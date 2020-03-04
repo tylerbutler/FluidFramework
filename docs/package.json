@@ -20,6 +20,8 @@
     "build:vuepress": "cross-env NODE_OPTIONS=\"--max-old-space-size=8192\" VUEPRESS_BASE=\"/\" vuepress build --dest ./dist --cache .cache",
     "clean": "rimraf api dist .vuepress/public/fluid/*/**",
     "lint": "vuepress check-md",
+    "lint:markdown": "markdownlint ../**/*.md --ignore node_modules",
+    "lint:markdown:fix": "markdownlint ../**/*.md --ignore node_modules --fix",
     "start": "npm run build:copy && node updateMarkdown.js && npm run start:vuepress",
     "start:vuepress": "cross-env VUEPRESS_BASE=\"/\" vuepress dev --port 8080 --no-clear-screen --cache .cache"
   },
@@ -48,6 +50,7 @@
   },
   "devDependencies": {
     "cross-env": "^7.0.2",
+    "markdownlint-cli": "^0.22.0",
     "rimraf": "^3.0.2"
   }
 }
