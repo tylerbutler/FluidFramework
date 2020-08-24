@@ -1,6 +1,6 @@
 # Logging
 
-The logging services route log data via fluentd to an elasticsearch stateful set. They can be configured via the 
+The logging services route log data via fluentd to an elasticsearch stateful set. They can be configured via the
 following commands
 
 ## Elasticsearch
@@ -21,6 +21,7 @@ We run a [CronJob](http://kubernetes.io/docs/user-guide/cron-jobs/) that will pe
 ```shell
 kubectl create -f es-curator-config.yaml
 ```
+
 ```shell
 kubectl create -f es-curator.yaml
 ```

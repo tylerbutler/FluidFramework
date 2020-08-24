@@ -2,10 +2,10 @@
 
 ## Monitoring
 
-Install Prometheus from https://github.com/kubernetes/charts/pull/1295 given RBAC issues. Once the pull request gets taken
+Install Prometheus from <https://github.com/kubernetes/charts/pull/1295> given RBAC issues. Once the pull request gets taken
 we can install prometheus directly from helm
 
-Grafana to visualize. 
+Grafana to visualize.
 
 `helm install stable/grafana`
 

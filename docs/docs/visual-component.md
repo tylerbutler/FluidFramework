@@ -125,6 +125,7 @@ export const ClickerInstantiationFactory = new PrimedComponentFactory(
 );
 export const fluidExport = ClickerInstantiationFactory;
 ```
+
 These two lines in combination allow the Clicker component to be consumed as a Fluid component. While the first two
 parameters that `PrimedComponentFactory` takes in simply define `Clicker`'s name and pass the class itself, the third
 parameter is important to keep in mind for later as it will list the Fluid DDS' (Distributed Data Structures) that

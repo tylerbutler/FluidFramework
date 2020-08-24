@@ -1,6 +1,7 @@
 # Breaking changes
 
 ## 0.25 Breaking Changes
+
 - [External Component Loader and IComponentDefaultFactoryName removed](#External-Component-Loader-and-IComponentDefaultFactoryName-removed)
 - [MockFluidDataStoreRuntime api rename](#MockFluidDataStoreRuntime-api-rename)
 - [Local Web Host API change](#Local-Web-Host-API-change)
@@ -19,18 +20,23 @@
 
 
 ### External Component Loader and IComponentDefaultFactoryName removed
+
 The @fluidframework/external-component-loader package has been removed from the repo. In addition to this, the IFluidExportDefaultFactoryName and the corresponding IProvideFluidExportDefaultFactoryName interfaces have also been dropped.
 
 ### MockFluidDataStoreRuntime api rename
+
 Runtime Test Utils's MockFluidDataStoreRuntime now has "requestDataStore" instead of "requestComponent"
 
 ### Local Web Host API change
+
 The renderDefaultComponent function has been updated to be renderDefaultFluidObject
 
 ### Container runtime event changes
+
 Container runtime now emits the event "fluidDataStoreInstantiated" instead of "componentInstantiated"
 
 ### Component is removed from telemetry event names
+
 The following telemetry event names have been updated to drop references to the term component:
 
 ComponentRuntimeDisposeError -> ChannelDisposeError
@@ -38,41 +44,52 @@ ComponentContextDisposeError -> FluidDataStoreContextDisposeError
 SignalComponentNotFound -> SignalFluidDataStoreNotFound
 
 ### IComponentContextLegacy is removed
+
 Deprecated in 0.18, removed.
 
 ### IContainerRuntimeBase._createDataStoreWithProps is removed
+
 `IContainerRuntimeBase._createDataStoreWithProps()` has been removed. Please use `IContainerRuntimeBase.createDataStore()` (returns IFluidRouter).
 If you need to pass props to data store, either use request() route to pass initial props directly, or to query fluid object to interact with it (pass props / call methods to configure object).
 
 ### _createDataStore APIs are removed
+
 `IFluidDataStoreContext._createDataStore()` & `IContainerRuntimeBase._createDataStore()` are removed
 Please switch to using one of the following APIs:
+
 1. `IContainerRuntime.createRootDataStore()` - data store created that way is automatically bound to container. It will immediately be visible to remote clients (when/if container is attached). Such data stores are never garbage collected. Note that this API is on `IContainerRuntime` interface, which is not directly accessible to data stores. The intention is that only container owners are creating roots.
 2. `IContainerRuntimeBase.createDataStore()` - creates data store that is not bound to container. In order for this store to be bound to container (and thus be observable on remote clients), ensure that handle to it (or any of its objects / DDS) is stored into any other DDS that is already bound to container. In other words, newly created data store has to be reachable (there has to be a path) from some root data store in container. If, in future, such data store becomes unreachable from one of the roots, it will be garbage collected (implementation pending).
 
 ### createDataStoreWithRealizationFn() APIs moved
+
 Removed from IFluidDataStoreContext  & IContainerRuntime.
 Temporarily exposed on IContainerRuntimeBase. The intent is to remove it altogether in same release (more info to follow)
 
 ## getDataStore() APIs is removed
+
 IContainerRuntime.getDataStore() is removed. Only IContainerRuntime.getRootDataStore() is available to retrieve root data stores.
 For couple versions we will allow retrieving non-root data stores using this API, but this functionality is temporary and will be removed soon.
 You can use handleFromLegacyUri() for creating handles from container-internal URIs (i.e., in format `/${dataStoreId}`) and resolving those containers to get to non-root data stores. Please note that this functionality is strictly added for legacy files! In future, not using handles to refer to content (and storing handles in DDSs) will result in such data stores not being reachable from roots, and thus garbage collected (deleted) from file.
 
 ### Package Renames
+
 As a follow up to the changes in 0.24 we are updating a number of package names
+
 - `@fluidframework/core-interfaces` is renamed to `@fluidframework/core-interfaces`
 - `@fluidframework/datastore-definitions` is renamed to `@fluidframework/datastore-definitions`
 - `@fluidframework/datastore` is renamed to `@fluidframework/datastore`
 - `@fluidframework/webpack-component-loader` is renamed to `@fluidframework/webpack-fluid-loader`
 
 ### IComponent and IComponent Interfaces Removed
+
 In 0.24 IComponent and IComponent interfaces were deprecated, they are being removed in this build. Please move to IFluidObject and IFluidObject interfaces.
 
 ### odsp-utils Changes
+
 To support additional authentication scenarios, the signature and/or name of a few auth-related functions was modified.
 
 ### LastEditedTrackerComponent renamed
+
 It is renamed to LastEditedTrackerDataObject
 
 ### ComponentProvider renamed to FluidObjectProvider
@@ -87,6 +104,7 @@ AsyncComponentProvider -> AsyncFluidObjectProvider
 NonNullableComponent -> NonNullableFluidObject
 
 ## 0.24 Breaking Changes
+
 This release only contains renames. There are no functional changes in this release. You should ensure you have integrated and validated up to release 0.23 before integrating this release.
 
 This is a followup to the forward compat added in release 0.22: [Forward Compat For Loader IComponent Interfaces](#Forward-Compat-For-Loader-IComponent-Interfaces)
@@ -227,20 +245,25 @@ All renames are 1-1, and global case senstive and whole word find replace for al
 ```
 
 ## 0.23 Breaking Changes
+
 - [Removed `collaborating` event on IComponentRuntime](#Removed-`collaborating`-event-on-IComponentRuntime)
 - [ISharedObjectFactory rename](#ISharedObjectFactory)
 - [LocalSessionStorageDbFactory moved to @fluidframework/local-driver](LocalSessionStorageDbFactory-moved-to-@fluidframework/local-driver)
 
 ### Removed `collaborating` event on IComponentRuntime
+
 Component Runtime no longer fires the collaborating event on attaching. Now it fires `attaching` event.
 
 ### ISharedObjectFactory
+
 `ISharedObjectFactory` renamed to `IChannelFactory` and moved from `@fluidframework/shared-object-base` to `@fluidframework/datastore-definitions`
 
 ### LocalSessionStorageDbFactory moved to @fluidframework/local-driver
+
 Previously, `LocalSessionStorageDbFactory` was part of the `@fluidframework/webpack-component-loader` package.  It has been moved to the `@fluidframework/local-driver` package.
 
 ## 0.22 Breaking Changes
+
 - [Deprecated `path` from `IComponentHandleContext`](#Deprecated-`path`-from-`IComponentHandleContext`)
 - [Dynamically loaded components compiled against older versions of runtime](#Dynamically-loaded-components)
 - [ContainerRuntime.load Request Handler Changes](#ContainerRuntime.load-Request-Handler-Changes)
@@ -253,24 +276,29 @@ Previously, `LocalSessionStorageDbFactory` was part of the `@fluidframework/webp
 - [`isAttached` replaced with `attachState` property](#`isAttached`-replaced-with-`attachState`-property)
 
 ### Deprecated `path` from `IComponentHandleContext`
+
 Deprecated the `path` field from the interface `IComponentHandleContext`. This means that `IComponentHandle` will not have this going forward as well.
 
 Added an `absolutePath` field to `IComponentHandleContext` which is the absolute path to reach it from the container runtime.
 
 ### Dynamically loaded components
+
 Components that were compiled against Fluid Framework <= 0.19.x releases will fail to load. A bunch of APIs has been deprecated in 0.20 & 0.21 and back compat support is being removed in 0.22. Some of the key APIs are:
-   - IComponentRuntime.attach
-   - ContainerContext.isAttached
-   - ContainerContext.isLocal
+
+- IComponentRuntime.attach
+- ContainerContext.isAttached
+- ContainerContext.isLocal
 Such components needs to be compiled against >= 0.21 runtime and can be used in container that is built using >= 0.21 runtime as well.
 
 ### ContainerRuntime.load Request Handler Changes
+
 ContainerRuntime.load no longer accepts an array of RuntimeRequestHandlers. It has been changed to a single function parameter with a compatible signature:
 `requestHandler?: (request: IRequest, runtime: IContainerRuntime) => Promise<IResponse>`
 
  To continue to use RuntimeRequestHandlers you can used the `RuntimeRequestHandlerBuilder` in the package `@fluidframework/request-handler`
 
 example:
+
 ``` typescript
     const builder = new RuntimeRequestHandlerBuilder();
     builder.pushHandler(...this.requestHandlers);
@@ -290,9 +318,11 @@ Additionally the class `RequestParser` has been moved to the `@fluidframework/ru
 This will allow consumers of our ContainerRuntime to substitute other routing frameworks more easily.
 
 ### IComponentHTMLVisual removed
+
 The `IComponentHTMLVisual` interface was deprecated in 0.21, and is now removed in 0.22.  To support multiview scenarios, consider split view/model patterns like those demonstrated in the multiview sample.
 
 ### IComponentReactViewable deprecated
+
 The `IComponentReactViewable` interface is deprecated and will be removed in an upcoming release.  For multiview scenarios, instead use a pattern like the one demonstrated in the sample in /components/experimental/multiview.  This sample demonstrates how to create multiple views for a component.
 
 
@@ -309,7 +339,7 @@ As part of the Fluid Data Library (FDL) and Fluid Component Library (FCL) split 
 - `IComponentRouter` will become `IFluidRouter`
 - `IComponentHandleContext` will become `IFluidHandleContext`
 - `IComponentHandle` will become `IFluidHandle`
-- `IComponentSerializer `will become `IFluidSerializer`
+- `IComponentSerializer`will become `IFluidSerializer`
 - `IComponentTokenProvider` will become `IFluidTokenProvider`
 
 `IComponent` will also become `IFluidObject`, and the mime type for for requests will change from `fluid/component` to `fluid/object`
@@ -317,6 +347,7 @@ As part of the Fluid Data Library (FDL) and Fluid Component Library (FCL) split 
 To ensure forward compatability when accessing the above interfaces outside the context of a container e.g. from the host, you should use the nullish coalesing operator (??).
 
 For example
+
 ``` typescript
         if (response.status !== 200 ||
             !(
@@ -334,6 +365,7 @@ For example
 ### Add Undefined to getAbsoluteUrl return type
 
 getAbsoluteUrl on the container runtime and component context now returns `string | undefined`. `undefined` will be returned if the container or component is not attached. You can determine if  a component is attached and get its url with the below snippit:
+
 ```typescript
 import { waitForAttach } from "@fluidframework/aqueduct";
 
@@ -352,6 +384,7 @@ protected async hasInitialized() {
 ### Renamed TestDeltaStorageService, TestDocumentDeltaConnection, TestDocumentService, TestDocumentServiceFactory and TestResolver
 
 Renamed the following in "@fluidframework/local-driver" since these are used beyond testing:
+
 - `TestDeltaStorageService` -> `LocalDeltaStorageService`
 - `TestDocumentDeltaConnection` -> `LocalDocumentDeltaConnection`
 - `TestDocumentService` -> `LocalDocumentService`
@@ -384,6 +417,7 @@ So if `attachState` is `AttachState.Attaching` or `AttachState.Attached` then `i
 Attaching is introduced in regards to Detached container where there is a time where state is neither AttachState.Detached nor AttachState.Attached.
 
 ## 0.21 Breaking Changes
+
 - [Removed `@fluidframework/local-test-utils`](#removed-`@fluidframework/local-test-utils`)
 - [IComponentHTMLVisual deprecated](#IComponentHTMLVisual-deprecated)
 - [createValueType removed from SharedMap and SharedDirectory](#createValueType-removed-from-SharedMap-and-SharedDirectory)
@@ -393,22 +427,29 @@ Attaching is introduced in regards to Detached container where there is a time w
 - [Error handling changes](#Error-handling-changes)
 
 ### Removed `@fluidframework/local-test-utils`
+
 Removed this package so classes like `TestHost` are no longer supported. Please contact us if there were dependencies on this or if any assistance in required to get rid of it.
 
 ### IComponentHTMLVisual deprecated
+
 The `IComponentHTMLVisual` interface is deprecated and will be removed in an upcoming release.  For multiview scenarios, instead use a pattern like the one demonstrated in the sample in /components/experimental/multiview.  This sample demonstrates how to create multiple views for a component.
 
 ### createValueType removed from SharedMap and SharedDirectory
+
 The `createValueType()` method on `SharedMap` and `SharedDirectory` was deprecated in 0.20, and is now removed in 0.21.  If `Counter` functionality is required, the `@fluidframework/counter` DDS can be used for counter functionality.
 
 ### isLocal api removed
+
 isLocal api is removed from the repo. It is now replaced with isAttached which tells that the entity is attached or getting attached to storage. So its meaning is opposite to isLocal.
 
 ### register/attach api renames on handles, components and dds
+
 Register on dds and attach on data store runtime is renamed to bindToContext(). attach on handles is renamed to attachGraph().
 
 ### Error handling changes
+
 ErrorType enum has been broken into 3 distinct enums / layers:
+
 1. [ContainerErrorType](./packages/loader/container-definitions/src/error.ts) - errors & warnings raised at loader level
 2. [OdspErrorType](./packages/drivers/odsp-driver/src/odspError.ts) and [R11sErrorType](./packages/drivers/routerlicious-driver/src/documentDeltaConnection.ts) - errors raised by ODSP and R11S drivers.
 3. Runtime errors, like ```"summarizingError"```, ```"dataCorruptionError"```. This class of errors it not pre-determined and depends on type of container loaded.
@@ -421,10 +462,12 @@ Due to a change in the sequence's snapshot format clients running a version less
 
 
 ## 0.20 Breaking Changes
+
 - [Value types deprecated on SharedMap and SharedDirectory](#Value-types-deprecated-on-sharedmap-and-shareddirectory)
 - [rename @fluidframework/aqueduct-react to @fluidframework/react-inputs](#rename-@fluidframework/aqueduct-react-to-@fluidframework/react-inputs)
 
 ### Value types deprecated on SharedMap and SharedDirectory
+
 The `Counter` value type and `createValueType()` method on `SharedMap` and `SharedDirectory` are now deprecated and will be removed in an upcoming release.  Instead, the `@fluidframework/counter` DDS can be used for counter functionality.
 
 ### rename @fluidframework/aqueduct-react to @fluidframework/react-inputs
@@ -432,18 +475,22 @@ The `Counter` value type and `createValueType()` method on `SharedMap` and `Shar
 aqueduct-react is actually just a react library and renamed it to reflect such.
 
 ## 0.19 Breaking Changes
+
 - [Container's "error" event](#Container-Error-Event)
 - [IUrlResolver change from requestUrl to getAbsoluteUrl](#IUrlResolver-change-from-requestUrl-to-getAbsoluteUrl)
 - [Package rename from `@microsoft/fluid-*` to `@fluidframework/*`](#package-rename)
 
 ### Package rename
+
 Package with the prefix "@microsoft/fluid-" is renamed to "@fluidframework/" to take advanage a separate namespace for fluid framework SDK packages.
 
 ### Container Error Event
+
 "error" event is gone. All critical errors are raised on "closed" event via optiona error object.
 "warning" event is added to expose warnings. Currently it contains summarizer errors and throttling errors.
 
 ### IUrlResolver change from requestUrl to getAbsoluteUrl
+
 As we continue to refine our API around detached containers, and component urls, we've renamed IUrlResolver from requestUrl to getAbsoluteUrl
 
 ## 0.18 Breaking Changes
@@ -455,15 +502,19 @@ As we continue to refine our API around detached containers, and component urls,
 (#OdspDocumentServiceFactory-no-longer-requires-a-logger)
 
 ### `App Id` removed as a parameter to OdspDocumentServiceFactory
+
 `@microsoft/fluid-odsp-driver` no longer requires consumers to pass in an app id as an input. Consumers should simply remove this parameter from the OdspDocumentServiceFactory/OdspDocumentServiceFactoryWithCodeSplit constructor.
 
 ### ConsensusRegisterCollection now supports storing handles
+
 ConsensusRegisterCollection will properly serialize/deserialize handles added as values.
 
 ### Summarizing errors on parent container
+
 The parent container of the summarizing container will now raise "error" events related to summarization problems. These will be of type `ISummarizingError` and will have a description indicating either a problem creating the summarizing container, a problem generating a summary, or a nack or ack wait timeout from the server.
 
 ### OdspDocumentServiceFactory no longer requires a logger
+
 The logger will be passed in on createDocumentService or createContainer, no need to pass in one on construction of OdspDocumentServiceFactory.
 
 ## 0.17 and earlier Breaking Changes

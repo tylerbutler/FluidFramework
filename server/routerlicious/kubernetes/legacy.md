@@ -28,5 +28,5 @@ curl -H "Content-Type: application/json" -X POST -d '{"name": "prague"}' --verbo
 ```
 
 
-http://praguekafka-w4viw5xf-worker-1.westus2.cloudapp.azure.com:9021/
+<http://praguekafka-w4viw5xf-worker-1.westus2.cloudapp.azure.com:9021/>
 

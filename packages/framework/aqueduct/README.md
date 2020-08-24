@@ -96,7 +96,9 @@ export const ClickerInstantiationFactory = new DataObjectFactory(
     {}, // Provider Symbols see below
 );
 ```
+
 This factory can then create Clickers when provided a creating instance context.
+
 ```typescript
 const myClicker = ClickerInstantiationFactory.createInstance(this.context) as Clicker;
 ```

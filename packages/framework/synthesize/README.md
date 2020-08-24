@@ -154,7 +154,7 @@ dc.register(IBar, generateBar);
 
 ## Synthesize
 
-Once you have a `DependencyContainer` with registered providers you can synthesize/generate a new IFluidObject 
+Once you have a `DependencyContainer` with registered providers you can synthesize/generate a new IFluidObject
 from it. The object that is returned will have the correct typing of optional and required types.
 
 An Example:
@@ -173,7 +173,7 @@ is a TypeScript `type` that ensures the types being passed match the ones in the
 
 ### Optional Types
 
-Optional types will return a Promise to it's corresponding IFluidObject  or undefined. Because of this we need to do 
+Optional types will return a Promise to it's corresponding IFluidObject  or undefined. Because of this we need to do
 an if check to validate the object or use the `?` like in the example below.
 
 ```typescript

@@ -1,6 +1,7 @@
 # Kubernetes deployment
 
 ## Cluster preparation
+
 Azure Container Service is the simplest way to get a cluster up and running. Optionally instructions on how to manually
 prepare a Kubernetes cluster on Azure can be found [here](azure.md).
 
@@ -20,7 +21,7 @@ chart. Or in the future simpling installing a chart we have published to a chart
 Prior to deploying the Routerlicious chart first a few base components need to be configured
 
 To actually deploy our services you'll need to provide the cluster with credentials to our private container as
-documented at https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/. This boils
+documented at <https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/>. This boils
 down to the below command to create a secret in Kubernetes
 
 ```

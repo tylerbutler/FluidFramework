@@ -28,12 +28,14 @@ This directory contains our reference server implementation. [Routerlicious](./r
 
 
 ## Running the Reference Server
+
 To get started with Routerlicious and the Fluid reference implementation, you must install docker and allocate at least 4gb of RAM. We suggest you use our docker images, as outlined by the [docker compose](./docker-compose.yml) to start. You can run ```npm run start:docker``` from the root directory to try this.
 
 1. Download and install [Docker](https://docs.docker.com/desktop/)
 2. Configure Docker to have 4gb of RAM
 3. Find and connect to our Docker Image registry (Coming Soon...)
 4. Build and Start the Container (substitute in the path to the compose file)
+
   ```
   docker-compose build -f FluidFramework/server/docker-compose.yml
   docker-compose up -f FluidFramework/server/docker-compose.yml
@@ -42,6 +44,7 @@ To get started with Routerlicious and the Fluid reference implementation, you mu
 For development, you'll also need to give docker access to your drive (Shared Drives). The instructions for local development are available in [Routerlicious](./routerlicious).
 
 ### Common Issues
+
 * Port already allocated
   * This can happen if you have a process already running on a port the docker-compose file expects to have available
   * This may be Tinylicious, which also expects to run on 3000
@@ -51,9 +54,11 @@ For development, you'll also need to give docker access to your drive (Shared Dr
   * Allocate more RAM
 
 ## Routerlicious for Local Development
+
 ### With Webpack Dev Server && the Webpack Component Loader (Yo-Fluid Output)
 
 To use Routerlicious with a Yo-Fluid container, you should start the Routerlicious docker conatiners, and then start the webpack dev server with the docker env command.
+
 ```
     "start:docker": "webpack-dev-server --config webpack.config.js --package package.json --env.mode docker",
 ```
@@ -63,6 +68,7 @@ To use Routerlicious with a Yo-Fluid container, you should start the Routerlicio
 Gateway is an example of a service providing its own Fluid Container host. [Gateway](./gateway) serves a Fluid Loader.
 
 You can access this loader by using the following URL Schema
+
 ```
 https://localhost:3000/loader/fluid/${container-identifier}?chaincode=${component-package-name}@${version}
 ```

@@ -5,6 +5,7 @@ This package provides factory methods to create a wrapper around some of the bas
 ## Shared String With Interception
 
 It provides `createSharedStringWithInterception` that accepts a SharedString, the data store context and a callback, and returns a SharedString object:
+
 ```typescript
 function createSharedStringWithInterception(
     sharedString: SharedString,
@@ -19,6 +20,7 @@ For example, to support a feature like simple user attribution, the app can appe
 ## Shared Map With Interception
 
 It provides `createSharedMapWithInterception` that accepts a SharedMap, the data store context and a callback, and returns a SharedMap object:
+
 ```typescript
 function createSharedMapWithInterception(
     sharedMap: SharedMap,
@@ -33,13 +35,16 @@ Example: To support a feature like simple user attribution, in the callback, the
 ## Shared Directory / Sub Directory With Interception
 
 It provides `createdDirectoryWithInterception` that accepts an IDirectory object, the data store context and a callback, and returns an IDirectory object:
+
 ```typescript
 function createDirectoryWithInterception<T extends IDirectory>(
     baseDirectory: T,
     context: IFluidDataStoreContext,
     setInterceptionCallback: (baseDirectory: IDirectory, subDirectory: IDirectory, key: string, value: any) => void): T;
 ```
+
 It can be used to wrap a SharedDirectory or one of it's subdirectories to get an interception callback when set is called on the object. The callback funtion is passed the following:
+
 - baseDirectory: This is the outermost directory in this directory structure that was wrapped. For example, when a SharedDirectory (say 'root') is wrapped, then a set on it or any of its sub directories will be passed 'root' as the baseDirectory.
 - subDirectory: This is the directory that the set is called on and which calls the callback.
 - key: They key that set was called with.

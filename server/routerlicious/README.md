@@ -33,8 +33,8 @@ below steps if you'd like to run a local version of the service or need to make 
 #### Standalone
 
 * [Docker](https://www.docker.com/)
-    * In Docker Settings -> Advanced Settings, give Docker at least 4GB of Memory--the more the better. You can give additional CPUs as well. 
-    * In Docker Settings -> Shared Drives, check the hard drive where your repository lives.
+  * In Docker Settings -> Advanced Settings, give Docker at least 4GB of Memory--the more the better. You can give additional CPUs as well.
+  * In Docker Settings -> Shared Drives, check the hard drive where your repository lives.
 
 #### For Development
 
@@ -73,13 +73,16 @@ If you also need debugging you can run:
 
 * `npm run start:debug` - which will allow you to attach a debugger
 
-After starting the service, you can navigate to http://localhost:3000/ in a browser.
+After starting the service, you can navigate to <http://localhost:3000/> in a browser.
 
 #### Dev Flow
+
 An example developer flow would be to:
+
 * `npm run start:debug` - attach a debugger
 
 Then use another command window to deliver the changes:
+
 * `npm run build` - build
 * `docker-compose restart {modified service}` - allow the container to pick up the changes stored on the local machine
 or
@@ -112,7 +115,7 @@ If you want to build API documentation locally, see [Building Documentation](htt
 
 ## CI/CD
 
-Historically: We make use of continuous integration and deployment via VSTS at https://offnet.visualstudio.com/officenet/
+Historically: We make use of continuous integration and deployment via VSTS at <https://offnet.visualstudio.com/officenet/>
 
 Coming Soon... a public facing CI/CD loop
 
@@ -180,9 +183,10 @@ Storage providers that implement this interface are then able to plug into the s
 support for [GitHub](https://developer.github.com/v3/git/), [Git](../gitrest), and
 [Cobalt](https://offnet.visualstudio.com/officenet/_git/cobalt-netcore).
 
-More details on content-adressable file systems and Git can be found at 
-* https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain
-* http://stefan.saasen.me/articles/git-clone-in-haskell-from-the-bottom-up/
+More details on content-adressable file systems and Git can be found at
+
+* <https://git-scm.com/book/en/v2/Git-Internals-Plumbing-and-Porcelain>
+* <http://stefan.saasen.me/articles/git-clone-in-haskell-from-the-bottom-up/>
 
 ### Picture Errata
 
@@ -255,15 +259,19 @@ From there you can use your git repository management tool of choice to inspect 
 stored in the repository.
 
 ## Alerting
+
 We are using [elastalert](https://github.com/Yelp/elastalert) plugin to send email alerts on production failures and errors. The plugin scans data from elasticsearch and looks for anomalies/patterns/spikes. Checkout the [documentation](http://elastalert.readthedocs.io/en/latest/) for creating new alert rules.
 
 ### Alerting on Error
+
 To receive service side error alerts, just print the error message in console using `winston.error('message')`. Elastalert aggregates all error messages for last hour and sends an email. Kibana dashboard can also be filtered down to just error messages (search for 'level:error').
 
 ## Latency tracking
+
 We are using telegraf, influxdb, and grafana to monitor the latency of our microservices. Each service annotates the messages with service name, tag, and timestamp (inspired by [Dapper paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36356.pdf)). Once the message is acknowledged back, the latency information is written to telegraf. Telegraf daemon picks up the messages every 10 seconds and writes to influxdb as time series data. Finally Grafana is used to visualize the time series graphs.
 
 By default, the service does not run locally. To run locally, first add the following field to the config file.
+
 ```
 "metric":
     {
@@ -274,9 +282,11 @@ By default, the service does not run locally. To run locally, first add the foll
         }
     }
 ```
+
 This will enable the metric writer to write to telegraf client. Then run `docker-compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.metric.yml up` to bring up telegraf, influxdb, and grafana containers. Navigate "http://localhost:7000" to see grafana up and running.
 
 ## Authentication model
+
 Routerlicious uses a token based authentication model. Tenants are registered to routerlicious first and a secret key is generated for each tenant. Apps are expected to pass <secret-key>, <tenant-id>, and <user-info> as a signed token to routerlicious. Tenants are given a symmetric-key beforehand to sign the token.
 
 When a user from a tenant wants to create/access a document in routerlicious, it passes the signed token in api load call. Routerlicious verifies the token, matches the secret-key for the tenant and on a successful verification, grants the user access to the document. The access token is valid for the entire websocket session. User is expected to pass in another signed token for any subsequent api load call.
@@ -284,6 +294,7 @@ When a user from a tenant wants to create/access a document in routerlicious, it
 For now, token is optional. So passing no token would grant access to the user.
 
 ### Creating a token
+
 Routerlicious uses [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) library for verifying the token. Example of a token creation:
 
 ```javascript
@@ -298,12 +309,15 @@ Routerlicious uses [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) li
 ```
 
 ### Passing auth token to the API
+
 Add a token field to api load call.
 
 ```javascript
 await prague.api.load(id, { encrypted: false, token });
 ```
+
 Passing an invalid token will fail the load call.
 
 ## Verdaccio and the Chaincode CDN
+
 Coming Soon...

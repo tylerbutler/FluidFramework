@@ -27,47 +27,55 @@ Note that the component loader uses 'npm install' to load the package in 'instal
 
 # Monitoring in Kubernetes
 
-For continuous service liveness monitoring, it is possible to deploy the script as a kubernetes cronjob. Instructions are listed below: 
+For continuous service liveness monitoring, it is possible to deploy the script as a kubernetes cronjob. Instructions are listed below:
 
 To build and run/test locally using docker
+
 ```
 npm run docker:build
 npm run docker:start
 ```
 
 Pushing to registry
+
 ```
 docker build -t prague.azurecr.io/monitoring .
 docker push prague.azurecr.io/monitoring
 ```
 
 Deploying cron job
+
 ```
 cd deployment
 kubectl apply -f cronjob.yaml
 ```
 
 To see cron job schedule and instances
+
 ```
 kubectl get cronjobs
 ```
 
 To see specific job instance.
+
 ```
 kubectl get jobs --watch
 ```
 
 To list the pods running this job
+
 ```
 kubectl get pods --selector=job-name=<specific_job_name>
 ```
 
 To view the output of a job pod instance
+
 ```
 kubectl logs <pod_name>
 ```
 
 To delete an existing job
+
 ```
 kubectl delete cronjob service-monitoring
 ```

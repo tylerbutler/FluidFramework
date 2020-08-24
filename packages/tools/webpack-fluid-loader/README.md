@@ -27,7 +27,7 @@ The following environment variables can be defined when running webpack-dev-serv
 
 ### Manually attach the container
 
-In all modes you can start a detached container that you can later attach by appending `/manualAttach` to the url. For example - http://localhost:8080/manualAttach.
+In all modes you can start a detached container that you can later attach by appending `/manualAttach` to the url. For example - <http://localhost:8080/manualAttach>.
 
 You can interact with the fluid object and do any number of operations before clicking the `Attach Container` button to attach the container.
 
@@ -39,11 +39,13 @@ To connect to a remote server, a host, tenant ID, tenant secret, and npm registr
 provided in the following ways (looked for in the following order):
 
 ### command line:
+
 ```
 npm run start -- --env.fluidHost https://fluidhost.com --env.tenantId my_tenant --env.tenantSecret my_secret --env.bearerSecret bear_secret --env.npm npm.com
 ```
 
 ### environment variables:
+
 - `fluid__webpack__fluidHost`
 - `fluid__webpack__tenantId`
 - `fluid__webpack__tenantSecret`
@@ -51,7 +53,9 @@ npm run start -- --env.fluidHost https://fluidhost.com --env.tenantId my_tenant 
 - `fluid__webpack__npm`
 
 ### config file:
+
 or in an optional `config.json` file in the `baseDir` passed into `webpack-fluid-loader.after()` that looks like this:
+
 ``` json
 {
     "fluid": {
@@ -68,8 +72,9 @@ or in an optional `config.json` file in the `baseDir` passed into `webpack-fluid
 ```
 
 ## SharePoint
+
 To use a SharePoint server, the Microsoft login clientId and secret environment variables must be set.  This can be done by running the getkeys tool.
 
-Sometimes the cached tokens are out of date or incorrect, and it will not automatically refresh them.  They can be manually refreshed by going navigating to http://localhost:8080/odspLogin (port may vary).  To force reauth on start, the env variable `odspForceReauth` can be set.  This can also be done by adding `--env.mode forceReauth true` to the end of the command.  For example: `npm run start:spo-df -- --env.mode forceReauth true`.
+Sometimes the cached tokens are out of date or incorrect, and it will not automatically refresh them.  They can be manually refreshed by going navigating to <http://localhost:8080/odspLogin> (port may vary).  To force reauth on start, the env variable `odspForceReauth` can be set.  This can also be done by adding `--env.mode forceReauth true` to the end of the command.  For example: `npm run start:spo-df -- --env.mode forceReauth true`.
 
 Use `spo-df` if your OneDrive is on the DogFood server, and `spo` if it is not.

@@ -47,7 +47,7 @@ sudo apt-get install docker-ce
 # Install kubectl
 curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.6.5/bin/linux/amd64/kubectl
 
-.. or if you want the latest ... 
+.. or if you want the latest ...
 curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
 
 chmod +x ./kubectl
@@ -113,7 +113,8 @@ You also need to create the /etc/kubernetes/cloud-config file. Note that you mus
 ```
 
 #### kubeadm.conf
-The last thing you need to create is the config file to pass to kubeadm which also specifies the use of the azure cloud provider. If you follow a default setup you likely will also want to set 
+
+The last thing you need to create is the config file to pass to kubeadm which also specifies the use of the azure cloud provider. If you follow a default setup you likely will also want to set
 
 ```
 kind: MasterConfiguration
@@ -169,7 +170,7 @@ To start using your cluster, you need to run (as a regular user):
 
 You should now deploy a pod network to the cluster.
 Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
-  http://kubernetes.io/docs/admin/addons/
+  <http://kubernetes.io/docs/admin/addons/>
 
 You can now join any number of machines by running the following on each node
 as root:
@@ -192,7 +193,9 @@ Then, on the node being removed, reset all kubeadm installed state:
 For a custom deployment these addons can be valuable
 
 ### Kubernetes dashboard
+
 `kubectl create -f https://git.io/kube-dashboard`
 
 ### Weave dashboard
+
 `kubectl apply --namespace kube-system -f "https://cloud.weave.works/k8s/scope.yaml?k8s-version=$(kubectl version | base64 | tr -d '\n')"`

@@ -1,6 +1,7 @@
 # @fluidframework/sequence
 
 Every item in a SharedSegmentSequence is at a specific position starting at 0, kind of like an array. However, it differs from an array in that the positions can move as local and remote collaborators make modifications to the sequence. There are a number of different sequence types:
+
 - SharedString for storing and collaborating on a sequence of text
 - SharedNumberSequence for storing and collaborating on a sequence of numbers
 - SharedObjectSequence for storing and collaborating on a sequence of json serializable objects
@@ -118,6 +119,7 @@ In addition to text, a Shared String can also contain markers. Markers can be us
 Both markers and text are stored as segments in the Shared String. Text segments will be split and merged when modifications are made to the Shared String and will therefore have variable length matching the length of the text content they contain. Marker segments are never split or merged, and always have a length of 1.
 
 ### Examples
+
 - Rich Text Editor Implementations
   - [webflow](https://github.com/microsoft/FluidFramework/tree/main/examples/data-objects/webflow)
   - [flowView](https://github.com/microsoft/FluidFramework/blob/main/examples/data-objects/client-ui-lib/src/controls/flowView.ts)
@@ -133,9 +135,10 @@ Both markers and text are stored as segments in the Shared String. Text segments
 
 # Sparse Matrix
 
-The Sparse Matrix is a specialized data structure for efficiently handling collaborative tabular data. The Sparse Matrix works in a similar fashion to [raster scanning](https://en.wikipedia.org/wiki/Raster_scan). When a row is inserted it is inserted with the maximum possible number of columns, 16,385. This makes it easy to find any cell in the Sparse Matrix as it will exist at Row * MaxCol + Col. In order to store this efficiently the Sparse Matrix doesn't materialize cells that don't have data, this is where *Sparse* comes from.
+The Sparse Matrix is a specialized data structure for efficiently handling collaborative tabular data. The Sparse Matrix works in a similar fashion to [raster scanning](https://en.wikipedia.org/wiki/Raster_scan). When a row is inserted it is inserted with the maximum possible number of columns, 16,385. This makes it easy to find any cell in the Sparse Matrix as it will exist at Row *MaxCol + Col. In order to store this efficiently the Sparse Matrix doesn't materialize cells that don't have data, this is where*Sparse* comes from.
 
 Just like any other sequence, the Sparse Matrix is made of segments. The segment types are RunSegments and PaddingSegments. RunSegment contain the data for cells that have data, and PaddingSegments fill the spaces that have no data. PaddingSegments just contain how long they are, and this is how the Sparse Matrix efficiently stores all the rows with the max number of columns. For instance, if we had a Matrix with 2 rows, and each row only contained data in a couple columns it's serialized form would look something like this:
+
 ``` Json
 [
 // The first row with data in 1st and 2nd column
