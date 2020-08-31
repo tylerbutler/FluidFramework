@@ -1,2 +1,4 @@
+{{ $_hugo_config := `{ "version": 1 }` }}
+
 {{ $file := .Get "file" }}
-{{ readFile $file }}
+{{ readFile $file | markdownify }}

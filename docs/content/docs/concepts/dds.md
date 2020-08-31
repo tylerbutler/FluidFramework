@@ -3,12 +3,32 @@ title: Introducing distributed data structures
 MenuPosition: 2
 ---
 
-Fluid Framework provides developers with distributed data structures (DDSes) that automatically ensure that each client has access to the same state.
-data structures_ (DDSes). We call them this because they are similar to data structures used commonly when programming, like
-strings, maps/dictionaries, and sequences/lists. The APIs provided by distributed data structures are designed to be
-familiar to programmers who've used these types of data structures before. For example, the `SharedMap` DDS is used to
-store key/value pairs, like a typical map or dictionary data structure, and provides `get` and `set` methods to store
-and retrieve data in the map.
+## Testing!!!
+
+<!-- {{% include file="_includes/draft-doc.md" markdown="true" %}}
+ -->
+
+{{% include file="_includes/sequences-usage.md" %}}
+
+a link: [bar]({{< relref "SharedSequence#sequence-sharedsequence-insert-Method" >}})
+
+
+Like all SharedSequences, you can use the {{% method sequence SharedSequence insert %}} and {{% method sequence
+SharedSequence getItems %}} methods to insert and retrieve items from the sequence, and [remove][sequence.remove] to
+remove items.
+
+Whenever an operation is performed on a sequence a {{% class sequenceDeltaEvent %}} will be raised. This event provides
+the ranges affected by the operation, the type of the operation, and the properties that were changed by the operation.
+
+This is a link to {{% class SharedMap %}}. And a link to the package {{% package Aqueduct %}}.
+
+
+Fluid Framework provides developers with _distributed data structures_ (DDSes) that automatically ensure that each
+client has access to the same state. We call them DDSes because they are similar to data structures used commonly when
+programming, like strings, maps/dictionaries, and sequences/lists. The APIs provided by distributed data structures are
+designed to be familiar to programmers who've used these types of data structures before. For example, the [SharedMap][]
+DDS is used to store key/value pairs, like a typical map or dictionary data structure, and provides `get` and `set`
+methods to store and retrieve data in the map.
 
 When using a DDS, you can largely treat it as a local object. You can add data to it, remove data, update it, etc.
 However, a DDS is not _just_ a local object. A DDS can also be changed by other users that are editing.

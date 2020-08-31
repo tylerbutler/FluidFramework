@@ -1,0 +1,6 @@
+{{- $package := .Get 0 | lower -}}
+{{- $class := .Get 1 | lower -}}
+{{- $meth := .Get 2 | lower -}}
+{{- $methRef := (delimit (slice ($class | lower) "#" ($package | lower) "-" ($class | lower) "-" ($meth | lower) "-Method") "") -}}
+
+<a href="{{ relref . $methRef }}">{{- $meth -}}</a>
