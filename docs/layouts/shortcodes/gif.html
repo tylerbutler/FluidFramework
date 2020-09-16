@@ -1,0 +1,13 @@
+{{ $src := .Get "src" }}
+{{ $alt := .Get "alt" }}
+{{ $duration := .Get "duration" | default 0 }}
+
+<script src="https://unpkg.com/gifffer@1.5.4/build/gifffer.min.js"></script>
+
+<img data-gifffer="{{ $src }}" data-gifffer-alt="{{ $alt }}" data-gifffer-duration="{{ $duration }}" />
+
+<script>
+  window.onload = function () {
+    Gifffer();
+  }
+</script>
