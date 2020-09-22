@@ -1,12 +1,10 @@
-var toml = require("toml");
+var yaml = require("yamljs");
 var S = require("string");
 
-var CONTENT_PATH_PREFIX = "site/content";
+var CONTENT_PATH_PREFIX = "content";
 
 module.exports = function (grunt) {
-
     grunt.registerTask("lunr-index", function () {
-
         grunt.log.writeln("Build pages index");
 
         var indexPages = function () {
@@ -20,11 +18,13 @@ module.exports = function (grunt) {
         };
 
         var processFile = function (abspath, filename) {
+            grunt.log.writeln(`Processing ${abspath}`);
+
             var pageIndex;
 
-            if (S(filename).endsWith(".html")) {
+            if (S(filename).endsWith(".html") || S(abspath).contains(`content/apis/`)) {
                 pageIndex = processHTMLFile(abspath, filename);
-            } else {
+            } else if (S(filename).endsWith(".md")) {
                 pageIndex = processMDFile(abspath, filename);
             }
 
@@ -33,7 +33,8 @@ module.exports = function (grunt) {
 
         var processHTMLFile = function (abspath, filename) {
             var content = grunt.file.read(abspath);
-            var pageName = S(filename).chompRight(".html").s;
+            // if(S(filename).endsWith(".html"))
+            var pageName = S(filename).chompRight(".html").chompRight(".md").s;
             var href = S(abspath)
                 .chompLeft(CONTENT_PATH_PREFIX).s;
             return {
@@ -47,12 +48,12 @@ module.exports = function (grunt) {
             var content = grunt.file.read(abspath);
             var pageIndex;
             // First separate the Front Matter from the content and parse it
-            content = content.split("+++");
+            content = content.split("---");
             var frontMatter;
             try {
-                frontMatter = toml.parse(content[1].trim());
+                frontMatter = yaml.parse(content[1].trim());
             } catch (e) {
-                conzole.failed(e.message);
+                console.error(e.message);
             }
 
             var href = S(abspath).chompLeft(CONTENT_PATH_PREFIX).chompRight(".md").s;
@@ -72,7 +73,7 @@ module.exports = function (grunt) {
             return pageIndex;
         };
 
-        grunt.file.write("site/static/js/lunr/PagesIndex.json", JSON.stringify(indexPages()));
+        grunt.file.write("static/search/PagesIndex.json", JSON.stringify(indexPages()));
         grunt.log.ok("Index built");
     });
 };
