@@ -19,7 +19,7 @@ export interface ISharedCell<T extends Serializable = any> extends ISharedObject
     /**
      * Retrieves the cell value.
      *
-     * @returns - the value of the cell
+     * @returns the value of the cell
      */
     get(): T | undefined;
 
@@ -27,18 +27,41 @@ export interface ISharedCell<T extends Serializable = any> extends ISharedObject
      * Sets the cell value.
      *
      * @param value - a JSON-able or SharedObject value to set the cell to
+     *
+     * @example
+     * ```typescript
+     * myCell.set(3);
+     * console.log(myCell.get()); // 3
+     * ```
+     *
      */
     set(value: T): void;
 
     /**
      * Checks whether cell is empty or not.
      *
-     * @returns - `true` if the value of cell is `undefined`, `false` otherwise
+     * @returns `true` if the value of cell is `undefined`, `false` otherwise
+     *
+     * @example
+     * ```typescript
+     * if (myCell.empty()) {
+     *   // myCell.get() will return undefined
+     * } else {
+     *   // myCell.get() will return a non-undefined value
+     * }
+     * ```
      */
     empty(): boolean;
 
     /**
      * Delete the value from the cell.
+     *
+     * @example
+     * ```typescript
+     * myCell.delete();
+     * console.log(myCell.get()); // undefined
+     * ```
+     *
      */
     delete(): void;
 }

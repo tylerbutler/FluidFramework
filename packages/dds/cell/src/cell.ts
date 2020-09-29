@@ -50,12 +50,22 @@ interface ICellValue {
 const snapshotFileName = "header";
 
 /**
- * Implementation of a cell shared object
+ * The SharedCell distributed data structure can be used to store a single serializable value.
+ *
+ * @remarks
+ * The value must only be plain JS objects or `SharedObject` handles (e.g. to another DDS or Fluid object). In
+ * collaborative scenarios, the value is settled with a policy of <em>last writer wins</em> (LWW).
+ *
  */
 export class SharedCell<T extends Serializable = any> extends SharedObject<ISharedCellEvents<T>>
     implements ISharedCell<T> {
     /**
      * Create a new shared cell
+     *
+     * @example
+     * ```typescript
+     * const myCell = SharedCell.create(this.runtime, id);
+     * ```
      *
      * @param runtime - data store runtime the new shared map belongs to
      * @param id - optional name of the shared map
@@ -68,7 +78,7 @@ export class SharedCell<T extends Serializable = any> extends SharedObject<IShar
     /**
      * Get a factory for SharedCell to register with the data store.
      *
-     * @returns a factory that creates and load SharedCell
+     * @returns A factory that creates and load SharedCell
      */
     public static getFactory(): IChannelFactory {
         return new CellFactory();
@@ -94,8 +104,9 @@ export class SharedCell<T extends Serializable = any> extends SharedObject<IShar
      * Constructs a new shared cell. If the object is non-local an id and service interfaces will
      * be provided
      *
-     * @param runtime - data store runtime the shared map belongs to
      * @param id - optional name of the shared map
+     * @param runtime - data store runtime the shared map belongs to
+     * @param attributes - attributes of the shared map
      */
     constructor(id: string, runtime: IFluidDataStoreRuntime, attributes: IChannelAttributes) {
         super(id, runtime, attributes);
@@ -199,7 +210,7 @@ export class SharedCell<T extends Serializable = any> extends SharedObject<IShar
      *
      * @param branchId - Not used
      * @param storage - the storage to get the snapshot from
-     * @returns - promise that resolved when the load is completed
+     * @returns A promise that resolved when the load is completed
      */
     protected async loadCore(
         branchId: string | undefined,
