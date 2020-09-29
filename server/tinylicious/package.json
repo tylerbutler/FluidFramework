@@ -67,6 +67,9 @@
     "@types/cors": "^2.8.4",
     "@types/json-stringify-safe": "^5.0.0",
     "@types/jsonwebtoken": "^8.3.7",
+    "@types/level-sublevel": "0.0.32",
+    "@types/leveldown": "^4.0.2",
+    "@types/levelup": "^4.3.0",
     "@types/lodash": "^4.14.149",
     "@types/mocha": "^5.2.5",
     "@types/morgan": "^1.7.35",
@@ -85,6 +88,6 @@
     "mocha": "^8.1.1",
     "rimraf": "^2.6.2",
     "ts-node": "^8.6.2",
-    "typescript": "~3.7.4"
+    "typescript": "~3.8.3"
   }
 }

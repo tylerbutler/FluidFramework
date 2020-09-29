@@ -8,11 +8,12 @@ import { ICollection, IDb } from "@fluidframework/server-services-core";
 import level from "level";
 import sublevel from "level-sublevel";
 import { Collection, ICollectionProperty } from "./levelDbCollection";
+import { LevelUp } from "levelup";
 
 const MaxFetchSize = 2000;
 
 export class LevelDb extends EventEmitter implements IDb {
-    private readonly db: any;
+    private readonly db: LevelUp;
 
     constructor(private readonly path: string) {
         super();
