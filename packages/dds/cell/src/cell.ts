@@ -56,6 +56,13 @@ const snapshotFileName = "header";
  * The value must only be plain JS objects or `SharedObject` handles (e.g. to another DDS or Fluid object). In
  * collaborative scenarios, the value is settled with a policy of <em>last writer wins</em> (LWW).
  *
+ * @example
+ * Creating a SharedMap:
+ *
+ * ```typescript
+ * const myCell = SharedCell.create(this.runtime, id);
+ * ```
+ *
  */
 export class SharedCell<T extends Serializable = any> extends SharedObject<ISharedCellEvents<T>>
     implements ISharedCell<T> {
