@@ -121,9 +121,13 @@ respond appropriately as the data is modified.
 [sequence.getItems]: {{< relref "/apis/sequence/sharedsequence.md#sequence-sharedsequence-getitems-Method" >}}
 [sequence.remove]: {{< relref "/apis/sequence/sharedsequence.md#sequence-sharedsequence-getitems-Method" >}}
 [sequenceDeltaEvent]: {{< relref "/apis/sequence/sequencedeltaevent.md" >}}
+
 <!-- Cell methods -->
 [cell.create]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-create-Method" >}}
 [cell.delete]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-delete-Method" >}}
 [cell.get]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-get-Method" >}}
 [cell.set]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-set-Method" >}}
+
+[.handle]: {{< relref "/apis/shared-object-base/sharedobject.md#shared-object-base-sharedobject-handle-Property" >}}
+
 <!-- AUTO-GENERATED-CONTENT:END -->

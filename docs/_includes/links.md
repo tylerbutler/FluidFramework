@@ -39,4 +39,4 @@
 [cell.get]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-get-Method" >}}
 [cell.set]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-set-Method" >}}
 
-[.handle]: {{<  >}}
+[.handle]: {{< relref "/apis/shared-object-base/sharedobject.md#shared-object-base-sharedobject-handle-Property" >}}
