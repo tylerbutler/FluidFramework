@@ -44,7 +44,7 @@ results in more complex code, especially around event handling.
 
 ### Creation
 
-To create a `SharedCell`, call the static [create][cell.create] method.
+To create a SharedCell, call the static [create][cell.create] method.
 
 ```typescript
 const myCell = SharedCell.create(this.runtime);
@@ -58,12 +58,37 @@ myCell.set(3);
 console.log(myCell.get()); // 3
 ```
 
+Calling set() will trigger a `valueChanged` event.
+
+**Signature**
+
+```typescript
+static create(runtime: IFluidDataStoreRuntime, id?: string): SharedCell<any>;
+```
+
+
+### Deletion
+
 The [delete()][cell.delete] method will delete the stored value from the cell:
 
 ```typescript
 myCell.delete();
 console.log(myCell.get()); // undefined
 ```
+
+Calling delete() will trigger a `delete` event.
+
+
+**Signature**
+
+```typescript
+delete(): void;
+```
+<div class=return-section><b>Returns:</b>
+
+</div>
+
+### Other methods
 
 The [empty()][cell.empty] method will check if the value is `undefined`.
 
@@ -75,16 +100,29 @@ if (myCell.empty()) {
 }
 ```
 
+**Signature**
+
+```typescript
+empty(): boolean;
+```
+
+<div class=return-section><b>Returns:</b>
+
+`true` if the value of cell is `undefined`<!-- -->, `false` otherwise
+
+</div>
+
+
 ## Events
 
 SharedCell, like all DDSes, will emit events when clients make modifications. You should register for these events and
 respond appropriately as the data is modified.
 
-| Method | Triggered event |
-| ------ | --------------- |
-| set    | valueChanged    |
-| delete | delete          |
-|        |                 |
+| Method   | Triggered event |
+| -------- | --------------- |
+| set()    | `valueChanged`  |
+| delete() | `delete`        |
+|          |                 |
 
 <!-- AUTO-GENERATED-CONTENT:START (INCLUDE:path=_includes/links.md) -->
 <!-- Links -->
@@ -125,6 +163,7 @@ respond appropriately as the data is modified.
 <!-- Cell methods -->
 [cell.create]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-create-Method" >}}
 [cell.delete]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-delete-Method" >}}
+[cell.empty]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-empty-Method" >}}
 [cell.get]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-get-Method" >}}
 [cell.set]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-set-Method" >}}
 

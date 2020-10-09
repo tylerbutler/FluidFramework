@@ -261,6 +261,7 @@ These DDSes are used for storing sequential data. They are all optimistic.
 <!-- Cell methods -->
 [cell.create]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-create-Method" >}}
 [cell.delete]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-delete-Method" >}}
+[cell.empty]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-empty-Method" >}}
 [cell.get]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-get-Method" >}}
 [cell.set]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-set-Method" >}}
 

@@ -56,7 +56,8 @@ footer {
     padding-left: 0;
 }
 
-.cta:hover, .cta:focus {
+.cta:hover,
+.cta:focus {
     text-decoration: none;
     transition: none;
     background: #5a5a66;
@@ -234,5 +235,14 @@ where bootstrap caption color is too light for white background */
 
 .table td:nth-child(2) {
     word-break: break-word
+}
+
+.return-section p,
+.return-section ul {
+    display: inline-block;
+}
+
+.return-section ul {
+    padding-inline-start: 0;
 }
 
