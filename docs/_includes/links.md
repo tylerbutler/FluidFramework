@@ -15,7 +15,7 @@
 [DataObject]: {{< relref "/apis/aqueduct/dataobject.md" >}}
 [DataObjectFactory]: {{< relref "/apis/aqueduct/dataobjectfactory.md" >}}
 [Ink]: {{< relref "/apis/ink/ink.md" >}}
-[SharedCell]: {{< relref "/apis/cell/sharedcell.md" >}}
+[SharedCell]: {{< relref "/docs/guides/cell.md" >}}
 [SharedCounter]: {{< relref "SharedCounter" >}}
 [SharedDirectory]: {{< relref "/apis/map/shareddirectory.md" >}}
 [SharedMap]: {{< relref "/apis/map/sharedmap.md" >}}
@@ -32,3 +32,11 @@
 [sequence.getItems]: {{< relref "/apis/sequence/sharedsequence.md#sequence-sharedsequence-getitems-Method" >}}
 [sequence.remove]: {{< relref "/apis/sequence/sharedsequence.md#sequence-sharedsequence-getitems-Method" >}}
 [sequenceDeltaEvent]: {{< relref "/apis/sequence/sequencedeltaevent.md" >}}
+
+<!-- Cell methods -->
+[cell.create]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-create-Method" >}}
+[cell.delete]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-delete-Method" >}}
+[cell.get]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-get-Method" >}}
+[cell.set]: {{< relref "/apis/cell/sharedcell.md#cell-sharedcell-set-Method" >}}
+
+[.handle]: {{<  >}}

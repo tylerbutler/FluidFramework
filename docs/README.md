@@ -218,4 +218,6 @@ The template lives in `themes/thxvscode`.
 | `start` | Start a local webserver to preview the built site on <http://localhost:1313> |
 | `start:default` | -- |
 | `start:win32` | -- |
+| `watch` | `concurrently -n site,api-documenter "npm run hugo -- server" "npm:watch:api" --kill-others` |
+| `watch:api` | `watch "npm run build:api-documenter" ../_api-extractor-temp/doc-models --interval=1` |
 <!-- AUTO-GENERATED-CONTENT:END -->

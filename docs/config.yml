@@ -37,21 +37,24 @@ menu:
   docs:
   - identifier: "get-started"
     name: "Get Started"
-    weight: -500
+    weight: -600
   - identifier: "concepts"
     name: "Learn"
-    weight: -300
+    weight: -500
+  - identifier: "guides"
+    name: "Guides"
+    weight: -400
   - identifier: "advanced"
     name: "Advanced concepts"
-    weight: -200
+    weight: -300
   - identifier: "faq"
     name: "FAQ"
     url: "/docs/faq/"
-    weight: -100
+    weight: -200
   - identifier: "glossary"
     name: "Glossary"
     url: "/docs/Glossary/"
-    weight: -90
+    weight: -100
 
 markup:
   goldmark:

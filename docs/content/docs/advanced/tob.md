@@ -102,7 +102,7 @@ Fluid objects' data structures will be summarized.
 [DataObject]: {{< relref "/apis/aqueduct/dataobject.md" >}}
 [DataObjectFactory]: {{< relref "/apis/aqueduct/dataobjectfactory.md" >}}
 [Ink]: {{< relref "/apis/ink/ink.md" >}}
-[SharedCell]: {{< relref "/apis/cell/sharedcell.md" >}}
+[SharedCell]: {{< relref "/docs/guides/cell.md" >}}
 [SharedCounter]: {{< relref "SharedCounter" >}}
 [SharedDirectory]: {{< relref "/apis/map/shareddirectory.md" >}}
 [SharedMap]: {{< relref "/apis/map/sharedmap.md" >}}
