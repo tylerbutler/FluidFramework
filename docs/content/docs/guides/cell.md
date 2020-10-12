@@ -1,28 +1,18 @@
 ---
 title: "SharedCell"
-menuPosition: 1
+menuPosition: 2
 ---
 
 The SharedCell distributed data structure can be used to store a single value.
 
-## Summary
-
-<!--
-|                |                           |
+{{< bootstrap-table "table table-dark table-striped table-bordered" >}}
+| Behavior       | SharedCell                |
 | -------------- | ------------------------- |
 | Merge strategy | Last writer wins (LWW)    |
 | Storable types | Any plain object or value |
 | Optimistic     | Yes                       |
-|                |                           |
--->
+{{< /bootstrap-table >}}
 
-
-| DDS                 | Merge Strategy         | Optimistic/Consensus | Storable types            |
-| ------------------- | ---------------------- | -------------------- | ------------------------- |
-| [SharedCell][]      | Last writer wins (LWW) | Optimistic           | Any plain object or value |
-| [SharedMap][]       |                        | Optimistic           | Any plain object or value |
-| [SharedDirectory][] |                        | Optimistic           |                           |
-|                     |                        |                      |                           |
 
 ## Concepts and applications
 
@@ -42,13 +32,21 @@ results in more complex code, especially around event handling.
 
 ## Usage
 
-### Creation
+### Creating SharedCells
 
 To create a SharedCell, call the static [create][cell.create] method.
 
 ```typescript
 const myCell = SharedCell.create(this.runtime);
 ```
+
+#### Signature
+
+```typescript
+static create(runtime: IFluidDataStoreRuntime, id?: string): SharedCell<any>;
+```
+
+### Getting and setting values
 
 The value stored in the cell can be set with the [set()][cell.set] method and retrieved with the [get()][cell.get]
 method:
@@ -58,16 +56,21 @@ myCell.set(3);
 console.log(myCell.get()); // 3
 ```
 
-Calling set() will trigger a `valueChanged` event.
+Calling set() will trigger a [valueChanged](#valueChanged) event.
 
-**Signature**
+#### Signature
 
 ```typescript
-static create(runtime: IFluidDataStoreRuntime, id?: string): SharedCell<any>;
+get(): T | undefined;
 ```
+<div class=return-section><b>Returns:</b>
+
+the value of the cell
+
+</div>
 
 
-### Deletion
+### Deleting values
 
 The [delete()][cell.delete] method will delete the stored value from the cell:
 
@@ -76,17 +79,15 @@ myCell.delete();
 console.log(myCell.get()); // undefined
 ```
 
-Calling delete() will trigger a `delete` event.
+Calling delete() will trigger a [delete](#delete) event.
 
 
-**Signature**
+#### Signature
 
 ```typescript
 delete(): void;
 ```
-<div class=return-section><b>Returns:</b>
 
-</div>
 
 ### Other methods
 
@@ -100,7 +101,7 @@ if (myCell.empty()) {
 }
 ```
 
-**Signature**
+#### Signature
 
 ```typescript
 empty(): boolean;
@@ -118,11 +119,20 @@ empty(): boolean;
 SharedCell, like all DDSes, will emit events when clients make modifications. You should register for these events and
 respond appropriately as the data is modified.
 
-| Method   | Triggered event |
-| -------- | --------------- |
-| set()    | `valueChanged`  |
-| delete() | `delete`        |
-|          |                 |
+{{< bootstrap-table "table table-dark table-striped table-bordered" >}}
+| Method   | Triggered event               |
+| -------- | ----------------------------- |
+| set()    | [valueChanged](#valueChanged) |
+| delete() | [delete](#delete)             |
+{{< /bootstrap-table >}}
+
+### valueChanged
+
+The `valueChanged` event is raised whenever a set operation occurs.
+
+### delete
+
+The `delete` event is raised whenever a delete operation occurs.
 
 <!-- AUTO-GENERATED-CONTENT:START (INCLUDE:path=_includes/links.md) -->
 <!-- Links -->
@@ -143,14 +153,14 @@ respond appropriately as the data is modified.
 [DataObjectFactory]: {{< relref "/apis/aqueduct/dataobjectfactory.md" >}}
 [Ink]: {{< relref "/apis/ink/ink.md" >}}
 [SharedCell]: {{< relref "/docs/guides/cell.md" >}}
-[SharedCounter]: {{< relref "SharedCounter" >}}
+[SharedCounter]: {{< relref "/apis/counter/sharedcounter.md" >}}
 [SharedDirectory]: {{< relref "/apis/map/shareddirectory.md" >}}
 [SharedMap]: {{< relref "/apis/map/sharedmap.md" >}}
-[SharedMatrix]: {{< relref "SharedMatrix" >}}
-[SharedNumberSequence]: {{< relref "SharedNumberSequence" >}}
+[SharedMatrix]: {{< relref "/apis/matrix/sharedmatrix.md" >}}
+[SharedNumberSequence]: {{< relref "/apis/sequence/sharednumbersequence.md" >}}
 [SharedObjectSequence]: {{< relref "/apis/sequence/sharedobjectsequence.md" >}}
-[SharedSequence]: {{< relref "SharedSequence" >}}
-[SharedString]: {{< relref "SharedString" >}}
+[SharedSequence]: {{< relref "/apis/sequence/sharedsequence.md" >}}
+[SharedString]: {{< relref "/apis/sequence/sharedstring.md" >}}
 [Quorum]: {{< relref "/apis/protocol-base/quorum.md" >}}
 
 <!-- Sequence methods -->

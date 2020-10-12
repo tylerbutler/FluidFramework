@@ -1,5 +1,5 @@
 ---
-title: "Guides"
+title: "DDS Guides"
 draft: false
 area: guides
 cascade:

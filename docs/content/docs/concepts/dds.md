@@ -222,6 +222,28 @@ These DDSes are used for storing sequential data. They are all optimistic.
 - [SharedString][] -- a specialized data structure for handling collaborative text.
 - [Ink][] -- a specialized data structure for ink data.
 
+### Table of DDSes
+
+<!-- AUTO-GENERATED-CONTENT:START (INCLUDE:path=_includes/dds-table.md) -->
+
+{{< bootstrap-table "table table-dark table-striped table-bordered" >}}
+
+| DDS                                                                             | Merge Strategy         | Optimistic/Consensus | Storable types            |
+| ------------------------------------------------------------------------------- | ---------------------- | -------------------- | ------------------------- |
+| [Ink]({{< relref "/apis/ink/ink.md" >}})                                        |                        | Optimistic           |                           |
+| [SharedCell]({{< relref "/docs/guides/cell.md" >}})                             | Last writer wins (LWW) | Optimistic           | Any plain object or value |
+| [SharedCounter]({{< relref "/apis/counter/sharedcounter.md" >}})                |                        |                      | Any number                |
+| [SharedDirectory]({{< relref "/apis/map/shareddirectory.md" >}})                | Last writer wins (LWW) | Optimistic           | Any plain object or value |
+| [SharedMap]({{< relref "/apis/map/sharedmap.md" >}})                            | Last writer wins (LWW) | Optimistic           | Any plain object or value |
+| [SharedMatrix]({{< relref "/apis/matrix/sharedmatrix.md" >}})                   |                        |                      |                           |
+| [SharedNumberSequence]({{< relref "/apis/sequence/sharednumbersequence.md" >}}) |                        |                      | Any number                |
+| [SharedObjectSequence]({{< relref "/apis/sequence/sharedobjectsequence.md" >}}) |                        |                      | Any plain object or value |
+| [SharedString]({{< relref "/apis/sequence/sharedstring.md" >}})                 |                        |                      |                           |
+
+{{< /bootstrap-table >}}
+
+<!-- AUTO-GENERATED-CONTENT:END -->
+
 <!-- AUTO-GENERATED-CONTENT:START (INCLUDE:path=_includes/links.md) -->
 <!-- Links -->
 
@@ -241,14 +263,14 @@ These DDSes are used for storing sequential data. They are all optimistic.
 [DataObjectFactory]: {{< relref "/apis/aqueduct/dataobjectfactory.md" >}}
 [Ink]: {{< relref "/apis/ink/ink.md" >}}
 [SharedCell]: {{< relref "/docs/guides/cell.md" >}}
-[SharedCounter]: {{< relref "SharedCounter" >}}
+[SharedCounter]: {{< relref "/apis/counter/sharedcounter.md" >}}
 [SharedDirectory]: {{< relref "/apis/map/shareddirectory.md" >}}
 [SharedMap]: {{< relref "/apis/map/sharedmap.md" >}}
-[SharedMatrix]: {{< relref "SharedMatrix" >}}
-[SharedNumberSequence]: {{< relref "SharedNumberSequence" >}}
+[SharedMatrix]: {{< relref "/apis/matrix/sharedmatrix.md" >}}
+[SharedNumberSequence]: {{< relref "/apis/sequence/sharednumbersequence.md" >}}
 [SharedObjectSequence]: {{< relref "/apis/sequence/sharedobjectsequence.md" >}}
-[SharedSequence]: {{< relref "SharedSequence" >}}
-[SharedString]: {{< relref "SharedString" >}}
+[SharedSequence]: {{< relref "/apis/sequence/sharedsequence.md" >}}
+[SharedString]: {{< relref "/apis/sequence/sharedstring.md" >}}
 [Quorum]: {{< relref "/apis/protocol-base/quorum.md" >}}
 
 <!-- Sequence methods -->

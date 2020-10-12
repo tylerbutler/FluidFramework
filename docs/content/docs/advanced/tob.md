@@ -103,14 +103,14 @@ Fluid objects' data structures will be summarized.
 [DataObjectFactory]: {{< relref "/apis/aqueduct/dataobjectfactory.md" >}}
 [Ink]: {{< relref "/apis/ink/ink.md" >}}
 [SharedCell]: {{< relref "/docs/guides/cell.md" >}}
-[SharedCounter]: {{< relref "SharedCounter" >}}
+[SharedCounter]: {{< relref "/apis/counter/sharedcounter.md" >}}
 [SharedDirectory]: {{< relref "/apis/map/shareddirectory.md" >}}
 [SharedMap]: {{< relref "/apis/map/sharedmap.md" >}}
-[SharedMatrix]: {{< relref "SharedMatrix" >}}
-[SharedNumberSequence]: {{< relref "SharedNumberSequence" >}}
+[SharedMatrix]: {{< relref "/apis/matrix/sharedmatrix.md" >}}
+[SharedNumberSequence]: {{< relref "/apis/sequence/sharednumbersequence.md" >}}
 [SharedObjectSequence]: {{< relref "/apis/sequence/sharedobjectsequence.md" >}}
-[SharedSequence]: {{< relref "SharedSequence" >}}
-[SharedString]: {{< relref "SharedString" >}}
+[SharedSequence]: {{< relref "/apis/sequence/sharedsequence.md" >}}
+[SharedString]: {{< relref "/apis/sequence/sharedstring.md" >}}
 [Quorum]: {{< relref "/apis/protocol-base/quorum.md" >}}
 
 <!-- Sequence methods -->
