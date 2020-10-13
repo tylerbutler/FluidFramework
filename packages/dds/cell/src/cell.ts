@@ -75,7 +75,7 @@ export class SharedCell<T extends Serializable = any> extends SharedObject<IShar
      * ```
      *
      * @param runtime - data store runtime the new shared map belongs to
-     * @param id - optional name of the shared map
+     * @param id - DEPRECATED - optional name of the shared map
      * @returns newly create shared map (but not attached yet)
      */
     public static create(runtime: IFluidDataStoreRuntime, id?: string) {

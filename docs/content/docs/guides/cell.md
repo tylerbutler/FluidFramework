@@ -46,6 +46,10 @@ const myCell = SharedCell.create(this.runtime);
 static create(runtime: IFluidDataStoreRuntime, id?: string): SharedCell<any>;
 ```
 
+{{< callout warning >}}
+The `id` parameter is deprecated and should not be used. It will be removed in a future version.
+{{< /callout >}}
+
 ### Getting and setting values
 
 The value stored in the cell can be set with the [set()][cell.set] method and retrieved with the [get()][cell.get]
