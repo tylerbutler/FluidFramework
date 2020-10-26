@@ -2,6 +2,8 @@ packages:
   # all packages in subdirs of packages/ and examples/
   - 'packages/**'
   - 'examples/**'
+  - 'server/routerlicious/packages/**'
+  - 'server/tinylicious'
   # exclude packages that are inside test/ directories
   # - '!**/test/**'
 link-workspace-packages: true

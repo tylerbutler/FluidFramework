@@ -65,7 +65,8 @@
     "watch:tsc": "lerna run --parallel tsc -- -- --watch",
     "watch:webpack": "lerna run --parallel webpack -- -- --watch",
     "webpack": "lerna run --no-sort webpack --stream",
-    "webpack:profile": "lerna run --no-sort webpack:profile --stream"
+    "webpack:profile": "lerna run --no-sort webpack:profile --stream",
+    "lage": "lage"
   },
   "nyc": {
     "all": true,
@@ -106,7 +107,8 @@
     "nyc": "^15.0.0",
     "rimraf": "^2.6.2",
     "run-script-os": "^1.0.7",
-    "typescript": "~3.7.4"
+    "typescript": "~3.7.4",
+    "lage": "0.24.0"
   },
   "fluidBuild": {
     "repoPackages": {
