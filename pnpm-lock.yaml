@@ -26,6 +26,158 @@ importers:
       rimraf: ^2.6.2
       run-script-os: ^1.0.7
       typescript: ~3.7.4
+  common/build/build-common:
+    specifiers: {}
+  common/build/eslint-config-fluid:
+    dependencies:
+      '@typescript-eslint/eslint-plugin': 2.17.0_a23ab4b07e7f961a6f3aee85fd7acb16
+      '@typescript-eslint/parser': 2.17.0_eslint@6.8.0
+      eslint: 6.8.0
+      eslint-plugin-eslint-comments: 3.1.2_eslint@6.8.0
+      eslint-plugin-import: 2.20.0_eslint@6.8.0
+      eslint-plugin-no-null: 1.0.2_eslint@6.8.0
+      eslint-plugin-optimize-regex: 1.1.7
+      eslint-plugin-prefer-arrow: 1.1.7_eslint@6.8.0
+      eslint-plugin-react: 7.18.3_eslint@6.8.0
+      eslint-plugin-unicorn: 15.0.1_eslint@6.8.0
+    specifiers:
+      '@typescript-eslint/eslint-plugin': ~2.17.0
+      '@typescript-eslint/parser': ~2.17.0
+      eslint: ~6.8.0
+      eslint-plugin-eslint-comments: ~3.1.2
+      eslint-plugin-import: 2.20.0
+      eslint-plugin-no-null: ~1.0.2
+      eslint-plugin-optimize-regex: ~1.1.7
+      eslint-plugin-prefer-arrow: ~1.1.7
+      eslint-plugin-react: ~7.18.0
+      eslint-plugin-unicorn: ~15.0.1
+  common/lib/common-definitions:
+    devDependencies:
+      '@fluidframework/build-common': 0.19.2_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../build/eslint-config-fluid'
+      '@microsoft/api-extractor': 7.10.4
+      '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
+      '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
+      concurrently: 5.3.0
+      copyfiles: 2.4.0
+      eslint: 7.9.0
+      eslint-plugin-eslint-comments: 3.2.0_eslint@7.9.0
+      eslint-plugin-import: 2.22.1_eslint@7.9.0
+      eslint-plugin-no-null: 1.0.2_eslint@7.9.0
+      eslint-plugin-prefer-arrow: 1.2.2_eslint@7.9.0
+      eslint-plugin-react: 7.21.5_eslint@7.9.0
+      eslint-plugin-unicorn: 22.0.0_eslint@7.9.0
+      rimraf: 2.7.1
+      typescript: 3.7.5
+      typescript-formatter: 7.1.0_typescript@3.7.5
+    specifiers:
+      '@fluidframework/build-common': ^0.19.2
+      '@fluidframework/eslint-config-fluid': ^0.20.0-0
+      '@microsoft/api-extractor': ^7.7.2
+      '@typescript-eslint/eslint-plugin': ~4.2.0
+      '@typescript-eslint/parser': ~4.2.0
+      concurrently: ^5.2.0
+      copyfiles: ^2.1.0
+      eslint: ~7.9.0
+      eslint-plugin-eslint-comments: ~3.2.0
+      eslint-plugin-import: ~2.22.0
+      eslint-plugin-no-null: ~1.0.2
+      eslint-plugin-prefer-arrow: ~1.2.2
+      eslint-plugin-react: ~7.21.2
+      eslint-plugin-unicorn: ~22.0.0
+      rimraf: ^2.6.2
+      typescript: ~3.7.4
+      typescript-formatter: 7.1.0
+  common/lib/common-utils:
+    dependencies:
+      '@fluidframework/common-definitions': 0.19.1
+      '@types/events': 3.0.0
+      assert: 2.0.0
+      base64-js: 1.3.1
+      events: 3.2.0
+      lodash: 4.17.20
+      sha.js: 2.4.11
+    devDependencies:
+      '@fluidframework/build-common': 0.19.2_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../build/eslint-config-fluid'
+      '@microsoft/api-extractor': 7.10.4
+      '@types/assert': 1.5.2
+      '@types/base64-js': 1.3.0
+      '@types/benchmark': 1.0.33
+      '@types/jest': 22.2.3
+      '@types/jest-environment-puppeteer': 2.2.0
+      '@types/mocha': 5.2.7
+      '@types/puppeteer': 1.3.0
+      '@types/sinon': 7.5.2
+      '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
+      '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
+      benchmark: 2.1.4
+      concurrently: 5.3.0
+      copyfiles: 2.4.0
+      eslint: 7.9.0
+      eslint-plugin-eslint-comments: 3.2.0_eslint@7.9.0
+      eslint-plugin-import: 2.22.1_eslint@7.9.0
+      eslint-plugin-no-null: 1.0.2_eslint@7.9.0
+      eslint-plugin-prefer-arrow: 1.2.2_eslint@7.9.0
+      eslint-plugin-react: 7.21.5_eslint@7.9.0
+      eslint-plugin-unicorn: 22.0.0_eslint@7.9.0
+      jest: 26.6.1
+      jest-junit: 10.0.0
+      jest-puppeteer: 4.4.0_puppeteer@2.1.1
+      mocha: 8.2.0
+      mocha-junit-reporter: 1.23.3_mocha@8.2.0
+      nyc: 15.1.0
+      puppeteer: 2.1.1
+      rimraf: 2.7.1
+      sinon: 7.5.0
+      ts-jest: 26.4.2_jest@26.6.1+typescript@3.7.5
+      ts-mocha: 6.0.0_mocha@8.2.0
+      typescript: 3.7.5
+      typescript-formatter: 7.1.0_typescript@3.7.5
+    specifiers:
+      '@fluidframework/build-common': ^0.19.2
+      '@fluidframework/common-definitions': ^0.19.1
+      '@fluidframework/eslint-config-fluid': ^0.20.0-0
+      '@microsoft/api-extractor': ^7.7.2
+      '@types/assert': ^1.5.1
+      '@types/base64-js': ^1.3.0
+      '@types/benchmark': ^1.0.31
+      '@types/events': ^3.0.0
+      '@types/jest': 22.2.3
+      '@types/jest-environment-puppeteer': 2.2.0
+      '@types/mocha': ^5.2.5
+      '@types/puppeteer': 1.3.0
+      '@types/sinon': ^7.0.13
+      '@typescript-eslint/eslint-plugin': ~4.2.0
+      '@typescript-eslint/parser': ~4.2.0
+      assert: ^2.0.0
+      base64-js: ^1.3.1
+      benchmark: ^2.1.4
+      concurrently: ^5.2.0
+      copyfiles: ^2.1.0
+      eslint: ~7.9.0
+      eslint-plugin-eslint-comments: ~3.2.0
+      eslint-plugin-import: ~2.22.0
+      eslint-plugin-no-null: ~1.0.2
+      eslint-plugin-prefer-arrow: ~1.2.2
+      eslint-plugin-react: ~7.21.2
+      eslint-plugin-unicorn: ~22.0.0
+      events: ^3.1.0
+      jest: ^26.4.2
+      jest-junit: ^10.0.0
+      jest-puppeteer: ^4.4.0
+      lodash: ^4.17.19
+      mocha: ^8.1.1
+      mocha-junit-reporter: ^1.18.0
+      nyc: ^15.0.0
+      puppeteer: ^2.1.0
+      rimraf: ^2.6.2
+      sha.js: ^2.4.11
+      sinon: ^7.4.2
+      ts-jest: ^26.2.0
+      ts-mocha: ^6.0.0
+      typescript: ~3.7.4
+      typescript-formatter: 7.1.0
   examples/apps/collaborative-textarea:
     dependencies:
       '@fluidframework/aqueduct': 'link:../../../packages/framework/aqueduct'
@@ -38,7 +190,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/get-session-storage-container': 'link:../../utils/get-session-storage-container'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
@@ -246,7 +398,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/get-session-storage-container': 'link:../../utils/get-session-storage-container'
       '@fluidframework/test-tools': 0.2.3074
       '@types/node': 10.17.42
@@ -357,7 +509,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
       '@types/react': 16.9.53
@@ -424,7 +576,7 @@ importers:
       '@fluidframework/view-interfaces': 'link:../../../packages/framework/view-interfaces'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -513,7 +665,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -598,7 +750,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
       '@types/jest': 22.2.3
@@ -674,7 +826,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
       '@types/jest': 22.2.3
@@ -751,7 +903,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -835,7 +987,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
       '@types/jest': 22.2.3
@@ -913,7 +1065,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
       '@types/jest': 22.2.3
@@ -1007,7 +1159,7 @@ importers:
       shape-detector: 0.2.1
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../../packages/test/mocha-test-setup'
       '@types/assert': 1.5.2
       '@types/debug': 4.1.5
@@ -1098,7 +1250,7 @@ importers:
       codemirror: 5.58.2
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -1171,7 +1323,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -1249,7 +1401,7 @@ importers:
   examples/data-objects/flow-util-lib:
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../../packages/test/mocha-test-setup'
       '@types/benchmark': 1.0.33
       '@types/mocha': 5.2.7
@@ -1322,7 +1474,7 @@ importers:
       '@types/node': 10.17.42
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
       concurrently: 5.3.0
@@ -1378,7 +1530,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
       react-image-gallery: 0.9.1_react@16.14.0
     devDependencies:
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
       '@types/react-dom': 16.9.8
@@ -1451,7 +1603,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -1525,7 +1677,7 @@ importers:
       katex: 0.10.2
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -1603,7 +1755,7 @@ importers:
       monaco-editor: 0.15.6
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -1682,7 +1834,7 @@ importers:
       '@fluidframework/map': 'link:../../../../packages/dds/map'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -1760,7 +1912,7 @@ importers:
       react: 16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -1855,7 +2007,7 @@ importers:
       react: 16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -1950,7 +2102,7 @@ importers:
       '@fluidframework/map': 'link:../../../../packages/dds/map'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -2022,7 +2174,7 @@ importers:
   examples/data-objects/multiview/interface:
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@types/expect-puppeteer': 2.2.1
       '@types/node': 10.17.42
       '@types/puppeteer': 1.3.0
@@ -2076,7 +2228,7 @@ importers:
       react: 16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -2158,7 +2310,7 @@ importers:
       react: 16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -2240,7 +2392,7 @@ importers:
       react: 16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -2329,7 +2481,7 @@ importers:
     devDependencies:
       '@babel/plugin-proposal-class-properties': 7.12.1
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
       '@types/react': 16.9.53
@@ -2412,7 +2564,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/expect-puppeteer': 2.2.1
@@ -2502,7 +2654,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
       '@types/react': 16.9.53
@@ -2569,7 +2721,7 @@ importers:
       bootstrap: 3.4.1
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
       concurrently: 5.3.0
@@ -2654,7 +2806,7 @@ importers:
       prosemirror-view: 1.16.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -2737,7 +2889,7 @@ importers:
       react: 16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/node': 10.17.42
       '@types/react': 16.9.53
@@ -2802,7 +2954,7 @@ importers:
       lodash: 4.17.20
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/async': 2.4.2
       '@types/lodash': 4.14.162
@@ -2875,7 +3027,7 @@ importers:
       '@types/node': 10.17.42
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
       concurrently: 5.3.0
@@ -3050,7 +3202,7 @@ importers:
       '@fluidframework/aqueduct': 'link:../../../packages/framework/aqueduct'
       '@fluidframework/view-interfaces': 'link:../../../packages/framework/view-interfaces'
     devDependencies:
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -3115,7 +3267,7 @@ importers:
       simplemde: 1.11.2
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -3191,7 +3343,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/local-driver': 'link:../../../packages/drivers/local-driver'
       '@fluidframework/mocha-test-setup': 'link:../../../packages/test/mocha-test-setup'
       '@fluidframework/runtime-utils': 'link:../../../packages/runtime/runtime-utils'
@@ -3268,7 +3420,7 @@ importers:
       '@tiny-calc/micro': 0.0.0-alpha.5
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -3334,7 +3486,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
@@ -3419,7 +3571,7 @@ importers:
       '@types/node': 10.17.42
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
       concurrently: 5.3.0
@@ -3493,7 +3645,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../../packages/tools/webpack-fluid-loader'
       '@types/node': 10.17.42
@@ -3602,7 +3754,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/local-driver': 'link:../../../packages/drivers/local-driver'
       '@fluidframework/mocha-test-setup': 'link:../../../packages/test/mocha-test-setup'
       '@fluidframework/runtime-utils': 'link:../../../packages/runtime/runtime-utils'
@@ -3719,7 +3871,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@types/expect-puppeteer': 2.2.1
       '@types/jest': 22.2.3
@@ -3807,7 +3959,7 @@ importers:
       '@fluidframework/get-tinylicious-container': 'link:../../../utils/get-tinylicious-container'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@types/expect-puppeteer': 2.2.1
       '@types/jest': 22.2.3
@@ -3884,7 +4036,7 @@ importers:
       '@fluidframework/core-interfaces': 'link:../../../packages/loader/core-interfaces'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -3934,7 +4086,7 @@ importers:
       '@fluidframework/web-code-loader': 'link:../../../packages/loader/web-code-loader'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
       concurrently: 5.3.0
@@ -4000,7 +4152,7 @@ importers:
       '@fluidframework/web-code-loader': 'link:../../../packages/loader/web-code-loader'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -4070,7 +4222,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
       concurrently: 5.3.0
@@ -4118,7 +4270,7 @@ importers:
       '@fluidframework/sequence': 'link:../../../packages/dds/sequence'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@mixer/webpack-bundle-compare': 0.1.0
       '@types/node': 10.17.42
       '@types/puppeteer': 1.3.0
@@ -4173,7 +4325,7 @@ importers:
       '@fluidframework/core-interfaces': 'link:../../../packages/loader/core-interfaces'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -4216,7 +4368,7 @@ importers:
       '@fluidframework/server-local-server': 0.1014.0-7764
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -4267,7 +4419,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@types/jsrsasign': 8.0.7
       '@types/mocha': 5.2.7
@@ -4325,7 +4477,7 @@ importers:
       request: 2.88.2
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@types/node': 10.17.42
       '@types/request': 2.48.5
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -4374,7 +4526,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -4441,7 +4593,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -4507,7 +4659,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -4575,7 +4727,7 @@ importers:
       path-browserify: 1.0.1
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -4652,7 +4804,7 @@ importers:
       tslib: 1.14.1
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -4737,7 +4889,7 @@ importers:
       '@fluidframework/telemetry-utils': 'link:../../utils/telemetry-utils'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@types/diff': 3.5.3
@@ -4811,7 +4963,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -4875,7 +5027,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -4948,7 +5100,7 @@ importers:
       lodash: 4.17.20
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/gitresources': 'link:../../../server/routerlicious/packages/gitresources'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/server-services-client': 0.1014.0-7764
@@ -5041,7 +5193,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -5094,7 +5246,7 @@ importers:
       '@fluidframework/shared-object-base': 'link:../shared-object-base'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -5163,7 +5315,7 @@ importers:
       '@fluidframework/replay-driver': 'link:../replay-driver'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/mocha': 5.2.7
       '@types/node': 10.17.42
@@ -5220,7 +5372,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -5273,7 +5425,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/debug': 4.1.5
       '@types/node': 10.17.42
@@ -5326,7 +5478,7 @@ importers:
       '@fluidframework/odsp-driver': 'link:../odsp-driver'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@types/mocha': 5.2.7
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -5380,7 +5532,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/debug': 4.1.5
       '@types/mocha': 5.2.7
@@ -5452,7 +5604,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@types/jsrsasign': 8.0.7
       '@types/mocha': 5.2.7
@@ -5536,7 +5688,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@microsoft/api-extractor': 7.10.4
       '@types/debug': 4.1.5
@@ -5613,7 +5765,7 @@ importers:
       '@fluidframework/odsp-driver': 'link:../odsp-driver'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@types/mocha': 5.2.7
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -5665,7 +5817,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/debug': 4.1.5
       '@types/mocha': 5.2.7
@@ -5737,7 +5889,7 @@ importers:
       ws: 6.2.1
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/debug': 4.1.5
       '@types/jwt-decode': 2.2.1
@@ -5812,7 +5964,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@types/mocha': 5.2.7
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -5860,7 +6012,7 @@ importers:
       nconf: 0.10.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@types/mocha': 5.2.7
       '@types/nconf': 0.0.37
@@ -5924,7 +6076,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@microsoft/api-extractor': 7.10.4
       '@types/mocha': 5.2.7
@@ -6003,7 +6155,7 @@ importers:
       '@fluidframework/shared-object-base': 'link:../../dds/shared-object-base'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@microsoft/api-extractor': 7.10.4
       '@types/mocha': 5.2.7
@@ -6068,7 +6220,7 @@ importers:
       '@fluidframework/sequence': 'link:../../dds/sequence'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -6143,7 +6295,7 @@ importers:
       '@fluidframework/shared-summary-block': 'link:../../dds/shared-summary-block'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@microsoft/api-extractor': 7.10.4
       '@types/mocha': 5.2.7
@@ -6210,7 +6362,7 @@ importers:
       react: 16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/node': 10.17.42
       '@types/react': 16.9.53
@@ -6266,7 +6418,7 @@ importers:
       '@fluidframework/runtime-utils': 'link:../../runtime/runtime-utils'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -6336,7 +6488,7 @@ importers:
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
       '@fluidframework/datastore': 'link:../../runtime/datastore'
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@microsoft/api-extractor': 7.10.4
       '@types/mocha': 5.2.7
@@ -6394,7 +6546,7 @@ importers:
       '@fluidframework/sequence': 'link:../../dds/sequence'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -6466,7 +6618,7 @@ importers:
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/react': 16.9.53
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -6511,7 +6663,7 @@ importers:
       '@fluidframework/core-interfaces': 'link:../../loader/core-interfaces'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -6559,7 +6711,7 @@ importers:
       '@fluidframework/web-code-loader': 'link:../../loader/web-code-loader'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../../runtime/test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -6640,7 +6792,7 @@ importers:
       '@fluidframework/protocol-definitions': 'link:../../../server/routerlicious/packages/protocol-definitions'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -6700,7 +6852,7 @@ importers:
     devDependencies:
       '@fluid-internal/test-loader-utils': 'link:../test-loader-utils'
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@microsoft/api-extractor': 7.10.4
       '@types/debug': 4.1.5
@@ -6776,7 +6928,7 @@ importers:
       '@fluidframework/telemetry-utils': 'link:../../utils/telemetry-utils'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@microsoft/api-extractor': 7.10.4
       '@types/mocha': 5.2.7
@@ -6827,7 +6979,7 @@ importers:
   packages/loader/core-interfaces:
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -6870,7 +7022,7 @@ importers:
       '@fluidframework/protocol-definitions': 'link:../../../server/routerlicious/packages/protocol-definitions'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -6919,7 +7071,7 @@ importers:
       '@fluidframework/telemetry-utils': 'link:../../utils/telemetry-utils'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/mocha': 5.2.7
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -6979,7 +7131,7 @@ importers:
       debug: 4.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/debug': 4.1.5
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -7028,7 +7180,7 @@ importers:
       '@fluidframework/protocol-definitions': 'link:../../../server/routerlicious/packages/protocol-definitions'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
       concurrently: 5.3.0
@@ -7068,7 +7220,7 @@ importers:
       isomorphic-fetch: 2.2.1
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/isomorphic-fetch': 0.0.35
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -7122,7 +7274,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@types/debug': 4.1.5
       '@types/mocha': 5.2.7
       '@types/node': 10.17.42
@@ -7197,7 +7349,7 @@ importers:
       jwt-decode: 2.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/debug': 4.1.5
       '@types/jwt-decode': 2.2.1
@@ -7291,7 +7443,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@fluidframework/test-runtime-utils': 'link:../test-runtime-utils'
       '@microsoft/api-extractor': 7.10.4
@@ -7376,7 +7528,7 @@ importers:
       '@types/node': 10.17.42
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -7440,7 +7592,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@microsoft/api-extractor': 7.10.4
       '@types/assert': 1.5.2
@@ -7522,7 +7674,7 @@ importers:
       '@types/node': 10.17.42
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -7576,7 +7728,7 @@ importers:
       '@types/node': 10.17.42
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -7630,7 +7782,7 @@ importers:
       '@fluidframework/runtime-definitions': 'link:../runtime-definitions'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@microsoft/api-extractor': 7.10.4
       '@types/benchmark': 1.0.33
@@ -7709,7 +7861,7 @@ importers:
       uuid: 3.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@types/jsrsasign': 8.0.7
       '@types/mocha': 5.2.7
@@ -7794,7 +7946,7 @@ importers:
       '@fluidframework/driver-base': 'link:../../drivers/driver-base'
       '@fluidframework/driver-definitions': 'link:../../loader/driver-definitions'
       '@fluidframework/driver-utils': 'link:../../loader/driver-utils'
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/ink': 'link:../../dds/ink'
       '@fluidframework/local-driver': 'link:../../drivers/local-driver'
       '@fluidframework/map': 'link:../../dds/map'
@@ -7951,7 +8103,7 @@ importers:
       '@fluidframework/common-utils': 0.24.0
       '@fluidframework/container-loader': 'link:../../loader/container-loader'
       '@fluidframework/container-runtime': 'link:../../runtime/container-runtime'
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../mocha-test-setup'
       '@fluidframework/protocol-definitions': 'link:../../../server/routerlicious/packages/protocol-definitions'
       '@fluidframework/sequence': 'link:../../dds/sequence'
@@ -8012,7 +8164,7 @@ importers:
   packages/test/mocha-test-setup:
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/mocha': 5.2.7
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -8066,7 +8218,7 @@ importers:
       commander: 5.1.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../mocha-test-setup'
       '@types/mocha': 5.2.7
       '@types/node': 10.17.42
@@ -8123,7 +8275,7 @@ importers:
       jsonschema: 1.4.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../mocha-test-setup'
       '@types/mocha': 5.2.7
       '@types/node': 10.17.42
@@ -8190,7 +8342,7 @@ importers:
       '@fluidframework/server-local-server': 0.1014.0-7764
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/diff': 3.5.3
       '@types/mocha': 5.2.7
@@ -8267,7 +8419,7 @@ importers:
       react: 16.14.0
       react-dom: 16.14.0_react@16.14.0
     devDependencies:
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/test-tools': 0.2.3074
       '@fluidframework/webpack-fluid-loader': 'link:../../tools/webpack-fluid-loader'
       '@types/jest': 22.2.3
@@ -8354,7 +8506,7 @@ importers:
       '@fluidframework/tool-utils': 'link:../../utils/tool-utils'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -8410,7 +8562,7 @@ importers:
       '@fluidframework/sequence': 'link:../../dds/sequence'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -8466,7 +8618,7 @@ importers:
       '@fluidframework/telemetry-utils': 'link:../../utils/telemetry-utils'
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@microsoft/api-extractor': 7.10.4
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
@@ -8543,7 +8695,7 @@ importers:
       webpack-dev-server: 3.11.0_93ca2875a658e9d1552850624e6b91c7
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@types/express': 4.17.8
       '@types/mocha': 5.2.7
@@ -8633,7 +8785,7 @@ importers:
       node-fetch: 2.6.1
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
       concurrently: 5.3.0
@@ -8674,7 +8826,7 @@ importers:
       events: 3.2.0
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@fluidframework/mocha-test-setup': 'link:../../test/mocha-test-setup'
       '@microsoft/api-extractor': 7.10.4
       '@types/debug': 4.1.5
@@ -8739,7 +8891,7 @@ importers:
       proper-lockfile: 4.1.1
     devDependencies:
       '@fluidframework/build-common': 0.19.2_typescript@3.7.5
-      '@fluidframework/eslint-config-fluid': 0.20.0-5959_typescript@3.7.5
+      '@fluidframework/eslint-config-fluid': 'link:../../../common/build/eslint-config-fluid'
       '@types/node': 10.17.42
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -8811,7 +8963,7 @@ importers:
       typescript-formatter: 7.1.0
   server/routerlicious/packages/protocol-base:
     dependencies:
-      '@fluidframework/common-utils': 0.24.0
+      '@fluidframework/common-utils': 'link:../../../../common/lib/common-utils'
       '@fluidframework/gitresources': 'link:../gitresources'
       '@fluidframework/protocol-definitions': 'link:../protocol-definitions'
       assert: 2.0.0
@@ -8844,7 +8996,7 @@ importers:
       typescript-formatter: 7.1.0_typescript@3.8.3
     specifiers:
       '@fluidframework/build-common': ^0.19.2
-      '@fluidframework/common-utils': ^0.24.0-0
+      '@fluidframework/common-utils': ^0.25.0-0
       '@fluidframework/eslint-config-fluid': ^0.19.1
       '@fluidframework/gitresources': ^0.1014.0
       '@fluidframework/protocol-definitions': ^0.1014.0
@@ -9018,7 +9170,6 @@ packages:
   /@babel/code-frame/7.10.4:
     dependencies:
       '@babel/highlight': 7.10.4
-    dev: true
     resolution:
       integrity: sha512-vG6SvB6oYEhvgisZNFRmRCUkLz11c7rp+tbNTynGqc6mS1d5ATd/sGyV6W0KZZnXRKMTzZDRgQT3Ou9jhpAfUg==
   /@babel/core/7.12.3:
@@ -9136,7 +9287,6 @@ packages:
     resolution:
       integrity: sha512-74Vejvp6mHkGE+m+k5vHY93FX2cAtrw1zXrZXRlG4l410Nm9PxfEiVTn1PjDPV5SnmieiueY4AFg2xqhNFuuZg==
   /@babel/helper-validator-identifier/7.10.4:
-    dev: true
     resolution:
       integrity: sha512-3U9y+43hz7ZM+rzG24Qe2mufW5KhvFg/NhnNph+i9mgCtdTCtMJuI1TMkrIUiK7Ix4PYlRF9I5dhqaLYA/ADXw==
   /@babel/helpers/7.12.1:
@@ -9152,7 +9302,6 @@ packages:
       '@babel/helper-validator-identifier': 7.10.4
       chalk: 2.4.2
       js-tokens: 4.0.0
-    dev: true
     resolution:
       integrity: sha512-i6rgnR/YgPEQzZZnbTHHuZdlE8qyoBNalD6F+q4vAFlcMEcqmkoG+mPqJYJCo63qPf74+Y1UZsl3l6f7/RIkmA==
   /@babel/parser/7.12.3:
@@ -9784,23 +9933,6 @@ packages:
       typescript: '*'
     resolution:
       integrity: sha512-ihzZ7AQwwPTVaHmlRkf1Yo77Sw+0OnGSpspHeRH5QYgNAtOL/lCL2kPVrjJWzTOU6VTq6biUXO2cvjQAF1lhdA==
-  /@fluidframework/eslint-config-fluid/0.20.0-5959_typescript@3.7.5:
-    dependencies:
-      '@typescript-eslint/eslint-plugin': 2.17.0_ddf39c6589a88df1614edc9f5f44e849
-      '@typescript-eslint/parser': 2.17.0_eslint@6.8.0+typescript@3.7.5
-      eslint: 6.8.0
-      eslint-plugin-eslint-comments: 3.1.2_eslint@6.8.0
-      eslint-plugin-import: 2.20.0_eslint@6.8.0
-      eslint-plugin-no-null: 1.0.2_eslint@6.8.0
-      eslint-plugin-optimize-regex: 1.1.7
-      eslint-plugin-prefer-arrow: 1.1.7_eslint@6.8.0
-      eslint-plugin-react: 7.18.3_eslint@6.8.0
-      eslint-plugin-unicorn: 15.0.1_eslint@6.8.0
-    dev: true
-    peerDependencies:
-      typescript: '*'
-    resolution:
-      integrity: sha512-T7cJzCUt8jEEkZP+gYXkZPZgiR3STo049acHTJS4EBHUfMQxjIkHcyMZsCNxIhC3ZaROZf++GYuQyMlCbOY/EA==
   /@fluidframework/gitresources/0.1012.2:
     dev: true
     resolution:
@@ -11759,6 +11891,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-Pzh9O3sTK8V6I1olsXpCfj2k/ygO2q1X0vhhnDrEQyYLHZesWz+zMZMVcwXLCYf0U36EtmyYaFGPfXlTtDHe3A==
+  /@types/base64-js/1.3.0:
+    dev: true
+    resolution:
+      integrity: sha512-ZmI0sZGAUNXUfMWboWwi4LcfpoVUYldyN6Oe0oJ5cCsHDU/LlRq8nQKPXhYLOx36QYSW9bNIb1vvRrD6K7Llgw==
   /@types/benchmark/1.0.33:
     dev: true
     resolution:
@@ -11797,7 +11933,6 @@ packages:
     resolution:
       integrity: sha512-O2+umEIlHBVyi+ePmucPjpINqTvSnsz+hAok0D4IpvrOsIsDr6c34B0AbNXW2UDVYuxbv51z5dxnrRt23ohgWg==
   /@types/eslint-visitor-keys/1.0.0:
-    dev: true
     resolution:
       integrity: sha512-OCutwjDZ4aFS6PB1UZ988C4YgwlBHJd6wCeQqaLdmadZ/7e+w79+hbMUFC1QXDNCmdyoRfAFdm0RypzwR+Qpag==
   /@types/estree/0.0.45:
@@ -11900,7 +12035,6 @@ packages:
     resolution:
       integrity: sha512-q+De3S/Ri6U9uPx89YA1XuC+QIBgndIfvBaaJG0pRT8Oqa75k4Mr7G9CRZjIvlbLGIukO/31DFGFJYlQBmXf/A==
   /@types/json-schema/7.0.6:
-    dev: true
     resolution:
       integrity: sha512-3c+yGKvVP5Y9TYBEibGNR+kLtijnj7mYrXRg+WpFb2X9xm04g/DXYkfg4hmzJQosc9snFNUPkbYIhu+KAm6jJw==
   /@types/json5/0.0.29:
@@ -11918,6 +12052,10 @@ packages:
   /@types/lodash/4.14.162:
     resolution:
       integrity: sha512-alvcho1kRUnnD1Gcl4J+hK0eencvzq9rmzvFPRmP5rPHx9VVsJj6bKLTATPVf9ktgv4ujzh7T+XWKp+jhuODig==
+  /@types/mime-types/2.1.0:
+    dev: true
+    resolution:
+      integrity: sha1-nKUs2jY/aZxpRmwqbM2q2RPqenM=
   /@types/mime/2.0.3:
     dev: true
     resolution:
@@ -11960,7 +12098,6 @@ packages:
     resolution:
       integrity: sha512-33/L34xS7HVUx23e0wOT2V1qPF1IrHgQccdJVm9uXGTB9vFBrrzBtkQymT8VskeKOxjz55MSqMv0xuLq+u98WQ==
   /@types/normalize-package-data/2.4.0:
-    dev: true
     resolution:
       integrity: sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==
   /@types/orderedmap/1.0.0:
@@ -12190,17 +12327,16 @@ packages:
         optional: true
     resolution:
       integrity: sha512-tg/OMOtPeXlvk0ES8mZzEZ4gd1ruSE03nsKcK+teJhxYv5CPCXK6Mb/OK6NpB4+CqGTHs4MVeoSZXNFqpT1PyQ==
-  /@typescript-eslint/eslint-plugin/2.17.0_ddf39c6589a88df1614edc9f5f44e849:
+  /@typescript-eslint/eslint-plugin/2.17.0_a23ab4b07e7f961a6f3aee85fd7acb16:
     dependencies:
-      '@typescript-eslint/experimental-utils': 2.17.0_eslint@6.8.0+typescript@3.7.5
-      '@typescript-eslint/parser': 2.17.0_eslint@6.8.0+typescript@3.7.5
+      '@typescript-eslint/experimental-utils': 2.17.0_eslint@6.8.0
+      '@typescript-eslint/parser': 2.17.0_eslint@6.8.0
       eslint: 6.8.0
       eslint-utils: 1.4.3
       functional-red-black-tree: 1.0.1
       regexpp: 3.1.0
-      tsutils: 3.17.1_typescript@3.7.5
-      typescript: 3.7.5
-    dev: true
+      tsutils: 3.17.1
+    dev: false
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     peerDependencies:
@@ -12236,18 +12372,17 @@ packages:
         optional: true
     resolution:
       integrity: sha512-zBNRkzvLSwo6y5TG0DVcmshZIYBHKtmzD4N+LYnfTFpzc4bc79o8jNRSb728WV7A4Cegbs+MV5IRAj8BKBgOVQ==
-  /@typescript-eslint/experimental-utils/2.17.0_eslint@6.8.0+typescript@3.7.5:
+  /@typescript-eslint/experimental-utils/2.17.0_eslint@6.8.0:
     dependencies:
       '@types/json-schema': 7.0.6
-      '@typescript-eslint/typescript-estree': 2.17.0_typescript@3.7.5
+      '@typescript-eslint/typescript-estree': 2.17.0
       eslint: 6.8.0
       eslint-scope: 5.1.1
-    dev: true
+    dev: false
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     peerDependencies:
       eslint: '*'
-      typescript: '*'
     resolution:
       integrity: sha512-2bNf+mZ/3mj5/3CP56v+ldRK3vFy9jOvmCPs/Gr2DeSJh+asPZrhFniv4QmQsHWQFPJFWhFHgkGgJeRmK4m8iQ==
   /@typescript-eslint/experimental-utils/2.17.0_eslint@6.8.0+typescript@3.8.3:
@@ -12281,15 +12416,14 @@ packages:
       typescript: '*'
     resolution:
       integrity: sha512-5BBj6BjgHEndBaQQpUVzRIPERz03LBc0MCQkHwUaH044FJFL08SwWv/sQftk7gf0ShZ2xZysz0LTwCwNt4Xu3w==
-  /@typescript-eslint/parser/2.17.0_eslint@6.8.0+typescript@3.7.5:
+  /@typescript-eslint/parser/2.17.0_eslint@6.8.0:
     dependencies:
       '@types/eslint-visitor-keys': 1.0.0
-      '@typescript-eslint/experimental-utils': 2.17.0_eslint@6.8.0+typescript@3.7.5
-      '@typescript-eslint/typescript-estree': 2.17.0_typescript@3.7.5
+      '@typescript-eslint/experimental-utils': 2.17.0_eslint@6.8.0
+      '@typescript-eslint/typescript-estree': 2.17.0
       eslint: 6.8.0
       eslint-visitor-keys: 1.3.0
-      typescript: 3.7.5
-    dev: true
+    dev: false
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     peerDependencies:
@@ -12353,7 +12487,7 @@ packages:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     resolution:
       integrity: sha512-xkv5nIsxfI/Di9eVwN+G9reWl7Me9R5jpzmZUch58uQ7g0/hHVuGUbbn4NcxcM5y/R4wuJIIEPKPDb5l4Fdmwg==
-  /@typescript-eslint/typescript-estree/2.17.0_typescript@3.7.5:
+  /@typescript-eslint/typescript-estree/2.17.0:
     dependencies:
       debug: 4.2.0
       eslint-visitor-keys: 1.3.0
@@ -12361,9 +12495,8 @@ packages:
       is-glob: 4.0.1
       lodash: 4.17.20
       semver: 6.3.0
-      tsutils: 3.17.1_typescript@3.7.5
-      typescript: 3.7.5
-    dev: true
+      tsutils: 3.17.1
+    dev: false
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     peerDependencies:
@@ -12762,7 +12895,6 @@ packages:
   /acorn-jsx/5.3.1_acorn@7.4.1:
     dependencies:
       acorn: 7.4.1
-    dev: true
     peerDependencies:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
     resolution:
@@ -12794,7 +12926,6 @@ packages:
     resolution:
       integrity: sha512-XtGIhXwF8YM8bJhGxG5kXgjkEuNGLTkoYqVE+KMR+aspr4KGYmKYg7yUe3KghyQ9yheNwLnjmzh/7+gfDBmHCQ==
   /acorn/7.4.1:
-    dev: true
     engines:
       node: '>=0.4.0'
     hasBin: true
@@ -12825,6 +12956,12 @@ packages:
       node: '>= 4.0.0'
     resolution:
       integrity: sha512-salcGninV0nPrwpGNn4VTXBb1SOuXQBiqbrNXoeizJsHrsL6ERFM2Ne3JUSBWRE6aeNJI2ROP/WEEIDUiDe3cg==
+  /agent-base/5.1.1:
+    dev: true
+    engines:
+      node: '>= 6.0.0'
+    resolution:
+      integrity: sha512-TMeqbNl2fMW0nMjTEPOwe3J/PRFP4vqeoNuQMG0HlMrtm5QxKqdvAkZ1pRBQ/ulIyDD5Yq0nJ7YbdD8ey0TO3g==
   /agentkeepalive/3.5.2:
     dependencies:
       humanize-ms: 1.2.1
@@ -12902,7 +13039,6 @@ packages:
   /ansi-escapes/4.3.1:
     dependencies:
       type-fest: 0.11.0
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -12930,7 +13066,6 @@ packages:
     resolution:
       integrity: sha512-1apePfXM1UOSqw0o9IiFAovVz9M5S1Dg+4TrDwfMewQ6p/rmMueb7tWZjQ1rx4Loy1ArBggoqGpfqqdI4rondg==
   /ansi-regex/5.0.0:
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -12951,7 +13086,6 @@ packages:
   /ansi-styles/4.3.0:
     dependencies:
       color-convert: 2.0.1
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -13065,7 +13199,6 @@ packages:
       define-properties: 1.1.3
       es-abstract: 1.17.7
       is-string: 1.0.5
-    dev: true
     engines:
       node: '>= 0.4'
     resolution:
@@ -13097,7 +13230,6 @@ packages:
     dependencies:
       define-properties: 1.1.3
       es-abstract: 1.17.7
-    dev: true
     engines:
       node: '>= 0.4'
     resolution:
@@ -13181,7 +13313,6 @@ packages:
     resolution:
       integrity: sha1-ECyenpAF0+fjgpvwxPok7oYu6bk=
   /astral-regex/1.0.0:
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -13868,7 +13999,6 @@ packages:
     resolution:
       integrity: sha1-BuuE8A7qQT2oav/vrL/7Ngk7PFA=
   /callsites/3.1.0:
-    dev: true
     engines:
       node: '>=6'
     resolution:
@@ -13985,7 +14115,6 @@ packages:
       ansi-styles: 3.2.1
       escape-string-regexp: 1.0.5
       supports-color: 5.5.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -14003,7 +14132,6 @@ packages:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
-    dev: true
     engines:
       node: '>=10'
     resolution:
@@ -14015,7 +14143,6 @@ packages:
     resolution:
       integrity: sha512-kWWXztvZ5SBQV+eRgKFeh8q5sLuZY2+8WUIzlxWVTg+oGwY14qylx1KbKzHd8P6ZYkAg0xyIDU9JMHhyJMZ1jw==
   /chardet/0.7.0:
-    dev: true
     resolution:
       integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==
   /charenc/0.0.2:
@@ -14081,7 +14208,6 @@ packages:
     resolution:
       integrity: sha512-vsGdkwSCDpWmP80ncATX7iea5DWQemg1UgCW5J8tqjU3lYw4FBYuj89J0CTVomA7BEfvSZd84GmHko+MxFQU2A==
   /ci-info/2.0.0:
-    dev: true
     resolution:
       integrity: sha512-5tK7EtrZ0N+OLFMthtqOj4fI2Jeb88C4CAZPu25LDVUgXJ0A3Js4PMGqrn0JU1W0Mh1/Z8wZzYPxqUrXeBboCQ==
   /cipher-base/1.0.4:
@@ -14120,7 +14246,6 @@ packages:
   /clean-regexp/1.0.0:
     dependencies:
       escape-string-regexp: 1.0.5
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -14168,7 +14293,6 @@ packages:
   /cli-cursor/3.1.0:
     dependencies:
       restore-cursor: 3.1.0
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -14178,7 +14302,6 @@ packages:
     resolution:
       integrity: sha512-GRMWDxpOB6Dgk2E5Uo+3eEBvtOOlimMmpbFiKuLFnQzYDavtLFY3K5ona41jgN/WdRZtG7utuVSVTL4HbZHGkw==
   /cli-width/3.0.0:
-    dev: true
     engines:
       node: '>= 10'
     resolution:
@@ -14299,7 +14422,6 @@ packages:
   /color-convert/2.0.1:
     dependencies:
       color-name: 1.1.4
-    dev: true
     engines:
       node: '>=7.0.0'
     resolution:
@@ -14308,7 +14430,6 @@ packages:
     resolution:
       integrity: sha1-p9BVi9icQveV3UIyj3QIMcpTvCU=
   /color-name/1.1.4:
-    dev: true
     resolution:
       integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==
   /colors/1.2.5:
@@ -14524,7 +14645,6 @@ packages:
     resolution:
       integrity: sha1-wguW2MYXdIqvHBYCF2DNJ/y4y3U=
   /contains-path/0.1.0:
-    dev: true
     engines:
       node: '>=0.10.0'
     resolution:
@@ -15150,7 +15270,6 @@ packages:
     resolution:
       integrity: sha512-LOHxIOaPYdHlJRtCQfDIVZtfw/ufM8+rVj649RIHzcm/vGwQRXFt6OPqIFWsm2XEMrNIEtWR64sY1LEKD2vAOA==
   /deep-is/0.1.3:
-    dev: true
     resolution:
       integrity: sha1-s2nW+128E+7PUk+RsHD+7cNXzzQ=
   /deepmerge/4.2.2:
@@ -15355,7 +15474,6 @@ packages:
     dependencies:
       esutils: 2.0.3
       isarray: 1.0.0
-    dev: true
     engines:
       node: '>=0.10.0'
     resolution:
@@ -15363,7 +15481,6 @@ packages:
   /doctrine/2.1.0:
     dependencies:
       esutils: 2.0.3
-    dev: true
     engines:
       node: '>=0.10.0'
     resolution:
@@ -15371,7 +15488,6 @@ packages:
   /doctrine/3.0.0:
     dependencies:
       esutils: 2.0.3
-    dev: true
     engines:
       node: '>=6.0.0'
     resolution:
@@ -15559,7 +15675,6 @@ packages:
     resolution:
       integrity: sha512-CwBLREIQ7LvYFB0WyRvwhq5N5qPhc6PMjD6bYggFlI5YyDgl+0vxq5VHbMOFqLg7hfWzmu8T5Z1QofhmTIhItA==
   /emoji-regex/8.0.0:
-    dev: true
     resolution:
       integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==
   /emojis-list/2.1.0:
@@ -15672,7 +15787,6 @@ packages:
   /error-ex/1.3.2:
     dependencies:
       is-arrayish: 0.2.1
-    dev: true
     resolution:
       integrity: sha512-7dFHNmqeFSEt2ZBsCriorKnn3Z2pj+fd9kmI6QoWw4//DL+icEBfc0U7qJCisqrTsKTjw4fNFy2pW9OqStD84g==
   /es-abstract/1.17.7:
@@ -15747,7 +15861,6 @@ packages:
     resolution:
       integrity: sha1-Aljq5NPQwJdN4cFpGI7wBR0dGYg=
   /escape-string-regexp/1.0.5:
-    dev: true
     engines:
       node: '>=0.8.0'
     resolution:
@@ -15782,7 +15895,6 @@ packages:
     dependencies:
       lodash.get: 4.4.2
       lodash.zip: 4.2.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -15803,14 +15915,12 @@ packages:
     dependencies:
       debug: 2.6.9
       resolve: 1.18.1
-    dev: true
     resolution:
       integrity: sha512-ogtf+5AB/O+nM6DIeBUNr2fuT7ot9Qg/1harBfBtaP13ekEWFQEEMP94BCB7zaNW3gyY+8SHYF00rnqYwXKWOA==
   /eslint-module-utils/2.6.0:
     dependencies:
       debug: 2.6.9
       pkg-dir: 2.0.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -15820,7 +15930,6 @@ packages:
       escape-string-regexp: 1.0.5
       eslint: 6.8.0
       ignore: 5.1.8
-    dev: true
     engines:
       node: '>=6.5.0'
     peerDependencies:
@@ -15854,7 +15963,6 @@ packages:
       object.values: 1.1.1
       read-pkg-up: 2.0.0
       resolve: 1.18.1
-    dev: true
     engines:
       node: '>=4'
     peerDependencies:
@@ -15887,7 +15995,6 @@ packages:
   /eslint-plugin-no-null/1.0.2_eslint@6.8.0:
     dependencies:
       eslint: 6.8.0
-    dev: true
     engines:
       node: '>=5.0.0'
     peerDependencies:
@@ -15907,7 +16014,6 @@ packages:
   /eslint-plugin-optimize-regex/1.1.7:
     dependencies:
       regexp-tree: 0.1.11
-    dev: true
     engines:
       node: '>=6'
     resolution:
@@ -15915,7 +16021,6 @@ packages:
   /eslint-plugin-prefer-arrow/1.1.7_eslint@6.8.0:
     dependencies:
       eslint: 6.8.0
-    dev: true
     peerDependencies:
       eslint: '>=2.0.0'
     resolution:
@@ -15941,7 +16046,6 @@ packages:
       prop-types: 15.7.2
       resolve: 1.18.1
       string.prototype.matchall: 4.0.2
-    dev: true
     engines:
       node: '>=4'
     peerDependencies:
@@ -15988,7 +16092,6 @@ packages:
       reserved-words: 0.1.2
       safe-regex: 2.1.1
       semver: 6.3.0
-    dev: true
     engines:
       node: '>=8'
     peerDependencies:
@@ -16031,7 +16134,6 @@ packages:
     dependencies:
       esrecurse: 4.3.0
       estraverse: 4.3.0
-    dev: true
     engines:
       node: '>=8.0.0'
     resolution:
@@ -16042,7 +16144,6 @@ packages:
       eslint-visitor-keys: 1.3.0
       espree: 6.2.1
       multimap: 1.1.0
-    dev: true
     peerDependencies:
       eslint: ^6.4.0
     resolution:
@@ -16062,7 +16163,6 @@ packages:
   /eslint-utils/1.4.3:
     dependencies:
       eslint-visitor-keys: 1.3.0
-    dev: true
     engines:
       node: '>=6'
     resolution:
@@ -16076,7 +16176,6 @@ packages:
     resolution:
       integrity: sha512-w94dQYoauyvlDc43XnGB8lU3Zt713vNChgt4EWwhXAP2XkBvndfxF0AgIqKOOasjPIPzj9JqgwkwbCYD0/V3Zg==
   /eslint-visitor-keys/1.3.0:
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -16126,7 +16225,6 @@ packages:
       table: 5.4.6
       text-table: 0.2.0
       v8-compile-cache: 2.1.1
-    dev: true
     engines:
       node: ^8.10.0 || ^10.13.0 || >=11.10.1
     hasBin: true
@@ -16182,7 +16280,6 @@ packages:
       acorn: 7.4.1
       acorn-jsx: 5.3.1_acorn@7.4.1
       eslint-visitor-keys: 1.3.0
-    dev: true
     engines:
       node: '>=6.0.0'
     resolution:
@@ -16220,7 +16317,6 @@ packages:
   /esquery/1.3.1:
     dependencies:
       estraverse: 5.2.0
-    dev: true
     engines:
       node: '>=0.10'
     resolution:
@@ -16228,25 +16324,21 @@ packages:
   /esrecurse/4.3.0:
     dependencies:
       estraverse: 5.2.0
-    dev: true
     engines:
       node: '>=4.0'
     resolution:
       integrity: sha512-KmfKL3b6G+RXvP8N1vr3Tq1kL/oCFgn2NYXEtqP8/L3pKapUA4G8cFVaoF3SU323CD4XypR/ffioHmkti6/Tag==
   /estraverse/4.3.0:
-    dev: true
     engines:
       node: '>=4.0'
     resolution:
       integrity: sha512-39nnKffWz8xN1BU/2c79n9nB9HDzo0niYUqx6xyqUnyoAnQyyWpOTdZEeiCch8BBu515t4wp9ZmgVfVhn9EBpw==
   /estraverse/5.2.0:
-    dev: true
     engines:
       node: '>=4.0'
     resolution:
       integrity: sha512-BxbNGGNm0RyRYvUdHpIwv9IWzeM9XClbOxwoATuFdOE7ZE6wHL+HQ5T8hoPM+zHvmKzzsEqhgy0GrQ5X13afiQ==
   /esutils/2.0.3:
-    dev: true
     engines:
       node: '>=0.10.0'
     resolution:
@@ -16449,7 +16541,6 @@ packages:
       chardet: 0.7.0
       iconv-lite: 0.4.24
       tmp: 0.0.33
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -16520,7 +16611,6 @@ packages:
     resolution:
       integrity: sha512-lhd/wF+Lk98HZoTCtlVraHtfh5XYijIjalXck7saUtuanSDyLMxnHhSXEDJqHxD7msR8D0uCmqlkwjCV8xvwHw==
   /fast-levenshtein/2.0.6:
-    dev: true
     resolution:
       integrity: sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
   /fast-safe-stringify/1.1.13:
@@ -16588,7 +16678,6 @@ packages:
   /figures/3.2.0:
     dependencies:
       escape-string-regexp: 1.0.5
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -16596,7 +16685,6 @@ packages:
   /file-entry-cache/5.0.1:
     dependencies:
       flat-cache: 2.0.1
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -16732,7 +16820,6 @@ packages:
   /find-up/2.1.0:
     dependencies:
       locate-path: 2.0.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -16748,7 +16835,6 @@ packages:
     dependencies:
       locate-path: 5.0.0
       path-exists: 4.0.0
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -16785,7 +16871,6 @@ packages:
       flatted: 2.0.2
       rimraf: 2.6.3
       write: 1.0.3
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -16796,7 +16881,6 @@ packages:
     resolution:
       integrity: sha512-b6suED+5/3rTpUBdG1gupIl8MPFCAMA0QXwmljLhvCUKcUvdE4gWky9zpuGCcXHOsz4J9wPGNWq6OKpmIzz3hQ==
   /flatted/2.0.2:
-    dev: true
     resolution:
       integrity: sha512-r5wGx7YeOwNWNlCA0wQ86zKyDLMQr+/RB8xy74M4hTphfmjlijTSSXGuH8rnvKZnfT9i+75zmd8jcKdMR4O6jA==
   /flush-write-stream/1.1.1:
@@ -17017,7 +17101,6 @@ packages:
     resolution:
       integrity: sha512-yIovAzMX49sF8Yl58fSCWJ5svSLuaibPxXQJFLmBObTuCr0Mf1KiPopGM9NiFjiYBCbfaa2Fh6breQ6ANVTI0A==
   /functional-red-black-tree/1.0.1:
-    dev: true
     resolution:
       integrity: sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=
   /gauge/2.7.4:
@@ -17215,7 +17298,6 @@ packages:
   /glob-parent/5.1.1:
     dependencies:
       is-glob: 4.0.1
-    dev: true
     engines:
       node: '>= 6'
     resolution:
@@ -17321,7 +17403,6 @@ packages:
   /globals/12.4.0:
     dependencies:
       type-fest: 0.8.1
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -17609,7 +17690,6 @@ packages:
     resolution:
       integrity: sha1-tdRU3CGZriJWmfNGfloH87lVuv0=
   /has-flag/4.0.0:
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -17721,7 +17801,6 @@ packages:
     resolution:
       integrity: sha512-HRcs+2mr52W0K+x8RzcLzuPPmVIKMSv97RGHy0Ea9y/mpcaK+xTrjICA04KAHi4GRzxliNqNJEFYWHghy3rSfQ==
   /hosted-git-info/2.8.8:
-    dev: true
     resolution:
       integrity: sha512-f/wzC2QaWBs7t9IYqB4T3sR1xviIViXJRJTWBlx2Gf3g0Xi5vI7Yy4koXQ1c9OYDGHN9sBy1DQ2AB8fqZBWhUg==
   /hotloop/1.2.0:
@@ -17923,6 +18002,15 @@ packages:
       node: '>= 4.5.0'
     resolution:
       integrity: sha512-OmvfoQ53WLjtA9HeYP9RNrWMJzzAz1JGaSFr1nijg0PVR1JaD/xbJq1mdEIIlxGpXp9eSe/O2LgU9DJmTPd0Eg==
+  /https-proxy-agent/4.0.0:
+    dependencies:
+      agent-base: 5.1.1
+      debug: 4.2.0
+    dev: true
+    engines:
+      node: '>= 6.0.0'
+    resolution:
+      integrity: sha512-zoDhWrkR3of1l9QAL8/scJZyLu8j/gBkcwcaQOZh7Gyh/+uJQzGVETdgT30akuwkpL8HTRfssqI3BZuV18teDg==
   /human-signals/1.1.1:
     dev: true
     engines:
@@ -17988,13 +18076,11 @@ packages:
     resolution:
       integrity: sha512-m7o6xuOaT1aqheYHKf8W6J5pYH85ZI9w077erOzLje3JsB1gkafkAhHHY19dqjulgIZHFm32Cp5uNZgcQqdJKw==
   /ignore/4.0.6:
-    dev: true
     engines:
       node: '>= 4'
     resolution:
       integrity: sha512-cyFDKrqc/YdcWFniJhzI42+AzS+gNwmUzOSFcRCQYwySuBBBy/KjuxWLZ/FHEH6Moq1NizMOBWyTcv8O4OZIMg==
   /ignore/5.1.8:
-    dev: true
     engines:
       node: '>= 4'
     resolution:
@@ -18024,7 +18110,6 @@ packages:
     dependencies:
       parent-module: 1.0.1
       resolve-from: 4.0.0
-    dev: true
     engines:
       node: '>=6'
     resolution:
@@ -18061,13 +18146,11 @@ packages:
     resolution:
       integrity: sha512-vjL3+w0oulAVZ0hBHnxa/Nm5TAurf9YLQJDhqRZyqb+VKGOB6LU8t9H1Nr5CIo16vh9XfJTOoHwU0B71S557gA==
   /import-modules/2.0.0:
-    dev: true
     engines:
       node: '>=8'
     resolution:
       integrity: sha512-iczM/v9drffdNnABOKwj0f9G3cFDon99VcG1mxeBsdqnbd+vnQ5c2uAiCHNQITqFTOPaEvwg3VjoWCur0uHLEw==
   /imurmurhash/0.1.4:
-    dev: true
     engines:
       node: '>=0.8.19'
     resolution:
@@ -18175,7 +18258,6 @@ packages:
       string-width: 4.2.0
       strip-ansi: 6.0.0
       through: 2.3.8
-    dev: true
     engines:
       node: '>=8.0.0'
     resolution:
@@ -18197,7 +18279,6 @@ packages:
       es-abstract: 1.17.7
       has: 1.0.3
       side-channel: 1.0.3
-    dev: true
     engines:
       node: '>= 0.4'
     resolution:
@@ -18263,7 +18344,6 @@ packages:
     resolution:
       integrity: sha512-xPh0Rmt8NE65sNzvyUmWgI1tz3mKq74lGA0mL8LYZcoIzKOzDh6HmrYm3d18k60nHerC8A9Km8kYu87zfSFnLA==
   /is-arrayish/0.2.1:
-    dev: true
     resolution:
       integrity: sha1-d8mYQFJ6qOyxqLppe4BkWnqSap0=
   /is-binary-path/1.0.1:
@@ -18311,7 +18391,6 @@ packages:
   /is-core-module/2.0.0:
     dependencies:
       has: 1.0.3
-    dev: true
     resolution:
       integrity: sha512-jq1AH6C8MuteOoBPwkxHafmByhL9j5q4OaPGdbuD+ZtQJVzH+i6E3BJDQcBA09k57i2Hh2yQbEG8yObZ0jdlWw==
   /is-data-descriptor/0.1.4:
@@ -18400,7 +18479,6 @@ packages:
     resolution:
       integrity: sha1-o7MKXE8ZkYMWeqq5O+764937ZU8=
   /is-fullwidth-code-point/3.0.0:
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -18575,7 +18653,6 @@ packages:
     resolution:
       integrity: sha512-XCoy+WlUr7d1+Z8GgSuXmpuUFC9fOhRXglJMx+dwLKTkL44Cjd4W1Z5P+BQZpr+cR93aGP4S/s7Ftw6Nd/kiEw==
   /is-string/1.0.5:
-    dev: true
     engines:
       node: '>= 0.4'
     resolution:
@@ -19027,6 +19104,16 @@ packages:
       puppeteer: '>= 1.5.0 < 3'
     resolution:
       integrity: sha512-ZaiCTlPZ07B9HW0erAWNX6cyzBqbXMM7d2ugai4epBDKpKvRDpItlRQC6XjERoJELKZsPziFGS0OhhUvTvQAXA==
+  /jest-puppeteer/4.4.0_puppeteer@2.1.1:
+    dependencies:
+      expect-puppeteer: 4.4.0
+      jest-environment-puppeteer: 4.4.0
+      puppeteer: 2.1.1
+    dev: true
+    peerDependencies:
+      puppeteer: '>= 1.5.0 < 3'
+    resolution:
+      integrity: sha512-ZaiCTlPZ07B9HW0erAWNX6cyzBqbXMM7d2ugai4epBDKpKvRDpItlRQC6XjERoJELKZsPziFGS0OhhUvTvQAXA==
   /jest-regex-util/26.0.0:
     dev: true
     engines:
@@ -19349,7 +19436,6 @@ packages:
     resolution:
       integrity: sha512-mrqyZKfX5EhL7hvqcV6WG1yYjnjeuYDzDhhcAAUrq8Po85NBQBJP+ZDUT75qZQ98IkUoBqdkExkukOU7Ts2wrw==
   /json-parse-even-better-errors/2.3.1:
-    dev: true
     resolution:
       integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==
   /json-schema-traverse/0.4.1:
@@ -19359,7 +19445,6 @@ packages:
     resolution:
       integrity: sha1-tIDIkuWaLwWVTOcnvT8qTogvnhM=
   /json-stable-stringify-without-jsonify/1.0.1:
-    dev: true
     resolution:
       integrity: sha1-nbe1lJatPzz+8wp1FC0tkwrXJlE=
   /json-stringify-safe/5.0.1:
@@ -19466,7 +19551,6 @@ packages:
     dependencies:
       array-includes: 3.1.1
       object.assign: 4.1.1
-    dev: true
     engines:
       node: '>=4.0'
     resolution:
@@ -19697,7 +19781,6 @@ packages:
     dependencies:
       prelude-ls: 1.1.2
       type-check: 0.3.2
-    dev: true
     engines:
       node: '>= 0.8.0'
     resolution:
@@ -19722,7 +19805,6 @@ packages:
     resolution:
       integrity: sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ==
   /lines-and-columns/1.1.6:
-    dev: true
     resolution:
       integrity: sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
   /linkify-it/2.2.0:
@@ -19749,7 +19831,6 @@ packages:
       parse-json: 2.2.0
       pify: 2.3.0
       strip-bom: 3.0.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -19816,7 +19897,6 @@ packages:
     dependencies:
       p-locate: 2.0.0
       path-exists: 3.0.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -19832,7 +19912,6 @@ packages:
   /locate-path/5.0.0:
     dependencies:
       p-locate: 4.1.0
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -19850,7 +19929,6 @@ packages:
     resolution:
       integrity: sha1-DM8tiRZq8Ds2Y8eWU4t1rG4RTZ0=
   /lodash.camelcase/4.3.0:
-    dev: true
     resolution:
       integrity: sha1-soqmKIorn8ZRA1x3EfZathkDMaY=
   /lodash.clonedeep/4.5.0:
@@ -19862,7 +19940,6 @@ packages:
     resolution:
       integrity: sha1-gteb/zCmfEAF/9XiUVMArZyk168=
   /lodash.defaultsdeep/4.6.1:
-    dev: true
     resolution:
       integrity: sha512-3j8wdDzYuWO3lM3Reg03MuQR957t287Rpcxp1njpEa8oDrikb+FwGdW3n+FELh/A6qib6yPit0j/pv9G/yeAqA==
   /lodash.difference/4.5.0:
@@ -19878,7 +19955,6 @@ packages:
     resolution:
       integrity: sha1-+wMJF/hqMTTlvJvsDWngAT3f7bI=
   /lodash.get/4.4.2:
-    dev: true
     resolution:
       integrity: sha1-LRd/ZS+jHpObRDjVNBSZ36OCXpk=
   /lodash.includes/4.3.0:
@@ -19911,7 +19987,6 @@ packages:
     resolution:
       integrity: sha1-1SfftUVuynzJu5XV2ur4i6VKVFE=
   /lodash.kebabcase/4.1.1:
-    dev: true
     resolution:
       integrity: sha1-hImxyw0p/4gZXM7KRI/21swpXDY=
   /lodash.keys/4.2.0:
@@ -19934,7 +20009,6 @@ packages:
     resolution:
       integrity: sha1-2HV7HagH3eJIFrDWqEvqGnYjCyM=
   /lodash.snakecase/4.1.1:
-    dev: true
     resolution:
       integrity: sha1-OdcUo1NXFHg3rv1ktdy7Fr7Nj40=
   /lodash.sortby/4.7.0:
@@ -19963,11 +20037,9 @@ packages:
     resolution:
       integrity: sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=
   /lodash.upperfirst/4.3.1:
-    dev: true
     resolution:
       integrity: sha1-E2Xt9DFIBIHvDRxolXpe2Z1J984=
   /lodash.zip/4.2.0:
-    dev: true
     resolution:
       integrity: sha1-7GZi5IlkCO1KtsVCo5kLcswIACA=
   /lodash/4.17.20:
@@ -20370,7 +20442,6 @@ packages:
     resolution:
       integrity: sha512-jf84uxzwiuiIVKiOLpfYk7N46TSy8ubTonmneY9vrpHNAnp0QBt2BxWV9dO3/j+BoVAb+a5G6YDPW3M5HOdMWQ==
   /mimic-fn/2.1.0:
-    dev: true
     engines:
       node: '>=6'
     resolution:
@@ -20599,7 +20670,6 @@ packages:
     resolution:
       integrity: sha512-ji6J5enbMyGRHIAkAOu3WdV8nggqviKCEKtXcOqfphZZtQrmHKycfynJ2V7eVPUA4NhJ6V7Wf4TmGbTwKE9B6g==
   /multimap/1.1.0:
-    dev: true
     resolution:
       integrity: sha512-0ZIR9PasPxGXmRsEF8jsDzndzHDj7tIav+JUmvIFB/WHswliFnquxECT/De7GR4yg99ky/NlRKJT82G1y271bw==
   /multimatch/3.0.0:
@@ -20630,7 +20700,6 @@ packages:
     resolution:
       integrity: sha1-MHXOk7whuPq0PhvE2n6BFe0ee6s=
   /mute-stream/0.0.8:
-    dev: true
     resolution:
       integrity: sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
   /mz/2.7.0:
@@ -20669,7 +20738,6 @@ packages:
     resolution:
       integrity: sha512-fpoe2T0RbHwBTBUOftAfBPaDEi06ufaUai0mE6Yn1kacc3SnTErfb/h+X94VXzI64rKFHYImXSvdwGGCmwOqCA==
   /natural-compare/1.4.0:
-    dev: true
     resolution:
       integrity: sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
   /nconf/0.10.0:
@@ -20930,7 +20998,6 @@ packages:
       resolve: 1.18.1
       semver: 5.7.1
       validate-npm-package-license: 3.0.4
-    dev: true
     resolution:
       integrity: sha512-/5CMN3T0R4XTj4DcGaexo+roZSdSFW/0AOOTROrjxzCG1wrWXEsGbRKevjlIL+ZDE4sZlJr5ED4YW0yqmkK+eA==
   /normalize-path/2.1.1:
@@ -21134,7 +21201,6 @@ packages:
       define-properties: 1.1.3
       es-abstract: 1.17.7
       has: 1.0.3
-    dev: true
     engines:
       node: '>= 0.4'
     resolution:
@@ -21145,7 +21211,6 @@ packages:
       es-abstract: 1.17.7
       function-bind: 1.1.1
       has: 1.0.3
-    dev: true
     engines:
       node: '>= 0.4'
     resolution:
@@ -21172,7 +21237,6 @@ packages:
       es-abstract: 1.17.7
       function-bind: 1.1.1
       has: 1.0.3
-    dev: true
     engines:
       node: '>= 0.4'
     resolution:
@@ -21239,7 +21303,6 @@ packages:
   /onetime/5.1.2:
     dependencies:
       mimic-fn: 2.1.0
-    dev: true
     engines:
       node: '>=6'
     resolution:
@@ -21264,7 +21327,6 @@ packages:
       prelude-ls: 1.1.2
       type-check: 0.3.2
       word-wrap: 1.2.3
-    dev: true
     engines:
       node: '>= 0.8.0'
     resolution:
@@ -21318,7 +21380,6 @@ packages:
     resolution:
       integrity: sha512-h8L+8aNjNcMpo/mAIBPn5PXCM16iyPGjHNWo6U1YO8sJTMHtEtyczI6QJnLoplswm6goopQkqc7OAnjhWcugVg==
   /os-tmpdir/1.0.2:
-    dev: true
     engines:
       node: '>=0.10.0'
     resolution:
@@ -21352,7 +21413,6 @@ packages:
   /p-limit/1.3.0:
     dependencies:
       p-try: 1.0.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -21375,7 +21435,6 @@ packages:
   /p-locate/2.0.0:
     dependencies:
       p-limit: 1.3.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -21390,7 +21449,6 @@ packages:
   /p-locate/4.1.0:
     dependencies:
       p-limit: 2.3.0
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -21456,7 +21514,6 @@ packages:
     resolution:
       integrity: sha512-XE6G4+YTTkT2a0UWb2kjZe8xNwf8bIbnqpc/IS/idOBVhyves0mK5OJgeocjx7q5pvX/6m23xuzVPYT1uGM73w==
   /p-try/1.0.0:
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -21536,7 +21593,6 @@ packages:
   /parent-module/1.0.1:
     dependencies:
       callsites: 3.1.0
-    dev: true
     engines:
       node: '>=6'
     resolution:
@@ -21579,7 +21635,6 @@ packages:
   /parse-json/2.2.0:
     dependencies:
       error-ex: 1.3.2
-    dev: true
     engines:
       node: '>=0.10.0'
     resolution:
@@ -21599,7 +21654,6 @@ packages:
       error-ex: 1.3.2
       json-parse-even-better-errors: 2.3.1
       lines-and-columns: 1.1.6
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -21691,7 +21745,6 @@ packages:
     resolution:
       integrity: sha1-zg6+ql94yxiSXqfYENe1mwEP1RU=
   /path-exists/4.0.0:
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -21716,7 +21769,6 @@ packages:
     resolution:
       integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==
   /path-parse/1.0.6:
-    dev: true
     resolution:
       integrity: sha512-GSmOT2EbHrINBf9SR7CDELwlJ8AENk3Qn7OikK4nFYAu3Ote2+JYNVvkpAEQm3/TLNEJFD/xZJjzyxg3KBWOzw==
   /path-to-regexp/0.1.7:
@@ -21740,7 +21792,6 @@ packages:
   /path-type/2.0.0:
     dependencies:
       pify: 2.3.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -21837,7 +21888,6 @@ packages:
   /pkg-dir/2.0.0:
     dependencies:
       find-up: 2.1.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -21935,7 +21985,6 @@ packages:
     resolution:
       integrity: sha512-soOk1h6J3VMTZtVeVpv15/Hpdl2cBLX3CAw4TAbkpTJiNPk9YP/zWcD1ND+xEtvyuuvKzbxliTOIyvkSeSJ6ag==
   /prelude-ls/1.1.2:
-    dev: true
     engines:
       node: '>= 0.8.0'
     resolution:
@@ -22013,7 +22062,6 @@ packages:
     resolution:
       integrity: sha1-czIwDoQBYb2j5podHZGn1LwW8YI=
   /progress/2.0.3:
-    dev: true
     engines:
       node: '>=0.4.0'
     resolution:
@@ -22283,6 +22331,24 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-bt48RDBy2eIwZPrkgbcwHtb51mj2nKvHOPMaSH2IsWiv7lOG9k9zhaRzpDZafrk05ajMc3cu+lSQYYOfH2DkVQ==
+  /puppeteer/2.1.1:
+    dependencies:
+      '@types/mime-types': 2.1.0
+      debug: 4.2.0
+      extract-zip: 1.7.0
+      https-proxy-agent: 4.0.0
+      mime: 2.4.6
+      mime-types: 2.1.27
+      progress: 2.0.3
+      proxy-from-env: 1.1.0
+      rimraf: 2.7.1
+      ws: 6.2.1
+    dev: true
+    engines:
+      node: '>=8.16.0'
+    requiresBuild: true
+    resolution:
+      integrity: sha512-LWzaDVQkk1EPiuYeTOj+CZRIjda4k2s5w4MK4xoH2+kgWV/SDlkYHmxatDdtYrciHUKSXTsGgPgPP8ILVdBsxg==
   /q/1.5.1:
     dev: true
     engines:
@@ -22677,7 +22743,6 @@ packages:
     dependencies:
       find-up: 2.1.0
       read-pkg: 2.0.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -22705,7 +22770,6 @@ packages:
       find-up: 4.1.0
       read-pkg: 5.2.0
       type-fest: 0.8.1
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -22725,7 +22789,6 @@ packages:
       load-json-file: 2.0.0
       normalize-package-data: 2.5.0
       path-type: 2.0.0
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -22756,7 +22819,6 @@ packages:
       normalize-package-data: 2.5.0
       parse-json: 5.1.0
       type-fest: 0.6.0
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -22903,12 +22965,10 @@ packages:
     resolution:
       integrity: sha512-J6SDjUgDxQj5NusnOtdFxDwN/+HWykR8GELwctJ7mdqhcyy1xEc4SRFHUXvxTp661YaVKAjfRLZ9cCqS6tn32A==
   /regexp-tree/0.1.11:
-    dev: true
     hasBin: true
     resolution:
       integrity: sha512-7/l/DgapVVDzZobwMCCgMlqiqyLFJ0cduo/j+3BcDJIB+yJdsYCfKuI3l/04NV+H/rfNRdPIDbXNZHM9XvQatg==
   /regexp-tree/0.1.21:
-    dev: true
     hasBin: true
     resolution:
       integrity: sha512-kUUXjX4AnqnR8KRTCrayAo9PzYMRKmVoGgaz2tBuz0MF3g1ZbGebmtW0yFHfFK9CmBjQKeYIgoL22pFLBJY7sw==
@@ -22921,13 +22981,11 @@ packages:
     resolution:
       integrity: sha512-2+Q0C5g951OlYlJz6yu5/M33IcsESLlLfsyIaLJaG4FA2r4yP8MvVMJUUP/fVBkSpbbbZlS5gynbEWLipiiXiQ==
   /regexpp/2.0.1:
-    dev: true
     engines:
       node: '>=6.5.0'
     resolution:
       integrity: sha512-lv0M6+TkDVniA3aD1Eg0DVpfU/booSu7Eev3TDO/mZKHBfVjgCGTV4t4buppESEYDtkArYFOxTJWv6S5C+iaNw==
   /regexpp/3.1.0:
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -23082,7 +23140,6 @@ packages:
     resolution:
       integrity: sha1-kl0mAdOaxIXgkc8NpcbmlNw9yv8=
   /reserved-words/0.1.2:
-    dev: true
     resolution:
       integrity: sha1-AKCUD5jNUBrqqsMWQR2a3FKzGrE=
   /resize-observer-polyfill/1.5.1:
@@ -23128,7 +23185,6 @@ packages:
     resolution:
       integrity: sha1-six699nWiBvItuZTM17rywoYh0g=
   /resolve-from/4.0.0:
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -23153,7 +23209,6 @@ packages:
     dependencies:
       is-core-module: 2.0.0
       path-parse: 1.0.6
-    dev: true
     resolution:
       integrity: sha512-lDfCPaMKfOJXjy0dPayzPdF1phampNWr3qFCjAu+rw/qbQmr5jWH5xN2hwh9QKfw9E5v4hwV7A+jrCmL8yjjqA==
   /restore-cursor/2.0.0:
@@ -23169,7 +23224,6 @@ packages:
     dependencies:
       onetime: 5.1.2
       signal-exit: 3.0.3
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -23198,7 +23252,6 @@ packages:
   /rimraf/2.6.3:
     dependencies:
       glob: 7.1.6
-    dev: true
     hasBin: true
     resolution:
       integrity: sha512-mwqeW5XsA2qAejG46gYdENaxXjx9onRNCfn7L0duuP4hCuTIi/QO7PDK07KJfp1d+izWPrzEJDcSqBa0OZQriA==
@@ -23233,7 +23286,6 @@ packages:
     resolution:
       integrity: sha512-nfMOlASu9OnRJo1mbEk2cz0D56a1MBNrJ7orjRZQG10XDyuvwksKbuXNp6qa+kbn839HwjwhBzhFmdsaEAfauA==
   /run-async/2.4.1:
-    dev: true
     engines:
       node: '>=0.12.0'
     resolution:
@@ -23260,7 +23312,6 @@ packages:
   /rxjs/6.6.3:
     dependencies:
       tslib: 1.14.1
-    dev: true
     engines:
       npm: '>=2.0.0'
     resolution:
@@ -23279,7 +23330,6 @@ packages:
   /safe-regex/2.1.1:
     dependencies:
       regexp-tree: 0.1.21
-    dev: true
     resolution:
       integrity: sha512-rx+x8AMzKb5Q5lQ95Zoi6ZbJqwCLkqi3XuJXp5P3rT8OEc6sZCJG5AE5dU3lsgRr/F4Bs31jSlVN+j5KrsGu9A==
   /safer-buffer/2.1.2:
@@ -23581,7 +23631,6 @@ packages:
     dependencies:
       es-abstract: 1.18.0-next.1
       object-inspect: 1.8.0
-    dev: true
     resolution:
       integrity: sha512-A6+ByhlLkksFoUepsGxfj5x1gTSrs+OydsRptUxeNCabQpCFUvcwIczgOigI8vhY/OJCnPnyE9rGiwgvr9cS1g==
   /sigmund/1.0.1:
@@ -23634,7 +23683,6 @@ packages:
       ansi-styles: 3.2.1
       astral-regex: 1.0.0
       is-fullwidth-code-point: 2.0.0
-    dev: true
     engines:
       node: '>=6'
     resolution:
@@ -23849,22 +23897,18 @@ packages:
     dependencies:
       spdx-expression-parse: 3.0.1
       spdx-license-ids: 3.0.6
-    dev: true
     resolution:
       integrity: sha512-cOYcUWwhCuHCXi49RhFRCyJEK3iPj1Ziz9DpViV3tbZOwXD49QzIN3MpOLJNxh2qwq2lJJZaKMVw9qNi4jTC0w==
   /spdx-exceptions/2.3.0:
-    dev: true
     resolution:
       integrity: sha512-/tTrYOC7PPI1nUAgx34hUpqXuyJG+DTHJTnIULG4rDygi4xu/tfgmq1e1cIRwRzwZgo4NLySi+ricLkZkw4i5A==
   /spdx-expression-parse/3.0.1:
     dependencies:
       spdx-exceptions: 2.3.0
       spdx-license-ids: 3.0.6
-    dev: true
     resolution:
       integrity: sha512-cbqHunsQWnJNE6KhVSMsMeH5H/L9EpymbzqTQ3uLwNCLZ1Q481oWaofqH7nO6V07xlXwY6PhQdQ2IedWx/ZK4Q==
   /spdx-license-ids/3.0.6:
-    dev: true
     resolution:
       integrity: sha512-+orQK83kyMva3WyPf59k1+Y525csj5JejicWut55zeTWANuN17qSiSLUXWtzHeNWORSvT7GLDJ/E/XiIWoXBTw==
   /spdy-transport/3.0.0_supports-color@6.1.0:
@@ -24063,7 +24107,6 @@ packages:
       emoji-regex: 8.0.0
       is-fullwidth-code-point: 3.0.0
       strip-ansi: 6.0.0
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -24076,7 +24119,6 @@ packages:
       internal-slot: 1.0.2
       regexp.prototype.flags: 1.3.0
       side-channel: 1.0.3
-    dev: true
     resolution:
       integrity: sha512-N/jp6O5fMf9os0JU3E72Qhf590RSRZU/ungsL/qJUYVTNv7hTG0P/dbPjxINVN9jpscu3nzYwKESU3P3RY5tOg==
   /string.prototype.trimend/1.0.2:
@@ -24130,7 +24172,6 @@ packages:
   /strip-ansi/6.0.0:
     dependencies:
       ansi-regex: 5.0.0
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -24144,7 +24185,6 @@ packages:
     resolution:
       integrity: sha1-YhmoVhZSBJHzV4i9vxRHqZx+aw4=
   /strip-bom/3.0.0:
-    dev: true
     engines:
       node: '>=4'
     resolution:
@@ -24196,7 +24236,6 @@ packages:
     resolution:
       integrity: sha1-PFMZQukIwml8DsNEhYwobHygpgo=
   /strip-json-comments/3.1.1:
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -24255,7 +24294,6 @@ packages:
   /supports-color/7.2.0:
     dependencies:
       has-flag: 4.0.0
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -24288,7 +24326,6 @@ packages:
       lodash: 4.17.20
       slice-ansi: 2.1.0
       string-width: 3.1.0
-    dev: true
     engines:
       node: '>=6.0.0'
     resolution:
@@ -24425,7 +24462,6 @@ packages:
     resolution:
       integrity: sha512-wiBrwC1EhBelW12Zy26JeOUkQ5mRu+5o8rpsJk5+2t+Y5vE7e842qtZDQ2g1NpX/29HdyFeJ4nSIhI47ENSxlQ==
   /text-table/0.2.0:
-    dev: true
     resolution:
       integrity: sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
   /thenify-all/1.6.0:
@@ -24447,7 +24483,6 @@ packages:
     resolution:
       integrity: sha512-fcwX4mndzpLQKBS1DVYhGAcYaYt7vsHNIvQV+WXMvnow5cgjPphq5CaayLaGsjRdSCKZFNGt7/GYAuXaNOiYCA==
   /through/2.3.8:
-    dev: true
     resolution:
       integrity: sha1-DdTJ/6q8NXlgsbckEV1+Doai4fU=
   /through2/2.0.5:
@@ -24488,7 +24523,6 @@ packages:
   /tmp/0.0.33:
     dependencies:
       os-tmpdir: 1.0.2
-    dev: true
     engines:
       node: '>=0.6.0'
     resolution:
@@ -24741,6 +24775,16 @@ packages:
     dev: true
     resolution:
       integrity: sha512-uZtkfKblCEQtZKBF6EBXVZeQNl82yqtDQdv+eck8u7tdPxjLu2/lp5/uPW+um2tpuxINHWy3GhiccY7QgEaVHQ==
+  /tsutils/3.17.1:
+    dependencies:
+      tslib: 1.14.1
+    dev: false
+    engines:
+      node: '>= 6'
+    peerDependencies:
+      typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
+    resolution:
+      integrity: sha512-kzeQ5B8H3w60nFY2g8cJIuH7JDpsALXySGtwGJ0p2LSjLgay3NdIpqq5SoOBe46bKDW2iq25irHCr8wjomUS2g==
   /tsutils/3.17.1_typescript@3.7.5:
     dependencies:
       tslib: 1.14.1
@@ -24784,7 +24828,6 @@ packages:
   /type-check/0.3.2:
     dependencies:
       prelude-ls: 1.1.2
-    dev: true
     engines:
       node: '>= 0.8.0'
     resolution:
@@ -24803,7 +24846,6 @@ packages:
     resolution:
       integrity: sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==
   /type-fest/0.11.0:
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -24821,13 +24863,11 @@ packages:
     resolution:
       integrity: sha512-cUGJnCdr4STbePCgqNFbpVNCepa+kAVohJs1sLhxzdH+gnEoOd8VhbYa7pD3zZYGiURWM2xzEII3fQcRizDkYQ==
   /type-fest/0.6.0:
-    dev: true
     engines:
       node: '>=8'
     resolution:
       integrity: sha512-q+MB8nYR1KDLrgr4G5yemftpMC7/QLqVndBmEEdqzmNj5dcFOO4Oo8qlwZE3ULT3+Zim1F8Kq4cBnikNhlCMlg==
   /type-fest/0.8.1:
-    dev: true
     engines:
       node: '>=8'
     resolution:
@@ -25207,7 +25247,6 @@ packages:
     resolution:
       integrity: sha512-FOmRr+FmWEIG8uhZv6C2bTgEVXsHk08kE7mPlrBbEe+c3r9pjceVPgupIfNIhc4yx55H69OXANrUaSuu9eInKg==
   /v8-compile-cache/2.1.1:
-    dev: true
     resolution:
       integrity: sha512-8OQ9CL+VWyt3JStj7HX7/ciTL2V3Rl1Wf5OL+SNTm0yK1KvtReVulksyeRnCANHHuUxHlQig+JJDlUhBt1NQDQ==
   /v8-to-istanbul/6.0.1:
@@ -25224,7 +25263,6 @@ packages:
     dependencies:
       spdx-correct: 3.1.1
       spdx-expression-parse: 3.0.1
-    dev: true
     resolution:
       integrity: sha512-DpKm2Ui/xN7/HQKCtpZxoRWBhZ9Z0kqtygG8XCgNQ8ZlDnxuQmWhj566j8fN4Cu3/JmbhsDo7fcAJq4s9h27Ew==
   /validate-npm-package-name/3.0.0:
@@ -25755,7 +25793,6 @@ packages:
     resolution:
       integrity: sha512-OSOGH1QYiW5yVor9TtmXKQvt2vjQqbYS+DqmsZw+r7xDwLXEeT3JGW0ZppFmHx4diyXmxt238KFR3N9jzevBRg==
   /word-wrap/1.2.3:
-    dev: true
     engines:
       node: '>=0.10.0'
     resolution:
@@ -25895,7 +25932,6 @@ packages:
   /write/1.0.3:
     dependencies:
       mkdirp: 0.5.5
-    dev: true
     engines:
       node: '>=4'
     resolution:

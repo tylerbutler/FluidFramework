@@ -1,5 +1,6 @@
 packages:
   # all packages in subdirs of packages/ and examples/
+  - 'common/*/*'
   - 'packages/*/*'
   - 'examples/**'
   - 'server/routerlicious/packages/gitresources'
