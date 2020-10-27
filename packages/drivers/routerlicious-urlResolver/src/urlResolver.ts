@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { parse } from "url";
+// import { parse } from "url";
 import {
     IRequest,
 } from "@fluidframework/core-interfaces";
@@ -70,7 +70,7 @@ export class RouterliciousUrlResolver implements IUrlResolver {
         const serverSuffix = isLocalHost ? `${server}:3003` : server.substring(4);
 
         let fluidUrl = "fluid://" +
-            `${this.config ? parse(this.config.provider.get("worker:serverUrl")).host : serverSuffix}/` +
+            `${this.config ? new URL(this.config.provider.get("worker:serverUrl")).host : serverSuffix}/` +
             `${encodeURIComponent(tenantId)}/` +
             `${encodeURIComponent(documentId)}`;
 
