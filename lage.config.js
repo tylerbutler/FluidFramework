@@ -1,7 +1,7 @@
 module.exports = {
     "pipeline": {
         "build": [
-            "^build"
+            "^tsc"
         ],
         "test": [
             "build"
