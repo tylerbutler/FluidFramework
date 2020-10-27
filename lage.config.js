@@ -7,7 +7,7 @@ module.exports = {
             "build"
         ],
         "lint": [
-            "lint"
+            "eslint"
         ]
     },
     "npmClient": "pnpm"
