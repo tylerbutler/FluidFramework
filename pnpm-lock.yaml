@@ -6848,6 +6848,7 @@ importers:
       debug: 4.2.0
       double-ended-queue: 2.1.0-0
       lodash: 4.17.20
+      querystring-browser: 1.0.4
       uuid: 3.4.0
     devDependencies:
       '@fluid-internal/test-loader-utils': 'link:../test-loader-utils'
@@ -6858,6 +6859,7 @@ importers:
       '@types/debug': 4.1.5
       '@types/lodash': 4.14.162
       '@types/mocha': 5.2.7
+      '@types/node': 10.17.42
       '@types/sinon': 7.5.2
       '@typescript-eslint/eslint-plugin': 4.2.0_0668a606cbec5f470c14e0dad8a0395d
       '@typescript-eslint/parser': 4.2.0_eslint@7.9.0+typescript@3.7.5
@@ -6898,6 +6900,7 @@ importers:
       '@types/double-ended-queue': ^2.1.0
       '@types/lodash': ^4.14.118
       '@types/mocha': ^5.2.5
+      '@types/node': ^10.17.24
       '@types/sinon': ^7.0.13
       '@typescript-eslint/eslint-plugin': ~4.2.0
       '@typescript-eslint/parser': ~4.2.0
@@ -6917,6 +6920,7 @@ importers:
       mocha: ^8.1.1
       mocha-junit-reporter: ^1.18.0
       nyc: ^15.0.0
+      querystring-browser: ^1.0.4
       rimraf: ^2.6.2
       sinon: ^7.4.2
       typescript: ~3.7.4
@@ -22382,6 +22386,10 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-/WWZ7d9na6s2wMEGdVCVgKWE9Rt7nYyNIf7k8xmHXcesPMlEzicWo3lbYwHyA4wBktI2KrXxxZeACLbE84hvSQ==
+  /querystring-browser/1.0.4:
+    dev: false
+    resolution:
+      integrity: sha1-8uNYgYQKgZvHsb9Zf68JeeZiLcY=
   /querystring-es3/0.2.1:
     dev: true
     engines:
