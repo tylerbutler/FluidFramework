@@ -3,7 +3,9 @@ packages:
   - 'common/*/*'
   - 'packages/*/*'
   - 'examples/**'
+#   - 'server/routerlicious/packages/**'
   - 'server/routerlicious/packages/gitresources'
+  - 'server/routerlicious/packages/localserver'
   - 'server/routerlicious/packages/protocol-*'
   # exclude packages that are inside test/ directories
   # - '!**/test/**'
