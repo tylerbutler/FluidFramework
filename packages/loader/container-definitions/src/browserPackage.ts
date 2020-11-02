@@ -34,7 +34,7 @@ export interface IFluidBrowserPackageEnvironment extends IFluidPackageEnvironmen
  */
 export interface IFluidBrowserPackage extends IFluidPackage {
     /**
-     * {@inheritdoc}
+     * {@inheritdoc IFluidPackage.fluid}
      */
     fluid: {
         /**
@@ -42,7 +42,8 @@ export interface IFluidBrowserPackage extends IFluidPackage {
          */
         browser: IFluidBrowserPackageEnvironment;
         /**
-         * {@inheritdoc}
+         * The name of the of the environment. This should be something like browser, or node
+         * and contain the necessary targets for loading this code in that environment.
          */
         [environment: string]: IFluidPackageEnvironment;
     }
