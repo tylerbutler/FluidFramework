@@ -20,7 +20,6 @@ export class FluidAppOdspUrlResolver implements IUrlResolver {
         const server = reqUrl.hostname.toLowerCase();
         let contents: { drive: string; item: string; site: string } | undefined;
         if (fluidOfficeAndOneNoteServers.includes(server)) {
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
             contents = await initializeFluidOfficeOrOneNote(reqUrl);
         } else if (server === "www.office.com") {
             const getRequiredParam = (name: string): string => {

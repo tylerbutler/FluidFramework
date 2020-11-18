@@ -170,7 +170,6 @@ export class ReplayControllerStatic extends ReplayController {
                         }
                     }
                 }
-                // eslint-disable-next-line @typescript-eslint/no-use-before-define
                 scheduleNext(nextInterval);
                 emitter(playbackOps);
             };
