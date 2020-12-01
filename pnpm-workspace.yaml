@@ -11,5 +11,6 @@ packages:
   # - '!**/test/**'
 #   - '!**/routerlicious-urlResolver'
 link-workspace-packages: true
+prefer-workspace-packages: true
 save-workspace-protocol: false
 shared-workspace-lockfile: true

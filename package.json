@@ -62,7 +62,7 @@
     "test:mocha:run": "lerna run test:mocha --stream --no-bail --no-sort -- -- --color",
     "test:report": "npm run test:mocha:report && npm run test:jest:report",
     "test:types": "lerna run test:types --stream --no-bail --no-sort",
-    "tsc": "lerna run tsc --stream",
+    "tsc": "pnpm m run tsc --sort",
     "tsc:fast": "fluid-build  --root . -s tsc",
     "tsfmt": "lerna run tsfmt:fix --no-sort --stream --no-bail",
     "tsfmt:fix": "lerna run tsfmt:fix --no-sort --stream --no-bail",
