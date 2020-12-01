@@ -10,7 +10,7 @@ packages:
   # exclude packages that are inside test/ directories
   # - '!**/test/**'
 #   - '!**/routerlicious-urlResolver'
-link-workspace-packages: true
+link-workspace-packages: deep
 prefer-workspace-packages: true
 save-workspace-protocol: false
 shared-workspace-lockfile: true
