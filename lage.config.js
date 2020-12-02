@@ -1,12 +1,19 @@
+/*!
+ * Copyright (c) Microsoft Corporation. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 module.exports = {
     "pipeline": {
         "build": [
-            "^tsc"
+            "^build",
+            // "^build:esnext"
         ],
         "test": [
-            "build"
+            "^build"
         ],
         "lint": [
+            "^build",
             "eslint"
         ]
     },

@@ -2,7 +2,8 @@ packages:
   # all packages in subdirs of packages/ and examples/
 #   - 'common/*/*'
   - 'packages/*'
-  - '../../common/*/*'
+#   - '../../common/*/*'
+  - '!packages/local-server'
 #   - 'examples/**'
 #   - 'server/routerlicious/packages/**'
 #   - 'server/routerlicious/packages/gitresources'
@@ -12,6 +13,8 @@ packages:
   # - '!**/test/**'
 #   - '!**/routerlicious-urlResolver'
 #   - '!**/node_modules/**'
-link-workspace-packages: true
+
+link-workspace-packages: deep
+prefer-workspace-packages: true
 save-workspace-protocol: false
 shared-workspace-lockfile: true

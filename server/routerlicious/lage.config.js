@@ -6,17 +6,21 @@
 module.exports = {
     "pipeline": {
         "build": [
-            "build:compile"
-        ],
-        "build:compile": [
-            "^build:compile"
+            "^tsc",
+            "^build:esnext"
         ],
         "test": [
-            "build"
+            "^build"
         ],
         "lint": [
+            "^build",
             "eslint"
-        ]
+        ],
+        "@fluidframework/server-local-server#build": [
+            "@fluidframework/server-lambdas#build",
+            "@fluidframework/server-memory-orderer#build",
+            "@fluidframework/server-test-utils#build",
+        ],
     },
     "npmClient": "pnpm"
 };
