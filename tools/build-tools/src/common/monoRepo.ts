@@ -21,12 +21,34 @@ export class MonoRepo {
             throw new Error(`ERROR: lerna.json not found in ${repoPath}`);
         }
         const lerna = readJsonSync(lernaPath);
-        for (const dir of lerna.packages as string[]) {
-            // TODO: other glob pattern?
-            const loadDir = dir.endsWith("/**") ? dir.substr(0, dir.length - 3) : dir;
-            this.packages.push(...Packages.loadDir(path.join(this.repoPath, loadDir), MonoRepoKind[kind], this));
+        if (lerna.packages) {
+            for (const dir of lerna.packages as string[]) {
+                // TODO: other glob pattern?
+                const loadDir = dir.endsWith("/**") ? dir.substr(0, dir.length - 3) : dir;
+                this.packages.push(...Packages.loadDir(path.join(this.repoPath, loadDir), MonoRepoKind[kind], this));
+            }
+        } else {
+            // look for workspaces in package.json
+            this.packages.push(...this.loadWorkspaces(repoPath));
         }
         this.version = lerna.version;
+    }
+
+    private loadWorkspaces(packagePath: string): Package[] {
+        const pkgPath = path.join(this.repoPath, "package.json");
+        const pkg = readJsonSync(pkgPath);
+        const packages: Package[] = [];
+        for (const dir of pkg.workspaces) {
+            if (dir.endsWith("/")) {
+                // ignore these for now
+                // this.packages.push(...this.loadWorkspaces(dir.substr(0, dir.length - 1)));
+            }
+            else if (dir.endsWith("/**") || dir.endsWith("*/*")) {
+                const loadDir = dir.substr(0, dir.length - 3);
+                return Packages.loadDir(path.join(this.repoPath, loadDir), MonoRepoKind[this.kind], this);
+            }
+        }
+        return [];
     }
 
     public static isSame(a: MonoRepo | undefined, b: MonoRepo | undefined) {
