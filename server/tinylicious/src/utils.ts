@@ -6,7 +6,6 @@
 import { ITenantManager } from "@fluidframework/server-services-core";
 import { IUser, ScopeType } from "@fluidframework/protocol-definitions";
 // In this case we want @types/express-serve-static-core, not express-serve-static-core, and so disable the lint rule
-// eslint-disable-next-line import/no-unresolved
 import { Params } from "express-serve-static-core";
 import * as _ from "lodash";
 import { IAlfredTenant } from "@fluidframework/server-services-client";
@@ -58,6 +57,7 @@ export interface IAlfredUser extends IUser {
 }
 
 export function getParam(params: Params, key: string) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return Array.isArray(params) ? undefined : params[key];
 }
 
