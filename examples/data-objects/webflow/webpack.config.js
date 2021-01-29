@@ -26,7 +26,7 @@ module.exports = env => {
                     {
                         test: /\.tsx?$/,
                         use: [{
-                            loader:'ts-loader',
+                            loader: require.resolve("ts-loader"),
                             options: {
                                 compilerOptions: {
                                     module: "esnext"
@@ -44,7 +44,7 @@ module.exports = env => {
                         test: /\.css$/,
                         use: [
                             "style-loader", {
-                                loader: "css-loader",
+                                loader: require.resolve("css-loader"),
                                 options: {
                                     modules: true,
                                     localIdentName: styleLocalIdentName

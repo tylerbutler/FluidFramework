@@ -31,7 +31,7 @@ module.exports = env => {
                     test: /\.(ts|tsx)$/,
                     use: [
                         {
-                            loader: "cache-loader"
+                            loader: require.resolve("cache-loader")
                         },
                         {
                             loader: 'thread-loader',
