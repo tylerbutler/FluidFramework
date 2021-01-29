@@ -106,7 +106,7 @@ export class TestObjectProvider<TestContainerConfigType> {
             await createAndAttachContainer(
                 defaultCodeDetails,
                 loader,
-                this.driver.createCreateNewRequest(this.documentId));
+                this.driver.createCreateNewRequest(this.documentId!));
         this.opProcessingController.addDeltaManagers(container.deltaManager);
         return container;
     }
