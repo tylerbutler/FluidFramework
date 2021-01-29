@@ -5,8 +5,6 @@
 
 import { debug } from "debug";
 import * as winston from "winston";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-import Transport = require("winston-transport");
 
 export interface IWinstonConfig {
     colorize: boolean;
@@ -14,7 +12,7 @@ export interface IWinstonConfig {
     label: string;
     level: string;
     timestamp: boolean;
-    additionalTransportList: Transport[];
+    additionalTransportList: winston.transport[];
 }
 
 /**
