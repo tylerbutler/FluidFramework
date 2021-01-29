@@ -55,7 +55,9 @@ export function create(
         mongoManager,
         storage);
 
-    app.use(cors());
+    // Note: the cors function is type-hinted explicitly here due a problem with the cors typings
+    // See https://github.com/DefinitelyTyped/DefinitelyTyped/issues/50068#issuecomment-743132578
+    app.use(cors<express.Request>());
     app.use(routes.storage);
     app.use(routes.ordering);
 
