@@ -91,7 +91,9 @@ export function create(
         producer,
         appTenants);
 
-    app.use("/public", cors(), express.static(path.join(__dirname, "../../public")));
+    // Note: the cors function is type-hinted explicitly here due a problem with the cors typings
+    // See https://github.com/DefinitelyTyped/DefinitelyTyped/issues/50068#issuecomment-743132578
+    app.use("/public", cors<express.Request>(), express.static(path.join(__dirname, "../../public")));
     app.use(routes.api);
 
     // Catch 404 and forward to error handler
