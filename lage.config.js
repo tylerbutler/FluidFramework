@@ -1,10 +1,10 @@
 module.exports = {
     "pipeline": {
         "l-build": [
+            "^build:copy",
             "^tsc",
             // "^build:compile",
-            // "^build:esnext",
-            "^build:copy",
+            "^build:esnext",
         ],
         "l-build:test": [
             "l-build",
