@@ -9,6 +9,7 @@
   "workspaces": [
     "packages/*/*",
     "examples/**",
+    "tools/**",
     "server/historian/",
     "server/routerlicious/",
     "server/tinylicious/",
