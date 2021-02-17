@@ -13253,7 +13253,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^16.0.11":
+"@types/react-dom@npm:^16.0.11, @types/react-dom@npm:^16.8.0":
   version: 16.9.11
   resolution: "@types/react-dom@npm:16.9.11"
   dependencies:
@@ -13297,6 +13297,16 @@ __metadata:
     "@types/prop-types": "*"
     csstype: ^3.0.2
   checksum: 41d227d4e9a45b1ad6d80c9b0fe9af003d95d03a0f2f2495a537c36d69541439fcff67edcef241e88c8ab7257377dbe8737d013d3f9b9503b76174165083f7b6
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^16.8.0":
+  version: 16.14.4
+  resolution: "@types/react@npm:16.14.4"
+  dependencies:
+    "@types/prop-types": "*"
+    csstype: ^3.0.2
+  checksum: f994d97aa05233e4f62cd42940ea4290ef1f9a8f3eb0ebda1ea39ed7ae20a16fff7ae1948952dce215b580c2a439fbf451556601be97ebe53a22dbce8a4e31a4
   languageName: node
   linkType: hard
 
@@ -30317,7 +30327,7 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"react-dom@npm:^16.10.2, react-dom@npm:^16.8.3":
+"react-dom@npm:^16.10.2, react-dom@npm:^16.8.0, react-dom@npm:^16.8.3":
   version: 16.14.0
   resolution: "react-dom@npm:16.14.0"
   dependencies:
@@ -30476,7 +30486,7 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"react@npm:^16.10.2, react@npm:^16.8.3":
+"react@npm:^16.10.2, react@npm:^16.8.0, react@npm:^16.8.3":
   version: 16.14.0
   resolution: "react@npm:16.14.0"
   dependencies:
@@ -34122,6 +34132,16 @@ resolve@~1.17.0:
   languageName: node
   linkType: hard
 
+typescript@*:
+  version: 4.1.5
+  resolution: "typescript@npm:4.1.5"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 29157c84426ac94ce97aac836264f303a26bd9fb30865650229e3406a36ca2e89735ef4b8878075ba1b95fa4d3ff9810057b64888700c28e20b4034a6db4da83
+  languageName: node
+  linkType: hard
+
 typescript@3.0.1 - 3.6.4:
   version: 3.6.4
   resolution: "typescript@npm:3.6.4"
@@ -34139,6 +34159,16 @@ typescript@^3.7.4:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10848a9c35fd8c70a8792b8bd9485317534bcd58768793d3b7d9c7486e9fd30cf345f83fa2a324e0bf6088bc8a4d8d061d58fda38b18c2ff187cf01fbbff6267
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@*#builtin<compat/typescript>":
+  version: 4.1.5
+  resolution: "typescript@patch:typescript@npm%3A4.1.5#builtin<compat/typescript>::version=4.1.5&hash=cc6730"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 58cc7786be0f8485c124944883b1384287532e4867ec37f1fb5cb2811dbc10f7a9decccad89097f924043285f3515bfd8223c61dbb4f88af00b2d8dc2ef73207
   languageName: node
   linkType: hard
 

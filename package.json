@@ -11,9 +11,8 @@
     "examples/**",
     "experimental/**",
     "tools/**",
-    "server/historian/",
-    "server/routerlicious/",
-    "server/tinylicious/",
+    "server/routerlicious/packages/gitresources",
+    "server/routerlicious/packages/protocol*",
     "common/lib/*",
     "common/build/*"
   ],
