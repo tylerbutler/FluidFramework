@@ -4,7 +4,10 @@ module.exports = {
             "^build:copy",
             "^tsc",
             // "^build:compile",
-            "^build:esnext",
+            "l-build:esnext",
+        ],
+        "l-build:esnext": [
+            "^l-build",
         ],
         "l-build:test": [
             "l-build",
