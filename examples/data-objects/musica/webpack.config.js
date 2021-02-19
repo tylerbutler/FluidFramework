@@ -15,42 +15,42 @@ module.exports = env => {
 
   return merge(
     {
-      entry: {
+    entry: {
         main: './src/index.tsx'
-      },
-      resolve: {
+    },
+    resolve: {
         extensions: ['.ts', '.tsx', '.js']
-      },
-      module: {
+    },
+    module: {
         rules: [
-          {
+        {
             test: /\.tsx?$/,
             loader: 'ts-loader'
-          },
-          {
+        },
+        {
             test: /\.css$/,
             use: [
-              'style-loader', // creates style nodes from JS strings
-              'css-loader' // translates CSS into CommonJS
+            'style-loader', // creates style nodes from JS strings
+            'css-loader' // translates CSS into CommonJS
             ]
-          },
-          {
+        },
+        {
             test: /\.js$/,
             exclude: /node_modules/,
             use: {
-              loader: 'babel-loader'
+            loader: 'babel-loader'
             }
-          },
-          {
+        },
+        {
             test: /\.(png|jpg|gif|svg|eot|ttf|woff|woff2)$/,
             loader: 'url-loader',
             options: {
-              limit: 10000
+            limit: 10000
             }
-          }
+        }
         ]
-      },
-      output: {
+    },
+    output: {
         filename: '[name].bundle.js',
         path: path.resolve(__dirname, 'dist'),
         library: '[name]',
@@ -58,16 +58,16 @@ module.exports = env => {
         // https://github.com/webpack/webpack/issues/7939
         devtoolNamespace: fluidPackageName,
         libraryTarget: 'umd'
-      },
-      devServer: {
+    },
+    devServer: {
         publicPath: '/dist',
         stats: 'minimal',
         before: fluidRoute.before,
         after: (app, server) => fluidRoute.after(app, server, __dirname, env),
         watchOptions: {
-          ignored: "**/node_modules/**",
+        ignored: "**/node_modules/**",
         }
-      }
+    }
     },
     isProduction ? require('./webpack.prod') : require('./webpack.dev')
   );

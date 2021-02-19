@@ -9,12 +9,12 @@
     background: #d97;
 }
 
-*[data-debug] *::after { 
+*[data-debug] *::after {
     border: 1px solid #796;
     background: #796;
 }
 
-*[data-debug] *::before, *[data-debug] *::after { 
+*[data-debug] *::before, *[data-debug] *::after {
     color: white;
     font-size: 0.4em;
     vertical-align: middle;
@@ -23,7 +23,7 @@
 }
 
 *[data-debug] a::before, *[data-debug] li::before, *[data-debug] span::before,
-*[data-debug] a::after, *[data-debug] li::after, *[data-debug] span::after { 
+*[data-debug] a::after, *[data-debug] li::after, *[data-debug] span::after {
     display: inline
 }
 

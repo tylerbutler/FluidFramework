@@ -22,7 +22,7 @@ function processDataObjectNameInput(nameArray) {
   }
   return nameArray
     .map((value, index) => {
-      return index === 0 ? value : capitalize(value);
+    return index === 0 ? value : capitalize(value);
     })
     .join()
     .replace(/\W/g, "");
@@ -34,7 +34,7 @@ const questions = {
         name: "dataObjectName",
         message: "What is the name of your new Data Object?",
         filter: (input) => {
-          return processDataObjectNameInput(input.split(" "));
+        return processDataObjectNameInput(input.split(" "));
         },
     },
     viewFramework : {
@@ -45,11 +45,11 @@ const questions = {
         choices: [react, none],
     },
     scaffolding: {
-      type: "list",
-      name: "scaffolding",
-      message: "Which type of scaffolding would you like?",
-      default: scaffoldingBeginner,
-      choices: [scaffoldingBeginner, scaffoldingAdvanced],
+    type: "list",
+    name: "scaffolding",
+    message: "Which type of scaffolding would you like?",
+    default: scaffoldingBeginner,
+    choices: [scaffoldingBeginner, scaffoldingAdvanced],
     }
 };
 
@@ -65,40 +65,40 @@ module.exports = class extends Generator {
 
     // Adding two options to specify the view inline
     this.option(
-      "view-react",
-      {
+    "view-react",
+    {
         description: "Sets React as Default View",
-      });
+    });
     this.option(
-      "view-none",
-      {
+    "view-none",
+    {
         description: "Sets None as Default View",
-      });
+    });
 
     // Adding two options to specify the scaffolding inline
     this.option(
-      scaffoldingBeginner,
-      {
+    scaffoldingBeginner,
+    {
         description: `Sets ${scaffoldingBeginner} as scaffolding`,
-      });
+    });
     this.option(
-      scaffoldingAdvanced,
-      {
+    scaffoldingAdvanced,
+    {
         description: `Sets ${scaffoldingAdvanced} as scaffolding`,
-      });
+    });
 
     // Adding argument to specify the DataObject name inline
     this.argument(
-      "dataObjectName",
-      {
+    "dataObjectName",
+    {
         type: Array,
         required: false,
         description: "Defines the DataObject Name"
-      });
+    });
 
     if (this.options["dataObjectName"]) {
-      // if there is a dataObjectName option we need to strip out non-word characters
-      this.options["dataObjectName"] = processDataObjectNameInput(this.options["dataObjectName"]);
+    // if there is a dataObjectName option we need to strip out non-word characters
+    this.options["dataObjectName"] = processDataObjectNameInput(this.options["dataObjectName"]);
     }
   }
 
@@ -107,37 +107,37 @@ module.exports = class extends Generator {
     this.log("Let us help you get set up. Once we're done, you can start coding!");
     const questionsCollection = [];
     if (this.options.dataObjectName) {
-      this.log(`${chalk.green("?")} ${questions.dataObjectName.message} ${chalk.blue(this._dataObjectName())}`)
+    this.log(`${chalk.green("?")} ${questions.dataObjectName.message} ${chalk.blue(this._dataObjectName())}`)
     } else {
-      questionsCollection.push(questions.dataObjectName);
+    questionsCollection.push(questions.dataObjectName);
     }
 
     if (this.options["view-react"] && this.options["view-none"]) {
-      this.log(chalk.red("Both --view-react and --view-none options have been included. Prompting question."));
-      delete this.options["view-react"];
-      delete this.options["view-none"];
+    this.log(chalk.red("Both --view-react and --view-none options have been included. Prompting question."));
+    delete this.options["view-react"];
+    delete this.options["view-none"];
     }
 
     if (this.options["view-react"] || this.options["view-none"]) {
-      this.log(`${chalk.green("?")} ${questions.viewFramework.message} ${chalk.blue(this._isReact() ? react : none)}`)
+    this.log(`${chalk.green("?")} ${questions.viewFramework.message} ${chalk.blue(this._isReact() ? react : none)}`)
     } else {
-      questionsCollection.push(questions.viewFramework);
+    questionsCollection.push(questions.viewFramework);
     }
 
     if (this.options[scaffoldingBeginner] && this.options[scaffoldingAdvanced]) {
-      this.log(chalk.red(`Both --${scaffoldingBeginner} and --${scaffoldingAdvanced} options have been included. Prompting question.`));
-      delete this.options[scaffoldingBeginner];
-      delete this.options[scaffoldingAdvanced];
+    this.log(chalk.red(`Both --${scaffoldingBeginner} and --${scaffoldingAdvanced} options have been included. Prompting question.`));
+    delete this.options[scaffoldingBeginner];
+    delete this.options[scaffoldingAdvanced];
     }
 
     if (this.options[scaffoldingBeginner] || this.options[scaffoldingAdvanced]) {
-      this.log(`${chalk.green("?")} ${questions.scaffolding.message} ${chalk.blue(this._isBeginnerScaffolding ? scaffoldingBeginner : scaffoldingAdvanced)}`)
+    this.log(`${chalk.green("?")} ${questions.scaffolding.message} ${chalk.blue(this._isBeginnerScaffolding ? scaffoldingBeginner : scaffoldingAdvanced)}`)
     } else {
-      questionsCollection.push(questions.scaffolding);
+    questionsCollection.push(questions.scaffolding);
     }
 
     if (questionsCollection) {
-      this.answers = await this.prompt(questionsCollection);
+    this.answers = await this.prompt(questionsCollection);
     }
 
     this.destinationRoot(this._dataObjectPkgName());
@@ -146,22 +146,22 @@ module.exports = class extends Generator {
   moveAndModifyTemplateFiles() {
 
     if (this._isBeginnerScaffolding()) {
-      this._copyAndModifySimpleDataObjectFile();
-      this.fs.copyTpl(
+    this._copyAndModifySimpleDataObjectFile();
+    this.fs.copyTpl(
         this.templatePath("README-Simple.md"), // FROM
         this.destinationPath("./README.md"), // TO Root Folder,
         { extension: this._getFileExtension() },
-      );
+    );
     } else {
-      // Copy and Modify Advanced Files
-      this._copyAndModifyDataObjectFile();
-      this._copyAndModifyInterfaceFile();
-      this._copyAndModifyViewFile();
-      this.fs.copyTpl(
+    // Copy and Modify Advanced Files
+    this._copyAndModifyDataObjectFile();
+    this._copyAndModifyInterfaceFile();
+    this._copyAndModifyViewFile();
+    this.fs.copyTpl(
         this.templatePath("README.md"), // FROM
         this.destinationPath("./README.md"), // TO Root Folder,
         { extension: this._getFileExtension() },
-      );
+    );
     }
 
     this._copyAndModifyPackageJsonFile();
@@ -169,30 +169,30 @@ module.exports = class extends Generator {
     this._copyAndModifyTsconfigFile();
 
     this.fs.copy(
-      this.templatePath("tests/diceRoller.test.ts"), // FROM
-      this.destinationPath(`tests/${this._dataObjectPkgName()}.test.ts`), // TO Root Folder
+    this.templatePath("tests/diceRoller.test.ts"), // FROM
+    this.destinationPath(`tests/${this._dataObjectPkgName()}.test.ts`), // TO Root Folder
     );
 
     // Copy Remaining Files
     this.fs.copy(
-      this.templatePath("webpack.config.js"), // FROM
-      this.destinationPath("./webpack.config.js"), // TO Root Folder
+    this.templatePath("webpack.config.js"), // FROM
+    this.destinationPath("./webpack.config.js"), // TO Root Folder
     );
 
     this.fs.copy(
-      this.templatePath("jest-puppeteer.config.js"), // FROM
-      this.destinationPath("jest-puppeteer.config.js"), // TO Root Folder
+    this.templatePath("jest-puppeteer.config.js"), // FROM
+    this.destinationPath("jest-puppeteer.config.js"), // TO Root Folder
     );
 
     this.fs.copy(
-      this.templatePath("jest.config.js"), // FROM
-      this.destinationPath("jest.config.js"), // TO Root Folder
+    this.templatePath("jest.config.js"), // FROM
+    this.destinationPath("jest.config.js"), // TO Root Folder
     );
 
     // Copy files that start with . from the root
     this.fs.copy(
-      this.templatePath(".*"), // FROM
-      this.destinationPath("./"), // TO Root Folder
+    this.templatePath(".*"), // FROM
+    this.destinationPath("./"), // TO Root Folder
     );
   }
 
@@ -204,22 +204,22 @@ module.exports = class extends Generator {
     packageJson.name = this._dataObjectPkgName();
 
     if (!this._isReact()) {
-      // REMOVE react-specific dependencies. This is preferred because it keeps all dependencies in one place
-      delete packageJson.devDependencies["@types/react-dom"];
-      delete packageJson.dependencies["react"];
-      delete packageJson.dependencies["react-dom"];
+    // REMOVE react-specific dependencies. This is preferred because it keeps all dependencies in one place
+    delete packageJson.devDependencies["@types/react-dom"];
+    delete packageJson.dependencies["react"];
+    delete packageJson.dependencies["react-dom"];
     }
 
     this.fs.writeJSON(
-      this.destinationPath("package.json"), // TO
-      packageJson, // contents
+    this.destinationPath("package.json"), // TO
+    packageJson, // contents
     );
   }
 
   _copyAndModifySimpleDataObjectFile() {
     const file = this._generateNewProjectFile(
-      `src/dataObject-simple${this._getFileExtension()}`,
-      `src/dataObject${this._getFileExtension()}`);
+    `src/dataObject-simple${this._getFileExtension()}`,
+    `src/dataObject${this._getFileExtension()}`);
     const classObj = file.getClass("DiceRoller");
     // Rename the class name with the DataObject name provided
     classObj.rename(this._dataObjectClassName());
@@ -229,8 +229,8 @@ module.exports = class extends Generator {
     accessor.setBodyText(`return "${this._dataObjectPkgName()}";`);
 
     if(this._isReact()) {
-      const viewClassObj = file.getClass("DiceRollerView");
-      viewClassObj.rename(`${this._dataObjectClassName()}View`);
+    const viewClassObj = file.getClass("DiceRollerView");
+    viewClassObj.rename(`${this._dataObjectClassName()}View`);
     }
 
     file.save();
@@ -309,15 +309,15 @@ module.exports = class extends Generator {
     interfaceImport.setName(this._dataObjectInterfaceModelName());
 
     if (this._isReact()) {
-      // For react we need to update our interface name on the model
-      const propsInterface = file.getInterface("IDiceRollerViewProps");
-      const modelProp = propsInterface.getProperty("model");
-      modelProp.setType(this._dataObjectInterfaceModelName());
+    // For react we need to update our interface name on the model
+    const propsInterface = file.getInterface("IDiceRollerViewProps");
+    const modelProp = propsInterface.getProperty("model");
+    modelProp.setType(this._dataObjectInterfaceModelName());
     } else {
-      // For vanillaJS we need to update the constructor param type
-      const ctor = file.getClass("DiceRollerView").getConstructors()[0];
-      const param = ctor.getParameter("model");
-      param.setType(this._dataObjectInterfaceModelName());
+    // For vanillaJS we need to update the constructor param type
+    const ctor = file.getClass("DiceRollerView").getConstructors()[0];
+    const param = ctor.getParameter("model");
+    param.setType(this._dataObjectInterfaceModelName());
     }
 
     file.save();
@@ -327,14 +327,14 @@ module.exports = class extends Generator {
     var tsconfigJson = this.fs.readJSON(this.templatePath("tsconfig.json"));
 
     if (!this._isReact()) {
-      // REMOVE react-specific dependencies. This is preferred because it keeps all dependencies in one place
-      delete tsconfigJson.compilerOptions.jsx;
-      tsconfigJson.compilerOptions.types = tsconfigJson.compilerOptions.types.slice(2)
+    // REMOVE react-specific dependencies. This is preferred because it keeps all dependencies in one place
+    delete tsconfigJson.compilerOptions.jsx;
+    tsconfigJson.compilerOptions.types = tsconfigJson.compilerOptions.types.slice(2)
     }
 
     this.fs.writeJSON(
-      this.destinationPath("tsconfig.json"), // TO
-      tsconfigJson, // contents
+    this.destinationPath("tsconfig.json"), // TO
+    tsconfigJson, // contents
     );
   }
 
@@ -344,13 +344,13 @@ module.exports = class extends Generator {
     const project = new Project({});
 
     const file = project.createSourceFile(
-      this.destinationPath("src/index.ts"),
-      fileString,
+    this.destinationPath("src/index.ts"),
+    fileString,
     );
 
     // Change class name plus references
     const dataObjectDec = file.getImportDeclaration((dec) => {
-      return dec.isModuleSpecifierRelative();
+    return dec.isModuleSpecifierRelative();
     });
 
     const importSpecifier = dataObjectDec.addNamedImport(this._dataObjectFactoryClassName());
@@ -385,8 +385,8 @@ module.exports = class extends Generator {
 
     this.log("We suggest you open your DataObject with your favorite IDE.\n Then start by typing:");
     if (this._dataObjectPkgName() !== ".") {
-      const cdPath = "    cd " + this._dataObjectPkgName();
-      this.log(chalk.cyan(cdPath));
+    const cdPath = "    cd " + this._dataObjectPkgName();
+    this.log(chalk.cyan(cdPath));
     }
     this.log(chalk.cyan("    npm start"));
   }
@@ -436,8 +436,8 @@ module.exports = class extends Generator {
     const project = new Project({});
 
     return project.createSourceFile(
-      this.destinationPath(destinationPath),
-      fileString,
+    this.destinationPath(destinationPath),
+    fileString,
     );
   }
 };

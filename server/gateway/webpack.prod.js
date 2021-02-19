@@ -43,43 +43,43 @@ module.exports = {
              *   be shipping polyfills for crypto APIs, so this can be removed once word-online-beta breaks the jwt dependency.
              */
             exclude: (instance) =>
-              instance.name === 'isarray' ||
-              instance.name === 'ms' ||
-              instance.name === 'debug' ||
-              instance.name === 'inherits' ||
-              /**
-               * The following need to be investigated:
-               * bn.js
-               * Multiple versions of bn.js found:
-               *     4.11.8 ./~/asn1.js/~/bn.js from ./~/asn1.js\lib\asn1.js
-               *     5.1.1 ./~/bn.js from ./~/browserify-sign\browser\sign.js
-               *
-               * component-emitter
-               * Multiple versions of component-emitter found:
-               *     1.2.1 ./~/component-emitter from ./~/socket.io-client\lib\socket.js
-               *     1.3.0 ./~/engine.io-client/~/component-emitter from ./~/engine.io-client\lib\socket.js
-               *
-               * readable-stream
-               * Multiple versions of readable-stream found:
-               *     2.0.6 ./~/readable-stream from ./~/stream-browserify\index.js
-               *     3.6.0 ./~/browserify-sign/~/readable-stream from ./~/browserify-sign/~/readable-stream\lib\_stream_writable.js
-               */
-              instance.name === 'bn.js' ||
-              instance.name === 'component-emitter' ||
-              instance.name === 'readable-stream'
-          }),
-          // We don't split debug/release builds, so always do bundle analysis
-          new BundleAnalyzerPlugin({
+            instance.name === 'isarray' ||
+            instance.name === 'ms' ||
+            instance.name === 'debug' ||
+            instance.name === 'inherits' ||
+            /**
+             * The following need to be investigated:
+             * bn.js
+             * Multiple versions of bn.js found:
+             *     4.11.8 ./~/asn1.js/~/bn.js from ./~/asn1.js\lib\asn1.js
+             *     5.1.1 ./~/bn.js from ./~/browserify-sign\browser\sign.js
+             *
+             * component-emitter
+             * Multiple versions of component-emitter found:
+             *     1.2.1 ./~/component-emitter from ./~/socket.io-client\lib\socket.js
+             *     1.3.0 ./~/engine.io-client/~/component-emitter from ./~/engine.io-client\lib\socket.js
+             *
+             * readable-stream
+             * Multiple versions of readable-stream found:
+             *     2.0.6 ./~/readable-stream from ./~/stream-browserify\index.js
+             *     3.6.0 ./~/browserify-sign/~/readable-stream from ./~/browserify-sign/~/readable-stream\lib\_stream_writable.js
+             */
+            instance.name === 'bn.js' ||
+            instance.name === 'component-emitter' ||
+            instance.name === 'readable-stream'
+        }),
+        // We don't split debug/release builds, so always do bundle analysis
+        new BundleAnalyzerPlugin({
             analyzerMode: 'static',
             reportFilename: path.resolve(process.cwd(), 'bundleAnalysis/report.html'),
             openAnalyzer: false,
             generateStatsFile: false,
             statsFilename: path.resolve(process.cwd(), 'bundleAnalysis/report.json')
-          }),
-          // Plugin that generates a compressed version of the stats file that can be uploaded to blob storage
-          new BundleComparisonPlugin({
+        }),
+        // Plugin that generates a compressed version of the stats file that can be uploaded to blob storage
+        new BundleComparisonPlugin({
             // File to create, relative to the webpack build output path:
             file: path.resolve(process.cwd(), 'bundleAnalysis/bundleStats.msp.gz')
-          })
+        })
     ],
 };

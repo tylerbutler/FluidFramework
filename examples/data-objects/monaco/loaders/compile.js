@@ -71,7 +71,7 @@ module.exports.pitch = function pitch(remainingRequest) {
     const mainFilename = entries[0].files[0];
     if (emit === false) { delete currentCompilation.assets[mainFilename]; }
     callback(null, compilation.assets[mainFilename].source(), null, {
-      [COMPILATION_METADATA]: entries[0].files,
+    [COMPILATION_METADATA]: entries[0].files,
     });
   });
 };
@@ -81,11 +81,11 @@ function getOutputFilename(options, { target }) {
   if (typeof options === 'string') { return { filename: options, options: undefined }; }
   if (typeof options === 'object') {
     return {
-      filename: options.filename,
-      options: {
+    filename: options.filename,
+    options: {
         context: options.context,
         regExp: options.regExp,
-      },
+    },
     };
   }
   throw new Error(`Invalid compile output options: ${options}`);

@@ -17,17 +17,17 @@
 }
 
 /* WebKit: Hide scrollbars */
-.observer::-webkit-scrollbar { 
-    display: none; 
+.observer::-webkit-scrollbar {
+    display: none;
 }
 
 .observer, .expand, .shrink, .expandChild, .shrinkChild {
     position: absolute;
     left: 0;
     top: 0;
-	border: 0 none;
-	outline: 0;
-	padding: 0;
+    border: 0 none;
+    outline: 0;
+    padding: 0;
     margin: 0;
 }
 

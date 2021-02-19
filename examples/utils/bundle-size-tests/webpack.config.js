@@ -20,16 +20,16 @@ module.exports = {
   mode: 'production',
   module: {
     rules: [
-      {
+    {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/,
-      },
-      {
+    },
+    {
         test: /\.js$/,
         use: ["source-map-loader"],
         enforce: "pre"
-      },
+    },
     ],
   },
   resolve: {
@@ -48,15 +48,15 @@ module.exports = {
         ]
     }),
     new DuplicatePackageCheckerPlugin({
-      // Also show module that is requiring each duplicate package
-      verbose: true,
-      // Emit errors instead of warnings
-      emitError: true,
-      /**
-       * We try to avoid duplicate packages, but sometimes we have to allow them since the duplication is coming from a third party library we do not control
-       * IMPORTANT: Do not add any new exceptions to this list without first doing a deep investigation on why a PR adds a new duplication, this hides a bundle size issue
-       */
-      exclude: (instance) =>
+    // Also show module that is requiring each duplicate package
+    verbose: true,
+    // Emit errors instead of warnings
+    emitError: true,
+    /**
+     * We try to avoid duplicate packages, but sometimes we have to allow them since the duplication is coming from a third party library we do not control
+     * IMPORTANT: Do not add any new exceptions to this list without first doing a deep investigation on why a PR adds a new duplication, this hides a bundle size issue
+     */
+    exclude: (instance) =>
         // object-is depends on es-abstract 1.18.0-next, which does not satisfy the semver of other packages. We should be able to remove this when es-abstract moves to 1.18.0
         instance.name === 'es-abstract' ||
         // socket.io and Fluid Framework do not use compatible versions of debug
@@ -67,16 +67,16 @@ module.exports = {
         instance.name === 'ms'
     }),
     new BundleAnalyzerPlugin({
-      analyzerMode: 'static',
-      reportFilename: path.resolve(process.cwd(), 'bundleAnalysis/report.html'),
-      openAnalyzer: false,
-      generateStatsFile: false,
-      statsFilename: path.resolve(process.cwd(), 'bundleAnalysis/report.json')
+    analyzerMode: 'static',
+    reportFilename: path.resolve(process.cwd(), 'bundleAnalysis/report.html'),
+    openAnalyzer: false,
+    generateStatsFile: false,
+    statsFilename: path.resolve(process.cwd(), 'bundleAnalysis/report.json')
     }),
     // Plugin that generates a compressed version of the stats file that can be uploaded to blob storage
     new BundleComparisonPlugin({
-      // File to create, relative to the webpack build output path:
-      file: path.resolve(process.cwd(), 'bundleAnalysis/bundleStats.msp.gz')
+    // File to create, relative to the webpack build output path:
+    file: path.resolve(process.cwd(), 'bundleAnalysis/bundleStats.msp.gz')
     })
   ],
 };

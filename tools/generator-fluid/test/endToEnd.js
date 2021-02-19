@@ -35,7 +35,7 @@ describe("Yo fluid", function () {
                 const expectedFiles = ["README.md"];
                 assert.file(expectedFiles);
 
-                // Navigate to the temp folder that 
+                // Navigate to the temp folder that
                 const tempDataObjectPath = `${dirPath}/foobar`;
                 shell.echo(`Navigating to temp path ${tempDataObjectPath}`);
                 shell.cd(tempDataObjectPath);
@@ -44,7 +44,7 @@ describe("Yo fluid", function () {
                 shell.echo("Running npm i - this can take some time...");
                 const installResponse = shell.exec("npm i", { silent: true });
                 assert.equal(installResponse.code, 0, `npm install failed with code: ${installResponse.code} - error: ${installResponse.stderr}`);
-                
+
                 // Run jest test for new DataObject
                 shell.echo("Running npm test - this can take some time...");
                 const testResponse = shell.exec("npm test", { silent: true });
@@ -79,7 +79,7 @@ describe("Yo fluid", function () {
                 const expectedFiles = ["README.md"];
                 assert.file(expectedFiles);
 
-                // Navigate to the temp folder that 
+                // Navigate to the temp folder that
                 const tempDataObjectPath = `${dirPath}/foobar`;
                 shell.echo(`Navigating to temp path ${tempDataObjectPath}`);
                 shell.cd(tempDataObjectPath);
@@ -88,7 +88,7 @@ describe("Yo fluid", function () {
                 shell.echo("Running npm i - this can take some time...");
                 const installResponse = shell.exec("npm i", { silent: true });
                 assert.equal(installResponse.code, 0, `npm install failed with code: ${installResponse.code} - error: ${installResponse.stderr}`);
-                
+
                 // Run jest test for new DataObject
                 shell.echo("Running npm test - this can take some time...");
                 const testResponse = shell.exec("npm test", { silent: true });
@@ -123,7 +123,7 @@ describe("Yo fluid", function () {
                 const expectedFiles = ["README.md"];
                 assert.file(expectedFiles);
 
-                // Navigate to the temp folder that 
+                // Navigate to the temp folder that
                 const tempDataObjectPath = `${dirPath}/foobar`;
                 shell.echo(`Navigating to temp path ${tempDataObjectPath}`);
                 shell.cd(tempDataObjectPath);
@@ -132,7 +132,7 @@ describe("Yo fluid", function () {
                 shell.echo("Running npm i - this can take some time...");
                 const installResponse = shell.exec("npm i", { silent: true });
                 assert.equal(installResponse.code, 0, `npm install failed with code: ${installResponse.code} - error: ${installResponse.stderr}`);
-                
+
                 // Run jest test for new DataObject
                 shell.echo("Running npm test - this can take some time...");
                 const testResponse = shell.exec("npm test", { silent: true });
@@ -144,7 +144,7 @@ describe("Yo fluid", function () {
                 runContext.cleanTestDirectory();
             });
         });
-        
+
         describe("View - None - advance", () => {
             let runContext;
             let dirPath;
@@ -167,7 +167,7 @@ describe("Yo fluid", function () {
                 const expectedFiles = ["README.md"];
                 assert.file(expectedFiles);
 
-                // Navigate to the temp folder that 
+                // Navigate to the temp folder that
                 const tempDataObjectPath = `${dirPath}/foobar`;
                 shell.echo(`Navigating to temp path ${tempDataObjectPath}`);
                 shell.cd(tempDataObjectPath);
@@ -176,7 +176,7 @@ describe("Yo fluid", function () {
                 shell.echo("Running npm i - this can take some time...");
                 const installResponse = shell.exec("npm i", { silent: true });
                 assert.equal(installResponse.code, 0, `npm install failed with code: ${installResponse.code} - error: ${installResponse.stderr}`);
-                
+
                 // Run jest test for new DataObject
                 shell.echo("Running npm test - this can take some time...");
                 const testResponse = shell.exec("npm test", { silent: true });

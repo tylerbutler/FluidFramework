@@ -30,4 +30,3 @@ stages:
       containerRegistryUrl: ${{ parameters.containerRegistryUrl }}
       containerName: public/${{ parameters.containerName }}
       tagName: ${{ parameters.tagName }}
-

@@ -16,16 +16,16 @@ module.exports = {
   devtool: 'inline-source-map',
   module: {
     rules: [
-      {
+    {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/,
-      },
-      {
+    },
+    {
         test: /\.js$/,
         use: ["source-map-loader"],
         enforce: "pre"
-      },
+    },
     ],
   },
   // Webpack 5 does not support automatic polyfilling of node modules, setting node to false will help simulate webpack 5 behavior by throwing build errors when we rely on node polyfills
@@ -39,7 +39,7 @@ module.exports = {
     new webpack.DefinePlugin({
         process: { env: { NODE_ENV: JSON.stringify(mode) } },
         global : {}
-      }),
+    }),
   ],
   output: {
     filename: '[name].bundle.js',
