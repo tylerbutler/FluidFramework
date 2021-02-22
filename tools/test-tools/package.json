@@ -14,7 +14,6 @@
     "build": "tsc -b",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/node": "^11.9.4",
     "typescript": "^3.7.4"
