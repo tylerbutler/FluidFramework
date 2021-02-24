@@ -26,6 +26,7 @@
     "deli": "node dist/deli/index.js",
     "deli:debug": "node --inspect=0.0.0.0:5858 dist/deli/index.js",
     "docker-run": "docker run --rm -v $(pwd):/usr/src/server -w /usr/src/server node:8.14.0-slim",
+    "eclint": "eclint fix $(git ls-files -- '**/*.js' '**/*.jsx' '**/*.css' '**/*.html' '**/*.htm' '**/*.yml')",
     "eslint": "eslint --format stylish src",
     "eslint:fix": "eslint --format stylish src --fix",
     "foreman": "node dist/foreman/index.js",

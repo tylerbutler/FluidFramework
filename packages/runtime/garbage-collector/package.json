@@ -26,6 +26,7 @@
     "build:test": "tsc --project ./src/test/tsconfig.json",
     "bump-version": "npm version minor --no-push --no-git-tag-version && npm run build:genver",
     "clean": "rimraf dist lib *.tsbuildinfo *.build.log",
+    "eclint": "eclint fix $(git ls-files -- '**/*.js' '**/*.jsx' '**/*.css' '**/*.html' '**/*.htm' '**/*.yml')",
     "eslint": "eslint --format stylish src",
     "eslint:fix": "eslint --format stylish src --fix",
     "lint": "npm run eslint",

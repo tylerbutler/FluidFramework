@@ -16,6 +16,7 @@
     "build:full:compile": "concurrently npm:build:compile npm:webpack",
     "clean": "rimraf dist lib *.tsbuildinfo *.build.log",
     "dev": "npm run webpack:dev",
+    "eclint": "eclint fix $(git ls-files -- '**/*.js' '**/*.jsx' '**/*.css' '**/*.html' '**/*.htm' '**/*.yml')",
     "eslint": "eslint --format stylish src",
     "eslint:fix": "eslint --format stylish src --fix",
     "lint": "npm run eslint",

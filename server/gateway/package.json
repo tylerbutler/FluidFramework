@@ -25,6 +25,7 @@
     "build:webpack": "npm run webpack",
     "build:webpack:min": "npm run webpack:min",
     "clean": "rimraf dist public/scripts/dist *.tsbuildinfo *.build.log",
+    "eclint": "eclint fix $(git ls-files -- '**/*.js' '**/*.jsx' '**/*.css' '**/*.html' '**/*.htm' '**/*.yml')",
     "eslint": "eslint --format stylish src",
     "eslint:fix": "eslint --format stylish src --fix",
     "less": "lessc src/stylesheets/style.less public/stylesheets/dist/style.css && lessc src/stylesheets/map.less public/stylesheets/dist/map.css",
