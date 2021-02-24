@@ -124,7 +124,7 @@ export abstract class SharedSegmentSequence<T extends MergeTree.ISegment>
     ) {
         super(id, dataStoreRuntime, attributes);
 
-        this.loadedDeferred.promise.catch((error)=>{
+        this.loadedDeferred.promise.catch((error) => {
             this.logger.sendErrorEvent({ eventName: "SequenceLoadFailed" }, error);
         });
 
@@ -419,16 +419,16 @@ export abstract class SharedSegmentSequence<T extends MergeTree.ISegment>
         // TODO: once the change to conditionally read these has propagated
         // conditionally write them as well
         // if (this.intervalMapKernel.size > 0) {
-            entries.push(
-                {
-                    mode: FileMode.File,
-                    path: snapshotFileName,
-                    type: TreeEntry.Blob,
-                    value: {
-                        contents: this.intervalMapKernel.serialize(serializer),
-                        encoding: "utf-8",
-                    },
-                });
+        entries.push(
+            {
+                mode: FileMode.File,
+                path: snapshotFileName,
+                type: TreeEntry.Blob,
+                value: {
+                    contents: this.intervalMapKernel.serialize(serializer),
+                    encoding: "utf-8",
+                },
+            });
         // }
         entries.push(
             {
@@ -519,18 +519,17 @@ export abstract class SharedSegmentSequence<T extends MergeTree.ISegment>
                             || m.referenceSequenceNumber < collabWindow.minSeq
                             || m.sequenceNumber <= collabWindow.minSeq
                             || m.sequenceNumber <= collabWindow.currentSeq) {
-                            throw new Error(`Invalid catchup operations in snapshot: ${
-                                JSON.stringify({
-                                    op:{
-                                        seq: m.sequenceNumber,
-                                        minSeq: m.minimumSequenceNumber,
-                                        refSeq:m.referenceSequenceNumber,
-                                    },
-                                    collabWindow:{
-                                        seq: collabWindow.currentSeq,
-                                        minSeq: collabWindow.minSeq,
-                                    },
-                                })}`);
+                            throw new Error(`Invalid catchup operations in snapshot: ${JSON.stringify({
+                                op: {
+                                    seq: m.sequenceNumber,
+                                    minSeq: m.minimumSequenceNumber,
+                                    refSeq: m.referenceSequenceNumber,
+                                },
+                                collabWindow: {
+                                    seq: collabWindow.currentSeq,
+                                    minSeq: collabWindow.minSeq,
+                                },
+                            })}`);
                         }
                         this.processMergeTreeMsg(m);
                     });
@@ -625,7 +624,7 @@ export abstract class SharedSegmentSequence<T extends MergeTree.ISegment>
                 // shallow clone the message as we only overwrite top level properties,
                 // like referenceSequenceNumber and content only
                 stashMessage = {
-                    ... message,
+                    ...message,
                     referenceSequenceNumber: stashMessage.sequenceNumber - 1,
                     contents: ops.length !== 1 ? MergeTree.createGroupOp(...ops) : ops[0],
                 };

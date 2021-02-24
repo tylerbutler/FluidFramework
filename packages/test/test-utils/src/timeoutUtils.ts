@@ -5,18 +5,18 @@
 
 export const defaultTimeoutDurationMs = 250;
 
- export interface TimeoutWithError{
+export interface TimeoutWithError {
     durationMs?: number;
     reject?: true;
     errorMsg?: string;
- }
- export interface TimeoutWithValue<T = void>{
+}
+export interface TimeoutWithValue<T = void> {
     durationMs?: number;
     reject: false;
     value?: T;
- }
+}
 
- export async function timeoutPromise<T = void>(
+export async function timeoutPromise<T = void>(
     executor: (resolve: (value: T | PromiseLike<T>) => void, reject: (reason?: any) => void) => void,
     timeoutOptions: TimeoutWithError | TimeoutWithValue<T> = {},
 ): Promise<T | void> {
@@ -25,9 +25,9 @@ export const defaultTimeoutDurationMs = 250;
     const err = timeoutOptions.reject === false
         ? undefined
         : new Error(timeoutOptions.errorMsg ?? "Timeout");
-    return new Promise<T | void>((res,rej)=>{
+    return new Promise<T | void>((res, rej) => {
         const timeout = setTimeout(
-            ()=>timeoutOptions.reject === false ? res(timeoutOptions.value) : rej(err),
+            () => timeoutOptions.reject === false ? res(timeoutOptions.value) : rej(err),
             timeoutOptions.durationMs ?? defaultTimeoutDurationMs);
 
         executor(

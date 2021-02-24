@@ -27,12 +27,12 @@ export class BubbleProxy {
             identifier: nodeId(),
             definition: "node" as Definition,
             traits: {
-                x: [ makeScalar(x) ],
-                y: [ makeScalar(y) ],
-                vx: [ makeScalar(vx) ],
-                vy: [ makeScalar(vy) ],
-                c: [ makeScalar(c) ],
-                r: [ makeScalar(r) ],
+                x: [makeScalar(x)],
+                y: [makeScalar(y)],
+                vx: [makeScalar(vx)],
+                vy: [makeScalar(vy)],
+                c: [makeScalar(c)],
+                r: [makeScalar(r)],
             },
         };
 
@@ -44,14 +44,14 @@ export class BubbleProxy {
         this.id = id;
     }
 
-    public get x()  { return this.readScalar(BubbleTrait.x) as number; }
-    public get y()  { return this.readScalar(BubbleTrait.y) as number; }
+    public get x() { return this.readScalar(BubbleTrait.x) as number; }
+    public get y() { return this.readScalar(BubbleTrait.y) as number; }
     public get vx() { return this.readScalar(BubbleTrait.vx) as number; }
     public get vy() { return this.readScalar(BubbleTrait.vy) as number; }
-    public get r()  { return this.readScalar(BubbleTrait.radius) as number; }
-    public get c()  { return this.readScalar(BubbleTrait.color) as string; }
+    public get r() { return this.readScalar(BubbleTrait.radius) as number; }
+    public get c() { return this.readScalar(BubbleTrait.color) as string; }
 
-    public move({width, height}: IStage, tree: Snapshot) {
+    public move({ width, height }: IStage, tree: Snapshot) {
         const changes: Change[] = [];
 
         let x = this.x;

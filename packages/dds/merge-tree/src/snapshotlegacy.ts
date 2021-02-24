@@ -159,7 +159,7 @@ export class SnapshotLegacy {
             segments === chunk1.totalSegmentCount,
             { eventName: "emit: mismatch in totalSegmentCount" });
 
-        if(catchUpMsgs !== undefined && catchUpMsgs.length > 0) {
+        if (catchUpMsgs !== undefined && catchUpMsgs.length > 0) {
             tree.entries.push({
                 mode: FileMode.File,
                 path: this.mergeTree.options?.catchUpBlobName ?? SnapshotLegacy.catchupOps,

@@ -519,7 +519,7 @@ export class MockFluidDataStoreRuntime extends EventEmitter
         };
     }
 
-    public updateUsedRoutes(usedRoutes: string[]) {}
+    public updateUsedRoutes(usedRoutes: string[]) { }
 
     public getAttachSnapshot(): ITreeEntry[] {
         return [];

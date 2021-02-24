@@ -23,7 +23,7 @@ import {
     unreachableCase,
     fromUtf8ToBase64,
     Uint8ArrayToString,
- } from "@fluidframework/common-utils";
+} from "@fluidframework/common-utils";
 import { ITelemetryLogger } from "@fluidframework/common-definitions";
 
 // Gate that when flipped, instructs to compress small blobs.
@@ -33,10 +33,10 @@ function gatesAllowPacking() {
     // Leave override for testing purposes
     // eslint-disable-next-line no-null/no-null
     if (typeof localStorage === "object" && localStorage !== null) {
-        if  (localStorage.FluidAggregateBlobs === "1") {
+        if (localStorage.FluidAggregateBlobs === "1") {
             return true;
         }
-        if  (localStorage.FluidAggregateBlobs === "0") {
+        if (localStorage.FluidAggregateBlobs === "0") {
             return false;
         }
     }
@@ -56,11 +56,11 @@ function bufferToString2(blob: ArrayBufferLike, encoding: "utf-8" | "base64"): s
     return bufferToString(blob, encoding);
 }
 
- /**
-  * Class responsible for aggregating smaller blobs into one and unpacking it later on.
-  */
+/**
+ * Class responsible for aggregating smaller blobs into one and unpacking it later on.
+ */
 class BlobAggregator {
-    private readonly content: [string, string][]= [];
+    private readonly content: [string, string][] = [];
 
     public addBlob(key: string, content: string) {
         this.content.push([key, content]);
@@ -122,7 +122,7 @@ export abstract class SnapshotExtractor {
                     let subTree = snapshot;
                     for (const subPath of pathSplit.slice(0, pathSplit.length - 1)) {
                         if (subTree.trees[subPath] === undefined) {
-                            subTree.trees[subPath] = { blobs: {}, commits: {}, trees: {}};
+                            subTree.trees[subPath] = { blobs: {}, commits: {}, trees: {} };
                         }
                         subTree = subTree.trees[subPath];
                     }
@@ -221,8 +221,7 @@ export class BlobAggregationStorage extends SnapshotExtractor implements IDocume
         private readonly storage: IDocumentStorageService,
         private readonly logger: ITelemetryLogger,
         private readonly allowPacking: boolean,
-        private readonly blobCutOffSize?: number)
-    {
+        private readonly blobCutOffSize?: number) {
         super();
     }
 
@@ -310,8 +309,7 @@ export class BlobAggregationStorage extends SnapshotExtractor implements IDocume
         summary: ISummaryTree,
         path = "",
         level = 0,
-        aggregatorArg?: BlobAggregator): Promise<ISummaryTree>
-    {
+        aggregatorArg?: BlobAggregator): Promise<ISummaryTree> {
         if (this.blobCutOffSize === undefined || this.blobCutOffSize < 0) {
             return summary;
         }
@@ -324,8 +322,8 @@ export class BlobAggregationStorage extends SnapshotExtractor implements IDocume
             aggregator = new BlobAggregator();
         }
 
-        const newSummary: ISummaryTree = {...summary};
-        newSummary.tree = { ...newSummary.tree};
+        const newSummary: ISummaryTree = { ...summary };
+        newSummary.tree = { ...newSummary.tree };
         for (const key of Object.keys(summary.tree)) {
             const obj = summary.tree[key];
             // Get path relative to root of data store (where we do aggregation)

@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { assert , bufferToString } from "@fluidframework/common-utils";
+import { assert, bufferToString } from "@fluidframework/common-utils";
 import { IFluidSerializer, ISerializedHandle } from "@fluidframework/core-interfaces";
 
 import {

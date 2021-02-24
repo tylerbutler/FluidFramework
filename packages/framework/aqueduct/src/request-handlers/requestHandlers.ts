@@ -60,7 +60,8 @@ export const defaultRouteRequestHandler = (defaultRootId: string) => {
         if (parser.pathParts.length === 0) {
             return runtime.IFluidHandleContext.resolveHandle({
                 url: `/${defaultRootId}${parser.query}`,
-                headers: request.headers });
+                headers: request.headers
+            });
         }
         return undefined; // continue search
     };

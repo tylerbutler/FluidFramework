@@ -416,7 +416,7 @@ export class OdspDocumentStorageService implements IDocumentStorageService {
         if (blob instanceof ArrayBuffer) {
             return IsoBuffer.from(blob).toString(outputFormat === "base64" ? "base64" : "utf8");
         }
-        if (outputFormat === blob.encoding || (outputFormat === "string" && blob.encoding === undefined))  {
+        if (outputFormat === blob.encoding || (outputFormat === "string" && blob.encoding === undefined)) {
             return blob.content;
         } else if (outputFormat === "base64") {
             return fromUtf8ToBase64(blob.content);
@@ -709,7 +709,7 @@ export class OdspDocumentStorageService implements IDocumentStorageService {
         }
         postBody += `_post: 1\r\n`;
         postBody += `\r\n--${formBoundary}--`;
-        const headers: {[index: string]: any} = {
+        const headers: { [index: string]: any } = {
             "Content-Type": `multipart/form-data;boundary=${formBoundary}`,
         };
 
@@ -835,7 +835,7 @@ export class OdspDocumentStorageService implements IDocumentStorageService {
         let encodedBlobsSize = 0;
         let decodedBlobsSize = 0;
         for (const tree of snapshot.trees) {
-            for(const treeEntry of tree.entries) {
+            for (const treeEntry of tree.entries) {
                 if (treeEntry.type === "blob") {
                     numBlobs++;
                 } else if (treeEntry.type === "tree") {

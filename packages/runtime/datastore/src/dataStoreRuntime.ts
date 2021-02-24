@@ -96,8 +96,8 @@ export interface ISharedObjectRegistry {
  * Base data store class
  */
 export class FluidDataStoreRuntime extends
-TypedEventEmitter<IFluidDataStoreRuntimeEvents> implements
-IFluidDataStoreChannel, IFluidDataStoreRuntime, IFluidHandleContext {
+    TypedEventEmitter<IFluidDataStoreRuntimeEvents> implements
+    IFluidDataStoreChannel, IFluidDataStoreRuntime, IFluidHandleContext {
     /**
      * Loads the data store runtime
      * @param context - The data store context
@@ -932,14 +932,14 @@ export const mixinRequestHandler = (
     requestHandler: (request: IRequest, runtime: FluidDataStoreRuntime) => Promise<IResponse>,
     Base: typeof FluidDataStoreRuntime = FluidDataStoreRuntime,
 ) => class RuntimeWithRequestHandler extends Base {
-        public async request(request: IRequest) {
-            const response  = await super.request(request);
-            if (response.status === 404) {
-                return requestHandler(request, this);
-            }
-            return response;
+    public async request(request: IRequest) {
+        const response = await super.request(request);
+        if (response.status === 404) {
+            return requestHandler(request, this);
         }
-    } as typeof FluidDataStoreRuntime;
+        return response;
+    }
+} as typeof FluidDataStoreRuntime;
 
 /**
  * Mixin class that adds await for DataObject to finish initialization before we proceed to summary.
@@ -949,33 +949,33 @@ export const mixinSummaryHandler = (
     handler: (runtime: FluidDataStoreRuntime) => Promise<{ path: string[], content: string }>,
     Base: typeof FluidDataStoreRuntime = FluidDataStoreRuntime,
 ) => class RuntimeWithSummarizerHandler extends Base {
-        private addBlob(summary: ISummaryTreeWithStats, path: string[], content: string) {
-            const firstName = path.shift();
-            if (firstName === undefined) {
-                throw new Error("Path can't be empty");
-            }
+    private addBlob(summary: ISummaryTreeWithStats, path: string[], content: string) {
+        const firstName = path.shift();
+        if (firstName === undefined) {
+            throw new Error("Path can't be empty");
+        }
 
-            let blob: ISummaryTree | ISummaryBlob = {
-                type: SummaryType.Blob,
-                content,
+        let blob: ISummaryTree | ISummaryBlob = {
+            type: SummaryType.Blob,
+            content,
+        };
+        summary.stats.blobNodeCount++;
+        summary.stats.totalBlobSize += content.length;
+
+        for (const name of path.reverse()) {
+            blob = {
+                type: SummaryType.Tree,
+                tree: { [name]: blob },
             };
-            summary.stats.blobNodeCount++;
-            summary.stats.totalBlobSize += content.length;
-
-            for (const name of path.reverse()) {
-                blob = {
-                    type: SummaryType.Tree,
-                    tree: { [name]: blob },
-                };
-                summary.stats.treeNodeCount++;
-            }
-            summary.summary.tree[firstName] = blob;
+            summary.stats.treeNodeCount++;
         }
+        summary.summary.tree[firstName] = blob;
+    }
 
-        async summarize(...args: any[]) {
-            const summary = await super.summarize(...args);
-            const content = await handler(this);
-            this.addBlob(summary, content.path, content.content);
-            return summary;
-        }
-    } as typeof FluidDataStoreRuntime;
+    async summarize(...args: any[]) {
+        const summary = await super.summarize(...args);
+        const content = await handler(this);
+        this.addBlob(summary, content.path, content.content);
+        return summary;
+    }
+} as typeof FluidDataStoreRuntime;

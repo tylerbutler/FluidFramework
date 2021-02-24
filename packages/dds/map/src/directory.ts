@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { assert, bufferToString ,TypedEventEmitter } from "@fluidframework/common-utils";
+import { assert, bufferToString, TypedEventEmitter } from "@fluidframework/common-utils";
 import { IFluidSerializer } from "@fluidframework/core-interfaces";
 import { addBlobToTree } from "@fluidframework/protocol-base";
 import {

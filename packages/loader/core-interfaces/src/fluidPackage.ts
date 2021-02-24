@@ -3,9 +3,9 @@
  * Licensed under the MIT License.
  */
 
- /**
-  * Specifies an environment on Fluid property of a IFluidPackage
-  */
+/**
+ * Specifies an environment on Fluid property of a IFluidPackage
+ */
 export interface IFluidPackageEnvironment {
 
     /**
@@ -48,7 +48,7 @@ export interface IFluidPackage {
          * The name of the of the environment. This should be something like browser, or node
          * and contain the necessary targets for loading this code in that environment.
          */
-        [environment: string]:  undefined | IFluidPackageEnvironment;
+        [environment: string]: undefined | IFluidPackageEnvironment;
     };
     /**
      * General access for extended fields as specific usages will
@@ -90,7 +90,7 @@ export interface IFluidCodeDetails {
     readonly config?: IFluidCodeDetailsConfig;
 }
 
-export const isFluidCodeDetails = (details: unknown): details is Readonly<IFluidPackage> =>{
+export const isFluidCodeDetails = (details: unknown): details is Readonly<IFluidPackage> => {
     const maybeCodeDetails = details as Partial<IFluidCodeDetails> | undefined;
     return typeof maybeCodeDetails === "object"
         && (typeof maybeCodeDetails?.package === "string" || isFluidPackage(maybeCodeDetails?.package))
@@ -100,7 +100,7 @@ export const isFluidCodeDetails = (details: unknown): details is Readonly<IFluid
 export const IFluidCodeDetailsComparer: keyof IProvideFluidCodeDetailsComparer = "IFluidCodeDetailsComparer";
 
 export interface IProvideFluidCodeDetailsComparer {
-    readonly IFluidCodeDetailsComparer: IFluidCodeDetailsComparer ;
+    readonly IFluidCodeDetailsComparer: IFluidCodeDetailsComparer;
 }
 
 /**

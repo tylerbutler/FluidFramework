@@ -203,7 +203,7 @@ export class PersistedCacheWithErrorHandling implements IPersistedCache {
                     eventName: "removeCacheEntries",
                     docId: file.docId,
                 },
-            error);
+                error);
         }
     }
 }
@@ -240,15 +240,15 @@ export class LocalPersistentCache implements IPersistedCache {
 
     async removeEntries(file: IFileEntry): Promise<void> {
         Array.from(this.cache)
-        .filter(([cachekey]) => {
-            const docIdFromKey = cachekey.split("_");
-            if (docIdFromKey[0] === file.docId) {
-                return true;
-            }
-        })
-        .map(([cachekey]) => {
-            this.cache.delete(cachekey);
-        });
+            .filter(([cachekey]) => {
+                const docIdFromKey = cachekey.split("_");
+                if (docIdFromKey[0] === file.docId) {
+                    return true;
+                }
+            })
+            .map(([cachekey]) => {
+                this.cache.delete(cachekey);
+            });
     }
 
     private keyFromEntry(entry: ICacheEntry): string {
@@ -313,7 +313,7 @@ export interface IPersistedCacheValueWithEpoch {
 export const persistedCacheValueVersion = "0.1";
 
 export class LocalPersistentCacheAdapter implements IPersistedCache {
-    constructor(private readonly cache: IPersistedCache) {}
+    constructor(private readonly cache: IPersistedCache) { }
 
     async get(entry: ICacheEntry, expiry?: number): Promise<IPersistedCacheValueWithEpoch> {
         const value = await this.cache.get(entry, expiry);

@@ -138,7 +138,7 @@ export class RetriableDocumentStorageService implements IDocumentStorageService 
                 retry: numRetries,
                 duration: performance.now() - startTime,
             },
-            lastError);
+                lastError);
         }
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return result!;

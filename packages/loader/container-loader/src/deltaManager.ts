@@ -1486,8 +1486,8 @@ export class DeltaManager
         }).finally(() => {
             this.refreshDelayInfo(this.deltaStorageDelayId);
             this.fetching = false;
-        }).catch ((error) => {
-            this.logger.sendErrorEvent({eventName: "GetDeltas_Exception"}, error);
+        }).catch((error) => {
+            this.logger.sendErrorEvent({ eventName: "GetDeltas_Exception" }, error);
         });
     }
 

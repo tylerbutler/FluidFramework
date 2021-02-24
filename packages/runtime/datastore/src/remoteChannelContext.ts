@@ -55,7 +55,7 @@ export class RemoteChannelContext implements IChannelContext {
         submitFn: (content: any, localOpMetadata: unknown) => void,
         dirtyFn: (address: string) => void,
         private readonly id: string,
-        baseSnapshot:  ISnapshotTree,
+        baseSnapshot: ISnapshotTree,
         private readonly registry: ISharedObjectRegistry,
         extraBlobs: Map<string, string> | undefined,
         createSummarizerNode: CreateChildSummarizerNodeFn,

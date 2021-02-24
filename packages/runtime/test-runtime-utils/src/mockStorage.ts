@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { assert , IsoBuffer, stringToBuffer } from "@fluidframework/common-utils";
+import { assert, IsoBuffer, stringToBuffer } from "@fluidframework/common-utils";
 import { IBlob, ISummaryTree, ITree } from "@fluidframework/protocol-definitions";
 import { IChannelStorageService } from "@fluidframework/datastore-definitions";
 import { convertSummaryTreeToITree, listBlobsAtTreePath } from "@fluidframework/runtime-utils";

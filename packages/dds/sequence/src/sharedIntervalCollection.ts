@@ -179,7 +179,7 @@ export class SharedIntervalCollection<TInterval extends ISerializableInterval = 
      */
     protected async loadCore(storage: IChannelStorageService) {
         const blob = await storage.readBlob(snapshotFileName);
-        const header = bufferToString(blob,"utf8");
+        const header = bufferToString(blob, "utf8");
         this.intervalMapKernel.populate(header);
     }
 

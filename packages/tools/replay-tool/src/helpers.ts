@@ -85,8 +85,7 @@ class UnknownChannel implements IChannel {
     constructor(
         public readonly id: string,
         public readonly attributes: IChannelAttributes,
-        services: IChannelServices)
-    {
+        services: IChannelServices) {
         services.deltaConnection.attach({
             process: (message: ISequencedDocumentMessage, local: boolean, localOpMetadata: unknown) => {
             },
@@ -113,14 +112,14 @@ class UnknownChannel implements IChannel {
             },
             summary: {
                 type: SummaryType.Tree,
-                tree: { },
+                tree: {},
             },
         };
     }
 
     public isAttached() { return true; }
 
-    public connect(services: IChannelServices): void {}
+    public connect(services: IChannelServices): void { }
 
     public getGCData(): IGarbageCollectionData {
         return { gcNodes: {} };
@@ -152,7 +151,7 @@ class UnknownChannelFactory implements IChannelFactory {
 class ObjectRegistryWithUnknownChannels implements ISharedObjectRegistry {
     private static readonly types = new Set<string>();
 
-    constructor(private readonly base: ISharedObjectRegistry) {}
+    constructor(private readonly base: ISharedObjectRegistry) { }
     public get(name: string): IChannelFactory | undefined {
         const res = this.base.get(name);
         if (res) {
@@ -168,8 +167,7 @@ class ObjectRegistryWithUnknownChannels implements ISharedObjectRegistry {
 
 // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 function mixinDataStoreWithAnyChannel(
-    Base: typeof FluidDataStoreRuntime = FluidDataStoreRuntime)
-{
+    Base: typeof FluidDataStoreRuntime = FluidDataStoreRuntime) {
     return class RuntimeWithRequestHandler extends Base {
         constructor(
             dataStoreContext: IFluidDataStoreContext,

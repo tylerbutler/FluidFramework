@@ -87,7 +87,7 @@ export class EpochTracker {
      */
     public async fetchAndParseAsJSON<T>(
         url: string,
-        fetchOptions: {[index: string]: any},
+        fetchOptions: { [index: string]: any },
         fetchType: FetchType,
         addInBody: boolean = false,
     ): Promise<IOdspResponse<T>> {
@@ -121,7 +121,7 @@ export class EpochTracker {
      */
     public async fetchResponse(
         url: string,
-        fetchOptions: {[index: string]: any},
+        fetchOptions: { [index: string]: any },
         fetchType: FetchType,
         addInBody: boolean = false,
     ): Promise<Response> {
@@ -148,8 +148,8 @@ export class EpochTracker {
 
     private addEpochInRequest(
         url: string,
-        fetchOptions: {[index: string]: any},
-        addInBody: boolean): {url: string, fetchOptions: {[index: string]: any}} {
+        fetchOptions: { [index: string]: any },
+        addInBody: boolean): { url: string, fetchOptions: { [index: string]: any } } {
         if (this.fluidEpoch !== undefined) {
             if (addInBody) {
                 // We use multi part form request for post body where we want to use this.
@@ -262,7 +262,7 @@ export class EpochTrackerWithRedemption extends EpochTracker {
 
     public async fetchAndParseAsJSON<T>(
         url: string,
-        fetchOptions: {[index: string]: any},
+        fetchOptions: { [index: string]: any },
         fetchType: FetchType,
         addInBody: boolean = false,
     ): Promise<IOdspResponse<T>> {

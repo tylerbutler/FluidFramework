@@ -138,10 +138,10 @@ async function loadOuterDataStoreDiv(
     );
 
     const dataStoreDiv = document.getElementById(dataStoreDivId) as HTMLDivElement;
-    getFluidObjectAndRender(container, dataStoreDiv).catch(() => {});
+    getFluidObjectAndRender(container, dataStoreDiv).catch(() => { });
     // Handle the code upgrade scenario (which fires contextChanged)
     container.on("contextChanged", (value) => {
-        getFluidObjectAndRender(container, dataStoreDiv).catch(() => {});
+        getFluidObjectAndRender(container, dataStoreDiv).catch(() => { });
     });
 }
 

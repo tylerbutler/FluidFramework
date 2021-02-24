@@ -237,7 +237,7 @@ export class SnapshotV1 {
                     raw.removedClient = mergeTree.getLongClientId!(segment.removedClientId!);
                 }
 
-            // Sanity check that we are preserving either the seq < minSeq or a removed segment's info.
+                // Sanity check that we are preserving either the seq < minSeq or a removed segment's info.
                 assert(raw.seq !== undefined && raw.client !== undefined
                     || raw.removedSeq !== undefined && raw.removedClient !== undefined);
 

@@ -46,4 +46,4 @@ export function parseAuthErrorTenant(responseHeader: Headers): string | undefine
         });
 
     return tenantId;
-  }
+}

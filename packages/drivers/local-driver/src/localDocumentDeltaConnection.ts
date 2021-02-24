@@ -56,7 +56,7 @@ export class LocalDocumentDeltaConnection
     }
 
     constructor(socket: SocketIOClient.Socket, documentId: string) {
-          super(socket, documentId, new TelemetryNullLogger());
+        super(socket, documentId, new TelemetryNullLogger());
     }
 
     /**

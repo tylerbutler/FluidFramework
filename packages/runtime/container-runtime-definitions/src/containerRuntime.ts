@@ -32,7 +32,7 @@ import {
     IContainerRuntimeBaseEvents,
     IFluidDataStoreContextDetached,
     IProvideFluidDataStoreRegistry,
- } from "@fluidframework/runtime-definitions";
+} from "@fluidframework/runtime-definitions";
 import { IProvideContainerRuntimeDirtyable } from "./containerRuntimeDirtyable";
 
 declare module "@fluidframework/core-interfaces" {
@@ -46,7 +46,7 @@ export interface IProvideContainerRuntime {
     IContainerRuntime: IContainerRuntime;
 }
 
-export interface IContainerRuntimeEvents extends IContainerRuntimeBaseEvents{
+export interface IContainerRuntimeEvents extends IContainerRuntimeBaseEvents {
     (event: "codeDetailsProposed", listener: (codeDetails: IFluidCodeDetails, proposal: IPendingProposal) => void);
     (
         event: "dirtyDocument" | "dirty" | "disconnected" | "dispose" | "savedDocument" | "saved",
@@ -60,7 +60,7 @@ export interface IContainerRuntimeEvents extends IContainerRuntimeBaseEvents{
 }
 
 export type IContainerRuntimeBaseWithCombinedEvents =
-    IContainerRuntimeBase &  IEventProvider<IContainerRuntimeEvents>;
+    IContainerRuntimeBase & IEventProvider<IContainerRuntimeEvents>;
 
 /*
  * Represents the runtime of the container. Contains helper functions/state of the container.

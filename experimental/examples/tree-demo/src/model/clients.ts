@@ -25,8 +25,8 @@ export class ClientProxy {
             identifier: nodeId(),
             definition: "node" as Definition,
             traits: {
-                [ClientTrait.clientId]: [ makeScalar(clientId) ],
-                [ClientTrait.color]: [ makeScalar(color) ],
+                [ClientTrait.clientId]: [makeScalar(clientId)],
+                [ClientTrait.color]: [makeScalar(color)],
                 [ClientTrait.bubbles]: bubbles,
             },
         };

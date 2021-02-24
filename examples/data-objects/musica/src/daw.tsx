@@ -399,8 +399,8 @@ export class DAW extends React.Component<DAWProps, DAWState> {
                         Start Recording!
                     </button>
                     <button style={{ marginLeft: 10, height: 36 }}
-                            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                            onClick={() => this.recorder.stopRecording()}>
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                        onClick={() => this.recorder.stopRecording()}>
                         Stop Recording!
                     </button>
                     <hr />

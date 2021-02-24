@@ -56,7 +56,7 @@ export enum FlushMode {
     Manual,
 }
 
-export interface IContainerRuntimeBaseEvents extends IEvent{
+export interface IContainerRuntimeBaseEvents extends IEvent {
 
     (event: "batchBegin" | "op", listener: (op: ISequencedDocumentMessage) => void);
     (event: "batchEnd", listener: (error: any, op: ISequencedDocumentMessage) => void);
@@ -70,8 +70,7 @@ export interface IContainerRuntimeBaseEvents extends IEvent{
  */
 export interface IContainerRuntimeBase extends
     IEventProvider<IContainerRuntimeBaseEvents>,
-    IProvideFluidHandleContext
-{
+    IProvideFluidHandleContext {
 
     readonly logger: ITelemetryLogger;
     readonly clientDetails: IClientDetails;
@@ -232,7 +231,7 @@ export interface IFluidDataStoreContextEvents extends IEvent {
  * get information and call functionality to the container.
  */
 export interface IFluidDataStoreContext extends
-IEventProvider<IFluidDataStoreContextEvents>, Partial<IProvideFluidDataStoreRegistry> {
+    IEventProvider<IFluidDataStoreContextEvents>, Partial<IProvideFluidDataStoreRegistry> {
     readonly documentId: string;
     readonly id: string;
     /**

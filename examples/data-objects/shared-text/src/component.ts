@@ -106,7 +106,7 @@ export class SharedTextRunner
         if (pathParts.length === 0) {
             return { status: 200, mimeType: "fluid/object", value: this };
         } else if (pathParts.length === 1 && pathParts[0].toLocaleLowerCase() === "sharedstring") {
-            return { status:200, mimeType: "fluid/sharedstring", value: this.sharedString };
+            return { status: 200, mimeType: "fluid/sharedstring", value: this.sharedString };
         }
         else {
             return { status: 404, mimeType: "text/plain", value: `${request.url} not found` };

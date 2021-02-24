@@ -157,8 +157,8 @@ export class PermutationVector extends Client {
 
         return {
             op: this.insertAtReferencePositionLocal(
-                    new LocalReference(this, segment, /* offset: */ 0, ReferenceType.Transient),
-                    inserted),
+                new LocalReference(this, segment, /* offset: */ 0, ReferenceType.Transient),
+                inserted),
             inserted,
         };
     }

@@ -542,8 +542,7 @@ export abstract class FluidDataStoreContext extends TypedEventEmitter<IFluidData
             throw new Error("Runtime already bound");
         }
 
-        try
-        {
+        try {
             assert(!this.detachedRuntimeCreation);
             assert(this.channelDeferred !== undefined);
             assert(this.pkg !== undefined);
@@ -659,7 +658,7 @@ export class RemotedFluidDataStoreContext extends FluidDataStoreContext {
         );
     }
 
-    private readonly initialSnapshotDetailsP =  new LazyPromise<ISnapshotDetails>(async () => {
+    private readonly initialSnapshotDetailsP = new LazyPromise<ISnapshotDetails>(async () => {
         let tree: ISnapshotTree | undefined;
         let isRootDataStore = true;
 
@@ -888,8 +887,7 @@ export class LocalFluidDataStoreContext extends LocalFluidDataStoreContextBase {
  */
 export class LocalDetachedFluidDataStoreContext
     extends LocalFluidDataStoreContextBase
-    implements IFluidDataStoreContextDetached
-{
+    implements IFluidDataStoreContextDetached {
     constructor(
         id: string,
         pkg: Readonly<string[]>,
@@ -917,8 +915,7 @@ export class LocalDetachedFluidDataStoreContext
 
     public async attachRuntime(
         registry: IProvideFluidDataStoreFactory,
-        dataStoreRuntime: IFluidDataStoreChannel)
-    {
+        dataStoreRuntime: IFluidDataStoreChannel) {
         assert(this.detachedRuntimeCreation);
         assert(this.channelDeferred === undefined);
 

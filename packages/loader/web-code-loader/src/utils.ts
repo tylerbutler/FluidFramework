@@ -15,7 +15,7 @@ export interface IPackageIdentifierDetails {
 
 export function extractPackageIdentifierDetails(
     codeDetailsPackage: string | IFluidPackage): IPackageIdentifierDetails {
-        const packageString = typeof codeDetailsPackage === "string"
+    const packageString = typeof codeDetailsPackage === "string"
         ? codeDetailsPackage // Just return it if it's a string e.g. "@fluid-example/clicker@0.1.1"
         // If it doesn't exist, let's make it from the package details
         : typeof codeDetailsPackage.version === "string"
@@ -59,7 +59,7 @@ export function extractPackageIdentifierDetails(
 export function resolveFluidPackageEnvironment(
     environment: IFluidPackageEnvironment,
     baseUrl: string,
-    ): Readonly<IFluidPackageEnvironment> {
+): Readonly<IFluidPackageEnvironment> {
     const resolvedEnvironment: IFluidPackageEnvironment = {};
     for (const targetName of Object.keys(environment)) {
         const target = environment[targetName];

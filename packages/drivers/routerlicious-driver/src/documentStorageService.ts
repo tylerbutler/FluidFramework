@@ -15,7 +15,7 @@ import {
     IDocumentStorageService,
     ISummaryContext,
     IDocumentStorageServicePolicies,
- } from "@fluidframework/driver-definitions";
+} from "@fluidframework/driver-definitions";
 import * as resources from "@fluidframework/gitresources";
 import { buildHierarchy, getGitType, getGitMode } from "@fluidframework/protocol-base";
 import {

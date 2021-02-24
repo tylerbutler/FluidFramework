@@ -8,7 +8,7 @@ import { assert, Deferred, Lazy } from "@fluidframework/common-utils";
 import { ChildLogger } from "@fluidframework/telemetry-utils";
 import { FluidDataStoreContext, LocalFluidDataStoreContext } from "./dataStoreContext";
 
- export class DataStoreContexts implements Iterable<[string,FluidDataStoreContext]>, IDisposable {
+export class DataStoreContexts implements Iterable<[string, FluidDataStoreContext]>, IDisposable {
     private readonly notBoundContexts = new Set<string>();
 
     /** Attached and loaded context proxies */
@@ -23,7 +23,7 @@ import { FluidDataStoreContext, LocalFluidDataStoreContext } from "./dataStoreCo
      */
     private readonly deferredContexts = new Map<string, Deferred<FluidDataStoreContext>>();
 
-    private readonly disposeOnce = new Lazy<void>(()=>{
+    private readonly disposeOnce = new Lazy<void>(() => {
         // close/stop all store contexts
         for (const [fluidDataStoreId, contextD] of this.deferredContexts) {
             contextD.promise.then((context) => {
@@ -33,7 +33,7 @@ import { FluidDataStoreContext, LocalFluidDataStoreContext } from "./dataStoreCo
                     eventName: "FluidDataStoreContextDisposeError",
                     fluidDataStoreId,
                 },
-                contextError);
+                    contextError);
             });
         }
     });
@@ -45,10 +45,10 @@ import { FluidDataStoreContext, LocalFluidDataStoreContext } from "./dataStoreCo
     }
 
     [Symbol.iterator](): Iterator<[string, FluidDataStoreContext]> {
-         return this._contexts.entries();
-     }
+        return this._contexts.entries();
+    }
 
-    public get disposed() { return this.disposeOnce.evaluated;}
+    public get disposed() { return this.disposeOnce.evaluated; }
     public readonly dispose = () => this.disposeOnce.value;
 
     public notBoundLength() {

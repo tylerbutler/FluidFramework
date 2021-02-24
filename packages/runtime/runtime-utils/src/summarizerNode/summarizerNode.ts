@@ -34,7 +34,7 @@ import {
     SummaryNode,
 } from "./summarizerNodeUtils";
 
-export interface IRootSummarizerNode extends ISummarizerNode, ISummarizerNodeRootContract {}
+export interface IRootSummarizerNode extends ISummarizerNode, ISummarizerNodeRootContract { }
 
 /**
  * Encapsulates the summarizing work and state of an individual tree node in the
@@ -138,7 +138,7 @@ export class SummarizerNode implements IRootSummarizerNode {
                 eventName: "SummarizingWithBasePlusOps",
                 category: "error",
             },
-            error);
+                error);
             const summary = encodeSummary(encodeParam, this.outstandingOps);
             this.wipLocalPaths = {
                 localPath,
@@ -601,9 +601,9 @@ export const createRootSummarizerNode = (
     referenceSequenceNumber: number | undefined,
     config: ISummarizerNodeConfig = {},
 ): IRootSummarizerNode => new SummarizerNode(
-        logger,
-        summarizeInternalFn,
-        config,
-        changeSequenceNumber,
-        referenceSequenceNumber === undefined ? undefined : SummaryNode.createForRoot(referenceSequenceNumber),
-    );
+    logger,
+    summarizeInternalFn,
+    config,
+    changeSequenceNumber,
+    referenceSequenceNumber === undefined ? undefined : SummaryNode.createForRoot(referenceSequenceNumber),
+);

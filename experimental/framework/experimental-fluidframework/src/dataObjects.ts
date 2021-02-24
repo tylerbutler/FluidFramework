@@ -3,4 +3,4 @@
  * Licensed under the MIT License.
  */
 
-export * from  "@fluid-experimental/data-objects";
+export * from "@fluid-experimental/data-objects";

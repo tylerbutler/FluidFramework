@@ -167,8 +167,7 @@ export async function getDriveId(
     library: string | undefined,
     authRequestInfo: IOdspAuthRequestInfo,
 ): Promise<string> {
-    if (library === undefined)
-    {
+    if (library === undefined) {
         const drive = await getDefaultDrive(server, account, authRequestInfo);
         return drive.id;
     }

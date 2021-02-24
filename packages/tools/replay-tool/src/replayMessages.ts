@@ -376,7 +376,7 @@ export class ReplayTool {
                                 JSON.parse(fs.readFileSync(`${dir}/${file}`).toString("utf-8")).sequenceNumber <= 1) {
                                 this.args.fromVersion = name;
                             }
-                        } catch (err) {}
+                        } catch (err) { }
                     }
                     if (this.args.fromVersion === undefined) {
                         // eslint-disable-next-line max-len

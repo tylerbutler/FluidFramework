@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { assert , fromBase64ToUtf8 } from "@fluidframework/common-utils";
+import { assert, fromBase64ToUtf8 } from "@fluidframework/common-utils";
 import { IRequest } from "@fluidframework/core-interfaces";
 import { IResolvedUrl, IUrlResolver } from "@fluidframework/driver-definitions";
 import { createOdspUrl, OdspDriverUrlResolver } from "@fluidframework/odsp-driver";

@@ -451,12 +451,11 @@ class ContainerRuntimeDataStoreRegistry extends FluidDataStoreRegistry {
  */
 export class ContainerRuntime extends TypedEventEmitter<IContainerRuntimeEvents>
     implements
-        IContainerRuntime,
-        IContainerRuntimeDirtyable,
-        IRuntime,
-        ISummarizerRuntime,
-        ISummarizerInternalsProvider
-{
+    IContainerRuntime,
+    IContainerRuntimeDirtyable,
+    IRuntime,
+    ISummarizerRuntime,
+    ISummarizerInternalsProvider {
     public get IContainerRuntime() { return this; }
     public get IContainerRuntimeDirtyable() { return this; }
     public get IFluidRouter() { return this; }
@@ -647,11 +646,11 @@ export class ContainerRuntime extends TypedEventEmitter<IContainerRuntimeEvents>
     }
 
     private get summaryConfiguration() {
-        return  {
-            ... DefaultSummaryConfiguration,
+        return {
+            ...DefaultSummaryConfiguration,
             ... this.context?.serviceConfiguration?.summary,
             ... this.runtimeOptions.summaryConfigOverrides,
-         };
+        };
     }
 
     private _disposed = false;
@@ -725,17 +724,17 @@ export class ContainerRuntime extends TypedEventEmitter<IContainerRuntimeEvents>
             this,
             (attachMsg) => this.submit(ContainerMessageType.Attach, attachMsg),
             (id: string, createParam: CreateChildSummarizerNodeParam) => (
-                    summarizeInternal: SummarizeInternalFn,
-                    getGCDataFn: (fullGC?: boolean) => Promise<IGarbageCollectionData>,
-                    getInitialGCSummaryDetailsFn: () => Promise<IGarbageCollectionSummaryDetails>,
-                ) => this.summarizerNode.createChild(
-                    summarizeInternal,
-                    id,
-                    createParam,
-                    undefined,
-                    getGCDataFn,
-                    getInitialGCSummaryDetailsFn,
-                ),
+                summarizeInternal: SummarizeInternalFn,
+                getGCDataFn: (fullGC?: boolean) => Promise<IGarbageCollectionData>,
+                getInitialGCSummaryDetailsFn: () => Promise<IGarbageCollectionSummaryDetails>,
+            ) => this.summarizerNode.createChild(
+                summarizeInternal,
+                id,
+                createParam,
+                undefined,
+                getGCDataFn,
+                getInitialGCSummaryDetailsFn,
+            ),
             this._logger);
 
         this.blobManager = new BlobManager(
@@ -970,7 +969,7 @@ export class ContainerRuntime extends TypedEventEmitter<IContainerRuntimeEvents>
         // On top of that newly reloaded runtime likely would not be dirty, while it has some changes.
         // And container would assume it's dirty (as there was no notification changing state)
         if (this.dirtyContainer) {
-            this.logger.sendErrorEvent({ eventName: "DirtyContainerReloadRuntime"});
+            this.logger.sendErrorEvent({ eventName: "DirtyContainerReloadRuntime" });
         }
 
         const snapshot = await this.snapshot();
@@ -1024,7 +1023,7 @@ export class ContainerRuntime extends TypedEventEmitter<IContainerRuntimeEvents>
         this._connected = connected;
 
         if (changeOfState) {
-           this.replayPendingStates();
+            this.replayPendingStates();
         }
 
         this.dataStores.setConnectionState(connected, clientId);
@@ -1215,8 +1214,7 @@ export class ContainerRuntime extends TypedEventEmitter<IContainerRuntimeEvents>
 
     public createDetachedRootDataStore(
         pkg: Readonly<string[]>,
-        rootDataStoreId: string): IFluidDataStoreContextDetached
-    {
+        rootDataStoreId: string): IFluidDataStoreContextDetached {
         return this.dataStores.createDetachedDataStoreCore(pkg, true, rootDataStoreId);
     }
 
@@ -1414,7 +1412,7 @@ export class ContainerRuntime extends TypedEventEmitter<IContainerRuntimeEvents>
                     // Get the container's GC data and run GC on the reference graph in it.
                     const gcData = await this.dataStores.getGCData(this.runtimeOptions.runFullGC === true);
                     const { referencedNodeIds, deletedNodeIds } = runGarbageCollection(
-                        gcData.gcNodes, [ "/" ],
+                        gcData.gcNodes, ["/"],
                         this.logger,
                     );
 
@@ -1870,12 +1868,12 @@ export class ContainerRuntime extends TypedEventEmitter<IContainerRuntimeEvents>
         };
 
         await this.summarizerNode.refreshLatestSummary(
-                proposalHandle,
-                getSnapshot,
-                async <T>(id: string) => readAndParse<T>(this.storage, id),
-                summaryLogger,
-            );
-        }
+            proposalHandle,
+            getSnapshot,
+            async <T>(id: string) => readAndParse<T>(this.storage, id),
+            summaryLogger,
+        );
+    }
 
     private async getVersionFromStorage(versionId: string): Promise<IVersion> {
         const versions = await this.storage.getVersions(versionId, 1);

@@ -3,4 +3,4 @@
  * Licensed under the MIT License.
  */
 
-export * from  "@fluidframework/datastore-definitions";
+export * from "@fluidframework/datastore-definitions";

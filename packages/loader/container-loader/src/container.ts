@@ -220,7 +220,7 @@ export class CollabWindowTracker {
     constructor(
         private readonly submit: (type: MessageType, contents: any) => void,
         private readonly activeConnection: () => boolean,
-    ) {}
+    ) { }
     /**
      * Schedules as ack to the server to update the reference sequence number
      */
@@ -536,11 +536,11 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
         return this._dirtyContainer;
     }
 
-    private get serviceFactory() {return this.loader.services.documentServiceFactory;}
-    private get urlResolver() {return this.loader.services.urlResolver;}
-    public get options() { return this.loader.services.options;}
-    private get scope() { return this.loader.services.scope;}
-    private get codeLoader() { return this.loader.services.codeLoader;}
+    private get serviceFactory() { return this.loader.services.documentServiceFactory; }
+    private get urlResolver() { return this.loader.services.urlResolver; }
+    public get options() { return this.loader.services.options; }
+    private get scope() { return this.loader.services.scope; }
+    private get codeLoader() { return this.loader.services.codeLoader; }
     constructor(
         private readonly loader: Loader,
         config: IContainerConfig,
@@ -615,10 +615,10 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
                         }
                         break;
                     case connectedEventName:
-                         if (this.connected) {
+                        if (this.connected) {
                             listener(event, this.clientId);
-                         }
-                         break;
+                        }
+                        break;
                     case disconnectedEventName:
                         if (!this.connected) {
                             listener(event);
@@ -631,7 +631,7 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
                         break;
                     default:
                 }
-            }).catch((error) =>  {
+            }).catch((error) => {
                 this.logger.sendErrorEvent({ eventName: "RaiseConnectedEventError" }, error);
             });
         });
@@ -910,8 +910,8 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
         }
 
         return this.getQuorum().propose("code", codeDetails)
-            .then(()=>true)
-            .catch(()=>false);
+            .then(() => true)
+            .catch(() => false);
     }
 
     private async reloadContextCore(): Promise<void> {
@@ -1198,8 +1198,8 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
     private async createDetached(source: IFluidCodeDetails) {
         if (!isFluidCodeDetails(source)) {
             this.logger.send({
-                    eventName: "DetachCreateNotIFluidCodeDetails",
-                    category: "warning",
+                eventName: "DetachCreateNotIFluidCodeDetails",
+                category: "warning",
             });
         }
         const attributes: IDocumentAttributes = {
@@ -1361,7 +1361,7 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
             }
         });
 
-        protocol.quorum.on("addProposal",(proposal: IPendingProposal) => {
+        protocol.quorum.on("addProposal", (proposal: IPendingProposal) => {
             if (proposal.key === "code" || proposal.key === "code2") {
                 this.emit("codeDetailsProposed", proposal.value, proposal);
             }
@@ -1375,8 +1375,8 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
                     debug(`codeProposal ${JSON.stringify(value)}`);
                     if (!isFluidCodeDetails(value)) {
                         this.logger.send({
-                                eventName: "CodeProposalNotIFluidCodeDetails",
-                                category: "warning",
+                            eventName: "CodeProposalNotIFluidCodeDetails",
+                            category: "warning",
                         });
                     }
                     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -1498,7 +1498,7 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
             // connection was fully established.
             // Note that we might be still initializing quorum - connection is established proactively on load!
             if ((this._protocolHandler !== undefined && this._protocolHandler.quorum.has(details.clientId))
-                    || deltaManager.connectionMode === "read") {
+                || deltaManager.connectionMode === "read") {
                 this.setConnectionState(ConnectionState.Connected);
             }
 
@@ -1767,8 +1767,7 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
      * @returns The snapshot requested, or the latest snapshot if no version was specified, plus version ID
      */
     private async fetchSnapshotTree(specifiedVersion: string | undefined | null):
-        Promise<{snapshot?: ISnapshotTree; versionId?: string}>
-    {
+        Promise<{ snapshot?: ISnapshotTree; versionId?: string }> {
         if (specifiedVersion === null) {
             return {};
         }
@@ -1796,7 +1795,7 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
         assert(this._context?.disposed !== false, "Existing context not disposed");
         // If this assert fires, our state tracking is likely not synchronized between COntainer & runtime.
         if (this._dirtyContainer) {
-            this.logger.sendErrorEvent({ eventName: "DirtyContainerReloadContainer"});
+            this.logger.sendErrorEvent({ eventName: "DirtyContainerReloadContainer" });
         }
 
         // The relative loader will proxy requests to '/' to the loader itself assuming no non-cache flags

@@ -20,7 +20,7 @@ import { v4 as uuid } from "uuid";
  */
 export class InsecureTinyliciousUrlResolver implements IUrlResolver {
     public async resolve(request: IRequest): Promise<IResolvedUrl> {
-        const url = request.url.replace("http://localhost:3000/","");
+        const url = request.url.replace("http://localhost:3000/", "");
         const documentId = url.split("/")[0];
         const encodedDocId = encodeURIComponent(documentId);
         const documentRelativePath = url.slice(documentId.length);
@@ -66,15 +66,15 @@ export class InsecureTinyliciousUrlResolver implements IUrlResolver {
 
         const utf8Key = { utf8: "12345" };
         // eslint-disable-next-line no-null/no-null
-        return jsrsasign.jws.JWS.sign(null, JSON.stringify({ alg:"HS256", typ: "JWT" }), claims, utf8Key);
+        return jsrsasign.jws.JWS.sign(null, JSON.stringify({ alg: "HS256", typ: "JWT" }), claims, utf8Key);
     }
 }
 
 export const createTinyliciousCreateNewRequest =
-    (documentId: string): IRequest=> (
+    (documentId: string): IRequest => (
         {
             url: documentId,
-            headers:{
+            headers: {
                 createNew: true,
             },
         }

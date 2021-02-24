@@ -11,7 +11,7 @@ import fetch from "isomorphic-fetch";
 import {
     extractPackageIdentifierDetails,
     resolveFluidPackageEnvironment,
- } from "./utils";
+} from "./utils";
 
 class FluidPackage {
     private resolveP: Promise<IResolvedFluidCodeDetails> | undefined;
@@ -44,7 +44,7 @@ class FluidPackage {
         return {
             ... this.codeDetails,
             resolvedPackage: {
-                ... maybePkg,
+                ...maybePkg,
                 fluid: {
                     browser,
                 },

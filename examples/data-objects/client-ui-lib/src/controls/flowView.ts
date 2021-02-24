@@ -818,14 +818,14 @@ function renderSegmentIntoLine(
                         handleFromLegacyUri(
                             `/${componentMarker.properties.leafId}`,
                             lineContext.flowView.collabDocument.context.containerRuntime)
-                        .get()
-                        .then(async (component) => {
-                            if (!HTMLViewAdapter.canAdapt(component)) {
-                                return Promise.reject(new Error("component is not viewable"));
-                            }
+                            .get()
+                            .then(async (component) => {
+                                if (!HTMLViewAdapter.canAdapt(component)) {
+                                    return Promise.reject(new Error("component is not viewable"));
+                                }
 
-                            return new HTMLViewAdapter(component);
-                        });
+                                return new HTMLViewAdapter(component);
+                            });
 
                         // eslint-disable-next-line @typescript-eslint/no-floating-promises
                         componentMarker.instanceP.then((instance) => {

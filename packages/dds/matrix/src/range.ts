@@ -3,9 +3,9 @@
  * Licensed under the MIT License.
  */
 
- /**
-  * Ensures that 0 <= 'value' < 'limit'.  Throws a RangeError otherwise.
-  */
+/**
+ * Ensures that 0 <= 'value' < 'limit'.  Throws a RangeError otherwise.
+ */
 export function ensureRange(value: number, limit: number) {
     // Coerce 'value' to Uint32 so that we can range check with a single branch.
     const _value = value >>> 0;   // eslint-disable-line no-bitwise

@@ -53,7 +53,7 @@ export class Todo extends DataObject implements IFluidHTMLView {
         this.todoItems =
             await this.root.get<IFluidHandle<SharedObjectSequence<IFluidHandle<TodoItem>>>>(this.todoItemsKey).get();
         // Hide the DDS eventing used by the model, expose a model-specific event interface.
-        this.todoItems.on("sequenceDelta",(event: SequenceDeltaEvent)=>{
+        this.todoItems.on("sequenceDelta", (event: SequenceDeltaEvent) => {
             this.emit("todoItemsChanged");
         });
     }
@@ -86,7 +86,7 @@ export class Todo extends DataObject implements IFluidHTMLView {
 
     public async getTodoItemComponents() {
         return Promise.all(
-            this.todoItems.getItems(0).map(async (i)=>i.get()));
+            this.todoItems.getItems(0).map(async (i) => i.get()));
     }
 
     // end public API surface for the Todo model, used by the view

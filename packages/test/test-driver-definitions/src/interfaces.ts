@@ -7,7 +7,7 @@ import { IDocumentServiceFactory, IUrlResolver } from "@fluidframework/driver-de
 
 export type TestDriverTypes = "tinylicious" | "routerlicious" | "odsp" | "local";
 
-export interface ITestDriver{
+export interface ITestDriver {
     /**
      * The type of server the test driver executes against
      */

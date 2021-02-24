@@ -23,7 +23,7 @@ export class InnerUrlResolver implements IUrlResolver {
 
     public constructor(
         private readonly outerProxy: IUrlResolverProxy,
-    ) {}
+    ) { }
 
     public async resolve(request: IRequest): Promise<IResolvedUrl | undefined> {
         const returnValueFn = await this.outerProxy.resolve(request);

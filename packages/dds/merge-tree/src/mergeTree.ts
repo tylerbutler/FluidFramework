@@ -1205,7 +1205,7 @@ export class MergeTree {
                 // and update the block's info.
                 for (let childIndex = 0;
                     childIndex < maxChildren && nodeIndex < nodes.length;   // While we still have children & nodes left
-                    childIndex++ , nodeIndex++                               // Advance to next child & node
+                    childIndex++, nodeIndex++                               // Advance to next child & node
                 ) {
                     // Insert the next node into the current block
                     this.addNode(block, nodes[nodeIndex]);
@@ -1301,7 +1301,7 @@ export class MergeTree {
                                     operation: MergeTreeMaintenanceType.UNLINK,
                                     deltaSegments: [{ segment }],
                                 },
-                                undefined);
+                                    undefined);
                             }
 
                             segment.parent = undefined;
@@ -1327,7 +1327,7 @@ export class MergeTree {
                                         operation: MergeTreeMaintenanceType.APPEND,
                                         deltaSegments: [{ segment: prevSegment! }, { segment }],
                                     },
-                                    undefined);
+                                        undefined);
                                 }
                                 segment.parent = undefined;
                                 segment.trackingCollection.trackingGroups.forEach((tg) => tg.unlink(segment));
@@ -1900,10 +1900,10 @@ export class MergeTree {
                     nodesToUpdate.push(pendingSegment.parent!);
                 }
                 deltaSegments.push({
-                    segment:pendingSegment,
+                    segment: pendingSegment,
                 });
             });
-            if(this.mergeTreeMaintenanceCallback) {
+            if (this.mergeTreeMaintenanceCallback) {
                 this.mergeTreeMaintenanceCallback(
                     {
                         deltaSegments,
@@ -2251,7 +2251,7 @@ export class MergeTree {
                 operation: MergeTreeMaintenanceType.SPLIT,
                 deltaSegments: [{ segment }, { segment: next }],
             },
-            undefined);
+                undefined);
         }
 
         return { next };
@@ -2972,9 +2972,9 @@ export class MergeTree {
                         console.log(`@tcli ${glc(this, this.collabWindow.clientId)}: map leaf action`);
                     }
                     if (actions.leaf) {
-                    go = actions.leaf(child, _pos, refSeq, clientId, _start, _end, accum);
+                        go = actions.leaf(child, _pos, refSeq, clientId, _start, _end, accum);
+                    }
                 }
-            }
             }
             if (!go) {
                 break;

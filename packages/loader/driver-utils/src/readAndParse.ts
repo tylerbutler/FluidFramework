@@ -26,7 +26,7 @@ export async function readAndParse<T>(storage: Pick<IDocumentStorageService, "re
  * @param id - the id of the blob to read and parse
  * @returns the object that we decoded and JSON.parse
  */
-export function readAndParseFromBlobs<T>(blobs: {[index: string]: string}, id: string): T {
+export function readAndParseFromBlobs<T>(blobs: { [index: string]: string }, id: string): T {
     const encoded = blobs[id];
     const decoded = fromBase64ToUtf8(encoded);
     return JSON.parse(decoded) as T;

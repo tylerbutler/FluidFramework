@@ -27,7 +27,7 @@ import {
     SummaryNode,
 } from "./summarizerNodeUtils";
 
-export interface IRootSummarizerNodeWithGC extends ISummarizerNodeWithGC, ISummarizerNodeRootContract {}
+export interface IRootSummarizerNodeWithGC extends ISummarizerNodeWithGC, ISummarizerNodeRootContract { }
 
 // Extend SummaryNode to add used routes tracking to it.
 class SummaryNodeWithGC extends SummaryNode {

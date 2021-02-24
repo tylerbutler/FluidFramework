@@ -32,10 +32,10 @@ import { TokenFetchOptions } from "./tokenFetch";
 function gatesMarkUnreferencedNodes() {
     // Leave override for testing purposes
     if (typeof localStorage === "object" && localStorage !== null) {
-        if  (localStorage.FluidMarkUnreferencedNodes === "1") {
+        if (localStorage.FluidMarkUnreferencedNodes === "1") {
             return true;
         }
-        if  (localStorage.FluidMarkUnreferencedNodes === "0") {
+        if (localStorage.FluidMarkUnreferencedNodes === "0") {
             return false;
         }
     }
@@ -110,8 +110,7 @@ export class OdspSummaryUploadManager {
     private async buildCachesForDedupCore(
         snapshotTree: api.ISnapshotTree,
         blobCache: Map<string, IBlob | ArrayBuffer>,
-        path: string = ""): Promise<api.ISummaryTree>
-    {
+        path: string = ""): Promise<api.ISummaryTree> {
         assert(Object.keys(snapshotTree.commits).length === 0, "There should not be commit tree entries in snapshot");
 
         const summaryTree: api.ISummaryTree = {
@@ -127,7 +126,7 @@ export class OdspSummaryUploadManager {
                 hash = await hashFile(
                     blobValue instanceof ArrayBuffer ?
                         IsoBuffer.from(blobValue) :
-                            IsoBuffer.from(blobValue.content, blobValue.encoding ?? "utf-8"),
+                        IsoBuffer.from(blobValue.content, blobValue.encoding ?? "utf-8"),
                 );
                 this.blobTreeDedupCaches.blobShaToPath.set(hash, fullBlobPath);
             }
@@ -199,8 +198,8 @@ export class OdspSummaryUploadManager {
         referenceSequenceNumber: number,
         tree: api.ISummaryTree,
     ): Promise<{
-            result: ISnapshotResponse,
-            blobTreeDedupCachesLatest: IDedupCaches,
+        result: ISnapshotResponse,
+        blobTreeDedupCachesLatest: IDedupCaches,
     }> {
         // This cache is associated with mapping sha to path for currently generated summary.
         // We are building these caches from scratch as this will take care of the deleted blobs. The deleted blobs/trees will not come

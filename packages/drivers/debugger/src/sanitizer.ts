@@ -213,7 +213,7 @@ export class Sanitizer {
      * information is being sufficiently sanitized.
      */
     objectMatchesSchema = (object: any, schema: any): boolean => {
-        const result =  schema === false ? falseResult : this.validator.validate(object, schema);
+        const result = schema === false ? falseResult : this.validator.validate(object, schema);
         if (!result.valid) {
             const errorMsg = `Bad msg fmt:\n${result.toString()}\n${JSON.stringify(object, undefined, 2)}`;
 
@@ -428,7 +428,7 @@ export class Sanitizer {
             if (element.value.entries) {
                 this.fixAttachEntries(element.value.entries);
             } else {
-            // Blob (leaf) type
+                // Blob (leaf) type
                 try {
                     if (typeof element.value.contents === "string") {
                         let data = JSON.parse(element.value.contents);

@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
- import {
+import {
     IContainerContext,
     IRuntime,
     IRuntimeFactory,

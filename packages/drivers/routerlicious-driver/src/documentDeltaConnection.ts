@@ -47,7 +47,7 @@ function createNetworkError(
 /**
  * Returns specific network error based on error object.
  */
-const errorObjectFromSocketError = (socketError: {[key: string]: any}, handler: string, canRetry: boolean) => {
+const errorObjectFromSocketError = (socketError: { [key: string]: any }, handler: string, canRetry: boolean) => {
     return createNetworkError(
         `socket.io: ${handler}: ${socketError.message}`,
         canRetry,

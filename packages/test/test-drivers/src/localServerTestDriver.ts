@@ -17,7 +17,7 @@ export class LocalServerTestDriver implements ITestDriver {
 
     public readonly type = "local";
     public readonly version = pkgVersion;
-    public get server() {return this._server;}
+    public get server() { return this._server; }
 
     createDocumentServiceFactory(): LocalDocumentServiceFactory {
         return new LocalDocumentServiceFactory(this._server);

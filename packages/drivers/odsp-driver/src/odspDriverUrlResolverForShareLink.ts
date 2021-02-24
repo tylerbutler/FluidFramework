@@ -70,9 +70,8 @@ export class OdspDriverUrlResolverForShareLink implements IUrlResolver {
             });
             fluidInfo.dataStorePath = `${parsingUrl.pathname}${parsingUrl.search}`;
         } else {
-            fluidInfo.dataStorePath = `${parsingUrl.pathname}${
-                parsingUrl.pathname.endsWith("/") || pathToAppend.startsWith("/") ? "" : "/"
-            }${pathToAppend}/${parsingUrl.search}`;
+            fluidInfo.dataStorePath = `${parsingUrl.pathname}${parsingUrl.pathname.endsWith("/") || pathToAppend.startsWith("/") ? "" : "/"
+                }${pathToAppend}/${parsingUrl.search}`;
         }
         storeLocatorInOdspUrl(requestUrl, fluidInfo);
 
@@ -114,7 +113,7 @@ export class OdspDriverUrlResolverForShareLink implements IUrlResolver {
         if (odspResolvedUrl.itemId) {
             // Kick start the sharing link request if we don't already have it already as a performance optimization.
             // For detached create new, we don't have an item id yet and therefore cannot generate a share link
-            this.getShareLinkPromise(odspResolvedUrl).catch(() => {});
+            this.getShareLinkPromise(odspResolvedUrl).catch(() => { });
         }
         return odspResolvedUrl;
     }
@@ -155,10 +154,10 @@ export class OdspDriverUrlResolverForShareLink implements IUrlResolver {
             undefined,
             this.msGraphOrigin,
         ).then((shareLink) => {
-                if (!shareLink) {
-                    throw new Error("Failed to get share link");
-                }
-                return shareLink;
+            if (!shareLink) {
+                throw new Error("Failed to get share link");
+            }
+            return shareLink;
         }).catch((error) => {
             if (this.logger) {
                 this.logger.sendErrorEvent({ eventName: "FluidFileUrlError" }, error);
@@ -187,7 +186,7 @@ export class OdspDriverUrlResolverForShareLink implements IUrlResolver {
         const shareLinkUrl = new URL(shareLink);
 
         const packageName = isFluidPackage(codeDetails?.package) ? codeDetails?.package.name : codeDetails?.package ??
-        odspResolvedUrl.codeHint?.containerPackageName;
+            odspResolvedUrl.codeHint?.containerPackageName;
 
         storeLocatorInOdspUrl(shareLinkUrl, {
             siteUrl: odspResolvedUrl.siteUrl,

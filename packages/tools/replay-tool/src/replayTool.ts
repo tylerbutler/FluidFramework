@@ -84,8 +84,8 @@ class ReplayProcessArgs extends ReplayArgs {
                     break;
                 case "--summaries":
                     this.testSummaries = true;
-                break;
-                    case "--outdir":
+                    break;
+                case "--outdir":
                     i += 1;
                     this.outDirName = this.parseStrArg(i);
                     break;

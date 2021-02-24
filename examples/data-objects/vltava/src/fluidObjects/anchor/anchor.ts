@@ -39,7 +39,7 @@ export class Anchor extends DataObject implements IProvideFluidHTMLView, IProvid
             LastEditedTrackerDataObject.getFactory().registryEntry,
             Vltava.getFactory().registryEntry,
         ],
-        );
+    );
 
     public static getFactory() {
         return Anchor.factory;

@@ -129,8 +129,7 @@ export class TreeDemo extends DataObject implements IFluidHTMLView {
 
             return (
                 <div ref={ref} style={{ position: "absolute", inset: "0px" }}>
-                    <div>{`${bubbles.length}/${bubbleCount} bubbles @ ${
-                        formatFloat(this.stats.smoothFps)} fps (${this.stats.lastFrameElapsed} ms)`}</div>
+                    <div>{`${bubbles.length}/${bubbleCount} bubbles @ ${formatFloat(this.stats.smoothFps)} fps (${this.stats.lastFrameElapsed} ms)`}</div>
                     <div>{`Total FPS: ${formatFloat(this.stats.totalFps)} (Glitches: ${this.stats.glitchCount})`}</div>
                     <StageView
                         width={stage.width}

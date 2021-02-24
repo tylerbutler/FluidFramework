@@ -191,8 +191,7 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection impleme
         url: string,
         telemetryLogger: ITelemetryLogger,
         timeoutMs: number,
-        epochTracker: EpochTracker): Promise<IDocumentDeltaConnection>
-    {
+        epochTracker: EpochTracker): Promise<IDocumentDeltaConnection> {
         // enable multiplexing when the websocket url does not include the tenant/document id
         const parsedUrl = new URL(url);
         const enableMultiplexing = !parsedUrl.searchParams.has("documentId") && !parsedUrl.searchParams.has("tenantId");
@@ -280,9 +279,8 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection impleme
         enableMultiplexing: boolean,
         tenantId: string,
         documentId: string,
-        logger: ITelemetryLogger): SocketReference
-    {
-        const existingSocketReference  = SocketReference.find(key, logger);
+        logger: ITelemetryLogger): SocketReference {
+        const existingSocketReference = SocketReference.find(key, logger);
         if (existingSocketReference) {
             return existingSocketReference;
         }
@@ -314,8 +312,7 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection impleme
         documentId: string,
         socketReference: SocketReference,
         logger: ITelemetryLogger,
-        private readonly enableMultiplexing?: boolean)
-    {
+        private readonly enableMultiplexing?: boolean) {
         super(socket, documentId, logger);
         this.socketReference = socketReference;
     }

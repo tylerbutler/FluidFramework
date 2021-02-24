@@ -29,8 +29,8 @@ export interface GraphItemLite {
 function slashTerminatedOriginOrEmptyString(origin: string | undefined) {
     return origin
         ? origin.charAt(-1) === "/"
-        ? origin
-        : `${origin}/`
+            ? origin
+            : `${origin}/`
         : "";
 }
 
@@ -134,7 +134,7 @@ export async function getShareLinkCore(
     }
 
     const createShareLinkResponse = await graphFetch(
-        async (options: TokenFetchOptions) => getToken({...options, siteUrl, type: "Graph"}),
+        async (options: TokenFetchOptions) => getToken({ ...options, siteUrl, type: "Graph" }),
         `${slashTerminatedOriginOrEmptyString(msGraphOrigin)}drives/${driveId}/items/${itemId}/createLink`,
         `GetShareLink_${scope}_${type}`,
         logger,
@@ -178,11 +178,11 @@ async function graphFetch(
                 const res = await fetchAndParseAsJSONHelper<IGraphFetchResponse>(url, augmentedRequest);
                 return res;
             },
-        );
-        const additionalProps = await getSPOAndGraphRequestIdsFromResponse(odspResponse.headers);
-        event.end({ ...additionalProps, tries });
-        return odspResponse;
-    });
+            );
+            const additionalProps = await getSPOAndGraphRequestIdsFromResponse(odspResponse.headers);
+            event.end({ ...additionalProps, tries });
+            return odspResponse;
+        });
     return response;
 }
 
@@ -209,7 +209,7 @@ async function getFileDefaultUrl(
     msGraphOrigin?: string,
 ): Promise<string | undefined> {
     const graphItem = await getGraphItemLite(
-        async (options: TokenFetchOptions) => getToken({...options, siteUrl, type: "Graph"}),
+        async (options: TokenFetchOptions) => getToken({ ...options, siteUrl, type: "Graph" }),
         driveId,
         itemId,
         logger,
@@ -235,8 +235,7 @@ async function getFileDefaultUrl(
                 tries++;
                 const token = await getToken({ ...options, siteUrl, type: "OneDrive" });
                 const { url, headers } = getUrlAndHeadersWithAuth(
-                    `${siteUrl}/_api/web/GetFileByUrl(@a1)/ListItemAllFields/GetSharingInformation?@a1=${
-                        encodeURIComponent(graphItem.webDavUrl)
+                    `${siteUrl}/_api/web/GetFileByUrl(@a1)/ListItemAllFields/GetSharingInformation?@a1=${encodeURIComponent(graphItem.webDavUrl)
                     }`, tokenFromResponse(token));
                 const requestInit = {
                     method: "POST",
@@ -288,14 +287,13 @@ async function getGraphItemLite(
     const cacheKey = `${driveId}_${itemId}`;
     if (graphItemLiteCache.has(cacheKey) === false) {
         const valueGenerator = async function() {
-            const partialUrl = `${
-                slashTerminatedOriginOrEmptyString(msGraphOrigin)
+            const partialUrl = `${slashTerminatedOriginOrEmptyString(msGraphOrigin)
                 }drives/${driveId}/items/${itemId}?select=webUrl,webDavUrl,name`;
 
             let response: IOdspResponse<GraphItemLite> | undefined;
             try {
                 response = await graphFetch(getToken, partialUrl, "GetGraphItemLite", logger);
-            } catch(error) {
+            } catch (error) {
                 graphItemLiteCache.remove(cacheKey);
                 return undefined;
             }

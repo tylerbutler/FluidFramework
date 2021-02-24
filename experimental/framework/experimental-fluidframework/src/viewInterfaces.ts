@@ -3,4 +3,4 @@
  * Licensed under the MIT License.
  */
 
-export * from  "@fluidframework/view-interfaces";
+export * from "@fluidframework/view-interfaces";

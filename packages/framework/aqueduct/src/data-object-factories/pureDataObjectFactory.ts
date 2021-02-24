@@ -8,7 +8,7 @@ import {
     FluidDataStoreRuntime,
     ISharedObjectRegistry,
     mixinRequestHandler,
- } from "@fluidframework/datastore";
+} from "@fluidframework/datastore";
 import { IEvent } from "@fluidframework/common-definitions";
 import { FluidDataStoreRegistry } from "@fluidframework/container-runtime";
 import {
@@ -52,8 +52,7 @@ async function createDataObject<TObj extends PureDataObject<O, S, E>, O, S, E ex
     sharedObjectRegistry: ISharedObjectRegistry,
     optionalProviders: FluidObjectSymbolProvider<O>,
     runtimeClassArg: typeof FluidDataStoreRuntime,
-    initProps?: S)
-{
+    initProps?: S) {
     // base
     let runtimeClass = runtimeClassArg;
 
@@ -61,7 +60,7 @@ async function createDataObject<TObj extends PureDataObject<O, S, E>, O, S, E ex
     runtimeClass = mixinRequestHandler(
         async (request: IRequest, runtimeArg: FluidDataStoreRuntime) =>
             (await PureDataObject.getDataObject(runtimeArg)).request(request),
-            runtimeClass);
+        runtimeClass);
 
     // Create a new runtime for our data store
     // The runtime is what Fluid uses to create DDS' and route to your data store
@@ -107,8 +106,7 @@ async function createDataObject<TObj extends PureDataObject<O, S, E>, O, S, E ex
  * E - represents events that will be available in the EventForwarder
  */
 export class PureDataObjectFactory<TObj extends PureDataObject<O, S, E>, O, S, E extends IEvent = IEvent>
-    implements IFluidDataStoreFactory, Partial<IProvideFluidDataStoreRegistry>, IRootDataObjectFactory
-{
+    implements IFluidDataStoreFactory, Partial<IProvideFluidDataStoreRegistry>, IRootDataObjectFactory {
     private readonly sharedObjectRegistry: ISharedObjectRegistry;
     private readonly registry: IFluidDataStoreRegistry | undefined;
 

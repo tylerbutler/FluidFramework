@@ -59,7 +59,7 @@ export interface DriverPreCheckInfo {
      * improved performance.
      */
     criticalBootDomains?: string[];
-  }
+}
 
 /**
  * Additional key in the loader request header

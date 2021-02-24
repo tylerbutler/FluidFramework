@@ -104,7 +104,7 @@ export function useSyncedArrayReducerFluid<
     viewKey: keyof SV,
     fluidKey: keyof SF,
     defaultViewState: SV,
-// eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/ban-types
 ): [ICombinedState<SV, SF, IFluidDataProps>, IFluidSyncedArrayReducer<SV, SF>, {}] {
     const syncedArrayReducer = generateSyncedArrayReducer(viewKey, fluidKey);
     return useReducerFluid<

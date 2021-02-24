@@ -42,8 +42,7 @@ export class Chaincode implements IFluidDataStoreFactory {
 
     public constructor(
         private readonly closeFn: () => void,
-        private readonly dataStoreFactory: typeof FluidDataStoreRuntime = FluidDataStoreRuntime)
-    { }
+        private readonly dataStoreFactory: typeof FluidDataStoreRuntime = FluidDataStoreRuntime) { }
 
     public async instantiateDataStore(context: IFluidDataStoreContext) {
         // Create channel factories

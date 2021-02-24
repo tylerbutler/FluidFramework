@@ -99,7 +99,7 @@ export class VersionTest extends DataObject implements IFluidHTMLView {
             ReactDOM.render(
                 <div>
                     <img src={imgSrc}></img>
-                    <br/>
+                    <br />
                     old title:
           <p className="title">{title}</p>
                     <input className="titleInput" type={"text"}

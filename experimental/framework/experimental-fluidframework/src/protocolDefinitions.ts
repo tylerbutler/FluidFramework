@@ -3,4 +3,4 @@
  * Licensed under the MIT License.
  */
 
-export * from  "@fluidframework/protocol-definitions";
+export * from "@fluidframework/protocol-definitions";

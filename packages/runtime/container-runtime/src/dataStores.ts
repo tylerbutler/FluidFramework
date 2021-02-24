@@ -28,10 +28,10 @@ import {
     ISummaryTreeWithStats,
 } from "@fluidframework/runtime-definitions";
 import {
-     convertSnapshotTreeToSummaryTree,
-     convertSummaryTreeToITree,
-     convertToSummaryTree,
-     SummaryTreeBuilder,
+    convertSnapshotTreeToSummaryTree,
+    convertSummaryTreeToITree,
+    convertToSummaryTree,
+    SummaryTreeBuilder,
 } from "@fluidframework/runtime-utils";
 import { ChildLogger } from "@fluidframework/telemetry-utils";
 import { AttachState } from "@fluidframework/container-definitions";
@@ -56,10 +56,10 @@ import {
     nonDataStorePaths,
 } from "./snapshot";
 
- /**
-  * This class encapsulates data store handling. Currently it is only used by the container runtime,
-  * but eventually could be hosted on any channel once we formalize the channel api boundary.
-  */
+/**
+ * This class encapsulates data store handling. Currently it is only used by the container runtime,
+ * but eventually could be hosted on any channel once we formalize the channel api boundary.
+ */
 export class DataStores implements IDisposable {
     // Stores tracked by the Domain
     private readonly pendingAttach = new Map<string, IAttachMessage>();
@@ -68,14 +68,14 @@ export class DataStores implements IDisposable {
 
     private readonly logger: ITelemetryLogger;
 
-    private readonly disposeOnce = new Lazy<void>(()=>this.contexts.dispose());
+    private readonly disposeOnce = new Lazy<void>(() => this.contexts.dispose());
 
     constructor(
         private readonly baseSnapshot: ISnapshotTree | undefined,
         private readonly runtime: ContainerRuntime,
         private readonly submitAttachFn: (attachContent: any) => void,
         private readonly getCreateChildSummarizerNodeFn:
-            (id: string, createParam: CreateChildSummarizerNodeParam)  => CreateChildSummarizerNodeFn,
+            (id: string, createParam: CreateChildSummarizerNodeParam) => CreateChildSummarizerNodeFn,
         baseLogger: ITelemetryBaseLogger,
         private readonly contexts: DataStoreContexts = new DataStoreContexts(baseLogger),
     ) {
@@ -109,8 +109,8 @@ export class DataStores implements IDisposable {
                 const snapshotTree = value;
                 // Need to rip through snapshot.
                 const attributes = readAndParseFromBlobs<IFluidDataStoreAttributes>(
-                        snapshotTree.blobs,
-                        snapshotTree.blobs[dataStoreAttributesBlobName]);
+                    snapshotTree.blobs,
+                    snapshotTree.blobs[dataStoreAttributesBlobName]);
                 // Use the snapshotFormatVersion to determine how the pkg is encoded in the snapshot.
                 // For snapshotFormatVersion = "0.1" or above, pkg is jsonified, otherwise it is just a string.
                 // However the feature of loading a detached container from snapshot, is added when the
@@ -150,7 +150,7 @@ export class DataStores implements IDisposable {
             return;
         }
 
-         // If a non-local operation then go and create the object, otherwise mark it as officially attached.
+        // If a non-local operation then go and create the object, otherwise mark it as officially attached.
         if (this.contexts.has(attachMessage.id)) {
             const error = new DataCorruptionError(
                 "Duplicate data store created with existing ID",
@@ -191,14 +191,14 @@ export class DataStores implements IDisposable {
             pkg);
 
         // Resolve pending gets and store off any new ones
-       this.contexts.addBoundOrRemoted(remotedFluidDataStoreContext);
+        this.contexts.addBoundOrRemoted(remotedFluidDataStoreContext);
 
         // Equivalent of nextTick() - Prefetch once all current ops have completed
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         Promise.resolve().then(async () => remotedFluidDataStoreContext.realize());
     }
 
-    public  bindFluidDataStore(fluidDataStoreRuntime: IFluidDataStoreChannel): void {
+    public bindFluidDataStore(fluidDataStoreRuntime: IFluidDataStoreChannel): void {
         const id = fluidDataStoreRuntime.id;
         const localContext = this.contexts.getUnbound(id);
         assert(!!localContext, "Could not find unbound context to bind");
@@ -221,8 +221,7 @@ export class DataStores implements IDisposable {
     public createDetachedDataStoreCore(
         pkg: Readonly<string[]>,
         isRoot: boolean,
-        id = uuid()): IFluidDataStoreContextDetached
-    {
+        id = uuid()): IFluidDataStoreContextDetached {
         const context = new LocalDetachedFluidDataStoreContext(
             id,
             pkg,
@@ -255,7 +254,7 @@ export class DataStores implements IDisposable {
         return context;
     }
 
-    public get disposed() {return this.disposeOnce.evaluated;}
+    public get disposed() { return this.disposeOnce.evaluated; }
     public readonly dispose = () => this.disposeOnce.value;
 
     public updateLeader() {
@@ -325,7 +324,7 @@ export class DataStores implements IDisposable {
         } else {
             eventName = "attached";
         }
-        for (const [,context] of this.contexts) {
+        for (const [, context] of this.contexts) {
             // Fire only for bounded stores.
             if (!this.contexts.isNotBound(context.id)) {
                 context.emit(eventName);

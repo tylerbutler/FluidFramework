@@ -70,7 +70,7 @@ export abstract class FluidReactView<SV extends IViewState,
         // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         if (isLocal) {
             super.setState(newState);
-        // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+            // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
         } else if (fromRootUpdate) {
             syncState(
                 true,

@@ -12,7 +12,7 @@ import {
 
 export const gcBlobKey = "gc";
 // A list of runtime blob paths whose contents should be normalized.
-const runtimeBlobsToNormalize = [ gcBlobKey ];
+const runtimeBlobsToNormalize = [gcBlobKey];
 
 export interface ISnapshotNormalizerConfig {
     // The paths of blobs whose contents should be normalized.
@@ -84,7 +84,7 @@ function getSortedBlobContent(content: string): string {
             contentObj = getDeepSortedObject(contentObj);
         }
         sortedContent = JSON.stringify(contentObj);
-    } catch {}
+    } catch { }
     return sortedContent;
 }
 
@@ -100,7 +100,7 @@ function getSortedBlobContent(content: string): string {
 export function getNormalizedSnapshot(snapshot: ITree, config?: ISnapshotNormalizerConfig): ITree {
     // Merge blobs to normalize in the config with runtime blobs to normalize. The contents of these blobs will be
     // parsed and deep sorted.
-    const blobsToNormalize = [ ...runtimeBlobsToNormalize, ...config?.blobsToNormalize ?? [] ];
+    const blobsToNormalize = [...runtimeBlobsToNormalize, ...config?.blobsToNormalize ?? []];
     const normalizedEntries: ITreeEntry[] = [];
 
     for (const entry of snapshot.entries) {

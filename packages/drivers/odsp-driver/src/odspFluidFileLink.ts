@@ -29,19 +29,15 @@ export function encodeOdspFluidDataStoreLocator(locator: OdspFluidDataStoreLocat
     const fileId = encodeURIComponent(locator.fileId);
     const dataStorePath = encodeURIComponent(locator.dataStorePath);
 
-    let locatorSerialized = `${fluidSitePathParamName}=${sitePath}&${fluidDriveIdParamName}=${driveId}&${
-        fluidFileIdParamName}=${fileId}&${fluidDataStorePathParamName}=${dataStorePath}&${
-        fluidSignatureParamName}=${fluidSignature}`;
+    let locatorSerialized = `${fluidSitePathParamName}=${sitePath}&${fluidDriveIdParamName}=${driveId}&${fluidFileIdParamName}=${fileId}&${fluidDataStorePathParamName}=${dataStorePath}&${fluidSignatureParamName}=${fluidSignature}`;
     if (locator.appName) {
         locatorSerialized += `&${fluidAppNameParamName}=${encodeURIComponent(locator.appName)}`;
     }
     if (locator.containerPackageName) {
-        locatorSerialized += `&${fluidContainerPackageNameParamName}=${
-            encodeURIComponent(locator.containerPackageName)}`;
+        locatorSerialized += `&${fluidContainerPackageNameParamName}=${encodeURIComponent(locator.containerPackageName)}`;
     }
     if (locator.fileVersion) {
-        locatorSerialized += `&${fluidFileVersionParamName}=${
-            encodeURIComponent(locator.fileVersion)}`;
+        locatorSerialized += `&${fluidFileVersionParamName}=${encodeURIComponent(locator.fileVersion)}`;
     }
 
     return fromUtf8ToBase64(locatorSerialized);

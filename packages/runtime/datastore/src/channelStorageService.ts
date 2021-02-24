@@ -32,7 +32,7 @@ export class ChannelStorageService implements IChannelStorageService {
         this.flattenedTree = {};
         // Create a map from paths to blobs
         if (tree !== undefined) {
-             ChannelStorageService.flattenTree("", tree, this.flattenedTree);
+            ChannelStorageService.flattenTree("", tree, this.flattenedTree);
         }
     }
 

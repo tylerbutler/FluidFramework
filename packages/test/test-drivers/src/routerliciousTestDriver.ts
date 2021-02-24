@@ -100,12 +100,12 @@ export class RouterliciousTestDriver implements ITestDriver {
 
     createUrlResolver(): InsecureUrlResolver {
         return new InsecureUrlResolver(
-                this.serviceEndpoints.hostUrl,
-                this.serviceEndpoints.ordererUrl,
-                this.serviceEndpoints.deltaStorageUrl,
-                this.tenantId,
-                this.bearerSecret,
-                true);
+            this.serviceEndpoints.hostUrl,
+            this.serviceEndpoints.ordererUrl,
+            this.serviceEndpoints.deltaStorageUrl,
+            this.tenantId,
+            this.bearerSecret,
+            true);
     }
 
     createCreateNewRequest(testId: string): IRequest {

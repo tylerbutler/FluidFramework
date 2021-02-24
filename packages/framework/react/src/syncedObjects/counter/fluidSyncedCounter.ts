@@ -100,7 +100,7 @@ export function useSyncedCounterReducerFluid<
     viewKey: keyof SV,
     fluidKey: keyof SF,
     defaultViewState: SV,
-// eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/ban-types
 ): [ICombinedState<SV, SF, IFluidDataProps>, IFluidSyncedCounterReducer<SV, SF>, {}] {
     const syncedCounterReducer = generateSyncedCounterReducer(viewKey, fluidKey);
     return useReducerFluid<

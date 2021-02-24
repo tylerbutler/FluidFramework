@@ -90,6 +90,6 @@ export class DeltaStorageService implements IDeltaStorageService {
 
         // It is assumed that server always returns all the ops that it has in the range that was requested.
         // This may change in the future, if so, we need to adjust and receive "end" value from server in such case.
-        return {messages: ops.data, partialResult: false };
+        return { messages: ops.data, partialResult: false };
     }
 }

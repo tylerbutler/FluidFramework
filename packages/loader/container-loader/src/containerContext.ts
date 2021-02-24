@@ -161,7 +161,7 @@ export class ContainerContext implements IContainerContext {
 
     private readonly fluidModuleP = new LazyPromise<IFluidModule>(async () => {
         if (this.codeDetails === undefined) {
-            const fluidExport =  new NullChaincode();
+            const fluidExport = new NullChaincode();
             return {
                 fluidExport,
             };

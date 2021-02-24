@@ -54,7 +54,7 @@ export class LocalCodeLoader implements ICodeLoader {
                     const defaultFactory = createDataStoreFactory("default", maybeExport.IFluidDataStoreFactory);
                     fluidModule = {
                         fluidExport: {
-                            ... maybeExport,
+                            ...maybeExport,
                             IRuntimeFactory:
                                 new ContainerRuntimeFactoryWithDefaultDataStore(
                                     defaultFactory,

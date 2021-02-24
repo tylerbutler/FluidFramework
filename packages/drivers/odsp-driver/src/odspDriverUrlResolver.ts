@@ -140,9 +140,9 @@ export class OdspDriverUrlResolver implements IUrlResolver {
         }
         const odspResolvedUrl = resolvedUrl as IOdspResolvedUrl;
         let odspUrl = `${odspResolvedUrl.siteUrl}/${url}?driveId=${encodeURIComponent(odspResolvedUrl.driveId,
-            )}&itemId=${encodeURIComponent(odspResolvedUrl.itemId)}&path=${encodeURIComponent("/")}`;
+        )}&itemId=${encodeURIComponent(odspResolvedUrl.itemId)}&path=${encodeURIComponent("/")}`;
         const packageName = isFluidPackage(codeDetails?.package) ? codeDetails?.package.name : codeDetails?.package ??
-             odspResolvedUrl.codeHint?.containerPackageName;
+            odspResolvedUrl.codeHint?.containerPackageName;
         if (packageName) {
             odspUrl += `&containerPackageName=${encodeURIComponent(packageName)}`;
         }
