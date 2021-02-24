@@ -23,6 +23,7 @@
     "eslint:fix": "eslint --format stylish src --fix",
     "lint": "npm run eslint",
     "lint:fix": "npm run eslint:fix",
+    "organize-imports": "organize-imports-cli tsconfig.json",
     "tsc": "tsc",
     "tsc:watch": "tsc --watch",
     "tsfmt": "tsfmt --verify",

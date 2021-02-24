@@ -33,6 +33,7 @@
     "foreman:debug": "node --inspect=0.0.0.0:5858 dist/foreman/index.js",
     "lint": "npm run eslint",
     "lint:fix": "npm run eslint:fix",
+    "organize-imports": "organize-imports-cli tsconfig.json",
     "scriptorium": "node dist/scriptorium/index.js",
     "scriptorium:debug": "node --inspect=0.0.0.0:5858 dist/scriptorium/index.js",
     "tsc": "tsc",

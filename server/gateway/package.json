@@ -30,6 +30,7 @@
     "eslint:fix": "eslint --format stylish src --fix",
     "less": "lessc src/stylesheets/style.less public/stylesheets/dist/style.css && lessc src/stylesheets/map.less public/stylesheets/dist/map.css",
     "lint": "npm run eslint",
+    "organize-imports": "organize-imports-cli tsconfig.json",
     "start": "docker-compose -f docker-compose.r11s.yml up -V",
     "test": "mocha --recursive dist/test --exit --unhandled-rejections=strict",
     "test:coverage": "nyc npm test -- --reporter mocha-junit-reporter --reporter-options mochaFile=nyc/junit-report.xml",

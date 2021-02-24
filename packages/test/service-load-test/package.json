@@ -26,6 +26,7 @@
     "eslint:fix": "eslint --format stylish src --fix",
     "lint": "npm run eslint",
     "lint:fix": "npm run eslint:fix",
+    "organize-imports": "organize-imports-cli tsconfig.json",
     "start": "node ./dist/nodeStressTest.js",
     "start:mini": "node ./dist/nodeStressTest.js --profile mini",
     "tsc": "tsc",

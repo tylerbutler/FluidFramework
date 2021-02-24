@@ -19,6 +19,7 @@
     "eslint:fix": "eslint --format stylish src --fix",
     "lint": "npm run eslint",
     "lint:fix": "npm run eslint:fix",
+    "organize-imports": "organize-imports-cli tsconfig.json",
     "prepack": "npm run webpack",
     "start": "webpack-dev-server --config webpack.config.js",
     "tsc": "tsc",

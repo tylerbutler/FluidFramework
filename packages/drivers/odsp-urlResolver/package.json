@@ -25,6 +25,7 @@
     "eslint:fix": "eslint --format stylish src --fix",
     "lint": "npm run eslint",
     "lint:fix": "npm run eslint:fix",
+    "organize-imports": "organize-imports-cli tsconfig.json",
     "test": "npm run test:mocha",
     "test:mocha": "mocha --recursive dist/test -r node_modules/@fluidframework/mocha-test-setup --unhandled-rejections=strict",
     "test:mocha:verbose": "cross-env FLUID_TEST_VERBOSE=1 npm run test:mocha",

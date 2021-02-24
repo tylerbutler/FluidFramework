@@ -28,6 +28,7 @@
     "eslint:fix": "eslint --format stylish src --fix",
     "lint": "npm run eslint",
     "lint:fix": "npm run eslint:fix",
+    "organize-imports": "organize-imports-cli tsconfig.json",
     "stress": "mocha --recursive dist/test/**/*.spec.js --exit -r node_modules/@fluidframework/mocha-test-setup --unhandled-rejections=strict --fgrep stress-loop",
     "test": "npm run test:mocha",
     "test:coverage": "nyc npm test -- --reporter mocha-junit-reporter --reporter-options mochaFile=nyc/junit-report.xml --exit",
