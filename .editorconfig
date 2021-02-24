@@ -17,5 +17,8 @@ block_comment_end = */
 [*.{js,jsx,ts,tsx}]
 indent_size = 4
 
-[{*.yml,package.json}]
+[{*.css,*.yml,package.json}]
 indent_size = 2
+
+[.gitignore]
+insert_final_newline = false
