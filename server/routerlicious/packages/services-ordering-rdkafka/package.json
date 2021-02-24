@@ -15,7 +15,7 @@
     "build:full:compile": "npm run build:compile",
     "build:genver": "gen-version",
     "clean": "rimraf dist lib *.tsbuildinfo *.build.log",
-    "eclint": "eclint fix $(git ls-files -- '**/*.js' '**/*.jsx' '**/*.css' '**/*.html' '**/*.htm' '**/*.yml')",
+    "eclint": "eclint fix $(git ls-files -- '**/*.js' '**/*.jsx' '**/*.css' '**/*.html' '**/*.htm' '**/*.yml' '**/*.ts' '**/*.tsx')",
     "eslint": "eslint --format stylish src",
     "eslint:fix": "eslint --format stylish src --fix",
     "lint": "npm run eslint",
