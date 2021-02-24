@@ -1770,7 +1770,6 @@ function buildIfMatch(pats: ITransformString[], e: IExpr, seedEnv?: () => IEnvir
             env = {};
         }
         if (matchS(pats[i].pattern, e, env)) {
-            // eslint-disable-next-line @typescript-eslint/unbound-method
             if ((!pats[i].exec) || (pats[i].exec(env, pats[i].param))) {
                 if (info) {
                     info.index = i;

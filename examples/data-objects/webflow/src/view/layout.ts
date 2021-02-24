@@ -549,10 +549,8 @@ export class Layout extends EventEmitter {
         let _end = end;
         // Union the delta range with the current invalidated range (if any).
         const doc = this.doc;
-        /* eslint-disable @typescript-eslint/unbound-method */
         _start = this.unionRef(doc, _start, this.startInvalid, Math.min, +Infinity);
         _end = this.unionRef(doc, _end, this.endInvalid, Math.max, -Infinity);
-        /* eslint-enable @typescript-eslint/unbound-method */
         this.startInvalid = updateRef(doc, this.startInvalid, _start);
         this.endInvalid = updateRef(doc, this.endInvalid, _end);
         this.scheduleRender();

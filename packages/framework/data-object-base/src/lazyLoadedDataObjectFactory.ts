@@ -36,7 +36,6 @@ export class LazyLoadedDataObjectFactory<T extends LazyLoadedDataObject> impleme
         if (storeFactories !== undefined) {
             this.IFluidDataStoreRegistry = new FluidDataStoreRegistry(
                 storeFactories.map(
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     (factory) => [factory.type, factory]) as NamedFluidDataStoreRegistryEntries);
         }
 

@@ -236,7 +236,6 @@ class ProgressBarsFactory implements IFluidDataStoreFactory {
         const runtime = new runtimeClass(context, dataTypes);
         const routerP = ProgressCollection.load(runtime, context);
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return runtime;
     }
 }

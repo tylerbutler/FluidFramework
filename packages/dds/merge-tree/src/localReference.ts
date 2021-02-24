@@ -106,7 +106,6 @@ export class LocalReference implements ReferencePosition {
     }
 
     public getOffset() {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         if (this.segment?.removedSeq) {
             return 0;
         }

@@ -65,7 +65,6 @@ export class CollaborativeTextArea
             // Because we did not make the change we need to manage the remote
             // character insertion.
             const remoteCaretStart = event.first.position;
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             const remoteCaretEnd = event.last.position + event.last.segment.cachedLength;
             const charactersModifiedCount = newText.length - this.state.text.length;
 

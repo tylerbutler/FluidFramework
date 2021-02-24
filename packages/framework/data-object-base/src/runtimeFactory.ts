@@ -32,9 +32,7 @@ export class RuntimeFactory implements IRuntimeFactory {
             (storeFactories.includes(defaultStoreFactory)
                 ? storeFactories
                 : storeFactories.concat(defaultStoreFactory)
-            ).map(
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                (factory) => [factory.type, factory]) as NamedFluidDataStoreRegistryEntries;
+            ).map((factory) => [factory.type, factory]) as NamedFluidDataStoreRegistryEntries;
     }
 
     public get IRuntimeFactory() { return this; }

@@ -63,7 +63,6 @@ export class ImageGalleryObject extends DataObject implements IFluidHTMLView {
     private readonly reactRender = (div, onSlide = this.onSlide) => {
         ReactDOM.render(
             <ImageGallery
-                // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
                 ref={(gallery) => (this.imageGallery = gallery ?? undefined)}
                 items={this.imageList}
                 onSlide={onSlide}
