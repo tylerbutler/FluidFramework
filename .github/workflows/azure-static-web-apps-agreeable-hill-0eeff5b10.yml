@@ -64,6 +64,11 @@ jobs:
         run: |
           cp $GITHUB_WORKSPACE/docs/static/playground/playground.html $GITHUB_WORKSPACE/docs/layouts/page/playground.html
 
+      - name: Create .env file
+        id: create-env
+        run: |
+          echo HUGO_PARAMS_APPINSIGHTKEY=${{ secrets.APP_INSIGHTS_KEY }} > .env
+
       # Build here so we can upload an artifact; ASWA will rebuild when it deploys in the step below
       - name: Build site artifact
         run: |

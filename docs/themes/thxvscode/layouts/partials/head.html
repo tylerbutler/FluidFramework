@@ -40,10 +40,11 @@
     {{- end }}
     {{- block "head" . -}}{{- end }}
 
-
+    {{ "<!-- Extra head -->" | safeHTML }}
     {{- if templates.Exists "partials/extra-head.html" -}}
     {{ partial "extra-head.html" . }}
     {{- end }}
+    {{ "<!-- End extra head -->" | safeHTML }}
 
     {{- if .Params.codeCopyButton -}}
         <script async src="/js/add-code-copy-button.js"></script>
