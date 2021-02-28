@@ -8,16 +8,17 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}\\dist\\fluidBuild\\fluidBuild.js",
+            "program": "${workspaceFolder}/dist/fluidBuild/fluidBuild.js",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
-            ]
+            ],
+            "cwd": "${workspaceFolder}",
         },
         {
             "type": "node",
             "request": "launch",
             "name": "policy-check",
-            "program": "${workspaceFolder}\\dist\\repoPolicyCheck\\repoPolicyCheck.js",
+            "program": "${workspaceFolder}/dist/repoPolicyCheck/repoPolicyCheck.js",
             "args": [
                 ""
             ],

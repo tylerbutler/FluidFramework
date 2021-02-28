@@ -3,11 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { Package, Packages } from "./npmPackage";
+import { readFileSync } from "fs-extra";
 import * as path from "path";
 import YAML from "yaml";
-import { execWithErrorAsync, rimrafWithErrorAsync, existsSync, readJsonSync } from "./utils";
-import { readFileSync } from "fs-extra";
+import { Package, Packages } from "./npmPackage";
+import { execWithErrorAsync, existsSync, readJsonSync, rimrafWithErrorAsync } from "./utils";
 
 export enum MonoRepoKind {
     Client,
@@ -62,9 +62,9 @@ export class MonoRepo {
         const content = readFileSync(pkgPath, "utf-8");
         const config = YAML.parse(content);
 
-        for (const dir of config.packages as string[]) {
-            console.log(dir);
-        }
+        // for (const dir of config.packages as string[]) {
+        //     console.log(dir);
+        // }
 
         for (const d of config.packages as string[]) {
             console.log(d);
@@ -77,7 +77,7 @@ export class MonoRepo {
                 packages.push(...Packages.loadDir(loadDir, MonoRepoKind[this.kind], ignoredDirs, this));
             }
         }
-        return [];
+        return packages;
     }
 
     public static isSame(a: MonoRepo | undefined, b: MonoRepo | undefined) {
