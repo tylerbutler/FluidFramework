@@ -4,6 +4,7 @@
  */
 
 import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct";
+import { IEvent } from "@fluidframework/common-definitions";
 import { IFluidHTMLView } from "@fluidframework/view-interfaces";
 import { SharedString } from "@fluidframework/sequence";
 
@@ -24,14 +25,16 @@ export class CollaborativeText extends DataObject implements IFluidHTMLView {
 
     public static get Name() { return "@fluid-example/collaborative-textarea"; }
 
-    private static readonly factory = new DataObjectFactory(
-        CollaborativeText.Name,
-        CollaborativeText,
-        [
-            SharedString.getFactory(),
-        ],
-        {},
-    );
+    private static readonly factory =
+    // eslint-disable-next-line @typescript-eslint/ban-types
+        new DataObjectFactory<CollaborativeText, object, undefined, IEvent>(
+            CollaborativeText.Name,
+            CollaborativeText,
+            [
+                SharedString.getFactory(),
+            ],
+            {},
+        );
 
     public static getFactory() { return this.factory; }
 

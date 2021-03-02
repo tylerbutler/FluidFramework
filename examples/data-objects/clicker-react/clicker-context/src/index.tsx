@@ -6,6 +6,7 @@
 import {
     DataObjectFactory,
 } from "@fluidframework/aqueduct";
+import { IEvent } from "@fluidframework/common-definitions";
 import {
     IViewState,
     createContextFluid,
@@ -113,7 +114,8 @@ export class ClickerContext extends SyncedDataObject {
 }
 
 // ----- FACTORY SETUP -----
-export const ClickerContextInstantiationFactory = new DataObjectFactory(
+export const ClickerContextInstantiationFactory = new DataObjectFactory<ClickerContext, unknown, unknown, IEvent>
+(
     "clicker-context",
     ClickerContext,
     [],

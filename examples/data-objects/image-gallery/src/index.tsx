@@ -8,6 +8,7 @@ import {
     DataObject,
     DataObjectFactory,
 } from "@fluidframework/aqueduct";
+import { IEvent } from "@fluidframework/common-definitions";
 import { IFluidHTMLView } from "@fluidframework/view-interfaces";
 import React from "react";
 import ReactDOM from "react-dom";
@@ -63,7 +64,6 @@ export class ImageGalleryObject extends DataObject implements IFluidHTMLView {
     private readonly reactRender = (div, onSlide = this.onSlide) => {
         ReactDOM.render(
             <ImageGallery
-                // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
                 ref={(gallery) => (this.imageGallery = gallery ?? undefined)}
                 items={this.imageList}
                 onSlide={onSlide}
@@ -102,7 +102,9 @@ export class ImageGalleryObject extends DataObject implements IFluidHTMLView {
     }
 }
 
-export const ImageGalleryInstantiationFactory = new DataObjectFactory(
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const ImageGalleryInstantiationFactory = new DataObjectFactory<ImageGalleryObject, object, undefined, IEvent>
+(
     imageGalleryName,
     ImageGalleryObject,
     [],

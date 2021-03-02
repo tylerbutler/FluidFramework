@@ -9,6 +9,7 @@ import {
     DataObject,
     DataObjectFactory,
 } from "@fluidframework/aqueduct";
+import { IEvent } from "@fluidframework/common-definitions";
 import { IFluidHTMLView } from "@fluidframework/view-interfaces";
 
 // React
@@ -100,7 +101,9 @@ export class Musica extends DataObject implements IFluidHTMLView {
     }
 }
 
-export const MusicaInstantiationFactory = new DataObjectFactory(
+export const MusicaInstantiationFactory =
+// eslint-disable-next-line @typescript-eslint/ban-types
+new DataObjectFactory<Musica, object, undefined, IEvent>(
     musicaName,
     Musica,
     [],

@@ -7,6 +7,7 @@ import {
     DataObject,
     DataObjectFactory,
 } from "@fluidframework/aqueduct";
+import { IEvent } from "@fluidframework/common-definitions";
 import { IValueChanged } from "@fluidframework/map";
 
 import { ICoordinate } from "@fluid-example/multiview-coordinate-interface";
@@ -24,7 +25,8 @@ export class Coordinate extends DataObject implements ICoordinate {
         return Coordinate.factory;
     }
 
-    private static readonly factory = new DataObjectFactory(
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    private static readonly factory = new DataObjectFactory<Coordinate, object, undefined, IEvent>(
         Coordinate.ComponentName,
         Coordinate,
         [],

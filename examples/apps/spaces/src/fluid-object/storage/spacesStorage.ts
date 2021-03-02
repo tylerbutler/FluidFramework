@@ -4,12 +4,13 @@
  */
 
 import { EventEmitter } from "events";
-import { Layout } from "react-grid-layout";
 import {
     DataObject,
     DataObjectFactory,
 } from "@fluidframework/aqueduct";
+import { IEvent } from "@fluidframework/common-definitions";
 import { AsSerializable } from "@fluidframework/datastore-definitions";
+import { Layout } from "react-grid-layout";
 import { v4 as uuid } from "uuid";
 import { ISpacesItem } from "../index";
 
@@ -55,7 +56,9 @@ export interface ISpacesStoredItem<T> {
 export class SpacesStorage extends DataObject implements ISpacesStorage<ISpacesItem> {
     public static get ComponentName() { return "@fluid-example/spaces-storage"; }
 
-    private static readonly factory = new DataObjectFactory(
+    private static readonly factory =
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        new DataObjectFactory<SpacesStorage, object, undefined, IEvent>(
         SpacesStorage.ComponentName,
         SpacesStorage,
         [],
