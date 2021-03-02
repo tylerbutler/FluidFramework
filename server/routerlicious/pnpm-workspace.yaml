@@ -1,0 +1,7 @@
+packages:
+  - 'packages/**'
+
+link-workspace-packages: deep
+prefer-workspace-packages: true
+save-workspace-protocol: false
+shared-workspace-lockfile: true

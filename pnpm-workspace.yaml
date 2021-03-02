@@ -1,0 +1,13 @@
+packages:
+  - 'common/*/*'
+  - 'packages/**'
+  - 'examples/**'
+  - 'experimental/**'
+  - 'server/routerlicious/packages/gitresources/'
+  - 'server/routerlicious/packages/protocol-base/'
+  - 'server/routerlicious/packages/protocol-definitions/'
+
+link-workspace-packages: deep
+prefer-workspace-packages: true
+save-workspace-protocol: false
+shared-workspace-lockfile: true
