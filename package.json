@@ -144,5 +144,9 @@
       }
     },
     "generatorName": "generator-fluid"
+  },
+  "volta": {
+    "node": "12.21.0",
+    "npm": "6.14.11"
   }
 }
