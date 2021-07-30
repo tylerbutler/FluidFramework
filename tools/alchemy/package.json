@@ -1,0 +1,25 @@
+{
+  "name": "@fluidframework/alchemy",
+  "version": "0.0.1",
+  "description": "",
+  "homepage": "https://fluidframework.com",
+  "repository": "https://github.com/microsoft/FluidFramework",
+  "license": "MIT",
+  "author": "Microsoft and contributors",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@babel/preset-env": "^7.14.8",
+    "@fluidframework/tool-utils": "^0.44.0",
+    "jscodeshift": "^0.13.0",
+    "meow": "^10.1.1",
+    "update-notifier": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/jscodeshift": "^0.11.2",
+    "typescript": "^4.3.5"
+  }
+}
