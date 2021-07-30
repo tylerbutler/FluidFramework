@@ -1,49 +1,52 @@
-import type { ASTPath, Transform } from "jscodeshift";
-import { pkgMapReverse, uberMap } from "./lib";
+import type { Transform } from "jscodeshift";
+import { specifiersToPackages, specifiersToUberPackage, uberPackageToPackages } from "./lib";
 
-// type Version = string;
-// type Pkg = [string, Version]
-
-
-export const removeUberPkg =
-}
+// export const removeUberPkg =
+// }
 
 const transform: Transform = (fileInfo, api, options) => {
-    const { jscodeshift } = api;
-    const toUber = options.toUber || true;
-    return jscodeshift(fileInfo.source)
-        .find(jscodeshift.ImportDeclaration)
+    const js = api.jscodeshift;
+    const toUber = options.toUber || false;
+    const sourcePackages = [...(toUber ? specifiersToPackages : uberPackageToPackages).keys()];
+    const targetPackages = toUber ? specifiersToUberPackage : specifiersToPackages;
+
+    const finalImportMap = new Map<string, string[]>();
+
+    const imports = js(fileInfo.source)
+        .find(js.ImportDeclaration)
+        .filter((path) => {
+            // Include only imports from source packages
+            return sourcePackages.includes(path.value.source.value as string);
+        });
+
+    imports
+        .find(js.ImportSpecifier)
         .forEach((path, i, paths) => {
-            const declaration = path.value;
-            const currentSourcePkg: string = declaration.source.value as string;
+            const specifier = path.value;
+            const importedName = specifier.imported.name;
+            const localName = specifier.local?.name;
+            if (importedName !== localName) {
+                api.stats("Renamed import");
+            }
 
-            // api.stats(`source-${source}`);
-            if (uberMap.has(currentSourcePkg)) {
-                for (const specifier of declaration.specifiers) {
-                    api.stats(specifier.type);
-                    switch (specifier.type) {
-                        case "ImportSpecifier":
-                            const importedName = specifier.imported.name;
-                            const localName = specifier.local?.name;
-                            if (importedName !== localName) {
-                                api.stats("Renamed import");
-                            }
-                            if (pkgMapReverse.has(importedName)) {
-                                const newPkg = pkgMapReverse.get(importedName);
-                                api.report(`FOUND:   import {${importedName}} from "${currentSourcePkg}";`);
-                                api.report(`WRITING: import {${importedName}} from "${newPkg}";`);
-
-                                declaration.source.value = newPkg;
-                            } else {
-                                api.stats(`MISSING:${importedName}`);
-                            }
-                            break;
-                        default:
-                            break;
-                    }
+            if (targetPackages.has(importedName)) {
+                const newPkg = targetPackages.get(importedName);
+                if (finalImportMap.has(newPkg)) {
+                    finalImportMap.get(newPkg).push(importedName);
+                } else {
+                    finalImportMap.set(newPkg, [importedName]);
                 }
-            })
-        .toSource();
+                // api.report(`WRITING: import {${importedName}} from "${newPkg}";`);
+            } else {
+                api.report(`MISSING: ${importedName}`);
+            }
+        });
+
+    const output = imports.remove();
+
+    return output.toSource();
+
+    // .toSource();
 }
 
 module.exports = transform;

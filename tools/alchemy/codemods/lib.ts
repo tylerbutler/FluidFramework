@@ -1,6 +1,4 @@
-import type { ImportSpecifier, Transform } from "jscodeshift";
-
-export const uberMap: Map<string, string[]> = new Map([
+export const uberPackageToPackages: Map<string, string[]> = new Map([
     ["@fluid-experimental/fluid-framework", [
         "@fluid-experimental/fluid-static",
         "@fluidframework/cell",
@@ -8,9 +6,15 @@ export const uberMap: Map<string, string[]> = new Map([
         "@fluidframework/sequence",
     ]],
 ]);
-export const uberPackages = [...uberMap.keys()];
 
-export const pkgMap: Map<string, string[]> = new Map([
+export const packagesToUberPackage = new Map<string, string>();
+uberPackageToPackages.forEach((innerPackages, uberPackage) => {
+    for (const innerPackage of innerPackages) {
+        packagesToUberPackage.set(innerPackage, uberPackage);
+    }
+})
+
+export const packagesToSpecifiers: Map<string, string[]> = new Map([
     ["@fluidframework/cell", [
         "ISharedCell",
         "ISharedCellEvents",
@@ -58,12 +62,16 @@ export const pkgMap: Map<string, string[]> = new Map([
     ]]
 ]);
 
-export const pkgMapReverse = new Map<string, string>();
-export const allExports: string[] = [];
+export const specifiersToPackages = new Map<string, string>();
+packagesToSpecifiers.forEach((specifiers, pkg) => {
+    for (const specifier of specifiers) {
+        specifiersToPackages.set(specifier, pkg);
+    }
+});
 
-pkgMap.forEach((value, key) => {
-    allExports.push(...value);
-    for (const xport of value) {
-        pkgMapReverse.set(xport, key);
+export const specifiersToUberPackage = new Map<string, string>();
+packagesToSpecifiers.forEach((specifiers, pkg) => {
+    for (const specifier of specifiers) {
+        specifiersToUberPackage.set(specifier, packagesToUberPackage.get(pkg));
     }
 });
