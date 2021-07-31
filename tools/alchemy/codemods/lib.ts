@@ -59,7 +59,32 @@ export const packagesToSpecifiers: Map<string, string[]> = new Map([
         "TelemetryEventCategory",
         "TelemetryEventPropertyType",
         "TransformedEvent",
-    ]]
+    ]],
+    ["@fluid-experimental/fluid-static", [
+        "ContainerSchema",
+        "DataObjectClass",
+        "DOProviderContainerRuntimeFactory",
+        "FluidContainer",
+        "IConnection",
+        "IFluidContainer",
+        "IFluidContainerEvents",
+        "IMember",
+        "IRuntimeSignaler",
+        "IServiceAudience",
+        "IServiceAudienceEvents",
+        "ISignaler ",
+        "LoadableObjectClass",
+        "LoadableObjectClassRecord",
+        "LoadableObjectCtor",
+        "LoadableObjectRecord",
+        "RootDataObject",
+        "RootDataObjectProps",
+        "ServiceAudience",
+        "SharedObjectClass",
+        "Signaler",
+        "SignalListener",
+        "SignalManager",
+    ]],
 ]);
 
 export const specifiersToPackages = new Map<string, string>();
