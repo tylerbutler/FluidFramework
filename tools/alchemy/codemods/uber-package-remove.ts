@@ -47,7 +47,7 @@ const transform: Transform = (fileInfo, api, options) => {
             const importedName = specifier.imported.name;
             const localName = specifier.local?.name;
             if (importedName !== localName) {
-                api.stats("Renamed import");
+                api.report("Renamed import");
             }
 
             if (targetPackages.has(importedName)) {
@@ -96,9 +96,13 @@ const transform: Transform = (fileInfo, api, options) => {
         accum.push(js.importDeclaration(specifiers, js.literal(pkg)));
     }
 
+	if(accum.length > 0) {
+		accum[0].comments = comments;
+	}
+	
     // js.importDeclaration(js.ImportSpecifier,)
     const outSrc = filterSourceImports(initialAST).remove().toSource();
-    console.log(initialAST.length);
+    //console.log(initialAST.length);
     const output = js(outSrc) // getFirstPath(js(outSrc))
     	.find(js.Statement)
     	.at(0)
@@ -115,11 +119,11 @@ const transform: Transform = (fileInfo, api, options) => {
     // console.log(`${fileInfo.path}: ${JSON.stringify(accum, undefined, 2)}`);
 
     // If the first node has been modified or deleted, reattach the comments
-    const firstNode2 = getFirstNode(js(outSrc));
+    //const firstNode2 = getFirstNode(js(outSrc));
     // console.log(firstNode2);
-    if (firstNode2 !== firstNode) {
-        firstNode2.comments = comments;
-    }
+    //if (firstNode2 !== firstNode) {
+    //    firstNode2.comments = comments;
+    //}
 
     // const output = imports
     //     .remove()
