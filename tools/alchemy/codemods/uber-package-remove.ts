@@ -4,7 +4,7 @@ import { packagesToUberPackage, specifiersToPackages, specifiersToUberPackage, u
 
 const transform: Transform = (fileInfo, api, options) => {
     const js = api.jscodeshift;
-    const toUber: bool  = options.toUber || false;
+    const toUber: bool  = options.uber || false;
 
 	// console.log(JSON.stringify(options));
     
