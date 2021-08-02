@@ -1,22 +1,29 @@
 import type { Collection, ImportDeclaration, ImportSpecifier, Transform } from "jscodeshift";
-import { specifiersToPackages, specifiersToUberPackage, uberPackageToPackages } from "./lib";
-
-// export const removeUberPkg =
-// }
+import { packagesToUberPackage, specifiersToPackages, specifiersToUberPackage, uberPackageToPackages } from "./lib";
 
 const transform: Transform = (fileInfo, api, options) => {
     const js = api.jscodeshift;
-    const toUber = options.toUber || false;
-    const sourcePackages = [...(toUber ? specifiersToPackages : uberPackageToPackages).keys()];
+    const toUber: bool  = options.toUber || false;
+
+	// console.log(JSON.stringify(options));
+    
+    const sourcePackages = [...(toUber ? packagesToUberPackage : uberPackageToPackages).keys()];
     const targetPackages = toUber ? specifiersToUberPackage : specifiersToPackages;
+
+    // console.log(sourcePackages);
+    // console.log(targetPackages);
 
     const initialAST = js(fileInfo.source);
     const finalImportMap = new Map<string, string[]>();
 
-    const getFirstNode = (root: Collection) => {
+	const getFirstNode = (root: Collection) => {
+		return getFirstPath(root).node;
+	}
+
+    const getFirstPath = (root: Collection) => {
         const c = root.find(js.Program);
         if (c.length > 0) {
-            return c.get("body", 0).node;
+            return c.get("body", 0);
         }
     }
 
@@ -75,33 +82,40 @@ const transform: Transform = (fileInfo, api, options) => {
     //     console.log(node.specifiers);
     // }
 
-    console.log(finalImportMap);
+    // console.log(finalImportMap);
     const accum: ImportDeclaration[] = [];
     for (const [pkg, importedNames] of finalImportMap) {
-        console.log(`[pkg=${pkg}, elements=(${importedNames.length})]`)
+        // console.log(`[pkg=${pkg}, elements=(${importedNames.length})]`)
         const specifiers: ImportSpecifier[] = [];
         for (const importName of importedNames) {
             specifiers.push(js.importSpecifier(
                 js.identifier(importName), js.identifier(importName))
             );
         }
-        console.log(`length: ${specifiers.length}`)
+        // console.log(`length: ${specifiers.length}`)
         accum.push(js.importDeclaration(specifiers, js.literal(pkg)));
     }
 
     // js.importDeclaration(js.ImportSpecifier,)
-    // const output = js(fileInfo.source)
-    //     .find(js.ImportDeclaration)
-    //     .at(-1)
-    //     .insertAfter(accum);
-
+    const outSrc = filterSourceImports(initialAST).remove().toSource();
+    console.log(initialAST.length);
+    const output = js(outSrc) // getFirstPath(js(outSrc))
+    	.find(js.Statement)
+    	.at(0)
+    	//.body
+    	//.get("body")
+    	.insertBefore(accum);
+         //.at(0).paths()[0] // this is a NodePath
+         //.get()
+         //.unshift(...accum);
+	//console.log(output);
     // console.log(sourceImports.toSource())
-    const sourceImports = filterSourceImports(initialAST)
-        .replaceWith(accum);
+    //const sourceImports = filterSourceImports(initialAST)
+        //.replaceWith(accum);
     // console.log(`${fileInfo.path}: ${JSON.stringify(accum, undefined, 2)}`);
 
     // If the first node has been modified or deleted, reattach the comments
-    const firstNode2 = getFirstNode(initialAST);
+    const firstNode2 = getFirstNode(js(outSrc));
     // console.log(firstNode2);
     if (firstNode2 !== firstNode) {
         firstNode2.comments = comments;
@@ -113,9 +127,9 @@ const transform: Transform = (fileInfo, api, options) => {
 
     // const output = sourceImports.nodes();
     // console.log(JSON.stringify(output));
-    return sourceImports.toSource();
+    //return sourceImports.toSource();
 
-    // .toSource();
+    return output.toSource();
 }
 
 module.exports = transform;
