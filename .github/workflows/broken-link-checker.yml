@@ -48,7 +48,7 @@ jobs:
         pm2 start $GITHUB_WORKSPACE/docs/serve.js
         npm run linkcheck
     - name: Success
-      if: ${{ steps.linkcheck.outcome == "success" }}
+      if: ${{ steps.linkcheck.outcome }} == "success"
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -61,7 +61,7 @@ jobs:
 
           Your attention to detail is admirable.
     - name: Failure
-      if: ${{ steps.linkcheck.outcome != "success" }}
+      if: ${{ steps.linkcheck.outcome }} != "success"
       uses: marocchino/sticky-pull-request-comment@v2
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
