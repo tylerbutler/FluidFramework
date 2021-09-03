@@ -31,6 +31,7 @@ jobs:
   broken_link_check_internal:
     runs-on: ubuntu-latest
     name: Check for broken internal links
+    needs: build_site
     steps:
     - uses: actions/setup-node@v2-beta
       with:
