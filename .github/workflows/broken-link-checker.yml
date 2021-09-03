@@ -49,6 +49,7 @@ jobs:
       run: |
         npm install pm2 -g
         cd $GITHUB_WORKSPACE/docs
+        npm ci
         pm2 start $GITHUB_WORKSPACE/docs/serve.js
         npm run linkcheck
     - name: Success
