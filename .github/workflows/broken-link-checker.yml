@@ -33,6 +33,9 @@ jobs:
     name: Check for broken internal links
     needs: build_site
     steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
     - uses: actions/setup-node@v2-beta
       with:
         node-version: "12"
