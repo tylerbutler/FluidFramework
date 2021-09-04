@@ -63,7 +63,6 @@ jobs:
       if: ${{ steps.linkcheck.outcome }} == "success"
       uses: marocchino/sticky-pull-request-comment@v2
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
         header: linkreport
         recreate: true
         message: |
@@ -76,7 +75,6 @@ jobs:
       if: ${{ steps.linkcheck.outcome }} != "success"
       uses: marocchino/sticky-pull-request-comment@v2
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
         header: linkreport
         recreate: true
         message: |
