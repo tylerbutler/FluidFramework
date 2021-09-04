@@ -43,7 +43,7 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: fluidframework-site
-        path: $GITHUB_WORKSPACE/docs/public
+        path: docs/public
     - name: Install dependencies
       run: |
         npm install pm2 -g
