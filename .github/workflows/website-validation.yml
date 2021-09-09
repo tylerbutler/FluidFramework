@@ -65,7 +65,7 @@ jobs:
       with:
         header: linkreport
         recreate: true
-        GITHUB_TOKEN: ${{ secrets.BOT_COMMENT_TOKEN }}
+        # GITHUB_TOKEN: ${{ secrets.BOT_COMMENT_TOKEN }}
         message: |
           ### Broken link report 👍🏻
 
@@ -78,7 +78,7 @@ jobs:
       with:
         header: linkreport
         recreate: true
-        GITHUB_TOKEN: ${{ secrets.BOT_COMMENT_TOKEN }}
+        # GITHUB_TOKEN: ${{ secrets.BOT_COMMENT_TOKEN }}
         message: |
           ### Broken link report ⚠
 
