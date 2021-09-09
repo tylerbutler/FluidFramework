@@ -4,6 +4,12 @@ aliases:
   - "/start/faq/"
 ---
 
+[broken link][]
+
+Another [broken link][blink]
+
+And another [broken link](broken.md)
+
 The following are short, sometimes superficial, answers to some of the most commonly asked questions about the Fluid
 Framework.
 
