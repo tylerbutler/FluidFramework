@@ -5,7 +5,7 @@ aliases:
 ---
 
 [broken link][]
-
+d
 Another [broken link][blink]
 
 And another [broken link](broken.md)
