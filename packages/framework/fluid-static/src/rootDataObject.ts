@@ -11,6 +11,7 @@ import {
 import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
 import { IFluidLoadable } from "@fluidframework/core-interfaces";
 import { requestFluidObject } from "@fluidframework/runtime-utils";
+import { IDirectory } from "../../aqueduct/node_modules/@fluidframework/map/dist";
 import {
     ContainerSchema,
     DataObjectClass,
@@ -29,7 +30,7 @@ export class RootDataObject extends DataObject<{InitialState: RootDataObjectProp
     private readonly initialObjectsDirKey = "initial-objects-key";
     private readonly _initialObjects: LoadableObjectRecord = {};
 
-    private get initialObjectsDir() {
+    private get initialObjectsDir(): IDirectory {
         const dir = this.root.getSubDirectory(this.initialObjectsDirKey);
         if (dir === undefined) {
             throw new Error("InitialObjects sub-directory was not initialized");
@@ -37,27 +38,27 @@ export class RootDataObject extends DataObject<{InitialState: RootDataObjectProp
         return dir;
     }
 
-    protected async initializingFirstTime(props: RootDataObjectProps) {
+    protected async initializingFirstTime(props: RootDataObjectProps): Promise<void> {
         this.root.createSubDirectory(this.initialObjectsDirKey);
 
         // Create initial objects provided by the developer
         const initialObjectsP: Promise<void>[] = [];
-        Object.entries(props.initialObjects).forEach(([id, objectClass]) => {
-            const createObject = async () => {
+        for (const [id, objectClass] of Object.entries(props.initialObjects)) {
+            const createObject = async (): Promise<void> => {
                 const obj = await this.create(objectClass);
                 this.initialObjectsDir.set(id, obj.handle);
             };
             initialObjectsP.push(createObject());
-        });
+        }
 
         await Promise.all(initialObjectsP);
     }
 
-    protected async hasInitialized() {
+    protected async hasInitialized(): Promise<void> {
         // We will always load the initial objects so they are available to the developer
         const loadInitialObjectsP: Promise<void>[] = [];
-        for (const [key, value] of Array.from(this.initialObjectsDir.entries())) {
-            const loadDir = async () => {
+        for (const [key, value] of this.initialObjectsDir.entries()) {
+            const loadDir = async (): Promise<void> => {
                 const obj = await value.get();
                 Object.assign(this._initialObjects, { [key]: obj });
             };
@@ -125,7 +126,7 @@ export class DOProviderContainerRuntimeFactory extends BaseContainerRuntimeFacto
         this.initialObjects = schema.initialObjects;
     }
 
-    protected async containerInitializingFirstTime(runtime: IContainerRuntime) {
+    protected async containerInitializingFirstTime(runtime: IContainerRuntime): Promise<void> {
         // The first time we create the container we create the RootDataObject
         await this.rootDataObjectFactory.createRootInstance(
             rootDataStoreId,

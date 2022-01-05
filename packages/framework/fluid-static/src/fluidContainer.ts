@@ -138,11 +138,11 @@ export interface IFluidContainer extends IEventProvider<IFluidContainerEvents> {
  * Implementation of the IFluidContainer.
  */
 export class FluidContainer extends TypedEventEmitter<IFluidContainerEvents> implements IFluidContainer {
-    private readonly connectedHandler = () => this.emit("connected");
-    private readonly disconnectedHandler = () => this.emit("disconnected");
-    private readonly disposedHandler = () => this.emit("disposed");
-    private readonly savedHandler = () => this.emit("saved");
-    private readonly dirtyHandler = () => this.emit("dirty");
+    private readonly connectedHandler = (): boolean => this.emit("connected");
+    private readonly disconnectedHandler = (): boolean => this.emit("disconnected");
+    private readonly disposedHandler = (): boolean => this.emit("disposed");
+    private readonly savedHandler = (): boolean => this.emit("saved");
+    private readonly dirtyHandler = (): boolean => this.emit("dirty");
 
     public constructor(
         private readonly container: IContainer,
@@ -173,21 +173,21 @@ export class FluidContainer extends TypedEventEmitter<IFluidContainerEvents> imp
     /**
      * {@inheritDoc IFluidContainer.disposed}
      */
-    public get disposed() {
+    public get disposed(): boolean {
         return this.container.closed;
     }
 
     /**
      * {@inheritDoc IFluidContainer.connected}
      */
-    public get connected() {
+    public get connected(): boolean {
         return this.container.connected;
     }
 
     /**
      * {@inheritDoc IFluidContainer.initialObjects}
      */
-    public get initialObjects() {
+    public get initialObjects(): Record<string, IFluidLoadable> {
         return this.rootDataObject.initialObjects;
     }
 
@@ -208,7 +208,7 @@ export class FluidContainer extends TypedEventEmitter<IFluidContainerEvents> imp
     /**
      * {@inheritDoc IFluidContainer.dispose}
      */
-    public dispose() {
+    public dispose(): void {
         this.container.close();
         this.container.off("connected", this.connectedHandler);
         this.container.off("closed", this.disposedHandler);

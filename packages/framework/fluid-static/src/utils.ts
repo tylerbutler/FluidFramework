@@ -36,7 +36,7 @@ export const parseDataObjectsFromSharedObjects = (schema: ContainerSchema):
     const registryEntries: Set<NamedFluidDataStoreRegistryEntry> = new Set();
     const sharedObjects: Set<IChannelFactory> = new Set();
 
-    const tryAddObject = (obj: LoadableObjectClass<any>) => {
+    const tryAddObject = (obj: LoadableObjectClass<any>): void => {
         if (isSharedObjectClass(obj)) {
             sharedObjects.add(obj.getFactory());
         } else if (isDataObjectClass(obj)) {
@@ -47,9 +47,9 @@ export const parseDataObjectsFromSharedObjects = (schema: ContainerSchema):
     };
 
     // Add the object types that will be initialized
-    Object.values(schema.initialObjects).forEach((obj) => {
+    for (const obj of Object.values(schema.initialObjects)) {
         tryAddObject(obj);
-    });
+    }
 
     // If there are dynamic object types we will add them now
     if (schema.dynamicObjectTypes) {
@@ -62,5 +62,5 @@ export const parseDataObjectsFromSharedObjects = (schema: ContainerSchema):
         throw new Error("Container cannot be initialized without any DataTypes");
     }
 
-    return [Array.from(registryEntries), Array.from(sharedObjects)];
+    return [[...registryEntries], [...sharedObjects]];
 };
