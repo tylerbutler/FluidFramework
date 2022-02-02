@@ -10,6 +10,12 @@ const DuplicatePackageCheckerPlugin = require('duplicate-package-checker-webpack
 const { BannedModulesPlugin } = require('@fluidframework/bundle-size-tools')
 
 module.exports = {
+  config: {
+    node: false,
+  },
+  experiments: {
+    futureDefaults: true,
+  },
   entry: {
     'aqueduct': './src/aqueduct',
     'containerRuntime': './src/containerRuntime',
@@ -44,11 +50,11 @@ module.exports = {
   node: false,
   plugins: [
     new BannedModulesPlugin({
-        bannedModules: [{
-                moduleName: 'assert',
-                reason: 'This module is very large when bundled in browser facing Javascript, instead use the assert API in @fluidframework/common-utils'
-            }
-        ]
+      bannedModules: [{
+        moduleName: 'assert',
+        reason: 'This module is very large when bundled in browser facing Javascript, instead use the assert API in @fluidframework/common-utils'
+      }
+      ]
     }),
     new DuplicatePackageCheckerPlugin({
       // Also show module that is requiring each duplicate package

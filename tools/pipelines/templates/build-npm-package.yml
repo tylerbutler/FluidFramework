@@ -394,6 +394,11 @@ stages:
 
           - ${{ parameters.preCG }}
 
+          - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+            displayName: Manifest Generation
+            inputs:
+                BuildDropPath: ${{ parameters.buildDirectory }}/${{ parameters.cgSubDirectory }}
+
           - task: ComponentGovernanceComponentDetection@0
             displayName: Component Detection
             inputs:
