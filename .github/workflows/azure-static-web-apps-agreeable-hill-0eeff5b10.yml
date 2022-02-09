@@ -33,6 +33,34 @@ jobs:
           cache: "npm"
           cache-dependency-path: docs/package-lock.json
       - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.x'
+          source-url: ${{ secrets.AZURE_NUGET_URL }}
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.AZURE_ARTIFACTS_PAT }}
+      # - name: 'Azure CLI'
+      #   description: 'The action is used to execute Azure CLI commands'
+      #   inputs:
+      #     inlineScript:
+      #       description: 'Specify the script here'
+      #       required: true
+      #     azcliversion:
+      #       description: 'Azure CLI version to be used to execute the script'
+      #       required: false
+      #       default: 'latest'
+      # - name: "Install Azure CredProvider"
+      #   run: |
+      #     wget -qO- https://aka.ms/install-artifacts-credprovider.sh | bash
+      #   env:
+      #   VSS_NUGET_EXTERNAL_FEED_ENDPOINTS: '{"endpointCredentials": [{"endpoint":"${{ secrets.AZURE_NUGET_URL
+      #   }}","password":"${{ secrets.AZURE_NUGET_PAT }}","username":"unused"}]}'
+      - name: Download SBOM tool
+        working-directory: $GITHUB_WORKSPACE/docs
+        run: |
+          mkdir -pv $GITHUB_WORKSPACE/docs/sbom
+          nuget install Microsoft.ManifestTool.CrossPlatform -outputdir sbom
+          cd sbom
+          unzip Microsoft.ManifestTool.CrossPlatform.nupkg
       - name: Download JSON by SHA
         id: download-sha-json
         continue-on-error: true
@@ -55,17 +83,21 @@ jobs:
 
       # Build here so we can upload an artifact; ASWA will rebuild when it deploys in the step below
       - name: Build site artifact
+        working-directory: $GITHUB_WORKSPACE/docs
         run: |
-          cd $GITHUB_WORKSPACE/docs
           npm ci
           npm run build
+      - name: Generate SBOM
+        working-directory: $GITHUB_WORKSPACE/docs
+        run: |
+          dotnet Content/Microsoft.ManifestTool.dll -pn fluidframework-docs -b $GITHUB_WORKSPACE/docs/public -bc $GITHUB_WORKSPACE/docs/public
       - name: Archive site artifact
         uses: actions/upload-artifact@v2
         with:
           name: fluidframework-site
           path: docs/public
 
-      - name: Hugo Build And Deploy
+      - name: ASWA Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v0.0.1-preview
         with:
