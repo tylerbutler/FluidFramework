@@ -34,7 +34,6 @@ jobs:
           cache-dependency-path: docs/package-lock.json
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '5.x'
           source-url: ${{ secrets.AZURE_NUGET_URL }}
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.AZURE_ARTIFACTS_PAT }}
