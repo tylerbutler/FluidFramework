@@ -38,6 +38,7 @@ jobs:
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.AZURE_ARTIFACTS_PAT }}
 
+      
       # - name: "Azure CLI"
       #   description: 'The action is used to execute Azure CLI commands'
       #   inputs:
