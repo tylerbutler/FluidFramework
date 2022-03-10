@@ -15,14 +15,18 @@ import {
 /**
  * Runtime check to determine if a class is a DataObject type
  */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const isDataObjectClass = (obj: any): obj is DataObjectClass<any> => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     return obj?.factory !== undefined;
 };
 
 /**
  * Runtime check to determine if a class is a SharedObject type
  */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const isSharedObjectClass = (obj: any): obj is SharedObjectClass<any> => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     return obj?.getFactory !== undefined;
 };
 

@@ -144,7 +144,7 @@ export class FluidContainer extends TypedEventEmitter<IFluidContainerEvents> imp
     private readonly savedHandler = (): boolean => this.emit("saved");
     private readonly dirtyHandler = (): boolean => this.emit("dirty");
 
-    public constructor(
+    constructor(
         private readonly container: IContainer,
         private readonly rootDataObject: RootDataObject,
     ) {

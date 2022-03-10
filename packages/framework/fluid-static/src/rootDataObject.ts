@@ -9,9 +9,9 @@ import {
     defaultRouteRequestHandler,
 } from "@fluidframework/aqueduct";
 import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
-import { IFluidLoadable } from "@fluidframework/core-interfaces";
+import { IFluidHandle, IFluidLoadable } from "@fluidframework/core-interfaces";
 import { requestFluidObject } from "@fluidframework/runtime-utils";
-import { IDirectory } from "../../aqueduct/node_modules/@fluidframework/map/dist";
+import type { IDirectory } from "@fluidframework/map";
 import {
     ContainerSchema,
     DataObjectClass,
@@ -45,8 +45,10 @@ export class RootDataObject extends DataObject<{InitialState: RootDataObjectProp
         const initialObjectsP: Promise<void>[] = [];
         for (const [id, objectClass] of Object.entries(props.initialObjects)) {
             const createObject = async (): Promise<void> => {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 const obj = await this.create(objectClass);
-                this.initialObjectsDir.set(id, obj.handle);
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                this.initialObjectsDir.set(id, obj.handle as IFluidHandle);
             };
             initialObjectsP.push(createObject());
         }
@@ -59,7 +61,10 @@ export class RootDataObject extends DataObject<{InitialState: RootDataObjectProp
         const loadInitialObjectsP: Promise<void>[] = [];
         for (const [key, value] of this.initialObjectsDir.entries()) {
             const loadDir = async (): Promise<void> => {
+                // eslint-disable-next-line max-len
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
                 const obj = await value.get();
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 Object.assign(this._initialObjects, { [key]: obj });
             };
             loadInitialObjectsP.push(loadDir());
@@ -128,6 +133,7 @@ export class DOProviderContainerRuntimeFactory extends BaseContainerRuntimeFacto
 
     protected async containerInitializingFirstTime(runtime: IContainerRuntime): Promise<void> {
         // The first time we create the container we create the RootDataObject
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
         await this.rootDataObjectFactory.createRootInstance(
             rootDataStoreId,
             runtime,

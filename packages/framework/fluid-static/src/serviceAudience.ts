@@ -31,11 +31,13 @@ export abstract class ServiceAudience<M extends IMember = IMember>
    * It is mapped clientId to M to be better work with what the IAudience event provides
    */
     protected lastMembers: Map<string, M> = new Map();
+    protected readonly container: IContainer;
 
     constructor(
-        protected readonly container: IContainer,
+        container: IContainer,
     ) {
         super();
+        this.container = container;
         this.audience = container.audience;
 
         // getMembers will assign lastMembers so the removeMember event has what it needs
