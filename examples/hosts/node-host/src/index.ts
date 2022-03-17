@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import * as url from "url";
+import * as url from "node:url";
 import { IFluidCodeDetails } from "@fluidframework/core-interfaces";
 import { Loader } from "@fluidframework/container-loader";
 import { IFluidResolvedUrl } from "@fluidframework/driver-definitions";

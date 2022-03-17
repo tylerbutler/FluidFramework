@@ -3,9 +3,9 @@
  * Licensed under the MIT License.
  */
 
-import { exec } from "child_process";
-import * as fs from "fs";
-import { promisify } from "util";
+import { exec } from "node:child_process";
+import * as fs from "node:fs";
+import { promisify } from "node:util";
 
 const asyncExec = promisify(exec);
 
