@@ -3,9 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { exec } from "node:child_process";
-import * as fs from "node:fs";
-import { promisify } from "node:util";
+/* eslint-disable unicorn/prefer-node-protocol -- This is a node-only package so using node built-ins is OK. */
+import { exec } from "child_process";
+import * as fs from "fs";
+import { promisify } from "util";
+/* eslint-enable unicorn/prefer-node-protocol */
 
 const asyncExec = promisify(exec);
 
@@ -39,7 +41,6 @@ export class NodeCodeLoader {
     }
 
     private async installOrWaitForPackages(pkg: string): Promise<string> {
-        // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
         const fluidObjects = pkg.match(/(.*)\/(.*)@(.*)/);
         if (fluidObjects === null) {
             return Promise.reject(new Error("Invalid package"));
