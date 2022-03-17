@@ -3,7 +3,6 @@
  * Licensed under the MIT License.
  */
 
-// eslint-disable-next-line unicorn/prefer-node-protocol -- This is a node-only package so using node built-ins is OK.
 import * as url from "url";
 import { IFluidCodeDetails } from "@fluidframework/core-interfaces";
 import { Loader } from "@fluidframework/container-loader";

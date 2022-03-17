@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+// eslint-disable-next-line unicorn/prefer-node-protocol -- This is a node-only package so using node built-ins is OK.
 import * as readline from "readline";
 import { IKeyValue } from "@fluid-example/key-value-cache";
 import { FluidObject } from "@fluidframework/core-interfaces";
