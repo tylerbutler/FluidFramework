@@ -15,7 +15,7 @@
   "module": "lib/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "npm run build:genver && concurrently npm:build:compile npm:lint && npm run build:docs",
+    "build": "npm run build:genver",
     "build:commonjs": "",
     "build:compile": "",
     "build:compile:min": "npm run build:compile",

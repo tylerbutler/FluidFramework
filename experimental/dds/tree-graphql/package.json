@@ -17,7 +17,7 @@
   "scripts": {
     "build": "",
     "build:codegen": "npm run build:plugins && graphql-codegen --config codegen.yml && prettier --write src/graphql-generated/*",
-    "build:compile": "concurrently npm:tsc npm:build:esnext",
+    "build:compile": "",
     "build:docs": "api-extractor run --local",
     "build:esnext": "tsc --project ./tsconfig.esnext.json",
     "build:full": "",

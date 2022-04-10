@@ -16,7 +16,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "bench": "ts-node bench/src/index.ts",
-    "build": "npm run build:genver && concurrently npm:build:compile npm:lint && npm run build:docs",
+    "build": "npm run build:genver",
     "build:commonjs": "",
     "build:compile": "",
     "build:docs": "api-extractor run --local --typescript-compiler-folder ../../../node_modules/typescript && copyfiles -u 1 ./_api-extractor-temp/doc-models/* ../../../_api-extractor-temp/",
