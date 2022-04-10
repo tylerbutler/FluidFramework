@@ -13,13 +13,13 @@
   "main": "dist/www.js",
   "scripts": {
     "build": "npm run build:genver && concurrently npm:build:compile npm:lint",
-    "build:compile": "npm run tsc",
+    "build:compile": "",
     "build:genver": "gen-version",
     "clean": "rimraf dist *.tsbuildinfo *.build.log",
     "eslint": "eslint --format stylish src",
     "eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
-    "lint": "npm run eslint",
-    "lint:fix": "npm run eslint:fix",
+    "lint": "",
+    "lint:fix": "",
     "start": "node dist/www.js",
     "tsc": "tsc"
   },

@@ -15,6 +15,9 @@
     "tsc": "tsc",
     "webpack": "webpack"
   },
+  "nx": {
+    "ignore": true
+  },
   "dependencies": {
     "@fluidframework/aqueduct": "^0.26.0",
     "@fluidframework/map": "^0.26.0",

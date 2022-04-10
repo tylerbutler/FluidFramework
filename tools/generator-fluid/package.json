@@ -17,6 +17,9 @@
   "files": [
     "app"
   ],
+  "nx": {
+    "ignore": true
+  },
   "scripts": {
     "check": "npm ls --global --depth 0",
     "link": "npm install && npm link",
