@@ -11,12 +11,29 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
+            "outFiles": [
+                "${workspaceFolder}/build-tools/**/*.js"
+            ],
             "type": "node",
             "args": [
-                "info",
+                "release",
+                "prep",
                 "-g",
-                "build-tools",
+                "client",
+                "-t",
+                "minor",
+                // "-S",
+                // "virtualPatch",
+                // "-x",
+                "-v",
+                // "--no-branchCheck",
+                // "--no-updateCheck",
+                "--no-commit",
             ],
+            "cwd": "/home/tylerbu/code/build-test-fluid",
+            "env": {
+                "DEBUG": "*",
+            }
         },
         {
             "name": "fluid-bump-version",

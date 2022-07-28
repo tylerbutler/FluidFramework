@@ -161,7 +161,7 @@ export class GitRepo {
      * Fetch Tags
      */
     public async fetchTags() {
-        return await this.exec(`fetch --tags`, `fetch tags`);
+        return await this.exec(`fetch --tags --force`, `fetch tags`);
     }
 
     /**
