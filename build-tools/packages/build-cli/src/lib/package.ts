@@ -84,7 +84,7 @@ export async function npmCheckUpdates(
     // Run on the whole repo
     if (releaseGroupsToCheck === undefined) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const pkg = context.fullPackageMap.get(releaseGroup!);
+        const pkg = context.fullPackageMap.get(releaseGroup!.toString());
         if (pkg === undefined) {
             throw new Error(`Package not found in context: ${releaseGroup}`);
         }
@@ -102,7 +102,7 @@ export async function npmCheckUpdates(
                 continue;
             }
 
-            const releaseGroupRoot = context.repo.releaseGroups.get(group);
+            const releaseGroupRoot = context.repo.releaseGroups.get(group.toString());
             if (releaseGroupRoot === undefined) {
                 throw new Error(`Cannot find release group: ${group}`);
             }
@@ -243,13 +243,13 @@ export async function getPreReleaseDependencies(
     let depsToUpdate: ReleasePackage[];
 
     if (isReleaseGroup(releaseGroup)) {
-        const monorepo = context.repo.releaseGroups.get(releaseGroup);
+        const monorepo = context.repo.releaseGroups.get(releaseGroup.toString());
         if (monorepo === undefined) {
             throw new Error(`Can't find release group in context: ${releaseGroup}`);
         }
 
         packagesToCheck = monorepo.packages;
-        depsToUpdate = context.packagesNotInReleaseGroup(releaseGroup).map((p) => p.name);
+        depsToUpdate = context.packagesNotInReleaseGroup(releaseGroup.toString()).map((p) => p.name);
     } else {
         const pkg = context.fullPackageMap.get(releaseGroup);
         if (pkg === undefined) {
@@ -283,7 +283,8 @@ export async function getPreReleaseDependencies(
                 if (depPkg.monoRepo === undefined) {
                     prereleasePackages.set(depPkg.name, depVersion);
                 } else {
-                    prereleaseGroups.set(depPkg.monoRepo.kind, depVersion);
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                    prereleaseGroups.set(ReleaseGroup.from(depPkg.monoRepo.kind)!, depVersion);
                 }
             }
         }
@@ -312,11 +313,13 @@ export async function getPreReleaseDependencies(
  */
 export async function isReleased(
     context: Context,
-    releaseGroupOrPackage: MonoRepo | Package | string,
+    releaseGroupOrPackage: MonoRepo | Package | ReleasePackage,
     version: string,
     log?: Logger,
 ): Promise<boolean> {
     await context.gitRepo.fetchTags();
+
+    // const releaseName = releaseGroupOrPackage instanceof ReleaseGroup ? releaseGroupOrPackage.toString() : releaseGroupOrPackage;
 
     const tagName = generateReleaseGitTagName(releaseGroupOrPackage, version);
     if (typeof releaseGroupOrPackage === "string" && isReleaseGroup(releaseGroupOrPackage)) {
@@ -339,7 +342,7 @@ export async function isReleased(
  * @internal
  */
 export function generateReleaseGitTagName(
-    releaseGroupOrPackage: MonoRepo | Package | string,
+    releaseGroupOrPackage: MonoRepo | Package | ReleasePackage,
     version?: string,
 ): string {
     let tagName = "";
@@ -372,7 +375,7 @@ export async function getTagsForReleaseGroup(
     releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
 ): Promise<string[]> {
     const prefix = isReleaseGroup(releaseGroupOrPackage)
-        ? releaseGroupOrPackage.toLowerCase()
+        ? releaseGroupOrPackage.toString().toLowerCase()
         : PackageName.getUnscopedName(releaseGroupOrPackage);
     const tagList = await context.gitRepo.getAllTags(`${prefix}_v*`);
 

@@ -19,7 +19,7 @@ export { VersionBag } from "./bumpVersion/versionBag";
 export { FluidRepo } from "./common/fluidRepo";
 export { getResolvedFluidRoot } from "./common/fluidUtils";
 export { Logger, ErrorLoggingFunction, LoggingFunction } from "./common/logging";
-export { isMonoRepoKind, MonoRepo, MonoRepoKind, supportedMonoRepoValues } from "./common/monoRepo";
+export { isMonoRepoKind, MonoRepo, MonoRepoKind, supportedMonoRepoValues, ExtendedMonoRepoKind, isExtendedMonoRepoKind } from "./common/monoRepo";
 export { Package } from "./common/npmPackage";
 export { LayerGraph } from "./layerCheck/layerGraph";
 export { Timer } from "./common/timer";

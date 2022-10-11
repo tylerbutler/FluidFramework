@@ -58,11 +58,6 @@ function parseOptions(argv: string[]) {
             continue;
         }
 
-        if (arg === "--build-tools") {
-            kind = MonoRepoKind.BuildTools;
-            continue;
-        }
-
         console.error(`ERROR: Invalid arguments ${arg}`);
         error = true;
         break;

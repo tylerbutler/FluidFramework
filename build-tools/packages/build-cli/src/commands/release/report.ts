@@ -497,7 +497,7 @@ export default class ReleaseReportCommand extends BaseCommand<typeof ReleaseRepo
             );
 
             tableData.push([
-                pkgOrReleaseGroup,
+                pkgOrReleaseGroup.toString(),
                 displayBumpType,
                 displayRelDate,
                 displayDate,

@@ -94,7 +94,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand.flags> {
         const updatedPackages: Package[] = [];
 
         if (isReleaseGroup(args.package_or_release_group)) {
-            const releaseRepo = context.repo.releaseGroups.get(args.package_or_release_group);
+            const releaseRepo = context.repo.releaseGroups.get(args.package_or_release_group.toString());
             assert(
                 releaseRepo !== undefined,
                 `Release repo not found for ${args.package_or_release_group}`,

@@ -19,6 +19,13 @@ export enum MonoRepoKind {
     Client = "client",
     Server = "server",
     Azure = "azure",
+}
+
+/**
+ * Represents release groups ("monorepos") that are used by newer commands and tools, but excluded from "legacy" tools
+ * like fluid-build. By having a separate enum, we can make APIs that work with both types or just the old one.
+ */
+export enum ExtendedMonoRepoKind {
     BuildTools = "build-tools",
 }
 
@@ -34,6 +41,20 @@ export function isMonoRepoKind(str: string | undefined): str is MonoRepoKind {
     const isMonoRepoValue = list.includes(str);
     return isMonoRepoValue;
 }
+
+/**
+ * A type guard used to determine if a string is a MonoRepoKind.
+ */
+ export function isExtendedMonoRepoKind(str: string | undefined): str is ExtendedMonoRepoKind {
+    if (str === undefined) {
+        return false;
+    }
+
+    const list = Object.values<string>(ExtendedMonoRepoKind);
+    const isMonoRepoValue = list.includes(str);
+    return isMonoRepoValue;
+}
+
 
 /**
  * An iterator that returns only the Enum values of MonoRepoKind.

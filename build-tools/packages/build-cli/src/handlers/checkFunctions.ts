@@ -7,7 +7,7 @@ import inquirer from "inquirer";
 import { Machine } from "jssm";
 import path from "path";
 
-import { MonoRepoKind, exec } from "@fluidframework/build-tools";
+import { exec } from "@fluidframework/build-tools";
 
 import { bumpVersionScheme } from "@fluid-tools/version-tools";
 
@@ -23,7 +23,7 @@ import {
 } from "../lib";
 import { CommandLogger } from "../logging";
 import { MachineState } from "../machines";
-import { isReleaseGroup } from "../releaseGroups";
+import { isReleaseGroup, ReleaseGroup } from "../releaseGroups";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler";
 import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers";
 
@@ -252,7 +252,7 @@ export const checkInstallBuildTools: StateHandlerFunction = async (
     if (answer.install === true) {
         log.info(`Installing build-tools so we can run build:genver`);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const buildToolsMonoRepo = context.repo.releaseGroups.get(MonoRepoKind.BuildTools)!;
+        const buildToolsMonoRepo = context.repo.releaseGroups.get(ReleaseGroup.BuildTools.toString())!;
         const ret = await buildToolsMonoRepo.install();
         if (ret.error) {
             log.errorLog("Install failed.");
@@ -368,7 +368,7 @@ export const checkNoPrereleaseDependencies: StateHandlerFunction = async (
 
     const packagesToBump = new Set(packages.keys());
     for (const rg of releaseGroups.keys()) {
-        for (const p of context.packagesInReleaseGroup(rg)) {
+        for (const p of context.packagesInReleaseGroup(rg.toString())) {
             packagesToBump.add(p.name);
         }
     }
@@ -516,7 +516,7 @@ export const checkReleaseGroupIsBumped: StateHandlerFunction = async (
     assert(bumpType !== undefined, "bumpType is undefined.");
 
     context.repo.reload();
-    const repoVersion = context.getVersion(releaseGroup);
+    const repoVersion = context.getVersion(releaseGroup.toString());
     const targetVersion = bumpVersionScheme(releaseVersion, bumpType).version;
 
     if (repoVersion !== targetVersion) {
@@ -552,7 +552,7 @@ export const checkReleaseIsDone: StateHandlerFunction = async (
     assert(context !== undefined, "Context is undefined.");
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const wasReleased = await isReleased(context, releaseGroup!, releaseVersion!);
+    const wasReleased = await isReleased(context, releaseGroup!.toString(), releaseVersion!);
     if (wasReleased) {
         BaseStateHandler.signalSuccess(machine, state);
     } else {

@@ -5,7 +5,7 @@
 import { PackageName } from "@rushstack/node-core-library";
 import * as semver from "semver";
 
-import { Context, MonoRepoKind } from "@fluidframework/build-tools";
+import { Context } from "@fluidframework/build-tools";
 
 import {
     ReleaseVersion,
@@ -41,7 +41,7 @@ export async function createBumpBranch(
     releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
     bumpType: VersionBumpType,
 ) {
-    const version = context.getVersion(releaseGroupOrPackage);
+    const version = context.getVersion(releaseGroupOrPackage.toString());
     const name = generateBumpVersionBranchName(releaseGroupOrPackage, bumpType, version);
     await context.createBranch(name);
     return name;
@@ -72,7 +72,7 @@ export function generateBumpVersionBranchName(
     const name = isReleaseGroup(releaseGroupOrPackage)
         ? releaseGroupOrPackage
         : PackageName.getUnscopedName(releaseGroupOrPackage);
-    const branchName = `bump_${name.toLowerCase()}_${bumpType}_${newVersion}`;
+    const branchName = `bump_${name.toString().toLowerCase()}_${bumpType}_${newVersion}`;
     return branchName;
 }
 
@@ -96,7 +96,7 @@ export function generateBumpDepsBranchName(
     releaseGroup?: ReleaseGroup,
 ): string {
     const releaseGroupSegment = releaseGroup ? `_${releaseGroup}` : "";
-    const branchName = `bump_deps_${bumpedDep.toLowerCase()}_${bumpType}${releaseGroupSegment}`;
+    const branchName = `bump_deps_${bumpedDep.toString().toLowerCase()}_${bumpType}${releaseGroupSegment}`;
     return branchName;
 }
 
@@ -130,12 +130,12 @@ export function generateReleaseBranchName(releaseGroup: ReleaseGroup, version: s
         branchVersion = version;
     }
 
-    if (releaseGroup === "client") {
+    if (releaseGroup.is(ReleaseGroup.Client)) {
         if (schemeIsInternal) {
             branchPath.push("v2int");
         }
     } else {
-        branchPath.push(releaseGroup);
+        branchPath.push(releaseGroup.toString());
     }
 
     const releaseBranchVersion =
@@ -239,7 +239,7 @@ export function getReleaseSourceForReleaseGroup(
         return "direct";
     }
 
-    if ([MonoRepoKind.BuildTools].includes(releaseGroupOrPackage)) {
+    if (releaseGroupOrPackage.is(ReleaseGroup.BuildTools)) {
         return "interactive";
     }
 

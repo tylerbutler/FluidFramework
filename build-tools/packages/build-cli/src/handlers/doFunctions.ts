@@ -47,12 +47,12 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 
     assert(!isEmpty, `No prereleases found in DoBumpReleasedDependencies state.`);
 
-    const preReleaseGroups = new Set(releaseGroups.keys());
+    const preReleaseGroups = new Set([...releaseGroups.keys()].map(g=>g.toString()));
     const preReleasePackages = new Set(packages.keys());
 
     const packagesToBump = new Set(packages.keys());
     for (const rg of releaseGroups.keys()) {
-        for (const p of context.packagesInReleaseGroup(rg)) {
+        for (const p of context.packagesInReleaseGroup(rg.toString())) {
             packagesToBump.add(p.name);
         }
     }
@@ -77,7 +77,8 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
         if (pkg.monoRepo === undefined) {
             updatedPkgs.add(pkg.name);
         } else {
-            updatedReleaseGroups.add(pkg.monoRepo.kind);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            updatedReleaseGroups.add(ReleaseGroup.from(pkg.monoRepo.kind)!);
         }
     }
 
@@ -150,7 +151,7 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 
     const rgRepo = isReleaseGroup(releaseGroup)
         ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          context.repo.releaseGroups.get(releaseGroup)!
+          context.repo.releaseGroups.get(releaseGroup.toString())!
         : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           context.fullPackageMap.get(releaseGroup!)!;
 

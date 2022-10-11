@@ -8,7 +8,7 @@ import { commonOptions } from "../common/commonOptions";
 import { FluidRepo, IPackageManifest } from "../common/fluidRepo";
 import { getPackageManifest } from "../common/fluidUtils";
 import { Logger, defaultLogger } from "../common/logging";
-import { MonoRepo, MonoRepoKind, isMonoRepoKind } from "../common/monoRepo";
+import { MonoRepo, MonoRepoKind, isMonoRepoKind, ExtendedMonoRepoKind, isExtendedMonoRepoKind } from "../common/monoRepo";
 import { Package } from "../common/npmPackage";
 import { Timer } from "../common/timer";
 import { GitRepo } from "./gitRepo";
@@ -214,7 +214,10 @@ export class Context {
      * @param releaseGroup - The release group to filter by
      * @returns An array of packages that belong to the release group
      */
-    public packagesInReleaseGroup(releaseGroup: MonoRepoKind): Package[] {
+    public packagesInReleaseGroup(releaseGroup: string): Package[] {
+        if(!isMonoRepoKind(releaseGroup) && !isExtendedMonoRepoKind(releaseGroup)) {
+            throw new Error(`Unknown release group: ${releaseGroup}`);
+        }
         const packages = this.packages.filter((pkg) => pkg.monoRepo?.kind === releaseGroup);
         return packages;
     }
@@ -225,7 +228,7 @@ export class Context {
      * @param releaseGroup - The release group or package to filter by.
      * @returns An array of packages that do not belong to the release group.
      */
-    public packagesNotInReleaseGroup(releaseGroup: MonoRepoKind | Package): Package[] {
+    public packagesNotInReleaseGroup(releaseGroup: string | Package): Package[] {
         let packages: Package[];
         if (releaseGroup instanceof Package) {
             packages = this.packages.filter((p) => p.name !== releaseGroup.name);
