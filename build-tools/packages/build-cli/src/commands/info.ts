@@ -5,10 +5,9 @@
 import { Flags } from "@oclif/core";
 import { table } from "table";
 
-import { MonoRepoKind, isMonoRepoKind } from "@fluidframework/build-tools";
-
 import { BaseCommand } from "../base";
 import { releaseGroupFlag } from "../flags";
+import { ReleaseGroup, isReleaseGroup } from "../releaseGroups";
 
 /**
  * The root `info` command.
@@ -34,7 +33,7 @@ export default class InfoCommand extends BaseCommand<typeof InfoCommand.flags> {
         const flags = this.processedFlags;
         const context = await this.getContext();
         let packages =
-            flags.releaseGroup !== undefined && isMonoRepoKind(flags.releaseGroup)
+            flags.releaseGroup !== undefined && isReleaseGroup(flags.releaseGroup)
                 ? context.packagesInReleaseGroup(flags.releaseGroup)
                 : [...context.fullPackageMap.values()];
 
@@ -43,7 +42,7 @@ export default class InfoCommand extends BaseCommand<typeof InfoCommand.flags> {
             packages = packages.filter((p) => !p.packageJson.private);
         }
 
-        const data: (string | MonoRepoKind | undefined)[][] = [
+        const data: (string | ReleaseGroup | undefined)[][] = [
             ["Release group", "Name", "Private", "Version"],
         ];
         for (const pkg of packages) {

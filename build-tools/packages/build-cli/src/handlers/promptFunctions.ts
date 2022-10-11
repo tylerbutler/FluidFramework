@@ -273,7 +273,7 @@ export const promptToRelease: StateHandlerFunction = async (
                 )} build for the following release group in ADO for branch ${chalk.blue(
                     chalk.bold(context.originalBranchName),
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                )}:\n\n    ${chalk.green(chalk.bold(releaseGroup!))}`,
+                )}:\n\n    ${chalk.green(chalk.bold(releaseGroup!.toString()))}`,
             },
             {
                 title: "NEXT",

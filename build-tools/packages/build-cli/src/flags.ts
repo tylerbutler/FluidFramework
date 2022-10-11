@@ -5,8 +5,6 @@
 import { Flags } from "@oclif/core";
 import * as semver from "semver";
 
-import { supportedMonoRepoValues } from "@fluidframework/build-tools";
-
 import {
     isVersionBumpType,
     isVersionBumpTypeExtended,
@@ -14,7 +12,7 @@ import {
 } from "@fluid-tools/version-tools";
 
 import { DependencyUpdateType } from "./lib";
-import { isReleaseGroup } from "./releaseGroups";
+import { ReleaseGroup, isReleaseGroup } from "./releaseGroups";
 
 /**
  * A re-usable CLI flag to parse the root directory of the Fluid repo.
@@ -32,7 +30,7 @@ export const rootPathFlag = Flags.build({
 export const releaseGroupFlag = Flags.build({
     char: "g",
     description: "Name of the release group",
-    options: [...supportedMonoRepoValues()],
+    options: [...ReleaseGroup.values()].map((g) => g.toString()),
     parse: async (str: string) => {
         const group = str.toLowerCase();
         if (!isReleaseGroup(group)) {

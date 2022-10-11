@@ -8,7 +8,13 @@ import { commonOptions } from "../common/commonOptions";
 import { FluidRepo, IPackageManifest } from "../common/fluidRepo";
 import { getPackageManifest } from "../common/fluidUtils";
 import { Logger, defaultLogger } from "../common/logging";
-import { MonoRepo, MonoRepoKind, isMonoRepoKind, ExtendedMonoRepoKind, isExtendedMonoRepoKind } from "../common/monoRepo";
+import {
+    ExtendedMonoRepoKind,
+    MonoRepo,
+    MonoRepoKind,
+    isExtendedMonoRepoKind,
+    isMonoRepoKind,
+} from "../common/monoRepo";
 import { Package } from "../common/npmPackage";
 import { Timer } from "../common/timer";
 import { GitRepo } from "./gitRepo";
@@ -215,7 +221,7 @@ export class Context {
      * @returns An array of packages that belong to the release group
      */
     public packagesInReleaseGroup(releaseGroup: string): Package[] {
-        if(!isMonoRepoKind(releaseGroup) && !isExtendedMonoRepoKind(releaseGroup)) {
+        if (!isMonoRepoKind(releaseGroup) && !isExtendedMonoRepoKind(releaseGroup)) {
             throw new Error(`Unknown release group: ${releaseGroup}`);
         }
         const packages = this.packages.filter((pkg) => pkg.monoRepo?.kind === releaseGroup);

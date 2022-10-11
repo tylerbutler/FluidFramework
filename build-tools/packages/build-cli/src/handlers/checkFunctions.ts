@@ -23,7 +23,7 @@ import {
 } from "../lib";
 import { CommandLogger } from "../logging";
 import { MachineState } from "../machines";
-import { isReleaseGroup, ReleaseGroup } from "../releaseGroups";
+import { ReleaseGroup, isReleaseGroup } from "../releaseGroups";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler";
 import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers";
 
@@ -252,7 +252,9 @@ export const checkInstallBuildTools: StateHandlerFunction = async (
     if (answer.install === true) {
         log.info(`Installing build-tools so we can run build:genver`);
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const buildToolsMonoRepo = context.repo.releaseGroups.get(ReleaseGroup.BuildTools.toString())!;
+        const buildToolsMonoRepo = context.repo.releaseGroups.get(
+            ReleaseGroup.BuildTools.toString(),
+        )!;
         const ret = await buildToolsMonoRepo.install();
         if (ret.error) {
             log.errorLog("Install failed.");

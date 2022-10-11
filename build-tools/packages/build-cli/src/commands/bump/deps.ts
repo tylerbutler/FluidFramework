@@ -114,7 +114,9 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand.flags> {
 
         if (isReleaseGroup(args.package_or_release_group)) {
             depsToUpdate.push(
-                ...context.packagesInReleaseGroup(args.package_or_release_group.toString()).map((p) => p.name),
+                ...context
+                    .packagesInReleaseGroup(args.package_or_release_group.toString())
+                    .map((p) => p.name),
             );
         } else {
             depsToUpdate.push(args.package_or_release_group);

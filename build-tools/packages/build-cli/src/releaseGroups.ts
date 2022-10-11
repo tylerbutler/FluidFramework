@@ -2,7 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { extend as extendEnum } from 'extended-enum';
+import { extend as extendEnum } from "extended-enum";
 
 /**
  * A type that represents independent packages (as opposed to those that are part of a release group).
@@ -25,7 +25,7 @@ export type ReleasePackage = string;
  * Represents the different types of release groups supported by the build tools. Each of these groups should be defined
  * in the fluid-build section of the root package.json.
  */
- enum _ReleaseGroup {
+enum _ReleaseGroup {
     Client = "client",
     Server = "server",
     Azure = "azure",
@@ -40,7 +40,7 @@ export class ReleaseGroup extends extendEnum<typeof _ReleaseGroup, _ReleaseGroup
  * @internal
  */
 export function isReleaseGroup(str: ReleaseGroup | string | undefined): str is ReleaseGroup {
-    if(typeof str === "string") {
+    if (typeof str === "string") {
         return ReleaseGroup.from(str) !== undefined;
     }
 

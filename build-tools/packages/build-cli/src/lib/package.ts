@@ -249,7 +249,9 @@ export async function getPreReleaseDependencies(
         }
 
         packagesToCheck = monorepo.packages;
-        depsToUpdate = context.packagesNotInReleaseGroup(releaseGroup.toString()).map((p) => p.name);
+        depsToUpdate = context
+            .packagesNotInReleaseGroup(releaseGroup.toString())
+            .map((p) => p.name);
     } else {
         const pkg = context.fullPackageMap.get(releaseGroup);
         if (pkg === undefined) {

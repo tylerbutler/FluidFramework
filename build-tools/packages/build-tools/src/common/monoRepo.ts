@@ -45,7 +45,7 @@ export function isMonoRepoKind(str: string | undefined): str is MonoRepoKind {
 /**
  * A type guard used to determine if a string is a MonoRepoKind.
  */
- export function isExtendedMonoRepoKind(str: string | undefined): str is ExtendedMonoRepoKind {
+export function isExtendedMonoRepoKind(str: string | undefined): str is ExtendedMonoRepoKind {
     if (str === undefined) {
         return false;
     }
@@ -54,7 +54,6 @@ export function isMonoRepoKind(str: string | undefined): str is MonoRepoKind {
     const isMonoRepoValue = list.includes(str);
     return isMonoRepoValue;
 }
-
 
 /**
  * An iterator that returns only the Enum values of MonoRepoKind.

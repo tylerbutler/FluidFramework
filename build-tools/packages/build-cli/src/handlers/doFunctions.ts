@@ -47,7 +47,7 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 
     assert(!isEmpty, `No prereleases found in DoBumpReleasedDependencies state.`);
 
-    const preReleaseGroups = new Set([...releaseGroups.keys()].map(g=>g.toString()));
+    const preReleaseGroups = new Set([...releaseGroups.keys()].map((g) => g.toString()));
     const preReleasePackages = new Set(packages.keys());
 
     const packagesToBump = new Set(packages.keys());

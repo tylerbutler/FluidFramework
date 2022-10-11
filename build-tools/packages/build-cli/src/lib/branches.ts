@@ -96,7 +96,9 @@ export function generateBumpDepsBranchName(
     releaseGroup?: ReleaseGroup,
 ): string {
     const releaseGroupSegment = releaseGroup ? `_${releaseGroup}` : "";
-    const branchName = `bump_deps_${bumpedDep.toString().toLowerCase()}_${bumpType}${releaseGroupSegment}`;
+    const branchName = `bump_deps_${bumpedDep
+        .toString()
+        .toLowerCase()}_${bumpType}${releaseGroupSegment}`;
     return branchName;
 }
 

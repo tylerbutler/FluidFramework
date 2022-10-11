@@ -4,11 +4,14 @@
 
 ```ts
 
-import { MonoRepoKind } from '@fluidframework/build-tools';
+import { ExtendedEnumStatic } from 'extended-enum';
 import { run } from '@oclif/core';
 
-// @internal
-export type ReleaseGroup = MonoRepoKind;
+// Warning: (ae-forgotten-export) The symbol "ReleaseGroup_base" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export class ReleaseGroup extends ReleaseGroup_base {
+}
 
 // @internal
 export type ReleasePackage = string;
