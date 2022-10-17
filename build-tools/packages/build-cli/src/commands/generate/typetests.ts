@@ -2,13 +2,40 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { CliUx, Flags } from "@oclif/core";
-import chalk from "chalk";
+import { Flags } from "@oclif/core";
+import { Listr, ListrBaseClassOptions, ListrTask, Manager } from "listr2";
 
 import { generateTests, getAndUpdatePackageDetails } from "@fluidframework/build-tools";
 
 import { BaseCommand } from "../../base";
 import { releaseGroupFlag } from "../../flags";
+
+function chunk<T>(array: T[], chunkSize: number): T[][] {
+    const res: T[][] = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+        // eslint-disable-next-line @typescript-eslint/no-shadow
+        const chunk = array.slice(i, i + chunkSize);
+        res.push(chunk);
+    }
+    return res;
+}
+
+interface TaskContext {
+    name?: string;
+}
+
+function TaskManagerFactory<T = any>(override?: ListrBaseClassOptions): Manager<T> {
+    const defaultOptions: ListrBaseClassOptions = {
+        concurrent: true,
+        exitOnError: false,
+        rendererOptions: {
+            showTimer: true,
+        },
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return new Manager({ ...defaultOptions, ...override });
+}
 
 export default class GenerateTypeTestsCommand extends BaseCommand<
     typeof GenerateTypeTestsCommand.flags
@@ -67,6 +94,9 @@ export default class GenerateTypeTestsCommand extends BaseCommand<
         },
     ];
 
+    // eslint-disable-next-line new-cap
+    private readonly tasks = TaskManagerFactory<TaskContext>();
+
     public async run(): Promise<void> {
         const flags = this.processedFlags;
 
@@ -117,88 +147,97 @@ export default class GenerateTypeTestsCommand extends BaseCommand<
             }
         }
 
-        if (!flags.verbose) {
-            CliUx.ux.action.start("Preparing/generating type tests...", "generating", {
-                stdout: true,
-            });
+        // if (!flags.verbose) {
+        //     CliUx.ux.action.start("Preparing/generating type tests...", "generating", {
+        //         stdout: true,
+        //     });
+        // }
+
+        // const pkgs = this.tasks.add([])
+
+        const output: string[] = [];
+        const _tasks: ListrTask[] = [];
+        const _tmp = [...packageDirs];
+        const chunkSize = 30;
+        for (const [i, entries] of chunk(_tmp, chunkSize).entries()) {
+            // this.warning(JSON.stringify(entries));
+            for (const [j, packageDir] of entries.entries()) {
+                const packageName = packageDir.slice(Math.max(0, packageDir.lastIndexOf("/") + 1));
+                const title = `${i + j * chunkSize + 1}/${packageDirs.length}: ${packageName}`;
+
+                _tasks.push({
+                    title,
+                    task: async (ctx, task): Promise<boolean> => {
+                        try {
+                            const start = Date.now();
+                            const packageData = await getAndUpdatePackageDetails(
+                                packageDir,
+                                /* writeUpdates */ runPrepare,
+                                flags.versionConstraint as any,
+                                flags.exact,
+                                this.logger,
+                            ).finally(() => {
+                                task.output = `Loaded(${Date.now() - start}ms)`;
+                            });
+
+                            if (packageData.skipReason !== undefined) {
+                                task.skip(`${title}: ${packageData.skipReason}`);
+                            } else if (runGenerate === true && packageData.oldVersions.length > 0) {
+                                // eslint-disable-next-line @typescript-eslint/no-shadow
+                                const start = Date.now();
+                                this.log(`Generating tests for ${packageData.pkg.name}`);
+                                await generateTests(packageData)
+                                    .then((s) => {
+                                        task.output = `dirs(${s.dirs}) files(${s.files}) tests(${s.tests})`;
+                                    })
+                                    .finally(() => {
+                                        task.output = `Generated(${Date.now() - start}ms)`;
+                                    });
+                            }
+                            task.output = "Done.";
+                            return true;
+                        } catch {
+                            return false;
+                        } finally {
+                            // this.verbose(output.join(": "));
+                        }
+                    },
+                });
+            }
+
+            this.tasks.add([
+                {
+                    title: `Group ${i}`,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+                    task: (ctx, task): Listr => task.newListr(_tasks),
+                },
+            ]);
+            // eslint-disable-next-line no-await-in-loop
+            await this.tasks.runAll();
         }
 
-        const concurrency = 25;
-        const runningGenerates: Promise<boolean>[] = [];
-        // this loop incrementally builds up the runningGenerates promise list
-        // each dir with an index greater than concurrency looks back the concurrency value
-        // to determine when to run
-        for (const [i, packageDir] of packageDirs.entries()) {
-            runningGenerates.push(
-                (async () => {
-                    if (i >= concurrency) {
-                        await runningGenerates[i - concurrency];
-                    }
+        // this.tasks.add([{
+        //     title: "Generate",
+        //     task: async () => true,
+        // },
+        // this.tasks.indent(_tasks),
+        // ]);
 
-                    const packageName = packageDir.slice(
-                        Math.max(0, packageDir.lastIndexOf("/") + 1),
-                    );
-
-                    const output = [
-                        `${(i + 1).toString()}/${packageDirs.length}`,
-                        `${packageName}`,
-                    ];
-
-                    try {
-                        const start = Date.now();
-                        const packageData = await getAndUpdatePackageDetails(
-                            packageDir,
-                            /* writeUpdates */ runPrepare,
-                            flags.versionConstraint as any,
-                            flags.exact,
-                            this.logger,
-                        ).finally(() => output.push(`Loaded(${Date.now() - start}ms)`));
-
-                        if (packageData.skipReason !== undefined) {
-                            output.push(packageData.skipReason);
-                        } else if (runGenerate === true && packageData.oldVersions.length > 0) {
-                            // eslint-disable-next-line @typescript-eslint/no-shadow
-                            const start = Date.now();
-                            this.log(`Generating tests for ${packageData.pkg.name}`);
-                            await generateTests(packageData)
-                                .then((s) =>
-                                    output.push(
-                                        `dirs(${s.dirs}) files(${s.files}) tests(${s.tests})`,
-                                    ),
-                                )
-                                .finally(() => output.push(`Generated(${Date.now() - start}ms)`));
-                        }
-
-                        output.push("Done");
-                    } catch (error) {
-                        output.push("Error");
-                        if (typeof error === "string") {
-                            output.push(chalk.red(error));
-                        } else if (error instanceof Error) {
-                            output.push(chalk.red(error.message), `\n ${error.stack}`);
-                        } else {
-                            output.push(typeof error, chalk.red(`${error}`));
-                        }
-
-                        return false;
-                    } finally {
-                        this.verbose(output.join(": "));
-                    }
-
-                    return true;
-                })(),
-            );
+        try {
+            await this.tasks.runAll();
+        } catch (error: any) {
+            this.error(error);
         }
 
         // eslint-disable-next-line unicorn/no-await-expression-member
-        const results = (await Promise.all(runningGenerates)).every((v) => v);
+        // const results = (await Promise.all(runningGenerates)).every((v) => v);
 
-        if (!flags.verbose) {
-            CliUx.ux.action.stop("Done");
-        }
+        // if (!flags.verbose) {
+        //     CliUx.ux.action.stop("Done");
+        // }
 
-        if (!results) {
-            this.error(`Some type test generation failed.`);
-        }
+        // if (!results) {
+        //     this.error(`Some type test generation failed.`);
+        // }
     }
 }
