@@ -12,6 +12,8 @@ Policy handlers are all defined here in the repo: `build-tools/packages/build-to
 
 ## Adding new policy handlers to `check policy`
 
+To add a new policy handler, you first define the handler and ensure it's exported.
+
 The policy `Handler` interface looks like this:
 
 ```ts
@@ -24,7 +26,8 @@ export interface Handler {
 }
 ```
 
-Each handler must define a RegExp (the `match` property) that filters the file list. The `handler` function itself
+Each `Handler` must define a RegExp (the `match` property) that filters the file list. The `handler` function itself
 receives the path to the file, and the path to the root of the repo. If the file passes the policy check, the function
 should return `undefined`. If a string is returned it is assumed to be an error message.
 
+## Implementing resolvers
