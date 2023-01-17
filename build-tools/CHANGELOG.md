@@ -1,3 +1,17 @@
+## [0.7.0](https://github.com/microsoft/FluidFramework/compare/build-tools_v0.6.0...build-tools_v0.7.0) (2022-12-08)
+
+### ⚠ BREAKING CHANGES
+
+* **run:bundleStats:** The `--dirname` argument has been removed. There is now
+a `--dangerfile` argument that defaults to the built-in dangerfile but
+can be customized if needed.
+
+### Bug Fixes
+
+* **build-tools:** Use local policy-check in build-tools ([#13145](https://github.com/microsoft/FluidFramework/issues/13145)) ([e9b8590](https://github.com/microsoft/FluidFramework/commit/e9b8590647d21645dcfd31122e3d3af5763fb0e3))
+* **run:bundleStats:** Take path to dangerfile instead of directory ([#13154](https://github.com/microsoft/FluidFramework/issues/13154)) ([0372fe0](https://github.com/microsoft/FluidFramework/commit/0372fe000991e324907d3e6342d6f72a49dfcb50))
+
+
 ## [0.6.0](https://github.com/microsoft/FluidFramework/compare/build-tools_v0.5.0...build-tools_v0.6.0) (2022-11-28)
 
 
