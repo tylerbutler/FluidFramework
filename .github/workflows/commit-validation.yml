@@ -39,9 +39,10 @@ jobs:
       #     cache: 'pnpm'
 
       - name: Install dependencies
+        working-directory: build-tools
         run: |
           # Only install the root dependencies since we don't need the whole workspace
-          pnpm config recursive-install false
+          pnpm config set recursive-install false
           pnpm install --ignore-scripts
 
       # Lints the PR title according to the settings file in the repo
