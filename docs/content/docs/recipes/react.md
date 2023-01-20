@@ -47,6 +47,7 @@ This tutorial assumes that you are familiar with the [Fluid Framework Overview](
     npm install @fluidframework/tinylicious-client fluid-framework
     ```
 
+
 ## Code the project
 
 1. Open the file `\src\App.js` in your code editor. Delete all the default `import` statements except the one that imports `App.css`. Then delete all the markup from the `return` statement. The file should look like the following:
@@ -220,12 +221,6 @@ npm run start
 
 Paste the URL of the application into the address bar of another tab or even another browser to have more than one client open at a time. Press the **Get Time** button on any client and see the value change and synchronize on all the clients.
 
-{{< callout note >}}
-
-You may need to install an additional dependency to make this demo compatible with Webpack 5. If you receive a compilation error related to a "buffer" package, please run `npm install -D buffer` and try again. This will be resolved in a future release of Fluid Framework.
-
-{{< /callout >}}
-
 ## Next steps
 
 - Try extending the demo with more key/value pairs and a more complex UI.
@@ -240,6 +235,10 @@ When you make changes to the code the project will automatically rebuild and the
 {{< /callout >}}
 
 <!-- AUTO-GENERATED-CONTENT:START (INCLUDE:path=docs/_includes/links.md) -->
+
+<!-- prettier-ignore-start -->
+
+<!-- This section is automatically generated. To update it, make the appropriate changes to docs/md-magic.config.js or the embedded content, then run 'npm run build:md-magic' in the docs folder. -->
 <!-- Links -->
 
 <!-- Concepts -->
@@ -264,5 +263,7 @@ When you make changes to the code the project will automatically rebuild and the
 
 [FluidContainer]: {{< relref "/docs/apis/fluid-static/fluidcontainer-class.md" >}}
 [IFluidContainer]: {{< relref "/docs/apis/fluid-static/ifluidcontainer-interface.md" >}}
+
+<!-- prettier-ignore-end -->
 
 <!-- AUTO-GENERATED-CONTENT:END -->

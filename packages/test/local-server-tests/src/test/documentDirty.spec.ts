@@ -18,6 +18,7 @@ import { requestFluidObject } from "@fluidframework/runtime-utils";
 import { ILocalDeltaConnectionServer, LocalDeltaConnectionServer } from "@fluidframework/server-local-server";
 import {
     createAndAttachContainer,
+    waitForContainerConnection,
     ITestFluidObject,
     LoaderContainerTracker,
     LocalCodeLoader,
@@ -51,13 +52,7 @@ describe("Document Dirty", () => {
          */
         async function waitForContainerReconnection(c: Container): Promise<void> {
             assert.equal(c.connected, false);
-            return new Promise((resolve) => c.once("connected", () => resolve()));
-        }
-
-        async function ensureContainerConnected(c: Container): Promise<void> {
-            if (!c.connected) {
-                return waitForContainerReconnection(c);
-            }
+            return waitForContainerConnection(c, true);
         }
 
         /**
@@ -256,9 +251,6 @@ describe("Document Dirty", () => {
 
                     checkDirtyState("after value set", true, 0);
 
-                    // Manually flush the ops before disconnecting
-                    (dataObject.context.containerRuntime as IContainerRuntime).flush();
-
                     // Disconnect the client.
                     assert(container.clientId);
                     documentServiceFactory.disconnectClient(container.clientId, "Disconnected for testing");
@@ -319,9 +311,6 @@ describe("Document Dirty", () => {
 
                     checkDirtyState("after batch value set", true, 0);
 
-                    // Manually flush the ops so that they are sent as a batch.
-                    (dataObject.context.containerRuntime as IContainerRuntime).flush();
-
                     // Disconnect the client.
                     documentServiceFactory.disconnectClient(container.clientId, "Disconnected for testing");
 
@@ -345,7 +334,7 @@ describe("Document Dirty", () => {
         describe("Force readonly", () => {
             it(`sets operations when force readonly and then turn off force readonly to process them`, async () => {
                 container.forceReadonly(true);
-                await ensureContainerConnected(container);
+                await waitForContainerConnection(container, true);
 
                 // Set values in DDSes in force read only state.
                 sharedMap.set("key", "value");
@@ -374,12 +363,9 @@ describe("Document Dirty", () => {
 
                     checkDirtyState("after value set", true, 0);
 
-                    // Manually flush the ops so that they are sent as a batch.
-                    (dataObject.context.containerRuntime as IContainerRuntime).flush();
-
                     // force readonly
                     container.forceReadonly(true);
-                    await ensureContainerConnected(container);
+                    await waitForContainerConnection(container, true);
 
                     await loaderContainerTracker.ensureSynchronized();
 

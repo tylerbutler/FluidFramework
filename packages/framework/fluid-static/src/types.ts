@@ -94,6 +94,26 @@ export interface ContainerSchema {
 }
 
 /**
+ * Holds the collection of objects that the container was initially created with, as well as provides the ability
+ * to dynamically create further objects during usage.
+ */
+export interface IRootDataObject {
+    /**
+     * Provides a record of the initial objects defined on creation.
+     */
+    readonly initialObjects: LoadableObjectRecord;
+
+    /**
+     * Dynamically creates a new detached collaborative object (DDS/DataObject).
+     *
+     * @param objectClass - Type of the collaborative object to be created.
+     *
+     * @typeParam T - The class of the `DataObject` or `SharedObject`.
+     */
+    create<T extends IFluidLoadable>(objectClass: LoadableObjectClass<T>): Promise<T>;
+}
+
+/**
  * Signature for {@link IMember} change events.
  *
  * @param clientId - A unique identifier for the client.
@@ -114,7 +134,6 @@ export type MemberChangedListener<M extends IMember> = (clientId: string, member
  * @typeParam M - A service-specific {@link IMember} implementation.
  */
 export interface IServiceAudienceEvents<M extends IMember> extends IEvent {
-    /* eslint-disable @typescript-eslint/unified-signatures */
     /**
      * Emitted when a {@link IMember | member}(s) are either added or removed.
      *
@@ -135,7 +154,6 @@ export interface IServiceAudienceEvents<M extends IMember> extends IEvent {
      * @eventProperty
      */
     (event: "memberRemoved", listener: MemberChangedListener<M>): void;
-    /* eslint-enable @typescript-eslint/unified-signatures */
 }
 
 /**
@@ -148,7 +166,8 @@ export interface IServiceAudienceEvents<M extends IMember> extends IEvent {
  *
  * @typeParam M - A service-specific {@link IMember} type.
  */
-export interface IServiceAudience<M extends IMember> extends IEventProvider<IServiceAudienceEvents<M>> {
+export interface IServiceAudience<M extends IMember>
+    extends IEventProvider<IServiceAudienceEvents<M>> {
     /**
      * Returns an map of all users currently in the Fluid session where key is the userId and the value is the
      * member object.  The implementation may choose to exclude certain connections from the returned map.
@@ -159,7 +178,7 @@ export interface IServiceAudience<M extends IMember> extends IEventProvider<ISer
     /**
      * Returns the current active user on this client once they are connected. Otherwise, returns undefined.
      */
-    getMyself(): M | undefined;
+    getMyself(): Myself<M> | undefined;
 }
 
 /**
@@ -195,3 +214,8 @@ export interface IMember {
      */
     connections: IConnection[];
 }
+
+/**
+ * An extended member object that includes currentConnection
+ */
+export type Myself<M extends IMember = IMember> = M & { currentConnection: string; };

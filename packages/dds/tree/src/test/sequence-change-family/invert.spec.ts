@@ -10,8 +10,9 @@ import {
     DUMMY_INVERT_TAG,
     sequenceChangeRebaser,
     SequenceChangeset,
-} from "../../feature-libraries";
-import { TreeSchemaIdentifier } from "../../schema-stored";
+    // eslint-disable-next-line import/no-internal-modules
+} from "../../feature-libraries/sequence-change-family";
+import { makeAnonChange, TreeSchemaIdentifier } from "../../core";
 import { brand } from "../../util";
 import { deepFreeze } from "../utils";
 
@@ -19,7 +20,7 @@ const type: TreeSchemaIdentifier = brand("Node");
 
 function invert(change: SequenceChangeset): SequenceChangeset {
     deepFreeze(change);
-    return sequenceChangeRebaser.invert(change);
+    return sequenceChangeRebaser.invert(makeAnonChange(change));
 }
 
 describe("SequenceChangeFamily - Invert", () => {

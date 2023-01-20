@@ -5,11 +5,17 @@
 
 import { fail, strict as assert } from "assert";
 import { unreachableCase } from "@fluidframework/common-utils";
-import { ChangeFamily } from "../../change-family";
-import { Commit, EditManager, SessionId } from "../../edit-manager";
-import { ChangeRebaser } from "../../rebase";
-import { Delta, FieldKey } from "../../tree";
-import { brand, makeArray, RecursiveReadonly } from "../../util";
+import {
+    ChangeFamily,
+    Commit,
+    EditManager,
+    SessionId,
+    ChangeRebaser,
+    Delta,
+    FieldKey,
+    TaggedChange,
+} from "../../core";
+import { brand, clone, makeArray, RecursiveReadonly } from "../../util";
 import {
     AnchorRebaseData,
     TestAnchorSet,
@@ -18,6 +24,7 @@ import {
     TestChangeRebaser,
     TestChange,
     UnrebasableTestChangeRebaser,
+    ConstrainedTestChangeRebaser,
 } from "../testChange";
 
 const rootKey: FieldKey = brand("root");
@@ -46,17 +53,17 @@ function changeFamilyFactory(
     return family;
 }
 
-function editManagerFactory(rebaser?: ChangeRebaser<TestChange>): {
+function editManagerFactory(options: {
+    rebaser?: ChangeRebaser<TestChange>;
+    sessionId?: SessionId;
+}): {
     manager: TestEditManager;
     anchors: AnchorRebaseData;
 } {
-    const family = changeFamilyFactory(rebaser);
+    const family = changeFamilyFactory(options.rebaser);
     const anchors = new TestAnchorSet();
-    const manager = new EditManager<TestChange, ChangeFamily<unknown, TestChange>>(
-        localSessionId,
-        family,
-        anchors,
-    );
+    const manager = new EditManager<TestChange, ChangeFamily<unknown, TestChange>>(family, anchors);
+    manager.initSessionId(options.sessionId ?? localSessionId);
     return { manager, anchors };
 }
 
@@ -144,6 +151,15 @@ describe("EditManager", () => {
             { seq: 3, type: "Ack" },
         ]);
 
+        runUnitTestScenario("Can handle non-concurrent local changes partially sequenced later", [
+            { seq: 1, type: "Push" },
+            { seq: 2, type: "Push" },
+            { seq: 1, type: "Ack" },
+            { seq: 3, type: "Push" },
+            { seq: 2, type: "Ack" },
+            { seq: 3, type: "Ack" },
+        ]);
+
         runUnitTestScenario("Can handle non-concurrent peer changes sequenced immediately", [
             { seq: 1, type: "Pull", ref: 0, from: peer1 },
             { seq: 2, type: "Pull", ref: 1, from: peer1 },
@@ -154,6 +170,12 @@ describe("EditManager", () => {
             { seq: 1, type: "Pull", ref: 0, from: peer1 },
             { seq: 2, type: "Pull", ref: 0, from: peer1 },
             { seq: 3, type: "Pull", ref: 0, from: peer1 },
+        ]);
+
+        runUnitTestScenario("Can handle non-concurrent peer changes partially sequenced later", [
+            { seq: 1, type: "Pull", ref: 0, from: peer1 },
+            { seq: 2, type: "Pull", ref: 0, from: peer1 },
+            { seq: 3, type: "Pull", ref: 1, from: peer1 },
         ]);
 
         runUnitTestScenario("Can rebase a single peer change over multiple peer changes", [
@@ -223,6 +245,21 @@ describe("EditManager", () => {
             { seq: 10, type: "Pull", ref: 0, from: peer2 },
             { seq: 12, type: "Pull", ref: 1, from: peer2 },
         ]);
+
+        it("Bounds memory growth when provided with a minimumSequenceNumber", () => {
+            const { manager } = editManagerFactory({});
+            for (let i = 0; i < 10; ++i) {
+                manager.addSequencedChange({
+                    changeset: TestChange.mint([], []),
+                    refNumber: brand(0),
+                    seqNumber: brand(i),
+                    sessionId: peer1,
+                });
+            }
+            assert.equal(manager.getTrunk().length, 10);
+            manager.advanceMinimumSequenceNumber(5);
+            assert(manager.getTrunk().length < 10);
+        });
     });
 
     describe("Avoids unnecessary rebases", () => {
@@ -238,6 +275,43 @@ describe("EditManager", () => {
                 { seq: 7, type: "Pull", ref: 5, from: peer1 },
             ],
             new UnrebasableTestChangeRebaser(),
+        );
+        runUnitTestScenario(
+            "Sequenced local changes should not be rebased over prior local changes if those earlier changes were not rebased",
+            [
+                { seq: 1, type: "Push" },
+                { seq: 2, type: "Push" },
+                { seq: 4, type: "Push" },
+                { seq: 1, type: "Ack" },
+                { seq: 2, type: "Ack" },
+                { seq: 3, type: "Pull", ref: 2, from: peer2 },
+                { seq: 4, type: "Ack" },
+            ],
+            new ConstrainedTestChangeRebaser(
+                (change: TestChange, over: TaggedChange<TestChange>): boolean => {
+                    // This is the only rebase that should happen
+                    assert.deepEqual(change.intentions, [4]);
+                    assert.deepEqual(over.change.intentions, [3]);
+                    return true;
+                },
+            ),
+        );
+        runUnitTestScenario(
+            "Sequenced peer changes should not be rebased over changes from the same peer if those earlier changes were not rebased",
+            [
+                { seq: 1, type: "Pull", ref: 0, from: peer1 },
+                { seq: 2, type: "Pull", ref: 0, from: peer1 },
+                { seq: 3, type: "Pull", ref: 2, from: peer2 },
+                { seq: 4, type: "Pull", ref: 0, from: peer1 },
+            ],
+            new ConstrainedTestChangeRebaser(
+                (change: TestChange, over: TaggedChange<TestChange>): boolean => {
+                    // This is the only rebase that should happen
+                    assert.deepEqual(change.intentions, [4]);
+                    assert.deepEqual(over.change.intentions, [3]);
+                    return true;
+                },
+            ),
         );
     });
 
@@ -259,15 +333,17 @@ describe("EditManager", () => {
         for (const scenario of buildScenario([], meta)) {
             // Uncomment the code below to log the titles of generated scenarios.
             // This is helpful for creating a unit test out of a generated scenario that fails.
-            // const title = scenario.map((s) => {
-            //     if (s.type === "Pull") {
-            //         return `Pull(${s.seq}) from:${s.from} ref:${s.ref}`;
-            //     } else if (s.type === "Ack") {
-            //         return `Ack(${s.seq})`;
-            //     }
-            //     return s.type;
-            // }).join("|");
-            // console.debug(title);
+            const title = scenario
+                .map((s) => {
+                    if (s.type === "Pull") {
+                        return `Pull(${s.seq}) from:${s.from} ref:${s.ref}`;
+                    } else if (s.type === "Ack") {
+                        return `Ack(${s.seq})`;
+                    }
+                    return `Push(${s.seq})`;
+                })
+                .join("|");
+            console.debug(title);
             runUnitTestScenario(undefined, scenario);
         }
     });
@@ -344,7 +420,30 @@ function runUnitTestScenario(
     rebaser?: ChangeRebaser<TestChange>,
 ): void {
     const run = () => {
-        const { manager, anchors } = editManagerFactory(rebaser);
+        const { manager, anchors } = editManagerFactory({ rebaser });
+        /**
+         * An `EditManager` that is kept up to date with all sequenced edits.
+         * Used as a source of summary data to spin-up `joiners`.
+         * This `EditManager` never has local changes.
+         */
+        const summarizer = editManagerFactory({ rebaser, sessionId: "Summarizer" }).manager;
+        /**
+         * A set of `EditManager`s spun-up based on summaries produced by `summarizer`.
+         * One such joiner is produced after every sequenced edit (i.e., after every "Ack" or "Pull" step).
+         * These are kept up to date with all sequenced edits.
+         * Used to check that summarization works properly.
+         */
+        const joiners: TestEditManager[] = [];
+        /**
+         * Local helper to update all the state that is dependent on the sequencing of new edits.
+         */
+        const recordSequencedEdit = (commit: TestCommit): void => {
+            trunk.push(commit.seqNumber);
+            summarizer.addSequencedChange(commit);
+            for (const j of joiners) {
+                j.addSequencedChange(commit);
+            }
+        };
         /**
          * Ordered list of local commits that have not yet been sequenced (i.e., `pushed - acked`)
          */
@@ -411,8 +510,8 @@ function runUnitTestScenario(
                     }
                     // Acknowledged (i.e., sequenced) local changes should always lead to an empty delta.
                     assert.deepEqual(manager.addSequencedChange(commit), Delta.empty);
-                    trunk.push(seq);
                     localRef = seq;
+                    recordSequencedEdit(commit);
                     break;
                 }
                 case "Pull": {
@@ -460,7 +559,7 @@ function runUnitTestScenario(
                         // Verify that the test case was annotated with the right expectations.
                         assert.deepEqual(step.expectedDelta, expected);
                     }
-                    trunk.push(seq);
+                    recordSequencedEdit(commit);
                     knownToLocal = [...trunk, ...localCommits.map((c) => c.seqNumber)];
                     localRef = seq;
                     break;
@@ -472,6 +571,29 @@ function runUnitTestScenario(
             assert.deepEqual(anchors.intentions, knownToLocal);
             // The exposed trunk and local changes should reflect what is known to the local client
             checkChangeList(manager, knownToLocal);
+            checkChangeList(summarizer, trunk);
+
+            // Spin-up a new joiner whenever a summary client would have a different state.
+            // This assumes summary clients have no local changes, which may change in the future.
+            if (step.type !== "Push") {
+                const joiner = editManagerFactory({
+                    rebaser,
+                    sessionId: `Join${joiners.length}`,
+                }).manager;
+                const summary = clone(summarizer.getSummaryData());
+                joiner.loadSummaryData((data) => {
+                    data.trunk.push(...summary.trunk);
+                    for (const [k, v] of summary.branches) {
+                        data.branches.set(k, v);
+                    }
+                });
+                joiners.push(joiner);
+            }
+
+            // Verify that clients spun-up based on summaries are able to interpret new edits properly
+            for (const j of joiners) {
+                checkChangeList(j, trunk);
+            }
         }
     };
     if (title !== undefined) {

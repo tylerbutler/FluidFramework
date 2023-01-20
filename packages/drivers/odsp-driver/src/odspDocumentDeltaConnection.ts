@@ -16,8 +16,9 @@ import {
     ISequencedDocumentMessage,
     ISignalMessage,
 } from "@fluidframework/protocol-definitions";
-import type { Socket, io as SocketIOClientStatic } from "socket.io-client";
+import { Socket, io as SocketIOClientStatic } from "socket.io-client";
 import { v4 as uuid } from "uuid";
+import { createGenericNetworkError } from "@fluidframework/driver-utils";
 import { IOdspSocketError, IGetOpsResponse, IFlushOpsResponse } from "./contracts";
 import { EpochTracker } from "./epochTracker";
 import { errorObjectFromSocketError } from "./odspError";
@@ -160,12 +161,17 @@ class SocketReference extends TypedEventEmitter<ISocketEvents> {
         const socket = this._socket;
         this._socket = undefined;
 
-        // Let all connections know they need to go through disconnect flow
-        this.emit("disconnect", error, undefined /* clientId */);
+        // Let all connections know they need to go through disconnect flow.
+        this.emit("disconnect",
+            error ?? createGenericNetworkError(
+                "Socket closed without error",
+                { canRetry: true },
+                { driverVersion: pkgVersion }),
+            undefined /* clientId */);
 
         // We should not have any users now, assuming synchronous disconnect flow in response to
         // "disconnect" event
-        assert(this.references === 0, "Nobody should be connected to this socket at this point!");
+        assert(this.references === 0, 0x412 /* Nobody should be connected to this socket at this point! */);
 
         socket.disconnect();
     }
@@ -196,7 +202,6 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection {
      * @param tenantId - the ID of the tenant
      * @param documentId - document ID
      * @param token - authorization token for storage service
-     * @param io - websocket library
      * @param client - information about the client
      * @param mode - mode of the client
      * @param url - websocket URL
@@ -209,7 +214,6 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection {
         tenantId: string,
         documentId: string,
         token: string | null,
-        io: typeof SocketIOClientStatic,
         client: IClient,
         url: string,
         telemetryLogger: ITelemetryLogger,
@@ -228,7 +232,7 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection {
         const socketReferenceKey = enableMultiplexing ? key : `${key},${tenantId},${documentId}`;
 
         const socketReference = OdspDocumentDeltaConnection.getOrCreateSocketIoReference(
-            io, timeoutMs, socketReferenceKey, url, enableMultiplexing, tenantId, documentId, telemetryLogger);
+            timeoutMs, socketReferenceKey, url, enableMultiplexing, tenantId, documentId, telemetryLogger);
 
         const socket = socketReference.socket;
 
@@ -239,6 +243,7 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection {
             tenantId,
             token,  // Token is going to indicate tenant level information, etc...
             versions: protocolVersions,
+            driverVersion: pkgVersion,
             nonce: uuid(),
             epoch: epochTracker.fluidEpoch,
             relayUserAgent: [client.details.environment, ` driverVersion:${pkgVersion}`].join(";"),
@@ -309,7 +314,6 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection {
      * Gets or create a socket io connection for the given key
      */
     private static getOrCreateSocketIoReference(
-        io: typeof SocketIOClientStatic,
         timeoutMs: number,
         key: string,
         url: string,
@@ -325,7 +329,7 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection {
 
         const query = enableMultiplexing ? undefined : { documentId, tenantId };
 
-        const socket = io(
+        const socket = SocketIOClientStatic(
             url,
             {
                 multiplex: false, // Don't rely on socket.io built-in multiplexing
@@ -364,7 +368,7 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection {
      * @returns ops retrieved
      */
      public requestOps(from: number, to: number) {
-        assert(!this.socketReference?.disconnected, "non-active socket");
+        assert(!this.socketReference?.disconnected, 0x413 /* non-active socket */);
 
         // Given that to is exclusive, we should be asking for at least something!
         assert(to > from, 0x272 /* "empty request" */);
@@ -422,7 +426,7 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection {
     }
 
     public async flush(): Promise<FlushResult> {
-        assert(!this.socketReference?.disconnected, "non-active socket");
+        assert(!this.socketReference?.disconnected, 0x414 /* non-active socket */);
 
         // back-compat: remove cast to any once latest version of IConnected is consumed
         if ((this.details as any).supportedFeatures?.[feature_flush_ops] !== true) {
@@ -453,13 +457,13 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection {
 
     protected disconnectHandler = (error: IFluidErrorBase & OdspError, clientId?: string) => {
         if (clientId === undefined || clientId === this.clientId) {
+            this.logger.sendTelemetryEvent({ eventName: "ServerDisconnect", clientId: this.hasDetails ? this.clientId : undefined }, error);
             this.disconnect(error);
-            this.logger.sendTelemetryEvent({ eventName: "ServerDisconnect", clientId: this.clientId }, error);
         }
     };
 
     protected async initialize(connectMessage: IConnect, timeout: number) {
-        assert(!this.socketReference?.disconnected, "non-active socket");
+        assert(!this.socketReference?.disconnected, 0x415 /* non-active socket */);
 
         if (this.enableMultiplexing) {
             // multiplex compatible early handlers
@@ -600,9 +604,9 @@ export class OdspDocumentDeltaConnection extends DocumentDeltaConnection {
      */
     protected closeSocket(error: IAnyDriverError) {
         const socket = this.socketReference;
-        assert(socket !== undefined, "reentrancy not supported in close socket");
+        assert(socket !== undefined, 0x416 /* reentrancy not supported in close socket */);
         socket.closeSocket(error);
-        assert(this.socketReference === undefined, "disconnect flow did not work correctly");
+        assert(this.socketReference === undefined, 0x417 /* disconnect flow did not work correctly */);
     }
 
     /**

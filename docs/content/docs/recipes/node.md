@@ -179,12 +179,6 @@ Open a new Command Prompt and navigate to the root of the project; for example, 
 
 To create a new Fluid container press Enter. The container id will be printed in the terminal. Copy the container id, launch a new terminal window, and type/paste the initial container id to have multiple collaborative NodeJS clients.
 
-{{< callout note >}}
-
-You may need to install an additional dependency to make this demo compatible with Webpack 5. If you receive a compilation error related to a "buffer" package, please run `npm install -D buffer` and try again. This will be resolved in a future release of Fluid Framework.
-
-{{< /callout >}}
-
 ## Next steps
 
 - You can find the completed code for this example in our Fluid Examples GitHub repository [here](https://github.com/microsoft/FluidExamples/tree/main/node-demo).
@@ -198,6 +192,10 @@ When you make changes to the code the project will automatically rebuild and the
 {{< /callout >}}
 
 <!-- AUTO-GENERATED-CONTENT:START (INCLUDE:path=docs/_includes/links.md) -->
+
+<!-- prettier-ignore-start -->
+
+<!-- This section is automatically generated. To update it, make the appropriate changes to docs/md-magic.config.js or the embedded content, then run 'npm run build:md-magic' in the docs folder. -->
 <!-- Links -->
 
 <!-- Concepts -->
@@ -222,5 +220,7 @@ When you make changes to the code the project will automatically rebuild and the
 
 [FluidContainer]: {{< relref "/docs/apis/fluid-static/fluidcontainer-class.md" >}}
 [IFluidContainer]: {{< relref "/docs/apis/fluid-static/ifluidcontainer-interface.md" >}}
+
+<!-- prettier-ignore-end -->
 
 <!-- AUTO-GENERATED-CONTENT:END -->

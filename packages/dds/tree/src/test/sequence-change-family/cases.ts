@@ -3,10 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import { Transposed as T, SequenceChangeset } from "../../feature-libraries";
+// eslint-disable-next-line import/no-internal-modules
+import { Transposed as T, SequenceChangeset } from "../../feature-libraries/sequence-change-family";
 import { brand } from "../../util";
-import { TreeSchemaIdentifier } from "../../schema-stored";
-import { Value } from "../../tree";
+import { TreeSchemaIdentifier, Value } from "../../core";
 
 export function setRootValueTo(value: Value): SequenceChangeset {
     return {

@@ -4,15 +4,9 @@
  */
 
 import { strict as assert } from "assert";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import {
-    ITestFluidObject,
-    ITestObjectProvider,
-    ITestContainerConfig,
-    DataObjectFactoryType,
-} from "@fluidframework/test-utils";
-import { describeNoCompat, itExpects } from "@fluidframework/test-version-utils";
+
 import { ContainerErrorType, IContainer, LoaderHeader } from "@fluidframework/container-definitions";
+import { Loader } from "@fluidframework/container-loader";
 import {
     ContainerMessageType,
     ContainerRuntime,
@@ -20,12 +14,18 @@ import {
     SummaryCollection,
     DefaultSummaryConfiguration,
 } from "@fluidframework/container-runtime";
-import { TelemetryNullLogger } from "@fluidframework/common-utils";
-import { ConfigTypes, IConfigProviderBase } from "@fluidframework/telemetry-utils";
-import { Loader } from "@fluidframework/container-loader";
-import { UsageError } from "@fluidframework/container-utils";
 import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
+import { UsageError } from "@fluidframework/container-utils";
 import { IFluidRouter } from "@fluidframework/core-interfaces";
+import { requestFluidObject } from "@fluidframework/runtime-utils";
+import { ConfigTypes, IConfigProviderBase, TelemetryNullLogger } from "@fluidframework/telemetry-utils";
+import {
+    ITestFluidObject,
+    ITestObjectProvider,
+    ITestContainerConfig,
+    DataObjectFactoryType,
+} from "@fluidframework/test-utils";
+import { describeNoCompat, itExpects } from "@fluidframework/test-version-utils";
 
 describeNoCompat("Named root data stores", (getTestObjectProvider) => {
     let provider: ITestObjectProvider;
@@ -93,18 +93,6 @@ describeNoCompat("Named root data stores", (getTestObjectProvider) => {
 
     const getRootDataStore = async (dataObject: ITestFluidObject, id: string, wait = true) =>
         runtimeOf(dataObject).getRootDataStore(id, wait);
-
-    const corruptedAPIAliasOp = async (runtime: IContainerRuntime, alias: string): Promise<boolean | Error> =>
-        new Promise<boolean>((resolve, reject) => {
-            runtime.once("dispose", () => reject(new Error("Runtime disposed")));
-            (runtime as ContainerRuntime).submitDataStoreAliasOp({ id: alias }, resolve);
-        }).catch((error) => new Error(error.message));
-
-    const corruptedAliasOp = async (runtime: IContainerRuntime, alias: string): Promise<boolean | Error> =>
-        new Promise<boolean>((resolve, reject) => {
-            runtime.once("dispose", () => reject(new Error("Runtime disposed")));
-            (runtime as any).submit(ContainerMessageType.Alias, { id: alias }, resolve);
-        }).catch((error) => new Error(error.message));
 
     describe("Legacy APIs", () => {
         beforeEach(async () => setupContainers(testContainerConfig));
@@ -295,8 +283,12 @@ describeNoCompat("Named root data stores", (getTestObjectProvider) => {
         });
 
         it("Sending a bad alias message returns error", async () => {
-            const aliasResult = await corruptedAPIAliasOp(runtimeOf(dataObject1), alias);
-            assert.equal((aliasResult as Error).message, "malformedDataStoreAliasMessage");
+            try {
+                (runtimeOf(dataObject1) as ContainerRuntime).submitDataStoreAliasOp({ id: alias }, undefined);
+                assert.fail("Expected exception from sending invalid alias");
+            } catch (err) {
+                assert.equal((err as Error).message, "malformedDataStoreAliasMessage");
+            }
         });
 
         const events = [
@@ -305,7 +297,7 @@ describeNoCompat("Named root data stores", (getTestObjectProvider) => {
         ];
         itExpects("Receiving a bad alias message breaks the container", events, async function() {
             const dataCorruption = allDataCorruption([container1, container2]);
-            await corruptedAliasOp(runtimeOf(dataObject1), alias);
+            (runtimeOf(dataObject1) as any).submit(ContainerMessageType.Alias, { id: alias });
             assert(await dataCorruption);
         });
 

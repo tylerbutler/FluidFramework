@@ -6,7 +6,6 @@
 import { ContainerRuntimeFactoryWithDefaultDataStore } from "@fluidframework/aqueduct";
 import { assert } from "@fluidframework/common-utils";
 import { IContainer, IHostLoader, LoaderHeader } from "@fluidframework/container-definitions";
-import { ConnectionState } from "@fluidframework/container-loader";
 import {
     IGCRuntimeOptions,
     ISummarizer,
@@ -21,13 +20,14 @@ import {
 } from "@fluidframework/runtime-definitions";
 import { requestFluidObject } from "@fluidframework/runtime-utils";
 import { IConfigProviderBase } from "@fluidframework/telemetry-utils";
+import { ITelemetryBaseLogger } from "@fluidframework/common-definitions";
 import { ITestContainerConfig, ITestObjectProvider } from "./testObjectProvider";
 import { mockConfigProvider } from "./TestConfigs";
+import { waitForContainerConnection } from "./containerUtils";
 
 const summarizerClientType = "summarizer";
 
-async function createSummarizerCore(container: IContainer, loader: IHostLoader, summaryVersion?: string) {
-    const absoluteUrl = await container.getAbsoluteUrl("");
+async function createSummarizerCore(absoluteUrl: string | undefined, loader: IHostLoader, summaryVersion?: string) {
     if (absoluteUrl === undefined) {
         throw new Error("URL could not be resolved");
     }
@@ -40,7 +40,6 @@ async function createSummarizerCore(container: IContainer, loader: IHostLoader, 
                 type: summarizerClientType,
             },
             [DriverHeader.summarizingClient]: true,
-            [LoaderHeader.reconnect]: false,
             [LoaderHeader.version]: summaryVersion,
         },
         url: absoluteUrl,
@@ -53,7 +52,11 @@ async function createSummarizerCore(container: IContainer, loader: IHostLoader, 
     if (fluidObject.ISummarizer === undefined) {
         throw new Error("Fluid object does not implement ISummarizer");
     }
-    return fluidObject.ISummarizer;
+
+    return {
+        container: summarizerContainer,
+        summarizer: fluidObject.ISummarizer,
+    };
 }
 
 const defaultSummaryOptions: ISummaryRuntimeOptions = {
@@ -91,8 +94,8 @@ export async function createSummarizerFromFactory(
         [[provider.defaultCodeDetails, runtimeFactory]],
         { configProvider: mockConfigProvider() },
     );
-
-    return createSummarizerCore(container, loader, summaryVersion);
+    const absoluteUrl = await container.getAbsoluteUrl("");
+    return (await createSummarizerCore(absoluteUrl, loader, summaryVersion)).summarizer;
 }
 
 export async function createSummarizer(
@@ -101,19 +104,41 @@ export async function createSummarizer(
     summaryVersion?: string,
     gcOptions?: IGCRuntimeOptions,
     configProvider: IConfigProviderBase = mockConfigProvider(),
+    logger?: ITelemetryBaseLogger,
 ): Promise<ISummarizer> {
+    const absoluteUrl = await container.getAbsoluteUrl("");
+    return (await createSummarizerWithContainer(
+        provider,
+        absoluteUrl,
+        summaryVersion,
+        gcOptions,
+        configProvider,
+        logger,
+    )).summarizer;
+}
+
+export async function createSummarizerWithContainer(
+    provider: ITestObjectProvider,
+    absoluteUrl: string | undefined,
+    summaryVersion?: string,
+    gcOptions?: IGCRuntimeOptions,
+    configProvider: IConfigProviderBase = mockConfigProvider(),
+    logger?: ITelemetryBaseLogger,
+): Promise<{ container: IContainer; summarizer: ISummarizer; }> {
     const testContainerConfig: ITestContainerConfig = {
         runtimeOptions: {
             summaryOptions: defaultSummaryOptions,
             gcOptions,
         },
-        loaderProps: { configProvider },
+        loaderProps: { configProvider, logger },
     };
-
     const loader = provider.makeTestLoader(testContainerConfig);
-    return createSummarizerCore(container, loader, summaryVersion);
+    return createSummarizerCore(absoluteUrl, loader, summaryVersion);
 }
-
+/**
+ * Summarizes on demand and returns the summary tree, the version number and the reference sequence number of the
+ * submitted summary.
+*/
 export async function summarizeNow(summarizer: ISummarizer, reason: string = "end-to-end test") {
     const result = summarizer.summarizeOnDemand({ reason });
 
@@ -134,11 +159,6 @@ export async function summarizeNow(summarizer: ISummarizer, reason: string = "en
     return {
         summaryTree: submitResult.data.summaryTree,
         summaryVersion: ackNackResult.data.summaryAckOp.contents.handle,
+        summaryRefSeq: submitResult.data.referenceSequenceNumber,
     };
-}
-
-export async function waitForContainerConnection(container: IContainer): Promise<void> {
-    if (container.connectionState !== ConnectionState.Connected) {
-        return new Promise((resolve) => container.once("connected", () => resolve()));
-    }
 }

@@ -12,15 +12,12 @@ import {
     SchemaData,
     FieldKindIdentifier,
     GlobalFieldKey,
-    InMemoryStoredSchemaRepository,
-} from "../../schema-stored";
-import {
     Adapters,
     ViewSchemaData,
     AdaptedViewSchema,
     Compatibility,
     FieldAdapter,
-} from "../../schema-view";
+} from "../../core";
 import { FieldKind, FullSchemaPolicy } from "./fieldKind";
 import { allowsRepoSuperset, isNeverTree } from "./comparison";
 
@@ -114,14 +111,17 @@ export class ViewSchema extends ViewSchemaData<FullSchemaPolicy> {
                 fail(`tree adapter for stored ${adapter.output} should not be never`);
             }
         }
-        const adapted = new InMemoryStoredSchemaRepository(this.policy);
+        const adapted = {
+            globalFieldSchema: new Map<GlobalFieldKey, FieldSchema>(),
+            treeSchema: new Map<TreeSchemaIdentifier, TreeSchema>(),
+        };
         for (const [key, schema] of stored.globalFieldSchema) {
             const adaptedField = this.adaptField(schema, this.adapters.fieldAdapters?.get(key));
-            adapted.updateFieldSchema(key, adaptedField);
+            adapted.globalFieldSchema.set(key, adaptedField);
         }
         for (const [key, schema] of stored.treeSchema) {
             const adapatedTree = this.adaptTree(schema);
-            adapted.updateTreeSchema(key, adapatedTree);
+            adapted.treeSchema.set(key, adapatedTree);
         }
 
         // TODO: subset these adapters to the ones that were needed/used.

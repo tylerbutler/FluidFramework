@@ -5,7 +5,7 @@
 
 import sillyname from "sillyname";
 import { v4 as uuid } from "uuid";
-import { assert, BaseTelemetryNullLogger, Deferred } from "@fluidframework/common-utils";
+import { assert, Deferred } from "@fluidframework/common-utils";
 import {
     AttachState,
     IFluidCodeResolver,
@@ -16,11 +16,13 @@ import {
     IFluidCodeDetails,
     IFluidModuleWithDetails,
     IFluidModule,
+    LoaderHeader,
 } from "@fluidframework/container-definitions";
 import { Loader } from "@fluidframework/container-loader";
 import { prefetchLatestSnapshot } from "@fluidframework/odsp-driver";
 import { HostStoragePolicy, IPersistedCache } from "@fluidframework/odsp-driver-definitions";
 import { IUser } from "@fluidframework/protocol-definitions";
+import { BaseTelemetryNullLogger } from "@fluidframework/telemetry-utils";
 import { HTMLViewAdapter } from "@fluidframework/view-adapters";
 import { IFluidMountableView } from "@fluidframework/view-interfaces";
 import {
@@ -280,7 +282,10 @@ export async function start(
             );
             assert(prefetched, 0x1eb /* "Snapshot should be prefetched!" */);
         }
-        container1 = await loader1.resolve({ url: documentUrl });
+        // This is just to replicate what apps do while loading which is to load the container in paused state and not load
+        // delta stream within the critical load flow.
+        container1 = await loader1.resolve({ url: documentUrl, headers: {[LoaderHeader.loadMode]: {deltaConnection: "none"}}});
+        container1.connect();
         containers.push(container1);
     }
 
