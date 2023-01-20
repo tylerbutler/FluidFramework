@@ -32,9 +32,14 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
 
-      - name: Install dependencies
-        run: "npm run install:commitlint"
-        working-directory: build-tools
+      - uses: pnpm/action-setup@v2
+        name: Install dependencies
+        with:
+          version: latest
+          run_install: |
+            - recursive: false
+              cwd: build-tools
+              args: [--frozen-lockfile]
 
       # Lints the PR title according to the settings file in the repo
       - uses: JulienKode/pull-request-name-linter-action@v0.5.0
