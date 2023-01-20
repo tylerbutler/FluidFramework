@@ -23,7 +23,6 @@ jobs:
           wrong_pr_description_message: |
             Your PR description contains placeholder content from the PR template. Remove or replace the placeholder
             content. More information at:
-
             https://github.com/microsoft/FluidFramework/wiki/Commit-message-style#pr-template-content
 
   conventional-pr-title:
@@ -39,3 +38,5 @@ jobs:
 
       # Lints the PR title according to the settings file in the repo
       - uses: JulienKode/pull-request-name-linter-action@v0.5.0
+        with:
+          configuration-path: build-tools/commitlint.config.cjs
