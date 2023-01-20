@@ -37,9 +37,9 @@ jobs:
         with:
           version: latest
           run_install: |
-            - recursive: false
-              cwd: build-tools
-              args: [--frozen-lockfile]
+            - cwd: build-tools
+              recursive: false
+              args: [--frozen-lockfile, --ignore-scripts]
 
       # Lints the PR title according to the settings file in the repo
       - uses: JulienKode/pull-request-name-linter-action@v0.5.0
