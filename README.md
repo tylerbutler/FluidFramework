@@ -8,7 +8,7 @@ applications using JavaScript or TypeScript.
 You may be here because you want to...
 
 -   Learn more about the Fluid Framework
--   Build a Fluid object
+-   Build a Fluid objectasdfasdf
 
 Documentation and guides can be found at <https://fluidframework.com/>.
 
