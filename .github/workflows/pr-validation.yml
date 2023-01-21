@@ -34,6 +34,7 @@ jobs:
           build-tools:
             - 'build-tools/**'
             - '.github/workflows/commit-validation.yml'
+            - '.github/workflows/pr-validation.yml'
 
   conventional-pr-title:
     name: PR title matches conventional commit format
