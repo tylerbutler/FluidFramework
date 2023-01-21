@@ -5,56 +5,78 @@
 import { TypedEventEmitter } from "@fluidframework/common-utils";
 import { IFluidLoadable } from "@fluidframework/core-interfaces";
 import { IEvent, IEventProvider } from "@fluidframework/common-definitions";
-import { AttachState, IContainer, ConnectionState } from "@fluidframework/container-definitions";
-import { LoadableObjectClass, LoadableObjectRecord } from "./types";
-import { RootDataObject } from "./rootDataObject";
+import {
+    AttachState,
+    IContainer,
+    ICriticalContainerError,
+    ConnectionState,
+} from "@fluidframework/container-definitions";
+import type { IRootDataObject, LoadableObjectClass, LoadableObjectRecord } from "./types";
 
 /**
  * Events emitted from {@link IFluidContainer}.
  */
 export interface IFluidContainerEvents extends IEvent {
-    /* eslint-disable @typescript-eslint/unified-signatures */
     /**
      * Emitted when the {@link IFluidContainer} completes connecting to the Fluid service.
      *
-     * @eventProperty
+     * @remarks Reflects connection state changes against the (delta) service acknowledging ops/edits.
+     *
+     * @see
+     *
+     * - {@link IFluidContainer.connectionState}
+     *
+     * - {@link IFluidContainer.connect}
      */
     (event: "connected", listener: () => void): void;
 
     /**
-     * Emitted when the {@link IFluidContainer} is disposed, which permanently disables it.
-     *
-     * @eventProperty
-     */
-     (event: "dispose", listener: () => void): void;
-
-    /**
      * Emitted when the {@link IFluidContainer} becomes disconnected from the Fluid service.
      *
-     * @eventProperty
+     * @remarks Reflects connection state changes against the (delta) service acknowledging ops/edits.
+     *
+     * @see
+     *
+     * - {@link IFluidContainer.connectionState}
+     *
+     * - {@link IFluidContainer.disconnect}
      */
     (event: "disconnected", listener: () => void): void;
 
     /**
-     * Emitted when all of the {@link IFluidContainer}'s local changes have been acknowledged by the service.
+     * Emitted when all local changes/edits have been acknowledged by the service.
      *
-     * @eventProperty
+     * @remarks "dirty" event will be emitted when the next local change has been made.
+     *
+     * @see {@link IFluidContainer.isDirty}
      */
-     (event: "saved", listener: () => void): void;
+    (event: "saved", listener: () => void): void;
 
     /**
-     * Emitted when the {@link IFluidContainer} has local changes that have not yet been acknowledged by the service.
+     * Emitted when the first local change has been made, following a "saved" event.
      *
-     * @eventProperty
+     * @remarks "saved" event will be emitted once all local changes have been acknowledged by the service.
+     *
+     * @see {@link IFluidContainer.isDirty}
      */
     (event: "dirty", listener: () => void): void;
 
-    /* eslint-enable @typescript-eslint/unified-signatures */
+    /**
+     * Emitted when the {@link IFluidContainer} is closed, which permanently disables it.
+     *
+     * @remarks Listener parameters:
+     *
+     * - `error`: If the container was closed due to error (as opposed to an explicit call to
+     * {@link IFluidContainer.dispose}), this will contain details about the error that caused it.
+     */
+    (event: "disposed", listener: (error?: ICriticalContainerError) => void);
 }
 
 /**
  * Provides an entrypoint into the client side of collaborative Fluid data.
  * Provides access to the data as well as status on the collaboration session.
+ *
+ * @remarks Note: external implementations of this interface are not supported.
  */
 export interface IFluidContainer extends IEventProvider<IFluidContainerEvents> {
     /**
@@ -123,7 +145,8 @@ export interface IFluidContainer extends IEventProvider<IFluidContainerEvents> {
 
     /**
      * Attempts to connect the container to the delta stream and process operations.
-     * Will throw an error if unsuccessful.
+     *
+     * @throws Will throw an error if connection is unsuccessful.
      *
      * @remarks
      *
@@ -178,13 +201,13 @@ export interface IFluidContainer extends IEventProvider<IFluidContainerEvents> {
 export class FluidContainer extends TypedEventEmitter<IFluidContainerEvents> implements IFluidContainer {
     private readonly connectedHandler = () => this.emit("connected");
     private readonly disconnectedHandler = () => this.emit("disconnected");
-    private readonly disposedHandler = () => this.emit("disposed");
+    private readonly disposedHandler = (error?: ICriticalContainerError) => this.emit("disposed", error);
     private readonly savedHandler = () => this.emit("saved");
     private readonly dirtyHandler = () => this.emit("dirty");
 
     public constructor(
         private readonly container: IContainer,
-        private readonly rootDataObject: RootDataObject,
+        private readonly rootDataObject: IRootDataObject,
     ) {
         super();
         container.on("connected", this.connectedHandler);
@@ -279,5 +302,19 @@ export class FluidContainer extends TypedEventEmitter<IFluidContainerEvents> imp
         this.container.off("disconnected", this.disconnectedHandler);
         this.container.off("saved", this.savedHandler);
         this.container.off("dirty", this.dirtyHandler);
+    }
+
+    /**
+     * FOR INTERNAL USE ONLY. NOT FOR EXTERNAL USE.
+     * We make no stability guarantees here whatsoever.
+     *
+     * Gets the underlying {@link @fluidframework/container-definitions#IContainer}.
+     *
+     * @remarks Used to power debug tooling.
+     *
+     * @internal
+     */
+    public readonly INTERNAL_CONTAINER_DO_NOT_USE?: () => IContainer = () => {
+        return this.container;
     }
 }

@@ -4,7 +4,7 @@
  */
 
 import { unreachableCase } from "@fluidframework/common-utils";
-import { Delta, FieldKey, getMapTreeField, MapTree } from "../tree";
+import { Delta, FieldKey, getMapTreeField, MapTree } from "../core";
 import { fail, OffsetListFactory } from "../util";
 import { mapTreeFromCursor } from "./mapTreeCursor";
 
@@ -22,7 +22,7 @@ export function mapFieldMarks<TIn, TOut>(
     fields: Delta.FieldMarks<TIn>,
     func: (tree: TIn) => TOut,
 ): Delta.FieldMarks<TOut> {
-    const out: Delta.FieldMarks<TOut> = new Map();
+    const out: Map<FieldKey, Delta.MarkList<TOut>> = new Map();
     for (const [k, v] of fields) {
         out.set(k, mapMarkList(v, func));
     }

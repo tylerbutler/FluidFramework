@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 import { Interfaces } from "@oclif/core";
-// eslint-disable-next-line import/no-internal-modules
 import { default as BaseReadme } from "oclif/lib/commands/readme";
+import * as semver from "semver";
 
 export default class Readme extends BaseReadme {
     static summary = "Adds commands to README.md in current directory.";
@@ -26,13 +26,23 @@ Customize the code URL prefix by setting oclif.repositoryPrefix in package.json.
             ...(config.pjson.oclif.additionalVersionFlags ?? []).sort(),
         ];
         const versionFlagsString = `(${versionFlags.join("|")})`;
+        const version = semver.parse(config.version);
+
+        if (version === null) {
+            this.error(`Can't parse version: ${config.version}`);
+        }
+
+        // We change the version in CI, which causes the readmes to get updated during a CI build. Including the
+        // full version section in the readme isn't valuable, so we strip off the prerelease section here.
+        const versionString = `${version.major}.${version.minor}.${version.patch}`;
+
         return [
             `\`\`\`sh-session
 $ npm install -g ${config.name}
 $ ${config.bin} COMMAND
 running command...
 $ ${config.bin} ${versionFlagsString}
-${config.name}/${config.version}
+${config.name}/${versionString}
 $ ${config.bin} --help [COMMAND]
 USAGE
   $ ${config.bin} COMMAND

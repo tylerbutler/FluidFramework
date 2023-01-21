@@ -135,14 +135,14 @@ export function createGenericNetworkError(message: string, retryInfo: {
 export const createWriteError: (message: string, props: DriverErrorTelemetryProps) => NonRetryableError<DriverErrorType.writeError>;
 
 // @public (undocumented)
-export class DeltaStreamConnectionForbiddenError extends LoggingError implements IFluidErrorBase {
+export class DeltaStreamConnectionForbiddenError extends LoggingError implements IDriverErrorBase, IFluidErrorBase {
     constructor(message: string, props: DriverErrorTelemetryProps);
     // (undocumented)
     readonly canRetry = false;
     // (undocumented)
-    static readonly errorType: string;
+    static readonly errorType = DriverErrorType.deltaStreamConnectionForbidden;
     // (undocumented)
-    readonly errorType: string;
+    readonly errorType = DriverErrorType.deltaStreamConnectionForbidden;
 }
 
 // @public (undocumented)
@@ -272,6 +272,35 @@ export class LocationRedirectionError extends LoggingError implements ILocationR
 // @public (undocumented)
 export function logNetworkFailure(logger: ITelemetryLogger, event: ITelemetryErrorEvent, error?: any): void;
 
+// @public
+export class MapWithExpiration<TKey = any, TValue = any> extends Map<TKey, TValue> {
+    // (undocumented)
+    [Symbol.iterator](): IterableIterator<[TKey, TValue]>;
+    constructor(expiryMs: number);
+    // (undocumented)
+    clear(): void;
+    // (undocumented)
+    delete(key: TKey): boolean;
+    // (undocumented)
+    entries(): IterableIterator<[TKey, TValue]>;
+    // (undocumented)
+    forEach(callbackfn: (value: TValue, key: TKey, map: Map<TKey, TValue>) => void, thisArg?: any): void;
+    // (undocumented)
+    get(key: TKey): TValue | undefined;
+    // (undocumented)
+    has(key: TKey): boolean;
+    // (undocumented)
+    keys(): IterableIterator<TKey>;
+    // (undocumented)
+    set(key: TKey, value: TValue): this;
+    // (undocumented)
+    get size(): number;
+    // (undocumented)
+    valueOf(): Object;
+    // (undocumented)
+    values(): IterableIterator<TValue>;
+}
+
 // @public (undocumented)
 export enum MessageType2 {
     // (undocumented)
@@ -350,7 +379,7 @@ export class PrefetchDocumentStorageService extends DocumentStorageServiceProxy 
     get policies(): {
         caching: LoaderCachingPolicy;
         minBlobSize?: number | undefined;
-        maximumCacheDurationMs?: number | undefined;
+        maximumCacheDurationMs?: 432000000 | undefined;
     } | undefined;
     // (undocumented)
     readBlob(blobId: string): Promise<ArrayBufferLike>;
@@ -447,10 +476,12 @@ export class ThrottlingError extends LoggingError implements IThrottlingWarning,
 }
 
 // @public
-export class UsageError extends LoggingError implements IFluidErrorBase {
+export class UsageError extends LoggingError implements IDriverErrorBase, IFluidErrorBase {
     constructor(message: string);
     // (undocumented)
-    readonly errorType = "usageError";
+    readonly canRetry = false;
+    // (undocumented)
+    readonly errorType = DriverErrorType.usageError;
 }
 
 // @public

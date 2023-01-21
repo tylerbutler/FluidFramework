@@ -168,6 +168,9 @@ module.exports = {
                 },
             },
         ],
+        // Rationale: Destructuring of `Array.entries()` in order to get the index variable results in a
+        //            significant performance regression [node 14 x64].
+        "unicorn/no-for-loop": "off",
         "unicorn/no-new-buffer": "error",
         "unicorn/no-unsafe-regex": "error",
 
@@ -236,7 +239,15 @@ module.exports = {
         "no-param-reassign": "error",
         "no-redeclare": "off", // Superseded by @typescript-eslint/no-redeclare
         "no-regex-spaces": "error",
-        "no-restricted-syntax": ["error", "ForInStatement"],
+        "no-restricted-syntax": [
+            "error",
+            {
+                selector: "ExportAllDeclaration",
+                message:
+                    "Exporting * is not permitted. You should export only named items you intend to export.",
+            },
+            "ForInStatement",
+        ],
         "no-return-await": "error",
         "no-sequences": "error",
         "no-shadow": "off", // Superseded by @typescript-eslint/no-shadow

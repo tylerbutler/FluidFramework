@@ -15,6 +15,7 @@ import { TextSegment } from "../textSegment";
 import { ReferenceType } from "../ops";
 import { PropertySet } from "../properties";
 import { MergeTree } from "../mergeTree";
+import { walkAllChildSegments } from "../mergeTreeNodeWalk";
 import { loadText } from "./text";
 
 export function loadTextFromFile(filename: string, mergeTree: MergeTree, segLimit = 0) {
@@ -174,7 +175,7 @@ function getPartialLengths(
     seq: number,
     mergeTree: MergeTree,
     localSeq?: number,
-    mergeBlock = mergeTree.root,
+    mergeBlock: IMergeBlock = mergeTree.root,
 ) {
     const partialLen = mergeBlock.partialLengths?.getPartialLength(
         seq,
@@ -200,7 +201,7 @@ function getPartialLengths(
             && segment.localRemovedSeq <= localSeq)
         || (segment.removedSeq !== -1 && segment.removedSeq <= seq));
 
-    mergeTree.walkAllSegments(mergeBlock, (segment) => {
+    walkAllChildSegments(mergeBlock, (segment) => {
         if (isInserted(segment) && !isRemoved(segment)) {
             actualLen += segment.cachedLength;
         }
@@ -218,7 +219,7 @@ export function validatePartialLengths(
     mergeTree: MergeTree,
     expectedValues?: { seq: number; len: number; localSeq?: number; }[],
     localSeq?: number,
-    mergeBlock = mergeTree.root,
+    mergeBlock: IMergeBlock = mergeTree.root,
 ): void {
     mergeTree.computeLocalPartials(0);
     for (let i = mergeTree.collabWindow.minSeq + 1; i <= mergeTree.collabWindow.currentSeq; i++) {
@@ -226,6 +227,9 @@ export function validatePartialLengths(
             clientId, i, mergeTree, localSeq, mergeBlock,
         );
 
+        if (partialLen && partialLen < 0) {
+            assert.fail("Negative partial length returned");
+        }
         assert.equal(partialLen, actualLen);
     }
 

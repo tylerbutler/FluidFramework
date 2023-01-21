@@ -5,8 +5,13 @@
 
 import { makeRandom } from "@fluid-internal/stochastic-test-utils";
 import { unreachableCase } from "@fluidframework/common-utils";
-import { AnchorSet, FieldKey, UpPath } from "../../tree";
-import { SequenceEditBuilder, singleTextCursor, Transposed as T } from "../../feature-libraries";
+import { AnchorSet, FieldKey, UpPath } from "../../core";
+import { singleTextCursor } from "../../feature-libraries";
+import {
+    SequenceEditBuilder,
+    Transposed as T,
+    // eslint-disable-next-line import/no-internal-modules
+} from "../../feature-libraries/sequence-change-family";
 import { jsonNumber } from "../../domains";
 
 /**

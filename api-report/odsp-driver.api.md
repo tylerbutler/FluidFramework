@@ -13,7 +13,6 @@ import { IDocumentService } from '@fluidframework/driver-definitions';
 import { IDocumentServiceFactory } from '@fluidframework/driver-definitions';
 import { IEntry } from '@fluidframework/odsp-driver-definitions';
 import { IFileEntry } from '@fluidframework/odsp-driver-definitions';
-import type { io } from 'socket.io-client';
 import { IOdspResolvedUrl } from '@fluidframework/odsp-driver-definitions';
 import { IOdspUrlParts } from '@fluidframework/odsp-driver-definitions';
 import { IPersistedCache } from '@fluidframework/odsp-driver-definitions';
@@ -117,7 +116,7 @@ export class OdspDocumentServiceFactory extends OdspDocumentServiceFactoryCore {
 
 // @public
 export class OdspDocumentServiceFactoryCore implements IDocumentServiceFactory {
-    constructor(getStorageToken: TokenFetcher<OdspResourceTokenFetchOptions>, getWebsocketToken: TokenFetcher<OdspResourceTokenFetchOptions> | undefined, getSocketIOClient: () => Promise<typeof io>, persistedCache?: IPersistedCache, hostPolicy?: HostStoragePolicy);
+    constructor(getStorageToken: TokenFetcher<OdspResourceTokenFetchOptions>, getWebsocketToken: TokenFetcher<OdspResourceTokenFetchOptions> | undefined, persistedCache?: IPersistedCache, hostPolicy?: HostStoragePolicy);
     // (undocumented)
     createContainer(createNewSummary: ISummaryTree | undefined, createNewResolvedUrl: IResolvedUrl, logger?: ITelemetryBaseLogger, clientIsSummarizer?: boolean): Promise<IDocumentService>;
     // (undocumented)
@@ -132,7 +131,7 @@ export class OdspDocumentServiceFactoryCore implements IDocumentServiceFactory {
     readonly protocolName = "fluid-odsp:";
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export class OdspDocumentServiceFactoryWithCodeSplit extends OdspDocumentServiceFactoryCore implements IDocumentServiceFactory {
     constructor(getStorageToken: TokenFetcher<OdspResourceTokenFetchOptions>, getWebsocketToken: TokenFetcher<OdspResourceTokenFetchOptions> | undefined, persistedCache?: IPersistedCache, hostPolicy?: HostStoragePolicy);
 }
@@ -171,8 +170,10 @@ export interface OdspFluidDataStoreLocator extends IOdspUrlParts {
     fileVersion?: string;
 }
 
+// Warning: (ae-forgotten-export) The symbol "ISnapshotContentsWithProps" needs to be exported by the entry point index.d.ts
+//
 // @public
-export function parseCompactSnapshotResponse(buffer: Uint8Array, logger: ITelemetryLogger): ISnapshotContents;
+export function parseCompactSnapshotResponse(buffer: Uint8Array, logger: ITelemetryLogger): ISnapshotContentsWithProps;
 
 // Warning: (ae-forgotten-export) The symbol "SnapshotFormatSupportType" needs to be exported by the entry point index.d.ts
 //
