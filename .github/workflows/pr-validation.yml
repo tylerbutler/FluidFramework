@@ -29,7 +29,7 @@ jobs:
           filters: |
             build-tools:
               - 'build-tools/**'
-              - '.github/workflows/commit-validation.yml'
+              - '.github/workflows/pr-validation.yml'
     # Set job outputs to values from filter step
     outputs:
       build-tools: ${{ steps.filter.outputs.build-tools }}
