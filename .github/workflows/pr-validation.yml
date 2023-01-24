@@ -73,9 +73,9 @@ jobs:
     name: PR title matches conventional commit format
     runs-on: ubuntu-latest
     # Only runs if build-tools is changed
-    needs: changes
+    needs: changed-paths
     if: |
-      needs.changes.outputs.build-tools == 'true' &&
+      needs.changed-paths.outputs.build-tools == 'true' &&
       github.event.action == 'edited'
     steps:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # ratchet:actions/checkout@v3
