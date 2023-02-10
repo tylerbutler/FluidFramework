@@ -2,3 +2,5 @@ packages:
   - "examples/**"
   - "experimental/**"
   - "packages/**"
+  - "server/routerlicious/packages/**"
+  - "build-tools/packages/**"
