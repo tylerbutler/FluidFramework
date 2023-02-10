@@ -35,11 +35,11 @@
 		"typetests:prepare": "flub generate typetests --prepare --dir . --pin"
 	},
 	"dependencies": {
-		"@fluidframework/common-utils": "^1.1.1",
-		"@fluidframework/driver-definitions": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0",
-		"@fluidframework/driver-utils": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0",
+		"@fluidframework/common-utils": "^1.0.0",
+		"@fluidframework/driver-definitions": "workspace:*",
+		"@fluidframework/driver-utils": "workspace:*",
 		"@fluidframework/protocol-definitions": "^1.1.0",
-		"@fluidframework/replay-driver": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0",
+		"@fluidframework/replay-driver": "workspace:*",
 		"jsonschema": "^1.2.6"
 	},
 	"devDependencies": {

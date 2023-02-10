@@ -63,11 +63,11 @@
 		"temp-directory": "nyc/.nyc_output"
 	},
 	"dependencies": {
-		"@fluidframework/common-utils": "^1.1.1",
-		"@fluidframework/map": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0",
-		"@fluidframework/merge-tree": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0",
-		"@fluidframework/runtime-definitions": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0",
-		"@fluidframework/sequence": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0"
+		"@fluidframework/common-utils": "^1.0.0",
+		"@fluidframework/map": "workspace:*",
+		"@fluidframework/merge-tree": "workspace:*",
+		"@fluidframework/runtime-definitions": "workspace:*",
+		"@fluidframework/sequence": "workspace:*"
 	},
 	"devDependencies": {
 		"@fluid-tools/build-cli": "0.11.0-134585",
@@ -75,8 +75,8 @@
 		"@fluidframework/build-tools": "0.11.0-134585",
 		"@fluidframework/dds-interceptions-previous": "npm:@fluidframework/dds-interceptions@2.0.0-internal.3.1.0",
 		"@fluidframework/eslint-config-fluid": "^2.0.0",
-		"@fluidframework/mocha-test-setup": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0",
-		"@fluidframework/test-runtime-utils": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0",
+		"@fluidframework/mocha-test-setup": "workspace:*",
+		"@fluidframework/test-runtime-utils": "workspace:*",
 		"@microsoft/api-extractor": "^7.22.2",
 		"@rushstack/eslint-config": "^2.5.1",
 		"@types/diff": "^3.5.1",

@@ -36,11 +36,11 @@
 	},
 	"dependencies": {
 		"@fluidframework/common-definitions": "^0.20.1",
-		"@fluidframework/common-utils": "^1.1.1",
-		"@fluidframework/driver-definitions": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0",
-		"@fluidframework/driver-utils": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0",
+		"@fluidframework/common-utils": "^1.0.0",
+		"@fluidframework/driver-definitions": "workspace:*",
+		"@fluidframework/driver-utils": "workspace:*",
 		"@fluidframework/protocol-definitions": "^1.1.0",
-		"@fluidframework/replay-driver": ">=2.0.0-internal.3.3.0 <2.0.0-internal.4.0.0"
+		"@fluidframework/replay-driver": "workspace:*"
 	},
 	"devDependencies": {
 		"@fluid-tools/build-cli": "0.11.0-134585",
