@@ -33,7 +33,7 @@
 		"tsc": "tsc"
 	},
 	"dependencies": {
-		"@fluidframework/core-interfaces": "workspace:*"
+		"@fluidframework/core-interfaces": "workspace:2.0.0-internal.3.3.0"
 	},
 	"devDependencies": {
 		"@fluid-tools/build-cli": "0.11.0-134585",

@@ -40,8 +40,8 @@
 	},
 	"dependencies": {
 		"@fluidframework/common-definitions": "^0.20.1",
-		"@fluidframework/odsp-driver-definitions": "workspace:*",
-		"@fluidframework/telemetry-utils": "workspace:*",
+		"@fluidframework/odsp-driver-definitions": "workspace:2.0.0-internal.3.3.0",
+		"@fluidframework/telemetry-utils": "workspace:2.0.0-internal.3.3.0",
 		"idb": "^6.1.2"
 	},
 	"devDependencies": {

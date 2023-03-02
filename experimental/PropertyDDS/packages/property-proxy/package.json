@@ -39,8 +39,8 @@
 		"tsc": "tsc"
 	},
 	"dependencies": {
-		"@fluid-experimental/property-changeset": "workspace:*",
-		"@fluid-experimental/property-properties": "workspace:*"
+		"@fluid-experimental/property-changeset": "workspace:2.0.0-internal.3.3.0",
+		"@fluid-experimental/property-properties": "workspace:2.0.0-internal.3.3.0"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.13.0",

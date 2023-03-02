@@ -64,9 +64,9 @@
 	},
 	"dependencies": {
 		"@fluidframework/common-definitions": "^0.20.1",
-		"@fluidframework/core-interfaces": "workspace:*",
-		"@fluidframework/driver-definitions": "workspace:*",
-		"@fluidframework/telemetry-utils": "workspace:*"
+		"@fluidframework/core-interfaces": "workspace:2.0.0-internal.3.3.0",
+		"@fluidframework/driver-definitions": "workspace:2.0.0-internal.3.3.0",
+		"@fluidframework/telemetry-utils": "workspace:2.0.0-internal.3.3.0"
 	},
 	"devDependencies": {
 		"@fluid-tools/build-cli": "0.11.0-134585",
@@ -74,8 +74,8 @@
 		"@fluidframework/build-tools": "0.11.0-134585",
 		"@fluidframework/eslint-config-fluid": "^2.0.0",
 		"@fluidframework/location-redirection-utils-previous": "npm:@fluidframework/location-redirection-utils@2.0.0-internal.3.0.0",
-		"@fluidframework/mocha-test-setup": "workspace:*",
-		"@fluidframework/test-runtime-utils": "workspace:*",
+		"@fluidframework/mocha-test-setup": "workspace:2.0.0-internal.3.3.0",
+		"@fluidframework/test-runtime-utils": "workspace:2.0.0-internal.3.3.0",
 		"@microsoft/api-extractor": "^7.22.2",
 		"@rushstack/eslint-config": "^2.5.1",
 		"@types/mocha": "^9.1.1",

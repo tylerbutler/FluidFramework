@@ -32,12 +32,12 @@
 		"tsc": "tsc"
 	},
 	"dependencies": {
-		"@fluidframework/aqueduct": "workspace:*",
+		"@fluidframework/aqueduct": "workspace:2.0.0-internal.3.3.0",
 		"@fluidframework/common-definitions": "^0.20.1",
 		"@fluidframework/common-utils": "^1.0.0",
-		"@fluidframework/datastore-definitions": "workspace:*",
-		"@fluidframework/map": "workspace:*",
-		"@fluidframework/runtime-definitions": "workspace:*",
+		"@fluidframework/datastore-definitions": "workspace:2.0.0-internal.3.3.0",
+		"@fluidframework/map": "workspace:2.0.0-internal.3.3.0",
+		"@fluidframework/runtime-definitions": "workspace:2.0.0-internal.3.3.0",
 		"events": "^3.1.0"
 	},
 	"devDependencies": {

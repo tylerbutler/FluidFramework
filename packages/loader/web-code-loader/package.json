@@ -34,8 +34,8 @@
 		"tsc": "tsc"
 	},
 	"dependencies": {
-		"@fluidframework/container-definitions": "workspace:*",
-		"@fluidframework/core-interfaces": "workspace:*",
+		"@fluidframework/container-definitions": "workspace:2.0.0-internal.3.3.0",
+		"@fluidframework/core-interfaces": "workspace:2.0.0-internal.3.3.0",
 		"isomorphic-fetch": "^3.0.0"
 	},
 	"devDependencies": {
