@@ -27,7 +27,7 @@
     "tslint": "tslint 'src/**/*.ts'"
   },
   "dependencies": {
-    "@fluidframework/historian-base": "^0.0.1",
+    "@fluidframework/historian-base": "workspace:0.0.1",
     "@fluidframework/server-services-shared": "^0.1038.3000-117199",
     "@fluidframework/server-services-utils": "^0.1038.3000-117199",
     "body-parser": "^1.17.2",
