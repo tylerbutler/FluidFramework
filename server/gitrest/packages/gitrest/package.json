@@ -27,7 +27,7 @@
     "tsc": "tsc"
   },
   "dependencies": {
-    "@fluidframework/gitrest-base": "^0.1.0",
+    "@fluidframework/gitrest-base": "workspace:0.0.1",
     "@fluidframework/server-services-shared": "^0.1038.3000-117199",
     "@fluidframework/server-services-utils": "^0.1038.3000-117199",
     "axios": "^0.26.0",
