@@ -3,4 +3,7 @@ packages:
   - "experimental/**"
   - "packages/**"
   - "server/routerlicious/packages/**"
+  - "server/historian/**"
+  - "server/gitrest/**"
+  - "server/tinylicious/*"
   - "build-tools/packages/**"
