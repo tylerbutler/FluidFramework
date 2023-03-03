@@ -1,4 +1,5 @@
 packages:
+  - "common/**"
   - "examples/**"
   - "experimental/**"
   - "packages/**"
