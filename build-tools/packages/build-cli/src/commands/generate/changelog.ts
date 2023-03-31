@@ -17,6 +17,7 @@ import { importEsm } from "../../magic.cjs";
 import { MonoRepo, Package } from "@fluidframework/build-tools";
 import { Repository } from "../../lib";
 import { VersionBumpType } from "@fluid-tools/version-tools";
+import { bumpTypeFlag } from "../../flags";
 
 // IMPORTANT: TypeScript changes imports to require when outputting CJS, which causes dynamic import to fail. This hack
 // creates a function dynamically that's invisible to TypeScript, so the import statements stay in the output JS.
@@ -50,6 +51,14 @@ export default class GenerateChangelog extends BaseCommand<typeof GenerateChange
 		package_or_release_group: packageOrReleaseGroupArg,
 	};
 
+	static flags = {
+		releaseType: bumpTypeFlag({
+			char: "t",
+			description: "The type of release that the changelog is being generated for.",
+		}),
+		...BaseCommand.flags,
+	};
+
 	private repo: Repository | undefined;
 
 	public async init(): Promise<void> {
@@ -73,6 +82,8 @@ export default class GenerateChangelog extends BaseCommand<typeof GenerateChange
 		if (args.package_or_release_group === undefined) {
 			this.error("ERROR: Must provide a package or release group.");
 		}
+
+		const releaseType = flags.releaseType ?? "minor";
 
 		let packageOrReleaseGroup: Package | MonoRepo;
 		let changesetsPath: string | undefined;
@@ -103,11 +114,12 @@ export default class GenerateChangelog extends BaseCommand<typeof GenerateChange
 
 		const changelogs = new Map<string, string>();
 		const filenames = await readdir(changesetsPath);
+		const changesetFiles = filenames
+			.filter((f) => path.extname(f) === ".md" && f !== "README.md")
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			.map((f) => path.join(changesetsPath!, f));
 
-		for (const filename of filenames.filter(
-			(f) => path.extname(f) === ".md" && f !== "README.md",
-		)) {
-			const changesetFile = path.join(changesetsPath, filename);
+		for (const changesetFile of changesetFiles) {
 			this.info(`Processing ${changesetFile}`);
 			const fileContents = readFileSync(changesetFile, "utf-8");
 			const parsed = matter(fileContents);
@@ -123,6 +135,11 @@ export default class GenerateChangelog extends BaseCommand<typeof GenerateChange
 			const changeEntry = `${addedCommit.summary}\n\n${parsed.content}`;
 
 			for (const [pkgName, bumpType] of Object.entries(parsed.data)) {
+				if (bumpType !== releaseType) {
+					this.verbose(
+						`Skipping ${pkgName} in ${changesetFile} because it's ${bumpType}; expecting ${releaseType}`,
+					);
+				}
 				const changes = changelogs.get(pkgName);
 				if (changes === undefined) {
 					changelogs.set(pkgName, changeEntry);
@@ -155,8 +172,13 @@ export default class GenerateChangelog extends BaseCommand<typeof GenerateChange
 				.process(changeLogContents);
 
 			writeFileSync(changelogPath, String(fileContent));
-			// eslint-disable-next-line no-await-in-loop
-			await rimraf(changelogPath);
+		}
+
+		// Delete the processed changeset files
+		for (const f of changesetFiles) {
+      // eslint-disable-next-line no-await-in-loop
+			await rimraf(f);
+			this.info(`Deleted: ${f}`);
 		}
 	}
 
