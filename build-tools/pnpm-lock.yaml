@@ -111,6 +111,7 @@ importers:
       npm-check-updates: ^16.0.0
       nyc: ^15.1.0
       oclif: ^3.7.0
+      parent-module: ^2.0.0
       prettier: ~2.6.2
       remark: ^14.0.2
       remark-gfm: ^3.0.1
@@ -152,9 +153,11 @@ importers:
       minimatch: 7.4.2
       npm-check-updates: 16.3.8
       oclif: 3.7.0
+      parent-module: 2.0.0
       remark: 14.0.2
       remark-gfm: 3.0.1
       remark-github: 11.2.4
+      rimraf: 4.4.0
       semver: 7.3.7
       semver-utils: 1.1.4
       simple-git: 3.16.1
@@ -199,7 +202,6 @@ importers:
       moment: 2.29.4
       nyc: 15.1.0
       prettier: 2.6.2
-      rimraf: 4.4.0
       ts-node: 10.9.1_2tzjs4v2vmg7rmkqk2kksjfdly
       tslib: 2.4.0
       typescript: 4.5.5
@@ -6854,7 +6856,6 @@ packages:
       minimatch: 7.4.2
       minipass: 4.2.5
       path-scurry: 1.6.1
-    dev: true
 
   /global-dirs/0.1.1:
     resolution: {integrity: sha512-NknMLn7F2J7aflwFOlGdNIuCDpN3VGoSoB+aap3KABFWbHVn1TCgFC+np23J8W2BiZbjfEw3BFBycSMv1AFblg==}
@@ -10069,6 +10070,13 @@ packages:
     dependencies:
       callsites: 3.1.0
 
+  /parent-module/2.0.0:
+    resolution: {integrity: sha512-uo0Z9JJeWzv8BG+tRcapBKNJ0dro9cLyczGzulS6EfeyAdeC9sbojtW6XwvYxJkEne9En+J2XEl4zyglVeIwFg==}
+    engines: {node: '>=8'}
+    dependencies:
+      callsites: 3.1.0
+    dev: false
+
   /parse-conflict-json/2.0.2:
     resolution: {integrity: sha512-jDbRGb00TAPFsKWCpZZOT93SxVP9nONOSgES3AevqRq/CHvavEBvKAjxX9p5Y5F0RZLxH9Ufd9+RwtCsa+lFDA==}
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
@@ -10174,7 +10182,6 @@ packages:
     dependencies:
       lru-cache: 7.18.3
       minipass: 4.2.5
-    dev: true
 
   /path-type/3.0.0:
     resolution: {integrity: sha512-T2ZUsdZFHgA3u4e5PfPbjd7HDDpxPnQb5jN0SrDsjNSuVXHJqtwTnWqG0B1jZrgmJ/7lj1EmVIByWt1gxGkWvg==}
@@ -10851,7 +10858,6 @@ packages:
     hasBin: true
     dependencies:
       glob: 9.3.0
-    dev: true
 
   /run-async/2.4.1:
     resolution: {integrity: sha512-tvVnVv01b8c1RrA6Ep7JkStj85Guv/YrMcwqYQnwjsAS2cTmmPGBBjAjpCW7RrSodNSoE2/qg9O4bceNvUuDgQ==}

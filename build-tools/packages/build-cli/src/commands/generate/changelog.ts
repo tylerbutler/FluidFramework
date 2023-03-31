@@ -5,30 +5,27 @@
 import { strict as assert } from "assert";
 import path from "path";
 
-import { Flags } from "@oclif/core";
 import { readdir, readFile } from "fs/promises";
 import { existsSync, readFileSync, writeFileSync } from "fs-extra";
 import matter from "gray-matter";
-import { packageOrReleaseGroupArg } from "../../args";
+import rimraf from "rimraf";
 
+import { packageOrReleaseGroupArg } from "../../args";
 import { BaseCommand } from "../../base";
 import { isReleaseGroup } from "../../releaseGroups";
+import { importEsm } from "../../magic.cjs";
 import { MonoRepo, Package } from "@fluidframework/build-tools";
 import { Repository } from "../../lib";
 import { VersionBumpType } from "@fluid-tools/version-tools";
 
+// IMPORTANT: TypeScript changes imports to require when outputting CJS, which causes dynamic import to fail. This hack
+// creates a function dynamically that's invisible to TypeScript, so the import statements stay in the output JS.
+// eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
+const dynamicImport = new Function("specifier", "return import(specifier)");
+
 let remark;
 let remarkGfm;
 let remarkGitHub;
-
-// await (async function () {
-//       // eslint-disable-next-line unicorn/no-await-expression-member
-//       remark = (await import('remark')).default;
-//       // eslint-disable-next-line unicorn/no-await-expression-member
-//       remarkGfm = (await import('remark-gfm')).default;
-//       // eslint-disable-next-line unicorn/no-await-expression-member
-//       remarkGitHub = (await import('remark-github')).default;
-//   })();
 
 const CHANGESET_PATH = ".changeset";
 const CHANGELOG_FILENAME = "CHANGELOG.md";
@@ -59,13 +56,13 @@ export default class GenerateChangelog extends BaseCommand<typeof GenerateChange
 		const [, context] = await Promise.all([super.init(), this.getContext()]);
 		this.repo = new Repository({ baseDir: context.gitRepo.resolvedRoot });
 
-		// Dynamic imports since these are ESM modules
+		// ESM-only libraries require dynamic import
 		// eslint-disable-next-line unicorn/no-await-expression-member
-		remark = (await import("remark")).remark;
+		remark = (await dynamicImport("remark")).remark;
 		// eslint-disable-next-line unicorn/no-await-expression-member
-		remarkGfm = (await import("remark-gfm")).default;
+		remarkGfm = (await dynamicImport("remark-gfm")).default;
 		// eslint-disable-next-line unicorn/no-await-expression-member
-		remarkGitHub = (await import("remark-github")).default;
+		remarkGitHub = (await dynamicImport("remark-github")).default;
 	}
 
 	public async run(): Promise<void> {
@@ -158,6 +155,8 @@ export default class GenerateChangelog extends BaseCommand<typeof GenerateChange
 				.process(changeLogContents);
 
 			writeFileSync(changelogPath, String(fileContent));
+			// eslint-disable-next-line no-await-in-loop
+			await rimraf(changelogPath);
 		}
 	}
 
