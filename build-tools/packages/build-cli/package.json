@@ -13,7 +13,6 @@
 	"sideEffects": false,
 	"exports": "./lib/index.js",
 	"types": "./lib/index.d.ts",
-  "type":"module",
 	"bin": {
 		"flub": "./bin/run"
 	},
@@ -30,8 +29,8 @@
 		"build:docs": "api-extractor run --local",
 		"build:genver": "gen-version",
 		"build:machine-diagram": "jssm-viz -i \"./src/machines/*.fsl\"",
-		"build:manifest": "cross-env NODE_OPTIONS='--experimental-abortcontroller' oclif manifest",
-		"build:readme": "node \"./bin/dev\" generate readme --multi",
+		"build:manifest": "oclif manifest",
+		"build:readme": "\"./bin/dev\" generate readme --multi",
 		"ci:build:docs": "api-extractor run",
 		"clean": "rimraf dist lib oclif.manifest.json *.tsbuildinfo *.build.log",
 		"clean:manifest": "rimraf oclif.manifest.json",
