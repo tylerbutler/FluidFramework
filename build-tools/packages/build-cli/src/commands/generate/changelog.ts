@@ -8,12 +8,11 @@ import path from "path";
 import { readdir, readFile } from "fs/promises";
 import { existsSync, readFileSync, writeFileSync } from "fs-extra";
 import matter from "gray-matter";
-import rimraf from "rimraf";
+import { rimraf } from "rimraf";
 
 import { packageOrReleaseGroupArg } from "../../args";
 import { BaseCommand } from "../../base";
 import { isReleaseGroup } from "../../releaseGroups";
-import { importEsm } from "../../magic.cjs";
 import { MonoRepo, Package } from "@fluidframework/build-tools";
 import { Repository } from "../../lib";
 import { VersionBumpType } from "@fluid-tools/version-tools";
@@ -121,6 +120,7 @@ export default class GenerateChangelog extends BaseCommand<typeof GenerateChange
 
 		for (const changesetFile of changesetFiles) {
 			this.info(`Processing ${changesetFile}`);
+			const filesToDelete = new Set<Changeset>();
 			const fileContents = readFileSync(changesetFile, "utf-8");
 			const parsed = matter(fileContents);
 
@@ -131,11 +131,11 @@ export default class GenerateChangelog extends BaseCommand<typeof GenerateChange
 			};
 
 			// eslint-disable-next-line no-await-in-loop
-			const addedCommit = await this.getChangesetCommit(changeset.file);
-			const changeEntry = `${addedCommit.summary}\n\n${parsed.content}`;
+			changeset.commit = await this.getChangesetCommit(changeset.file);
+			const changeEntry = `${changeset.commit.summary}\n\n${changeset.rawContent}`;
 
-			for (const [pkgName, bumpType] of Object.entries(parsed.data)) {
-				if (bumpType !== releaseType) {
+			for (const [pkgName, bumpType] of Object.entries(changeset.packages)) {
+				if (releaseType === "minor" && bumpType !== releaseType) {
 					this.verbose(
 						`Skipping ${pkgName} in ${changesetFile} because it's ${bumpType}; expecting ${releaseType}`,
 					);
@@ -147,6 +147,8 @@ export default class GenerateChangelog extends BaseCommand<typeof GenerateChange
 					changelogs.set(pkgName, `${changes}\n\n${changeEntry}`);
 				}
 			}
+
+			filesToDelete.add(changeset);
 		}
 
 		for (const [pkgName, changelog] of changelogs) {
@@ -176,7 +178,7 @@ export default class GenerateChangelog extends BaseCommand<typeof GenerateChange
 
 		// Delete the processed changeset files
 		for (const f of changesetFiles) {
-      // eslint-disable-next-line no-await-in-loop
+			// eslint-disable-next-line no-await-in-loop
 			await rimraf(f);
 			this.info(`Deleted: ${f}`);
 		}

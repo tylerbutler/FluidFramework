@@ -90,13 +90,17 @@
 		"inquirer-table-prompt": "^0.2.1",
 		"jssm": "^5.79.18",
 		"jssm-viz-cli": "^5.83.0",
+    "mdast": "^3.0.0",
 		"minimatch": "^7.3.0",
 		"npm-check-updates": "^16.0.0",
 		"oclif": "^3.7.0",
 		"parent-module": "^2.0.0",
 		"remark": "^14.0.2",
+    "remark-frontmatter": "^4.0.1",
 		"remark-gfm": "^3.0.1",
 		"remark-github": "^11.2.4",
+    "remark-parse": "^10.0.1",
+    "remark-stringify": "^10.0.2",
 		"rimraf": "^4.4.0",
 		"semver": "^7.3.7",
 		"semver-utils": "^1.1.4",
@@ -105,7 +109,8 @@
 		"sort-package-json": "1.54.0",
 		"strip-ansi": "^6.0.0",
 		"table": "^6.8.0",
-		"type-fest": "^2.19.0"
+		"type-fest": "^2.19.0",
+    "unified": "^10.1.2"
 	},
 	"devDependencies": {
 		"@fluidframework/build-common": "^1.1.0",
