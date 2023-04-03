@@ -63,13 +63,15 @@ Generate a changelog based on changeset files.
 
 ```
 USAGE
-  $ flub generate changelog PACKAGE_OR_RELEASE_GROUP [-v]
+  $ flub generate changelog PACKAGE_OR_RELEASE_GROUP [-v] [-t major|minor|patch]
 
 ARGUMENTS
   PACKAGE_OR_RELEASE_GROUP  The name of a package or a release group.
 
 FLAGS
-  -v, --verbose  Verbose logging.
+  -t, --releaseType=<option>  The type of release that the changelog is being generated for.
+                              <options: major|minor|patch>
+  -v, --verbose               Verbose logging.
 
 DESCRIPTION
   Generate a changelog based on changeset files.
