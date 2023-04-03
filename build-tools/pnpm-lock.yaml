@@ -105,7 +105,6 @@ importers:
       inquirer-table-prompt: ^0.2.1
       jssm: ^5.79.18
       jssm-viz-cli: ^5.83.0
-      mdast: ^3.0.0
       mdast-builder: ^1.1.1
       mdast-util-assert: ^4.0.1
       mdast-util-compact: ^4.1.1
@@ -146,6 +145,7 @@ importers:
       type-fest: ^2.19.0
       typescript: ~4.5.5
       unified: ^10.1.2
+      unist-util-visit: ^4.1.2
     dependencies:
       '@fluid-tools/version-tools': link:../version-tools
       '@fluidframework/build-tools': link:../build-tools
@@ -168,7 +168,6 @@ importers:
       inquirer-table-prompt: 0.2.1
       jssm: 5.85.11
       jssm-viz-cli: 5.85.11
-      mdast: 3.0.0
       mdast-builder: 1.1.1
       mdast-util-assert: 4.0.1
       mdast-util-compact: 4.1.1
@@ -200,6 +199,7 @@ importers:
       table: 6.8.0
       type-fest: 2.19.0
       unified: 10.1.2
+      unist-util-visit: 4.1.2
     devDependencies:
       '@fluidframework/build-common': 1.1.0
       '@fluidframework/eslint-config-fluid': 2.0.0_kufnqfq7tb5rpdawkdb6g5smma
@@ -8712,11 +8712,6 @@ packages:
       mdast-util-to-string: 3.1.1
       unist-util-is: 5.2.1
       unist-util-visit: 4.1.2
-    dev: false
-
-  /mdast/3.0.0:
-    resolution: {integrity: sha512-xySmf8g4fPKMeC07jXGz971EkLbWAJ83s4US2Tj9lEdnZ142UP5grN73H1Xd3HzrdbU5o9GYYP/y8F9ZSwLE9g==}
-    deprecated: '`mdast` was renamed to `remark`'
     dev: false
 
   /mem-fs-editor/9.6.0_mem-fs@2.2.1:

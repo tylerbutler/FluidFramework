@@ -1,3 +1,8 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 import { VersionBumpType } from "@fluid-tools/version-tools";
 import { Logger, Package } from "@fluidframework/build-tools";
 import { existsSync, readFileSync, writeFileSync } from "fs";
@@ -5,7 +10,7 @@ import matter from "gray-matter";
 
 // import type { Root } from "mdast";
 import type { Plugin } from "unified";
-
+import type { Node } from "unist";
 import { Repository } from "./git";
 
 // IMPORTANT: TypeScript changes imports to require when outputting CJS, which causes dynamic import to fail. This hack
@@ -42,7 +47,7 @@ let unified;
 	/* eslint-disable unicorn/no-await-expression-member */
 	// mdast = (await dynamicImport("mdast")).default;
 	compact = (await dynamicImport("mdast-util-compact")).compact;
-  mdastAssert = (await dynamicImport("mdast-util-assert")).assert;
+	mdastAssert = (await dynamicImport("mdast-util-assert")).assert;
 
 	const builder = await dynamicImport("mdast-builder");
 	root = builder.root;
@@ -149,7 +154,7 @@ export async function addChangesetsToChangelog(
 			.use(remarkGitHub)
 			// .use(remarkNormalizeHeadings)
 			.process(changeset.rawContent);
-		console.log(JSON.stringify(changesetContent, null, 2));
+		// console.log(JSON.stringify(changesetContent, null, 2));
 	}
 
 	// console.log(JSON.stringify(tree, null, 2));
@@ -161,14 +166,12 @@ export async function addChangesetsToChangelog(
 }
 
 const firstParagraphToHeading: Plugin = () => {
-
 	return (tree) => {
 		console.log(tree);
-    mdastAssert(tree);
-    const firstPara = . children[0];
-    if(firstPara.type !== "paragraph") {
-      return;
-    }
-
+		mdastAssert(tree);
+		// const firstPara = tree.children[0];
+		// if (firstPara.type !== "paragraph") {
+		// 	return;
+		// }
 	};
 };
