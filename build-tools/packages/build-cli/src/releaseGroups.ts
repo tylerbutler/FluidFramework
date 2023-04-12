@@ -2,7 +2,34 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { MonoRepoKind, isMonoRepoKind } from "@fluidframework/build-tools";
+import { MonoRepo } from "@fluidframework/build-tools";
+// eslint-disable-next-line node/no-missing-import
+import type { LiteralUnion } from "type-fest";
+
+const knownReleaseGroups = ["azure" , "build-tools" , "client" , "gitrest" , "historian" , "server"];
+type Names = typeof knownReleaseGroups[number];
+
+export type ReleaseGroupName = LiteralUnion<
+	// "azure" | "build-tools" | "client" | "gitrest" | "historian" | "server",
+	Names,
+  string
+>;
+
+/**
+ * A type guard used to determine if a string is a valid ReleaseGroupName.
+ */
+export function isReleaseGroupName(str: string | undefined, groups?: MonoRepo[]): str is ReleaseGroupName {
+	if (str === undefined || groups === undefined) {
+		return false;
+	}
+
+  if(knownReleaseGroups.includes(str)) {
+    return true;
+  }
+
+  return groups.some((g) => g.kind === str);
+}
+
 
 /**
  * A type that represents independent packages (as opposed to those that are part of a release group).
@@ -21,7 +48,7 @@ export type ReleasePackage = string;
  *
  * @internal
  */
-export type ReleaseGroup = MonoRepoKind;
+export type ReleaseGroup = ReleaseGroupName;
 
 /**
  * A type guard used to determine if a string is a ReleaseGroup.
@@ -29,7 +56,7 @@ export type ReleaseGroup = MonoRepoKind;
  * @internal
  */
 export function isReleaseGroup(str: string | undefined): str is ReleaseGroup {
-	return isMonoRepoKind(str);
+	return isReleaseGroupName(str);
 }
 
 /**

@@ -190,7 +190,7 @@ export class FluidRepo {
 	/**
 	 * @deprecated Use .releaseGroups instead.
 	 */
-	public readonly monoRepos = new Map<MonoRepoKind, MonoRepo>();
+	public readonly monoRepos = new Map<MonoRepoKind | string, MonoRepo>();
 
 	public get releaseGroups() {
 		return this.monoRepos;

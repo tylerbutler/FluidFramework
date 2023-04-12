@@ -49,6 +49,23 @@ export class Context {
 		this.repo.reload();
 	}
 
+	public get releaseGroups(): Map<string, MonoRepo> {
+		return this.repo.releaseGroups;
+	}
+
+	/**
+	 * Gets a release group.
+	 *
+	 * @throws If the key is not found.
+	 */
+	public getReleaseGroup(releaseGroup: string): MonoRepo {
+		const rg = this.releaseGroups.get(releaseGroup);
+		if (rg === undefined) {
+			throw new Error(`No release group found for ${releaseGroup}`);
+		}
+		return rg;
+	}
+
 	/**
 	 * Returns a {@link VersionBag} of all packages in the repo.
 	 *
@@ -206,7 +223,7 @@ export class Context {
 	 * @param releaseGroup - The release group to filter by
 	 * @returns An array of packages that belong to the release group
 	 */
-	public packagesInReleaseGroup(releaseGroup: MonoRepoKind): Package[] {
+	public packagesInReleaseGroup(releaseGroup: MonoRepoKind | string): Package[] {
 		const packages = this.packages.filter((pkg) => pkg.monoRepo?.kind === releaseGroup);
 		return packages;
 	}
@@ -217,7 +234,7 @@ export class Context {
 	 * @param releaseGroup - The release group or package to filter by.
 	 * @returns An array of packages that do not belong to the release group.
 	 */
-	public packagesNotInReleaseGroup(releaseGroup: MonoRepoKind | Package): Package[] {
+	public packagesNotInReleaseGroup(releaseGroup: MonoRepoKind | string | Package): Package[] {
 		let packages: Package[];
 		if (releaseGroup instanceof Package) {
 			packages = this.packages.filter((p) => p.name !== releaseGroup.name);
@@ -249,26 +266,35 @@ export class Context {
 	 *
 	 * @returns A version string.
 	 */
-	public getVersion(key: MonoRepoKind | string, versionBag?: VersionBag): string {
-		let ver = "";
-		if (versionBag !== undefined && !versionBag.isEmpty()) {
+	public getVersion(key: string, versionBag?: VersionBag): string {
+		let ver: string;
+    if (versionBag !== undefined && !versionBag.isEmpty()) {
 			ver = versionBag.get(key);
 		} else {
-			if (isMonoRepoKind(key)) {
-				const rgRepo = this.repo.releaseGroups.get(key);
-				if (rgRepo === undefined) {
-					throw new Error(`Release group not found: ${key}`);
-				}
-				ver = rgRepo.version;
-			} else {
-				const pkg = this.fullPackageMap.get(key);
-				if (pkg === undefined) {
-					throw new Error(`Package not in context: ${key}`);
-				}
-				ver = pkg.version;
+			const rgRepo = this.releaseGroups.get(key);
+			const pkg = this.fullPackageMap.get(key);
+
+			if (rgRepo === undefined && pkg === undefined) {
+				throw new Error(`Release group or package not found in context: ${key}`);
 			}
+
+			if (rgRepo !== undefined && pkg !== undefined) {
+				throw new Error(`Found a matching release group and package: ${key}`);
+			}
+
+			if (rgRepo !== undefined) {
+				assert(pkg === undefined);
+				ver = rgRepo.version;
+			} else if (pkg !== undefined) {
+				assert(rgRepo === undefined);
+				ver = pkg.version;
+			} else {
+        // Should never get here since we throw earlier
+        ver = "";
+      }
 		}
-		return ver;
+
+    return ver;
 	}
 
 	private _tags: Map<MonoRepoKind | string, string[]> = new Map();

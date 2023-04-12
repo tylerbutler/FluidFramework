@@ -116,19 +116,19 @@ export class FluidRepoBuild extends FluidRepo {
 			return this.matchWithFilter(() => true);
 		}
 
-		const monoReposToConsider: MonoRepoKind[] = [];
+		const monoReposToConsider: string[] = [];
 
 		if (options.azure) {
-			monoReposToConsider.push(MonoRepoKind.Azure);
+			monoReposToConsider.push("azure");
 		}
 		if (options.server) {
-			monoReposToConsider.push(MonoRepoKind.Server);
+			monoReposToConsider.push("server");
 		}
 		if (options.buildTools) {
-			monoReposToConsider.push(MonoRepoKind.BuildTools);
+			monoReposToConsider.push("build-tools");
 		}
 		if (!options.azure && !options.server && !options.buildTools) {
-			monoReposToConsider.push(MonoRepoKind.Client);
+			monoReposToConsider.push("client");
 		}
 
 		return this.matchWithFilter((pkg) =>

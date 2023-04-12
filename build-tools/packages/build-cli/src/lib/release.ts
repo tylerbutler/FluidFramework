@@ -9,7 +9,6 @@ import {
 	detectVersionScheme,
 	getVersionRange,
 } from "@fluid-tools/version-tools";
-
 import { ReleaseGroup } from "../releaseGroups";
 
 /**

@@ -344,7 +344,7 @@ export class Packages {
 	 */
 	public static loadGlob(
 		globPath: string,
-		group: MonoRepoKind,
+		group: string,
 		ignoredGlobs: string[] | undefined,
 		monoRepo?: MonoRepo,
 	): Package[] {
