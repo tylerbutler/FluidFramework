@@ -4,11 +4,13 @@
 
 ```ts
 
-import { MonoRepoKind } from '@fluidframework/build-tools';
+import type { LiteralUnion } from 'type-fest';
 import { run } from '@oclif/core';
 
+// Warning: (ae-forgotten-export) The symbol "ReleaseGroupName" needs to be exported by the entry point index.d.ts
+//
 // @internal
-export type ReleaseGroup = MonoRepoKind;
+export type ReleaseGroup = ReleaseGroupName;
 
 // @internal
 export type ReleasePackage = string;
