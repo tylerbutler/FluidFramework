@@ -6,30 +6,32 @@ import { MonoRepo } from "@fluidframework/build-tools";
 // eslint-disable-next-line node/no-missing-import
 import type { LiteralUnion } from "type-fest";
 
-const knownReleaseGroups = ["azure" , "build-tools" , "client" , "gitrest" , "historian" , "server"];
-type Names = typeof knownReleaseGroups[number];
+const knownReleaseGroups = ["azure", "build-tools", "client", "gitrest", "historian", "server"];
+type KnownReleaseGroupNames = typeof knownReleaseGroups[number];
 
 export type ReleaseGroupName = LiteralUnion<
 	// "azure" | "build-tools" | "client" | "gitrest" | "historian" | "server",
-	Names,
-  string
+	KnownReleaseGroupNames,
+	string
 >;
 
 /**
  * A type guard used to determine if a string is a valid ReleaseGroupName.
  */
-export function isReleaseGroupName(str: string | undefined, groups?: MonoRepo[]): str is ReleaseGroupName {
+export function isReleaseGroupName(
+	str: string | undefined,
+	groups?: MonoRepo[],
+): str is ReleaseGroupName {
 	if (str === undefined || groups === undefined) {
 		return false;
 	}
 
-  if(knownReleaseGroups.includes(str)) {
-    return true;
-  }
+	if (knownReleaseGroups.includes(str)) {
+		return true;
+	}
 
-  return groups.some((g) => g.kind === str);
+	return groups.some((g) => g.kind === str);
 }
-
 
 /**
  * A type that represents independent packages (as opposed to those that are part of a release group).
@@ -44,7 +46,7 @@ export function isReleaseGroupName(str: string | undefined, groups?: MonoRepo[])
 export type ReleasePackage = string;
 
 /**
- * An enum that represents known release groups.
+ * A type that represents known release groups.
  *
  * @internal
  */

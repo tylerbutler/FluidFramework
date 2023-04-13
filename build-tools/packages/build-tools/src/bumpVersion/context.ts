@@ -268,7 +268,7 @@ export class Context {
 	 */
 	public getVersion(key: string, versionBag?: VersionBag): string {
 		let ver: string;
-    if (versionBag !== undefined && !versionBag.isEmpty()) {
+		if (versionBag !== undefined && !versionBag.isEmpty()) {
 			ver = versionBag.get(key);
 		} else {
 			const rgRepo = this.releaseGroups.get(key);
@@ -289,12 +289,12 @@ export class Context {
 				assert(rgRepo === undefined);
 				ver = pkg.version;
 			} else {
-        // Should never get here since we throw earlier
-        ver = "";
-      }
+				// Should never get here since we throw earlier
+				ver = "";
+			}
 		}
 
-    return ver;
+		return ver;
 	}
 
 	private _tags: Map<MonoRepoKind | string, string[]> = new Map();

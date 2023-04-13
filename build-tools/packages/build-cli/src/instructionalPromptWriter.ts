@@ -52,10 +52,7 @@ export const ADOPipelineLinks = new Map<ReleasePackage | ReleaseGroup | undefine
 	["client", "https://dev.azure.com/fluidframework/internal/_build?definitionId=12"],
 	["server", "https://dev.azure.com/fluidframework/internal/_build?definitionId=30"],
 	["azure", "https://dev.azure.com/fluidframework/internal/_build?definitionId=85"],
-	[
-		"build-tools",
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=14",
-	],
+	["build-tools", "https://dev.azure.com/fluidframework/internal/_build?definitionId=14"],
 	[
 		"@fluid-tools/api-markdown-documenter",
 		"https://dev.azure.com/fluidframework/internal/_build?definitionId=97",
