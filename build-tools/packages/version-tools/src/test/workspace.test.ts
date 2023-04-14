@@ -69,29 +69,29 @@ describe("workspace protocol; internal version scheme", () => {
 
 describe("workspace protocol; virtualPatch scheme", () => {
 	it("bumps 0.59.3002 major using virtualPatch scheme", () => {
-		const input = `0.59.3002`;
-		const expected = `0.60.1000`;
+		const input = `workspace:0.59.3002`;
+		const expected = `workspace:0.60.1000`;
 		const calculated = bumpRange(input, "major");
 		assert.strictEqual(calculated, expected);
 	});
 
 	it("bumps 0.58.1002 minor using virtualPatch scheme", () => {
-		const input = `0.58.1002`;
-		const expected = `0.58.2000`;
+		const input = `workspace:0.58.1002`;
+		const expected = `workspace:0.58.2000`;
 		const calculated = bumpRange(input, "minor");
 		assert.strictEqual(calculated, expected);
 	});
 
 	it("bumps 0.58.1002 patch using virtualPatch scheme", () => {
-		const input = `0.58.1002`;
-		const expected = `0.58.1003`;
+		const input = `workspace:0.58.1002`;
+		const expected = `workspace:0.58.1003`;
 		const calculated = bumpRange(input, "patch");
 		assert.strictEqual(calculated, expected);
 	});
 
 	it("bumps 0.58.2000 minor using virtualPatch scheme", () => {
-		const input = `0.58.2000`;
-		const expected = `0.58.3000`;
+		const input = `workspace:0.58.2000`;
+		const expected = `workspace:0.58.3000`;
 		const calculated = bumpRange(input, "minor");
 		assert.strictEqual(calculated, expected);
 	});
@@ -305,6 +305,14 @@ describe("workspace protocol; semver scheme ranges", () => {
 			const result = bumpRange(input, "current", true);
 			assert.strictEqual(result, expected);
 		});
+
+    it("pre-1.0 semver", () => {
+			const input = `workspace:^0.14.0`;
+			const expected = `workspace:^0.15.0`;
+			const result = bumpRange(input, "minor", false);
+			assert.strictEqual(result, expected);
+		});
+
 	});
 });
 

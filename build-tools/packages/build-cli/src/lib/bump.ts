@@ -123,12 +123,6 @@ export async function bumpPackageDependencies(
 				}
 				const [isWorkspace, verString] = parseWorkspaceProtocol(depVer);
 
-				if (isWorkspace === true && preserveWorkspace === true) {
-					newRangeString += workspaceProtocol;
-					console.log(`newRangeString: ${newRangeString}`);
-				}
-
-				const scheme = detectVersionScheme(verString);
 				const depIsPrerelease = isInternalVersionScheme(verString)
 					? false
 					: (semver.minVersion(verString)?.prerelease?.length ?? 0) > 0;
@@ -140,6 +134,10 @@ export async function bumpPackageDependencies(
 					newRangeString = bumpRange(verString, depNewRangeOrBumpType, prerelease);
 				} else {
 					newRangeString = depNewRangeOrBumpType;
+				}
+
+        if (isWorkspace === true && preserveWorkspace === true) {
+					newRangeString = workspaceProtocol + newRangeString;
 				}
 
 				// If we're only bumping prereleases, check if the dep is a pre-release. Otherwise bump all packages
@@ -236,6 +234,7 @@ export async function bumpReleaseGroup(
 			}
 		} catch (error: any) {
 			log?.errorLog(`Error running command: ${cmd} ${args}\n${error}`);
+      throw error;
 		}
 	}
 

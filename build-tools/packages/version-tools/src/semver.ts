@@ -35,7 +35,7 @@ export function bumpRange(
 	prerelease = false,
 ): string {
 	const [isWorkspaceProtocol, rangeToBump] = parseWorkspaceProtocol(range);
-
+  console.log(`isWorkspaceProtocol: ${isWorkspaceProtocol}`)
 	// if(rangeToBump.length === 1 && ["^","~", "*"].includes(rangeToBump[0])) {
 
 	// }
