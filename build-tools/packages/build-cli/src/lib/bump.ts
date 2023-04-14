@@ -24,6 +24,10 @@ import {
 	getVersionRange,
 	isVersionBumpType,
 	isVersionBumpTypeExtended,
+	parseWorkspaceProtocol,
+	workspaceProtocol,
+	isInternalVersionScheme,
+	detectVersionScheme,
 } from "@fluid-tools/version-tools";
 
 /**
@@ -78,6 +82,7 @@ export interface PackageWithRangeSpec {
  * Generally this should be false, but in some cases you may need to set a precise dependency range string within the
  * same release group.
  * @param changedVersions - If provided, the changed packages will be put into this {@link VersionBag}.
+ * @param preserveWorkspace - If true, the bumped ranges will preserve the workspace protocol if it is in use.
  * @returns True if the packages dependencies were changed; false otherwise.
  *
  * @remarks
@@ -99,10 +104,11 @@ export async function bumpPackageDependencies(
 	onlyBumpPrerelease: boolean,
 	// eslint-disable-next-line default-param-last
 	updateWithinSameReleaseGroup = false,
+	preserveWorkspace: boolean,
 	changedVersions?: VersionBag,
 ) {
 	let changed = false;
-	let newRangeString: string;
+	let newRangeString: string = "";
 	for (const { name, dev } of pkg.combinedDependencies) {
 		const dep = bumpPackageMap.get(name);
 		if (dep !== undefined) {
@@ -111,9 +117,21 @@ export async function bumpPackageDependencies(
 				const dependencies = dev
 					? pkg.packageJson.devDependencies
 					: pkg.packageJson.dependencies;
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				const verString = dependencies[name]!;
-				const depIsPrerelease = (semver.minVersion(verString)?.prerelease?.length ?? 0) > 0;
+				const depVer = dependencies[name];
+				if (depVer === undefined) {
+					throw new Error(`Dependency ${name} had no version in package ${pkg.name}`);
+				}
+				const [isWorkspace, verString] = parseWorkspaceProtocol(depVer);
+
+				if (isWorkspace === true && preserveWorkspace === true) {
+					newRangeString += workspaceProtocol;
+					console.log(`newRangeString: ${newRangeString}`);
+				}
+
+				const scheme = detectVersionScheme(verString);
+				const depIsPrerelease = isInternalVersionScheme(verString)
+					? false
+					: (semver.minVersion(verString)?.prerelease?.length ?? 0) > 0;
 
 				const depNewRangeOrBumpType = dep.rangeOrBumpType;
 				// eslint-disable-next-line unicorn/prefer-ternary
@@ -151,6 +169,8 @@ export async function bumpPackageDependencies(
  * @param context - The {@link Context}.
  * @param bumpType - The bump type. Can be a SemVer object to set an exact version.
  * @param releaseGroupOrPackage - A release group repo or package to bump.
+ * @param preserveWorkspaceProtocol - If true, dependencies using the workspace protocol will preserve the workspace
+ * protocol after being bumped.
  * @param scheme - The version scheme to use.
  * @param exactDependencyType - The type of dependency to use on packages within the release group.
  * @param log - A logger to use.
@@ -162,6 +182,7 @@ export async function bumpReleaseGroup(
 	context: Context,
 	bumpType: VersionChangeType,
 	releaseGroupOrPackage: MonoRepo | Package,
+	preserveWorkspaceProtocol: boolean,
 	scheme?: VersionScheme,
 	// eslint-disable-next-line default-param-last
 	exactDependencyType: "~" | "^" | "" = "^",
@@ -265,6 +286,7 @@ export async function bumpReleaseGroup(
 			/* prerelease */ false,
 			/* onlyBumpPrerelease */ false,
 			/* updateWithinSameReleaseGroup */ true,
+			preserveWorkspaceProtocol,
 		);
 	}
 }

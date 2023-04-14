@@ -139,6 +139,11 @@ describe("internalScheme", () => {
 			const input = `^2.0.0-internal.2.2.1`;
 			assert.isFalse(isInternalVersionRange(input));
 		});
+
+		it("~2.0.0-internal.2.2.1 is not internal", () => {
+			const input = `~2.0.0-internal.2.2.1`;
+			assert.isFalse(isInternalVersionRange(input));
+		});
 	});
 
 	describe("converting FROM internal scheme", () => {

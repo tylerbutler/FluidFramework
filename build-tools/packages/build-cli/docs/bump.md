@@ -13,24 +13,27 @@ Bumps the version of a release group or package to the next minor, major, or pat
 ```
 USAGE
   $ flub bump PACKAGE_OR_RELEASE_GROUP [-v] [-t major|minor|patch | --exact <value>] [--scheme
-    semver|internal|virtualPatch | ] [--exactDepType ^|~|] [-x | --install | --commit |  |  | ]
+    semver|internal|virtualPatch | ] [--exactDepType ^|~|] [-w] [-x | --install | --commit |  |  | ]
 
 ARGUMENTS
   PACKAGE_OR_RELEASE_GROUP  The name of a package or a release group.
 
 FLAGS
-  -t, --bumpType=<option>  Bump the release group or package to the next version according to this bump type.
-                           <options: major|minor|patch>
-  -v, --verbose            Verbose logging.
-  -x, --skipChecks         Skip all checks.
-  --[no-]commit            Commit changes to a new branch.
-  --exact=<value>          An exact string to use as the version. The string must be a valid semver string.
-  --exactDepType=<option>  [default: ^] Controls the type of dependency that is used between packages within the release
-                           group. Use "" to indicate exact dependencies.
-                           <options: ^|~|>
-  --[no-]install           Update lockfiles by running 'npm install' automatically.
-  --scheme=<option>        Override the version scheme used by the release group or package.
-                           <options: semver|internal|virtualPatch>
+  -t, --bumpType=<option>       Bump the release group or package to the next version according to this bump type.
+                                <options: major|minor|patch>
+  -v, --verbose                 Verbose logging.
+  -w, --[no-]workspaceProtocol  If packages are using the workspace protocol, preserve it when bumping versions. Use
+                                --no-workspaceProtocol when publishing packages to ensure the workspace protocol is
+                                replaced with the correct version.
+  -x, --skipChecks              Skip all checks.
+  --[no-]commit                 Commit changes to a new branch.
+  --exact=<value>               An exact string to use as the version. The string must be a valid semver string.
+  --exactDepType=<option>       [default: ^] Controls the type of dependency that is used between packages within the
+                                release group. Use "" to indicate exact dependencies.
+                                <options: ^|~|>
+  --[no-]install                Update lockfiles by running 'npm install' automatically.
+  --scheme=<option>             Override the version scheme used by the release group or package.
+                                <options: semver|internal|virtualPatch>
 
 DESCRIPTION
   Bumps the version of a release group or package to the next minor, major, or patch version, or to a specific version,

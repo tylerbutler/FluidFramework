@@ -160,7 +160,7 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 		)} bump)!`,
 	);
 
-	await bumpReleaseGroup(context, bumpType, rgRepo, scheme, undefined, log);
+	await bumpReleaseGroup(context, bumpType, rgRepo, true, scheme, undefined, log);
 
 	if (shouldInstall === true && !(await FluidRepo.ensureInstalled(packages, false))) {
 		log.errorLog("Install failed.");

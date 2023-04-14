@@ -34,6 +34,20 @@ describe("semver", () => {
 			const result = detectConstraintType(input);
 			assert.strictEqual(result, expected);
 		});
+
+		it("~ constraint", () => {
+			const input = `~2.0.0-internal.1.0.23`;
+			const expected = `patch`;
+			const result = detectConstraintType(input);
+			assert.strictEqual(result, expected);
+		});
+
+		it("^ constraint", () => {
+			const input = `^2.0.0-internal.1.0.0`;
+			const expected = `minor`;
+			const result = detectConstraintType(input);
+			assert.strictEqual(result, expected);
+		});
 	});
 
 	describe("detectBumpType semver", () => {
