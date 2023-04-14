@@ -193,36 +193,50 @@ export async function bumpReleaseGroup(
 		: bumpType;
 
 	let name: string;
-	const cmds: [string, string[]][] = [];
-	let workingDir: string;
+	const cmds: [string, string[], execa.Options | undefined][] = [];
 
 	// Run npm version in each package to set its version in package.json. Also regenerates packageVersion.ts if needed.
 	if (releaseGroupOrPackage instanceof MonoRepo) {
-		workingDir = context.gitRepo.resolvedRoot;
 		name = releaseGroupOrPackage.kind;
 		cmds.push(
-			[`flub`, [`exec`, "-g", name, "--", `"npm version ${translatedVersion.version}"`]],
-			[`npm`, ["run", "build:genver"]],
+			[
+				`flub`,
+				[`exec`, "-g", name, "--", `"npm version ${translatedVersion.version}"`],
+				{
+					cwd: releaseGroupOrPackage.repoPath,
+					stdio: "inherit",
+					shell: true,
+				},
+			],
+			[
+				`npm`,
+				["run", "build:genver"],
+				{
+					cwd: context.gitRepo.resolvedRoot,
+					stdio: "inherit",
+					shell: true,
+				},
+			],
 		);
 	} else {
-		workingDir = releaseGroupOrPackage.directory;
 		name = releaseGroupOrPackage.name;
-		cmds.push([`npm`, ["version", translatedVersion.version]]);
+		const options: execa.Options = {
+			cwd: releaseGroupOrPackage.directory,
+			stdio: "inherit",
+			shell: true,
+		};
+		cmds.push([`npm`, ["version", translatedVersion.version], options]);
 		if (releaseGroupOrPackage.getScript("build:genver") !== undefined) {
-			cmds.push([`npm`, ["run", "build:genver"]]);
+			cmds.push([`npm`, ["run", "build:genver"], options]);
 		}
 	}
 
-	for (const [cmd, args] of cmds) {
-		log?.verbose(`Running command: ${cmd} in ${workingDir}`);
+	for (const [cmd, args, options] of cmds) {
+		log?.verbose(`Running command: ${cmd} ${args} in ${options?.cwd}`);
 		try {
 			// TODO: The shell option should not need to be true. AB#4067
 			// eslint-disable-next-line no-await-in-loop
-			const results = await execa(cmd, args, {
-				cwd: workingDir,
-				stdio: "inherit",
-				shell: true,
-			});
+			const results = await execa(cmd, args, options);
 			if (results.all !== undefined) {
 				log?.verbose(results.all);
 			}
