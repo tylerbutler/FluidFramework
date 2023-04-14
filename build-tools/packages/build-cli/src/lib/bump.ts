@@ -194,45 +194,43 @@ export async function bumpReleaseGroup(
 
 	let name: string;
 	const cmds: [string, string[], execa.Options | undefined][] = [];
+  let options: execa.Options | undefined;
 
 	// Run npm version in each package to set its version in package.json. Also regenerates packageVersion.ts if needed.
 	if (releaseGroupOrPackage instanceof MonoRepo) {
 		name = releaseGroupOrPackage.kind;
+    options = {
+      cwd: releaseGroupOrPackage.repoPath,
+      stdio: "inherit",
+      shell: true,
+    };
 		cmds.push(
 			[
 				`flub`,
 				[`exec`, "-g", name, "--", `"npm version ${translatedVersion.version}"`],
-				{
-					cwd: releaseGroupOrPackage.repoPath,
-					stdio: "inherit",
-					shell: true,
-				},
+				options,
 			],
 			[
 				`npm`,
 				["run", "build:genver"],
-				{
-					cwd: context.gitRepo.resolvedRoot,
-					stdio: "inherit",
-					shell: true,
-				},
+				options,
 			],
 		);
 	} else {
 		name = releaseGroupOrPackage.name;
-		const options: execa.Options = {
-			cwd: releaseGroupOrPackage.directory,
-			stdio: "inherit",
-			shell: true,
-		};
+    options = {
+      cwd: releaseGroupOrPackage.directory,
+      stdio: "inherit",
+      shell: true,
+    };
 		cmds.push([`npm`, ["version", translatedVersion.version], options]);
 		if (releaseGroupOrPackage.getScript("build:genver") !== undefined) {
 			cmds.push([`npm`, ["run", "build:genver"], options]);
 		}
 	}
 
-	for (const [cmd, args, options] of cmds) {
-		log?.verbose(`Running command: ${cmd} ${args} in ${options?.cwd}`);
+	for (const [cmd, args, opts] of cmds) {
+		log?.verbose(`Running command: ${cmd} ${args} in ${opts?.cwd}`);
 		try {
 			// TODO: The shell option should not need to be true. AB#4067
 			// eslint-disable-next-line no-await-in-loop
