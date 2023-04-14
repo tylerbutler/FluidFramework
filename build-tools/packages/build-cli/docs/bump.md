@@ -27,9 +27,9 @@ FLAGS
                                 replaced with the correct version.
   -x, --skipChecks              Skip all checks.
   --[no-]commit                 Commit changes to a new branch.
-  --exact=<value>               An exact string to use as the version. The string must be a valid semver string.
+  --exact=<value>               An exact string to use as the version. The string must be a valid semver version string.
   --exactDepType=<option>       [default: ^] Controls the type of dependency that is used between packages within the
-                                release group. Use "" to indicate exact dependencies.
+                                release group. Use "" (the empty string) to indicate exact dependencies.
                                 <options: ^|~|>
   --[no-]install                Update lockfiles by running 'npm install' automatically.
   --scheme=<option>             Override the version scheme used by the release group or package.
