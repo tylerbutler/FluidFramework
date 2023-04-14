@@ -194,38 +194,34 @@ export async function bumpReleaseGroup(
 
 	let name: string;
 	const cmds: [string, string[], execa.Options | undefined][] = [];
-  let options: execa.Options | undefined;
+	let options: execa.Options | undefined;
 
 	// Run npm version in each package to set its version in package.json. Also regenerates packageVersion.ts if needed.
 	if (releaseGroupOrPackage instanceof MonoRepo) {
 		name = releaseGroupOrPackage.kind;
-    options = {
-      cwd: releaseGroupOrPackage.repoPath,
-      stdio: "inherit",
-      shell: true,
-    };
+		options = {
+			cwd: releaseGroupOrPackage.repoPath,
+			stdio: "inherit",
+			shell: true,
+		};
 		cmds.push(
 			[
 				`flub`,
 				[`exec`, "-g", name, "--", `"npm version ${translatedVersion.version}"`],
 				options,
 			],
-			[
-				`npm`,
-				["run", "build:genver"],
-				options,
-			],
+			["pnpm", ["-r", "run", "build:genver"], options],
 		);
 	} else {
 		name = releaseGroupOrPackage.name;
-    options = {
-      cwd: releaseGroupOrPackage.directory,
-      stdio: "inherit",
-      shell: true,
-    };
+		options = {
+			cwd: releaseGroupOrPackage.directory,
+			stdio: "inherit",
+			shell: true,
+		};
 		cmds.push([`npm`, ["version", translatedVersion.version], options]);
 		if (releaseGroupOrPackage.getScript("build:genver") !== undefined) {
-			cmds.push([`npm`, ["run", "build:genver"], options]);
+			cmds.push([`pnpm`, ["run", "build:genver"], options]);
 		}
 	}
 
