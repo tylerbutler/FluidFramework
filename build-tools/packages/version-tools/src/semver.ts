@@ -36,7 +36,7 @@ export function bumpRange(
 ): string {
 	const [isWorkspaceProtocol, rangeToBump] = parseWorkspaceProtocol(range);
 
-  if (semver.validRange(rangeToBump) === null && rangeToBump.length !== 1) {
+	if (semver.validRange(rangeToBump) === null && rangeToBump.length !== 1) {
 		throw new Error(`${rangeToBump} is not a valid semver range.`);
 	}
 
