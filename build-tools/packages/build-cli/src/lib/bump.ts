@@ -136,7 +136,7 @@ export async function bumpPackageDependencies(
 					newRangeString = depNewRangeOrBumpType;
 				}
 
-        if (isWorkspace === true && preserveWorkspace === true) {
+				if (isWorkspace === true && preserveWorkspace === true) {
 					newRangeString = workspaceProtocol + newRangeString;
 				}
 
@@ -234,7 +234,7 @@ export async function bumpReleaseGroup(
 			}
 		} catch (error: any) {
 			log?.errorLog(`Error running command: ${cmd} ${args}\n${error}`);
-      throw error;
+			throw error;
 		}
 	}
 

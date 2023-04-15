@@ -35,12 +35,8 @@ export function bumpRange(
 	prerelease = false,
 ): string {
 	const [isWorkspaceProtocol, rangeToBump] = parseWorkspaceProtocol(range);
-  console.log(`isWorkspaceProtocol: ${isWorkspaceProtocol}`)
-	// if(rangeToBump.length === 1 && ["^","~", "*"].includes(rangeToBump[0])) {
 
-	// }
-
-	if (semver.validRange(rangeToBump) === null && rangeToBump.length !== 1) {
+  if (semver.validRange(rangeToBump) === null && rangeToBump.length !== 1) {
 		throw new Error(`${rangeToBump} is not a valid semver range.`);
 	}
 

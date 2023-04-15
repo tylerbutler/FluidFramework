@@ -306,13 +306,12 @@ describe("workspace protocol; semver scheme ranges", () => {
 			assert.strictEqual(result, expected);
 		});
 
-    it("pre-1.0 semver", () => {
+		it("pre-1.0 semver", () => {
 			const input = `workspace:^0.14.0`;
 			const expected = `workspace:^0.15.0`;
 			const result = bumpRange(input, "minor", false);
 			assert.strictEqual(result, expected);
 		});
-
 	});
 });
 
