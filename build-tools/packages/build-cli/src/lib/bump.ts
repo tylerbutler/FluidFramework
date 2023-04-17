@@ -80,8 +80,8 @@ export interface PackageWithRangeSpec {
  * @param updateWithinSameReleaseGroup - If true, will update dependency ranges of deps within the same release group.
  * Generally this should be false, but in some cases you may need to set a precise dependency range string within the
  * same release group.
- * @param changedVersions - If provided, the changed packages will be put into this {@link VersionBag}.
  * @param preserveWorkspace - If true, the bumped ranges will preserve the workspace protocol if it is in use.
+ * @param changedVersions - If provided, the changed packages will be put into this {@link VersionBag}.
  * @returns True if the packages dependencies were changed; false otherwise.
  *
  * @remarks
