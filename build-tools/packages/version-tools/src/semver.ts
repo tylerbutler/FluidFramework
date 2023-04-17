@@ -14,7 +14,7 @@ import {
 } from "./internalVersionScheme";
 import { bumpVersionScheme, detectVersionScheme } from "./schemes";
 import { fromVirtualPatchScheme, toVirtualPatchScheme } from "./virtualPatchScheme";
-import { parseWorkspaceProtocol, workspaceProtocol } from "./workspace";
+import { parseWorkspaceProtocol, WORKSPACE_PROTOCOL_PREFIX } from "./workspace";
 
 /**
  * Return the version RANGE incremented by the bump type (major, minor, or patch).
@@ -103,7 +103,7 @@ export function bumpRange(
 		}
 	}
 
-	return isWorkspaceProtocol ? `${workspaceProtocol}${newRange}` : newRange;
+	return isWorkspaceProtocol ? `${WORKSPACE_PROTOCOL_PREFIX}${newRange}` : newRange;
 }
 
 /**

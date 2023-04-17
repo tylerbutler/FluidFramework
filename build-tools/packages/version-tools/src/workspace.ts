@@ -3,7 +3,10 @@
  * Licensed under the MIT License.
  */
 
-export const workspaceProtocol: string = `workspace:`;
+/**
+ * The prefix used to identify a range string that is using the workspace protocol.
+ */
+export const WORKSPACE_PROTOCOL_PREFIX: string = `workspace:`;
 
 /**
  * Parses a version string that may be using the workspace protocol.
@@ -28,8 +31,8 @@ export const workspaceProtocol: string = `workspace:`;
  * workspace:2.0.0
  */
 export const parseWorkspaceProtocol = (version: string): [boolean, string] => {
-	if (version.startsWith(workspaceProtocol)) {
-		const range = version.slice(workspaceProtocol.length);
+	if (version.startsWith(WORKSPACE_PROTOCOL_PREFIX)) {
+		const range = version.slice(WORKSPACE_PROTOCOL_PREFIX.length);
 		return [true, range];
 	}
 

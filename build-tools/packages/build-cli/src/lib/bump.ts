@@ -19,15 +19,14 @@ import {
 import {
 	VersionChangeType,
 	VersionScheme,
+	WORKSPACE_PROTOCOL_PREFIX,
 	bumpRange,
 	bumpVersionScheme,
 	getVersionRange,
 	isVersionBumpType,
 	isVersionBumpTypeExtended,
 	parseWorkspaceProtocol,
-	workspaceProtocol,
 	isInternalVersionScheme,
-	detectVersionScheme,
 } from "@fluid-tools/version-tools";
 
 /**
@@ -137,7 +136,7 @@ export async function bumpPackageDependencies(
 				}
 
 				if (isWorkspace === true && preserveWorkspace === true) {
-					newRangeString = workspaceProtocol + newRangeString;
+					newRangeString = WORKSPACE_PROTOCOL_PREFIX + newRangeString;
 				}
 
 				// If we're only bumping prereleases, check if the dep is a pre-release. Otherwise bump all packages

@@ -82,8 +82,8 @@ export type VersionChangeTypeExtended = VersionBumpTypeExtended | SemVer;
 // @public
 export type VersionScheme = "semver" | "internal" | "internalPrerelease" | "virtualPatch";
 
-// @public (undocumented)
-export const workspaceProtocol: string;
+// @public
+export const WORKSPACE_PROTOCOL_PREFIX: string;
 
 // (No @packageDocumentation comment for this package)
 

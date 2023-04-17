@@ -63,10 +63,9 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 			default: "^",
 		}),
 		workspaceProtocol: Flags.boolean({
-			allowNo: true,
 			char: "w",
 			description:
-				"If packages are using the workspace protocol, preserve it when bumping versions. Use --no-workspaceProtocol when publishing packages to ensure the workspace protocol is replaced with the correct version.",
+				"If packages are using the workspace protocol, preserve it when bumping versions. This option defaults to false so that when publishing packages the workspace protocol is replaced with the correct version. You must pass this flag to preserve the workspace protocol when bumping.",
 			default: false,
 		}),
 		commit: checkFlags.commit,

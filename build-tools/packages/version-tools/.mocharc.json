@@ -1,4 +1,5 @@
 {
+	"require": ["src/test/helpers/init.js"],
 	"recursive": true,
 	"reporter": "spec",
 	"timeout": 60000
