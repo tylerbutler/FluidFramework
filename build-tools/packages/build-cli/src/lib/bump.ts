@@ -10,23 +10,23 @@ import * as semver from "semver";
 
 import {
 	Context,
-	MonoRepo,
 	Logger,
+	MonoRepo,
 	Package,
-	VersionBag,
 	updatePackageJsonFile,
+	VersionBag,
 } from "@fluidframework/build-tools";
 import {
-	VersionChangeType,
-	VersionScheme,
-	WORKSPACE_PROTOCOL_PREFIX,
 	bumpRange,
 	bumpVersionScheme,
 	getVersionRange,
+	isInternalVersionScheme,
 	isVersionBumpType,
 	isVersionBumpTypeExtended,
 	parseWorkspaceProtocol,
-	isInternalVersionScheme,
+	VersionChangeType,
+	VersionScheme,
+	WORKSPACE_PROTOCOL_PREFIX,
 } from "@fluid-tools/version-tools";
 
 /**
