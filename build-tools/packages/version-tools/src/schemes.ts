@@ -57,7 +57,7 @@ export function detectVersionScheme(rangeOrVersion: string | semver.SemVer): Ver
 			// isInternalVersionRange does not identify strings starting with tilde or caret as valid internal ranges. This is
 			// correct. However, for the version scheme detection we want to allow tilde and caret strings even though they
 			// need to be translated to >= < ranges before they can be used with semver. To allow this we call
-			// isInternalVersionScheme instead of isInternalVersionRange. We strip the leading range operator ifneeded before
+			// isInternalVersionScheme instead of isInternalVersionRange. We strip the leading range operator if needed before
 			// calling.
 			isInternalVersionScheme(
 				["^", "~"].includes(rangeOrVersionToCheck[0])
