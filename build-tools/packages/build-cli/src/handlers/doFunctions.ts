@@ -160,6 +160,7 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 		)} bump)!`,
 	);
 
+	// We want to preserve the workspace protocol if it's used. It should only be removed when publishing packages which happens in CI.
 	await bumpReleaseGroup(context, bumpType, rgRepo, true, scheme, undefined, log);
 
 	if (shouldInstall === true && !(await FluidRepo.ensureInstalled(packages, false))) {
