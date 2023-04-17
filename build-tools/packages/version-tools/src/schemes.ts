@@ -103,7 +103,6 @@ export function detectVersionScheme(rangeOrVersion: string | semver.SemVer): Ver
 			}
 		}
 	}
-	// return "semver";
 	throw new Error(`Couldn't detect version scheme for '${rangeOrVersion}'.`);
 }
 
