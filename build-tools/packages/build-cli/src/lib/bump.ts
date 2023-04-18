@@ -135,7 +135,7 @@ export async function bumpPackageDependencies(
 					newRangeString = depNewRangeOrBumpType;
 				}
 
-				if (isWorkspace === true && preserveWorkspace === true) {
+				if (isWorkspace && preserveWorkspace) {
 					newRangeString = WORKSPACE_PROTOCOL_PREFIX + newRangeString;
 				}
 
