@@ -46,11 +46,12 @@ export function bumpRange(
 	/** True if the range has no version; it's an operator only. We only expect this when using the workspace protocol. */
 	const operatorOnly = rangeToBump.length === 1;
 
-	if (operatorOnly && !isWorkspaceProtocol) {
-		throw new Error(
-			`${rangeToBump} is not a valid semver range. Did you mean to use the workspace protocol?`,
-		);
-	}
+	if (operatorOnly) {
+		if (!isWorkspaceProtocol) {
+			throw new Error(
+				`${rangeToBump} is not a valid semver range. Did you mean to use the workspace protocol?`,
+			);
+		}
 
 		// Return the original range since this is a workspace protocol range with no explicit version.
 		return range;
