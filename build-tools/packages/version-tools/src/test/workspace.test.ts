@@ -4,10 +4,67 @@
  */
 import { assert } from "chai";
 import { detectVersionScheme } from "../schemes";
-
 import { bumpRange } from "../semver";
+import { parseWorkspaceProtocol } from "../workspace";
+
+describe("parseWorkspaceProtocol", () => {
+	it("workspace:*", () => {
+		const input = `workspace:*`;
+		const expected = `*`;
+		const [isWorkspace, result] = parseWorkspaceProtocol(input);
+		assert.isTrue(isWorkspace);
+		assert.strictEqual(result, expected);
+	});
+
+	it("workspace:^", () => {
+		const input = `workspace:^`;
+		const expected = `^`;
+		const [isWorkspace, result] = parseWorkspaceProtocol(input);
+		assert.isTrue(isWorkspace);
+		assert.strictEqual(result, expected);
+	});
+
+	it("workspace:~", () => {
+		const input = `workspace:~`;
+		const expected = `~`;
+		const [isWorkspace, result] = parseWorkspaceProtocol(input);
+		assert.isTrue(isWorkspace);
+		assert.strictEqual(result, expected);
+	});
+
+	it("workspace:1.2.3", () => {
+		const input = `workspace:1.2.3`;
+		const expected = `1.2.3`;
+		const [isWorkspace, result] = parseWorkspaceProtocol(input);
+		assert.isTrue(isWorkspace);
+		assert.strictEqual(result, expected);
+	});
+
+	it("workspace:~1.2.3", () => {
+		const input = `workspace:~1.2.3`;
+		const expected = `~1.2.3`;
+		const [isWorkspace, result] = parseWorkspaceProtocol(input);
+		assert.isTrue(isWorkspace);
+		assert.strictEqual(result, expected);
+	});
+
+	it("workspace:^1.2.3", () => {
+		const input = `workspace:^1.2.3`;
+		const expected = `^1.2.3`;
+		const [isWorkspace, result] = parseWorkspaceProtocol(input);
+		assert.isTrue(isWorkspace);
+		assert.strictEqual(result, expected);
+	});
+});
 
 describe("workspace protocol; constraint only", () => {
+	it("bump star constraint", () => {
+		const input = `workspace:*`;
+		const expected = `workspace:*`;
+		const result = bumpRange(input, "patch");
+		assert.strictEqual(result, expected);
+	});
+
 	it("bump caret constraint", () => {
 		const input = `workspace:^`;
 		const expected = `workspace:^`;

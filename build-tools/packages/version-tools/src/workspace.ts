@@ -29,6 +29,8 @@ export const WORKSPACE_PROTOCOL_PREFIX: string = `workspace:`;
  * workspace:\~2.0.0
  *
  * workspace:2.0.0
+ *
+ * workspace:*
  */
 export const parseWorkspaceProtocol = (version: string): [boolean, string] => {
 	if (version.startsWith(WORKSPACE_PROTOCOL_PREFIX)) {
