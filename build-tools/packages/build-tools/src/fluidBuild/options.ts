@@ -13,7 +13,7 @@ import { ISymlinkOptions } from "./symlinkUtils";
 
 const { log, errorLog } = defaultLogger;
 
-interface FastBuildOptions extends IPackageMatchedOptions, ISymlinkOptions {
+export interface FastBuildOptions extends IPackageMatchedOptions, ISymlinkOptions {
 	nolint: boolean;
 	lintonly: boolean;
 	showExec: boolean;

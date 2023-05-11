@@ -16,6 +16,7 @@ common/lib/**/lib
 common/build/eslint-config-fluid/printed-configs/
 build-tools/packages/*/docs/*.md
 build-tools/packages/build-cli/README.md
+build-tools/packages/curtis/README.md
 build-tools/packages/readme-command/README.md
 build-tools/packages/version-tools/README.md
 **/src/**/test/types/*

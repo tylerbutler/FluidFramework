@@ -4,16 +4,132 @@
 
 ```ts
 
+import { Arg } from '@oclif/core/lib/interfaces/parser';
+import { BooleanFlag } from '@oclif/core/lib/interfaces';
+import { Command } from '@oclif/core';
+import { Context } from '@fluidframework/build-tools';
+import { CustomOptions } from '@oclif/core/lib/interfaces/parser';
+import { FlagDefinition } from '@oclif/core/lib/interfaces/parser';
+import { Interfaces } from '@oclif/core';
+import { Logger } from '@fluidframework/build-tools';
+import { MonoRepo } from '@fluidframework/build-tools';
 import { MonoRepoKind } from '@fluidframework/build-tools';
+import { Package } from '@fluidframework/build-tools';
+import { PrettyPrintableError } from '@oclif/core/lib/interfaces';
 import { run } from '@oclif/core';
+import { VersionBumpType } from '@fluid-tools/version-tools';
+import { VersionBumpTypeExtended } from '@fluid-tools/version-tools';
+import { VersionScheme } from '@fluid-tools/version-tools';
+
+// @public (undocumented)
+export type Args<T extends typeof Command> = Interfaces.InferredArgs<T["args"]>;
+
+// @public
+export abstract class BaseCommand<T extends typeof Command> extends Command implements CommandLogger {
+    // (undocumented)
+    protected args: Args<T>;
+    static baseFlags: {
+        root: Interfaces.OptionFlag<string | undefined, CustomOptions>;
+        verbose: Interfaces.BooleanFlag<boolean>;
+        timer: Interfaces.BooleanFlag<boolean>;
+    };
+    // (undocumented)
+    protected catch(err: Error & {
+        exitCode?: number;
+    }): Promise<any>;
+    error(input: string | Error, options: {
+        code?: string | undefined;
+        exit: false;
+    } & PrettyPrintableError): void;
+    error(input: string | Error, options?: ({
+        code?: string | undefined;
+        exit?: number | undefined;
+    } & PrettyPrintableError) | undefined): never;
+    errorLog(message: string | Error | undefined): void;
+    // (undocumented)
+    protected finally(_: Error | undefined): Promise<any>;
+    // (undocumented)
+    protected flags: Flags<T>;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@fluid-tools/build-cli" does not have an export "Context"
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@fluid-tools/build-cli" does not have an export "Context"
+    getContext(): Promise<Context>;
+    info(message: string | Error | undefined): void;
+    // (undocumented)
+    init(): Promise<void>;
+    // (undocumented)
+    protected get logger(): CommandLogger;
+    logHr(): void;
+    logIndent(input: string, indentNumber?: number): void;
+    verbose(message: string | Error | undefined): void;
+    // @deprecated (undocumented)
+    warn(input: string | Error): string | Error;
+    warning(message: string | Error | undefined): void;
+    warningWithDebugTrace(message: string | Error): string | Error;
+}
+
+// @public
+export const bumpTypeExtendedFlag: FlagDefinition<VersionBumpTypeExtended | undefined, Record<string, unknown>>;
+
+// @public
+export const bumpTypeFlag: FlagDefinition<VersionBumpType, Record<string, unknown>>;
+
+// @public
+export const checkFlags: {
+    commit: BooleanFlag<boolean>;
+    install: BooleanFlag<boolean>;
+    branchCheck: BooleanFlag<boolean>;
+    updateCheck: BooleanFlag<boolean>;
+    policyCheck: BooleanFlag<boolean>;
+};
+
+// Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@fluid-tools/build-cli" does not have an export "Logger"
+//
+// @public
+export interface CommandLogger extends Logger {
+    logHr(): void;
+    logIndent(msg: string, indent: number): void;
+}
+
+// @public
+export type DependencyUpdateType = "latest" | "newest" | "greatest" | "minor" | "patch" | `@${string}`;
+
+// @public
+export const dependencyUpdateTypeFlag: FlagDefinition<DependencyUpdateType, Record<string, unknown>>;
+
+// @public
+export const findPackageOrReleaseGroup: (name: string, context: Context) => Package | MonoRepo | undefined;
+
+// @public
+export type Flags<T extends typeof Command> = Interfaces.InferredFlags<typeof BaseCommand["baseFlags"] & T["flags"]>;
+
+// @public
+export const packageOrReleaseGroupArg: Arg<string, Record<string, unknown>>;
+
+// @public
+export const packageSelectorFlag: FlagDefinition<string, Record<string, unknown>>;
 
 // @internal
 export type ReleaseGroup = MonoRepoKind;
 
+// @public
+export const releaseGroupFlag: FlagDefinition<MonoRepoKind, Record<string, unknown>>;
+
 // @internal
 export type ReleasePackage = string;
 
+// @public
+export const rootPathFlag: FlagDefinition<string, Record<string, unknown>>;
+
 export { run }
+
+// @public
+export const semverRangeFlag: FlagDefinition<string | undefined, Record<string, unknown>>;
+
+// @public
+export const skipCheckFlag: BooleanFlag<boolean>;
+
+// @public
+export const versionSchemeFlag: FlagDefinition<VersionScheme | undefined, Record<string, unknown>>;
 
 // (No @packageDocumentation comment for this package)
 
