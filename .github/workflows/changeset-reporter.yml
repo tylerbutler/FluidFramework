@@ -31,7 +31,7 @@ jobs:
         with:
           header: changeset
           number: ${{ fromJson(env.CHANGESET).pr }}
-          path: ./.github/workflows/data/changeset-missing.md
+          path: ${{ github.workspace }}/.github/workflows/data/changeset-missing.md
 
       - name: Required and present
         if: fromJson(env.CHANGESET).required == true && fromJson(env.CHANGESET).changesetFound == true
