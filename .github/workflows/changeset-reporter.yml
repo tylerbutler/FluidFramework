@@ -53,3 +53,11 @@ jobs:
           recreate: true
           message: |
             This PR requires a changeset and it has one! Good job!
+
+      - name: Changeset not required
+        if: fromJson(env.CHANGESET).required == false && fromJson(env.CHANGESET).changesetFound == true
+        uses: marocchino/sticky-pull-request-comment@fcf6fe9e4a0409cd9316a5011435be0f3327f1e1 # ratchet:marocchino/sticky-pull-request-comment@v2.3.1
+        with:
+          header: changeset
+          number: ${{ fromJson(env.CHANGESET).pr }}
+          delete: true
