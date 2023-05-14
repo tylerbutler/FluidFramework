@@ -11,6 +11,12 @@ on:
     types:
       - completed
 
+permissions:
+  actions: read
+  checks: write
+  contents: read
+  pull-requests: write
+
 jobs:
   load_report:
     runs-on: ubuntu-latest
