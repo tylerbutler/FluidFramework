@@ -81,15 +81,9 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'changeset-required') }}
     steps:
-      - id: changeset-status
-        name: Changeset disabled
-        run: |
-          # Always output changesetFound=true to signal that changesets aren't needed
-          echo "{'branch': '${{ github.base_ref }}','changesetFound': true}" > ./changeset-metadata.json
-
-      - name: Upload changeset status
-        uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # ratchet:actions/upload-artifact@v3
+      - name: Changeset not required
+        if: fromJson(env.CHANGESET).required == false && fromJson(env.CHANGESET).changesetFound == true
+        uses: marocchino/sticky-pull-request-comment@fcf6fe9e4a0409cd9316a5011435be0f3327f1e1 # ratchet:marocchino/sticky-pull-request-comment@v2.3.1
         with:
-          name: changeset-metadata
-          path: ./changeset-metadata.json
-          retention-days: 3
+          header: changeset
+          delete: true
