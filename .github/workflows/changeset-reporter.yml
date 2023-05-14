@@ -36,9 +36,13 @@ jobs:
       - name: Load changeset metadata into env variable
         run: echo "CHANGESET=$(cat changeset-metadata.json)" >> $GITHUB_ENV
 
+      - name: Load PR number
+        id: load_pr
+        run: echo "pr=$(jq '.pr' changeset-metadata.json)" >> $GITHUB_OUTPUT
+
       - name: Required but missing
         if: fromJson(env.CHANGESET).required == true && fromJson(env.CHANGESET).changesetFound == false
-        uses: marocchino/sticky-pull-request-comment@fcf6fe9e4a0409cd9316a5011435be0f3327f1e1 # ratchet:marocchino/sticky-pull-request-comment@v2.3.1
+        uses: marocchino/sticky-pull-request-comment@f61b6cf21ef2fcc468f4345cdfcc9bda741d2343 # ratchet:marocchino/sticky-pull-request-comment@v2.6.2
         with:
           header: changeset
           number: ${{ fromJson(env.CHANGESET).pr }}
@@ -46,7 +50,7 @@ jobs:
 
       - name: Required and present
         if: fromJson(env.CHANGESET).required == true && fromJson(env.CHANGESET).changesetFound == true
-        uses: marocchino/sticky-pull-request-comment@fcf6fe9e4a0409cd9316a5011435be0f3327f1e1 # ratchet:marocchino/sticky-pull-request-comment@v2.3.1
+        uses: marocchino/sticky-pull-request-comment@f61b6cf21ef2fcc468f4345cdfcc9bda741d2343 # ratchet:marocchino/sticky-pull-request-comment@v2.6.2
         with:
           header: changeset
           number: ${{ fromJson(env.CHANGESET).pr }}
@@ -56,7 +60,7 @@ jobs:
 
       - name: Changeset not required
         if: fromJson(env.CHANGESET).required == false && fromJson(env.CHANGESET).changesetFound == true
-        uses: marocchino/sticky-pull-request-comment@fcf6fe9e4a0409cd9316a5011435be0f3327f1e1 # ratchet:marocchino/sticky-pull-request-comment@v2.3.1
+        uses: marocchino/sticky-pull-request-comment@f61b6cf21ef2fcc468f4345cdfcc9bda741d2343 # ratchet:marocchino/sticky-pull-request-comment@v2.6.2
         with:
           header: changeset
           number: ${{ fromJson(env.CHANGESET).pr }}
