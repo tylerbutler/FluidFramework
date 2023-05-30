@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 import { MonoRepoKind, isMonoRepoKind } from "@fluidframework/build-tools";
+import { Any } from "ts-toolbelt";
 
 /**
  * A type that represents independent packages (as opposed to those that are part of a release group).
@@ -14,7 +15,8 @@ import { MonoRepoKind, isMonoRepoKind } from "@fluidframework/build-tools";
  *
  * @internal
  */
-export type ReleasePackage = string;
+// export type ReleasePackage = string;
+export type ReleasePackage = Any.Type<string, "ReleasePackage">;
 
 /**
  * An enum that represents known release groups.
