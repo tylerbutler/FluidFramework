@@ -154,10 +154,10 @@
 		"syncpack": "^9.8.4",
 		"typescript": "~4.5.5"
 	},
-	"packageManager": "pnpm@7.32.3+sha512.c28d73f0d82a6c4712a40b91aa43d7397e119b16f35e5e75fe9b7e8fd4f2fc6dfbb68bb3ffac3473a958bbafa7888b79ec384ad122537378089a3a2a19b9900e",
+	"packageManager": "pnpm@8.5.1+sha512.b8c69619796f1be9b934825a47824411e9c285b83ed403f8cd5a6ab383c4719838b87fa55cc4ddfd7fe58ab29903e4c2d30d1dfbefb2ddbb4835cc322acbb000",
 	"engines": {
 		"node": ">=16.16.0",
-		"pnpm": "7"
+		"pnpm": "8"
 	},
 	"pnpm": {
 		"comments": [
@@ -183,7 +183,7 @@
 			"allowedVersions": {
 				"react": "17.0.2",
 				"react-dom": "17.0.2",
-				"webpack": "5.83.0"
+				"webpack": "^5.82.0"
 			},
 			"ignoreMissing": [
 				"fluid-framework"
