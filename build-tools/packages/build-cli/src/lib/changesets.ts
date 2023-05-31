@@ -171,7 +171,7 @@ export async function addChangesetsToChangelog(
 	const changelogEntries: Content[] = [];
 	for (const changeset of changesets) {
 		// eslint-disable-next-line no-await-in-loop
-		const changesetContent: Content = await unified()
+		const changesetContent: Content = await remark()
 			.use(remarkParse)
 			.use(remarkGfm)
 			.use(remarkGitHub)
