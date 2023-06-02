@@ -1,6 +1,6 @@
 ---
 "@fluidframework/sequence": minor
-"@fluidframework/merge-tree": patch
 ---
 
-initial implementation of interval stickiness, behind feature flag "intervalStickinessEnabled"
+Experimental feature: An initial implementation of "interval stickiness". This experimental feature can only be used by
+enabling the feature flag "intervalStickinessEnabled".

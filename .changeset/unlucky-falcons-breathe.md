@@ -1,5 +1,5 @@
 ---
-"@fluidframework/sequence": major
+"@fluidframework/sequence": minor
 ---
 
-Add attachIndex/detachIndex API to IntervalCollection for interval querying
+New feature: `IntervalCollection`s now have an `attachIndex` and `detachIndex` API for interval querying.
