@@ -4,7 +4,7 @@
 		"@fluid-internal/changelog-generator",
 		{
 			"repoBaseUrl": "https://github.com/microsoft/FluidFramework",
-			"issueTemplate": " ([#$issue]($repoBaseUrl/pull-requests/$issue))",
+			"issueTemplate": " ([#$issue]($repoBaseUrl/pull/$issue))",
 			"commitTemplate": " [$abbrevHash]($repoBaseUrl/commits/$hash)"
 		}
 	],
