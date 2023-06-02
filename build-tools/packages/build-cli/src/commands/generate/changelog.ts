@@ -9,29 +9,12 @@ import matter from "gray-matter";
 import globby from "globby";
 import { strict as assert } from "node:assert";
 import path from "node:path";
+import { format as prettier, resolveConfig as resolvePrettierConfig } from "prettier";
+import replace from "replace-in-file";
 
-import { BaseCommand } from "../../base";
 import { PackageCommand } from "../../BasePackageCommand";
 import { ReleasePackage } from "../..";
-
-const DEFAULT_BRANCH = "main";
-
-/**
- * Package scopes that will be excluded by default. The default list contains scopes that are not typically published to
- * a public registry, and thus are the least likely to have a changeset-relevant change.
- */
-const excludedScopes = new Set(["@fluid-example", "@fluid-internal", "@fluid-test"]);
-
-/**
- * Represents a choice in the CLI prompt UX.
- */
-interface Choice {
-	title: string;
-	value?: Package;
-	disabled?: boolean;
-	selected?: boolean;
-	heading?: boolean;
-}
+import { ensureFile } from "fs-extra";
 
 export default class GenerateChangelogCommand extends PackageCommand<
 	typeof GenerateChangelogCommand
@@ -42,59 +25,60 @@ export default class GenerateChangelogCommand extends PackageCommand<
 	static enableJsonFlag = true;
 
 	static examples = [
-		// {
-		// 	description: "Create an empty changeset using the --empty flag.",
-		// 	command: "<%= config.bin %> <%= command.id %> --empty",
-		// },
-		// {
-		// 	description: `Create a changeset interactively. Any package whose contents has changed relative to the '${DEFAULT_BRANCH}' branch will be selected by default.`,
-		// 	command: "<%= config.bin %> <%= command.id %>",
-		// },
-		// {
-		// 	description: `You can compare with a different branch using --branch (-b).`,
-		// 	command: "<%= config.bin %> <%= command.id %> --branch next",
-		// },
-		// {
-		// 	description: `By default example and private packages are excluded, but they can be included with --all.`,
-		// 	command: "<%= config.bin %> <%= command.id %> --all",
-		// },
+		{
+			description: "Generate changelogs for the client release group.",
+			command: "<%= config.bin %> <%= command.id %> --releaseGroup client",
+		},
 	];
 
 	private changesets: Map<ReleasePackage, string[]> = new Map();
 
 	public async init(): Promise<void> {
 		await super.init();
+
+		if (this.argv.length === 0) {
+			this.error("No packages selected.", { exit: 1 });
+		}
+
 		const context = await this.getContext();
 		this.changesets = await loadChangesets(path.join(context.repo.resolvedRoot, ".changeset"));
 	}
 
-	// public async run(): Promise<void> {
-	// 	const context = await this.getContext();
-	// 	this.changesets = await loadChangesets(path.join(context.repo.resolvedRoot, ".changeset"));
-
-	// 	// Calls processPackage on all packages.
-	// 	await super.run();
-	// }
-
 	protected async processPackage(directory: string): Promise<void> {
 		const context = await this.getContext();
-		const pkgRaw = new Package(path.join(directory, "package.json"), "none");
-		const pkgName = pkgRaw.name;
+		const pkg = new Package(path.join(directory, "package.json"), "none");
+		const pkgName = pkg.name;
+		const version = pkg.version;
 
 		if (!context.fullPackageMap.has(pkgName)) {
-			this.warning(`Package ${pkgName} not found.`);
+			this.warning(`Package ${pkgName} not found in context.`);
 		}
 
 		const entries = this.changesets.get(pkgName);
+		const pattern = new RegExp(`# ${pkgName}\n\n`);
+		let replacement = `# ${pkgName}\n\n## ${version}\n\n`;
 
 		if (entries === undefined || entries.length === 0) {
 			this.verbose(`${pkgName}: No changes`);
-			return;
+			replacement += `Dependency updates only.\n\n`;
+		} else {
+			this.warning(
+				`${pkgName}: ${entries.length} ${entries.length === 1 ? "change" : "changes"}`,
+			);
+			for (const entry of entries) {
+				replacement += `-   ${entry.trim()}\n\n`;
+			}
 		}
 
-		this.warning(
-			`${pkgName}: ${entries.length} ${entries.length === 1 ? "change" : "changes"}`,
-		);
+		const changelogPath = path.join(directory, "CHANGELOG.md");
+		await ensureFile(changelogPath);
+		await replace.replaceInFile({
+			files: changelogPath,
+			from: pattern,
+			to: replacement,
+		});
+
+		// prettier(changelogPath);
 	}
 }
 

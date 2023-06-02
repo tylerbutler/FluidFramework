@@ -98,6 +98,7 @@
 		"prettier": "~2.6.2",
 		"prompts": "npm:prompts-ncu@^3.0.0",
 		"read-pkg-up": "^7.0.1",
+		"replace-in-file": "^6.0.0",
 		"semver": "^7.3.7",
 		"semver-utils": "^1.1.4",
 		"simple-git": "^3.16.1",

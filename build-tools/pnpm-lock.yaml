@@ -129,6 +129,9 @@ importers:
       fs-extra:
         specifier: ^9.0.1
         version: 9.1.0
+      globby:
+        specifier: ^11
+        version: 11.1.0
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
@@ -162,6 +165,9 @@ importers:
       read-pkg-up:
         specifier: ^7.0.1
         version: 7.0.1
+      replace-in-file:
+        specifier: ^6.0.0
+        version: 6.3.5
       semver:
         specifier: ^7.3.7
         version: 7.3.7
@@ -274,9 +280,6 @@ importers:
       eslint-plugin-unused-imports:
         specifier: ~2.0.0
         version: 2.0.0(@typescript-eslint/eslint-plugin@5.9.1)(eslint@8.6.0)
-      globby:
-        specifier: ^11
-        version: 11.1.0
       mocha:
         specifier: ^10.2.0
         version: 10.2.0
@@ -12347,7 +12350,7 @@ packages:
     dependencies:
       chalk: 4.1.2
       glob: 7.2.3
-      yargs: 17.6.0
+      yargs: 17.7.1
     dev: false
 
   /require-directory@2.1.1:
@@ -14493,6 +14496,7 @@ packages:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 21.1.1
+    dev: true
 
   /yargs@17.7.1:
     resolution: {integrity: sha512-cwiTb08Xuv5fqF4AovYacTFNxk62th7LKJ6BL9IGUpTJrWoU7/7WdQGTP2SjKf1dUNBGzDd28p/Yfs/GI6JrLw==}
