@@ -5,6 +5,7 @@ Generate commands are used to create/update code, docs, readmes, etc.
 
 * [`flub generate buildVersion`](#flub-generate-buildversion)
 * [`flub generate bundleStats`](#flub-generate-bundlestats)
+* [`flub generate changelog`](#flub-generate-changelog)
 * [`flub generate changeset`](#flub-generate-changeset)
 * [`flub generate packageJson`](#flub-generate-packagejson)
 
@@ -58,6 +59,37 @@ GLOBAL FLAGS
 DESCRIPTION
   Find all bundle analysis artifacts and copy them into a central location to upload as build artifacts for later
   consumption
+```
+
+## `flub generate changelog`
+
+Generates changelog entries for packages based on available changesets.
+
+```
+USAGE
+  $ flub generate changelog [-v] [-a | -d <value> | --packages | -g client|server|azure|build-tools|gitrest|historian]
+    [--releaseGroupRoots] [--private] [--scope <value> | -g client|server|azure|build-tools|gitrest|historian] [--json]
+
+FLAGS
+  -a, --all                    Run on all packages and release groups. Cannot be used with --dir, --packages, or
+                               --releaseGroup.
+  -d, --dir=<value>            Run on the package in this directory. Cannot be used with --all, --packages, or
+                               --releaseGroup.
+  -g, --releaseGroup=<option>  Run on all packages within this release group. Cannot be used with --all, --dir, or
+                               --packages.
+                               <options: client|server|azure|build-tools|gitrest|historian>
+  -g, --skipScope=<option>...  Package scopes to filter out.
+                               <options: client|server|azure|build-tools|gitrest|historian>
+  --packages                   Run on all independent packages in the repo. Cannot be used with --all, --dir, or
+                               --releaseGroup.
+  --[no-]private               Only include private packages (or non-private packages for --no-private)
+  --releaseGroupRoots          Runs only on the root package of release groups. Can only be used with --all or
+                               --releaseGroup.
+  --scope=<value>...           Package scopes to filter to.
+
+GLOBAL FLAGS
+  -v, --verbose  Verbose logging.
+  --json         Format output as json.
 ```
 
 ## `flub generate changeset`
