@@ -4,17 +4,16 @@
  */
 import { Package } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
-import chalk from "chalk";
+import { ensureFile } from "fs-extra";
 import matter from "gray-matter";
 import globby from "globby";
-import { strict as assert } from "node:assert";
 import path from "node:path";
+import fs from "node:fs/promises";
 import { format as prettier, resolveConfig as resolvePrettierConfig } from "prettier";
 import replace from "replace-in-file";
 
 import { PackageCommand } from "../../BasePackageCommand";
 import { ReleasePackage } from "../..";
-import { ensureFile } from "fs-extra";
 
 export default class GenerateChangelogCommand extends PackageCommand<
 	typeof GenerateChangelogCommand
@@ -23,6 +22,17 @@ export default class GenerateChangelogCommand extends PackageCommand<
 
 	// Enables the global JSON flag in oclif.
 	static enableJsonFlag = true;
+
+	static flags = {
+		unchanged: Flags.boolean({
+			description:
+				"Generate changelogs only for packages with changesets that apply to them. Useful for testing.",
+			default: true,
+			allowNo: true,
+			helpGroup: "CHANGELOG GENERATION",
+		}),
+		...PackageCommand.flags,
+	};
 
 	static examples = [
 		{
@@ -78,7 +88,7 @@ export default class GenerateChangelogCommand extends PackageCommand<
 			to: replacement,
 		});
 
-		// prettier(changelogPath);
+		await prettierFile(changelogPath);
 	}
 }
 
@@ -97,4 +107,10 @@ async function loadChangesets(dir: string): Promise<Map<ReleasePackage, string[]
 	}
 
 	return changesetMap;
+}
+
+async function prettierFile(file: string): Promise<void> {
+	const content = await fs.readFile(file);
+	const formatted = prettier(content.toString());
+	await fs.writeFile(file, formatted);
 }

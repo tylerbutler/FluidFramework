@@ -69,6 +69,7 @@ Generates changelog entries for packages based on available changesets.
 USAGE
   $ flub generate changelog [-v] [-a | -d <value> | --packages | -g client|server|azure|build-tools|gitrest|historian]
     [--releaseGroupRoots] [--private] [--scope <value> | -g client|server|azure|build-tools|gitrest|historian] [--json]
+    [--unchanged]
 
 FLAGS
   -a, --all                    Run on all packages and release groups. Cannot be used with --dir, --packages, or
@@ -90,6 +91,14 @@ FLAGS
 GLOBAL FLAGS
   -v, --verbose  Verbose logging.
   --json         Format output as json.
+
+CHANGELOG GENERATION FLAGS
+  --[no-]unchanged  Generate changelogs only for packages with changesets that apply to them. Useful for testing.
+
+EXAMPLES
+  Generate changelogs for the client release group.
+
+    $ flub generate changelog --releaseGroup client
 ```
 
 ## `flub generate changeset`
