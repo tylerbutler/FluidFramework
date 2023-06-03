@@ -24,7 +24,7 @@ export default class GenerateChangelogCommand extends PackageCommand<
 	static enableJsonFlag = true;
 
 	static flags = {
-		unchanged: Flags.boolean({
+		changed: Flags.boolean({
 			description:
 				"Generate changelogs only for packages with changesets that apply to them. Useful for testing.",
 			default: true,
