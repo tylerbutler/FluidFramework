@@ -70,6 +70,9 @@ export default class GenerateChangelogCommand extends PackageCommand<
 
 		if (entries === undefined || entries.length === 0) {
 			this.verbose(`${pkgName}: No changes`);
+			if (this.flags.changed) {
+				return;
+			}
 			replacement += `Dependency updates only.\n\n`;
 		} else {
 			this.warning(
@@ -111,6 +114,6 @@ async function loadChangesets(dir: string): Promise<Map<ReleasePackage, string[]
 
 async function prettierFile(file: string): Promise<void> {
 	const content = await fs.readFile(file);
-	const formatted = prettier(content.toString());
+	const formatted = prettier(content.toString(), { parser: "markdown", proseWrap: "never" });
 	await fs.writeFile(file, formatted);
 }
