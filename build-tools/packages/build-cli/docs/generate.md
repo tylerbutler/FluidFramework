@@ -81,6 +81,8 @@ FLAGS
                                <options: client|server|azure|build-tools|gitrest|historian>
   -g, --skipScope=<option>...  Package scopes to filter out.
                                <options: client|server|azure|build-tools|gitrest|historian>
+  --changed                    Generate changelogs only for packages with changesets that apply to them. Useful for
+                               testing.
   --packages                   Run on all independent packages in the repo. Cannot be used with --all, --dir, or
                                --releaseGroup.
   --[no-]private               Only include private packages (or non-private packages for --no-private)
@@ -91,9 +93,6 @@ FLAGS
 GLOBAL FLAGS
   -v, --verbose  Verbose logging.
   --json         Format output as json.
-
-CHANGELOG GENERATION FLAGS
-  --[no-]changed  Generate changelogs only for packages with changesets that apply to them. Useful for testing.
 
 EXAMPLES
   Generate changelogs for the client release group.
