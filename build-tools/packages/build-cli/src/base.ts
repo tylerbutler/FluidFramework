@@ -55,7 +55,7 @@ export abstract class BaseCommand<T extends typeof Command>
 
 	protected flags!: Flags<T>;
 	protected args!: Args<T>;
-	private _context: Context | undefined;
+	protected _context: Context | undefined;
 	private _logger: CommandLogger | undefined;
 
 	public async init(): Promise<void> {
@@ -110,7 +110,15 @@ export abstract class BaseCommand<T extends typeof Command>
 	 */
 	async getContext(): Promise<Context> {
 		if (this._context === undefined) {
-			const resolvedRoot = await (this.flags.root ?? getResolvedFluidRoot(this.logger));
+			let resolvedRoot: string;
+			if (this.flags?.root === undefined) {
+				resolvedRoot = await getResolvedFluidRoot(this.logger);
+				this.verbose(`Using root from getResolvedFluidRoot: ${resolvedRoot}`);
+			} else {
+				resolvedRoot = this.flags.root;
+				this.verbose(`Using root from --root flag: ${resolvedRoot}`);
+			}
+
 			const gitRepo = new GitRepo(resolvedRoot, this.logger);
 			const branch = await gitRepo.getCurrentBranchName();
 
