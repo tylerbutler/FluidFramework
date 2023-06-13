@@ -3,4 +3,9 @@
  * Licensed under the MIT License.
  */
 
-export { run } from "@oclif/core";
+export {
+	Changeset,
+	loadAllChangesets,
+	loadChangesetFromFile,
+	summarizeChangesets, // eslint-disable-next-line import/no-unresolved, node/no-missing-import
+} from "./changeset.js";

@@ -106,6 +106,7 @@
 		"type-fest": "^2.19.0"
 	},
 	"devDependencies": {
+		"@fluid-internal/changeset-summarizer": "workspace:*",
 		"@fluid-internal/readme-command": "workspace:*",
 		"@fluidframework/build-common": "^1.2.0",
 		"@fluidframework/eslint-config-fluid": "^2.0.0",
