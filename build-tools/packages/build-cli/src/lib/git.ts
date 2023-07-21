@@ -5,7 +5,7 @@
 import { Context, Package } from "@fluidframework/build-tools";
 import path from "node:path";
 import readPkgUp from "read-pkg-up";
-import { SimpleGit, SimpleGitOptions, simpleGit } from "simple-git";
+import { ResetMode, SimpleGit, SimpleGitOptions, simpleGit } from "simple-git";
 
 // type-fest seems to trigger this lint rule, which seems to be a false positive.
 // eslint-disable-next-line node/no-missing-import
@@ -180,31 +180,47 @@ export class Repository {
 	}
 
 	/**
-	 * Calls `git rev-list` to get all commits between the base and head commits.
+	 * Calls `git rev-list` to get all commits between the base and head commits in reverse chronological order.
 	 *
 	 * @param baseCommit - The base commit.
 	 * @param headCommit - The head commit. Defaults to HEAD.
-	 * @returns An array of all commits between the base and head commits.
+	 * @returns An array of all commits between the base and head commits in revers chronological order. That is, index 0
+	 * is the newest commit.
+	 *
+	 * @remarks
+	 * Commits are ordered reverse-chronologically because that is the default that `git rev-list` uses. If you need to
+	 * order the commits chronologically instead, use `.reverse()` on the results of this method.
 	 */
 	public async revList(baseCommit: string, headCommit: string = "HEAD"): Promise<string[]> {
-		const result = await this.git.raw("rev-list", `${baseCommit}..${headCommit}`, "--reverse");
+		const result = await this.git.raw("rev-list", `${baseCommit}..${headCommit}`);
 		return result
 			.split(/\r?\n/)
 			.filter((value) => value !== null && value !== undefined && value !== "");
 	}
 
 	public async canMergeWithoutConflicts(commit: string): Promise<boolean> {
-		let mergeResult;
+		this.log?.verbose(`Checking merge conflicts for: ${commit}`);
 		try {
-			console.log(`Checking merge conflicts for: ${commit}`);
-			mergeResult = await this.git.merge([commit, "--no-commit", "--no-ff"]);
+			const mergeResult = await this.git.merge([commit, "--no-commit", "--no-ff"]);
 			await this.git.merge(["--abort"]);
+			return mergeResult.result === "success";
 		} catch {
-			console.log(`Merge conflicts exists for: ${commit}`);
+			this.log?.verbose(`Merge conflicts exists for: ${commit}`);
 			await this.git.merge(["--abort"]);
 			return false;
 		}
+	}
 
-		return mergeResult.result === "success";
+	public async canCherryPickWithoutConflicts(commit: string): Promise<boolean> {
+		this.log?.verbose(`Checking cherry-pick conflicts for: ${commit}`);
+		try {
+			const result = await this.git.raw("cherry-pick", commit, "--no-commit");
+			await this.git.reset(ResetMode.HARD);
+			return true;
+		} catch {
+			this.log?.verbose(`Cherry-pick conflicts exists for: ${commit}`);
+			await this.git.reset(ResetMode.HARD);
+			return false;
+		}
 	}
 }

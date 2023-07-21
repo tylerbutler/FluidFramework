@@ -143,13 +143,18 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 			remoteTargetBranch,
 		);
 		this.log(
-			`${lastMergedCommit} is the last merged commit id between ${flags.source} and ${flags.target}`,
+			`${shortCommit(lastMergedCommit)} is the last merged commit id between ${
+				flags.source
+			} and ${flags.target}`,
 		);
 
 		const unmergedCommitList: string[] = await this.gitRepo.revList(
 			lastMergedCommit,
 			flags.source,
 		);
+
+		// sort chronologically; oldest first
+		unmergedCommitList.reverse();
 
 		if (unmergedCommitList.length === 0) {
 			this.log(

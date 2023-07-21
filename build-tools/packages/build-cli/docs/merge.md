@@ -5,6 +5,7 @@ Sync branches depending on the batch size passed
 
 * [`flub merge branches`](#flub-merge-branches)
 * [`flub merge info`](#flub-merge-info)
+* [`flub merge preview`](#flub-merge-preview)
 
 ## `flub merge branches`
 
@@ -62,4 +63,26 @@ EXAMPLES
   Output the merge status as JSON using --json.
 
     $ flub merge info --json
+```
+
+## `flub merge preview`
+
+Sync branches depending on the batch size passed
+
+```
+USAGE
+  $ flub merge preview -s <value> -t <value> [-v | --quiet] [-r <value>]
+
+FLAGS
+  -r, --remote=<value>  The name of the upstream remote to use to check for PRs. If not provided, the remote matching
+                        the microsoft/FluidFramework repo will be used.
+  -s, --source=<value>  (required) [default: main] Source branch name
+  -t, --target=<value>  (required) [default: next] Target branch name
+
+LOGGING FLAGS
+  -v, --verbose  Enable verbose logging.
+  --quiet        Disable all logging.
+
+DESCRIPTION
+  Sync branches depending on the batch size passed
 ```
