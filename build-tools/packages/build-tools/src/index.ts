@@ -5,7 +5,12 @@
 
 export { Context } from "./common/context";
 export { GitRepo } from "./common/gitRepo";
-export { FluidRepo, type VersionDetails } from "./common/fluidRepo";
+export {
+	FluidRepo,
+	type IFluidBuildConfig,
+	type ITypeValidationConfig,
+	type VersionDetails,
+} from "./common/fluidRepo";
 export { getResolvedFluidRoot, getFluidBuildConfig } from "./common/fluidUtils";
 export type { Logger, ErrorLoggingFunction, LoggingFunction } from "./common/logging";
 export { isMonoRepoKind, MonoRepo, MonoRepoKind, supportedMonoRepoValues } from "./common/monoRepo";
