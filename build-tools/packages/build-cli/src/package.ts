@@ -15,7 +15,7 @@ import sortPackageJson from "sort-package-json";
 import type { PackageJson as StandardPackageJson, SetRequired } from "type-fest";
 
 import { Logger } from "./logging";
-import { MonoRepo } from "./monorepo";
+import { ReleaseGroup } from "./monorepo";
 import { IFluidBuildConfig, ITypeValidationConfig, lookUpDirSync } from "./fluidRepo";
 import { execWithErrorAsync } from "./exec";
 
@@ -95,7 +95,7 @@ export class Package {
 	constructor(
 		public readonly packageJsonFileName: string,
 		public readonly group: string,
-		public readonly monoRepo?: MonoRepo,
+		public readonly monoRepo?: ReleaseGroup,
 		private readonly log?: Logger,
 		additionalProperties: any = {},
 	) {
@@ -305,7 +305,7 @@ export class Package {
 		this: T,
 		packageJsonFileName: string,
 		group: string,
-		monoRepo?: MonoRepo,
+		monoRepo?: ReleaseGroup,
 		log?: Logger,
 		additionalProperties?: TAddProps,
 	) {
@@ -333,7 +333,7 @@ export class Package {
 		this: T,
 		packageDir: string,
 		group: string,
-		monoRepo?: MonoRepo,
+		monoRepo?: ReleaseGroup,
 		log?: Logger,
 		additionalProperties?: TAddProps,
 	) {
@@ -355,7 +355,7 @@ export class Packages {
 		dirFullPath: string,
 		group: string,
 		ignoredDirFullPaths: string[] | undefined,
-		monoRepo?: MonoRepo,
+		monoRepo?: ReleaseGroup,
 	) {
 		const packageJsonFileName = path.join(dirFullPath, "package.json");
 		if (existsSync(packageJsonFileName)) {

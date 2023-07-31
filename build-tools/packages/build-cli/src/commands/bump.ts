@@ -30,7 +30,7 @@ import {
 	setVersion,
 } from "../lib";
 import { Package } from "../package";
-import { MonoRepo } from "../monorepo";
+import { ReleaseGroup } from "../monorepo";
 import { FluidRepo } from "../fluidRepo";
 
 export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
@@ -157,7 +157,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		}
 
 		let repoVersion: ReleaseVersion;
-		let packageOrReleaseGroup: Package | MonoRepo;
+		let packageOrReleaseGroup: Package | ReleaseGroup;
 		let scheme: VersionScheme | undefined;
 		const exactVersion: semver.SemVer | null = semver.parse(flags.exact);
 		const updatedPackages: Package[] = [];
@@ -166,7 +166,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 			this.error(`--exact value invalid: ${flags.exact}`);
 		}
 
-		if (rgOrPackage instanceof MonoRepo) {
+		if (rgOrPackage instanceof ReleaseGroup) {
 			const releaseRepo = rgOrPackage;
 			assert(releaseRepo !== undefined, `Release repo not found for ${rgOrPackageName}`);
 

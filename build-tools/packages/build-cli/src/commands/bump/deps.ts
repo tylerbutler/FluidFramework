@@ -24,7 +24,7 @@ import {
 	isDependencyUpdateType,
 	npmCheckUpdates,
 } from "../../lib";
-import { MonoRepo } from "../../monorepo";
+import { ReleaseGroup } from "../../monorepo";
 import { ReleaseGroupName, isReleaseGroup } from "../../releaseGroups";
 
 /**
@@ -152,7 +152,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 		 */
 		const depsToUpdate: string[] = [];
 
-		if (rgOrPackage instanceof MonoRepo) {
+		if (rgOrPackage instanceof ReleaseGroup) {
 			depsToUpdate.push(...rgOrPackage.packages.map((pkg) => pkg.name));
 		} else {
 			depsToUpdate.push(rgOrPackageName);

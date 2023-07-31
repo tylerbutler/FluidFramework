@@ -35,7 +35,7 @@ import { IFluidBuildConfig, IFluidRepoPackage } from "./fluidRepo";
  *
  * - If the version was not defined in lerna.json, then the version value in package.json will be used.
  */
-export class MonoRepo {
+export class ReleaseGroup {
 	public readonly packages: Package[] = [];
 	public readonly version: string;
 	public readonly workspaceGlobs: string[];
@@ -81,7 +81,7 @@ export class MonoRepo {
 			return;
 		}
 
-		return new MonoRepo(
+		return new ReleaseGroup(
 			group,
 			directory,
 			defaultInterdependencyRange ?? DEFAULT_INTERDEPENDENCY_RANGE,
@@ -169,7 +169,7 @@ export class MonoRepo {
 		}
 	}
 
-	public static isSame(a: MonoRepo | undefined, b: MonoRepo | undefined) {
+	public static isSame(a: ReleaseGroup | undefined, b: ReleaseGroup | undefined) {
 		return a !== undefined && a === b;
 	}
 

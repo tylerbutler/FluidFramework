@@ -31,7 +31,7 @@ import { indentString } from "./text";
 import { Context } from "../context";
 import { Package, updatePackageJsonFile } from "../package";
 import { Logger } from "../logging";
-import { MonoRepo } from "../monorepo";
+import { ReleaseGroup } from "../monorepo";
 import { VersionDetails } from "../fluidRepo";
 
 /**
@@ -318,7 +318,7 @@ export async function getPreReleaseDependencies(
  */
 export async function isReleased(
 	context: Context,
-	releaseGroupOrPackage: MonoRepo | Package | string,
+	releaseGroupOrPackage: ReleaseGroup | Package | string,
 	version: string,
 	log?: Logger,
 ): Promise<boolean> {
@@ -345,12 +345,12 @@ export async function isReleased(
  * @internal
  */
 export function generateReleaseGitTagName(
-	releaseGroupOrPackage: MonoRepo | Package | string,
+	releaseGroupOrPackage: ReleaseGroup | Package | string,
 	version?: string,
 ): string {
 	let tagName = "";
 
-	if (releaseGroupOrPackage instanceof MonoRepo) {
+	if (releaseGroupOrPackage instanceof ReleaseGroup) {
 		const kindLowerCase = releaseGroupOrPackage.kind.toLowerCase();
 		tagName = `${kindLowerCase}_v${version ?? releaseGroupOrPackage.version}`;
 	} else if (releaseGroupOrPackage instanceof Package) {
@@ -488,7 +488,7 @@ export interface DependencyWithRange {
  */
 export async function setVersion(
 	context: Context,
-	releaseGroupOrPackage: MonoRepo | Package,
+	releaseGroupOrPackage: ReleaseGroup | Package,
 	version: semver.SemVer,
 	// eslint-disable-next-line default-param-last
 	interdependencyRange: InterdependencyRange = "^",
@@ -502,7 +502,7 @@ export async function setVersion(
 	let options: execa.Options | undefined;
 
 	// Run npm version in each package to set its version in package.json. Also regenerates packageVersion.ts if needed.
-	if (releaseGroupOrPackage instanceof MonoRepo) {
+	if (releaseGroupOrPackage instanceof ReleaseGroup) {
 		name = releaseGroupOrPackage.kind;
 		options = {
 			cwd: releaseGroupOrPackage.repoPath,
@@ -657,7 +657,7 @@ export async function setPackageDependencies(
 	for (const { name, dev } of pkg.combinedDependencies) {
 		const dep = dependencyVersionMap.get(name);
 		if (dep !== undefined) {
-			const isSameReleaseGroup = MonoRepo.isSame(dep?.pkg.monoRepo, pkg.monoRepo);
+			const isSameReleaseGroup = ReleaseGroup.isSame(dep?.pkg.monoRepo, pkg.monoRepo);
 			if (!isSameReleaseGroup || (updateWithinSameReleaseGroup && isSameReleaseGroup)) {
 				const dependencies = dev
 					? pkg.packageJson.devDependencies

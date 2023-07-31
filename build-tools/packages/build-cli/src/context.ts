@@ -9,7 +9,7 @@ import { Logger, defaultLogger } from "./logging";
 import { Package } from "./package";
 import { Timer } from "./timer";
 import { Repository } from "./lib";
-import { MonoRepo } from "./monorepo";
+import { ReleaseGroup } from "./monorepo";
 import { isReleaseGroup } from "./releaseGroups";
 import { PackageName } from "@rushstack/node-core-library";
 import { getVersionFromTag } from "./tags";
@@ -85,7 +85,7 @@ export class Context {
 	 * Takes a packageOrReleaseGroupArg and searches the context for it. Release groups are checked first, then
 	 * independent packages by scoped name, then by unscoped name.
 	 */
-	public findPackageOrReleaseGroup(name: string): Package | MonoRepo | undefined {
+	public findPackageOrReleaseGroup(name: string): Package | ReleaseGroup | undefined {
 		if (isReleaseGroup(name)) {
 			return this.repo.releaseGroups.get(name);
 		}

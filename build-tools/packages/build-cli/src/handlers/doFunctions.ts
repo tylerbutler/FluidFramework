@@ -15,7 +15,7 @@ import { ReleaseGroupName, ReleasePackageName, isReleaseGroup } from "../release
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler";
 import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers";
 import { FluidRepo } from "../fluidRepo";
-import { MonoRepo } from "../monorepo";
+import { ReleaseGroup } from "../monorepo";
 
 /**
  * Bumps any pre-release dependencies that have been released.
@@ -160,7 +160,7 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 
 	const scheme = detectVersionScheme(releaseVersion);
 	const newVersion = bumpVersionScheme(releaseVersion, bumpType, scheme);
-	const packages = rgRepo instanceof MonoRepo ? rgRepo.packages : [rgRepo];
+	const packages = rgRepo instanceof ReleaseGroup ? rgRepo.packages : [rgRepo];
 
 	log.info(
 		`Bumping ${releaseGroup} from ${releaseVersion} to ${newVersion} (${chalk.blue(
@@ -172,7 +172,7 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 		context,
 		rgRepo,
 		newVersion,
-		rgRepo instanceof MonoRepo ? rgRepo.interdependencyRange : undefined,
+		rgRepo instanceof ReleaseGroup ? rgRepo.interdependencyRange : undefined,
 		log,
 	);
 

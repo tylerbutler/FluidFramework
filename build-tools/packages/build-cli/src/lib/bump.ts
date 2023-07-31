@@ -14,7 +14,7 @@ import {
 
 import { setVersion } from "./package";
 import { Context } from "../context";
-import { MonoRepo } from "../monorepo";
+import { ReleaseGroup } from "../monorepo";
 import { Package } from "../package";
 import { Logger } from "../logging";
 
@@ -62,7 +62,7 @@ export function isDependencyUpdateType(str: string | undefined): str is Dependen
 // eslint-disable-next-line max-params
 export async function bumpReleaseGroup(
 	context: Context,
-	releaseGroupOrPackage: MonoRepo | Package,
+	releaseGroupOrPackage: ReleaseGroup | Package,
 	bumpType: VersionChangeType,
 	scheme?: VersionScheme,
 	// eslint-disable-next-line default-param-last
