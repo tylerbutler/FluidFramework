@@ -7,9 +7,7 @@ import chalk from "chalk";
 import prompts from "prompts";
 import stripAnsi from "strip-ansi";
 
-import { FluidRepo, MonoRepo, MonoRepoKind } from "@fluidframework/build-tools";
-
-import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../../args";
+import { packageOrReleaseGroupArg } from "../../args";
 import { BaseCommand } from "../../base";
 import {
 	checkFlags,
@@ -18,6 +16,7 @@ import {
 	releaseGroupFlag,
 	skipCheckFlag,
 } from "../../flags";
+import { FluidRepo } from "../../fluidRepo";
 import {
 	generateBumpDepsBranchName,
 	generateBumpDepsCommitMessage,
@@ -25,6 +24,7 @@ import {
 	isDependencyUpdateType,
 	npmCheckUpdates,
 } from "../../lib";
+import { MonoRepo } from "../../monorepo";
 import { ReleaseGroup, isReleaseGroup } from "../../releaseGroups";
 
 /**
@@ -118,14 +118,14 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 			this.error("No dependency provided.");
 		}
 
-		const rgOrPackage = findPackageOrReleaseGroup(rgOrPackageName, context);
+		const rgOrPackage = context.findPackageOrReleaseGroup(rgOrPackageName);
 		if (rgOrPackage === undefined) {
 			this.error(`Package not found: ${rgOrPackageName}`);
 		}
 
-		const branchName = await context.gitRepo.getCurrentBranchName();
+		const branchName = await context.gitRepo.currentBranch();
 
-		if (args.package_or_release_group === MonoRepoKind.Server && branchName !== "next") {
+		if (args.package_or_release_group === "server" && branchName !== "next") {
 			const { confirmed } = await prompts({
 				type: "confirm",
 				name: "confirmed",
@@ -254,8 +254,9 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 					flags.releaseGroup,
 				);
 				this.log(`Creating branch ${bumpBranch}`);
-				await context.createBranch(bumpBranch);
-				await context.gitRepo.commit(commitMessage, "Error committing");
+				await context.gitRepo.gitClient
+					.checkoutBranch(branchName, "HEAD")
+					.commit(commitMessage);
 				this.finalMessages.push(
 					`You can now create a PR for branch ${bumpBranch} targeting ${context.originalBranchName}`,
 				);

@@ -7,11 +7,11 @@ import { Command, Flags, Interfaces } from "@oclif/core";
 import { type PrettyPrintableError } from "@oclif/core/lib/interfaces";
 import chalk from "chalk";
 
-import { Context, GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
-
+import { Context } from "./context";
 import { rootPathFlag } from "./flags";
-import { indentString } from "./lib";
+import { Repository, indentString } from "./lib";
 import { CommandLogger } from "./logging";
+import { getResolvedFluidRoot } from "./fluidUtils";
 
 /**
  * A type representing all the flags of the base commands and subclasses.
@@ -128,8 +128,8 @@ export abstract class BaseCommand<T extends typeof Command>
 	async getContext(): Promise<Context> {
 		if (this._context === undefined) {
 			const resolvedRoot = await (this.flags.root ?? getResolvedFluidRoot(this.logger));
-			const gitRepo = new GitRepo(resolvedRoot, this.logger);
-			const branch = await gitRepo.getCurrentBranchName();
+			const gitRepo = new Repository({ baseDir: resolvedRoot }, this.logger);
+			const branch = await gitRepo.currentBranch();
 
 			this.verbose(`Repo: ${resolvedRoot}`);
 			this.verbose(`Branch: ${branch}`);

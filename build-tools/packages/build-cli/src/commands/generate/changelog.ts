@@ -3,7 +3,6 @@
  * Licensed under the MIT License.
  */
 
-import { Package, FluidRepo } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import { command as execCommand } from "execa";
 import { readFile, writeFile } from "fs/promises";
@@ -13,6 +12,8 @@ import { BaseCommand } from "../../base";
 import { releaseGroupFlag } from "../../flags";
 import { Repository } from "../../lib";
 import { isReleaseGroup } from "../../releaseGroups";
+import { Package } from "../../package";
+import { FluidRepo } from "../../fluidRepo";
 
 async function replaceInFile(search: string, replace: string, path: string): Promise<void> {
 	const content = await readFile(path, "utf8");
@@ -58,7 +59,7 @@ export default class GenerateChangeLogCommand extends BaseCommand<typeof Generat
 	public async run(): Promise<void> {
 		const context = await this.getContext();
 
-		const gitRoot = context.gitRepo.resolvedRoot;
+		const gitRoot = context.gitRepo.rootPath;
 
 		const { releaseGroup } = this.flags;
 

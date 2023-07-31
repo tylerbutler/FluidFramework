@@ -3,10 +3,10 @@
  * Licensed under the MIT License.
  */
 import { Flags } from "@oclif/core";
-import { Package } from "@fluidframework/build-tools";
 import path from "node:path";
 
 import { PackageCommand } from "../../BasePackageCommand";
+import { Package } from "../../package";
 
 export default class CheckBuildVersionCommand extends PackageCommand<
 	typeof CheckBuildVersionCommand

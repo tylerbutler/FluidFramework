@@ -3,15 +3,6 @@
  * Licensed under the MIT License.
  */
 import {
-	Context,
-	Logger,
-	MonoRepo,
-	Package,
-	VersionBag,
-	VersionDetails,
-	updatePackageJsonFile,
-} from "@fluidframework/build-tools";
-import {
 	InterdependencyRange,
 	ReleaseVersion,
 	detectVersionScheme,
@@ -37,6 +28,11 @@ import * as semver from "semver";
 import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../releaseGroups";
 import { DependencyUpdateType } from "./bump";
 import { indentString } from "./text";
+import { Context } from "../context";
+import { Package, updatePackageJsonFile } from "../package";
+import { Logger } from "../logging";
+import { MonoRepo } from "../monorepo";
+import { VersionDetails } from "../fluidRepo";
 
 /**
  * An object that maps package names to version strings or range strings.
@@ -336,7 +332,7 @@ export async function isReleased(
 
 	log?.verbose(`Checking for tag '${tagName}'`);
 	const rawTag = await context.gitRepo.getTags(tagName);
-	return rawTag.trim() === tagName;
+	return rawTag.includes(tagName);
 }
 
 /**
@@ -654,7 +650,7 @@ export async function setPackageDependencies(
 	dependencyVersionMap: Map<string, DependencyWithRange>,
 	// eslint-disable-next-line default-param-last
 	updateWithinSameReleaseGroup = false,
-	changedVersions?: VersionBag,
+	// changedVersions?: VersionBag,
 ): Promise<boolean> {
 	let changed = false;
 	let newRangeString: string;
@@ -670,7 +666,7 @@ export async function setPackageDependencies(
 				newRangeString = dep.range.toString();
 				dependencies[name] = newRangeString;
 				changed = true;
-				changedVersions?.add(dep.pkg, newRangeString);
+				// changedVersions?.add(dep.pkg, newRangeString);
 			}
 		}
 	}

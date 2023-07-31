@@ -78,7 +78,7 @@ export default class MergeInfoCommand extends BaseCommand<typeof MergeInfoComman
 		}
 
 		const context = await this.getContext();
-		const repo = new Repository({ baseDir: context.gitRepo.resolvedRoot });
+		const repo = new Repository({ baseDir: context.gitRepo.rootPath });
 		const remote = await repo.getRemote(context.originRemotePartialUrl);
 
 		if (remote === undefined) {

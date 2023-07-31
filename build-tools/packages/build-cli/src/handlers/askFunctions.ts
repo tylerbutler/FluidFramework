@@ -34,7 +34,7 @@ export const askForReleaseType: StateHandlerFunction = async (
 
 	const { bumpType: inputBumpType, context, releaseVersion } = data;
 
-	const currentBranch = await context.gitRepo.getCurrentBranchName();
+	const currentBranch = await context.gitRepo.currentBranch();
 	const currentVersion = releaseVersion;
 	const bumpedMajor = bumpVersionScheme(currentVersion, "major");
 	const bumpedMinor = bumpVersionScheme(currentVersion, "minor");

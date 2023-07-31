@@ -5,8 +5,6 @@
 import { StringBuilder } from "@rushstack/node-core-library";
 import chalk from "chalk";
 
-import { MonoRepoKind } from "@fluidframework/build-tools";
-
 import { indentString } from "./lib";
 import { CommandLogger } from "./logging";
 import { ReleaseGroup, ReleasePackage } from "./releaseGroups";
@@ -51,13 +49,10 @@ interface Section {
  * Map release groups to ADO pipeline
  */
 export const ADOPipelineLinks = new Map<ReleasePackage | ReleaseGroup | undefined, string>([
-	[MonoRepoKind.Client, "https://dev.azure.com/fluidframework/internal/_build?definitionId=12"],
-	[MonoRepoKind.Server, "https://dev.azure.com/fluidframework/internal/_build?definitionId=30"],
-	[MonoRepoKind.Azure, "https://dev.azure.com/fluidframework/internal/_build?definitionId=85"],
-	[
-		MonoRepoKind.BuildTools,
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=14",
-	],
+	["client", "https://dev.azure.com/fluidframework/internal/_build?definitionId=12"],
+	["server", "https://dev.azure.com/fluidframework/internal/_build?definitionId=30"],
+	["azure", "https://dev.azure.com/fluidframework/internal/_build?definitionId=85"],
+	["build-tools", "https://dev.azure.com/fluidframework/internal/_build?definitionId=14"],
 	[
 		"@fluid-tools/api-markdown-documenter",
 		"https://dev.azure.com/fluidframework/internal/_build?definitionId=97",

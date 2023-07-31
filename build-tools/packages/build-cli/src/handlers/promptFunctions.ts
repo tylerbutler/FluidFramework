@@ -166,7 +166,7 @@ export const promptToPRBump: StateHandlerFunction = async (
 
 	const { command, context, promptWriter, releaseGroup, releaseVersion } = data;
 
-	const bumpBranch = await context.gitRepo.getCurrentBranchName();
+	const bumpBranch = await context.gitRepo.currentBranch();
 	const prompt: InstructionalPrompt = {
 		title: "NEED TO BUMP TO THE NEXT VERSION",
 		sections: [
@@ -222,7 +222,7 @@ export const promptToPRDeps: StateHandlerFunction = async (
 		sections: [
 			{
 				title: "FIRST",
-				message: `Push and create a PR for branch ${await context.gitRepo.getCurrentBranchName()} targeting the ${
+				message: `Push and create a PR for branch ${await context.gitRepo.currentBranch()} targeting the ${
 					context.originalBranchName
 				} branch.`,
 			},

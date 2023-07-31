@@ -7,7 +7,6 @@ import execa from "execa";
 import inquirer from "inquirer";
 import { Machine } from "jssm";
 
-import { FluidRepo } from "@fluidframework/build-tools";
 import { bumpVersionScheme } from "@fluid-tools/version-tools";
 
 import {
@@ -26,6 +25,7 @@ import { isReleaseGroup } from "../releaseGroups";
 import { getRunPolicyCheckDefault } from "../repoConfig";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler";
 import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers";
+import { FluidRepo } from "../fluidRepo";
 
 /**
  * Checks that the current branch matches the expected branch for a release.
@@ -315,7 +315,7 @@ export const checkOnReleaseBranch: StateHandlerFunction = async (
 	const { context, releaseGroup, releaseVersion, shouldCheckBranch } = data;
 	assert(context !== undefined, "Context is undefined.");
 
-	const currentBranch = await context.gitRepo.getCurrentBranchName();
+	const currentBranch = await context.gitRepo.currentBranch();
 	if (!isReleaseGroup(releaseGroup)) {
 		// must be a package
 		assert(
@@ -404,16 +404,16 @@ export const checkPolicy: StateHandlerFunction = async (
 		// the client release group, we can't easily scope it to just the client. Thus, we always run it at the root just
 		// like we do in CI.
 		const result = await execa.command(`npm run policy-check`, {
-			cwd: context.gitRepo.resolvedRoot,
+			cwd: context.gitRepo.rootPath,
 		});
 		log.verbose(result.stdout);
 
 		// check for policy check violation
-		const afterPolicyCheckStatus = await context.gitRepo.getStatus();
-		if (afterPolicyCheckStatus !== "" && afterPolicyCheckStatus !== "") {
+		const isClean = await context.gitRepo.isClean();
+		if (!isClean) {
 			log.logHr();
 			log.errorLog(
-				`Policy check needed to make modifications. Please create a PR for the changes and merge before retrying.\n${afterPolicyCheckStatus}`,
+				`Policy check needed to make modifications. Please create a PR for the changes and merge before retrying.\n${isClean}`,
 			);
 			BaseStateHandler.signalFailure(machine, state);
 			return false;
@@ -462,16 +462,16 @@ export const checkAssertTagging: StateHandlerFunction = async (
 		// the client release group, we can't easily scope it to just the client. Thus, we always run it at the root just
 		// like we do in CI.
 		const result = await execa.command(`npm run policy-check:asserts`, {
-			cwd: context.gitRepo.resolvedRoot,
+			cwd: context.gitRepo.rootPath,
 		});
 		log.verbose(result.stdout);
 
 		// check for policy check violation
-		const afterPolicyCheckStatus = await context.gitRepo.getStatus();
-		if (afterPolicyCheckStatus !== "" && afterPolicyCheckStatus !== "") {
+		const isClean = await context.gitRepo.isClean();
+		if (!isClean) {
 			log.logHr();
 			log.errorLog(
-				`Asserts were tagged. Please create a PR for the changes and merge before retrying.\n${afterPolicyCheckStatus}`,
+				`Asserts were tagged. Please create a PR for the changes and merge before retrying.`,
 			);
 			BaseStateHandler.signalFailure(machine, state);
 			return false;
@@ -543,7 +543,13 @@ export const checkReleaseGroupIsBumped: StateHandlerFunction = async (
 	const { context, releaseGroup, releaseVersion, bumpType } = data;
 
 	context.repo.reload();
-	const repoVersion = context.getVersion(releaseGroup);
+
+	const rgOrPackage = context.findPackageOrReleaseGroup(releaseGroup);
+	if (rgOrPackage === undefined) {
+		throw new Error(`Package not found: ${releaseGroup}`);
+	}
+
+	const repoVersion = rgOrPackage?.version;
 	const targetVersion = bumpVersionScheme(releaseVersion, bumpType).version;
 
 	if (repoVersion !== targetVersion) {
@@ -616,10 +622,10 @@ export const checkShouldCommit: StateHandlerFunction = async (
 	const branchName = generateBumpVersionBranchName(releaseGroup, bumpType, releaseVersion);
 	const commitMsg = generateBumpVersionCommitMessage(releaseGroup, bumpType, releaseVersion);
 
-	await context.createBranch(branchName);
+	await context.gitRepo.gitClient.checkoutBranch(branchName, "HEAD");
 	log.verbose(`Created bump branch: ${branchName}`);
 
-	await context.gitRepo.commit(commitMsg, `Error committing to ${branchName}`);
+	await context.gitRepo.gitClient.commit(commitMsg);
 	BaseStateHandler.signalSuccess(machine, state);
 	return true;
 };
@@ -651,13 +657,13 @@ export const checkShouldCommitReleasedDepsBump: StateHandlerFunction = async (
 
 	assert(isReleaseGroup(releaseGroup), `Not a release group: ${releaseGroup}`);
 	const branchName = generateBumpDepsBranchName(releaseGroup, "latest");
-	await context.gitRepo.createBranch(branchName);
+	await context.gitRepo.gitClient.checkoutBranch(branchName, "HEAD");
 
 	log.verbose(`Created bump branch: ${branchName}`);
 	log.info(`${releaseGroup}: Bumped prerelease dependencies to release versions.`);
 
 	const commitMsg = generateBumpDepsCommitMessage("prerelease", "latest", releaseGroup);
-	await context.gitRepo.commit(commitMsg, `Error committing to ${branchName}`);
+	await context.gitRepo.gitClient.commit(commitMsg);
 	BaseStateHandler.signalSuccess(machine, state);
 	return true;
 };

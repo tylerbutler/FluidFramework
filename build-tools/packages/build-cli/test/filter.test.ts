@@ -3,9 +3,8 @@
  * Licensed under the MIT License.
  */
 import chai, { assert, expect } from "chai";
-
-import { Context, GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
 import assertArrays from "chai-arrays";
+import path from "node:path";
 
 import {
 	AllPackagesSelectionCriteria,
@@ -14,14 +13,16 @@ import {
 	PackageSelectionCriteria,
 	selectAndFilterPackages,
 } from "../src/filter";
-import path from "path";
+import { getResolvedFluidRoot } from "../src/fluidUtils";
+import { Repository } from "../src/lib";
+import { Context } from "../src/context";
 
 chai.use(assertArrays);
 
 async function getContext() {
 	const resolvedRoot = await getResolvedFluidRoot();
-	const gitRepo = new GitRepo(resolvedRoot);
-	const branch = await gitRepo.getCurrentBranchName();
+	const gitRepo = new Repository({ baseDir: resolvedRoot });
+	const branch = await gitRepo.currentBranch();
 	const context = new Context(gitRepo, "microsoft/FluidFramework", branch);
 	return context;
 }

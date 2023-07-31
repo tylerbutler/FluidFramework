@@ -9,7 +9,8 @@ import { readJson } from "fs-extra";
 import { EOL as newline } from "os";
 import path from "path";
 
-import { getFluidBuildConfig, Handler, policyHandlers } from "@fluidframework/build-tools";
+import { Handler, policyHandlers } from "@fluidframework/build-tools";
+import { getFluidBuildConfig } from "../../fluidUtils";
 
 import { BaseCommand } from "../../base";
 

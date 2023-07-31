@@ -40,7 +40,7 @@ export default class CheckChangesetCommand extends BaseCommand<typeof CheckChang
 		changesetPath?: string;
 	}> {
 		const context = await this.getContext();
-		const repo = new Repository({ baseDir: context.gitRepo.resolvedRoot });
+		const repo = new Repository({ baseDir: context.gitRepo.rootPath });
 		const remote = await repo.getRemote(context.originRemotePartialUrl);
 		const branch = this.flags.branch;
 

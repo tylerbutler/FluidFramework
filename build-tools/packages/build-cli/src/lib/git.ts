@@ -2,7 +2,6 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Context, Package } from "@fluidframework/build-tools";
 import path from "node:path";
 import readPkgUp from "read-pkg-up";
 import { SimpleGit, SimpleGitOptions, simpleGit } from "simple-git";
@@ -11,8 +10,11 @@ import { SimpleGit, SimpleGitOptions, simpleGit } from "simple-git";
 // eslint-disable-next-line node/no-missing-import
 import type { SetRequired } from "type-fest";
 
+import { Context } from "../context";
 import { CommandLogger } from "../logging";
+import { Package } from "../package";
 import { ReleaseGroup } from "../releaseGroups";
+import { parseISO } from "date-fns";
 
 /**
  * Default options passed to the git client.
@@ -35,6 +37,7 @@ const defaultGitOptions: Partial<SimpleGitOptions> = {
  */
 export class Repository {
 	private readonly git: SimpleGit;
+	public readonly rootPath: string;
 
 	/**
 	 * A git client for the repository that can be used to call git directly.
@@ -56,6 +59,7 @@ export class Repository {
 		log?.verbose("gitOptions:");
 		log?.verbose(JSON.stringify(options));
 		this.git = simpleGit(options);
+		this.rootPath = options.baseDir;
 	}
 
 	/**
@@ -97,7 +101,7 @@ export class Repository {
 		remote: string,
 		localRef = "HEAD",
 	): Promise<string> {
-		const base = await this.gitClient
+		const base = await this.git
 			.fetch(["--all"]) // make sure we have the latest remote refs
 			.raw("merge-base", `refs/remotes/${remote}/${branch}`, localRef);
 		return base;
@@ -109,14 +113,14 @@ export class Repository {
 	 * @returns The ref of the merge base between the two refs.
 	 */
 	public async getMergeBase(ref1: string, ref2: string): Promise<string> {
-		const base = await this.gitClient.raw("merge-base", `${ref1}`, ref2);
+		const base = await this.git.raw("merge-base", `${ref1}`, ref2);
 		return base;
 	}
 
 	private async getChangedFilesSinceRef(ref: string, remote: string): Promise<string[]> {
 		const divergedAt = await this.getMergeBaseRemote(ref, remote);
 		// Now we can find which files we added
-		const added = await this.gitClient
+		const added = await this.git
 			.fetch(["--all"]) // make sure we have the latest remote refs
 			.diff(["--name-only", "--diff-filter=d", divergedAt]);
 
@@ -206,5 +210,77 @@ export class Repository {
 		}
 
 		return mergeResult.result === "success";
+	}
+
+	/**
+	 * Get the current git branch name
+	 */
+	public async currentBranch(): Promise<string> {
+		const result = await this.git.raw("rev-parse", "--abbrev-ref", "HEAD");
+		const split = result
+			.split(/\r?\n/)
+			.filter((value) => value !== null && value !== undefined && value !== "");
+
+		if (split.length === 0) {
+			throw new Error(`git rev-parse returned no results.`);
+		}
+
+		if (split.length > 1) {
+			throw new Error(`git rev-parse returned multiple results: ${split.join(", ")}`);
+		}
+
+		return split[0];
+	}
+
+	public async fetchTags(): Promise<void> {
+		await this.git.fetch("--tags", "--force");
+	}
+
+	public async isBranchUpToDate(branch: string, remote: string) {
+		await this.git.fetch(remote, branch);
+		const currentSha = await this.getShaForBranch(branch);
+		const remoteSha = await this.getShaForBranch(branch, remote);
+		return remoteSha === currentSha;
+	}
+
+	public async isClean(): Promise<boolean> {
+		const results = await this.git.status();
+		return results.isClean();
+	}
+
+	/**
+	 * Get all tags matching a pattern.
+	 *
+	 * @param pattern - Pattern of tags to get.
+	 */
+	public async getTags(pattern?: string): Promise<string[]> {
+		if (pattern === undefined || pattern.length === 0) {
+			this.log?.verbose(`Reading git tags from repo.`);
+		} else {
+			this.log?.verbose(`Reading git tags from repo using pattern: '${pattern}'`);
+		}
+
+		const results =
+			pattern === undefined || pattern.length === 0
+				? await this.git.tag(["--list", "--sort", "-committerdate"])
+				: await this.git.tag(["--list", "--sort", "-committerdate", pattern]);
+
+		const tags = results
+			.trim()
+			.split(/\r?\n/)
+			.filter((value) => value !== null && value !== undefined && value !== "");
+
+		this.log?.verbose(`Found ${tags.length} tags.`);
+		return tags;
+	}
+
+	/**
+	 * @param gitRef - A reference to a git commit/tag/branch for which the commit date will be parsed.
+	 * @returns The commit date of the ref.
+	 */
+	public async getCommitDate(gitRef: string) {
+		const result = await this.git.show(["--quiet", "--format=%cI", gitRef]);
+		const date = parseISO(result);
+		return date;
 	}
 }

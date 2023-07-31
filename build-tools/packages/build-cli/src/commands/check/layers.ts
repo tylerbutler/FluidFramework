@@ -6,9 +6,10 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { Flags } from "@oclif/core";
-import { LayerGraph, Timer } from "@fluidframework/build-tools";
 
 import { BaseCommand } from "../../base";
+import { LayerGraph } from "../../layerGraph";
+import { Timer } from "../../timer";
 
 const packagesMdFileName = "PACKAGES.md";
 
@@ -39,7 +40,7 @@ export class CheckLayers extends BaseCommand<typeof CheckLayers> {
 
 	async run() {
 		const flags = this.flags;
-		const timer = new Timer(flags.timer);
+		const timer = new Timer(flags.timer, this);
 
 		const context = await this.getContext();
 		const resolvedRoot = context.repo.resolvedRoot;

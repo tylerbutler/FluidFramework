@@ -2,7 +2,6 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { MonoRepoKind, isMonoRepoKind } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import sortPackageJson from "sort-package-json";
 import { table } from "table";
@@ -10,6 +9,7 @@ import { table } from "table";
 import { BaseCommand } from "../base";
 import { releaseGroupFlag } from "../flags";
 import { PackageVersionList } from "../lib";
+import { isReleaseGroup } from "../releaseGroups";
 
 /**
  * The root `info` command.
@@ -37,7 +37,7 @@ export default class InfoCommand extends BaseCommand<typeof InfoCommand> {
 		const flags = this.flags;
 		const context = await this.getContext();
 		let packages =
-			flags.releaseGroup !== undefined && isMonoRepoKind(flags.releaseGroup)
+			flags.releaseGroup !== undefined && isReleaseGroup(flags.releaseGroup)
 				? context.packagesInReleaseGroup(flags.releaseGroup)
 				: [...context.fullPackageMap.values()];
 
@@ -46,7 +46,7 @@ export default class InfoCommand extends BaseCommand<typeof InfoCommand> {
 			packages = packages.filter((p) => p.packageJson.private !== true);
 		}
 
-		const tableData: (string | MonoRepoKind | undefined)[][] = [
+		const tableData: (string | undefined)[][] = [
 			["Release group", "Name", "Private", "Version"],
 		];
 		const jsonData: PackageVersionList = {};

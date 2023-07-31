@@ -8,8 +8,6 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import * as semver from "semver";
 
-import { FluidRepo, MonoRepo, Package } from "@fluidframework/build-tools";
-
 import {
 	InterdependencyRange,
 	RangeOperators,
@@ -23,7 +21,7 @@ import {
 	isInterdependencyRange,
 } from "@fluid-tools/version-tools";
 
-import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../args";
+import { packageOrReleaseGroupArg } from "../args";
 import { BaseCommand } from "../base";
 import { bumpTypeFlag, checkFlags, skipCheckFlag, versionSchemeFlag } from "../flags";
 import {
@@ -31,6 +29,9 @@ import {
 	generateBumpVersionCommitMessage,
 	setVersion,
 } from "../lib";
+import { Package } from "../package";
+import { MonoRepo } from "../monorepo";
+import { FluidRepo } from "../fluidRepo";
 
 export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 	static summary =
@@ -146,7 +147,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 			this.error("No dependency provided.");
 		}
 
-		const rgOrPackage = findPackageOrReleaseGroup(rgOrPackageName, context);
+		const rgOrPackage = context.findPackageOrReleaseGroup(rgOrPackageName);
 		if (rgOrPackage === undefined) {
 			this.error(`Package not found: ${rgOrPackageName}`);
 		}
@@ -278,8 +279,8 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 				scheme,
 			);
 			this.log(`Creating branch ${bumpBranch}`);
-			await context.createBranch(bumpBranch);
-			await context.gitRepo.commit(commitMessage, "Error committing");
+			await context.gitRepo.gitClient.checkoutBranch(bumpBranch, "HEAD");
+			await context.gitRepo.gitClient.commit(commitMessage);
 			this.finalMessages.push(
 				`You can now create a PR for branch ${bumpBranch} targeting ${context.originalBranchName}`,
 			);

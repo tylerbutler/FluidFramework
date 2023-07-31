@@ -3,20 +3,20 @@
  * Licensed under the MIT License.
  */
 
-import { Context, MonoRepo, Logger, Package, VersionBag } from "@fluidframework/build-tools";
 import {
 	DEFAULT_INTERDEPENDENCY_RANGE,
 	InterdependencyRange,
 	VersionChangeType,
 	VersionScheme,
-	bumpRange,
 	bumpVersionScheme,
 	isVersionBumpType,
-	isVersionBumpTypeExtended,
 } from "@fluid-tools/version-tools";
-import * as semver from "semver";
 
 import { setVersion } from "./package";
+import { Context } from "../context";
+import { MonoRepo } from "../monorepo";
+import { Package } from "../package";
+import { Logger } from "../logging";
 
 /**
  * A type representing the types of dependency updates that can be done. This type is intended to match the type

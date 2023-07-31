@@ -2,7 +2,6 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Package } from "@fluidframework/build-tools";
 import { VersionBumpType } from "@fluid-tools/version-tools";
 import { Flags } from "@oclif/core";
 import chalk from "chalk";
@@ -14,8 +13,7 @@ import prompts from "prompts";
 
 import { BaseCommand } from "../../base";
 import { Repository, getDefaultBumpTypeForBranch } from "../../lib";
-import GenerateUpcomingCommand from "./upcoming";
-import { ReleaseGroup } from "../../releaseGroups";
+import { Package } from "../../package";
 
 /**
  * If more than this number of packages are changed relative to the selected branch, the user will be prompted to select
@@ -108,9 +106,9 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 		let { branch } = this.flags;
 
 		if (empty) {
-			const emptyFile = await createChangesetFile(context.gitRepo.resolvedRoot, new Map());
+			const emptyFile = await createChangesetFile(context.gitRepo.rootPath, new Map());
 			// eslint-disable-next-line @typescript-eslint/no-shadow
-			const changesetPath = path.relative(context.gitRepo.resolvedRoot, emptyFile);
+			const changesetPath = path.relative(context.gitRepo.rootPath, emptyFile);
 			this.logHr();
 			this.log(`Created empty changeset: ${chalk.green(changesetPath)}`);
 			return {
@@ -120,7 +118,7 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 			};
 		}
 
-		const repo = new Repository({ baseDir: context.gitRepo.resolvedRoot });
+		const repo = new Repository({ baseDir: context.gitRepo.rootPath });
 		// context.originRemotePartialUrl is 'microsoft/FluidFramework'; see BaseCommand.getContext().
 		const remote = await repo.getRemote(context.originRemotePartialUrl);
 
@@ -280,11 +278,11 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 		const bumpType = getDefaultBumpTypeForBranch(branch) ?? "minor";
 
 		const newFile = await createChangesetFile(
-			context.gitRepo.resolvedRoot,
+			context.gitRepo.rootPath,
 			new Map(selectedPackages.map((p) => [p, bumpType])),
 			`${response.summary.trim()}\n\n${response.description}`,
 		);
-		const changesetPath = path.relative(context.gitRepo.resolvedRoot, newFile);
+		const changesetPath = path.relative(context.gitRepo.rootPath, newFile);
 
 		this.logHr();
 		this.log(`Created new changeset: ${chalk.green(changesetPath)}`);

@@ -2,7 +2,6 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { MonoRepoKind } from "@fluidframework/build-tools";
 import { ReleaseVersion, VersionBumpType, detectBumpType } from "@fluid-tools/version-tools";
 import { Args } from "@oclif/core";
 import semver from "semver";
@@ -135,7 +134,7 @@ const getReleaseTitle = (
 	version: semver.SemVer,
 	releaseType: VersionBumpType,
 ): string => {
-	const name = releaseGroup === MonoRepoKind.Client ? "Fluid Framework" : releaseGroup;
+	const name = releaseGroup === "client" ? "Fluid Framework" : releaseGroup;
 	// e.g. Fluid Framework v2.0.0-internal.4.1.0 (minor)
 	return `${name} v${version} (${releaseType})`;
 };

@@ -121,7 +121,7 @@ export default class GenerateBuildVersionCommand extends BaseCommand<
 		}
 
 		const context = await this.getContext();
-		const tags = flags.tags ?? (await context.gitRepo.getAllTags());
+		const tags = flags.tags ?? (await context.gitRepo.getTags());
 		if (flags.tag !== undefined) {
 			const isLatest = getIsLatest(
 				flags.tag,

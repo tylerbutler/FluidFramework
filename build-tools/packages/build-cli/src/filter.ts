@@ -3,10 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { Context, Package, supportedMonoRepoValues } from "@fluidframework/build-tools";
 import path from "node:path";
 import { filterFlags, selectionFlags } from "./flags";
+import { Package } from "./package";
 import { ReleaseGroup, knownReleaseGroups } from "./releaseGroups";
+import { Context } from "./context";
 
 /**
  * The criteria that should be used for selecting package-like objects from a collection.
@@ -145,6 +146,7 @@ const selectPackagesFromContext = (
 			path.join(selection.directory, "package.json"),
 			"none",
 			undefined,
+			undefined,
 			{
 				kind: "packageFromDirectory" as PackageKind,
 			},
@@ -156,7 +158,7 @@ const selectPackagesFromContext = (
 	if (selection.independentPackages === true) {
 		for (const pkg of context.independentPackages) {
 			selected.push(
-				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, {
+				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, undefined, {
 					kind: "independentPackage",
 				}),
 			);
@@ -167,7 +169,7 @@ const selectPackagesFromContext = (
 	for (const rg of selection.releaseGroups) {
 		for (const pkg of context.packagesInReleaseGroup(rg)) {
 			selected.push(
-				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, {
+				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, undefined, {
 					kind: "releaseGroupChildPackage",
 				}),
 			);
@@ -182,7 +184,9 @@ const selectPackagesFromContext = (
 		}
 		const dir = packages[0].directory;
 		const pkg = Package.loadDir(dir, rg);
-		selected.push(Package.loadDir(dir, rg, pkg.monoRepo, { kind: "releaseGroupRootPackage" }));
+		selected.push(
+			Package.loadDir(dir, rg, pkg.monoRepo, undefined, { kind: "releaseGroupRootPackage" }),
+		);
 	}
 
 	return selected;

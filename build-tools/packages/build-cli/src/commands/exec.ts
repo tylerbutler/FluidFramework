@@ -2,11 +2,11 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Package } from "@fluidframework/build-tools";
 import { Args } from "@oclif/core";
 import execa from "execa";
 
 import { PackageCommand } from "../BasePackageCommand";
+import { Package } from "../package";
 
 export default class ExecCommand extends PackageCommand<typeof ExecCommand> {
 	static description = `Run a shell command in the context of a package or release group.`;

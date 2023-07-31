@@ -69,11 +69,11 @@ Generate a changelog for packages based on changesets.
 
 ```
 USAGE
-  $ flub generate changelog -g client|server|azure|build-tools|gitrest|historian [-v | --quiet] [--version <value>]
+  $ flub generate changelog -g build-tools|client|server|gitrest|historian [-v | --quiet] [--version <value>]
 
 FLAGS
   -g, --releaseGroup=<option>  (required) Name of a release group.
-                               <options: client|server|azure|build-tools|gitrest|historian>
+                               <options: build-tools|client|server|gitrest|historian>
   --version=<value>            The version for which to generate the changelog. If this is not provided, the version of
                                the package according to package.json will be used.
 
@@ -148,12 +148,12 @@ Generates a summary of all changesets. This is used to generate an UPCOMING.md f
 
 ```
 USAGE
-  $ flub generate upcoming -g client|server|azure|build-tools|gitrest|historian -t major|minor [-v | --quiet] [--json]
-    [--out <value>]
+  $ flub generate upcoming -g build-tools|client|server|gitrest|historian -t major|minor [-v | --quiet] [--json] [--out
+    <value>]
 
 FLAGS
   -g, --releaseGroup=<option>  (required) Name of a release group.
-                               <options: client|server|azure|build-tools|gitrest|historian>
+                               <options: build-tools|client|server|gitrest|historian>
   -t, --releaseType=<option>   (required) The type of release for which the upcoming file is being generated.
                                <options: major|minor>
   --out=<value>                [default: UPCOMING.md] Output the results to this file.

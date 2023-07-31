@@ -12,8 +12,8 @@ FOR INTERNAL TESTING ONLY. This command is used only to test the common package 
 ```
 USAGE
   $ flub test-only-filter [-v | --quiet] [--concurrency <value>] [--all | --dir <value> | --packages | -g
-    client|server|azure|build-tools|gitrest|historian|all | --releaseGroupRoot
-    client|server|azure|build-tools|gitrest|historian|all] [--private] [--scope <value> | --skipScope <value>] [--json]
+    build-tools|client|server|gitrest|historian|all | --releaseGroupRoot
+    build-tools|client|server|gitrest|historian|all] [--private] [--scope <value> | --skipScope <value>] [--json]
 
 FLAGS
   --concurrency=<value>  [default: 25] The number of tasks to execute concurrently.
@@ -22,7 +22,7 @@ PACKAGE SELECTION FLAGS
   -g, --releaseGroup=<option>...  Run on all child packages within the specified release groups. This does not include
                                   release group root packages. To include those, use the --releaseGroupRoot argument.
                                   Cannot be used with --all, --dir, or --packages.
-                                  <options: client|server|azure|build-tools|gitrest|historian|all>
+                                  <options: build-tools|client|server|gitrest|historian|all>
   --all                           Run on all packages and release groups. Cannot be used with --all, --dir,
                                   --releaseGroup, or --releaseGroupRoot.
   --dir=<value>                   Run on the package in this directory. Cannot be used with --all, --dir,
@@ -32,7 +32,7 @@ PACKAGE SELECTION FLAGS
   --releaseGroupRoot=<option>...  Run on the root package of the specified release groups. This does not include any
                                   child packages within the release group. To include those, use the --releaseGroup
                                   argument. Cannot be used with --all, --dir, or --packages.
-                                  <options: client|server|azure|build-tools|gitrest|historian|all>
+                                  <options: build-tools|client|server|gitrest|historian|all>
 
 LOGGING FLAGS
   -v, --verbose  Enable verbose logging.

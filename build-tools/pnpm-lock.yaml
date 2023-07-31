@@ -63,6 +63,7 @@ importers:
       '@fluidframework/build-tools': workspace:*
       '@fluidframework/bundle-size-tools': workspace:*
       '@fluidframework/eslint-config-fluid': ^2.0.0
+      '@manypkg/get-packages': ^2.2.0
       '@microsoft/api-extractor': ^7.36.1
       '@oclif/core': ^2.8.11
       '@oclif/plugin-autocomplete': ^2.3.1
@@ -78,6 +79,7 @@ importers:
       '@types/chai-arrays': ^2.0.0
       '@types/fs-extra': ^8.1.2
       '@types/inquirer': ^8.2.6
+      '@types/lodash.isequal': ^4.5.6
       '@types/mocha': ^9.1.1
       '@types/node': ^14.18.53
       '@types/prompts': ^2.4.4
@@ -90,14 +92,17 @@ importers:
       chalk: ^2.4.2
       concurrently: ^7.6.0
       copyfiles: ^2.4.1
+      cosmiconfig: ^8.2.0
       cross-env: ^7.0.3
       danger: ^10.9.0
       date-fns: ^2.30.0
+      detect-indent: ^6.1.0
       eslint: ~8.6.0
       eslint-config-oclif: ^4.0.0
       eslint-config-oclif-typescript: ^1.0.3
       eslint-config-prettier: ~8.5.0
       execa: ^5.1.1
+      find-up: ^5.0.0
       fs-extra: ^9.1.0
       globby: ^11.1.0
       gray-matter: ^4.0.3
@@ -105,6 +110,7 @@ importers:
       inquirer: ^8.2.5
       jssm: ^5.89.2
       jssm-viz-cli: ^5.89.2
+      lodash.isequal: ^4.5.0
       minimatch: ^7.4.6
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.1.0
@@ -129,10 +135,12 @@ importers:
       type-fest: ^2.19.0
       type-plus: ^7.6.0
       typescript: ~4.5.5
+      yaml: ^2.3.1
     dependencies:
       '@fluid-tools/version-tools': link:../version-tools
       '@fluidframework/build-tools': link:../build-tools
       '@fluidframework/bundle-size-tools': link:../bundle-size-tools
+      '@manypkg/get-packages': 2.2.0
       '@oclif/core': 2.8.11_xwahr3c6nnleznukhncjhj6fk4
       '@oclif/plugin-autocomplete': 2.3.1_xwahr3c6nnleznukhncjhj6fk4
       '@oclif/plugin-commands': 2.2.17_xwahr3c6nnleznukhncjhj6fk4
@@ -144,9 +152,12 @@ importers:
       '@rushstack/node-core-library': 3.59.5_@types+node@14.18.53
       async: 3.2.4
       chalk: 2.4.2
+      cosmiconfig: 8.2.0
       danger: 10.9.0_@octokit+core@4.2.4
       date-fns: 2.30.0
+      detect-indent: 6.1.0
       execa: 5.1.1
+      find-up: 5.0.0
       fs-extra: 9.1.0
       globby: 11.1.0
       gray-matter: 4.0.3
@@ -154,6 +165,7 @@ importers:
       inquirer: 8.2.5
       jssm: 5.89.2
       jssm-viz-cli: 5.89.2
+      lodash.isequal: 4.5.0
       minimatch: 7.4.6
       npm-check-updates: 16.10.15
       oclif: 3.9.1_xwahr3c6nnleznukhncjhj6fk4
@@ -169,6 +181,7 @@ importers:
       table: 6.8.1
       type-fest: 2.19.0
       type-plus: 7.6.0
+      yaml: 2.3.1
     devDependencies:
       '@fluid-internal/readme-command': link:../readme-command
       '@fluidframework/build-common': 2.0.0
@@ -179,6 +192,7 @@ importers:
       '@types/chai-arrays': 2.0.0
       '@types/fs-extra': 8.1.2
       '@types/inquirer': 8.2.6
+      '@types/lodash.isequal': 4.5.6
       '@types/mocha': 9.1.1
       '@types/node': 14.18.53
       '@types/prompts': 2.4.4
@@ -11559,7 +11573,7 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 14.18.53
-      acorn: 8.8.2
+      acorn: 8.8.0
       acorn-walk: 8.2.0
       arg: 4.1.3
       create-require: 1.1.1

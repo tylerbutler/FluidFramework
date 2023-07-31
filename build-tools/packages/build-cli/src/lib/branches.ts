@@ -5,8 +5,6 @@
 import { PackageName } from "@rushstack/node-core-library";
 import * as semver from "semver";
 
-import { Context } from "@fluidframework/build-tools";
-
 import {
 	ReleaseVersion,
 	VersionBumpType,
@@ -22,6 +20,7 @@ import {
 
 import { ReleaseGroup, ReleasePackage, ReleaseSource, isReleaseGroup } from "../releaseGroups";
 import { DependencyUpdateType } from "./bump";
+import { Context } from "../context";
 
 /**
  * Creates an appropriate branch for a release group and bump type. Does not commit!
@@ -42,9 +41,10 @@ export async function createBumpBranch(
 	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
 	bumpType: VersionBumpType,
 ) {
-	const version = context.getVersion(releaseGroupOrPackage);
-	const name = generateBumpVersionBranchName(releaseGroupOrPackage, bumpType, version);
-	await context.createBranch(name);
+	const version = context.findPackageOrReleaseGroup(releaseGroupOrPackage)?.version;
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	const name = generateBumpVersionBranchName(releaseGroupOrPackage, bumpType, version!);
+	await context.gitRepo.gitClient.checkoutBranch(name, "HEAD");
 	return name;
 }
 

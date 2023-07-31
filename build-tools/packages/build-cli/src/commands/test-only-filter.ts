@@ -2,10 +2,10 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Package } from "@fluidframework/build-tools";
 import { strict as assert } from "node:assert";
 import { PackageCommand } from "../BasePackageCommand";
 import { PackageWithKind } from "../filter";
+import { Package } from "../package";
 
 interface FilterCommandResult {
 	selected: Pick<Package, "name" | "directory">[];

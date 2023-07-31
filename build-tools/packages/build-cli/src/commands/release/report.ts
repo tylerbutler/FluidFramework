@@ -2,7 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { ux, Flags, Interfaces, Command } from "@oclif/core";
+import { ux, Flags, Command } from "@oclif/core";
 import { strict as assert } from "assert";
 import chalk from "chalk";
 import { differenceInBusinessDays, formatDistanceToNow } from "date-fns";
@@ -11,8 +11,6 @@ import inquirer from "inquirer";
 import path from "path";
 import sortJson from "sort-json";
 import { table } from "table";
-
-import { Context, VersionDetails } from "@fluidframework/build-tools";
 
 import {
 	ReleaseVersion,
@@ -39,6 +37,8 @@ import {
 } from "../../lib";
 import { CommandLogger } from "../../logging";
 import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../../releaseGroups";
+import { Context } from "../../context";
+import { VersionDetails } from "../../fluidRepo";
 
 /**
  * Controls behavior when there is a list of releases and one needs to be selected.
@@ -170,7 +170,8 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 			const data = await this.collectRawReleaseData(
 				context,
 				rg,
-				rgVerMap?.[rg] ?? context.getVersion(rg),
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				rgVerMap?.[rg] ?? context.findPackageOrReleaseGroup(rg)!.version,
 				mode,
 			);
 			if (data !== undefined) {
@@ -443,7 +444,7 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 				`${chalk.yellow.bold("\nIMPORTANT")}: This report only includes the ${chalk.blue(
 					flags.releaseGroup,
 				)} release group (version ${chalk.blue(
-					context.getVersion(flags.releaseGroup),
+					context.findPackageOrReleaseGroup(flags.releaseGroup)?.version ?? "unknown",
 				)}) and its ${chalk.bold("direct Fluid dependencies")}.`,
 			);
 			this.log(
@@ -678,7 +679,11 @@ async function writeReport(
 		releaseGroup === undefined
 			? // Use container-runtime as a proxy for the client release group.
 			  report["@fluidframework/container-runtime"].version
-			: context.getVersion(releaseGroup);
+			: context.findPackageOrReleaseGroup(releaseGroup)?.version;
+
+	if (version === undefined) {
+		throw new Error(`No version found for ${releaseGroup}.`);
+	}
 
 	const reportName = generateReportFileName(kind, version, releaseGroup);
 	const reportPath = path.join(dir, reportName);

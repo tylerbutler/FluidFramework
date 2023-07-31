@@ -4,10 +4,8 @@
  */
 import { VersionBumpType, detectVersionScheme } from "@fluid-tools/version-tools";
 import { Config } from "@oclif/core";
-import { MonoRepoKind } from "@fluidframework/build-tools";
 import chalk from "chalk";
 
-import { findPackageOrReleaseGroup } from "../args";
 import {
 	bumpTypeFlag,
 	checkFlags,
@@ -69,7 +67,7 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const releaseGroup = flags.releaseGroup ?? flags.package!;
-		const packageOrReleaseGroup = findPackageOrReleaseGroup(releaseGroup, context);
+		const packageOrReleaseGroup = context.findPackageOrReleaseGroup(releaseGroup);
 		if (packageOrReleaseGroup === undefined) {
 			this.error(`Could not find release group or package: ${releaseGroup}`, {
 				exit: 1,
@@ -80,7 +78,7 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 
 		// eslint-disable-next-line no-warning-comments
 		// TODO: can be removed once server team owns server releases
-		if (flags.releaseGroup === MonoRepoKind.Server && flags.bumpType === "minor") {
+		if (flags.releaseGroup === "server" && flags.bumpType === "minor") {
 			this.error(`Server release are always a ${chalk.bold("MAJOR")} release`);
 		}
 

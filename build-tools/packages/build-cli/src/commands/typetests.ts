@@ -3,9 +3,9 @@
  * Licensed under the MIT License.
  */
 import { Flags } from "@oclif/core";
-import { Package, PackageJson, updatePackageJsonFile } from "@fluidframework/build-tools";
 
 import { PackageCommand } from "../BasePackageCommand";
+import { Package, PackageJson, updatePackageJsonFile } from "../package";
 
 export default class PrepareTypeTestsCommand extends PackageCommand<
 	typeof PrepareTypeTestsCommand
