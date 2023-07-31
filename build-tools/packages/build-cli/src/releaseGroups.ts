@@ -13,7 +13,7 @@
  *
  * @internal
  */
-export type ReleasePackage = string;
+export type ReleasePackageName = string;
 
 /**
  * An array of known release groups.

@@ -25,7 +25,7 @@ import path from "path";
 import { format as prettier, resolveConfig as resolvePrettierConfig } from "prettier";
 import * as semver from "semver";
 
-import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../releaseGroups";
+import { ReleaseGroup, ReleasePackageName, isReleaseGroup } from "../releaseGroups";
 import { DependencyUpdateType } from "./bump";
 import { indentString } from "./text";
 import { Context } from "../context";
@@ -40,7 +40,7 @@ import { VersionDetails } from "../fluidRepo";
  * @internal
  */
 export interface PackageVersionMap {
-	[packageName: ReleasePackage | ReleaseGroup]: ReleaseVersion;
+	[packageName: ReleasePackageName | ReleaseGroup]: ReleaseVersion;
 }
 
 /**
@@ -63,8 +63,8 @@ export interface PackageVersionMap {
 // eslint-disable-next-line max-params
 export async function npmCheckUpdates(
 	context: Context,
-	releaseGroup: ReleaseGroup | ReleasePackage | undefined,
-	depsToUpdate: ReleasePackage[] | RegExp[],
+	releaseGroup: ReleaseGroup | ReleasePackageName | undefined,
+	depsToUpdate: ReleasePackageName[] | RegExp[],
 	releaseGroupFilter: ReleaseGroup | undefined,
 	depUpdateType: DependencyUpdateType,
 	// eslint-disable-next-line default-param-last
@@ -222,7 +222,7 @@ export interface PreReleaseDependencies {
 	/**
 	 * A map of release packages to a version string. Only includes independent packages.
 	 */
-	packages: Map<ReleasePackage, string>;
+	packages: Map<ReleasePackageName, string>;
 	/**
 	 * True if there are no pre-release dependencies. False otherwise.
 	 */
@@ -240,13 +240,13 @@ export interface PreReleaseDependencies {
  */
 export async function getPreReleaseDependencies(
 	context: Context,
-	releaseGroup: ReleaseGroup | ReleasePackage,
+	releaseGroup: ReleaseGroup | ReleasePackageName,
 	// depsToUpdate: ReleasePackage[],
 ): Promise<PreReleaseDependencies> {
-	const prereleasePackages = new Map<ReleasePackage, string>();
+	const prereleasePackages = new Map<ReleasePackageName, string>();
 	const prereleaseGroups = new Map<ReleaseGroup, string>();
 	let packagesToCheck: Package[];
-	let depsToUpdate: ReleasePackage[];
+	let depsToUpdate: ReleasePackageName[];
 
 	if (isReleaseGroup(releaseGroup)) {
 		const monorepo = context.repo.releaseGroups.get(releaseGroup);
@@ -425,7 +425,7 @@ export function filterVersionsOlderThan(
  */
 export function getFluidDependencies(
 	context: Context,
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
+	releaseGroupOrPackage: ReleaseGroup | ReleasePackageName,
 ): [releaseGroups: PackageVersionMap, packages: PackageVersionMap] {
 	const releaseGroups: PackageVersionMap = {};
 	const packages: PackageVersionMap = {};

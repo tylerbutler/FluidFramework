@@ -8,7 +8,7 @@ import semver from "semver";
 import { sortPackageJson as sortJson } from "sort-package-json";
 
 import { sortVersions } from "../../lib";
-import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../../releaseGroups";
+import { ReleaseGroup, ReleasePackageName, isReleaseGroup } from "../../releaseGroups";
 import { ReleaseReportBaseCommand, ReleaseSelectionMode } from "./report";
 
 /**
@@ -32,7 +32,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 	};
 
 	defaultMode: ReleaseSelectionMode = "inRepo";
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackage | undefined;
+	releaseGroupOrPackage: ReleaseGroup | ReleasePackageName | undefined;
 
 	static examples = [
 		{
@@ -46,7 +46,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 	];
 
 	async run(): Promise<{
-		packageOrReleaseGroup: ReleaseGroup | ReleasePackage;
+		packageOrReleaseGroup: ReleaseGroup | ReleasePackageName;
 		title: string;
 		tag: string;
 		date?: Date;

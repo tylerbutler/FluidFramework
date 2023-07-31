@@ -36,7 +36,7 @@ import {
 	toReportKind,
 } from "../../lib";
 import { CommandLogger } from "../../logging";
-import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../../releaseGroups";
+import { ReleaseGroup, ReleasePackageName, isReleaseGroup } from "../../releaseGroups";
 import { Context } from "../../context";
 import { VersionDetails } from "../../fluidRepo";
 
@@ -93,7 +93,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 	/**
 	 * The release group or package that is being reported on.
 	 */
-	protected abstract releaseGroupOrPackage: ReleaseGroup | ReleasePackage | undefined;
+	protected abstract releaseGroupOrPackage: ReleaseGroup | ReleasePackageName | undefined;
 
 	/**
 	 * Returns true if the `date` is within `days` days of the current date.
@@ -119,7 +119,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 		context: Context,
 		// eslint-disable-next-line default-param-last
 		mode: ReleaseSelectionMode = this.defaultMode,
-		releaseGroupOrPackage?: ReleaseGroup | ReleasePackage,
+		releaseGroupOrPackage?: ReleaseGroup | ReleasePackageName,
 		includeDependencies = true,
 	): Promise<PackageReleaseData> {
 		const versionData: PackageReleaseData = {};
@@ -131,7 +131,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 		}
 
 		const rgs: ReleaseGroup[] = [];
-		const pkgs: ReleasePackage[] = [];
+		const pkgs: ReleasePackageName[] = [];
 
 		let rgVerMap: PackageVersionMap | undefined;
 		let pkgVerMap: PackageVersionMap | undefined;
@@ -206,7 +206,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 	 */
 	private async collectRawReleaseData(
 		context: Context,
-		releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
+		releaseGroupOrPackage: ReleaseGroup | ReleasePackageName,
 		repoVersion: string,
 		latestReleaseChooseMode?: ReleaseSelectionMode,
 	): Promise<RawReleaseData | undefined> {
@@ -396,7 +396,7 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 	};
 
 	defaultMode: ReleaseSelectionMode = "inRepo";
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackage | undefined;
+	releaseGroupOrPackage: ReleaseGroup | ReleasePackageName | undefined;
 
 	public async run(): Promise<void> {
 		const flags = this.flags;

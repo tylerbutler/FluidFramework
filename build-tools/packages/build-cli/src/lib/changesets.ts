@@ -9,7 +9,7 @@ import globby from "globby";
 import matter from "gray-matter";
 import path from "node:path";
 
-import { ReleasePackage } from "../releaseGroups";
+import { ReleasePackageName } from "../releaseGroups";
 import { Repository } from "./git";
 import { Logger } from "../logging";
 
@@ -109,8 +109,8 @@ export async function loadChangesets(dir: string, log?: Logger): Promise<Changes
  */
 export function groupByPackage(
 	changesets: ChangesetEntry[],
-): Map<ReleasePackage, ChangesetEntry[]> {
-	const changesetMap = new Map<ReleasePackage, ChangesetEntry[]>();
+): Map<ReleasePackageName, ChangesetEntry[]> {
+	const changesetMap = new Map<ReleasePackageName, ChangesetEntry[]>();
 	for (const changeset of changesets) {
 		const entries = changesetMap.get(changeset.pkg) ?? [];
 		entries.push(changeset);
