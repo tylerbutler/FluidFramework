@@ -180,7 +180,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 			const releasePackage = rgOrPackage;
 
 			if (releasePackage.monoRepo !== undefined) {
-				const rg = releasePackage.monoRepo.kind;
+				const rg = releasePackage.monoRepo.name;
 				this.errorLog(`${releasePackage.name} is part of the ${rg} release group.`);
 				this.errorLog(
 					`If you want to bump that package, run the following command to bump the whole release group:\n\n    ${

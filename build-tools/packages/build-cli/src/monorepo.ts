@@ -12,8 +12,10 @@ import YAML from "yaml";
 
 import { Logger, defaultLogger } from "./logging";
 import { Package, PackageJson, PackageManager } from "./package";
-import { execWithErrorAsync } from "./exec";
+import { execWithErrorAsync, rimrafWithErrorAsync } from "./exec";
 import { IFluidBuildConfig, IFluidRepoPackage } from "./fluidRepo";
+import { ReleaseGroupName, isReleaseGroup } from "./releaseGroups";
+import { brand } from "./brand";
 
 /**
  * A monorepo is a collection of packages that are versioned and released together.
@@ -40,6 +42,7 @@ export class MonoRepo {
 	public readonly version: string;
 	public readonly workspaceGlobs: string[];
 	private readonly _packageJson: PackageJson;
+	private readonly _name: ReleaseGroupName;
 
 	static load(group: string, repoPackage: IFluidRepoPackage, log: Logger) {
 		const { directory, ignoredDirs, defaultInterdependencyRange } = repoPackage;
@@ -81,6 +84,10 @@ export class MonoRepo {
 			return;
 		}
 
+		if(!isReleaseGroup(group)) {
+			return;
+		}
+
 		return new MonoRepo(
 			group,
 			directory,
@@ -101,7 +108,7 @@ export class MonoRepo {
 	 * @param ignoredDirs - Paths to ignore when loading the monorepo.
 	 */
 	constructor(
-		public readonly kind: string,
+		name: string | ReleaseGroupName,
 		public readonly repoPath: string,
 		public readonly interdependencyRange: InterdependencyRange,
 		private readonly packageManager: PackageManager,
@@ -109,6 +116,7 @@ export class MonoRepo {
 		ignoredDirs?: string[],
 		private readonly logger: Logger = defaultLogger,
 	) {
+		this._name = isReleaseGroup(name) ? name : brand(name);
 		this.version = "";
 		this.workspaceGlobs = [];
 		const pnpmWorkspace = path.join(repoPath, "pnpm-workspace.yaml");
@@ -145,7 +153,7 @@ export class MonoRepo {
 			}
 
 			if (lerna.version !== undefined) {
-				logger.verbose(`${kind}: Loading version (${lerna.version}) from ${lernaPath}`);
+				logger.verbose(`${name}: Loading version (${lerna.version}) from ${lernaPath}`);
 				this.version = lerna.version;
 				versionFromLerna = true;
 			}
@@ -159,13 +167,13 @@ export class MonoRepo {
 		if (!versionFromLerna) {
 			this.version = this._packageJson.version;
 			logger.verbose(
-				`${kind}: Loading version (${this._packageJson.version}) from ${packagePath}`,
+				`${name}: Loading version (${this._packageJson.version}) from ${packagePath}`,
 			);
 		}
 
-		logger.verbose(`${kind}: Loading packages from ${packageManager}`);
+		logger.verbose(`${name}: Loading packages from ${packageManager}`);
 		for (const pkgDir of packageDirs) {
-			this.packages.push(Package.load(path.join(pkgDir, "package.json"), kind, this));
+			this.packages.push(Package.load(path.join(pkgDir, "package.json"), name, this));
 		}
 	}
 
@@ -185,15 +193,20 @@ export class MonoRepo {
 		return this._packageJson.fluidBuild;
 	}
 
+	public get name(): ReleaseGroupName {
+		return this._name;
+	}
+
 	public getNodeModulePath() {
 		return path.join(this.repoPath, "node_modules");
 	}
 
 	public async install() {
-		this.logger.info(`${this.kind}: Installing - ${this.installCommand}`);
+		this.logger.info(`${this.name}: Installing - ${this.installCommand}`);
 		return execWithErrorAsync(this.installCommand, { cwd: this.repoPath }, this.repoPath);
 	}
-	// public async uninstall() {
-	// 	return rimrafWithErrorAsync(this.getNodeModulePath(), this.repoPath);
-	// }
+
+	public async uninstall() {
+		return rimrafWithErrorAsync(this.getNodeModulePath(), this.repoPath);
+	}
 }

@@ -3,6 +3,10 @@
  * Licensed under the MIT License.
  */
 
+// import { type Brand, type Flavor } from "type-plus";
+// import { Brand } from "@rushstack/node-core-library";
+import { Brand, brand } from "./brand";
+
 /**
  * A type that represents independent packages (as opposed to those that are part of a release group).
  *
@@ -15,25 +19,29 @@
  */
 export type ReleasePackage = string;
 
+export type ReleasePackageName = Brand<string, "ReleasePackageName">;
+
+export type ReleaseGroupName = Brand<string, "ReleaseGroupName">;
+
 /**
  * An array of known release groups.
  *
  * @internal
  */
-export const knownReleaseGroups = [
-	"build-tools",
-	"client",
-	"server",
-	"gitrest",
-	"historian",
-] as const;
+export const knownReleaseGroups: ReleaseGroupName[] = [
+	brand("build-tools"),
+	brand("client"),
+	brand("server"),
+	brand("gitrest"),
+	brand("historian"),
+];
 
 /**
  * A type that represents release groups.
  *
  * @internal
  */
-export type ReleaseGroup = typeof knownReleaseGroups[number] | string;
+export type ReleaseGroup = typeof knownReleaseGroups[number];
 
 /**
  * A type guard used to determine if a string is a ReleaseGroup.
