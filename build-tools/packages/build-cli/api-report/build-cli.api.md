@@ -10,10 +10,10 @@ import { run } from '@oclif/core';
 export const knownReleaseGroups: readonly ["build-tools", "client", "server", "gitrest", "historian"];
 
 // @internal
-export type ReleaseGroup = typeof knownReleaseGroups[number] | string;
+export type ReleaseGroupName = typeof knownReleaseGroups[number] | string;
 
 // @internal
-export type ReleasePackage = string;
+export type ReleasePackageName = string;
 
 export { run }
 

@@ -18,7 +18,12 @@ import {
 	toVirtualPatchScheme,
 } from "@fluid-tools/version-tools";
 
-import { ReleaseGroupName, ReleasePackageName, ReleaseSource, isReleaseGroup } from "../releaseGroups";
+import {
+	ReleaseGroupName,
+	ReleasePackageName,
+	ReleaseSource,
+	isReleaseGroup,
+} from "../releaseGroups";
 import { DependencyUpdateType } from "./bump";
 import { Context } from "../context";
 
