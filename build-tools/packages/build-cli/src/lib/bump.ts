@@ -14,7 +14,7 @@ import {
 
 import { setVersion } from "./package";
 import { Context } from "../context";
-import { ReleaseGroup } from "../monorepo";
+import { ReleaseGroup } from "../releaseGroups";
 import { Package } from "../package";
 import { Logger } from "../logging";
 

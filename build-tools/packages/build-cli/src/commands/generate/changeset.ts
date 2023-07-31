@@ -183,7 +183,7 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 			}
 
 			choices.push(
-				{ title: `${chalk.bold(rg.kind)}`, heading: true, disabled: true },
+				{ title: `${chalk.bold(rg.name)}`, heading: true, disabled: true },
 				...rg.packages
 					.filter((pkg) => (all ? true : isIncludedByDefault(pkg)))
 					.sort((a, b) => packageComparer(a, b, changedPackages))
@@ -216,9 +216,9 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 
 		// Finally list the remaining (unchanged) release groups and their packages
 		for (const rg of context.repo.releaseGroups.values()) {
-			if (!changedReleaseGroups.includes(rg.kind)) {
+			if (!changedReleaseGroups.includes(rg.name)) {
 				choices.push(
-					{ title: `${chalk.bold(rg.kind)}`, heading: true, disabled: true },
+					{ title: `${chalk.bold(rg.name)}`, heading: true, disabled: true },
 					...rg.packages
 						.filter((pkg) => (all ? true : isIncludedByDefault(pkg)))
 						.sort((a, b) => packageComparer(a, b, changedPackages))

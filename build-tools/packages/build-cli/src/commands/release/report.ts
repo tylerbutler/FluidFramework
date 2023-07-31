@@ -547,7 +547,7 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 						previousVersion: prevVer === DEFAULT_MIN_VERSION ? undefined : prevVer,
 						date: latestDate,
 						releaseType: bumpType,
-						releaseGroup: pkg.monoRepo?.kind,
+						releaseGroup: pkg.releaseGroup?.name,
 						isNewRelease,
 						ranges,
 					};

@@ -30,7 +30,7 @@ import {
 	setVersion,
 } from "../lib";
 import { Package } from "../package";
-import { ReleaseGroup } from "../monorepo";
+import { ReleaseGroup } from "../releaseGroups";
 import { FluidRepo } from "../fluidRepo";
 
 export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
@@ -179,8 +179,8 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		} else {
 			const releasePackage = rgOrPackage;
 
-			if (releasePackage.monoRepo !== undefined) {
-				const rg = releasePackage.monoRepo.kind;
+			if (releasePackage.releaseGroup !== undefined) {
+				const rg = releasePackage.releaseGroup.name;
 				this.errorLog(`${releasePackage.name} is part of the ${rg} release group.`);
 				this.errorLog(
 					`If you want to bump that package, run the following command to bump the whole release group:\n\n    ${

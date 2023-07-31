@@ -158,7 +158,7 @@ const selectPackagesFromContext = (
 	if (selection.independentPackages === true) {
 		for (const pkg of context.independentPackages) {
 			selected.push(
-				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, undefined, {
+				Package.load(pkg.packageJsonFileName, pkg.group, pkg.releaseGroup, undefined, {
 					kind: "independentPackage",
 				}),
 			);
@@ -169,7 +169,7 @@ const selectPackagesFromContext = (
 	for (const rg of selection.releaseGroups) {
 		for (const pkg of context.packagesInReleaseGroup(rg)) {
 			selected.push(
-				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, undefined, {
+				Package.load(pkg.packageJsonFileName, pkg.group, pkg.releaseGroup, undefined, {
 					kind: "releaseGroupChildPackage",
 				}),
 			);
@@ -185,7 +185,9 @@ const selectPackagesFromContext = (
 		const dir = packages[0].directory;
 		const pkg = Package.loadDir(dir, rg);
 		selected.push(
-			Package.loadDir(dir, rg, pkg.monoRepo, undefined, { kind: "releaseGroupRootPackage" }),
+			Package.loadDir(dir, rg, pkg.releaseGroup, undefined, {
+				kind: "releaseGroupRootPackage",
+			}),
 		);
 	}
 

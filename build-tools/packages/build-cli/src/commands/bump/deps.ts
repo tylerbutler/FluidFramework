@@ -24,8 +24,7 @@ import {
 	isDependencyUpdateType,
 	npmCheckUpdates,
 } from "../../lib";
-import { ReleaseGroup } from "../../monorepo";
-import { ReleaseGroupName, isReleaseGroup } from "../../releaseGroups";
+import { ReleaseGroup, ReleaseGroupName, isReleaseGroup } from "../../releaseGroups";
 
 /**
  * Update the dependency version of a specified package or release group. That is, if one or more packages in the repo
@@ -161,8 +160,8 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 				this.error(`Package not found: ${rgOrPackageName}`);
 			}
 
-			if (pkg.monoRepo !== undefined) {
-				const rg = pkg.monoRepo.kind;
+			if (pkg.releaseGroup !== undefined) {
+				const rg = pkg.releaseGroup.name;
 				this.errorLog(`${pkg.name} is part of the ${rg} release group.`);
 				this.errorLog(
 					`If you want to update dependencies on that package, run the following command:\n\n    ${
@@ -210,9 +209,9 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 			const updatedReleaseGroups: ReleaseGroupName[] = [
 				...new Set(
 					updatedPackages
-						.filter((p) => p.monoRepo !== undefined)
+						.filter((p) => p.releaseGroup !== undefined)
 						// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-						.map((p) => p.monoRepo!.kind),
+						.map((p) => p.releaseGroup!.name),
 				),
 			];
 
@@ -223,7 +222,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 			}
 
 			for (const pkg of updatedPackages) {
-				if (pkg.monoRepo === undefined) {
+				if (pkg.releaseGroup === undefined) {
 					changedVersionsString.push(indentString(`${pkg.name}`));
 				}
 			}

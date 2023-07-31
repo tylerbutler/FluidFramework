@@ -13,8 +13,8 @@ import * as path from "node:path";
 
 import { getFluidBuildConfig } from "./fluidUtils";
 import { Logger, defaultLogger } from "./logging";
-import { ReleaseGroup } from "./monorepo";
 import { Package, Packages } from "./package";
+import { ReleaseGroup } from "./releaseGroups";
 
 export function lookUpDirSync(dir: string, callback: (currentDir: string) => boolean) {
 	let curr = path.resolve(dir);
@@ -298,9 +298,9 @@ export class FluidRepo {
 		const installPromises: Promise<ExecAsyncResult>[] = [];
 		for (const pkg of packages) {
 			// eslint-disable-next-line no-await-in-loop
-			if ((!check || !(await pkg.checkInstall(false))) && pkg.monoRepo !== undefined) {
-				installedMonoRepo.add(pkg.monoRepo);
-				installPromises.push(pkg.monoRepo.install());
+			if ((!check || !(await pkg.checkInstall(false))) && pkg.releaseGroup !== undefined) {
+				installedMonoRepo.add(pkg.releaseGroup);
+				installPromises.push(pkg.releaseGroup.install());
 			}
 		}
 		const rets = await Promise.all(installPromises);

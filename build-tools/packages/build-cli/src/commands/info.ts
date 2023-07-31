@@ -51,9 +51,9 @@ export default class InfoCommand extends BaseCommand<typeof InfoCommand> {
 		];
 		const jsonData: PackageVersionList = {};
 		for (const pkg of packages) {
-			const version = pkg.monoRepo ? pkg.monoRepo.version : pkg.version;
+			const version = pkg.releaseGroup === undefined ? pkg.version : pkg.releaseGroup.version;
 			tableData.push([
-				pkg.monoRepo?.kind ?? "n/a",
+				pkg.releaseGroup?.name ?? "n/a",
 				pkg.name,
 				pkg.packageJson.private === true ? "-private-" : "",
 				version,

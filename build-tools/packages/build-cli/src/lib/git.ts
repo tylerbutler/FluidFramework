@@ -172,7 +172,7 @@ export class Repository {
 			.filter((pkg): pkg is Package => pkg !== undefined);
 
 		const changedReleaseGroups = [
-			...new Set(changedPackages.map((pkg) => pkg.monoRepo?.kind)),
+			...new Set(changedPackages.map((pkg) => pkg.releaseGroup?.name)),
 		].filter((rg): rg is ReleaseGroupName => rg !== undefined);
 
 		return {

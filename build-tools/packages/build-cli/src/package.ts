@@ -15,9 +15,9 @@ import sortPackageJson from "sort-package-json";
 import type { PackageJson as StandardPackageJson, SetRequired } from "type-fest";
 
 import { Logger } from "./logging";
-import { ReleaseGroup } from "./monorepo";
 import { IFluidBuildConfig, ITypeValidationConfig, lookUpDirSync } from "./fluidRepo";
 import { execWithErrorAsync } from "./exec";
+import { ReleaseGroup } from "./releaseGroups";
 
 export type PackageManager = "npm" | "pnpm" | "yarn";
 
@@ -88,14 +88,14 @@ export class Package {
 	 *
 	 * @param packageJsonFileName - The path to a package.json file.
 	 * @param group - A group that this package is a part of.
-	 * @param monoRepo - Set this if the package is part of a release group (monorepo).
+	 * @param releaseGroup - Set this if the package is part of a release group (monorepo).
 	 * @param additionalProperties - An object with additional properties that should be added to the class. This is
 	 * useful to augment the package class with additional properties.
 	 */
 	constructor(
 		public readonly packageJsonFileName: string,
 		public readonly group: string,
-		public readonly monoRepo?: ReleaseGroup,
+		public readonly releaseGroup?: ReleaseGroup,
 		private readonly log?: Logger,
 		additionalProperties: any = {},
 	) {
@@ -200,7 +200,8 @@ export class Package {
 	 * @returns full path for the lock file, or undefined if one doesn't exist
 	 */
 	public getLockFilePath() {
-		const directory = this.monoRepo ? this.monoRepo.repoPath : this.directory;
+		const directory =
+			this.releaseGroup === undefined ? this.directory : this.releaseGroup.repoPath;
 		const lockFileNames = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"];
 		for (const lockFileName of lockFileNames) {
 			const full = path.join(directory, lockFileName);
@@ -284,7 +285,7 @@ export class Package {
 	}
 
 	public async install() {
-		if (this.monoRepo) {
+		if (this.releaseGroup) {
 			throw new Error("Package in a monorepo shouldn't be installed");
 		}
 
@@ -395,7 +396,7 @@ export class Packages {
 		if (releaseGroup === undefined) {
 			return this.packages;
 		}
-		return this.packages.filter((p) => p.monoRepo?.kind === releaseGroup);
+		return this.packages.filter((p) => p.releaseGroup?.name === releaseGroup);
 	}
 
 	// public async forEachAsync<TResult>(

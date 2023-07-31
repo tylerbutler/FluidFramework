@@ -25,13 +25,17 @@ import path from "path";
 import { format as prettier, resolveConfig as resolvePrettierConfig } from "prettier";
 import * as semver from "semver";
 
-import { ReleaseGroupName, ReleasePackageName, isReleaseGroup } from "../releaseGroups";
+import {
+	ReleaseGroup,
+	ReleaseGroupName,
+	ReleasePackageName,
+	isReleaseGroup,
+} from "../releaseGroups";
 import { DependencyUpdateType } from "./bump";
 import { indentString } from "./text";
 import { Context } from "../context";
 import { Package, updatePackageJsonFile } from "../package";
 import { Logger } from "../logging";
-import { ReleaseGroup } from "../monorepo";
 import { VersionDetails } from "../fluidRepo";
 
 /**
@@ -117,7 +121,7 @@ export async function npmCheckUpdates(
 			}
 
 			log?.verbose(
-				`Adding ${releaseGroupRoot.workspaceGlobs.length} globs for release group ${releaseGroupRoot.kind}.`,
+				`Adding ${releaseGroupRoot.workspaceGlobs.length} globs for release group ${releaseGroupRoot.name}.`,
 			);
 
 			searchGlobs.push(
@@ -286,10 +290,10 @@ export async function getPreReleaseDependencies(
 					throw new Error(`Can't find package in context: ${depName}`);
 				}
 
-				if (depPkg.monoRepo === undefined) {
+				if (depPkg.releaseGroup === undefined) {
 					prereleasePackages.set(depPkg.name, depVersion);
 				} else {
-					prereleaseGroups.set(depPkg.monoRepo.kind, depVersion);
+					prereleaseGroups.set(depPkg.releaseGroup.name, depVersion);
 				}
 			}
 		}
@@ -351,7 +355,7 @@ export function generateReleaseGitTagName(
 	let tagName = "";
 
 	if (releaseGroupOrPackage instanceof ReleaseGroup) {
-		const kindLowerCase = releaseGroupOrPackage.kind.toLowerCase();
+		const kindLowerCase = releaseGroupOrPackage.name.toLowerCase();
 		tagName = `${kindLowerCase}_v${version ?? releaseGroupOrPackage.version}`;
 	} else if (releaseGroupOrPackage instanceof Package) {
 		tagName = `${PackageName.getUnscopedName(releaseGroupOrPackage.name)}_v${
@@ -458,8 +462,8 @@ export function getFluidDependencies(
 				throw new Error(`Failed to parse depVersion: ${dep.version}`);
 			}
 
-			if (pkg.monoRepo !== undefined) {
-				releaseGroups[pkg.monoRepo.kind] = newVersion.version;
+			if (pkg.releaseGroup !== undefined) {
+				releaseGroups[pkg.releaseGroup.name] = newVersion.version;
 				continue;
 			}
 
@@ -503,7 +507,7 @@ export async function setVersion(
 
 	// Run npm version in each package to set its version in package.json. Also regenerates packageVersion.ts if needed.
 	if (releaseGroupOrPackage instanceof ReleaseGroup) {
-		name = releaseGroupOrPackage.kind;
+		name = releaseGroupOrPackage.name;
 		options = {
 			cwd: releaseGroupOrPackage.repoPath,
 			stdio: "inherit",
@@ -657,7 +661,7 @@ export async function setPackageDependencies(
 	for (const { name, dev } of pkg.combinedDependencies) {
 		const dep = dependencyVersionMap.get(name);
 		if (dep !== undefined) {
-			const isSameReleaseGroup = ReleaseGroup.isSame(dep?.pkg.monoRepo, pkg.monoRepo);
+			const isSameReleaseGroup = ReleaseGroup.isSame(dep?.pkg.releaseGroup, pkg.releaseGroup);
 			if (!isSameReleaseGroup || (updateWithinSameReleaseGroup && isSameReleaseGroup)) {
 				const dependencies = dev
 					? pkg.packageJson.devDependencies

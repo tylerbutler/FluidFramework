@@ -9,8 +9,7 @@ import { Logger, defaultLogger } from "./logging";
 import { Package } from "./package";
 import { Timer } from "./timer";
 import { Repository } from "./lib";
-import { ReleaseGroup } from "./monorepo";
-import { isReleaseGroup } from "./releaseGroups";
+import { isReleaseGroup, ReleaseGroup } from "./releaseGroups";
 import { PackageName } from "@rushstack/node-core-library";
 import { getVersionFromTag } from "./tags";
 
@@ -47,7 +46,7 @@ export class Context {
 	 * @returns An array of packages that belong to the release group
 	 */
 	public packagesInReleaseGroup(releaseGroup: string): Package[] {
-		const packages = this.packages.filter((pkg) => pkg.monoRepo?.kind === releaseGroup);
+		const packages = this.packages.filter((pkg) => pkg.releaseGroup?.name === releaseGroup);
 		return packages;
 	}
 
@@ -61,7 +60,7 @@ export class Context {
 		const packages: Package[] =
 			releaseGroup instanceof Package
 				? this.packages.filter((p) => p.name !== releaseGroup.name)
-				: this.packages.filter((pkg) => pkg.monoRepo?.kind !== releaseGroup);
+				: this.packages.filter((pkg) => pkg.releaseGroup?.name !== releaseGroup);
 
 		return packages;
 	}
@@ -70,7 +69,7 @@ export class Context {
 	 * @returns An array of packages in the repo that are not associated with a release group.
 	 */
 	public get independentPackages(): Package[] {
-		const packages = this.packages.filter((pkg) => pkg.monoRepo === undefined);
+		const packages = this.packages.filter((pkg) => pkg.releaseGroup === undefined);
 		return packages;
 	}
 
@@ -87,6 +86,7 @@ export class Context {
 	 */
 	public findPackageOrReleaseGroup(name: string): Package | ReleaseGroup | undefined {
 		if (isReleaseGroup(name)) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 			return this.repo.releaseGroups.get(name);
 		}
 

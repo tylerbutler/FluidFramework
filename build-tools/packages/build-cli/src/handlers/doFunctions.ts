@@ -11,11 +11,15 @@ import { bumpVersionScheme, detectVersionScheme } from "@fluid-tools/version-too
 import { difference, getPreReleaseDependencies, npmCheckUpdates, setVersion } from "../lib";
 import { CommandLogger } from "../logging";
 import { MachineState } from "../machines";
-import { ReleaseGroupName, ReleasePackageName, isReleaseGroup } from "../releaseGroups";
+import {
+	ReleaseGroup,
+	ReleaseGroupName,
+	ReleasePackageName,
+	isReleaseGroup,
+} from "../releaseGroups";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler";
 import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers";
 import { FluidRepo } from "../fluidRepo";
-import { ReleaseGroup } from "../monorepo";
 
 /**
  * Bumps any pre-release dependencies that have been released.
@@ -72,10 +76,10 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 	const updatedPkgs = new Set<ReleasePackageName>();
 
 	for (const pkg of updatedPackages) {
-		if (pkg.monoRepo === undefined) {
+		if (pkg.releaseGroup === undefined) {
 			updatedPkgs.add(pkg.name);
 		} else {
-			updatedReleaseGroups.add(pkg.monoRepo.kind);
+			updatedReleaseGroups.add(pkg.releaseGroup.name);
 		}
 	}
 
@@ -87,10 +91,10 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 			continue;
 		}
 
-		if (pkg.monoRepo === undefined) {
+		if (pkg.releaseGroup === undefined) {
 			updatedDeps.add(pkg.name);
 		} else {
-			updatedDeps.add(pkg.monoRepo.kind);
+			updatedDeps.add(pkg.releaseGroup.name);
 		}
 	}
 
