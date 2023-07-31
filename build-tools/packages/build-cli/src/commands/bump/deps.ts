@@ -25,7 +25,7 @@ import {
 	npmCheckUpdates,
 } from "../../lib";
 import { MonoRepo } from "../../monorepo";
-import { ReleaseGroup, isReleaseGroup } from "../../releaseGroups";
+import { ReleaseGroupName, isReleaseGroup } from "../../releaseGroups";
 
 /**
  * Update the dependency version of a specified package or release group. That is, if one or more packages in the repo
@@ -207,7 +207,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 				this.warning(`Skipping installation. Lockfiles might be outdated.`);
 			}
 
-			const updatedReleaseGroups: ReleaseGroup[] = [
+			const updatedReleaseGroups: ReleaseGroupName[] = [
 				...new Set(
 					updatedPackages
 						.filter((p) => p.monoRepo !== undefined)

@@ -33,14 +33,14 @@ export const knownReleaseGroups = [
  *
  * @internal
  */
-export type ReleaseGroup = typeof knownReleaseGroups[number] | string;
+export type ReleaseGroupName = typeof knownReleaseGroups[number] | string;
 
 /**
  * A type guard used to determine if a string is a ReleaseGroup.
  *
  * @internal
  */
-export function isReleaseGroup(str: string | undefined): str is ReleaseGroup {
+export function isReleaseGroup(str: string | undefined): str is ReleaseGroupName {
 	return str === undefined ? false : knownReleaseGroups.includes(str as any);
 }
 

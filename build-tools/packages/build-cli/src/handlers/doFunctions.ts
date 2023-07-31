@@ -11,7 +11,7 @@ import { bumpVersionScheme, detectVersionScheme } from "@fluid-tools/version-too
 import { difference, getPreReleaseDependencies, npmCheckUpdates, setVersion } from "../lib";
 import { CommandLogger } from "../logging";
 import { MachineState } from "../machines";
-import { ReleaseGroup, ReleasePackageName, isReleaseGroup } from "../releaseGroups";
+import { ReleaseGroupName, ReleasePackageName, isReleaseGroup } from "../releaseGroups";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler";
 import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers";
 import { FluidRepo } from "../fluidRepo";
@@ -68,7 +68,7 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 	);
 
 	// Divide the updated packages into individual packages and release groups
-	const updatedReleaseGroups = new Set<ReleaseGroup>();
+	const updatedReleaseGroups = new Set<ReleaseGroupName>();
 	const updatedPkgs = new Set<ReleasePackageName>();
 
 	for (const pkg of updatedPackages) {

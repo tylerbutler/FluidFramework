@@ -25,7 +25,7 @@ import path from "path";
 import { format as prettier, resolveConfig as resolvePrettierConfig } from "prettier";
 import * as semver from "semver";
 
-import { ReleaseGroup, ReleasePackageName, isReleaseGroup } from "../releaseGroups";
+import { ReleaseGroupName, ReleasePackageName, isReleaseGroup } from "../releaseGroups";
 import { DependencyUpdateType } from "./bump";
 import { indentString } from "./text";
 import { Context } from "../context";
@@ -40,7 +40,7 @@ import { VersionDetails } from "../fluidRepo";
  * @internal
  */
 export interface PackageVersionMap {
-	[packageName: ReleasePackageName | ReleaseGroup]: ReleaseVersion;
+	[packageName: ReleasePackageName | ReleaseGroupName]: ReleaseVersion;
 }
 
 /**
@@ -63,9 +63,9 @@ export interface PackageVersionMap {
 // eslint-disable-next-line max-params
 export async function npmCheckUpdates(
 	context: Context,
-	releaseGroup: ReleaseGroup | ReleasePackageName | undefined,
+	releaseGroup: ReleaseGroupName | ReleasePackageName | undefined,
 	depsToUpdate: ReleasePackageName[] | RegExp[],
-	releaseGroupFilter: ReleaseGroup | undefined,
+	releaseGroupFilter: ReleaseGroupName | undefined,
 	depUpdateType: DependencyUpdateType,
 	// eslint-disable-next-line default-param-last
 	prerelease = false,
@@ -218,7 +218,7 @@ export interface PreReleaseDependencies {
 	/**
 	 * A map of release groups to a version string.
 	 */
-	releaseGroups: Map<ReleaseGroup, string>;
+	releaseGroups: Map<ReleaseGroupName, string>;
 	/**
 	 * A map of release packages to a version string. Only includes independent packages.
 	 */
@@ -240,11 +240,11 @@ export interface PreReleaseDependencies {
  */
 export async function getPreReleaseDependencies(
 	context: Context,
-	releaseGroup: ReleaseGroup | ReleasePackageName,
+	releaseGroup: ReleaseGroupName | ReleasePackageName,
 	// depsToUpdate: ReleasePackage[],
 ): Promise<PreReleaseDependencies> {
 	const prereleasePackages = new Map<ReleasePackageName, string>();
-	const prereleaseGroups = new Map<ReleaseGroup, string>();
+	const prereleaseGroups = new Map<ReleaseGroupName, string>();
 	let packagesToCheck: Package[];
 	let depsToUpdate: ReleasePackageName[];
 
@@ -425,7 +425,7 @@ export function filterVersionsOlderThan(
  */
 export function getFluidDependencies(
 	context: Context,
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackageName,
+	releaseGroupOrPackage: ReleaseGroupName | ReleasePackageName,
 ): [releaseGroups: PackageVersionMap, packages: PackageVersionMap] {
 	const releaseGroups: PackageVersionMap = {};
 	const packages: PackageVersionMap = {};

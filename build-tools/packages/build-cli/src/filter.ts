@@ -6,7 +6,7 @@
 import path from "node:path";
 import { filterFlags, selectionFlags } from "./flags";
 import { Package } from "./package";
-import { ReleaseGroup, knownReleaseGroups } from "./releaseGroups";
+import { ReleaseGroupName, knownReleaseGroups } from "./releaseGroups";
 import { Context } from "./context";
 
 /**
@@ -21,12 +21,12 @@ export interface PackageSelectionCriteria {
 	/**
 	 * An array of release groups whose packages are selected.
 	 */
-	releaseGroups: ReleaseGroup[];
+	releaseGroups: ReleaseGroupName[];
 
 	/**
 	 * An array of release groups whose root packages are selected.
 	 */
-	releaseGroupRoots: ReleaseGroup[];
+	releaseGroupRoots: ReleaseGroupName[];
 
 	/**
 	 * If set, only selects the single package in this directory.

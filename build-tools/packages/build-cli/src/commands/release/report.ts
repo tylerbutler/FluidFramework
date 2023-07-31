@@ -36,7 +36,7 @@ import {
 	toReportKind,
 } from "../../lib";
 import { CommandLogger } from "../../logging";
-import { ReleaseGroup, ReleasePackageName, isReleaseGroup } from "../../releaseGroups";
+import { ReleaseGroupName, ReleasePackageName, isReleaseGroup } from "../../releaseGroups";
 import { Context } from "../../context";
 import { VersionDetails } from "../../fluidRepo";
 
@@ -93,7 +93,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 	/**
 	 * The release group or package that is being reported on.
 	 */
-	protected abstract releaseGroupOrPackage: ReleaseGroup | ReleasePackageName | undefined;
+	protected abstract releaseGroupOrPackage: ReleaseGroupName | ReleasePackageName | undefined;
 
 	/**
 	 * Returns true if the `date` is within `days` days of the current date.
@@ -119,7 +119,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 		context: Context,
 		// eslint-disable-next-line default-param-last
 		mode: ReleaseSelectionMode = this.defaultMode,
-		releaseGroupOrPackage?: ReleaseGroup | ReleasePackageName,
+		releaseGroupOrPackage?: ReleaseGroupName | ReleasePackageName,
 		includeDependencies = true,
 	): Promise<PackageReleaseData> {
 		const versionData: PackageReleaseData = {};
@@ -130,7 +130,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 			);
 		}
 
-		const rgs: ReleaseGroup[] = [];
+		const rgs: ReleaseGroupName[] = [];
 		const pkgs: ReleasePackageName[] = [];
 
 		let rgVerMap: PackageVersionMap | undefined;
@@ -206,7 +206,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 	 */
 	private async collectRawReleaseData(
 		context: Context,
-		releaseGroupOrPackage: ReleaseGroup | ReleasePackageName,
+		releaseGroupOrPackage: ReleaseGroupName | ReleasePackageName,
 		repoVersion: string,
 		latestReleaseChooseMode?: ReleaseSelectionMode,
 	): Promise<RawReleaseData | undefined> {
@@ -396,7 +396,7 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 	};
 
 	defaultMode: ReleaseSelectionMode = "inRepo";
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackageName | undefined;
+	releaseGroupOrPackage: ReleaseGroupName | ReleasePackageName | undefined;
 
 	public async run(): Promise<void> {
 		const flags = this.flags;
@@ -570,10 +570,10 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 
 	private generateReleaseTable(
 		reportData: ReleaseReport,
-		initialReleaseGroup?: ReleaseGroup,
+		initialReleaseGroup?: ReleaseGroupName,
 	): string[][] {
 		const tableData: string[][] = [];
-		const releaseGroups: ReleaseGroup[] = [];
+		const releaseGroups: ReleaseGroupName[] = [];
 
 		for (const [pkgName, verDetails] of Object.entries(reportData)) {
 			const {
@@ -652,7 +652,7 @@ export interface RawReleaseData {
 function generateReportFileName(
 	kind: ReportKind,
 	releaseVersion: ReleaseVersion,
-	releaseGroup?: ReleaseGroup,
+	releaseGroup?: ReleaseGroupName,
 ): string {
 	if (releaseGroup === undefined && releaseVersion === undefined) {
 		throw new Error(`Both releaseGroup and releaseVersion were undefined.`);
@@ -672,7 +672,7 @@ async function writeReport(
 	report: ReleaseReport,
 	kind: ReportKind,
 	dir: string,
-	releaseGroup?: ReleaseGroup,
+	releaseGroup?: ReleaseGroupName,
 	log?: CommandLogger,
 ): Promise<void> {
 	const version =

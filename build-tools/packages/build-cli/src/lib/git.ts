@@ -13,7 +13,7 @@ import type { SetRequired } from "type-fest";
 import { Context } from "../context";
 import { CommandLogger } from "../logging";
 import { Package } from "../package";
-import { ReleaseGroup } from "../releaseGroups";
+import { ReleaseGroupName } from "../releaseGroups";
 import { parseISO } from "date-fns";
 
 /**
@@ -154,7 +154,7 @@ export class Repository {
 	): Promise<{
 		files: string[];
 		dirs: string[];
-		releaseGroups: ReleaseGroup[];
+		releaseGroups: ReleaseGroupName[];
 		packages: Package[];
 	}> {
 		const files = await this.getChangedFilesSinceRef(ref, remote);
@@ -173,7 +173,7 @@ export class Repository {
 
 		const changedReleaseGroups = [
 			...new Set(changedPackages.map((pkg) => pkg.monoRepo?.kind)),
-		].filter((rg): rg is ReleaseGroup => rg !== undefined);
+		].filter((rg): rg is ReleaseGroupName => rg !== undefined);
 
 		return {
 			files,

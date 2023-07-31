@@ -8,7 +8,7 @@ import semver from "semver";
 import { sortPackageJson as sortJson } from "sort-package-json";
 
 import { sortVersions } from "../../lib";
-import { ReleaseGroup, ReleasePackageName, isReleaseGroup } from "../../releaseGroups";
+import { ReleaseGroupName, ReleasePackageName, isReleaseGroup } from "../../releaseGroups";
 import { ReleaseReportBaseCommand, ReleaseSelectionMode } from "./report";
 
 /**
@@ -32,7 +32,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 	};
 
 	defaultMode: ReleaseSelectionMode = "inRepo";
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackageName | undefined;
+	releaseGroupOrPackage: ReleaseGroupName | ReleasePackageName | undefined;
 
 	static examples = [
 		{
@@ -46,7 +46,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 	];
 
 	async run(): Promise<{
-		packageOrReleaseGroup: ReleaseGroup | ReleasePackageName;
+		packageOrReleaseGroup: ReleaseGroupName | ReleasePackageName;
 		title: string;
 		tag: string;
 		date?: Date;
@@ -114,7 +114,7 @@ const pre = "refs/tags/";
  * @param input - A git tag as a string.
  * @returns A 3-tuple of the release group, the semver version, and the original tag.
  */
-const parseTag = (input: string): [ReleaseGroup, semver.SemVer, string] => {
+const parseTag = (input: string): [ReleaseGroupName, semver.SemVer, string] => {
 	const tag = input.startsWith(pre) ? input.slice(pre.length) : input;
 	const [rg, ver] = tag.split("_v");
 	if (!isReleaseGroup(rg)) {
@@ -130,7 +130,7 @@ const parseTag = (input: string): [ReleaseGroup, semver.SemVer, string] => {
 };
 
 const getReleaseTitle = (
-	releaseGroup: ReleaseGroup,
+	releaseGroup: ReleaseGroupName,
 	version: semver.SemVer,
 	releaseType: VersionBumpType,
 ): string => {

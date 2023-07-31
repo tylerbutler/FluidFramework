@@ -14,7 +14,7 @@ import {
 } from "@fluid-tools/version-tools";
 
 import { DependencyUpdateType } from "./lib";
-import { isReleaseGroup, knownReleaseGroups, ReleaseGroup } from "./releaseGroups";
+import { isReleaseGroup, knownReleaseGroups, ReleaseGroupName } from "./releaseGroups";
 
 /**
  * A re-usable CLI flag to parse the root directory of the Fluid repo.
@@ -28,7 +28,7 @@ export const rootPathFlag = Flags.custom({
 /**
  * A re-usable CLI flag to parse release groups.
  */
-export const releaseGroupFlag = Flags.custom<ReleaseGroup>({
+export const releaseGroupFlag = Flags.custom<ReleaseGroupName>({
 	char: "g",
 	description: "Name of a release group.",
 	aliases: ["releaseGroups"],
@@ -46,7 +46,7 @@ export const releaseGroupFlag = Flags.custom<ReleaseGroup>({
 /**
  * A re-usable CLI flag to parse release groups along with the value "all" to indicate all release groups.
  */
-export const releaseGroupWithAllFlag = Flags.custom<ReleaseGroup | "all">({
+export const releaseGroupWithAllFlag = Flags.custom<ReleaseGroupName | "all">({
 	char: "g",
 	description: "Name of a release group.",
 	aliases: ["releaseGroups"],

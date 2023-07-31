@@ -18,7 +18,7 @@ import {
 	toVirtualPatchScheme,
 } from "@fluid-tools/version-tools";
 
-import { ReleaseGroup, ReleasePackageName, ReleaseSource, isReleaseGroup } from "../releaseGroups";
+import { ReleaseGroupName, ReleasePackageName, ReleaseSource, isReleaseGroup } from "../releaseGroups";
 import { DependencyUpdateType } from "./bump";
 import { Context } from "../context";
 
@@ -38,7 +38,7 @@ import { Context } from "../context";
  */
 export async function createBumpBranch(
 	context: Context,
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackageName,
+	releaseGroupOrPackage: ReleaseGroupName | ReleasePackageName,
 	bumpType: VersionBumpType,
 ) {
 	const version = context.findPackageOrReleaseGroup(releaseGroupOrPackage)?.version;
@@ -64,7 +64,7 @@ export async function createBumpBranch(
  * @internal
  */
 export function generateBumpVersionBranchName(
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackageName,
+	releaseGroupOrPackage: ReleaseGroupName | ReleasePackageName,
 	bumpType: VersionChangeTypeExtended,
 	version: ReleaseVersion,
 	scheme?: VersionScheme,
@@ -95,9 +95,9 @@ export function generateBumpVersionBranchName(
  * @internal
  */
 export function generateBumpDepsBranchName(
-	bumpedDep: ReleaseGroup | ReleasePackageName,
+	bumpedDep: ReleaseGroupName | ReleasePackageName,
 	bumpType: DependencyUpdateType | VersionBumpType,
-	releaseGroup?: ReleaseGroup,
+	releaseGroup?: ReleaseGroupName,
 ): string {
 	const releaseGroupSegment = releaseGroup === undefined ? "" : `_${releaseGroup}`;
 	const branchName = `bump_deps_${bumpedDep.toLowerCase()}_${bumpType}${releaseGroupSegment}`;
@@ -119,7 +119,7 @@ export function generateBumpDepsBranchName(
  * @internal
  */
 export function generateReleaseBranchName(
-	releaseGroup: ReleaseGroup | ReleasePackageName,
+	releaseGroup: ReleaseGroupName | ReleasePackageName,
 	version: string,
 ): string {
 	// An array of all the sections of a "path" branch -- a branch with slashes in the name.
@@ -173,7 +173,7 @@ export function generateReleaseBranchName(
  * @internal
  */
 export function generateBumpVersionCommitMessage(
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackageName,
+	releaseGroupOrPackage: ReleaseGroupName | ReleasePackageName,
 	bumpType: VersionChangeTypeExtended,
 	version: ReleaseVersion,
 	scheme?: VersionScheme,
@@ -200,9 +200,9 @@ export function generateBumpVersionCommitMessage(
  * @internal
  */
 export function generateBumpDepsCommitMessage(
-	bumpedDep: ReleaseGroup | ReleasePackageName | "prerelease",
+	bumpedDep: ReleaseGroupName | ReleasePackageName | "prerelease",
 	bumpType: DependencyUpdateType | VersionBumpType,
-	releaseGroup?: ReleaseGroup,
+	releaseGroup?: ReleaseGroupName,
 ): string {
 	const name =
 		bumpedDep === "prerelease"
@@ -247,7 +247,7 @@ export function getDefaultBumpTypeForBranch(branchName: string): VersionBumpType
  * @internal
  */
 export function getReleaseSourceForReleaseGroup(
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackageName,
+	releaseGroupOrPackage: ReleaseGroupName | ReleasePackageName,
 ): ReleaseSource {
 	// All packages and release groups use release branches.
 	return "releaseBranches";

@@ -12,7 +12,7 @@ import { Context } from "../context";
 import { InstructionalPromptWriter } from "../instructionalPromptWriter";
 import { CommandLogger } from "../logging";
 import { MachineState } from "../machines";
-import { ReleaseGroup, ReleasePackageName } from "../releaseGroups";
+import { ReleaseGroupName, ReleasePackageName } from "../releaseGroups";
 import { askForReleaseType } from "./askFunctions";
 import {
 	checkAssertTagging,
@@ -63,7 +63,7 @@ export interface FluidReleaseStateHandlerData {
 	/**
 	 * The release group or package that is being released.
 	 */
-	releaseGroup: ReleaseGroup | ReleasePackageName;
+	releaseGroup: ReleaseGroupName | ReleasePackageName;
 
 	/**
 	 * The version scheme used by the release group or package being released.

@@ -7,7 +7,7 @@ import chalk from "chalk";
 
 import { indentString } from "./lib";
 import { CommandLogger } from "./logging";
-import { ReleaseGroup, ReleasePackageName } from "./releaseGroups";
+import { ReleaseGroupName, ReleasePackageName } from "./releaseGroups";
 
 /**
  * An instructional prompt to display to a user in a terminal. A prompt can have any number of sections, and each
@@ -48,7 +48,7 @@ interface Section {
 /**
  * Map release groups to ADO pipeline
  */
-export const ADOPipelineLinks = new Map<ReleasePackageName | ReleaseGroup | undefined, string>([
+export const ADOPipelineLinks = new Map<ReleasePackageName | ReleaseGroupName | undefined, string>([
 	["client", "https://dev.azure.com/fluidframework/internal/_build?definitionId=12"],
 	["server", "https://dev.azure.com/fluidframework/internal/_build?definitionId=30"],
 	["azure", "https://dev.azure.com/fluidframework/internal/_build?definitionId=85"],
@@ -93,7 +93,7 @@ export const ADOPipelineLinks = new Map<ReleasePackageName | ReleaseGroup | unde
  * Returns ADO pipeline link for the releaseGroup
  */
 export const mapADOLinks = (
-	releaseGroup: ReleaseGroup | ReleasePackageName | undefined,
+	releaseGroup: ReleaseGroupName | ReleasePackageName | undefined,
 ): string | undefined => {
 	return ADOPipelineLinks.get(releaseGroup);
 };

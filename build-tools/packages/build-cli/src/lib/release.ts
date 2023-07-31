@@ -10,7 +10,7 @@ import {
 	getVersionRange,
 } from "@fluid-tools/version-tools";
 
-import { ReleaseGroup } from "../releaseGroups";
+import { ReleaseGroupName } from "../releaseGroups";
 
 /**
  * A map of package names to their versions. This is the format of the "simple" release report.
@@ -36,7 +36,7 @@ export interface ReleaseDetails {
 	date?: Date;
 	releaseType: VersionBumpType;
 	isNewRelease: boolean;
-	releaseGroup?: ReleaseGroup;
+	releaseGroup?: ReleaseGroupName;
 	ranges: ReleaseRanges;
 }
 
