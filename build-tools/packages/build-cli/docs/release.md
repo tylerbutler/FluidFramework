@@ -6,6 +6,8 @@ Release commands are used to manage the Fluid release process.
 * [`flub release`](#flub-release)
 * [`flub release fromTag TAG`](#flub-release-fromtag-tag)
 * [`flub release history`](#flub-release-history)
+* [`flub release prep PACKAGE_OR_RELEASE_GROUP`](#flub-release-prep-package_or_release_group)
+* [`flub release prepare PACKAGE_OR_RELEASE_GROUP`](#flub-release-prepare-package_or_release_group)
 * [`flub release report`](#flub-release-report)
 
 ## `flub release`
@@ -125,6 +127,52 @@ EXAMPLES
   List the 10 most recent client releases.
 
     $ flub release history -g client --limit 10
+```
+
+## `flub release prep PACKAGE_OR_RELEASE_GROUP`
+
+Runs checks on a local branch to verify it is ready to create a release branch.
+
+```
+USAGE
+  $ flub release prep PACKAGE_OR_RELEASE_GROUP [-v | --quiet]
+
+ARGUMENTS
+  PACKAGE_OR_RELEASE_GROUP  [default: client] The name of a package or a release group. Defaults to the client release
+                            group if not specified.
+
+LOGGING FLAGS
+  -v, --verbose  Enable verbose logging.
+  --quiet        Disable all logging.
+
+DESCRIPTION
+  Runs checks on a local branch to verify it is ready to create a release branch.
+
+ALIASES
+  $ flub release prep
+```
+
+## `flub release prepare PACKAGE_OR_RELEASE_GROUP`
+
+Runs checks on a local branch to verify it is ready to create a release branch.
+
+```
+USAGE
+  $ flub release prepare PACKAGE_OR_RELEASE_GROUP [-v | --quiet]
+
+ARGUMENTS
+  PACKAGE_OR_RELEASE_GROUP  [default: client] The name of a package or a release group. Defaults to the client release
+                            group if not specified.
+
+LOGGING FLAGS
+  -v, --verbose  Enable verbose logging.
+  --quiet        Disable all logging.
+
+DESCRIPTION
+  Runs checks on a local branch to verify it is ready to create a release branch.
+
+ALIASES
+  $ flub release prep
 ```
 
 ## `flub release report`
