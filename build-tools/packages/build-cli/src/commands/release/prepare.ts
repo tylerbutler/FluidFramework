@@ -2,122 +2,17 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Context, FluidRepo, Package } from "@fluidframework/build-tools";
+import { Context, Package } from "@fluidframework/build-tools";
 import async from "async";
 import chalk from "chalk";
 import execa from "execa";
+import clonedeep from "lodash.clonedeep";
 
 import { packageOrReleaseGroupArg as baseArg, findPackageOrReleaseGroup } from "../../args";
 import { BaseCommand } from "../../base";
 import { isReleaseGroup, ReleaseGroup, ReleasePackage } from "../../releaseGroups";
 import { Repository, getPreReleaseDependencies } from "../../lib";
 import { ResetMode } from "simple-git";
-import { CommandLogger } from "../../logging";
-
-const asyncEvery = async (arr: Package[], predicate) => {
-	for (const e of arr) {
-		// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, no-await-in-loop
-		if (!(await predicate(e))) return false;
-	}
-	return true;
-};
-
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-function deepCopy(obj) {
-	let copy;
-
-	// Handle the 3 simple types, and null or undefined
-	if (null === obj || "object" !== typeof obj) {
-		return obj;
-	}
-
-	// Handle Date
-	if (obj instanceof Date) {
-		copy = new Date();
-		copy.setTime(obj.getTime());
-		return copy;
-	}
-
-	// Handle Array
-	if (Array.isArray(obj)) {
-		copy = [];
-		for (let i = 0, len = obj.length; i < len; i++) {
-			copy[i] = deepCopy(obj[i]);
-		}
-		return copy;
-	}
-
-	// Handle Object
-	if (obj instanceof Object) {
-		copy = {};
-		// eslint-disable-next-line no-restricted-syntax
-		for (const attr in obj) {
-			// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, no-prototype-builtins
-			if (obj.hasOwnProperty(attr)) copy[attr] = deepCopy(obj[attr]);
-		}
-		return copy;
-	}
-
-	throw new Error("Unable to copy obj! Its type isn't supported.");
-}
-/* eslint-enable @typescript-eslint/no-unsafe-return */
-
-const packageOrReleaseGroupArg = deepCopy(baseArg);
-packageOrReleaseGroupArg.description =
-	"The name of a package or a release group. Defaults to the client release group if not specified.";
-packageOrReleaseGroupArg.default = "client";
-
-export class ReleasePrepareCommand extends BaseCommand<typeof ReleasePrepareCommand> {
-	static description =
-		"Runs checks on a local branch to verify it is ready to create a release branch.";
-
-	static args = {
-		package_or_release_group: packageOrReleaseGroupArg,
-	};
-
-	static aliases: string[] = ["release:prep"];
-
-	async run() {
-		const context = await this.getContext();
-		const checks = new Map<string, CheckFunction>([
-			["Has no local changes", checkNoLocalChanges],
-			["Has a microsoft/FluidFramework remote", checkHasRemote],
-			["The branch is up to date", checkBranchUpToDate],
-			["Dependencies are installed locally", checkDepsInstalled],
-			["Has no pre-release dependencies", checkHasNoPrereleaseDependencies],
-			["No policy violations", checkPolicy],
-			["No untagged asserts", checkAsserts],
-		]);
-
-		const rgArg = this.args.package_or_release_group as string;
-		const pkgOrReleaseGroup = findPackageOrReleaseGroup(rgArg, context);
-		if (pkgOrReleaseGroup === undefined) {
-			this.error(`Can't find package or release group "${rgArg}"`, { exit: 1 });
-		}
-		this.verbose(`Release group or package found: ${pkgOrReleaseGroup.name}`);
-
-		this.logHr();
-		for (const [name, check] of checks) {
-			// eslint-disable-next-line no-await-in-loop
-			const checkResult = await check(context, pkgOrReleaseGroup.name, this.flags.verbose);
-			const { result, message, fixCommand, fatal } = checkResult;
-			this.log(
-				`${result ? chalk.bgGreen.black(" ✔︎ ") : chalk.bgRed.white(" ✖︎ ")} ${
-					message === undefined ? name : chalk.red(message)
-				}`,
-			);
-			if (fixCommand !== undefined) {
-				this.logIndent(
-					`${chalk.yellow(`Possible fix command:`)} ${chalk.yellow.bold(fixCommand)}`,
-					6,
-				);
-			}
-			if (fatal === true) {
-				this.error("Can't do other checks until the failures are resolved.", { exit: 5 });
-			}
-		}
-	}
-}
 
 type CheckFunction = (
 	context: Context,
@@ -283,3 +178,62 @@ const checkAsserts: CheckFunction = async (context: Context): Promise<CheckResul
 
 	return { result: true };
 };
+
+const allChecks = new Map<string, CheckFunction>([
+	["Has no local changes", checkNoLocalChanges],
+	["Has a microsoft/FluidFramework remote", checkHasRemote],
+	["The branch is up to date", checkBranchUpToDate],
+	["Dependencies are installed locally", checkDepsInstalled],
+	["Has no pre-release dependencies", checkHasNoPrereleaseDependencies],
+	["No policy violations", checkPolicy],
+	["No untagged asserts", checkAsserts],
+]);
+
+const packageOrReleaseGroupArg = clonedeep(baseArg);
+packageOrReleaseGroupArg.description =
+	"The name of a package or a release group. Defaults to the client release group if not specified.";
+packageOrReleaseGroupArg.default = "client";
+
+export class ReleasePrepareCommand extends BaseCommand<typeof ReleasePrepareCommand> {
+	static description = `Runs checks on a local branch to verify it is ready to create a release branch.\n\nRuns the following checks:\n\n- ${[
+		...allChecks.keys(),
+	].join("\n- ")}`;
+
+	static args = {
+		package_or_release_group: packageOrReleaseGroupArg,
+	};
+
+	static aliases: string[] = ["release:prep"];
+
+	async run() {
+		const context = await this.getContext();
+
+		const rgArg = this.args.package_or_release_group;
+		const pkgOrReleaseGroup = findPackageOrReleaseGroup(rgArg, context);
+		if (pkgOrReleaseGroup === undefined) {
+			this.error(`Can't find package or release group "${rgArg}"`, { exit: 1 });
+		}
+		this.verbose(`Release group or package found: ${pkgOrReleaseGroup.name}`);
+
+		this.logHr();
+		for (const [name, check] of allChecks) {
+			// eslint-disable-next-line no-await-in-loop
+			const checkResult = await check(context, pkgOrReleaseGroup.name, this.flags.verbose);
+			const { result, message, fixCommand, fatal } = checkResult;
+			this.log(
+				`${result ? chalk.bgGreen.black(" ✔︎ ") : chalk.bgRed.white(" ✖︎ ")} ${
+					message === undefined ? name : chalk.red(message)
+				}`,
+			);
+			if (fixCommand !== undefined) {
+				this.logIndent(
+					`${chalk.yellow(`Possible fix command:`)} ${chalk.yellow.bold(fixCommand)}`,
+					6,
+				);
+			}
+			if (fatal === true) {
+				this.error("Can't do other checks until the failures are resolved.", { exit: 5 });
+			}
+		}
+	}
+}

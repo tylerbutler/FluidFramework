@@ -148,6 +148,16 @@ LOGGING FLAGS
 DESCRIPTION
   Runs checks on a local branch to verify it is ready to create a release branch.
 
+  Runs the following checks:
+
+  - Has no local changes
+  - Has a microsoft/FluidFramework remote
+  - The branch is up to date
+  - Dependencies are installed locally
+  - Has no pre-release dependencies
+  - No policy violations
+  - No untagged asserts
+
 ALIASES
   $ flub release prep
 ```
@@ -170,6 +180,16 @@ LOGGING FLAGS
 
 DESCRIPTION
   Runs checks on a local branch to verify it is ready to create a release branch.
+
+  Runs the following checks:
+
+  - Has no local changes
+  - Has a microsoft/FluidFramework remote
+  - The branch is up to date
+  - Dependencies are installed locally
+  - Has no pre-release dependencies
+  - No policy violations
+  - No untagged asserts
 
 ALIASES
   $ flub release prep
