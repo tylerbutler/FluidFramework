@@ -14,7 +14,7 @@ import { InstructionalPromptWriter } from "../instructionalPromptWriter";
 import { CommandLogger } from "../logging";
 import { MachineState } from "../machines";
 import { ReleaseGroup, ReleasePackage } from "../releaseGroups";
-import { askForReleaseType } from "./askFunctions";
+import { askForReleaseType, askForReleaseVersion } from "./askFunctions";
 import {
 	checkAssertTagging,
 	checkBranchName,
@@ -36,7 +36,11 @@ import {
 	checkTypeTestPrepare,
 	checkValidReleaseGroup,
 } from "./checkFunctions";
-import { doBumpReleasedDependencies, doReleaseGroupBump } from "./doFunctions";
+import {
+	doBumpReleasedDependencies,
+	doConfirmReleasePlan,
+	doReleaseGroupBump,
+} from "./doFunctions";
 import { InitFailedStateHandler } from "./initFailedStateHandler";
 import {
 	promptToCommitChanges,
@@ -156,6 +160,11 @@ export class FluidReleaseStateHandler extends InitFailedStateHandler {
 				break;
 			}
 
+			case "AskForReleaseVersion": {
+				result = await askForReleaseVersion(state, machine, testMode, log, data);
+				break;
+			}
+
 			case "CheckShouldRunOptionalChecks": {
 				result = await checkShouldRunOptionalChecks(state, machine, testMode, log, data);
 				break;
@@ -202,9 +211,10 @@ export class FluidReleaseStateHandler extends InitFailedStateHandler {
 
 				if (bumpType === undefined) {
 					BaseStateHandler.signalFailure(machine, state);
+					break;
 				}
 
-				BaseStateHandler.signalSuccess(machine, state);
+				result = await doConfirmReleasePlan(state, machine, testMode, log, data);
 				break;
 			}
 

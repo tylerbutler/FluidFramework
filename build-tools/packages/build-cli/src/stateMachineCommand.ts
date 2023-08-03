@@ -7,8 +7,9 @@ import chalk from "chalk";
 import { Machine } from "jssm";
 
 import { BaseCommand } from "./base";
-import { StateHandler } from "./handlers";
 import { testModeFlag } from "./flags";
+import { StateHandler } from "./handlers";
+import { CommandLogger } from "./logging";
 
 /**
  * A base CLI command that uses an internal state machine to govern its behavior. Subclasses must provide a state
@@ -26,7 +27,9 @@ import { testModeFlag } from "./flags";
  * The command also provides a `state` flag that can be used to initialize the state machine to a specific state. This
  * is intended for testing.
  */
-export abstract class StateMachineCommand<T extends typeof Command> extends BaseCommand<T> {
+export abstract class StateMachineCommand<
+	T extends typeof Command & { flags: typeof StateMachineCommand.flags },
+> extends BaseCommand<T> {
 	static flags = {
 		// Test mode flags
 		testMode: testModeFlag,
@@ -34,7 +37,7 @@ export abstract class StateMachineCommand<T extends typeof Command> extends Base
 			description:
 				"A state to start in when the command initializes. Used to test the processing of specific states.",
 			dependsOn: ["testMode"],
-			hidden: true,
+			hidden: false,
 		}),
 	};
 
@@ -57,28 +60,28 @@ export abstract class StateMachineCommand<T extends typeof Command> extends Base
 
 	async init(): Promise<void> {
 		await super.init();
-		await this.initMachineHooks();
+		await StateMachineCommand.initMachineHooks(this.machine, this);
 	}
 
 	/**
 	 * Wires up some hooks on the state machine to do machine-wide logging.
 	 */
-	protected async initMachineHooks() {
-		for (const state of this.machine.states()) {
+	static async initMachineHooks(machine: Machine<unknown>, log: CommandLogger) {
+		for (const state of machine.states()) {
 			// Logs the entry into any terminal state, noting the source state and action that caused the transition.
-			if (this.machine.state_is_terminal(state) === true) {
-				this.machine.hook_entry(state, (o: any) => {
+			if (machine.state_is_terminal(state) === true) {
+				machine.hook_entry(state, (o: any) => {
 					const { from, action } = o;
-					this.verbose(`${state}: ${action} from ${from}`);
+					log.verbose(`${state}: ${action} from ${from}`);
 				});
 			}
 		}
 
 		// Logs all transitions in the state machine, noting the source and target states and the action that caused the
 		// transition.
-		this.machine.hook_any_transition((t: any) => {
+		machine.hook_any_transition((t: any) => {
 			const { action, from, to } = t;
-			this.verbose(`STATE MACHINE: ${from} [${action}] ==> ${to}`);
+			log.verbose(`STATE MACHINE: ${from} [${action}] ==> ${to}`);
 		});
 	}
 

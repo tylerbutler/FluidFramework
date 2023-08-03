@@ -11,11 +11,13 @@ import { FluidRepo } from "@fluidframework/build-tools";
 import { bumpVersionScheme } from "@fluid-tools/version-tools";
 
 import {
+	checkBranchExists,
 	generateBumpDepsBranchName,
 	generateBumpDepsCommitMessage,
 	generateBumpVersionBranchName,
 	generateBumpVersionCommitMessage,
 	generateReleaseBranchName,
+	generateReleaseGitTagName,
 	getPreReleaseDependencies,
 	getReleaseSourceForReleaseGroup,
 	isReleased,
@@ -123,6 +125,7 @@ export const checkBranchUpToDate: StateHandlerFunction = async (
 			log.errorLog(
 				`Local '${context.originalBranchName}' branch not up to date with remote. Please pull from '${remote}'.`,
 			);
+			return true;
 		}
 
 		BaseStateHandler.signalSuccess(machine, state);
@@ -312,7 +315,7 @@ export const checkOnReleaseBranch: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, releaseVersion, shouldCheckBranch } = data;
+	const { bumpType, context, releaseGroup, releaseVersion, shouldCheckBranch } = data;
 	assert(context !== undefined, "Context is undefined.");
 
 	const currentBranch = await context.gitRepo.getCurrentBranchName();
@@ -332,9 +335,14 @@ export const checkOnReleaseBranch: StateHandlerFunction = async (
 		} else {
 			BaseStateHandler.signalFailure(machine, state);
 		}
-	} else {
-		BaseStateHandler.signalSuccess(machine, state);
-	}
+	} else if (bumpType === "patch") {
+			log.errorLog(
+				`Cannot run a ${bumpType} release on the '${currentBranch}' branch. You need to be on the '${releaseBranch}' branch.`,
+			);
+			BaseStateHandler.signalFailure(machine, state);
+		} else {
+			BaseStateHandler.signalSuccess(machine, state);
+		}
 
 	return true;
 };
@@ -508,13 +516,12 @@ export const checkReleaseBranchExists: StateHandlerFunction = async (
 	if (testMode) return true;
 
 	const { context, releaseGroup, releaseVersion } = data;
-	assert(isReleaseGroup(releaseGroup), `Not a release group: ${releaseGroup}`);
 	const releaseBranch = generateReleaseBranchName(releaseGroup, releaseVersion);
+	const branchExists = await checkBranchExists(releaseBranch, context);
 
-	const commit = await context.gitRepo.getShaForBranch(releaseBranch);
-	if (commit === undefined) {
-		log.errorLog(`Can't find the '${releaseBranch}' branch.`);
+	if (!branchExists) {
 		BaseStateHandler.signalFailure(machine, state);
+		return true;
 	}
 
 	BaseStateHandler.signalSuccess(machine, state);
@@ -541,12 +548,35 @@ export const checkReleaseGroupIsBumped: StateHandlerFunction = async (
 	if (testMode) return true;
 
 	const { context, releaseGroup, releaseVersion, bumpType } = data;
+	assert(isReleaseGroup(releaseGroup), `Not a release group: ${releaseGroup}`);
 
 	context.repo.reload();
-	const repoVersion = context.getVersion(releaseGroup);
-	const targetVersion = bumpVersionScheme(releaseVersion, bumpType).version;
 
-	if (repoVersion !== targetVersion) {
+	const repoVersion = context.getVersion(releaseGroup);
+	const postBumpVersion = bumpVersionScheme(releaseVersion, bumpType).version;
+
+	const [repoVersionReleaseTag, postBumpVersionReleaseTag] = await Promise.all([
+		context.gitRepo.getShaForTag(generateReleaseGitTagName(releaseGroup, repoVersion)),
+		context.gitRepo.getShaForTag(generateReleaseGitTagName(releaseGroup, postBumpVersion)),
+	]);
+
+	if (postBumpVersionReleaseTag !== undefined) {
+		log.errorLog(
+			`The version that we're bumping to has already been released (${postBumpVersion})`,
+		);
+		BaseStateHandler.signalFailure(machine, state);
+		return true;
+	}
+
+	if (repoVersionReleaseTag !== undefined) {
+		// log.errorLog(`${postBumpVersionReleaseTag}, ${repoReleaseTag}, ${repoVersion}`);
+		log.errorLog(`The version that we're releasing has already been released (${repoVersion})`);
+		BaseStateHandler.forceFailed(machine, state);
+		return true;
+	}
+
+	// release version is not yet released, but bump hasn't happened yet
+	if (repoVersion !== postBumpVersion) {
 		BaseStateHandler.signalFailure(machine, state);
 		return true;
 	}
@@ -577,7 +607,7 @@ export const checkReleaseIsDone: StateHandlerFunction = async (
 
 	const { context, releaseGroup, releaseVersion } = data;
 
-	const wasReleased = await isReleased(context, releaseGroup, releaseVersion);
+	const wasReleased = await isReleased(context, releaseGroup, releaseVersion, log);
 	if (wasReleased) {
 		BaseStateHandler.signalSuccess(machine, state);
 	} else {

@@ -350,6 +350,7 @@ export class Context {
 	 */
 	public async getAllVersions(
 		releaseGroupOrPackage: string,
+		limit?: number,
 	): Promise<VersionDetails[] | undefined> {
 		const cacheEntry = this._versions.get(releaseGroupOrPackage);
 		if (cacheEntry !== undefined) {
@@ -357,7 +358,10 @@ export class Context {
 		}
 
 		const versions = new Map<string, Date>();
-		const tags = await this.getTagsForReleaseGroup(releaseGroupOrPackage);
+		let tags = await this.getTagsForReleaseGroup(releaseGroupOrPackage);
+		if (limit !== undefined && tags.length > limit) {
+			tags = tags.slice(0, limit);
+		}
 
 		for (const tag of tags) {
 			const ver = getVersionFromTag(tag);

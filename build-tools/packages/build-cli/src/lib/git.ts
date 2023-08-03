@@ -70,6 +70,24 @@ export class Repository {
 	}
 
 	/**
+	 * Returns the SHA hash for a branch. If a remote is provided, the SHA for the remote ref is returned.
+	 */
+	public async getShaForTag(tag: string): Promise<string | undefined> {
+		const refspec = `refs/tags/${tag}`;
+		const result = await this.git.raw(`show-ref`, refspec);
+		if (result) {
+			// Take the first line of the output, which is a string of the form:
+			// b4c84760a15db9a92eeadf8f283316ef530aac5c refs/tags/client_v1.0.0
+			const line = result.split(/\r?\n/)[0];
+			if (line) {
+				// Split by spaces, the first element is the commit
+				return line.split(" ")[0];
+			}
+		}
+		return undefined;
+	}
+
+	/**
 	 * Get the remote based on the partial Url. It will match the first remote that contains the partialUrl case
 	 * insensitively.
 	 *
