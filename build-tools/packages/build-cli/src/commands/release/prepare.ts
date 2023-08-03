@@ -7,12 +7,12 @@ import async from "async";
 import chalk from "chalk";
 import execa from "execa";
 import clonedeep from "lodash.clonedeep";
+import { ResetMode } from "simple-git";
 
 import { packageOrReleaseGroupArg as baseArg, findPackageOrReleaseGroup } from "../../args";
 import { BaseCommand } from "../../base";
-import { isReleaseGroup, ReleaseGroup, ReleasePackage } from "../../releaseGroups";
 import { Repository, getPreReleaseDependencies } from "../../lib";
-import { ResetMode } from "simple-git";
+import { isReleaseGroup, ReleaseGroup, ReleasePackage } from "../../releaseGroups";
 
 type CheckFunction = (
 	context: Context,
