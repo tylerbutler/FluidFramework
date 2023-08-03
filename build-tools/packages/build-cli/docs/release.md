@@ -131,7 +131,7 @@ EXAMPLES
 
 ## `flub release prep PACKAGE_OR_RELEASE_GROUP`
 
-Runs checks on a local branch to verify it is ready to create a release branch.
+Runs checks on a local branch to verify it is ready to serve as the base for a release branch.
 
 ```
 USAGE
@@ -146,16 +146,16 @@ LOGGING FLAGS
   --quiet        Disable all logging.
 
 DESCRIPTION
-  Runs checks on a local branch to verify it is ready to create a release branch.
+  Runs checks on a local branch to verify it is ready to serve as the base for a release branch.
 
   Runs the following checks:
 
-  - Has no local changes
+  - Branch has no local changes
   - Has a microsoft/FluidFramework remote
-  - The branch is up to date
+  - The local branch is up to date with the remote
   - Dependencies are installed locally
-  - Has no pre-release dependencies
-  - No policy violations
+  - Has no pre-release Fluid dependencies
+  - No repo policy violations
   - No untagged asserts
 
 ALIASES
@@ -164,7 +164,7 @@ ALIASES
 
 ## `flub release prepare PACKAGE_OR_RELEASE_GROUP`
 
-Runs checks on a local branch to verify it is ready to create a release branch.
+Runs checks on a local branch to verify it is ready to serve as the base for a release branch.
 
 ```
 USAGE
@@ -179,16 +179,16 @@ LOGGING FLAGS
   --quiet        Disable all logging.
 
 DESCRIPTION
-  Runs checks on a local branch to verify it is ready to create a release branch.
+  Runs checks on a local branch to verify it is ready to serve as the base for a release branch.
 
   Runs the following checks:
 
-  - Has no local changes
+  - Branch has no local changes
   - Has a microsoft/FluidFramework remote
-  - The branch is up to date
+  - The local branch is up to date with the remote
   - Dependencies are installed locally
-  - Has no pre-release dependencies
-  - No policy violations
+  - Has no pre-release Fluid dependencies
+  - No repo policy violations
   - No untagged asserts
 
 ALIASES

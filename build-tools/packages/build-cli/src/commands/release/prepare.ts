@@ -63,7 +63,7 @@ const checkDepsInstalled: CheckFunction = async (
 	if (!installed) {
 		return {
 			result: false,
-			message: "Install failed. Try installing dependencies manually.",
+			message: "Some dependencies aren't installed. Try installing dependencies manually.",
 			fixCommand: "pnpm install",
 		};
 	}
@@ -180,12 +180,12 @@ const checkAsserts: CheckFunction = async (context: Context): Promise<CheckResul
 };
 
 const allChecks = new Map<string, CheckFunction>([
-	["Has no local changes", checkNoLocalChanges],
+	["Branch has no local changes", checkNoLocalChanges],
 	["Has a microsoft/FluidFramework remote", checkHasRemote],
-	["The branch is up to date", checkBranchUpToDate],
+	["The local branch is up to date with the remote", checkBranchUpToDate],
 	["Dependencies are installed locally", checkDepsInstalled],
-	["Has no pre-release dependencies", checkHasNoPrereleaseDependencies],
-	["No policy violations", checkPolicy],
+	["Has no pre-release Fluid dependencies", checkHasNoPrereleaseDependencies],
+	["No repo policy violations", checkPolicy],
 	["No untagged asserts", checkAsserts],
 ]);
 
@@ -195,15 +195,15 @@ packageOrReleaseGroupArg.description =
 packageOrReleaseGroupArg.default = "client";
 
 export class ReleasePrepareCommand extends BaseCommand<typeof ReleasePrepareCommand> {
-	static description = `Runs checks on a local branch to verify it is ready to create a release branch.\n\nRuns the following checks:\n\n- ${[
-		...allChecks.keys(),
-	].join("\n- ")}`;
+	static summary = `Runs checks on a local branch to verify it is ready to serve as the base for a release branch.`;
+
+	static description = `Runs the following checks:\n\n- ${[...allChecks.keys()].join("\n- ")}`;
+
+	static aliases: string[] = ["release:prep"];
 
 	static args = {
 		package_or_release_group: packageOrReleaseGroupArg,
 	};
-
-	static aliases: string[] = ["release:prep"];
 
 	async run() {
 		const context = await this.getContext();
