@@ -111,14 +111,14 @@ const checkBranchUpToDate: CheckFunction = async (context: Context): Promise<Che
 
 const checkHasNoPrereleaseDependencies: CheckFunction = async (
 	context: Context,
-	rgOrPkg: ReleaseGroup | ReleasePackage,
+	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
 ): Promise<CheckResult> => {
-	const { releaseGroups, packages, isEmpty } = await getPreReleaseDependencies(context, rgOrPkg);
+	const { releaseGroups, packages, isEmpty } = await getPreReleaseDependencies(context, releaseGroupOrPackage);
 
 	const packagesToBump = new Set(packages.keys());
-	for (const rg of releaseGroups.keys()) {
-		for (const p of context.packagesInReleaseGroup(rg)) {
-			packagesToBump.add(p.name);
+	for (const releaseGroup of releaseGroups.keys()) {
+		for (const pkg of context.packagesInReleaseGroup(releaseGroup)) {
+			packagesToBump.add(pkg.name);
 		}
 	}
 
