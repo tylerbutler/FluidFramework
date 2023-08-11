@@ -6,7 +6,6 @@ Release commands are used to manage the Fluid release process.
 * [`flub release`](#flub-release)
 * [`flub release fromTag TAG`](#flub-release-fromtag-tag)
 * [`flub release history`](#flub-release-history)
-* [`flub release prep PACKAGE_OR_RELEASE_GROUP`](#flub-release-prep-package_or_release_group)
 * [`flub release prepare PACKAGE_OR_RELEASE_GROUP`](#flub-release-prepare-package_or_release_group)
 * [`flub release report`](#flub-release-report)
 
@@ -129,39 +128,6 @@ EXAMPLES
     $ flub release history -g client --limit 10
 ```
 
-## `flub release prep PACKAGE_OR_RELEASE_GROUP`
-
-Runs checks on a local branch to verify it is ready to serve as the base for a release branch.
-
-```
-USAGE
-  $ flub release prep PACKAGE_OR_RELEASE_GROUP [-v | --quiet]
-
-ARGUMENTS
-  PACKAGE_OR_RELEASE_GROUP  [default: client] The name of a package or a release group. Defaults to the client release
-                            group if not specified.
-
-LOGGING FLAGS
-  -v, --verbose  Enable verbose logging.
-  --quiet        Disable all logging.
-
-DESCRIPTION
-  Runs checks on a local branch to verify it is ready to serve as the base for a release branch.
-
-  Runs the following checks:
-
-  - Branch has no local changes
-  - Has a microsoft/FluidFramework remote
-  - The local branch is up to date with the remote
-  - Dependencies are installed locally
-  - Has no pre-release Fluid dependencies
-  - No repo policy violations
-  - No untagged asserts
-
-ALIASES
-  $ flub release prep
-```
-
 ## `flub release prepare PACKAGE_OR_RELEASE_GROUP`
 
 Runs checks on a local branch to verify it is ready to serve as the base for a release branch.
@@ -190,9 +156,6 @@ DESCRIPTION
   - Has no pre-release Fluid dependencies
   - No repo policy violations
   - No untagged asserts
-
-ALIASES
-  $ flub release prep
 ```
 
 ## `flub release report`
