@@ -1,5 +1,5 @@
 ---
-@fluid-example/table-document: minor
+"@fluid-example/table-document": minor
 ---
 
 REMOVEMEMEMEMEME!!!
