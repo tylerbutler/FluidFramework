@@ -2,21 +2,19 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Context, Package } from "@fluidframework/build-tools";
+import { Context, MonoRepo, Package } from "@fluidframework/build-tools";
 import async from "async";
 import chalk from "chalk";
 import execa from "execa";
-import clonedeep from "lodash.clonedeep";
 import { ResetMode } from "simple-git";
 
-import { packageOrReleaseGroupArg as baseArg, findPackageOrReleaseGroup } from "../../args";
+import { newPackageOrReleaseGroupArg, findPackageOrReleaseGroup } from "../../args";
 import { BaseCommand } from "../../base";
 import { Repository, getPreReleaseDependencies } from "../../lib";
-import { isReleaseGroup, ReleaseGroup, ReleasePackage } from "../../releaseGroups";
 
 type CheckFunction = (
 	context: Context,
-	rgOrPkg: ReleaseGroup | ReleasePackage,
+	rgOrPkg: MonoRepo | Package,
 	print?: boolean,
 ) => Promise<CheckResult>;
 
@@ -27,7 +25,7 @@ interface CheckResult {
 	fatal?: boolean;
 }
 
-const checkNoLocalChanges: CheckFunction = async (context: Context): Promise<CheckResult> => {
+async function checkNoLocalChanges(context: Context): Promise<CheckResult> {
 	const status = await context.gitRepo.getStatus();
 	if (status !== "") {
 		return {
@@ -39,26 +37,26 @@ const checkNoLocalChanges: CheckFunction = async (context: Context): Promise<Che
 	}
 
 	return { result: true };
-};
+}
 
-const checkDepsInstalled: CheckFunction = async (
+/**
+ * Returns true if all the dependencies are installed for the package/release group.
+ */
+async function checkDepsInstalled(
 	context: Context,
-	rgOrPkg: ReleaseGroup | ReleasePackage,
-	print?: boolean,
-): Promise<CheckResult> => {
-	const packagesToCheck = isReleaseGroup(rgOrPkg)
-		? context.packagesInReleaseGroup(rgOrPkg)
-		: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		  [context.fullPackageMap.get(rgOrPkg)!];
+	rgOrPkg: MonoRepo | Package,
+): Promise<CheckResult> {
+	const packagesToCheck = rgOrPkg instanceof MonoRepo ? rgOrPkg.packages : [rgOrPkg];
 
-	async function checkDeps(pkg: Package): Promise<boolean> {
-		const depsAreInstalled = await pkg.checkInstall(print);
-		// console.warn(`deps for ${pkg.name}: ${depsAreInstalled}`);
-		return depsAreInstalled;
-		// return pkg.checkInstall(false);
-	}
+	const checkDeps: async.AsyncBooleanIterator<Package> = async (
+		pkg: Package,
+	): Promise<boolean> => {
+		return pkg.checkInstall(false);
+	};
 
-	// eslint-disable-next-line unicorn/no-array-method-this-argument, @typescript-eslint/no-misused-promises
+	// I think the unicorn/no-array-method-this-argument lint error is a false positive. As far as I can tell, the
+	// checkDeps function is defined correctly and has the correct type. It appears to work as expected at runtime.
+	// eslint-disable-next-line unicorn/no-array-method-this-argument
 	const installed = await async.every(packagesToCheck, checkDeps);
 	if (!installed) {
 		return {
@@ -69,9 +67,12 @@ const checkDepsInstalled: CheckFunction = async (
 	}
 
 	return { result: true };
-};
+}
 
-const checkHasRemote: CheckFunction = async (context: Context): Promise<CheckResult> => {
+/**
+ * Returns true if the local git repo has a remote for the microsoft/FluidFramework repo.
+ */
+async function checkHasRemote(context: Context): Promise<CheckResult> {
 	const remote = await context.gitRepo.getRemote(context.originRemotePartialUrl);
 	if (remote === undefined) {
 		return {
@@ -80,9 +81,12 @@ const checkHasRemote: CheckFunction = async (context: Context): Promise<CheckRes
 		};
 	}
 	return { result: true };
-};
+}
 
-const checkBranchUpToDate: CheckFunction = async (context: Context): Promise<CheckResult> => {
+/**
+ * Returns true if the local git repo has a remote for the microsoft/FluidFramework repo.
+ */
+async function checkBranchUpToDate(context: Context): Promise<CheckResult> {
 	const remote = await context.gitRepo.getRemote(context.originRemotePartialUrl);
 
 	let succeeded = false;
@@ -95,7 +99,9 @@ const checkBranchUpToDate: CheckFunction = async (context: Context): Promise<Che
 	} catch (error) {
 		return {
 			result: false,
-			message: (error as Error).message,
+			message: `Error when checking remote branch. Does the remote branch exist? Full error message:\n${
+				(error as Error).message
+			}`,
 		};
 	}
 
@@ -107,13 +113,19 @@ const checkBranchUpToDate: CheckFunction = async (context: Context): Promise<Che
 		};
 	}
 	return { result: true };
-};
+}
 
-const checkHasNoPrereleaseDependencies: CheckFunction = async (
+/**
+ * Returns true if the release group/package has no prerelease dependencies on other Fluid packages.
+ */
+async function checkHasNoPrereleaseDependencies(
 	context: Context,
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
-): Promise<CheckResult> => {
-	const { releaseGroups, packages, isEmpty } = await getPreReleaseDependencies(context, releaseGroupOrPackage);
+	releaseGroupOrPackage: MonoRepo | Package,
+): Promise<CheckResult> {
+	const { releaseGroups, packages, isEmpty } = await getPreReleaseDependencies(
+		context,
+		releaseGroupOrPackage,
+	);
 
 	const packagesToBump = new Set(packages.keys());
 	for (const releaseGroup of releaseGroups.keys()) {
@@ -135,9 +147,12 @@ const checkHasNoPrereleaseDependencies: CheckFunction = async (
 		].join("\n")}\n${[...packages.keys()].join("\n")}`,
 		fixCommand: "pnpm flub bump deps <release group or package>",
 	};
-};
+}
 
-const checkPolicy: CheckFunction = async (context: Context): Promise<CheckResult> => {
+/**
+ * Returns true if there are no policy-check failures.
+ */
+async function checkPolicy(context: Context): Promise<CheckResult> {
 	// policy-check is scoped to the path that it's run in. Since we have multiple folders at the root that represent
 	// the client release group, we can't easily scope it to just the client. Thus, we always run it at the root just
 	// like we do in CI.
@@ -148,15 +163,18 @@ const checkPolicy: CheckFunction = async (context: Context): Promise<CheckResult
 	if (result.exitCode !== 0) {
 		return {
 			result: false,
-			message: "Policy check failed.",
+			message: "Policy check failed. These failures must be fixed before release.",
 			fixCommand: "pnpm run policy-check:fix",
 		};
 	}
 
 	return { result: true };
-};
+}
 
-const checkAsserts: CheckFunction = async (context: Context): Promise<CheckResult> => {
+/**
+ * Returns true if there are no asserts to be tagged.
+ */
+async function checkAsserts(context: Context): Promise<CheckResult> {
 	// policy-check is scoped to the path that it's run in. Since we have multiple folders at the root that represent
 	// the client release group, we can't easily scope it to just the client. Thus, we always run it at the root just
 	// like we do in CI.
@@ -177,9 +195,12 @@ const checkAsserts: CheckFunction = async (context: Context): Promise<CheckResul
 	}
 
 	return { result: true };
-};
+}
 
-const allChecks = new Map<string, CheckFunction>([
+/**
+ * All the checks that should be executed. The checks are executed serially in this order.
+ */
+const allChecks: ReadonlyMap<string, CheckFunction> = new Map([
 	["Branch has no local changes", checkNoLocalChanges],
 	["Has a microsoft/FluidFramework remote", checkHasRemote],
 	["The local branch is up to date with the remote", checkBranchUpToDate],
@@ -189,19 +210,20 @@ const allChecks = new Map<string, CheckFunction>([
 	["No untagged asserts", checkAsserts],
 ]);
 
-const packageOrReleaseGroupArg = clonedeep(baseArg);
+// Customize the argument with a description and default value.
+const packageOrReleaseGroupArg = newPackageOrReleaseGroupArg();
 packageOrReleaseGroupArg.description =
 	"The name of a package or a release group. Defaults to the client release group if not specified.";
 packageOrReleaseGroupArg.default = "client";
 
 export class ReleasePrepareCommand extends BaseCommand<typeof ReleasePrepareCommand> {
-	static summary = `Runs checks on a local branch to verify it is ready to serve as the base for a release branch.`;
+	static readonly summary = `Runs checks on a local branch to verify it is ready to serve as the base for a release branch.`;
 
-	static description = `Runs the following checks:\n\n- ${[...allChecks.keys()].join("\n- ")}`;
+	static readonly description = `Runs the following checks:\n\n- ${[...allChecks.keys()].join(
+		"\n- ",
+	)}`;
 
-	static aliases: string[] = ["release:prep"];
-
-	static args = {
+	static readonly args = {
 		package_or_release_group: packageOrReleaseGroupArg,
 	};
 
@@ -218,7 +240,7 @@ export class ReleasePrepareCommand extends BaseCommand<typeof ReleasePrepareComm
 		this.logHr();
 		for (const [name, check] of allChecks) {
 			// eslint-disable-next-line no-await-in-loop
-			const checkResult = await check(context, pkgOrReleaseGroup.name, this.flags.verbose);
+			const checkResult = await check(context, pkgOrReleaseGroup, this.flags.verbose);
 			const { result, message, fixCommand, fatal } = checkResult;
 			this.log(
 				`${result ? chalk.bgGreen.black(" ✔︎ ") : chalk.bgRed.white(" ✖︎ ")} ${

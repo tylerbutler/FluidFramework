@@ -6,13 +6,15 @@ import { Context, MonoRepo, Package, isMonoRepoKind } from "@fluidframework/buil
 import { Args } from "@oclif/core";
 
 /**
- * A re-usable CLI argument for package or release group names.
+ * Creates a CLI argument for package or release group names. It's a factory function so that commands can override the
+ * properties more easily when using the argument.
  */
-export const packageOrReleaseGroupArg = Args.string({
-	name: "package_or_release_group",
-	required: true,
-	description: "The name of a package or a release group.",
-});
+export const newPackageOrReleaseGroupArg = () =>
+	Args.string({
+		name: "package_or_release_group",
+		required: true,
+		description: "The name of a package or a release group.",
+	});
 
 /**
  * Takes a packageOrReleaseGroupArg and searches the context for it. Release groups are checked first, then independent
