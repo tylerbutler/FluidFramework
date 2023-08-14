@@ -5,10 +5,23 @@
 import { PackageName } from "@rushstack/node-core-library";
 import { assert } from "chai";
 import { parseJSON } from "date-fns";
+import { stubObject } from "ts-sinon";
 
-import { VersionDetails } from "@fluidframework/build-tools";
+import { Context, GitRepo, VersionDetails } from "@fluidframework/build-tools";
 
-import { generateReleaseGitTagName, sortVersions } from "../../src/lib/package";
+import { generateReleaseGitTagName, getPreReleaseDependencies, sortVersions } from "../../src/lib/package";
+
+const repo = new GitRepo(".");
+const stubRepo = stubObject(repo);
+const context = new Context(stubRepo, "microsoft/FluidFramework", "main");
+const stubContext = stubObject(context);
+
+describe("getPreReleaseDependencies", async () => {
+  it("test1", async () => {
+		const results = await getPreReleaseDependencies(stubContext, "release-group");
+    assert.isTrue(results.isEmpty);
+	});
+});
 
 describe("VersionDetails sorting", async () => {
 	const versions: VersionDetails[] = [
