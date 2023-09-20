@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-export { ContainerViewRuntimeFactory, ViewCallback } from "./containerViewRuntimeFactory";
+export { ContainerViewRuntimeFactory, type ViewCallback } from "./containerViewRuntimeFactory";
 export type {
 	DataTransformationCallback,
 	IImportExportModel,
@@ -31,12 +31,12 @@ export {
 } from "./migrationTool";
 export { Migrator, SameContainerMigrator } from "./migrator";
 export {
-	IDetachedModel,
-	IModelLoader,
+	type IDetachedModel,
+	type IModelLoader,
 	makeModelRequestHandler,
 	ModelContainerRuntimeFactory,
 	ModelLoader,
-	ModelMakerCallback,
+	type ModelMakerCallback,
 	SessionStorageModelLoader,
 	StaticCodeLoader,
 	TinyliciousModelLoader,

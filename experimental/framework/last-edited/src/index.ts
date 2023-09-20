@@ -4,8 +4,8 @@
  */
 export {
 	IFluidLastEditedTracker,
-	ILastEditDetails,
-	IProvideFluidLastEditedTracker,
+	type ILastEditDetails,
+	type IProvideFluidLastEditedTracker,
 } from "./interfaces";
 export { LastEditedTracker } from "./lastEditedTracker";
 export { LastEditedTrackerDataObject } from "./lastEditedTrackerDataObject";

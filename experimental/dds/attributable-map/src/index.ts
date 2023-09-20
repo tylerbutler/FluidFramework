@@ -13,12 +13,12 @@
  * @packageDocumentation
  */
 
-export {
+export type {
 	ISerializableValue,
 	ISerializedValue,
 	ISharedMap,
 	ISharedMapEvents,
 	IValueChanged,
 } from "./interfaces";
-export { LocalValueMaker, ILocalValue } from "./localValues";
+export { LocalValueMaker, type ILocalValue } from "./localValues";
 export { MapFactory, AttributableMap } from "./map";

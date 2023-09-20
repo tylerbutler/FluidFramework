@@ -7,7 +7,7 @@ export { AllowList } from "./allowList";
 export { SemVerCdnCodeResolver } from "./semVerCdnCodeResolver";
 export {
 	extractPackageIdentifierDetails,
-	IPackageIdentifierDetails,
+	type IPackageIdentifierDetails,
 	resolveFluidPackageEnvironment,
 } from "./utils";
 export { WebCodeLoader } from "./webLoader";

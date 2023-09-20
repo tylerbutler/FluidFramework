@@ -4,12 +4,12 @@
  */
 export {
 	createChildMonitoringContext,
-	MonitoringContext,
-	IConfigProviderBase,
+	type MonitoringContext,
+	type IConfigProviderBase,
 	sessionStorageConfigProvider,
 	mixinMonitoringContext,
-	IConfigProvider,
-	ConfigTypes,
+	type IConfigProvider,
+	type ConfigTypes,
 	loggerToMonitoringContext,
 } from "./config";
 export {
@@ -24,7 +24,7 @@ export {
 	generateErrorWithStack,
 	generateStack,
 	getCircularReplacer,
-	IFluidErrorAnnotations,
+	type IFluidErrorAnnotations,
 	isExternalError,
 	isILoggingError,
 	isTaggedTelemetryPropertyValue,
@@ -44,7 +44,7 @@ export {
 } from "./events";
 export {
 	hasErrorInstanceId,
-	IFluidErrorBase,
+	type IFluidErrorBase,
 	isFluidError,
 	isValidLegacyError,
 } from "./fluidErrorBase";
@@ -53,23 +53,23 @@ export {
 	createChildLogger,
 	createMultiSinkLogger,
 	formatTick,
-	IPerformanceEventMarkers,
-	ITelemetryLoggerPropertyBag,
-	ITelemetryLoggerPropertyBags,
+	type IPerformanceEventMarkers,
+	type ITelemetryLoggerPropertyBag,
+	type ITelemetryLoggerPropertyBags,
 	numberFromString,
 	PerformanceEvent,
 	TaggedLoggerAdapter,
 	tagData,
 	tagCodeArtifacts,
 	TelemetryDataTag,
-	TelemetryEventPropertyTypes,
+	type TelemetryEventPropertyTypes,
 	TelemetryNullLogger,
 } from "./logger";
 export { MockLogger } from "./mockLogger";
 export { ThresholdCounter } from "./thresholdCounter";
 export { SampledTelemetryHelper } from "./sampledTelemetryHelper";
 export { logIfFalse } from "./utils";
-export {
+export type {
 	TelemetryEventPropertyTypeExt,
 	ITelemetryEventExt,
 	ITelemetryGenericEventExt,

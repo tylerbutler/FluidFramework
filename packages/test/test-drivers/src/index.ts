@@ -5,15 +5,15 @@
 
 export {
 	createFluidTestDriver,
-	CreateFromEnvConfigParam,
+	type CreateFromEnvConfigParam,
 	DriverApi,
-	DriverApiType,
-	FluidTestDriverConfig,
+	type DriverApiType,
+	type FluidTestDriverConfig,
 } from "./factory";
-export { LocalDriverApi, LocalDriverApiType } from "./localDriverApi";
+export { LocalDriverApi, type LocalDriverApiType } from "./localDriverApi";
 export { LocalServerTestDriver } from "./localServerTestDriver";
-export { generateOdspHostStoragePolicy, OdspDriverApi, OdspDriverApiType } from "./odspDriverApi";
+export { generateOdspHostStoragePolicy, OdspDriverApi, type OdspDriverApiType } from "./odspDriverApi";
 export { assertOdspEndpoint, OdspTestDriver } from "./odspTestDriver";
-export { RouterliciousDriverApi, RouterliciousDriverApiType } from "./routerliciousDriverApi";
+export { RouterliciousDriverApi, type RouterliciousDriverApiType } from "./routerliciousDriverApi";
 export { assertRouterliciousEndpoint, RouterliciousTestDriver } from "./routerliciousTestDriver";
 export { TinyliciousTestDriver } from "./tinyliciousTestDriver";

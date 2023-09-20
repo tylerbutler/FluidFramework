@@ -15,7 +15,7 @@ export {
 	createGenericNetworkError,
 	createWriteError,
 	DeltaStreamConnectionForbiddenError,
-	DriverErrorTelemetryProps,
+	type DriverErrorTelemetryProps,
 	FluidInvalidSchemaError,
 	GenericNetworkError,
 	getRetryDelayFromError,
@@ -40,9 +40,9 @@ export {
 export { PrefetchDocumentStorageService } from "./prefetchDocumentStorageService";
 export { RateLimiter } from "./rateLimiter";
 export { readAndParse } from "./readAndParse";
-export { calculateMaxWaitTime, IProgress, runWithRetry } from "./runWithRetry";
+export { calculateMaxWaitTime, type IProgress, runWithRetry } from "./runWithRetry";
 export {
-	CombinedAppAndProtocolSummary,
+	type CombinedAppAndProtocolSummary,
 	getDocAttributesFromProtocolSummary,
 	getQuorumValuesFromProtocolSummary,
 	isCombinedAppAndProtocolSummary,
@@ -50,6 +50,6 @@ export {
 export { convertSummaryTreeToSnapshotITree } from "./treeConversions";
 export {
 	applyStorageCompression,
-	ICompressionStorageConfig,
+	type ICompressionStorageConfig,
 	blobHeadersBlobName,
 } from "./adapters";

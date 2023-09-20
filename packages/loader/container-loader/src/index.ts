@@ -4,15 +4,14 @@
  */
 
 export { ConnectionState } from "./connectionState";
-export { IContainerExperimental, waitContainerToCatchUp } from "./container";
-export {
+export { type IContainerExperimental, waitContainerToCatchUp } from "./container";
+export type {
 	ICodeDetailsLoader,
 	IDetachedBlobStorage,
 	IFluidModuleWithDetails,
 	ILoaderOptions,
 	ILoaderProps,
 	ILoaderServices,
-	Loader,
-	requestResolvedObjectFromContainer,
 } from "./loader";
-export { IProtocolHandler, ProtocolHandlerBuilder } from "./protocol";
+export { Loader, requestResolvedObjectFromContainer } from "./loader";
+export type { IProtocolHandler, ProtocolHandlerBuilder } from "./protocol";

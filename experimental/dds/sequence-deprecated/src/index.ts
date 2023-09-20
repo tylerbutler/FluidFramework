@@ -6,7 +6,7 @@
 export { SharedNumberSequence } from "./sharedNumberSequence";
 export { SharedObjectSequence } from "./sharedObjectSequence";
 export {
-	MatrixSegment,
+	type MatrixSegment,
 	maxCellPosition,
 	maxCol,
 	maxCols,
@@ -18,6 +18,6 @@ export {
 	RunSegment,
 	SparseMatrix,
 	SparseMatrixFactory,
-	SparseMatrixItem,
+	type SparseMatrixItem,
 } from "./sparsematrix";
-export { IJSONRunSegment, SubSequence, SharedSequence } from "./sharedSequence";
+export { type IJSONRunSegment, SubSequence, SharedSequence } from "./sharedSequence";

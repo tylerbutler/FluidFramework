@@ -9,7 +9,7 @@ export {
 	createDataStoreFactory,
 	createResponseError,
 	exceptionToResponse,
-	Factory,
+	type Factory,
 	requestFluidObject,
 	responseToException,
 } from "./dataStoreHelpers";
@@ -34,4 +34,4 @@ export {
 	utf8ByteLength,
 } from "./summaryUtils";
 export { unpackChildNodesUsedRoutes } from "./unpackUsedRoutes";
-export { ReadAndParseBlob, seqFromTree } from "./utils";
+export { type ReadAndParseBlob, seqFromTree } from "./utils";

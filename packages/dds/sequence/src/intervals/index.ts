@@ -4,15 +4,15 @@
  */
 
 export {
-	IInterval,
-	ISerializedInterval,
-	ISerializableInterval,
+	type IInterval,
+	type ISerializedInterval,
+	type ISerializableInterval,
 	IntervalOpType,
 	IntervalType,
-	IIntervalHelpers,
+	type IIntervalHelpers,
 	IntervalStickiness,
-	SerializedIntervalDelta,
-	CompressedSerializedInterval,
+	type SerializedIntervalDelta,
+	type CompressedSerializedInterval,
 	endReferenceSlidingPreference,
 	startReferenceSlidingPreference,
 } from "./intervalUtils";

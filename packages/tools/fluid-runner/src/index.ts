@@ -4,10 +4,10 @@
  */
 
 /* eslint-disable import/no-internal-modules */
-export { ICodeLoaderBundle, IFluidFileConverter } from "./codeLoaderBundle";
+export type { ICodeLoaderBundle, IFluidFileConverter } from "./codeLoaderBundle";
 export { createContainerAndExecute, exportFile, IExportFileResponse } from "./exportFile";
 export { fluidRunner } from "./fluidRunner";
-export { OutputFormat, ITelemetryOptions } from "./logger/fileLogger";
+export { OutputFormat, type ITelemetryOptions } from "./logger/fileLogger";
 export {
 	createLogger,
 	getTelemetryFileValidationError,

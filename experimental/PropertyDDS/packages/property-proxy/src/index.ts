@@ -5,16 +5,16 @@
 
 export {
 	BaseProxifiedProperty,
-	CollectionTypes,
-	GenericProxify,
-	PrimitiveTypes,
-	PropertyTypes,
+	type CollectionTypes,
+	type GenericProxify,
+	type PrimitiveTypes,
+	type PropertyTypes,
 	ProxifiedArrayProperty,
 	ProxifiedMapProperty,
 	ProxifiedPropertyValueArray,
 	ProxifiedSetProperty,
-	ProxyType,
-	ReferenceType,
+	type ProxyType,
+	type ReferenceType,
 } from "./interfaces";
-export { IParentAndPathOfReferencedProperty } from "./IParentAndPathOfReferencedProperty";
+export type { IParentAndPathOfReferencedProperty } from "./IParentAndPathOfReferencedProperty";
 export { PropertyProxy, proxySymbol } from "./propertyProxy";

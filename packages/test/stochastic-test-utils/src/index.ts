@@ -7,11 +7,11 @@ export { combineReducers, combineReducersAsync } from "./combineReducers";
 export {
 	createFuzzDescribe,
 	defaultOptions,
-	DescribeFuzz,
+	type DescribeFuzz,
 	describeFuzz,
-	DescribeFuzzSuite,
-	FuzzDescribeOptions,
-	FuzzSuiteArguments,
+	type DescribeFuzzSuite,
+	type FuzzDescribeOptions,
+	type FuzzSuiteArguments,
 } from "./describeFuzz";
 export {
 	asyncGeneratorFromArray,
@@ -33,17 +33,19 @@ export {
 export { PerformanceWordMarkovChain, SpaceEfficientWordMarkovChain } from "./markovChain";
 export { performFuzzActions, performFuzzActionsAsync } from "./performActions";
 export { makeRandom } from "./random";
-export {
+export type {
 	AcceptanceCondition,
 	AsyncGenerator,
 	AsyncReducer,
 	AsyncWeights,
 	BaseFuzzTestState,
-	done,
 	Generator,
 	IRandom,
 	Reducer,
 	SaveInfo,
 	Weights,
+} from "./types";
+export {
+	done,
 } from "./types";
 export { XSadd } from "./xsadd";

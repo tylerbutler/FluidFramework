@@ -10,5 +10,5 @@
  * @packageDocumentation
  */
 
-export { ITaskManager, ITaskManagerEvents, TaskEventListener } from "./interfaces";
+export type { ITaskManager, ITaskManagerEvents, TaskEventListener } from "./interfaces";
 export { TaskManager } from "./taskManager";

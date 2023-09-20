@@ -7,10 +7,10 @@ export type { IDisposable } from "./disposable";
 
 export {
 	FluidErrorTypes,
-	IErrorBase,
-	IGenericError,
-	IUsageError,
-	IThrottlingWarning,
+	type IErrorBase,
+	type IGenericError,
+	type IUsageError,
+	type IThrottlingWarning,
 } from "./error";
 
 export type {
@@ -26,38 +26,42 @@ export type {
 
 export {
 	IFluidLoadable,
-	IProvideFluidLoadable,
+	type IProvideFluidLoadable,
 	IFluidRunnable,
-	IProvideFluidRunnable,
+	type IProvideFluidRunnable,
 } from "./fluidLoadable";
 
 export {
-	IFluidPackageEnvironment,
-	IFluidPackage,
+	type IFluidPackageEnvironment,
+	type IFluidPackage,
 	isFluidPackage,
-	IFluidCodeDetailsConfig,
-	IFluidCodeDetails,
+	type IFluidCodeDetailsConfig,
+	type IFluidCodeDetails,
 	isFluidCodeDetails,
-	IFluidCodeDetailsComparer,
-	IProvideFluidCodeDetailsComparer,
+  IFluidCodeDetailsComparer,
+	type IProvideFluidCodeDetailsComparer,
 } from "./fluidPackage";
 
 // TypeScript forgets the index signature when customers augment IRequestHeader if we export *.
 // So we export the explicit members as a workaround:
 // https://github.com/microsoft/TypeScript/issues/18877#issuecomment-476921038
-export {
+export type {
 	IRequest,
 	IRequestHeader,
 	IResponse,
 	IProvideFluidRouter,
+} from "./fluidRouter";
+export {
 	IFluidRouter,
 } from "./fluidRouter";
 
+export type {
+	IProvideFluidHandleContext,
+	IProvideFluidHandle,
+} from "./handles";
 export {
 	IFluidHandleContext,
-	IProvideFluidHandleContext,
 	IFluidHandle,
-	IProvideFluidHandle,
 } from "./handles";
 
 export type {
@@ -77,4 +81,4 @@ export type {
 	TelemetryEventPropertyType, // deprecated
 } from "./logger";
 export { LogLevel } from "./logger";
-export { FluidObjectProviderKeys, FluidObject, FluidObjectKeys } from "./provider";
+export type { FluidObjectProviderKeys, FluidObject, FluidObjectKeys } from "./provider";

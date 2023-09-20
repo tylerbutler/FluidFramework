@@ -22,7 +22,7 @@ export {
 	PathHelper,
 	ArrayChangeSetIterator,
 	rebaseToRemoteChanges,
-	SerializedChangeSet,
+	type SerializedChangeSet,
 	TraversalContext,
-	ExtractedContext,
+	type ExtractedContext,
 };

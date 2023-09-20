@@ -8,9 +8,9 @@ export {
 	wrapDocumentServiceFactory,
 	wrapDocumentStorageService,
 } from "./DriverWrappers";
-export { IProvideTestFluidObject, ITestFluidObject } from "./interfaces";
+export type { IProvideTestFluidObject, ITestFluidObject } from "./interfaces";
 export { LoaderContainerTracker } from "./loaderContainerTracker";
-export { fluidEntryPoint, LocalCodeLoader, SupportedExportInterfaces } from "./localCodeLoader";
+export { type fluidEntryPoint, LocalCodeLoader, type SupportedExportInterfaces } from "./localCodeLoader";
 export { createAndAttachContainer, createLoader } from "./localLoader";
 export { retryWithEventualValue } from "./retry";
 export { mockConfigProvider } from "./TestConfigs";
@@ -18,15 +18,15 @@ export {
 	createTestContainerRuntimeFactory,
 	TestContainerRuntimeFactory,
 } from "./testContainerRuntimeFactory";
-export { ChannelFactoryRegistry, TestFluidObject, TestFluidObjectFactory } from "./testFluidObject";
+export { type ChannelFactoryRegistry, TestFluidObject, TestFluidObjectFactory } from "./testFluidObject";
 export {
 	createDocumentId,
 	DataObjectFactoryType,
 	EventAndErrorTrackingLogger,
 	getUnexpectedLogErrorException,
-	IOpProcessingController,
-	ITestContainerConfig,
-	ITestObjectProvider,
+	type IOpProcessingController,
+	type ITestContainerConfig,
+	type ITestObjectProvider,
 	TestObjectProvider,
 } from "./testObjectProvider";
 export { createSummarizer, createSummarizerFromFactory, summarizeNow } from "./TestSummaryUtils";
@@ -34,7 +34,7 @@ export {
 	defaultTimeoutDurationMs,
 	timeoutAwait,
 	timeoutPromise,
-	TimeoutWithError,
-	TimeoutWithValue,
+	type TimeoutWithError,
+	type TimeoutWithValue,
 } from "./timeoutUtils";
 export { waitForContainerConnection } from "./containerUtils";

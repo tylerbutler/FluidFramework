@@ -7,7 +7,7 @@ export {
 	createFluidObjectResponse,
 	handleFromLegacyUri,
 	rootDataStoreRequestHandler,
-	RuntimeRequestHandler,
+	type RuntimeRequestHandler,
 } from "./requestHandlers";
 export {
 	buildRuntimeRequestHandler,

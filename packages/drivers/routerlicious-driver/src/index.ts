@@ -5,10 +5,10 @@
 
 // Tokens
 export { DefaultTokenProvider } from "./defaultTokenProvider";
-export { ITokenProvider, ITokenResponse, ITokenService } from "./tokens";
+export type { ITokenProvider, ITokenResponse, ITokenService } from "./tokens";
 
 // Errors
-export { RouterliciousErrorType, RouterliciousErrorTypes } from "./errorUtils";
+export { RouterliciousErrorType, type RouterliciousErrorTypes } from "./errorUtils";
 
 // Factory
 export {
@@ -17,4 +17,4 @@ export {
 } from "./documentServiceFactory";
 
 // Configuration
-export { IRouterliciousDriverPolicies } from "./policies";
+export type { IRouterliciousDriverPolicies } from "./policies";

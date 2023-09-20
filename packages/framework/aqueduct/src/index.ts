@@ -20,10 +20,10 @@
 
 export {
 	DataObjectFactory,
-	IRootDataObjectFactory,
+	type IRootDataObjectFactory,
 	PureDataObjectFactory,
 } from "./data-object-factories";
-export { DataObject, DataObjectTypes, IDataObjectProps, PureDataObject } from "./data-objects";
+export { DataObject, type DataObjectTypes, type IDataObjectProps, PureDataObject } from "./data-objects";
 export {
 	BaseContainerRuntimeFactory,
 	ContainerRuntimeFactoryWithDefaultDataStore,

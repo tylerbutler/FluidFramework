@@ -9,13 +9,13 @@
  * @packageDocumentation
  */
 
-export { IAudience, IAudienceOwner } from "./audience";
+export type { IAudience, IAudienceOwner } from "./audience";
 export {
-	IFluidBrowserPackage,
-	IFluidBrowserPackageEnvironment,
+	type IFluidBrowserPackage,
+	type IFluidBrowserPackageEnvironment,
 	isFluidBrowserPackage,
 } from "./browserPackage";
-export {
+export type {
 	IConnectionDetails,
 	IDeltaManager,
 	IDeltaManagerEvents,
@@ -27,10 +27,10 @@ export {
 export {
 	ContainerErrorTypes,
 	ContainerErrorType,
-	ContainerWarning,
-	ICriticalContainerError,
+	type ContainerWarning,
+	type ICriticalContainerError,
 } from "./error";
-export {
+export type {
 	ConnectionState,
 	ICodeDetailsLoader,
 	IContainer,
@@ -46,29 +46,31 @@ export {
 	IProvideLoader,
 	IResolvedFluidCodeDetails,
 	ISnapshotTreeWithBlobContents,
+} from "./loader";
+export {
 	LoaderHeader,
 } from "./loader";
-export { IFluidModule } from "./fluidModule";
+export type { IFluidModule } from "./fluidModule";
 export {
-	IFluidPackage,
-	IFluidPackageEnvironment,
-	IFluidCodeDetails,
-	IFluidCodeDetailsComparer,
-	IFluidCodeDetailsConfig,
-	IProvideFluidCodeDetailsComparer,
+	type IFluidPackage,
+	type IFluidPackageEnvironment,
+	type IFluidCodeDetails,
+  IFluidCodeDetailsComparer,
+	type IFluidCodeDetailsConfig,
+	type IProvideFluidCodeDetailsComparer,
 	isFluidPackage,
 	isFluidCodeDetails,
 } from "./fluidPackage";
 export {
 	AttachState,
-	IBatchMessage,
-	IContainerContext,
-	IProvideRuntimeFactory,
-	IRuntime,
+	type IBatchMessage,
+	type IContainerContext,
+	type IProvideRuntimeFactory,
+	type IRuntime,
 	IRuntimeFactory,
 } from "./runtime";
 
-export {
+export type {
 	/**
 	 * @deprecated IErrorBase is being deprecated as a public export is moving to "core-interfaces".
 	 */

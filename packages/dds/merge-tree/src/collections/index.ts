@@ -3,9 +3,9 @@
  * Licensed under the MIT License.
  */
 
-export { Comparer, Heap } from "./heap";
-export { List, ListNode, ListNodeRange, walkList } from "./list";
-export {
+export { type Comparer, Heap } from "./heap";
+export { List, type ListNode, type ListNodeRange, walkList } from "./list";
+export type {
 	ConflictAction,
 	Dictionary,
 	IRBAugmentation,
@@ -14,10 +14,9 @@ export {
 	Property,
 	PropertyAction,
 	QProperty,
-	RBColor,
 	RBNode,
 	RBNodeActions,
-	RedBlackTree,
 	SortedDictionary,
 } from "./rbTree";
+export { RBColor, RedBlackTree } from "./rbTree";
 export { Stack } from "./stack";

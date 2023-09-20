@@ -8,16 +8,16 @@ export { OdcApiSiteOrigin, OdcFileSiteOrigin } from "./constants";
 
 export {
 	ClpCompliantAppHeader,
-	IClpCompliantAppHeader,
-	ISharingLinkHeader,
-	OdspFluidDataStoreLocator,
+	type IClpCompliantAppHeader,
+	type ISharingLinkHeader,
+	type OdspFluidDataStoreLocator,
 	SharingLinkHeader,
 } from "./contractsPublic";
 
 // public utils
 export { checkUrl } from "./checkUrl";
 export { createOdspUrl } from "./createOdspUrl";
-export { getHashedDocumentId, ISnapshotContents } from "./odspPublicUtils";
+export { getHashedDocumentId, type ISnapshotContents } from "./odspPublicUtils";
 export { getApiRoot, getOdspUrlParts, isOdcOrigin, isOdcUrl, isSpoUrl } from "./odspUrlHelper";
 
 // prefetch latest snapshot before container load
@@ -38,7 +38,7 @@ export { createOdspCreateContainerRequest } from "./createOdspCreateContainerReq
 export { OdspDriverUrlResolver } from "./odspDriverUrlResolver";
 export {
 	OdspDriverUrlResolverForShareLink,
-	ShareLinkFetcherProps,
+	type ShareLinkFetcherProps,
 } from "./odspDriverUrlResolverForShareLink";
 
 // It's used by URL resolve code, but also has some public functions

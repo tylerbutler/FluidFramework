@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-export {
+export type {
 	IAttributionCollection,
 	IAttributionCollectionSerializer,
 	IAttributionCollectionSpec,
@@ -11,9 +11,9 @@ export {
 	SequenceOffsets,
 } from "./attributionCollection";
 export { createInsertOnlyAttributionPolicy } from "./attributionPolicy";
-export { IIntegerRange } from "./base";
+export { type IIntegerRange } from "./base";
 export { Client } from "./client";
-export {
+export type {
 	ConflictAction,
 	Dictionary,
 	IRBAugmentation,
@@ -22,13 +22,11 @@ export {
 	Property,
 	PropertyAction,
 	QProperty,
-	RBColor,
 	RBNode,
 	RBNodeActions,
-	RedBlackTree,
 	SortedDictionary,
-	Stack,
 } from "./collections";
+export { RBColor, RedBlackTree, Stack } from "./collections";
 export {
 	LocalClientId,
 	NonCollabClient,
@@ -39,16 +37,16 @@ export {
 export {
 	createDetachedLocalReferencePosition,
 	LocalReferenceCollection,
-	LocalReferencePosition,
+	type LocalReferencePosition,
 	SlidingPreference,
 } from "./localReference";
 export {
-	AttributionPolicy,
-	IMergeTreeAttributionOptions,
-	IMergeTreeOptions,
+	type AttributionPolicy,
+	type IMergeTreeAttributionOptions,
+	type IMergeTreeOptions,
 	getSlideToSegoff,
 } from "./mergeTree";
-export {
+export type {
 	IMergeTreeClientSequenceArgs,
 	IMergeTreeDeltaCallbackArgs,
 	IMergeTreeDeltaOpArgs,
@@ -58,34 +56,34 @@ export {
 	MergeTreeDeltaOperationType,
 	MergeTreeDeltaOperationTypes,
 	MergeTreeMaintenanceCallback,
-	MergeTreeMaintenanceType,
 } from "./mergeTreeDeltaCallback";
+export { MergeTreeMaintenanceType } from "./mergeTreeDeltaCallback";
 export {
 	BaseSegment,
 	CollaborationWindow,
 	compareNumbers,
 	compareStrings,
 	debugMarkerToString,
-	IConsensusInfo,
-	IJSONMarkerSegment,
-	IMarkerModifiedAction,
-	IMergeNodeCommon,
+	type IConsensusInfo,
+	type IJSONMarkerSegment,
+	type IMarkerModifiedAction,
+	type IMergeNodeCommon,
 	internedSpaces,
-	IRemovalInfo,
-	ISegment,
-	ISegmentAction,
+	type IRemovalInfo,
+	type ISegment,
+	type ISegmentAction,
 	Marker,
 	MergeNode,
 	reservedMarkerIdKey,
 	reservedMarkerSimpleTypeKey,
-	SegmentAccumulator,
-	SegmentGroup,
+	type SegmentAccumulator,
+	type SegmentGroup,
 	toRemovalInfo,
 } from "./mergeTreeNodes";
 export {
-	Trackable,
+	type Trackable,
 	TrackingGroup,
-	ITrackingGroup,
+	type ITrackingGroup,
 	TrackingGroupCollection,
 } from "./mergeTreeTracking";
 export {
@@ -96,7 +94,7 @@ export {
 	createInsertSegmentOp,
 	createRemoveRangeOp,
 } from "./opBuilder";
-export {
+export type {
 	ICombiningOp,
 	IJSONSegment,
 	IMarkerDef,
@@ -108,9 +106,8 @@ export {
 	IMergeTreeOp,
 	IMergeTreeRemoveMsg,
 	IRelativePosition,
-	MergeTreeDeltaType,
-	ReferenceType,
 } from "./ops";
+export { MergeTreeDeltaType, ReferenceType } from "./ops";
 export {
 	addProperties,
 	clone,
@@ -118,18 +115,18 @@ export {
 	createMap,
 	extend,
 	extendIfUndefined,
-	IConsensusValue,
-	MapLike,
+	type IConsensusValue,
+	type MapLike,
 	matchProperties,
-	PropertySet,
+	type PropertySet,
 } from "./properties";
 export {
 	compareReferencePositions,
 	DetachedReferencePosition,
 	maxReferencePosition,
 	minReferencePosition,
-	RangeStackMap,
-	ReferencePosition,
+	type RangeStackMap,
+	type ReferencePosition,
 	refGetRangeLabels,
 	refGetTileLabels,
 	refHasRangeLabel,
@@ -143,13 +140,13 @@ export {
 export { SegmentGroupCollection } from "./segmentGroupCollection";
 export { PropertiesManager, PropertiesRollback } from "./segmentPropertiesManager";
 export { SortedSet } from "./sortedSet";
-export { SortedSegmentSet, SortedSegmentSetItem } from "./sortedSegmentSet";
-export { IJSONTextSegment, IMergeTreeTextHelper, TextSegment } from "./textSegment";
+export { SortedSegmentSet, type SortedSegmentSetItem } from "./sortedSegmentSet";
+export { type IJSONTextSegment, type IMergeTreeTextHelper, TextSegment } from "./textSegment";
 export {
 	appendToMergeTreeDeltaRevertibles,
 	discardMergeTreeDeltaRevertible,
 	isMergeTreeDeltaRevertible,
-	MergeTreeDeltaRevertible,
-	MergeTreeRevertibleDriver,
+	type MergeTreeDeltaRevertible,
+	type MergeTreeRevertibleDriver,
 	revertMergeTreeDeltaRevertibles,
 } from "./revertibles";

@@ -3,16 +3,16 @@
  * Licensed under the MIT License.
  */
 
-export { IAsyncCache, IResources, loadRC, lockRC, saveRC } from "./fluidToolRC";
+export { type IAsyncCache, type IResources, loadRC, lockRC, saveRC } from "./fluidToolRC";
 export {
 	getMicrosoftConfiguration,
-	IOdspTokenManagerCacheKey,
-	OdspTokenConfig,
+	type IOdspTokenManagerCacheKey,
+	type OdspTokenConfig,
 	OdspTokenManager,
 	odspTokensCache,
 } from "./odspTokenManager";
 export {
 	gcBlobPrefix,
 	getNormalizedSnapshot,
-	ISnapshotNormalizerConfig,
+	type ISnapshotNormalizerConfig,
 } from "./snapshotNormalizer";

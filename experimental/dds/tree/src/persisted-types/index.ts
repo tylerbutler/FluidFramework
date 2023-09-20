@@ -5,18 +5,15 @@
 
 // API Exports
 
-export {
+export type {
 	BuildInternal_0_0_2,
 	BuildNodeInternal_0_0_2,
 	ChangeInternal_0_0_2,
 	ChangeNode_0_0_2,
-	ChangeTypeInternal,
-	ConstraintEffect,
 	ConstraintInternal_0_0_2,
 	DetachInternal_0_0_2,
 	Edit,
 	EditBase,
-	EditStatus,
 	EditWithoutId,
 	HasTraits,
 	InsertInternal_0_0_2,
@@ -27,11 +24,9 @@ export {
 	SharedTreeEditOp_0_0_2,
 	SharedTreeNoOp,
 	SharedTreeOp_0_0_2,
-	SharedTreeOpType,
 	SharedTreeSummary_0_0_2,
 	SharedTreeSummaryBase,
 	SharedTreeUpdateOp,
-	Side,
 	StablePlaceInternal_0_0_2,
 	StableRangeInternal_0_0_2,
 	TraitLocationInternal_0_0_2,
@@ -39,12 +34,20 @@ export {
 	TreeNode,
 	TreeNodeSequence,
 	VersionedOp,
+} from './0.0.2';
+
+export {
+	ChangeTypeInternal,
+	ConstraintEffect,
+	EditStatus,
+	SharedTreeOpType,
+	Side,
 	WriteFormat,
 } from './0.0.2';
-export {
+
+export type {
 	BuildInternal,
 	BuildNodeInternal,
-	ChangeInternal,
 	ChangeNode,
 	CompressedBuildInternal,
 	CompressedBuildNode,
@@ -58,16 +61,20 @@ export {
 	EditChunkContents_0_1_1,
 	EditLogSummary,
 	FluidEditHandle,
-	ghostSessionId,
 	InsertInternal,
 	InternalizedChange,
-	reservedIdCount,
 	SetValueInternal,
 	SharedTreeEditOp,
 	SharedTreeHandleOp,
 	SharedTreeOp,
 	SharedTreeSummary,
+	TraitLocationInternal,
+} from './0.1.1';
+
+export {
+	ChangeInternal,
+	ghostSessionId,
+	reservedIdCount,
 	StablePlaceInternal,
 	StableRangeInternal,
-	TraitLocationInternal,
 } from './0.1.1';

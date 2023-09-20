@@ -6,8 +6,8 @@
 export { ConsensusRegisterCollection } from "./consensusRegisterCollection";
 export { ConsensusRegisterCollectionFactory } from "./consensusRegisterCollectionFactory";
 export {
-	IConsensusRegisterCollection,
-	IConsensusRegisterCollectionEvents,
-	IConsensusRegisterCollectionFactory,
+	type IConsensusRegisterCollection,
+	type IConsensusRegisterCollectionEvents,
+	type IConsensusRegisterCollectionFactory,
 	ReadPolicy,
 } from "./interfaces";

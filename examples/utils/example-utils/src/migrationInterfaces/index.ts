@@ -3,21 +3,21 @@
  * Licensed under the MIT License.
  */
 
-export {
+export type {
 	IImportExportModel,
 	IMigratableModel,
 	IMigratableModelEvents,
 	IVersionedModel,
 } from "./migratableModel";
-export { IMigrationTool, IMigrationToolEvents, MigrationState } from "./migrationTool";
-export { DataTransformationCallback, IMigrator, IMigratorEvents } from "./migrator";
-export {
+export type { IMigrationTool, IMigrationToolEvents, MigrationState } from "./migrationTool";
+export type { DataTransformationCallback, IMigrator, IMigratorEvents } from "./migrator";
+export type {
 	ISameContainerMigratableModel,
 	ISameContainerMigratableModelEvents,
 } from "./sameContainerMigratableModel";
-export {
+export type {
 	ISameContainerMigrationTool,
 	ISameContainerMigrationToolEvents,
 	SameContainerMigrationState,
 } from "./sameContainerMigrationTool";
-export { ISameContainerMigrator, ISameContainerMigratorEvents } from "./sameContainerMigrator";
+export type { ISameContainerMigrator, ISameContainerMigratorEvents } from "./sameContainerMigrator";

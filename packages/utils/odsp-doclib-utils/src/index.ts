@@ -12,12 +12,12 @@ export {
 	getOdspScope,
 	getPushRefreshTokenFn,
 	getRefreshTokenFn,
-	IClientConfig,
-	IOdspAuthRequestInfo,
-	IOdspTokens,
+	type IClientConfig,
+	type IOdspAuthRequestInfo,
+	type IOdspTokens,
 	pushScope,
 	refreshTokens,
-	TokenRequestCredentials,
+	type TokenRequestCredentials,
 } from "./odspAuth";
 export {
 	getAadTenant,
@@ -33,7 +33,7 @@ export {
 	getDriveItemByRootFileName,
 	getDriveItemByServerRelativePath,
 	getDriveItemFromDriveAndItem,
-	IOdspDriveItem,
+	type IOdspDriveItem,
 } from "./odspDrives";
 export {
 	createOdspNetworkError,
@@ -41,8 +41,8 @@ export {
 	fetchIncorrectResponse,
 	getSPOAndGraphRequestIdsFromResponse,
 	hasFacetCodes,
-	OdspErrorResponse,
-	OdspErrorResponseInnerError,
+	type OdspErrorResponse,
+	type OdspErrorResponseInnerError,
 	OdspRedirectError,
 	OdspServiceReadOnlyErrorCode,
 	parseFacetCodes,

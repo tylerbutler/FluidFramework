@@ -6,7 +6,7 @@
 export { Ink } from "./ink";
 export { InkCanvas } from "./inkCanvas";
 export { InkFactory } from "./inkFactory";
-export {
+export type {
 	IClearOperation,
 	IColor,
 	ICreateStrokeOperation,

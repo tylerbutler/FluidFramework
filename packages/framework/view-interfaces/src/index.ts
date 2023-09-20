@@ -5,6 +5,6 @@
 
 export {
 	IFluidMountableView,
-	IFluidMountableViewClass,
-	IProvideFluidMountableView,
+	type IFluidMountableViewClass,
+	type IProvideFluidMountableView,
 } from "./mountableView";

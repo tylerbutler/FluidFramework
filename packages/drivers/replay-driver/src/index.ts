@@ -8,7 +8,7 @@ export { ReplayDocumentService } from "./replayDocumentService";
 export { ReplayDocumentServiceFactory } from "./replayDocumentServiceFactory";
 export {
 	FileSnapshotReader,
-	IFileSnapshot,
+	type IFileSnapshot,
 	OpStorage,
 	SnapshotStorage,
 	StaticStorageDocumentServiceFactory,

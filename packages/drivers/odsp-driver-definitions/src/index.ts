@@ -4,48 +4,48 @@
  */
 
 export {
-	IOdspError,
-	IOdspErrorAugmentations,
-	OdspError,
+	type IOdspError,
+	type IOdspErrorAugmentations,
+	type OdspError,
 	OdspErrorType,
 	OdspErrorTypes,
 } from "./errors";
-export {
+export type {
 	HostStoragePolicy,
 	ICollabSessionOptions,
 	IOpsCachingPolicy,
 	ISnapshotOptions,
 } from "./factory";
 export {
-	CacheContentType,
+	type CacheContentType,
 	getKeyForCacheEntry,
-	ICacheEntry,
-	IEntry,
-	IFileEntry,
-	IPersistedCache,
+	type ICacheEntry,
+	type IEntry,
+	type IFileEntry,
+	type IPersistedCache,
 	snapshotKey,
 } from "./odspCache";
 export {
-	IOdspResolvedUrl,
-	IOdspUrlParts,
-	ISharingLink,
-	ISharingLinkKind,
-	ShareLinkInfoType,
+	type IOdspResolvedUrl,
+	type IOdspUrlParts,
+	type ISharingLink,
+	type ISharingLinkKind,
+	type ShareLinkInfoType,
 	ShareLinkTypes,
 	SharingLinkRole,
 	SharingLinkScope,
 } from "./resolvedUrl";
 export {
-	IdentityType,
-	InstrumentedStorageTokenFetcher,
+	type IdentityType,
+	type InstrumentedStorageTokenFetcher,
 	isTokenFromCache,
-	OdspResourceTokenFetchOptions,
-	TokenFetcher,
-	TokenFetchOptions,
+	type OdspResourceTokenFetchOptions,
+	type TokenFetcher,
+	type TokenFetchOptions,
 	tokenFromResponse,
-	TokenResponse,
+	type TokenResponse,
 } from "./tokenFetch";
-export {
+export type {
 	IProvideSessionAwareDriverFactory,
 	IRelaySessionAwareDriverFactory,
 	ISocketStorageDiscovery,

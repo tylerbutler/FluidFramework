@@ -15,40 +15,44 @@
  *
  * @packageDocumentation
  */
-export { IMapMessageLocalMetadata, IValueOpEmitter, SequenceOptions } from "./defaultMapInterfaces";
+export type {
+	IMapMessageLocalMetadata,
+	IValueOpEmitter,
+	SequenceOptions,
+} from "./defaultMapInterfaces";
 export {
-	IInterval,
+	type IInterval,
 	Interval,
-	IIntervalHelpers,
+	type IIntervalHelpers,
 	IntervalOpType,
 	IntervalType,
-	ISerializableInterval,
-	ISerializedInterval,
+	type ISerializableInterval,
+	type ISerializedInterval,
 	SequenceInterval,
-	SerializedIntervalDelta,
+	type SerializedIntervalDelta,
 	IntervalStickiness,
 	sequenceIntervalHelpers,
 } from "./intervals";
 export {
-	DeserializeCallback,
-	IIntervalCollectionEvent,
-	IIntervalCollection,
-	IntervalLocator,
+	type DeserializeCallback,
+	type IIntervalCollectionEvent,
+	type IIntervalCollection,
+	type IntervalLocator,
 	intervalLocatorFromEndpoint,
 } from "./intervalCollection";
 export {
-	IntervalIndex,
-	SequenceIntervalIndexes,
-	IOverlappingIntervalsIndex,
+	type IntervalIndex,
+	type SequenceIntervalIndexes,
+	type IOverlappingIntervalsIndex,
 	createOverlappingIntervalsIndex,
 	createOverlappingSequenceIntervalsIndex,
-	IEndpointInRangeIndex,
-	IStartpointInRangeIndex,
+	type IEndpointInRangeIndex,
+	type IStartpointInRangeIndex,
 	createEndpointInRangeIndex,
 	createStartpointInRangeIndex,
-	IIdIntervalIndex,
+	type IIdIntervalIndex,
 	createIdIntervalIndex,
-	IEndpointIndex,
+	type IEndpointIndex,
 	createEndpointIndex,
 } from "./intervalIndex";
 export {
@@ -58,13 +62,13 @@ export {
 	appendIntervalPropertyChangedToRevertibles,
 	appendSharedStringDeltaToRevertibles,
 	discardSharedStringRevertibles,
-	IntervalRevertible,
+	type IntervalRevertible,
 	revertSharedStringRevertibles,
-	SharedStringRevertible,
+	type SharedStringRevertible,
 } from "./revertibles";
-export { ISharedSegmentSequenceEvents, SharedSegmentSequence } from "./sequence";
+export { type ISharedSegmentSequenceEvents, SharedSegmentSequence } from "./sequence";
 export {
-	ISequenceDeltaRange,
+	type ISequenceDeltaRange,
 	SequenceDeltaEvent,
 	SequenceEvent,
 	SequenceMaintenanceEvent,
@@ -72,13 +76,13 @@ export {
 export { SharedStringFactory } from "./sequenceFactory";
 export {
 	getTextAndMarkers,
-	ISharedString,
+	type ISharedString,
 	SharedString,
-	SharedStringSegment,
+	type SharedStringSegment,
 } from "./sharedString";
 export {
-	ISharedIntervalCollection,
+	type ISharedIntervalCollection,
 	SharedIntervalCollection,
 	SharedIntervalCollectionFactory,
 } from "./sharedIntervalCollection";
-export { IJSONRunSegment, SharedSequence, SubSequence } from "./sharedSequence";
+export { type IJSONRunSegment, SharedSequence, SubSequence } from "./sharedSequence";

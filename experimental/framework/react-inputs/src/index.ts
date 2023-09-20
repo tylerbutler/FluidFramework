@@ -5,17 +5,17 @@
 
 export {
 	CollaborativeCheckbox,
-	ICollaborativeCheckboxProps,
-	ICollaborativeCheckboxState,
+	type ICollaborativeCheckboxProps,
+	type ICollaborativeCheckboxState,
 } from "./CollaborativeCheckbox";
 export {
-	ICollaborativeInputProps,
-	ICollaborativeInputState,
+	type ICollaborativeInputProps,
+	type ICollaborativeInputState,
 	CollaborativeInput,
 } from "./CollaborativeInput";
-export { CollaborativeTextArea, ICollaborativeTextAreaProps } from "./CollaborativeTextArea";
+export { CollaborativeTextArea, type ICollaborativeTextAreaProps } from "./CollaborativeTextArea";
 export {
-	ISharedStringHelperEvents,
-	ISharedStringHelperTextChangedEventArgs,
+	type ISharedStringHelperEvents,
+	type ISharedStringHelperTextChangedEventArgs,
 	SharedStringHelper,
 } from "./SharedStringHelper";

@@ -17,34 +17,34 @@
 // API Exports
 
 export {
-	Build,
-	BuildNode,
-	BuildTreeNode,
+	type Build,
+	type BuildNode,
+	type BuildTreeNode,
 	Change,
 	ChangeType,
-	Constraint,
-	Detach,
-	HasVariadicTraits,
-	Insert,
-	SetValue,
+	type Constraint,
+	type Detach,
+	type HasVariadicTraits,
+	type Insert,
+	type SetValue,
 	StablePlace,
 	StableRange,
 } from './ChangeTypes';
-export { Checkout, CheckoutEvent, ICheckoutEvents, EditValidationResult } from './Checkout';
+export { Checkout, CheckoutEvent, type ICheckoutEvents, EditValidationResult } from './Checkout';
 export { isSharedTreeEvent, sharedTreeAssertionErrorType, Result } from './Common';
 export { EagerCheckout } from './EagerCheckout';
 export type { OrderedEditSet, EditHandle } from './EditLog';
 export {
 	setTrait,
 	areRevisionViewsSemanticallyEqual,
-	BadPlaceValidationResult,
-	BadRangeValidationResult,
+	type BadPlaceValidationResult,
+	type BadRangeValidationResult,
 	PlaceValidationResult,
-	RangeValidationResult,
+	type RangeValidationResult,
 	RangeValidationResultKind,
 } from './EditUtilities';
 export { SharedTreeDiagnosticEvent, SharedTreeEvent } from './EventTypes';
-export { Delta, Forest, ForestNode, ParentData } from './Forest';
+export { type Delta, Forest, type ForestNode, type ParentData } from './Forest';
 export type {
 	CompressedId,
 	Definition,
@@ -65,10 +65,10 @@ export type {
 export { isDetachedSequenceId } from './Identifiers';
 export { initialTree } from './InitialTree';
 export { LazyCheckout } from './LazyCheckout';
-export { LogViewer } from './LogViewer';
-export { NodeIdContext, NodeIdGenerator, NodeIdConverter } from './NodeIdUtilities';
+export type { LogViewer } from './LogViewer';
+export type { NodeIdContext, NodeIdGenerator, NodeIdConverter } from './NodeIdUtilities';
 export {
-	MergeHealthStats,
+	type MergeHealthStats,
 	SharedTreeMergeHealthTelemetryHeartbeat,
 	useFailedSequencedEditTelemetry,
 } from './MergeHealth';
@@ -76,67 +76,67 @@ export { comparePayloads } from './PayloadUtilities';
 export {
 	Side,
 	EditStatus,
-	TreeNode,
-	TreeNodeSequence,
-	Payload,
+	type TreeNode,
+	type TreeNodeSequence,
+	type Payload,
 	ConstraintEffect,
-	Edit,
-	ChangeInternal,
-	InternalizedChange,
-	ChangeNode,
-	ChangeNode_0_0_2,
-	EditLogSummary,
-	FluidEditHandle,
-	SharedTreeSummaryBase,
-	EditWithoutId,
-	PlaceholderTree,
-	EditBase,
-	HasTraits,
-	InsertInternal,
-	DetachInternal,
-	BuildInternal,
-	SetValueInternal,
-	ConstraintInternal,
-	BuildNodeInternal,
-	StablePlaceInternal_0_0_2,
-	StableRangeInternal_0_0_2,
-	NodeData,
-	TraitMap,
+	type Edit,
+	type ChangeInternal,
+	type InternalizedChange,
+	type ChangeNode,
+	type ChangeNode_0_0_2,
+	type EditLogSummary,
+	type FluidEditHandle,
+	type SharedTreeSummaryBase,
+	type EditWithoutId,
+	type PlaceholderTree,
+	type EditBase,
+	type HasTraits,
+	type InsertInternal,
+	type DetachInternal,
+	type BuildInternal,
+	type SetValueInternal,
+	type ConstraintInternal,
+	type BuildNodeInternal,
+	type StablePlaceInternal_0_0_2,
+	type StableRangeInternal_0_0_2,
+	type NodeData,
+	type TraitMap,
 	ChangeTypeInternal,
-	TraitLocationInternal_0_0_2,
+	type TraitLocationInternal_0_0_2,
 	WriteFormat,
-	ConstraintInternal_0_0_2,
-	StablePlaceInternal,
-	StableRangeInternal,
-	BuildNodeInternal_0_0_2,
-	BuildInternal_0_0_2,
-	InsertInternal_0_0_2,
-	DetachInternal_0_0_2,
-	SetValueInternal_0_0_2,
-	TraitLocationInternal,
+	type ConstraintInternal_0_0_2,
+	type StablePlaceInternal,
+	type StableRangeInternal,
+	type BuildNodeInternal_0_0_2,
+	type BuildInternal_0_0_2,
+	type InsertInternal_0_0_2,
+	type DetachInternal_0_0_2,
+	type SetValueInternal_0_0_2,
+	type TraitLocationInternal,
 } from './persisted-types';
-export { ReconciliationChange, ReconciliationEdit, ReconciliationPath } from './ReconciliationPath';
-export { Revision } from './RevisionValueCache';
+export type { ReconciliationChange, ReconciliationEdit, ReconciliationPath } from './ReconciliationPath';
+export { type Revision } from './RevisionValueCache';
 export { RevisionView, TransactionView } from './RevisionView';
 export { TreeNodeHandle } from './TreeNodeHandle';
 export { getTraitLocationOfRange, placeFromStablePlace, rangeFromStableRange } from './TreeViewUtilities';
 export {
-	SharedTreeArgs,
-	SharedTreeOptions,
-	SharedTreeBaseOptions,
-	SharedTreeOptions_0_0_2,
-	SharedTreeOptions_0_1_1,
+	type SharedTreeArgs,
+	type SharedTreeOptions,
+	type SharedTreeBaseOptions,
+	type SharedTreeOptions_0_0_2,
+	type SharedTreeOptions_0_1_1,
 	SharedTreeFactory,
 	SharedTree,
-	EditCommittedHandler,
-	SequencedEditAppliedHandler,
-	EditCommittedEventArguments,
-	SequencedEditAppliedEventArguments,
-	EditApplicationOutcome,
-	ISharedTreeEvents,
-	StashedLocalOpMetadata,
+	type EditCommittedHandler,
+	type SequencedEditAppliedHandler,
+	type EditCommittedEventArguments,
+	type SequencedEditAppliedEventArguments,
+	type EditApplicationOutcome,
+	type ISharedTreeEvents,
+	type StashedLocalOpMetadata,
 } from './SharedTree';
-export { StringInterner } from './StringInterner';
+export type { StringInterner } from './StringInterner';
 
 /**
  * TODO:#61413: Publish test utilities from a separate test package
@@ -146,22 +146,22 @@ export {
 	getSerializedUploadedEditChunkContents,
 } from './SummaryTestUtilities';
 
-export { Transaction, TransactionEvent, TransactionEvents } from './Transaction';
+export { Transaction, TransactionEvent, type TransactionEvents } from './Transaction';
 export {
 	TransactionInternal,
 	GenericTransaction,
-	GenericTransactionPolicy,
-	EditingResult,
-	EditingResultBase,
-	FailedEditingResult,
-	ValidEditingResult,
-	TransactionState,
-	TransactionFailure,
-	SucceedingTransactionState,
-	FailingTransactionState,
-	ChangeResult,
+	type GenericTransactionPolicy,
+	type EditingResult,
+	type EditingResultBase,
+	type FailedEditingResult,
+	type ValidEditingResult,
+	type TransactionState,
+	type TransactionFailure,
+	type SucceedingTransactionState,
+	type FailingTransactionState,
+	type ChangeResult,
 } from './TransactionInternal';
-export {
+export type {
 	NodeInTrait,
 	PlaceIndex,
 	TreeViewNode,

@@ -3,15 +3,15 @@
  * Licensed under the MIT License.
  */
 
-export { IInsecureUser } from "./insecureUsers";
+export { type IInsecureUser } from "./insecureUsers";
 export { InsecureTokenProvider } from "./insecureTokenProvider";
 export { MockFluidDataStoreContext } from "./mocksDataStoreContext";
 export { MockDeltaManager, MockDeltaQueue } from "./mockDeltas";
 export { MockHandle } from "./mockHandle";
 export {
-	IMockContainerRuntimePendingMessage,
+	type IMockContainerRuntimePendingMessage,
 	MockContainerRuntime,
-	IMockContainerRuntimeOptions,
+	type IMockContainerRuntimeOptions,
 	MockContainerRuntimeFactory,
 	MockDeltaConnection,
 	MockEmptyDeltaConnection,

@@ -15,8 +15,8 @@
  * @packageDocumentation
  */
 
-export {
-	DirectoryFactory,
+export { DirectoryFactory, SharedDirectory } from "./directory";
+export type {
 	ICreateInfo,
 	IDirectoryClearOperation,
 	IDirectoryCreateSubDirectoryOperation,
@@ -29,9 +29,8 @@ export {
 	IDirectorySetOperation,
 	IDirectoryStorageOperation,
 	IDirectorySubDirectoryOperation,
-	SharedDirectory,
 } from "./directory";
-export {
+export type {
 	IDirectory,
 	IDirectoryEvents,
 	IDirectoryValueChanged,
@@ -43,5 +42,5 @@ export {
 	ISharedMapEvents,
 	IValueChanged,
 } from "./interfaces";
-export { LocalValueMaker, ILocalValue } from "./localValues";
+export { LocalValueMaker, type ILocalValue } from "./localValues";
 export { MapFactory, SharedMap } from "./map";

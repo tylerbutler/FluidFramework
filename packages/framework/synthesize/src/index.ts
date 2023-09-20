@@ -6,9 +6,9 @@
 export { DependencyContainer } from "./dependencyContainer";
 export {
 	IFluidDependencySynthesizer,
-	IProvideFluidDependencySynthesizer,
+	type IProvideFluidDependencySynthesizer,
 } from "./IFluidDependencySynthesizer";
-export {
+export type {
 	AsyncFluidObjectProvider,
 	AsyncOptionalFluidObjectProvider,
 	AsyncRequiredFluidObjectProvider,

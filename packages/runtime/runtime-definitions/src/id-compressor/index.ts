@@ -4,14 +4,14 @@
  */
 
 export {
-	IdCreationRange,
-	SerializedIdCompressor,
-	SerializedIdCompressorWithNoSession,
-	SerializedIdCompressorWithOngoingSession,
-	IdCreationRangeWithStashedState,
+	type IdCreationRange,
+	type SerializedIdCompressor,
+	type SerializedIdCompressorWithNoSession,
+	type SerializedIdCompressorWithOngoingSession,
+	type IdCreationRangeWithStashedState,
 	initialClusterCapacity,
 } from "./persisted-types";
 
-export { IIdCompressorCore, IIdCompressor } from "./idCompressor";
+export type { IIdCompressorCore, IIdCompressor } from "./idCompressor";
 
-export { SessionSpaceCompressedId, OpSpaceCompressedId, SessionId, StableId } from "./identifiers";
+export type { SessionSpaceCompressedId, OpSpaceCompressedId, SessionId, StableId } from "./identifiers";

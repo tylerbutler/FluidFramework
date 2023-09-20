@@ -3,11 +3,13 @@
  * Licensed under the MIT License.
  */
 
-export {
+export type {
 	IdCreationRange,
 	SerializedIdCompressor,
 	SerializedIdCompressorWithNoSession,
 	SerializedIdCompressorWithOngoingSession,
 	IdCreationRangeWithStashedState,
+} from "./0.0.1";
+export {
 	initialClusterCapacity,
 } from "./0.0.1";

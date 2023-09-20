@@ -5,7 +5,7 @@
 
 export {
 	SummaryCompressionAlgorithm,
-	ICompressionStorageConfig,
+	type ICompressionStorageConfig,
 	DefaultCompressionStorageConfig,
 } from "./compressionTypes";
 export { DocumentServiceFactoryCompressionAdapter } from "./documentServiceFactoryCompressionAdapter";

@@ -96,4 +96,4 @@ export {
 	SharedSegmentSequenceRevertible,
 	SharedSegmentSequenceUndoRedoHandler,
 } from "./sequenceHandler";
-export { IRevertible, UndoRedoStackManager } from "./undoRedoStackManager";
+export { type IRevertible, UndoRedoStackManager } from "./undoRedoStackManager";

@@ -16,7 +16,7 @@ export { EventForwarder } from "./eventForwarder";
  */
 // eslint-disable-next-line no-restricted-syntax
 export * from "./indexNode";
-export { IsomorphicPerformance } from "./performanceIsomorphic";
+export type { IsomorphicPerformance } from "./performanceIsomorphic";
 // export { IRange, IRangeTrackerSnapshot, RangeTracker } from "./rangeTracker";
-export { ITraceEvent, Trace } from "./trace";
-export { EventEmitterEventType, TypedEventEmitter, TypedEventTransform } from "./typedEventEmitter";
+export { type ITraceEvent, Trace } from "./trace";
+export { type EventEmitterEventType, TypedEventEmitter, type TypedEventTransform } from "./typedEventEmitter";

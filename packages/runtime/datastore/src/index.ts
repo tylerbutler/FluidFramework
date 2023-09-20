@@ -7,7 +7,7 @@ export { FluidObjectHandle } from "./fluidHandle";
 export {
 	DataStoreMessageType,
 	FluidDataStoreRuntime,
-	ISharedObjectRegistry,
+	type ISharedObjectRegistry,
 	mixinRequestHandler,
 	mixinSummaryHandler,
 } from "./dataStoreRuntime";
