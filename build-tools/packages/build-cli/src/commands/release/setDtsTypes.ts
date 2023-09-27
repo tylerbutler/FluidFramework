@@ -144,12 +144,16 @@ function updatePackageJsonTypes(config: UpdateConfig, log: CommandLogger): boole
 	let loadFile;
 	try {
 		loadFile = ExtractorConfig.loadFile(apiExtractorConfigFilePath);
+
 		const dtsRollupEnabled = loadFile.dtsRollup?.enabled;
 		if (dtsRollupEnabled === true) {
 			log.verbose(`Config exists: ${JSON.stringify(config.pkg.directory)}`);
 
 			const alpha = loadFile.dtsRollup?.alphaTrimmedFilePath;
 			const beta = loadFile.dtsRollup?.betaTrimmedFilePath;
+
+			log.log(alpha);
+			log.log(beta);
 
 			if (config.releaseType === "alpha" && alpha !== "") {
 				config.json.types = `${config.typesFolder}/${config.pkg.nameUnscoped}-alpha.d.ts`;
