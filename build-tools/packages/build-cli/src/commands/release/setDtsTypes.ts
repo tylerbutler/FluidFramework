@@ -2,13 +2,13 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Flags } from "@oclif/core";
+import { ExtractorConfig } from "@microsoft/api-extractor";
+import { Flags, Config } from "@oclif/core";
 import { Package, updatePackageJsonFile } from "@fluidframework/build-tools";
 import path from "node:path";
 import { PackageCommand } from "../../BasePackageCommand";
 // eslint-disable-next-line node/no-missing-import
 import type { PackageJson } from "type-fest";
-import { ExtractorConfig } from "@microsoft/api-extractor";
 import { CommandLogger } from "../../logging";
 
 /**
@@ -70,20 +70,19 @@ export default class SetReleaseTagPublishingCommand extends PackageCommand<
 	static readonly flags = {
 		types: Flags.custom<ReleaseTag>({
 			description: "Which .d.ts types to include in the published package.",
-			parse: async (input) => {
+			required: true,
+			parse: async (input: string): Promise<ReleaseTag> => {
 				if (isReleaseTag(input)) {
 					return input;
 				}
 				throw new Error(`Invalid release type: ${input}`);
 			},
-			required: true,
 		})(),
 		...PackageCommand.flags,
 	};
 
-	private packageList!: PackageTypesList;
+	private packageList: PackageTypesList | undefined;
 
-	// Override the init method to initialize packageList
 	public async init() {
 		await super.init();
 		this.packageList = {
@@ -105,17 +104,61 @@ export default class SetReleaseTagPublishingCommand extends PackageCommand<
 			const [typesFolder] = types.split("/");
 			const includesAlphaBeta: boolean = types.includes("alpha") || types.includes("beta");
 
-			const config: UpdateConfig = {
-				pkg,
-				releaseType: this.flags.types as ReleaseTag,
-				json,
-				typesFolder,
-				includesAlphaBeta,
-			};
+			// if (apiExtractorConfigExists) {
+			// Read the content of api-extractor.json
+			const configOptions = ExtractorConfig.tryLoadForFolder({
+				startingFolder: pkg.directory,
+			});
+			if (configOptions === undefined) {
+				this.verbose(`No api-extractor config found for ${pkg.name}. Skipping.`);
+				return;
+			}
+			const apiExtractorConfig = ExtractorConfig.prepare(configOptions);
+			// const apiExtractorConfig: string = fs.readFileSync(
+			// 	apiExtractorConfigFilePath,
+			// 	"utf-8",
+			// );
 
-			packageUpdate = updatePackageJsonTypes(config, this.logger);
+			// if (apiExtractorConfig.alphaTrimmedFilePath !== "") {
+			let typesFilePath: string | undefined;
+			switch (this.flags.types) {
+				case "alpha": {
+					packageUpdate = true;
+					typesFilePath = apiExtractorConfig.alphaTrimmedFilePath;
+					break;
+				}
 
-			updatePackageLists(this.packageList, packageUpdate, pkg);
+				case "beta": {
+					packageUpdate = true;
+					typesFilePath = apiExtractorConfig.betaTrimmedFilePath;
+					break;
+				}
+
+				case "public": {
+					if (includesAlphaBeta) {
+						typesFilePath = apiExtractorConfig.publicTrimmedFilePath;
+					}
+					break;
+				}
+
+				default: {
+					this.error(`${this.flags.types} is not a valid value.`);
+				}
+			}
+
+			if (typesFilePath === undefined) {
+				this.error(`No .d.ts file found.`);
+			}
+			packageUpdate = true;
+			json.types = typesFilePath;
+			// }
+
+			if (packageUpdate) {
+				this.packageList?.packagesUpdated.push(pkg.name);
+			} else {
+				this.packageList?.packagesNotUpdated.push(pkg.name);
+			}
+			// }
 		});
 	}
 
@@ -125,11 +168,11 @@ export default class SetReleaseTagPublishingCommand extends PackageCommand<
 
 		const flags = this.flags;
 
-		if (this.packageList.packagesUpdated.length === 0) {
+		if (this.packageList?.packagesUpdated.length === 0) {
 			this.log(`No updates in package.json for ${flags.types} release tag`);
 		}
 
-		return this.packageList;
+		return this.packageList ?? { packagesUpdated: [], packagesNotUpdated: [] };
 	}
 }
 
