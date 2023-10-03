@@ -1,0 +1,29 @@
+name: Monthly issue metrics
+on:
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  build:
+    name: issue metrics
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Run issue-metrics tool
+      uses: github/issue-metrics@v2
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        LABELS_TO_MEASURE: 'msftbot: merge-next'
+        SEARCH_QUERY: 'repo:microsoft/FluidFramework is:pr label:"base: next" -label:main-next-integrate'
+
+    - name: Create issue
+      uses: peter-evans/create-issue-from-file@v4
+      with:
+        title: Monthly issue metrics report
+        token: ${{ secrets.GITHUB_TOKEN }}
+        content-filepath: ./issue_metrics.md
+        assignees: <YOUR_GITHUB_HANDLE_HERE>
