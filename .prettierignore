@@ -37,6 +37,9 @@ tools/pipelines/
 # Templates
 .changeset/templates/
 
+# Handlebar templates can be broken by autoformatting
+*.hbs
+
 # Test json
 build-tools/packages/build-tools/src/test/data/
 experimental/dds/tree/src/test/documents/
@@ -79,6 +82,9 @@ docs/**/*.html
 
 # Ignore docs markdown files since those are formatted using markdownlint
 docs/**/*.md
+
+# Ignore docs scss files since those are manually formatted
+docs/**/*.scss
 
 # This is a generated file
 docs/themes/thxvscode/assets/js/bundle.js
