@@ -1,0 +1,16 @@
+[formatter.js]
+command = "prettier"
+options = ["--write"]
+includes = [
+ "*.css",
+ "*.html",
+ "*.cjs",
+ "*.js",
+ "*.json",
+ "*.jsx",
+ "*.md",
+ "*.mdx",
+ "*.scss",
+ "*.ts",
+ "*.yaml",
+]
