@@ -87,7 +87,11 @@ function layoutContent(apiItem, itemSpecificContent, config) {
 	}
 
 	// Render examples (if any)
-	const renderedExamples = LayoutUtilities.createExamplesSection(apiItem, config, customExamplesSectionTitle);
+	const renderedExamples = LayoutUtilities.createExamplesSection(
+		apiItem,
+		config,
+		customExamplesSectionTitle,
+	);
 	if (renderedExamples !== undefined) {
 		sections.push(renderedExamples);
 	}
@@ -99,7 +103,11 @@ function layoutContent(apiItem, itemSpecificContent, config) {
 	}
 
 	// Render @throws content (if any)
-	const renderedThrows = LayoutUtilities.createThrowsSection(apiItem, config, customThrowsSectionTitle);
+	const renderedThrows = LayoutUtilities.createThrowsSection(
+		apiItem,
+		config,
+		customThrowsSectionTitle,
+	);
 	if (renderedThrows !== undefined) {
 		sections.push(renderedThrows);
 	}
