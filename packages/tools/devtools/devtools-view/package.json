@@ -57,6 +57,7 @@
 		"@fluidframework/driver-definitions": "workspace:~",
 		"@fluidframework/protocol-definitions": "^3.0.0",
 		"@fluidframework/telemetry-utils": "workspace:~",
+		"prop-types": "^15.7.2",
 		"react": "^17.0.1",
 		"react-dom": "^17.0.1",
 		"react-split-pane": "^0.1.92",
