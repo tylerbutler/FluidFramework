@@ -77,6 +77,22 @@ export class MonoRepo {
 	public readonly packages: Package[] = [];
 	public readonly version: string;
 	public readonly workspaceGlobs: string[];
+
+	public get name(): string {
+		return this.kind;
+	}
+
+	/**
+	 * The directory of the root of the release group.
+	 */
+	public get directory(): string {
+		return this.repoPath;
+	}
+
+	public get releaseGroup(): "build-tools" | "client" | "server" | "gitrest" | "historian" {
+		return this.kind as "build-tools" | "client" | "server" | "gitrest" | "historian";
+	}
+
 	private _packageJson: PackageJson;
 
 	static load(group: string, repoPackage: IFluidRepoPackage, log: Logger) {

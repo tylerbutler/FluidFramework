@@ -7,6 +7,8 @@ Release commands are used to manage the Fluid release process.
 * [`flub release fromTag TAG`](#flub-release-fromtag-tag)
 * [`flub release history`](#flub-release-history)
 * [`flub release report`](#flub-release-report)
+* [`flub release report-unreleased`](#flub-release-report-unreleased)
+* [`flub release setPackageTypesField`](#flub-release-setpackagetypesfield)
 
 ## `flub release`
 
@@ -196,4 +198,81 @@ EXAMPLES
   Generate a release report for each package and release group in the repo interactively.
 
     $ flub release report -i
+```
+
+## `flub release report-unreleased`
+
+Creates a release report for the most recent build of the client release group published to an internal ADO feed. It does this by finding the most recent build in ADO produced from a provided branch, and creates a report using that version. The report is a combination of the "simple" and "caret" report formats. Packages released as part of the client release group will have an exact version range, while other packages, such as server packages or independent packages, will have a caret-equivalent version range.
+
+```
+USAGE
+  $ flub release report-unreleased --repo <value> --ado_pat <value> --sourceBranch <value> --output <value> [-v |
+  --quiet]
+
+FLAGS
+  --ado_pat=<value>       (required) ADO Personal Access Token. This flag should be provided via the ADO_PAT environment
+                          variable for security reasons.
+  --output=<value>        (required) Output manifest file path
+  --repo=<value>          (required) Repository name
+  --sourceBranch=<value>  (required) Branch name across which the dev release manifest should be generated.
+
+LOGGING FLAGS
+  -v, --verbose  Enable verbose logging.
+  --quiet        Disable all logging.
+
+DESCRIPTION
+  Creates a release report for the most recent build of the client release group published to an internal ADO feed. It
+  does this by finding the most recent build in ADO produced from a provided branch, and creates a report using that
+  version. The report is a combination of the "simple" and "caret" report formats. Packages released as part of the
+  client release group will have an exact version range, while other packages, such as server packages or independent
+  packages, will have a caret-equivalent version range.
+```
+
+## `flub release setPackageTypesField`
+
+Updates which .d.ts file is referenced by the `types` field in package.json. This command is used during package publishing (by CI) to select the d.ts file which corresponds to the selected API-Extractor release tag.
+
+```
+USAGE
+  $ flub release setPackageTypesField --types <value> [-v | --quiet] [--concurrency <value>] [--all | --dir <value> | --packages |
+    -g client|server|azure|build-tools|gitrest|historian|all | --releaseGroupRoot
+    client|server|azure|build-tools|gitrest|historian|all] [--private] [--scope <value> | --skipScope <value>] [--json]
+
+FLAGS
+  --concurrency=<value>  [default: 25] The number of tasks to execute concurrently.
+  --types=<value>        (required) Which .d.ts types to include in the published package.
+
+PACKAGE SELECTION FLAGS
+  -g, --releaseGroup=<option>...  Run on all child packages within the specified release groups. This does not include
+                                  release group root packages. To include those, use the --releaseGroupRoot argument.
+                                  Cannot be used with --all, --dir, or --packages.
+                                  <options: client|server|azure|build-tools|gitrest|historian|all>
+  --all                           Run on all packages and release groups. Cannot be used with --all, --dir,
+                                  --releaseGroup, or --releaseGroupRoot.
+  --dir=<value>                   Run on the package in this directory. Cannot be used with --all, --dir,
+                                  --releaseGroup, or --releaseGroupRoot.
+  --packages                      Run on all independent packages in the repo. Cannot be used with --all, --dir,
+                                  --releaseGroup, or --releaseGroupRoot.
+  --releaseGroupRoot=<option>...  Run on the root package of the specified release groups. This does not include any
+                                  child packages within the release group. To include those, use the --releaseGroup
+                                  argument. Cannot be used with --all, --dir, or --packages.
+                                  <options: client|server|azure|build-tools|gitrest|historian|all>
+
+LOGGING FLAGS
+  -v, --verbose  Enable verbose logging.
+  --quiet        Disable all logging.
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+PACKAGE FILTER FLAGS
+  --[no-]private          Only include private packages. Use --no-private to exclude private packages instead.
+  --scope=<value>...      Package scopes to filter to. If provided, only packages whose scope matches the flag will be
+                          included. Cannot be used with --skipScope.
+  --skipScope=<value>...  Package scopes to filter out. If provided, packages whose scope matches the flag will be
+                          excluded. Cannot be used with --scope.
+
+DESCRIPTION
+  Updates which .d.ts file is referenced by the `types` field in package.json. This command is used during package
+  publishing (by CI) to select the d.ts file which corresponds to the selected API-Extractor release tag.
 ```

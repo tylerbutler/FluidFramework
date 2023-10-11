@@ -3,23 +3,20 @@
  * Licensed under the MIT License.
  */
 
-import { Static, Type } from "@sinclair/typebox";
-import { assert } from "@fluidframework/common-utils";
+import { ObjectOptions, Static, Type } from "@sinclair/typebox";
+import { assert } from "@fluidframework/core-utils";
 import {
 	FieldKindIdentifierSchema,
 	FieldStoredSchema,
-	GlobalFieldKey,
-	GlobalFieldKeySchema,
-	LocalFieldKey,
-	LocalFieldKeySchema,
-	Named,
+	FieldKey,
+	FieldKeySchema,
 	SchemaData,
 	TreeStoredSchema,
 	TreeSchemaIdentifier,
 	TreeSchemaIdentifierSchema,
 	ValueSchema,
 } from "../core";
-import { brand, fail } from "../util";
+import { brand, fail, Named } from "../util";
 import { ICodecOptions, IJsonCodec } from "../codec";
 
 const version = "1.0.0" as const;
@@ -29,39 +26,29 @@ const FieldSchemaFormatBase = Type.Object({
 	types: Type.Optional(Type.Array(TreeSchemaIdentifierSchema)),
 });
 
-const FieldSchemaFormat = Type.Intersect([FieldSchemaFormatBase], { additionalProperties: false });
+const noAdditionalProps: ObjectOptions = { additionalProperties: false };
 
-const NamedLocalFieldSchemaFormat = Type.Intersect(
+const FieldSchemaFormat = Type.Composite([FieldSchemaFormatBase], noAdditionalProps);
+
+const NamedFieldSchemaFormat = Type.Composite(
 	[
 		FieldSchemaFormatBase,
 		Type.Object({
-			name: LocalFieldKeySchema,
+			name: FieldKeySchema,
 		}),
 	],
-	{ additionalProperties: false },
-);
-
-const NamedGlobalFieldSchemaFormat = Type.Intersect(
-	[
-		FieldSchemaFormatBase,
-		Type.Object({
-			name: GlobalFieldKeySchema,
-		}),
-	],
-	{ additionalProperties: false },
+	noAdditionalProps,
 );
 
 const TreeSchemaFormat = Type.Object(
 	{
 		name: TreeSchemaIdentifierSchema,
-		localFields: Type.Array(NamedLocalFieldSchemaFormat),
-		globalFields: Type.Array(GlobalFieldKeySchema),
-		extraLocalFields: FieldSchemaFormat,
-		extraGlobalFields: Type.Boolean(),
+		structFields: Type.Array(NamedFieldSchemaFormat),
+		mapFields: Type.Optional(FieldSchemaFormat),
 		// TODO: don't use external type here.
-		value: Type.Enum(ValueSchema),
+		leafValue: Type.Optional(Type.Enum(ValueSchema)),
 	},
-	{ additionalProperties: false },
+	noAdditionalProps,
 );
 
 /**
@@ -73,20 +60,19 @@ const TreeSchemaFormat = Type.Object(
  * this choice is somewhat arbitrary, but avoids user data being used as object keys,
  * which can sometimes be an issue (for example handling that for "__proto__" can require care).
  */
-const Format = Type.Object(
+export const Format = Type.Object(
 	{
 		version: Type.Literal(version),
 		treeSchema: Type.Array(TreeSchemaFormat),
-		globalFieldSchema: Type.Array(NamedGlobalFieldSchemaFormat),
+		rootFieldSchema: FieldSchemaFormat,
 	},
-	{ additionalProperties: false },
+	noAdditionalProps,
 );
 
-type Format = Static<typeof Format>;
+export type Format = Static<typeof Format>;
 type FieldSchemaFormat = Static<typeof FieldSchemaFormat>;
 type TreeSchemaFormat = Static<typeof TreeSchemaFormat>;
-type NamedLocalFieldSchemaFormat = Static<typeof NamedLocalFieldSchemaFormat>;
-type NamedGlobalFieldSchemaFormat = Static<typeof NamedGlobalFieldSchemaFormat>;
+type NamedFieldSchemaFormat = Static<typeof NamedFieldSchemaFormat>;
 
 const Versioned = Type.Object({
 	version: Type.String(),
@@ -95,19 +81,15 @@ type Versioned = Static<typeof Versioned>;
 
 function encodeRepo(repo: SchemaData): Format {
 	const treeSchema: TreeSchemaFormat[] = [];
-	const globalFieldSchema: NamedGlobalFieldSchemaFormat[] = [];
+	const rootFieldSchema = encodeField(repo.rootFieldSchema);
 	for (const [name, schema] of repo.treeSchema) {
 		treeSchema.push(encodeTree(name, schema));
 	}
-	for (const [name, schema] of repo.globalFieldSchema) {
-		globalFieldSchema.push(encodeNamedField(name, schema));
-	}
 	treeSchema.sort(compareNamed);
-	globalFieldSchema.sort(compareNamed);
 	return {
 		version,
 		treeSchema,
-		globalFieldSchema,
+		rootFieldSchema,
 	};
 }
 
@@ -124,13 +106,11 @@ function compareNamed(a: Named<string>, b: Named<string>) {
 function encodeTree(name: TreeSchemaIdentifier, schema: TreeStoredSchema): TreeSchemaFormat {
 	const out: TreeSchemaFormat = {
 		name,
-		extraGlobalFields: schema.extraGlobalFields,
-		extraLocalFields: encodeField(schema.extraLocalFields),
-		globalFields: [...schema.globalFields].sort(),
-		localFields: [...schema.localFields]
+		mapFields: schema.mapFields === undefined ? undefined : encodeField(schema.mapFields),
+		structFields: [...schema.structFields]
 			.map(([k, v]) => encodeNamedField(k, v))
 			.sort(compareNamed),
-		value: schema.value,
+		leafValue: schema.leafValue,
 	};
 	return out;
 }
@@ -153,16 +133,12 @@ function encodeNamedField<T>(name: T, schema: FieldStoredSchema): FieldSchemaFor
 }
 
 function decode(f: Format): SchemaData {
-	const globalFieldSchema: Map<GlobalFieldKey, FieldStoredSchema> = new Map();
 	const treeSchema: Map<TreeSchemaIdentifier, TreeStoredSchema> = new Map();
-	for (const field of f.globalFieldSchema) {
-		globalFieldSchema.set(field.name, decodeField(field));
-	}
 	for (const tree of f.treeSchema) {
 		treeSchema.set(brand(tree.name), decodeTree(tree));
 	}
 	return {
-		globalFieldSchema,
+		rootFieldSchema: decodeField(f.rootFieldSchema),
 		treeSchema,
 	};
 }
@@ -178,28 +154,26 @@ function decodeField(schema: FieldSchemaFormat): FieldStoredSchema {
 
 function decodeTree(schema: TreeSchemaFormat): TreeStoredSchema {
 	const out: TreeStoredSchema = {
-		extraGlobalFields: schema.extraGlobalFields,
-		extraLocalFields: decodeField(schema.extraLocalFields),
-		globalFields: new Set(schema.globalFields),
-		localFields: new Map(
-			schema.localFields.map((field): [LocalFieldKey, FieldStoredSchema] => [
+		mapFields: schema.mapFields === undefined ? undefined : decodeField(schema.mapFields),
+		structFields: new Map(
+			schema.structFields.map((field): [FieldKey, FieldStoredSchema] => [
 				brand(field.name),
 				decodeField(field),
 			]),
 		),
-		value: schema.value,
+		leafValue: schema.leafValue,
 	};
 	return out;
 }
 
 /**
- * Creates a codec which performs synchronous monolithic summarization of schema content.
+ * Creates a codec which performs synchronous monolithic encoding of schema content.
  *
  * TODO: when perf matters, this should be replaced with a chunked async version using a binary format.
  */
 export function makeSchemaCodec({
 	jsonValidator: validator,
-}: ICodecOptions): IJsonCodec<SchemaData, string> {
+}: ICodecOptions): IJsonCodec<SchemaData, Format> {
 	const versionedValidator = validator.compile(Versioned);
 	const formatValidator = validator.compile(Format);
 	return {
@@ -210,23 +184,20 @@ export function makeSchemaCodec({
 				0x5c6 /* Encoded schema should be versioned */,
 			);
 			assert(formatValidator.check(encoded), 0x5c7 /* Encoded schema should validate */);
-			// Currently no Fluid handles are used, so just use JSON.stringify.
-			return JSON.stringify(encoded);
+			return encoded;
 		},
-		decode: (data: string): SchemaData => {
-			// Currently no Fluid handles are used, so just use JSON.parse.
-			const parsed = JSON.parse(data);
-			if (!versionedValidator.check(parsed)) {
+		decode: (data: Format) => {
+			if (!versionedValidator.check(data)) {
 				fail("invalid serialized schema: did not have a version");
 			}
 			// When more versions exist, we can switch on the version here.
-			if (!formatValidator.check(parsed)) {
-				if (parsed.version !== version) {
-					fail("Unexpected version for serialized schema");
-				}
+			if (data.version !== version) {
+				fail("Unexpected version for serialized schema");
+			}
+			if (!formatValidator.check(data)) {
 				fail("Serialized schema failed validation");
 			}
-			return decode(parsed);
+			return decode(data);
 		},
 	};
 }

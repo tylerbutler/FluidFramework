@@ -25,9 +25,10 @@ import {
 	itExpects,
 	TestDataObjectType,
 } from "@fluid-internal/test-version-utils";
-import { delay, stringToBuffer } from "@fluidframework/common-utils";
+import { stringToBuffer } from "@fluid-internal/client-utils";
+import { delay } from "@fluidframework/core-utils";
 import { IContainer, LoaderHeader } from "@fluidframework/container-definitions";
-import { IFluidHandle, IRequest, IResponse } from "@fluidframework/core-interfaces";
+import { IErrorBase, IFluidHandle, IRequest, IResponse } from "@fluidframework/core-interfaces";
 import { ISummaryTree } from "@fluidframework/protocol-definitions";
 import { validateAssertionError } from "@fluidframework/test-runtime-utils";
 import { IFluidDataStoreChannel } from "@fluidframework/runtime-definitions";
@@ -50,11 +51,6 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 
 	const testContainerConfig: ITestContainerConfig = {
 		runtimeOptions: {
-			summaryOptions: {
-				summaryConfigOverrides: {
-					state: "disabled",
-				},
-			},
 			gcOptions: { inactiveTimeoutMs: 0 },
 		},
 		loaderProps: { configProvider: mockConfigProvider(settings) },
@@ -101,9 +97,11 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 		return createSummarizer(
 			provider,
 			container,
+			{
+				...testContainerConfig,
+				loaderProps: { configProvider: mockConfigProvider(settings) },
+			},
 			summaryVersion,
-			testContainerConfig.runtimeOptions?.gcOptions,
-			mockConfigProvider(settings),
 		);
 	};
 	const summarize = async (summarizer: ISummarizer) => {
@@ -121,9 +119,8 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 		await waitForContainerConnection(container);
 
 		const handleKey = "handle";
-		const dataStore = await defaultDataObject._context.containerRuntime.createDataStore(
-			TestDataObjectType,
-		);
+		const dataStore =
+			await defaultDataObject._context.containerRuntime.createDataStore(TestDataObjectType);
 		const testDataObject = (await dataStore.entryPoint?.get()) as ITestDataObject | undefined;
 		assert(
 			testDataObject !== undefined,
@@ -137,9 +134,8 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 		defaultDataObject._root.delete(handleKey);
 
 		// Summarize
-		const { container: summarizingContainer1, summarizer: summarizer1 } = await loadSummarizer(
-			container,
-		);
+		const { container: summarizingContainer1, summarizer: summarizer1 } =
+			await loadSummarizer(container);
 		const summaryVersion = (await summarize(summarizer1)).summaryVersion;
 
 		// TODO: trailing op test - note because of the way gc is currently structured, the error isn't logged,
@@ -225,7 +221,7 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 				// Modifying a testDataObject substantiated from the request pattern should fail!
 				assert.throws(
 					() => dataObject._root.set("send", "op"),
-					(error) => {
+					(error: IErrorBase) => {
 						const correctErrorType = error.errorType === "dataCorruptionError";
 						const correctErrorMessage =
 							error.message?.startsWith(`Context is tombstoned`) === true;
@@ -307,7 +303,7 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 				// Sending a signal from a testDataObject substantiated from the request pattern should fail!
 				assert.throws(
 					() => dataObject._runtime.submitSignal("send", "signal"),
-					(error) => {
+					(error: IErrorBase) => {
 						const correctErrorType = error.errorType === "dataCorruptionError";
 						const correctErrorMessage =
 							error.message?.startsWith(`Context is tombstoned`) === true;
@@ -853,13 +849,10 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 			const mainDataStoreUrl = `/${mainDataStore._context.id}`;
 			await waitForContainerConnection(mainContainer);
 
-			const { summarizer } = await createSummarizer(
-				provider,
-				mainContainer,
-				undefined /* summaryVersion */,
-				testContainerConfig.runtimeOptions?.gcOptions,
-				mockConfigProvider(settings),
-			);
+			const { summarizer } = await createSummarizer(provider, mainContainer, {
+				...testContainerConfig,
+				loaderProps: { configProvider: mockConfigProvider(settings) },
+			});
 
 			// Create couple of data stores.
 			const newDataStore = await requestFluidObject<ITestDataObject>(
@@ -910,13 +903,10 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 			const mainDataStoreUrl = `/${mainDataStore._context.id}`;
 			await waitForContainerConnection(mainContainer);
 
-			const { summarizer } = await createSummarizer(
-				provider,
-				mainContainer,
-				undefined /* summaryVersion */,
-				testContainerConfig.runtimeOptions?.gcOptions,
-				mockConfigProvider(settings),
-			);
+			const { summarizer } = await createSummarizer(provider, mainContainer, {
+				...testContainerConfig,
+				loaderProps: { configProvider: mockConfigProvider(settings) },
+			});
 
 			// Upload an attachment blobs and mark it referenced.
 			const blobContents = "Blob contents";
@@ -986,9 +976,11 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 				const { summarizer } = await createSummarizer(
 					provider,
 					mainContainer,
-					undefined /* summaryVersion */,
-					testContainerConfig.runtimeOptions?.gcOptions,
-					mockConfigProvider(settings),
+					{
+						...testContainerConfig,
+						loaderProps: { configProvider: mockConfigProvider(settings) },
+					},
+					undefined,
 					mockLogger,
 				);
 
@@ -1098,13 +1090,10 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 			);
 			await waitForContainerConnection(mainContainer);
 
-			const { summarizer } = await createSummarizer(
-				provider,
-				mainContainer,
-				undefined /* summaryVersion */,
-				testContainerConfig.runtimeOptions?.gcOptions,
-				mockConfigProvider(settings),
-			);
+			const { summarizer } = await createSummarizer(provider, mainContainer, {
+				...testContainerConfig,
+				loaderProps: { configProvider: mockConfigProvider(settings) },
+			});
 
 			// Create a data store.
 			const newDataStore = await requestFluidObject<ITestDataObject>(
@@ -1137,7 +1126,7 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 			const summary2 = await summarizeNow(summarizer);
 			assert.throws(
 				() => getGCStateFromSummary(summary2.summaryTree),
-				(e) => validateAssertionError(e, "GC state is not a blob"),
+				(e: Error) => validateAssertionError(e, "GC state is not a blob"),
 			);
 			const tombstoneState = getGCTombstoneStateFromSummary(summary2.summaryTree);
 			assert(
@@ -1149,7 +1138,7 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 			const summary3 = await summarizeNow(summarizer);
 			assert.throws(
 				() => getGCTombstoneStateFromSummary(summary3.summaryTree),
-				(e) => validateAssertionError(e, "GC data should be a tree"),
+				(e: Error) => validateAssertionError(e, "GC data should be a tree"),
 			);
 		});
 
@@ -1169,13 +1158,10 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 				const mainDataStoreUrl = `/${mainDataStore._context.id}`;
 				await waitForContainerConnection(mainContainer);
 
-				const { summarizer } = await createSummarizer(
-					provider,
-					mainContainer,
-					undefined /* summaryVersion */,
-					testContainerConfig.runtimeOptions?.gcOptions,
-					mockConfigProvider(settings),
-				);
+				const { summarizer } = await createSummarizer(provider, mainContainer, {
+					...testContainerConfig,
+					loaderProps: { configProvider: mockConfigProvider(settings) },
+				});
 
 				// Create a data store and mark it referenced.
 				const newDataStore = await requestFluidObject<ITestDataObject>(
@@ -1212,7 +1198,7 @@ describeNoCompat("GC data store tombstone tests", (getTestObjectProvider) => {
 				const unreferencedId = newDataStore._context.id;
 				await assert.rejects(
 					async () => requestFluidObject<ITestDataObject>(container2, unreferencedId),
-					(error) => {
+					(error: any) => {
 						const correctErrorType = error.code === 404;
 						const correctErrorMessage =
 							error.message === `DataStore was deleted: ${unreferencedId}`;

@@ -98,7 +98,7 @@ export class Repository {
 		localRef = "HEAD",
 	): Promise<string> {
 		const base = await this.gitClient
-			.fetch(["--all"]) // make sure we have the latest remote refs
+			.fetch([remote]) // make sure we have the latest remote refs
 			.raw("merge-base", `refs/remotes/${remote}/${branch}`, localRef);
 		return base;
 	}
@@ -198,9 +198,9 @@ export class Repository {
 		try {
 			console.log(`Checking merge conflicts for: ${commit}`);
 			mergeResult = await this.git.merge([commit, "--no-commit", "--no-ff"]);
-			console.log(`Git merge result: ${mergeResult}`);
 			await this.git.merge(["--abort"]);
 		} catch {
+			console.log(`Merge conflicts exists for: ${commit}`);
 			await this.git.merge(["--abort"]);
 			return false;
 		}
