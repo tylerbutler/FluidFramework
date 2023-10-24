@@ -6,6 +6,11 @@
 		"outDir": "./lib",
 		"types": ["node"],
 		"noImplicitAny": true,
+
+		// settings required to use swc
+		"isolatedModules": true,
+		"verbatimModuleSyntax": true,
+		"esModuleInterop": true,
 	},
 	"include": ["src/**/*"],
 	"exclude": ["src/test/**/*"],

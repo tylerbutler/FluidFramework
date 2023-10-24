@@ -13,9 +13,9 @@
 		"strictPropertyInitialization": true,
 		"target": "es2018",
 		"types": ["node"],
-		"module": "ESNext",
 
 		// settings required to use swc
+		"module": "ESNext",
 		"isolatedModules": true,
 		"verbatimModuleSyntax": true,
 		"esModuleInterop": true,
