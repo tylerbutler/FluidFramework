@@ -5,9 +5,9 @@
 import { unlinkSync } from "fs";
 import path from "path";
 
-import { IFluidBuildConfig, IFluidRepoPackageEntry } from "../../common/fluidRepo";
+import { type IFluidBuildConfig, type IFluidRepoPackageEntry } from "../../common/fluidRepo";
 import { getFluidBuildConfig } from "../../common/fluidUtils";
-import { Handler, readFile } from "../common";
+import { type Handler, readFile } from "../common";
 
 const lockFilePattern = /.*?package-lock\.json$/i;
 const urlPattern = /(https?[^"@]+)(\/@.+|\/[^/]+\/-\/.+tgz)/g;

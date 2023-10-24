@@ -4,7 +4,7 @@
  */
 import { EOL as newline } from "os";
 
-import { Handler, readFile, writeFile } from "../common";
+import { type Handler, readFile, writeFile } from "../common";
 
 const copyrightText =
 	"Copyright (c) Microsoft Corporation and contributors. All rights reserved." +

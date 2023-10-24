@@ -5,7 +5,7 @@
 import { PackageName } from "@rushstack/node-core-library";
 
 import { commonOptions } from "../common/commonOptions";
-import { FluidRepo, IFluidBuildConfig, VersionDetails } from "../common/fluidRepo";
+import { FluidRepo, type IFluidBuildConfig, type VersionDetails } from "../common/fluidRepo";
 import { getFluidBuildConfig } from "../common/fluidUtils";
 import { isMonoRepoKind } from "../common/monoRepo";
 import { Package } from "../common/npmPackage";

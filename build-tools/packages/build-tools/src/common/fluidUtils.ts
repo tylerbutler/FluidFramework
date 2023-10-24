@@ -9,7 +9,7 @@ import { cosmiconfigSync } from "cosmiconfig";
 import findUp from "find-up";
 
 import { commonOptions } from "./commonOptions";
-import { IFluidBuildConfig } from "./fluidRepo";
+import { type IFluidBuildConfig } from "./fluidRepo";
 import { realpathAsync } from "./utils";
 import { readJson } from "fs-extra";
 

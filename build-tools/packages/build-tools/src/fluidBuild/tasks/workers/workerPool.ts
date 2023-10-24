@@ -7,7 +7,7 @@ import { EventEmitter } from "events";
 import { Readable } from "stream";
 import { Worker } from "worker_threads";
 
-import { WorkerExecResult, WorkerMessage } from "./worker";
+import type { WorkerExecResult, WorkerMessage } from "./worker";
 
 export interface WorkerExecResultWithOutput extends WorkerExecResult {
 	stdout: string;

@@ -4,7 +4,7 @@
  */
 import {
 	ADOSizeComparator,
-	BundleComparisonResult,
+	type BundleComparisonResult,
 	bundlesContainNoChanges,
 	getAzureDevopsApi,
 } from "@fluidframework/bundle-size-tools";

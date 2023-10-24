@@ -6,7 +6,7 @@ import fs from "fs";
 import path from "path";
 import * as JSON5 from "json5";
 import * as semver from "semver";
-import { Package, PackageJson, updatePackageJsonFile } from "../../common/npmPackage";
+import { Package, type PackageJson, updatePackageJsonFile } from "../../common/npmPackage";
 import {
 	normalizeGlobalTaskDefinitions,
 	getTaskDefinitions,
@@ -15,7 +15,7 @@ import { getEsLintConfigFilePath } from "../../common/taskUtils";
 import { FluidRepo } from "../../common/fluidRepo";
 import { getFluidBuildConfig } from "../../common/fluidUtils";
 import * as TscUtils from "../../common/tscUtils";
-import { Handler, readFile } from "../common";
+import { type Handler, readFile } from "../common";
 
 /**
  * Get and cache the tsc check ignore setting

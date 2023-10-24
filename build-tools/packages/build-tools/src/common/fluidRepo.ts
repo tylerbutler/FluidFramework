@@ -6,16 +6,16 @@ import * as path from "path";
 
 import {
 	DEFAULT_INTERDEPENDENCY_RANGE,
-	InterdependencyRange,
-	ReleaseVersion,
-	VersionBumpType,
+	type InterdependencyRange,
+	type ReleaseVersion,
+	type VersionBumpType,
 } from "@fluid-tools/version-tools";
 
 import { getFluidBuildConfig } from "./fluidUtils";
 import { MonoRepo } from "./monoRepo";
 import { Package, Packages } from "./npmPackage";
-import { ExecAsyncResult } from "./utils";
-import { TaskDefinitionsOnDisk } from "./fluidTaskDefinitions";
+import { type ExecAsyncResult } from "./utils";
+import { type TaskDefinitionsOnDisk } from "./fluidTaskDefinitions";
 import registerDebug from "debug";
 const traceInit = registerDebug("fluid-build:init");
 

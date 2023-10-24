@@ -16,9 +16,9 @@ import type { PackageJson as StandardPackageJson, SetRequired } from "type-fest"
 import { options } from "../fluidBuild/options";
 import { type IFluidBuildConfig, type ITypeValidationConfig } from "./fluidRepo";
 import { defaultLogger } from "./logging";
-import { MonoRepo, PackageManager } from "./monoRepo";
+import { MonoRepo, type PackageManager } from "./monoRepo";
 import {
-	ExecAsyncResult,
+	type ExecAsyncResult,
 	execWithErrorAsync,
 	existsSync,
 	isSameFileOrDir,

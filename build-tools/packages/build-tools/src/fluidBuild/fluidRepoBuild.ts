@@ -14,11 +14,11 @@ import {
 	globFn,
 	isSameFileOrDir,
 	lookUpDirSync,
-	ExecAsyncResult,
+	type ExecAsyncResult,
 } from "../common/utils";
 import { BuildGraph } from "./buildGraph";
 import { NpmDepChecker } from "./npmDepChecker";
-import { ISymlinkOptions, symlinkPackage } from "./symlinkUtils";
+import { type ISymlinkOptions, symlinkPackage } from "./symlinkUtils";
 import registerDebug from "debug";
 const traceInit = registerDebug("fluid-build:init");
 

@@ -2,7 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { AsyncPriorityQueue } from "async";
+import { type AsyncPriorityQueue } from "async";
 import chalk from "chalk";
 import * as semver from "semver";
 
@@ -11,14 +11,14 @@ import { defaultLogger } from "../common/logging";
 import { Package } from "../common/npmPackage";
 import { Timer } from "../common/timer";
 import { options } from "./options";
-import { Task, TaskExec } from "./tasks/task";
+import { Task, type TaskExec } from "./tasks/task";
 import { TaskFactory } from "./tasks/taskFactory";
 import { WorkerPool } from "./tasks/workers/workerPool";
 import * as assert from "assert";
 import {
-	TaskDefinitions,
-	TaskDefinitionsOnDisk,
-	TaskConfig,
+	type TaskDefinitions,
+	type TaskDefinitionsOnDisk,
+	type TaskConfig,
 	getTaskDefinitions,
 	normalizeGlobalTaskDefinitions,
 } from "../common/fluidTaskDefinitions";

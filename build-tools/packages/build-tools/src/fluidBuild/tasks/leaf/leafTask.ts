@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 import * as assert from "assert";
-import { AsyncPriorityQueue } from "async";
+import { type AsyncPriorityQueue } from "async";
 import chalk from "chalk";
 import crypto from "crypto";
 import registerDebug from "debug";
@@ -11,7 +11,7 @@ import * as path from "path";
 
 import { defaultLogger } from "../../../common/logging";
 import {
-	ExecAsyncResult,
+	type ExecAsyncResult,
 	execAsync,
 	existsSync,
 	getExecutableFromCommand,
@@ -22,7 +22,7 @@ import {
 } from "../../../common/utils";
 import { BuildPackage, BuildResult, summarizeBuildResult } from "../../buildGraph";
 import { options } from "../../options";
-import { Task, TaskExec } from "../task";
+import { Task, type TaskExec } from "../task";
 
 const { log } = defaultLogger;
 const traceTaskTrigger = registerDebug("fluid-build:task:trigger");

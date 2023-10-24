@@ -10,7 +10,7 @@ import isEqual from "lodash.isequal";
 
 import { existsSync, readFileAsync } from "../../../common/utils";
 import { getInstalledPackageVersion } from "../../../common/taskUtils";
-import { getTscUtils, TscUtil } from "../../../common/tscUtils";
+import { getTscUtils, type TscUtil } from "../../../common/tscUtils";
 import { LeafTask, LeafWithDoneFileTask } from "./leafTask";
 
 interface ITsBuildInfo {

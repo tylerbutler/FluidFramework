@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { TypeData, toTypeString } from "./typeData";
+import { type TypeData, toTypeString } from "./typeData";
 
 export interface TestCaseTypeData extends TypeData {
 	prefix: "old" | "current";

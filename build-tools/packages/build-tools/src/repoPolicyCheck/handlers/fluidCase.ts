@@ -2,7 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Handler, readFile, writeFile } from "../common";
+import { type Handler, readFile, writeFile } from "../common";
 
 export const handler: Handler = {
 	name: "fluid-case",

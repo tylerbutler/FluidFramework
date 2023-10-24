@@ -8,8 +8,8 @@ import * as path from "path";
 import { commonOptionString, parseOption } from "../common/commonOptions";
 import { defaultLogger } from "../common/logging";
 import { existsSync } from "../common/utils";
-import { IPackageMatchedOptions } from "./fluidRepoBuild";
-import { ISymlinkOptions } from "./symlinkUtils";
+import { type IPackageMatchedOptions } from "./fluidRepoBuild";
+import { type ISymlinkOptions } from "./symlinkUtils";
 
 const { log, warning, errorLog } = defaultLogger;
 

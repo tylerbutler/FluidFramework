@@ -10,10 +10,10 @@ import * as readline from "readline";
 import replace from "replace-in-file";
 import sortPackageJson from "sort-package-json";
 
-import { PackageJson, updatePackageJsonFile } from "../../common/npmPackage";
+import { type PackageJson, updatePackageJsonFile } from "../../common/npmPackage";
 import { getFluidBuildConfig } from "../../common/fluidUtils";
-import { Handler, readFile, writeFile } from "../common";
-import { PackageNamePolicyConfig } from "../../common/fluidRepo";
+import { type Handler, readFile, writeFile } from "../common";
+import { type PackageNamePolicyConfig } from "../../common/fluidRepo";
 
 const licenseId = "MIT";
 const author = "Microsoft and contributors";

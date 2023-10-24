@@ -7,10 +7,10 @@ import { readJsonSync } from "fs-extra";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { Project, SourceFile } from "ts-morph";
-import { BrokenCompatTypes } from "../common/fluidRepo";
-import { PackageJson } from "../common/npmPackage";
-import { buildTestCase, TestCaseTypeData } from "../typeValidator/testGeneration";
-import { getFullTypeName, getNodeTypeData, TypeData } from "../typeValidator/typeData";
+import { type BrokenCompatTypes } from "../common/fluidRepo";
+import { type PackageJson } from "../common/npmPackage";
+import { buildTestCase, type TestCaseTypeData } from "../typeValidator/testGeneration";
+import { getFullTypeName, getNodeTypeData, type TypeData } from "../typeValidator/typeData";
 import { typeOnly } from "./compatibility";
 
 // Do not check that file exists before opening:

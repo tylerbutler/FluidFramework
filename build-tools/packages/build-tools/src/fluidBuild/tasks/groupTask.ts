@@ -2,11 +2,11 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { AsyncPriorityQueue } from "async";
+import { type AsyncPriorityQueue } from "async";
 
 import { BuildPackage, BuildResult } from "../buildGraph";
 import { LeafTask } from "./leaf/leafTask";
-import { Task, TaskExec } from "./task";
+import { Task, type TaskExec } from "./task";
 
 export class GroupTask extends Task {
 	constructor(

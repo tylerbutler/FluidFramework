@@ -2,7 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { AsyncPriorityQueue, priorityQueue } from "async";
+import { type AsyncPriorityQueue, priorityQueue } from "async";
 
 import { BuildPackage, BuildResult } from "../buildGraph";
 import { options } from "../options";
