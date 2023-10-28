@@ -5,7 +5,8 @@
 		"target": "es6",
 		"outDir": "lib",
 		"jsx": "react",
-		"types": ["node", "react"],"moduleResolution": "node16",
+		"types": ["node", "react"],
+		"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

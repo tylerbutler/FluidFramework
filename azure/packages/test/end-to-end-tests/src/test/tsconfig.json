@@ -5,7 +5,8 @@
 		"declarationMap": false,
 		"rootDir": "../",
 		"outDir": "../../dist",
-		"types": ["mocha"],"moduleResolution": "node16",
+		"types": ["mocha"],
+		"moduleResolution": "node16",
 	},
 	"include": ["./**/*", "../*"],
 }

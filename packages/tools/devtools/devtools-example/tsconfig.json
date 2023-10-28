@@ -8,7 +8,8 @@
 		"moduleResolution": "node16",
 		"jsx": "react",
 		"types": ["jest", "node", "puppeteer", "jest-environment-puppeteer"],
-		"skipLibCheck": true,"moduleResolution": "node16",
+		"skipLibCheck": true,
+		"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

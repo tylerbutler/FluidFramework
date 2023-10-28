@@ -4,7 +4,8 @@
 		"rootDir": "./",
 		"outDir": "../../dist/test",
 		"types": ["node", "mocha"],
-		"skipLibCheck": true,"moduleResolution": "node16",
+		"skipLibCheck": true,
+		"moduleResolution": "node16",
 	},
 	"include": ["./**/*"],
 	"references": [

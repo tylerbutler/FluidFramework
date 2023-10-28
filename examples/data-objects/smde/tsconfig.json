@@ -5,7 +5,8 @@
 		"module": "esnext",
 		"outDir": "lib",
 		"jsx": "react",
-		"types": ["react"],"moduleResolution": "node16",
+		"types": ["react"],
+		"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

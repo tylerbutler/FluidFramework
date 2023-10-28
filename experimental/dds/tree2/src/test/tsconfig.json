@@ -7,7 +7,7 @@
 		"rootDir": "./",
 		"outDir": "../../dist/test",
 		"types": ["node", "mocha"],
-    "moduleResolution": "node16",
+		"moduleResolution": "node16",
 	},
 	"include": ["./**/*"],
 	"references": [

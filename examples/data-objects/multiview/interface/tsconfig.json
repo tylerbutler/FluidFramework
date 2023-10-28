@@ -4,7 +4,8 @@
 		"module": "esnext",
 		"outDir": "lib",
 		"jsx": "react",
-		"types": ["react", "react-dom", "puppeteer", "expect-puppeteer"],"moduleResolution": "node16",
+		"types": ["react", "react-dom", "puppeteer", "expect-puppeteer"],
+		"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

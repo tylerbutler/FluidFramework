@@ -6,7 +6,7 @@
 		"types": ["node", "mocha"],
 		"declaration": false,
 		"declarationMap": false,
-    "moduleResolution": "node16",
+		"moduleResolution": "node16",
 	},
 	"include": ["./**/*"],
 	"references": [

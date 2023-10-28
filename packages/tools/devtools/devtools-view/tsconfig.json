@@ -8,7 +8,8 @@
 		"composite": true,
 		"moduleResolution": "node16",
 		"jsx": "react",
-		"skipLibCheck": true,"moduleResolution": "node16",
+		"skipLibCheck": true,
+		"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

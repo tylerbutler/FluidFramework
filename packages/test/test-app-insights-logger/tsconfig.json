@@ -4,7 +4,7 @@
 	"compilerOptions": {
 		"rootDir": "./src",
 		"outDir": "./dist",
-    "moduleResolution": "node16",
+		"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

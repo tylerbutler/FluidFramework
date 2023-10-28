@@ -9,7 +9,8 @@
 		"jsx": "react-jsx",
 		"target": "es2018",
 		"forceConsistentCasingInFileNames": true,
-		"skipLibCheck": true,"moduleResolution": "node16",
+		"skipLibCheck": true,
+		"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

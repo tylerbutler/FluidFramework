@@ -6,7 +6,8 @@
 		"rootDir": "./",
 		"outDir": "../../dist/test",
 		"types": ["node", "mocha"],
-		"skipLibCheck": true,"moduleResolution": "node16",
+		"skipLibCheck": true,
+		"moduleResolution": "node16",
 		"noUnusedLocals": false, // Need it so memory tests can declare local variables just for the sake of keeping things in memory
 	},
 	"include": ["./**/*", "memory/.mocharc.js"],

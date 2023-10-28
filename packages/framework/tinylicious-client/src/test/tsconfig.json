@@ -6,7 +6,8 @@
 		"composite": true,
 		"moduleResolution": "node16",
 		"types": ["mocha", "node"],
-		"skipLibCheck": true,"moduleResolution": "node16",
+		"skipLibCheck": true,
+		"moduleResolution": "node16",
 	},
 	"include": ["./**/*"],
 	"references": [

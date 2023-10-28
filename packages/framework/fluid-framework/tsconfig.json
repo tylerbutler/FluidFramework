@@ -7,7 +7,8 @@
 		"composite": true,
 		"moduleResolution": "node16",
 		"types": ["node"],
-		"skipLibCheck": true,"moduleResolution": "node16",
+		"skipLibCheck": true,
+		"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }
