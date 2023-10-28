@@ -4,6 +4,8 @@
 		"rootDir": "./src",
 		"outDir": "./dist",
 		"composite": true,
+		"moduleResolution": "node16",
+		"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 	"exclude": ["src/test/**/*"],

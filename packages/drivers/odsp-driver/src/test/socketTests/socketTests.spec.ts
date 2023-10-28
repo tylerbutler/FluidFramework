@@ -11,7 +11,7 @@ import { IClient } from "@fluidframework/protocol-definitions";
 import { ITelemetryLoggerExt, MockLogger, isFluidError } from "@fluidframework/telemetry-utils";
 import { DriverErrorTypes, IAnyDriverError } from "@fluidframework/driver-definitions";
 import { createOdspNetworkError } from "@fluidframework/odsp-doclib-utils";
-import { Socket } from "socket.io-client";
+import { Socket } from "socket.io-client/dist/socket.io.js";
 import { EpochTracker } from "../../epochTracker";
 import { LocalPersistentCache } from "../../odspCache";
 import { getHashedDocumentId } from "../../odspPublicUtils";

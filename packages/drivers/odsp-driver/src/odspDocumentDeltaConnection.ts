@@ -23,7 +23,7 @@ import {
 	ISequencedDocumentMessage,
 	ISignalMessage,
 } from "@fluidframework/protocol-definitions";
-import { Socket } from "socket.io-client";
+import { Socket } from "socket.io-client/dist/socket.io.js";
 import { v4 as uuid } from "uuid";
 import { createGenericNetworkError } from "@fluidframework/driver-utils";
 import { IOdspSocketError, IGetOpsResponse, IFlushOpsResponse } from "./contracts";

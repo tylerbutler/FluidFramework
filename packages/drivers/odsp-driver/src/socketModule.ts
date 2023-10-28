@@ -3,6 +3,6 @@
  * Licensed under the MIT License.
  */
 
-import { io } from "socket.io-client";
+import { io } from "socket.io-client/dist/socket.io.js";
 
 export const SocketIOClientStatic = io;

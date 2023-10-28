@@ -19,7 +19,7 @@ import { ISignalClient } from '@fluidframework/protocol-definitions';
 import { ISignalMessage } from '@fluidframework/protocol-definitions';
 import { ITelemetryLoggerExt } from '@fluidframework/telemetry-utils';
 import { ITokenClaims } from '@fluidframework/protocol-definitions';
-import type { Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client/dist/socket.io.js';
 
 // @public
 export class DocumentDeltaConnection extends EventEmitterWithErrorHandling<IDocumentDeltaConnectionEvents> implements IDocumentDeltaConnection, IDisposable {
@@ -59,7 +59,7 @@ export class DocumentDeltaConnection extends EventEmitterWithErrorHandling<IDocu
     // (undocumented)
     protected getConnectionDetailsProps(): {
         disposed: boolean;
-        socketConnected: boolean;
+        socketConnected: any;
         clientId: string | undefined;
         connectionId: string | undefined;
     };

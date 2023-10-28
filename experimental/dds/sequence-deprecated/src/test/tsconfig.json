@@ -3,10 +3,10 @@
 	"compilerOptions": {
 		"rootDir": "./",
 		"outDir": "../../dist/test",
-		"types": ["mocha"],
+		"types": ["mocha"],"moduleResolution": "node16",
 		"declaration": false,
 		"declarationMap": false,
-		"skipLibCheck": true,
+		"skipLibCheck": true,"moduleResolution": "node16",
 	},
 	"include": ["./**/*"],
 	"references": [

@@ -8,7 +8,7 @@ import * as api from "@fluidframework/driver-definitions";
 import { DriverErrorTypes } from "@fluidframework/driver-definitions";
 import { RateLimiter, NetworkErrorBasic, canRetryOnError } from "@fluidframework/driver-utils";
 import { IClient } from "@fluidframework/protocol-definitions";
-import io from "socket.io-client";
+import io from "socket.io-client/dist/socket.io.js";
 import { PerformanceEvent, wrapError, ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
 import { DeltaStorageService, DocumentDeltaStorageService } from "./deltaStorageService";
 import { DocumentStorageService } from "./documentStorageService";

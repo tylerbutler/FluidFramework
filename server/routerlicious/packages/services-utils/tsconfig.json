@@ -5,7 +5,7 @@
 		"strictNullChecks": true,
 		"rootDir": "./src",
 		"outDir": "./dist",
-		"types": ["mocha"],
+		"types": ["mocha"],"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

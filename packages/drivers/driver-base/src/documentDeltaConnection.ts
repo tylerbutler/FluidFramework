@@ -32,7 +32,7 @@ import {
 	normalizeError,
 	createChildMonitoringContext,
 } from "@fluidframework/telemetry-utils";
-import type { Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client/dist/socket.io.js";
 // For now, this package is versioned and released in unison with the specific drivers
 import { pkgVersion as driverVersion } from "./packageVersion";
 

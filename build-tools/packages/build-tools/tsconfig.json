@@ -4,6 +4,7 @@
 		"outDir": "./dist",
 		"rootDir": "./src",
 		"composite": true,
+"moduleResolution": "node16",
 		"noImplicitAny": false,
 		"noImplicitThis": true,
 		"noUnusedLocals": false,

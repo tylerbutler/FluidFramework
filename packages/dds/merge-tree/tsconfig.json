@@ -5,7 +5,9 @@
 		"rootDir": "./src",
 		"outDir": "./dist",
 		"composite": true,
+		"moduleResolution": "node16",
 		"preserveConstEnums": true,
+		"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

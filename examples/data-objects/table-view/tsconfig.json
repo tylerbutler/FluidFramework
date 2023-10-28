@@ -5,7 +5,7 @@
 		"jsx": "react",
 		"rootDir": "./src",
 		"outDir": "lib",
-		"types": ["react"],
+		"types": ["react"],"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

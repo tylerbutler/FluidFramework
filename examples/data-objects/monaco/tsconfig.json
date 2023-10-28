@@ -5,6 +5,7 @@
 		"outDir": "lib",
 		"jsx": "react",
 		"types": ["react"],
+    "moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

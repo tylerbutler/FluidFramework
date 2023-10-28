@@ -5,6 +5,7 @@
 		"outDir": "lib",
 		"jsx": "react",
 		"types": ["jest", "puppeteer", "jest-environment-puppeteer", "expect-puppeteer", "react"],
+    "moduleResolution": "node16",
 	},
 	"include": ["src/**/*", "tests/**/*"],
 }

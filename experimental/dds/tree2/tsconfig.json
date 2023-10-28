@@ -6,6 +6,7 @@
 		"outDir": "./dist",
 		"noImplicitAny": true,
 		"composite": true,
+		"moduleResolution": "node16",
 		"preserveConstEnums": true,
 		// Allow unused locals.
 		// This is needed for type assertions using the TypeCheck library.

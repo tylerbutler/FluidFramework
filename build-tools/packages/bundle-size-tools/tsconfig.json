@@ -4,6 +4,7 @@
 		"outDir": "./dist",
 		"rootDir": "./src",
 		"composite": true,
+"moduleResolution": "node16",
 		"noImplicitThis": true,
 		"noImplicitAny": true,
 		"target": "es2018",

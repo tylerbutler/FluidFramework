@@ -3,6 +3,7 @@
 	"exclude": ["dist", "node_modules"],
 	"compilerOptions": {
 		"composite": true,
+		"moduleResolution": "node16",
 		"downlevelIteration": true,
 		"noUnusedLocals": false,
 		"outDir": "./dist",

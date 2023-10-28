@@ -8,7 +8,7 @@
 		"rootDir": "./",
 		"outDir": "../lib/test",
 		"types": ["node", "mocha", "chai"],
-		"skipLibCheck": true,
+		"skipLibCheck": true,"moduleResolution": "node16",
 		"target": "ES2015",
 	},
 	"references": [

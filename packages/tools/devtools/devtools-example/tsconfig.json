@@ -5,9 +5,10 @@
 		"outDir": "dist",
 		"module": "ESNext",
 		"composite": true,
+		"moduleResolution": "node16",
 		"jsx": "react",
 		"types": ["jest", "node", "puppeteer", "jest-environment-puppeteer"],
-		"skipLibCheck": true,
+		"skipLibCheck": true,"moduleResolution": "node16",
 	},
 	"include": ["src/**/*"],
 }

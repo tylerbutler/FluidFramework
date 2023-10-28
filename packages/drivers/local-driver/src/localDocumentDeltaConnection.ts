@@ -13,7 +13,7 @@ import {
 import { createChildLogger } from "@fluidframework/telemetry-utils";
 import { LocalWebSocketServer } from "@fluidframework/server-local-server";
 import { IWebSocketServer } from "@fluidframework/server-services-core";
-import type { Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client/dist/socket.io.js";
 import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
 
 const testProtocolVersions = ["^0.3.0", "^0.2.0", "^0.1.0"];

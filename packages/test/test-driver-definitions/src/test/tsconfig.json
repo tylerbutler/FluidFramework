@@ -5,7 +5,7 @@
 		"outDir": "../../dist/test",
 		"declaration": false,
 		"declarationMap": false,
-		"skipLibCheck": true,
+		"skipLibCheck": true,"moduleResolution": "node16",
 	},
 	"include": ["./**/*"],
 	"references": [

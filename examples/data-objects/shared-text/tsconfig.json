@@ -11,7 +11,7 @@
 			"puppeteer",
 			"jest-environment-puppeteer",
 			"expect-puppeteer",
-		],
+		],"moduleResolution": "node16",
 	},
 	"include": ["src/**/*.ts"],
 }

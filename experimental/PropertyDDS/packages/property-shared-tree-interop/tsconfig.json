@@ -3,6 +3,7 @@
 	"exclude": ["src/test/**/*"],
 	"compilerOptions": {
 		"composite": true,
+		"moduleResolution": "node16",
 		"rootDir": "./src",
 		"outDir": "./dist",
 	},
