@@ -4,14 +4,15 @@
  */
 
 module.exports = {
-    "extends": [
-        require.resolve("@fluidframework/eslint-config-fluid")
-    ],
-    "parserOptions": {
-        project: ["./tsconfig.json"],
-    },
-    "rules": {
-        "@typescript-eslint/ban-ts-comment": "off",
-        "@typescript-eslint/no-non-null-assertion": "off",
-    }
+	extends: [require.resolve("@fluidframework/eslint-config-fluid/recommended"), "prettier"],
+	parserOptions: {
+		project: ["./tsconfig.json", "./src/test/tsconfig.json"],
+	},
+	rules: {
+		"@typescript-eslint/ban-ts-comment": "off",
+		"@typescript-eslint/no-non-null-assertion": "off",
+		"import/no-nodejs-modules": "off",
+		"unicorn/no-process-exit": "off",
+		"unicorn/prefer-node-protocol": "off",
+	},
 };

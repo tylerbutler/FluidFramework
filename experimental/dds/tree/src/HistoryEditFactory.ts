@@ -3,9 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryLogger } from '@fluidframework/common-definitions';
+import { assert } from '@fluidframework/core-utils';
+import { ITelemetryLoggerExt } from '@fluidframework/telemetry-utils';
 import { DetachedSequenceId, isDetachedSequenceId, NodeId } from './Identifiers';
-import { assert, fail } from './Common';
+import { fail } from './Common';
 import { rangeFromStableRange } from './TreeViewUtilities';
 import {
 	ChangeInternal,
@@ -16,6 +17,7 @@ import {
 	BuildNodeInternal,
 	Side,
 	StableRangeInternal,
+	EditStatus,
 } from './persisted-types';
 import { TransactionInternal } from './TransactionInternal';
 import { RangeValidationResultKind, validateStableRange } from './EditUtilities';
@@ -50,7 +52,7 @@ export enum HistoryEditFactoryEvents {
 export function revert(
 	changes: readonly ChangeInternal[],
 	before: RevisionView,
-	logger?: ITelemetryLogger,
+	logger?: ITelemetryLoggerExt,
 	emit?: (event: string | symbol, ...args: any[]) => void
 ): ChangeInternal[] | undefined {
 	const result: ChangeInternal[] = [];
@@ -67,8 +69,14 @@ export function revert(
 			case ChangeTypeInternal.Build: {
 				// Save nodes added to the detached state for use in future changes
 				const { destination, source } = change;
-				assert(!builtNodes.has(destination), `Cannot revert Build: destination is already used by a Build`);
-				assert(!detachedNodes.has(destination), `Cannot revert Build: destination is already used by a Detach`);
+				assert(
+					!builtNodes.has(destination),
+					0x626 /* Cannot revert Build: destination is already used by a Build */
+				);
+				assert(
+					!detachedNodes.has(destination),
+					0x627 /* Cannot revert Build: destination is already used by a Detach */
+				);
 				builtNodes.set(
 					destination,
 					source.reduce((ids: NodeId[], curr: BuildNodeInternal) => {
@@ -168,8 +176,10 @@ export function revert(
 				fail('Revert does not support the change type.');
 		}
 
-		// Update the revision
-		editor.applyChange(change);
+		// Abort the entire revert if this change can't be applied successfully.
+		if (editor.applyChange(change).status !== EditStatus.Applied) {
+			return undefined;
+		}
 	}
 
 	editor.close();

@@ -11,19 +11,21 @@ import { ISharedObject } from "@fluidframework/shared-object-base";
  * The set on this interface must only be called in response to a remote op. Basically, if we replay same ops,
  * the set of calls on this interface to set data should be the same. This is critical because the object does not
  * generate ops of its own, but relies on the above principle to maintain eventual consistency and to summarize.
+ *
+ * @public
  */
 export interface ISharedSummaryBlock extends ISharedObject {
-    /**
-     * Retrieves the given key from the map.
-     * @param key - Key to retrieve from.
-     * @returns The stored value, or undefined if the key is not set.
-     */
-    get<T>(key: string): Jsonable<T>;
+	/**
+	 * Retrieves the given key from the map.
+	 * @param key - Key to retrieve from.
+	 * @returns The stored value, or undefined if the key is not set.
+	 */
+	get<T>(key: string): Jsonable<T>;
 
-    /**
-     * Sets the value stored at key to the provided value.
-     * @param key - Key to set at.
-     * @param value - Jsonable type value to set.
-     */
-    set<T>(key: string, value: Jsonable<T>): void;
+	/**
+	 * Sets the value stored at key to the provided value.
+	 * @param key - Key to set at.
+	 * @param value - Jsonable type value to set.
+	 */
+	set<T>(key: string, value: Jsonable<T>): void;
 }

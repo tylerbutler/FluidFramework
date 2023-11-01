@@ -3,7 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { bufferToString } from '@fluidframework/common-utils';
+import { assert } from '@fluidframework/core-utils';
+import { bufferToString } from '@fluid-internal/client-utils';
 import { ISequencedDocumentMessage } from '@fluidframework/protocol-definitions';
 import {
 	IFluidDataStoreRuntime,
@@ -20,10 +21,17 @@ import {
 	ISharedObjectEvents,
 	SharedObject,
 } from '@fluidframework/shared-object-base';
-import { ITelemetryLogger, ITelemetryProperties } from '@fluidframework/common-definitions';
-import { ChildLogger, ITelemetryLoggerPropertyBags, PerformanceEvent } from '@fluidframework/telemetry-utils';
+import { ITelemetryProperties } from '@fluidframework/core-interfaces';
+import {
+	ITelemetryLoggerExt,
+	createChildLogger,
+	ITelemetryLoggerPropertyBags,
+	PerformanceEvent,
+	createSampledLogger,
+	IEventSampler,
+} from '@fluidframework/telemetry-utils';
 import { ISummaryTreeWithStats } from '@fluidframework/runtime-definitions';
-import { assert, fail, copyPropertyIfDefined, RestOrArray, unwrapRestOrArray } from './Common';
+import { fail, copyPropertyIfDefined, RestOrArray, unwrapRestOrArray } from './Common';
 import { EditHandle, EditLog, OrderedEditSet } from './EditLog';
 import {
 	EditId,
@@ -105,15 +113,37 @@ export type SharedTreeArgs<WF extends WriteFormat = WriteFormat> = [writeFormat:
  */
 export type SharedTreeOptions<
 	WF extends WriteFormat,
-	HistoryCompatibility extends 'Forwards' | 'None' = 'Forwards'
-> = Omit<
-	WF extends WriteFormat.v0_0_2
-		? SharedTreeOptions_0_0_2
-		: WF extends WriteFormat.v0_1_1
-		? SharedTreeOptions_0_1_1
-		: never,
-	HistoryCompatibility extends 'Forwards' ? 'summarizeHistory' : never
->;
+	HistoryCompatibility extends 'Forwards' | 'None' = 'Forwards',
+> = SharedTreeBaseOptions &
+	Omit<
+		WF extends WriteFormat.v0_0_2
+			? SharedTreeOptions_0_0_2
+			: WF extends WriteFormat.v0_1_1
+			? SharedTreeOptions_0_1_1
+			: never,
+		HistoryCompatibility extends 'Forwards' ? 'summarizeHistory' : never
+	>;
+
+/**
+ * Configuration options for SharedTree that are independent of write format versions.
+ * @public
+ */
+export interface SharedTreeBaseOptions {
+	/**
+	 * The target number of sequenced edits that the tree will try to store in memory.
+	 * Depending on eviction frequency and the collaboration window, there can be more edits in memory at a given time.
+	 * Edits in the collaboration window are not evicted.
+	 *
+	 * The size is set to infinity by default, meaning that all edits in session are kept within memory.
+	 */
+	inMemoryHistorySize?: number;
+	/**
+	 * The rate at which edits are evicted from memory. This is a factor of the inMemoryHistorySize.
+	 * For example, with the default frequency of inMemoryHistorySize * 2 and a size of 10, the log will evict once it reaches 20 sequenced edits
+	 * down to 10 edits, also keeping any that are still in the collaboration window.
+	 */
+	editEvictionFrequency?: number;
+}
 
 /**
  * Configuration options for a SharedTree with write format 0.0.2
@@ -281,7 +311,7 @@ export interface SequencedEditAppliedEventArguments {
 	/** The tree the edit was applied to. */
 	readonly tree: SharedTree;
 	/** The telemetry logger associated with sequenced edit application. */
-	readonly logger: ITelemetryLogger;
+	readonly logger: ITelemetryLoggerExt;
 	/** The reconciliation path for the edit. See {@link ReconciliationPath} for details. */
 	readonly reconciliationPath: ReconciliationPath;
 	/** The outcome of the sequenced edit being applied. */
@@ -411,7 +441,12 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 		}
 	}
 
+	/**
+	 * This is SharedTree's internal IdCompressor that predates the one in the runtime. If access
+	 * to the IdCompressor is needed, this is the one that should be used.
+	 */
 	private idCompressor: IdCompressor;
+
 	private readonly idNormalizer: NodeIdNormalizer<OpSpaceNodeId> & { tree: SharedTree } = {
 		tree: this,
 		get localSessionId() {
@@ -430,6 +465,8 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 	 * The log of completed edits for this SharedTree.
 	 */
 	private editLog: EditLog<ChangeInternal>;
+	private readonly editLogSize?: number;
+	private readonly editEvictionFrequency?: number;
 
 	/**
 	 * As an implementation detail, SharedTree uses a log viewer that caches views of different revisions.
@@ -448,8 +485,8 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 	/**
 	 * logger for SharedTree events.
 	 */
-	public readonly logger: ITelemetryLogger;
-	private readonly sequencedEditAppliedLogger: ITelemetryLogger;
+	public readonly logger: ITelemetryLoggerExt;
+	private readonly sequencedEditAppliedLogger: ITelemetryLoggerExt;
 
 	private readonly encoder_0_0_2: SharedTreeEncoder_0_0_2;
 	private encoder_0_1_1: SharedTreeEncoder_0_1_1;
@@ -513,15 +550,35 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 		const historyPolicy = this.getHistoryPolicy(options);
 		this.summarizeHistory = historyPolicy.summarizeHistory;
 
-		this.logger = ChildLogger.create(runtime.logger, 'SharedTree', sharedTreeTelemetryProperties);
-		this.sequencedEditAppliedLogger = ChildLogger.create(
-			this.logger,
-			'SequencedEditApplied',
-			sharedTreeTelemetryProperties
-		);
+		this.logger = createChildLogger({
+			logger: runtime.logger,
+			namespace: 'SharedTree',
+			properties: sharedTreeTelemetryProperties,
+		});
+		this.sequencedEditAppliedLogger = createChildLogger({
+			logger: this.logger,
+			namespace: 'SequencedEditApplied',
+			properties: sharedTreeTelemetryProperties,
+		});
 
 		const attributionId = (options as SharedTreeOptions<WriteFormat.v0_1_1>).attributionId;
-		this.idCompressor = new IdCompressor(createSessionId(), reservedIdCount, attributionId, this.logger);
+
+		/**
+		 * Because the IdCompressor emits so much telemetry, this function is used to sample
+		 * approximately 5% of all clients. Only the given percentage of sessions will emit telemetry.
+		 */
+		const idCompressorEventSampler: IEventSampler = (() => {
+			const isIdCompressorTelemetryEnabled = Math.random() < 0.05;
+			return {
+				sample: () => {
+					return isIdCompressorTelemetryEnabled;
+				},
+			};
+		})();
+		const idCompressorLoger = createSampledLogger(this.logger, idCompressorEventSampler);
+		this.idCompressor = new IdCompressor(createSessionId(), reservedIdCount, attributionId, idCompressorLoger);
+		this.editLogSize = options.inMemoryHistorySize;
+		this.editEvictionFrequency = options.inMemoryHistorySize;
 		const { editLog, cachingLogViewer } = this.initializeNewEditLogFromSummary(
 			{
 				editChunks: [],
@@ -563,7 +620,7 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 			return false;
 		}
 
-		assert(this.runtime.clientId !== undefined, 'Client id should be set if connected.');
+		assert(this.runtime.clientId !== undefined, 0x62d /* Client id should be set if connected. */);
 
 		const quorum = this.runtime.getQuorum();
 		const selfSequencedClient = quorum.getMember(this.runtime.clientId);
@@ -587,7 +644,7 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 	 * @returns the current view of the tree.
 	 */
 	public get currentView(): RevisionView {
-		return this.logViewer.getRevisionViewInSession(Number.POSITIVE_INFINITY);
+		return this.logViewer.getRevisionViewInMemory(Number.POSITIVE_INFINITY);
 	}
 
 	/**
@@ -701,7 +758,7 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 
 	/**
 	 * Initialize shared tree with a serialized summary. This is used for testing.
-	 * @returns - statistics about the loaded summary.
+	 * @returns Statistics about the loaded summary.
 	 * @internal
 	 */
 	public loadSerializedSummary(blobData: string): ITelemetryProperties {
@@ -723,7 +780,7 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 		if (this.editLog.numberOfLocalEdits > 0) {
 			assert(
 				this.runtime.attachState !== AttachState.Attached,
-				'Summarizing should not occur with local edits except on first attach.'
+				0x62e /* Summarizing should not occur with local edits except on first attach. */
 			);
 			if (this.writeFormat === WriteFormat.v0_1_1) {
 				// Since we're the first client to attach, we can safely finalize ourselves since we're the only ones who have made IDs.
@@ -735,7 +792,7 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 			this.editLog.sequenceLocalEdits();
 		}
 
-		assert(this.editLog.numberOfLocalEdits === 0, 'generateSummary must not be called with local edits');
+		assert(this.editLog.numberOfLocalEdits === 0, 0x62f /* generateSummary must not be called with local edits */);
 		return this.generateSummary();
 	}
 
@@ -792,7 +849,7 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 
 		assert(
 			this.idCompressor.getAllIdsFromLocalSession().next().done === true,
-			'Summary load should not be executed after local state is created.'
+			0x630 /* Summary load should not be executed after local state is created. */
 		);
 
 		let convertedSummary: SummaryContents;
@@ -869,34 +926,30 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 		// Dispose the current log viewer if it exists. This ensures that re-used EditAddedHandlers below don't retain references to old
 		// log viewers.
 		this.cachingLogViewer?.detachFromEditLog();
-		const indexOfFirstEditInSession =
-			version === WriteFormat.v0_0_2 || (editHistory?.editIds.length === 1 && version === WriteFormat.v0_1_1)
-				? 0
-				: editHistory?.editIds.length;
 
 		// Use previously registered EditAddedHandlers if there is an existing EditLog.
 		const editLog = new EditLog(
 			editHistory,
 			this.logger,
 			this.editLog?.editAddedHandlers,
-			indexOfFirstEditInSession
+			this.editLogSize,
+			this.editEvictionFrequency
 		);
 
 		editLog.on(SharedTreeDiagnosticEvent.UnexpectedHistoryChunk, () => {
 			this.emit(SharedTreeDiagnosticEvent.UnexpectedHistoryChunk);
 		});
 
-		let knownRevisions: [number, EditCacheEntry][] | undefined;
+		let initialRevision: [number, EditCacheEntry] | undefined;
 		if (currentTree !== undefined) {
 			const currentView = RevisionView.fromTree(currentTree);
-			// TODO:#47830: Store multiple checkpoints in summary.
-			knownRevisions = [[editLog.length, { view: currentView }]];
+			initialRevision = [editLog.length, { view: currentView }];
 		}
 
 		const logViewer = new CachingLogViewer(
 			editLog,
 			RevisionView.fromTree(initialTree, this),
-			knownRevisions,
+			initialRevision,
 			editStatusCallback,
 			sequencedEditResultCallback,
 			0
@@ -1113,7 +1166,7 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 
 		const unifyHistoricalIds = (context: NodeIdContext): void => {
 			for (let i = 0; i < this.editLog.numberOfSequencedEdits; i++) {
-				const edit = this.editLog.getEditInSessionAtIndex(i);
+				const edit = this.editLog.tryGetEditAtIndex(i) ?? fail('edit not found');
 				convertEditIds(edit, (id) => context.generateNodeId(this.convertToStableNodeId(id)));
 			}
 		};
@@ -1126,13 +1179,13 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 			unifyHistoricalIds(ghostContext);
 			// The same logic applies to string interning, so intern all the strings in the history (superset of those in the current view)
 			for (let i = 0; i < this.editLog.numberOfSequencedEdits; i++) {
-				this.internStringsFromEdit(this.editLog.getEditInSessionAtIndex(i));
+				this.internStringsFromEdit(this.editLog.tryGetEditAtIndex(i) ?? fail('edit not found'));
 			}
 		} else {
 			// Clients do not have the full history, but all share the same current view (sequenced). They can all finalize the same final
 			// IDs for every ID in the view via the ghost compressor.
 			// The same logic applies for the string interner.
-			for (const node of this.logViewer.getRevisionViewInSession(this.editLog.numberOfSequencedEdits)) {
+			for (const node of this.logViewer.getRevisionViewInMemory(this.editLog.numberOfSequencedEdits)) {
 				ghostContext.generateNodeId(this.convertToStableNodeId(node.identifier));
 				this.interner.getOrCreateInternedId(node.definition);
 				for (const label of [...node.traits.keys()].sort()) {
@@ -1311,8 +1364,8 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 	 */
 	public revert(editId: EditId): EditId | undefined {
 		const index = this.edits.getIndexOfId(editId);
-		const edit = this.edits.getEditInSessionAtIndex(index);
-		const before = this.logViewer.getRevisionViewInSession(index);
+		const edit = this.edits.tryGetEditAtIndex(index) ?? fail('edit not found');
+		const before = this.logViewer.getRevisionViewInMemory(index);
 		const changes = this.revertChanges(edit.changes, before);
 		if (changes === undefined) {
 			return undefined;
@@ -1368,7 +1421,7 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 	private submitOp(content: SharedTreeOp | SharedTreeOp_0_0_2, localOpMetadata: unknown = undefined): void {
 		assert(
 			compareSummaryFormatVersions(content.version, this.writeFormat) === 0,
-			'Attempted to submit op of wrong version'
+			0x631 /* Attempted to submit op of wrong version */
 		);
 		this.submitLocalMessage(content, localOpMetadata);
 	}
@@ -1415,7 +1468,10 @@ export class SharedTree extends SharedObject<ISharedTreeEvents> implements NodeI
 								break;
 							}
 							case WriteFormat.v0_1_1: {
-								assert(this.stashedIdCompressor !== null, 'Stashed op applied after expected window');
+								assert(
+									this.stashedIdCompressor !== null,
+									0x632 /* Stashed op applied after expected window */
+								);
 								if (this.stashedIdCompressor === undefined) {
 									// Use a temporary compressor that will help translate the stashed ops
 									this.stashedIdCompressor = IdCompressor.deserialize(

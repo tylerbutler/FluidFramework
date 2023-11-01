@@ -12,7 +12,7 @@ import { IFluidFileConverter } from "./codeLoaderBundle";
  * @internal
  */
 export function isJsonSnapshot(content: Buffer): boolean {
-    return content.toString(undefined, 0, 1) === "{";
+	return content.toString(undefined, 0, 1) === "{";
 }
 
 /**
@@ -21,25 +21,79 @@ export function isJsonSnapshot(content: Buffer): boolean {
  * @param filePath - path to the ODSP snapshot file
  */
 export function getSnapshotFileContent(filePath: string): string | Buffer {
-    // TODO: read file stream
-    const content = fs.readFileSync(filePath);
-    return isJsonSnapshot(content) ? content.toString() : content;
+	// TODO: read file stream
+	const content = fs.readFileSync(filePath);
+	return isJsonSnapshot(content) ? content.toString() : content;
 }
 
 /**
  * Validate provided command line arguments
  * @internal
  */
- export function validateCommandLineArgs(
-    codeLoader?: string,
-    fluidFileConverter?: IFluidFileConverter,
+export function validateCommandLineArgs(
+	codeLoader?: string,
+	fluidFileConverter?: IFluidFileConverter,
 ): string | undefined {
-    if (codeLoader && fluidFileConverter !== undefined) {
-        return "\"codeLoader\" and \"fluidFileConverter\" cannot both be provided. See README for details.";
-    }
-    if (!codeLoader && fluidFileConverter === undefined) {
-        // eslint-disable-next-line max-len
-        return "\"codeLoader\" must be provided if there is no explicit \"fluidFileConverter\". See README for details.";
-    }
-    return undefined;
+	if (codeLoader && fluidFileConverter !== undefined) {
+		return '"codeLoader" and "fluidFileConverter" cannot both be provided. See README for details.';
+	}
+	if (!codeLoader && fluidFileConverter === undefined) {
+		return '"codeLoader" must be provided if there is no explicit "fluidFileConverter". See README for details.';
+	}
+	return undefined;
+}
+
+/**
+ * @internal
+ */
+export function getArgsValidationError(
+	inputFile: string,
+	outputFile: string,
+	timeout?: number,
+): string | undefined {
+	// Validate input file
+	if (!inputFile) {
+		return "Input file name argument is missing.";
+	} else if (!fs.existsSync(inputFile)) {
+		return "Input file does not exist.";
+	}
+
+	// Validate output file
+	if (!outputFile) {
+		return "Output file argument is missing.";
+	} else if (fs.existsSync(outputFile)) {
+		return `Output file already exists [${outputFile}].`;
+	}
+
+	if (timeout !== undefined && (isNaN(timeout) || timeout < 0)) {
+		return "Invalid timeout";
+	}
+
+	return undefined;
+}
+
+/**
+ * @internal
+ */
+export async function timeoutPromise<T = void>(
+	executor: (
+		resolve: (value: T | PromiseLike<T>) => void,
+		reject: (reason?: any) => void,
+	) => void,
+	timeout: number,
+): Promise<T> {
+	return new Promise<T>((resolve, reject) => {
+		const timer = setTimeout(() => reject(new Error(`Timed out (${timeout}ms)`)), timeout);
+
+		executor(
+			(value) => {
+				clearTimeout(timer);
+				resolve(value);
+			},
+			(reason) => {
+				clearTimeout(timer);
+				reject(reason);
+			},
+		);
+	});
 }

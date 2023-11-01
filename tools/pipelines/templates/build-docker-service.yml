@@ -66,6 +66,31 @@ parameters:
   type: string
   default: repo
 
+- name: packageManager
+  type: string
+  default: npm
+
+- name: packageManagerInstallCommand
+  type: string
+  default: 'npm ci --unsafe-perm'
+
+# The semver range constraint to use for interdependencies; that is, dependencies on other packages within the release
+# group
+- name: interdependencyRange
+  type: string
+  default: "^"
+
+# A list of scripts that execute checks of the release group, e.g. prettier, syncpack, etc. These will be run serially
+# in a pipeline stage separate from the build stage.
+- name: checks
+  type: object
+  default: []
+
+# Any additional build arguments to pass to the docker build command.
+- name: additionalBuildArguments
+  type: string
+  default: ""
+
 trigger: none
 
 variables:
@@ -114,8 +139,15 @@ variables:
     value: ${{ parameters.tagName }}
 
 stages:
+- ${{ if ne(convertToJson(parameters.checks), '[]') }}:
+  - template: include-policy-check.yml
+    parameters:
+      buildDirectory: ${{ parameters.buildDirectory }}
+      checks: ${{ parameters.checks }}
+
 - stage: build
   displayName: Build Stage
+  dependsOn: [] # this stage doesn't depend on preceding stage
   jobs:
   - job: build
     displayName: Build Container - ${{ parameters.containerName }}
@@ -157,6 +189,7 @@ stages:
             componentDetection=${{ variables.componentDetection }}
             publish=${{ variables.publish }}
             canRelease=${{ variables.canRelease }}
+            interdependencyRange='${{ parameters.interdependencyRange }}'
 
             pushImage=${{ variables.pushImage }}
             releaseImage=${{ variables.releaseImage }}
@@ -200,10 +233,7 @@ stages:
           fi
 
     # for npm ci in component detection and set version
-    - task: UseNode@1
-      displayName: Use Node 14.x
-      inputs:
-        version: 14.x
+    - template: include-use-node-version.yml
 
     # Component detection
     - ${{ if eq(variables.componentDetection, true) }}:
@@ -212,13 +242,27 @@ stages:
           buildDirectory: ${{ parameters.buildDirectory }}
           requireNotice: ${{ eq(variables.releaseImage, true) }}
 
+    - ${{ if eq(parameters.packageManager, 'pnpm') }}:
+      - template: include-install-pnpm.yml
+        parameters:
+          buildDirectory: ${{ parameters.buildDirectory }}
+
     # Set version
     - ${{ if eq(parameters.setVersion, true) }}:
+      - task: Bash@3
+        displayName: Install dependencies
+        inputs:
+          targetType: 'inline'
+          workingDirectory: ${{ parameters.buildDirectory }}
+          script: |
+            ${{ parameters.packageManagerInstallCommand }}
+
       - template: include-set-package-version.yml
         parameters:
           buildDirectory: ${{ parameters.buildDirectory }}
           buildNumberInPatch: ${{ parameters.buildNumberInPatch }}
           buildToolsVersionToInstall: ${{ parameters.buildToolsVersionToInstall }}
+          interdependencyRange: ${{ parameters.interdependencyRange }}
           tagName: ${{ parameters.tagName }}
     - ${{ if eq(parameters.setVersion, false) }}:
       - task: Bash@3
@@ -239,7 +283,7 @@ stages:
           command: build
           dockerFile: ${{ parameters.buildDirectory }}/Dockerfile
           buildContext: ${{ parameters.buildDirectory }}
-          arguments: --target base
+          arguments: --target base ${{ parameters.additionalBuildArguments }}
           tags: |
             $(containerTagSuffix)
 
@@ -249,14 +293,14 @@ stages:
           displayName: Pack
           inputs:
             action: 'Run a Docker command'
-            customCommand: 'run -v $(System.DefaultWorkingDirectory)/pack/scoped:/usr/src/pack -t $(baseContainerTag) npx lerna exec --no-private -- mv `npm pack` /usr/src/pack'
+            customCommand: 'run -v $(System.DefaultWorkingDirectory)/pack/scoped:/usr/src/pack -t $(baseContainerTag) pnpm lerna exec --no-private -- mv `npm pack` /usr/src/pack'
 
-        - task: PublishBuildArtifacts@1
+        - task: PublishPipelineArtifact@1
           displayName: Publish Artifact - pack
           inputs:
-            PathtoPublish: '$(System.DefaultWorkingDirectory)/pack'
-            ArtifactName: pack
-            publishLocation: 'Container'
+            targetPath: '$(System.DefaultWorkingDirectory)/pack'
+            artifactName: pack
+            publishLocation: 'pipeline'
 
       # Lint
       - ${{ if eq(parameters.lint, true) }}:
@@ -311,12 +355,12 @@ stages:
             action: 'Run a Docker command'
             customCommand: 'run --user root -v $(System.DefaultWorkingDirectory)/_api-extractor-temp:/usr/src/server/_api-extractor-temp -t $(baseContainerTag) npm run ci:build:docs'
 
-        - task: PublishBuildArtifacts@1
+        - task: PublishPipelineArtifact@1
           displayName: 'Docs: Publish Artifact'
           inputs:
-            PathtoPublish: '$(System.DefaultWorkingDirectory)/_api-extractor-temp'
-            ArtifactName: _api-extractor-temp
-            publishLocation: 'Container'
+            targetPath: '$(System.DefaultWorkingDirectory)/_api-extractor-temp'
+            artifactName: _api-extractor-temp
+            publishLocation: 'pipeline'
 
     # Build
     - task: Docker@2
@@ -327,6 +371,7 @@ stages:
         command: build
         dockerFile: ${{ parameters.buildDirectory }}/Dockerfile
         buildContext: ${{ parameters.buildDirectory }}
+        arguments: ${{ parameters.additionalBuildArguments }}
         tags: |
           $(containerTagSuffix)
           ${{ variables.latestContainerTagSuffix }}
@@ -377,6 +422,16 @@ stages:
           customCommand: rmi ${{ variables.latestContainerTag }}
         continueOnError: true
         condition: succeededOrFailed()
+
+    - ${{ if eq(parameters.packageManager, 'pnpm') }}:
+      # Prune the pnpm store before it's cached. This removes any deps that are not used by the current build.
+      - task: Bash@3
+        displayName: Prune pnpm store
+        inputs:
+          targetType: 'inline'
+          workingDirectory: ${{ parameters.buildDirectory }}
+          script: |
+            pnpm store prune
 
 # Publish stage
 - ${{ if and(eq(variables.publish, true), ne(parameters.releaseKind, 'docker')) }}:

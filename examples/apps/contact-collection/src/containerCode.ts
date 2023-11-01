@@ -6,6 +6,7 @@
 import { ModelContainerRuntimeFactory } from "@fluid-example/example-utils";
 import { IContainer } from "@fluidframework/container-definitions";
 import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
+// eslint-disable-next-line import/no-deprecated
 import { requestFluidObject } from "@fluidframework/runtime-utils";
 
 import { ContactCollectionInstantiationFactory, IContactCollection } from "./dataObject";
@@ -13,38 +14,37 @@ import { ContactCollectionInstantiationFactory, IContactCollection } from "./dat
 const contactCollectionId = "contactCollection";
 
 export interface IContactCollectionAppModel {
-    readonly contactCollection: IContactCollection;
+	readonly contactCollection: IContactCollection;
 }
 
 class ContactCollectionAppModel implements IContactCollectionAppModel {
-    public constructor(public readonly contactCollection: IContactCollection) { }
+	public constructor(public readonly contactCollection: IContactCollection) {}
 }
 
 export class ContactCollectionContainerRuntimeFactory extends ModelContainerRuntimeFactory<IContactCollectionAppModel> {
-    public constructor() {
-        super(
-            new Map([
-                ContactCollectionInstantiationFactory.registryEntry,
-            ]), // registryEntries
-        );
-    }
+	public constructor() {
+		super(
+			new Map([ContactCollectionInstantiationFactory.registryEntry]), // registryEntries
+		);
+	}
 
-    /**
-     * {@inheritDoc ModelContainerRuntimeFactory.containerInitializingFirstTime}
-     */
-    protected async containerInitializingFirstTime(runtime: IContainerRuntime) {
-        const dataStore = await runtime.createDataStore(ContactCollectionInstantiationFactory.type);
-        await dataStore.trySetAlias(contactCollectionId);
-    }
+	/**
+	 * {@inheritDoc ModelContainerRuntimeFactory.containerInitializingFirstTime}
+	 */
+	protected async containerInitializingFirstTime(runtime: IContainerRuntime) {
+		const dataStore = await runtime.createDataStore(ContactCollectionInstantiationFactory.type);
+		await dataStore.trySetAlias(contactCollectionId);
+	}
 
-    /**
-     * {@inheritDoc ModelContainerRuntimeFactory.createModel}
-     */
-    protected async createModel(runtime: IContainerRuntime, container: IContainer) {
-        const contactCollection = await requestFluidObject<IContactCollection>(
-            await runtime.getRootDataStore(contactCollectionId),
-            "",
-        );
-        return new ContactCollectionAppModel(contactCollection);
-    }
+	/**
+	 * {@inheritDoc ModelContainerRuntimeFactory.createModel}
+	 */
+	protected async createModel(runtime: IContainerRuntime, container: IContainer) {
+		// eslint-disable-next-line import/no-deprecated
+		const contactCollection = await requestFluidObject<IContactCollection>(
+			await runtime.getRootDataStore(contactCollectionId),
+			"",
+		);
+		return new ContactCollectionAppModel(contactCollection);
+	}
 }

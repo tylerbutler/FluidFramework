@@ -4,11 +4,19 @@
  */
 
 export const enum Handle {
-    /** Minimum valid handle. */
-    valid = 1,
+	/**
+	 * Sentinel representing the absence of a valid handle.
+	 */
+	none = 0,
 
-    /** Sentinel representing an unallocated Handle. */
-    unallocated = -0x80000000,
+	/** Minimum valid handle. */
+	valid = 1,
+
+	/**
+	 * Sentinel representing an unallocated Handle.  Used by PermutationVector
+	 * to delay allocate handles when previously empty row/cols become populated.
+	 */
+	unallocated = -0x80000000,
 }
 
 export const isHandleValid = (handle: Handle) => handle >= Handle.valid;
@@ -17,71 +25,87 @@ export const isHandleValid = (handle: Handle) => handle >= Handle.valid;
  * A handle table provides a fast mapping from an integer `handle` to a value `T`.
  */
 export class HandleTable<T> {
-    // Note: the first slot of the 'handles' array is reserved to store the pointer to the first
-    //       free handle.  We initialize this slot with a pointer to slot '1', which will cause
-    //       us to delay allocate the following slot in the array on the first allocation.
-    public constructor(private readonly handles: (Handle | T)[] = [1]) { }
+	// Note: the first slot of the 'handles' array is reserved to store the pointer to the first
+	//       free handle.  We initialize this slot with a pointer to slot '1', which will cause
+	//       us to delay allocate the following slot in the array on the first allocation.
+	public constructor(private readonly handles: (Handle | T)[] = [1]) {}
 
-    public clear() {
-        // Restore the HandleTable's initial state by deleting all items in the handles array
-        // and then re-inserting the value '1' in the 0th slot.  (See comment at `handles` decl
-        // for explanation.)
-        this.handles.splice(0, this.handles.length, 1);
-    }
+	public clear() {
+		// Restore the HandleTable's initial state by deleting all items in the handles array
+		// and then re-inserting the value '1' in the 0th slot.  (See comment at `handles` decl
+		// for explanation.)
+		this.handles.splice(0, this.handles.length, 1);
+	}
 
-    /**
-     * Allocates and returns the next available handle.  Note that freed handles are recycled.
-     */
-    public allocate(): Handle {
-        const free = this.next;
-        this.next = (this.handles[free] as Handle) ?? (free + 1);
-        this.handles[free] = 0;
-        return free;
-    }
+	/**
+	 * Allocates and returns the next available handle.  Note that freed handles are recycled.
+	 */
+	public allocate(): Handle {
+		// Get the handle to the next free slot.
+		const free = this.next;
 
-    /**
-     * Allocates and returns the next available `count` handles.
-     */
-    public allocateMany(count: Handle) {
-        const handles = new Uint32Array(count);
-        for (let i = 0; i < count; i++) {
-            handles[i] = this.allocate();
-        }
-        return handles;
-    }
+		// Update 'next' to point to the new head of the free list.  We use the contents of
+		// recycled slots to store the free list.  The contents of the handles[free] will point
+		// to the next available slot.  If there are no free slots (i.e., 'handles' is full),
+		// the slot will point to 'handles.length'.  In this case, the handles array will grow
+		// and we update 'next' to point to the new end of the array.
+		this.next = (this.handles[free] as Handle) ?? free + 1;
 
-    /**
-     * Returns the given handle to the free list.
-     */
-    public free(handle: Handle) {
-        this.handles[handle] = this.next;
-        this.next = handle;
-    }
+		// Out of paranoia, overwrite the contents of the newly allocated free slot with an
+		// invalid handle value.  This may help catch/diagnose bugs in the event the free list
+		// becomes corrupted.
+		this.handles[free] = Handle.none;
 
-    /**
-     * Get the value `T` associated with the given handle, if any.
-     */
-    public get(handle: Handle): T {
-        return this.handles[handle] as T;
-    }
+		return free;
+	}
 
-    /**
-     * Set the value `T` associated with the given handle.
-     */
-    public set(handle: Handle, value: T) {
-        this.handles[handle] = value;
-    }
+	/**
+	 * Allocates and returns the next available `count` handles.
+	 */
+	public allocateMany(count: Handle) {
+		const handles = new Uint32Array(count);
+		for (let i = 0; i < count; i++) {
+			handles[i] = this.allocate();
+		}
+		return handles;
+	}
 
-    // Private helpers to get/set the head of the free list, which is stored in the 0th slot
-    // of the handle array.
-    private get next() { return this.handles[0] as Handle; }
-    private set next(handle: Handle) { this.handles[0] = handle; }
+	/**
+	 * Returns the given handle to the free list.
+	 */
+	public free(handle: Handle) {
+		this.handles[handle] = this.next;
+		this.next = handle;
+	}
 
-    public getSummaryContent() {
-        return this.handles;
-    }
+	/**
+	 * Get the value `T` associated with the given handle, if any.
+	 */
+	public get(handle: Handle): T {
+		return this.handles[handle] as T;
+	}
 
-    public static load<T>(data: (Handle | T)[]) {
-        return new HandleTable<T>(data);
-    }
+	/**
+	 * Set the value `T` associated with the given handle.
+	 */
+	public set(handle: Handle, value: T) {
+		this.handles[handle] = value;
+	}
+
+	// Private helpers to get/set the head of the free list, which is stored in the 0th slot
+	// of the handle array.
+	private get next() {
+		return this.handles[0] as Handle;
+	}
+	private set next(handle: Handle) {
+		this.handles[0] = handle;
+	}
+
+	public getSummaryContent() {
+		return this.handles;
+	}
+
+	public static load<T>(data: (Handle | T)[]) {
+		return new HandleTable<T>(data);
+	}
 }

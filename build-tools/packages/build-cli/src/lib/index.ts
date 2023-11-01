@@ -4,37 +4,39 @@
  */
 
 export {
-    generateBumpVersionBranchName,
-    generateBumpVersionCommitMessage,
-    generateBumpDepsBranchName,
-    generateBumpDepsCommitMessage,
-    createBumpBranch,
-    getDefaultBumpTypeForBranch,
-    getReleaseSourceForReleaseGroup,
-    generateReleaseBranchName,
+	generateBumpVersionBranchName,
+	generateBumpVersionCommitMessage,
+	generateBumpDepsBranchName,
+	generateBumpDepsCommitMessage,
+	createBumpBranch,
+	getDefaultBumpTypeForBranch,
+	getReleaseSourceForReleaseGroup,
+	generateReleaseBranchName,
 } from "./branches";
-export {
-    bumpPackageDependencies,
-    bumpReleaseGroup,
-    DependencyUpdateType,
-    isDependencyUpdateType,
-    PackageWithRangeSpec,
-} from "./bump";
+export { getDisplayDate, getDisplayDateRelative } from "./dates";
+export { bumpReleaseGroup, DependencyUpdateType, isDependencyUpdateType } from "./bump";
+export { DEFAULT_CHANGESET_PATH, loadChangesets } from "./changesets";
 export { Repository } from "./git";
 export {
-    filterVersionsOlderThan,
-    getAllVersions,
-    getPreReleaseDependencies,
-    generateReleaseGitTagName,
-    getTagsForReleaseGroup,
-    getVersionFromTag,
-    isReleased,
-    npmCheckUpdates,
-    PackageVersionMap,
-    PreReleaseDependencies,
-    sortVersions,
-    VersionDetails,
+	filterVersionsOlderThan,
+	generateReleaseGitTagName,
+	getFluidDependencies,
+	getPreReleaseDependencies,
+	isReleased,
+	npmCheckUpdates,
+	PackageVersionMap,
+	PreReleaseDependencies,
+	setVersion,
+	sortVersions,
 } from "./package";
 export { difference } from "./sets";
 export { getIndent, indentString } from "./text";
-export { createPullRequest, getUserAccess, pullRequestExists, pullRequestInfo } from "./github";
+export { createPullRequest, getCommitInfo, pullRequestExists } from "./github";
+export {
+	getRanges,
+	PackageVersionList,
+	ReleaseRanges,
+	ReleaseReport,
+	ReportKind,
+	toReportKind,
+} from "./release";

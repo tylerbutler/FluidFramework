@@ -4,7 +4,17 @@
  */
 
 module.exports = {
-    preset: "jest-puppeteer",
-    testMatch: ["**/dist/test/jest/?(*.)+(spec|test).js"],
-    testPathIgnorePatterns: ["/node_modules/"],
+	preset: "jest-puppeteer",
+	testMatch: ["**/dist/test/jest/?(*.)+(spec|test).js"],
+	testPathIgnorePatterns: ["/node_modules/"],
+	reporters: [
+		"default",
+		[
+			"jest-junit",
+			{
+				outputDirectory: "nyc",
+				outputName: "jest-junit-report.xml",
+			},
+		],
+	],
 };

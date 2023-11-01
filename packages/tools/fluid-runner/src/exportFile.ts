@@ -4,15 +4,13 @@
  */
 
 import * as fs from "fs";
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
+import { ITelemetryLoggerExt, PerformanceEvent } from "@fluidframework/telemetry-utils";
 import { LoaderHeader } from "@fluidframework/container-definitions";
 import { Loader } from "@fluidframework/container-loader";
 import { createLocalOdspDocumentServiceFactory } from "@fluidframework/odsp-driver";
-import { PerformanceEvent } from "@fluidframework/telemetry-utils";
-import { getArgsValidationError } from "./getArgsValidationError";
 import { IFluidFileConverter } from "./codeLoaderBundle";
 import { FakeUrlResolver } from "./fakeUrlResolver";
-import { getSnapshotFileContent } from "./utils";
+import { getSnapshotFileContent, timeoutPromise, getArgsValidationError } from "./utils";
 /* eslint-disable import/no-internal-modules */
 import { ITelemetryOptions } from "./logger/fileLogger";
 import { createLogger, getTelemetryFileValidationError } from "./logger/loggerUtils";
@@ -21,14 +19,14 @@ import { createLogger, getTelemetryFileValidationError } from "./logger/loggerUt
 export type IExportFileResponse = IExportFileResponseSuccess | IExportFileResponseFailure;
 
 interface IExportFileResponseSuccess {
-    success: true;
+	success: true;
 }
 
 interface IExportFileResponseFailure {
-    success: false;
-    eventName: string;
-    errorMessage: string;
-    error?: any;
+	success: false;
+	eventName: string;
+	errorMessage: string;
+	error?: any;
 }
 
 const clientArgsValidationError = "Client_ArgsValidationError";
@@ -37,45 +35,56 @@ const clientArgsValidationError = "Client_ArgsValidationError";
  * Execute code on Container based on ODSP snapshot and write result to file
  */
 export async function exportFile(
-    fluidFileConverter: IFluidFileConverter,
-    inputFile: string,
-    outputFile: string,
-    telemetryFile: string,
-    options?: string,
-    telemetryOptions?: ITelemetryOptions,
+	fluidFileConverter: IFluidFileConverter,
+	inputFile: string,
+	outputFile: string,
+	telemetryFile: string,
+	options?: string,
+	telemetryOptions?: ITelemetryOptions,
+	timeout?: number,
+	disableNetworkFetch?: boolean,
 ): Promise<IExportFileResponse> {
-    const telemetryArgError = getTelemetryFileValidationError(telemetryFile);
-    if (telemetryArgError) {
-        const eventName = clientArgsValidationError;
-        return { success: false, eventName, errorMessage: telemetryArgError };
-    }
-    const { fileLogger, logger } = createLogger(telemetryFile, telemetryOptions);
+	const telemetryArgError = getTelemetryFileValidationError(telemetryFile);
+	if (telemetryArgError) {
+		const eventName = clientArgsValidationError;
+		return { success: false, eventName, errorMessage: telemetryArgError };
+	}
+	const { fileLogger, logger } = createLogger(telemetryFile, telemetryOptions);
 
-    try {
-        return await PerformanceEvent.timedExecAsync(logger, { eventName: "ExportFile" }, async () => {
-            const argsValidationError = getArgsValidationError(inputFile, outputFile);
-            if (argsValidationError) {
-                const eventName = clientArgsValidationError;
-                logger.sendErrorEvent({ eventName, message: argsValidationError });
-                return { success: false, eventName, errorMessage: argsValidationError };
-            }
+	try {
+		return await PerformanceEvent.timedExecAsync(
+			logger,
+			{ eventName: "ExportFile" },
+			async () => {
+				const argsValidationError = getArgsValidationError(inputFile, outputFile, timeout);
+				if (argsValidationError) {
+					const eventName = clientArgsValidationError;
+					logger.sendErrorEvent({ eventName, message: argsValidationError });
+					return { success: false, eventName, errorMessage: argsValidationError };
+				}
 
-            fs.writeFileSync(outputFile, await createContainerAndExecute(
-                getSnapshotFileContent(inputFile),
-                fluidFileConverter,
-                logger,
-                options,
-            ));
+				fs.writeFileSync(
+					outputFile,
+					await createContainerAndExecute(
+						getSnapshotFileContent(inputFile),
+						fluidFileConverter,
+						logger,
+						options,
+						timeout,
+						disableNetworkFetch,
+					),
+				);
 
-            return { success: true };
-        });
-    } catch (error) {
-        const eventName = "Client_UnexpectedError";
-        logger.sendErrorEvent({ eventName }, error);
-        return { success: false, eventName, errorMessage: "Unexpected error", error };
-    } finally {
-        await fileLogger.close();
-    }
+				return { success: true };
+			},
+		);
+	} catch (error) {
+		const eventName = "Client_UnexpectedError";
+		logger.sendErrorEvent({ eventName }, error);
+		return { success: false, eventName, errorMessage: "Unexpected error", error };
+	} finally {
+		await fileLogger.close();
+	}
 }
 
 /**
@@ -83,22 +92,52 @@ export async function exportFile(
  * @returns result of execution
  */
 export async function createContainerAndExecute(
-    localOdspSnapshot: string | Uint8Array,
-    fluidFileConverter: IFluidFileConverter,
-    logger: ITelemetryLogger,
-    options?: string,
+	localOdspSnapshot: string | Uint8Array,
+	fluidFileConverter: IFluidFileConverter,
+	logger: ITelemetryLoggerExt,
+	options?: string,
+	timeout?: number,
+	disableNetworkFetch: boolean = false,
 ): Promise<string> {
-    const loader = new Loader({
-        urlResolver: new FakeUrlResolver(),
-        documentServiceFactory: createLocalOdspDocumentServiceFactory(localOdspSnapshot),
-        codeLoader: await fluidFileConverter.getCodeLoader(logger),
-        scope: fluidFileConverter.scope,
-        logger,
-    });
+	const fn = async () => {
+		if (disableNetworkFetch) {
+			global.fetch = async () => {
+				throw new Error("Network fetch is not allowed");
+			};
+		}
 
-    const container = await loader.resolve({ url: "/fakeUrl/", headers: {
-        [LoaderHeader.loadMode]: { opsBeforeReturn: "cached" } } });
+		const loader = new Loader({
+			urlResolver: new FakeUrlResolver(),
+			documentServiceFactory: createLocalOdspDocumentServiceFactory(localOdspSnapshot),
+			codeLoader: await fluidFileConverter.getCodeLoader(logger),
+			scope: await fluidFileConverter.getScope?.(logger),
+			logger,
+		});
 
-    return PerformanceEvent.timedExecAsync(logger, { eventName: "ExportFile" }, async () =>
-        fluidFileConverter.execute(container, options));
+		const container = await loader.resolve({
+			url: "/fakeUrl/",
+			headers: {
+				[LoaderHeader.loadMode]: { opsBeforeReturn: "cached" },
+			},
+		});
+
+		return PerformanceEvent.timedExecAsync(logger, { eventName: "ExportFile" }, async () => {
+			try {
+				return await fluidFileConverter.execute(container, options);
+			} finally {
+				container.dispose();
+			}
+		});
+	};
+
+	// eslint-disable-next-line unicorn/prefer-ternary
+	if (timeout !== undefined) {
+		return timeoutPromise<string>((resolve, reject) => {
+			fn()
+				.then((value) => resolve(value))
+				.catch((error) => reject(error));
+		}, timeout);
+	} else {
+		return fn();
+	}
 }

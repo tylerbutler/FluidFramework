@@ -3,7 +3,9 @@
  * Licensed under the MIT License.
  */
 
+import { strict as assert } from 'assert';
 import { expect } from 'chai';
+import { validateAssertionError } from '@fluidframework/test-runtime-utils';
 import { fail } from '../Common';
 import { RevisionValueCache } from '../RevisionValueCache';
 
@@ -16,18 +18,22 @@ describe('RevisionValueCache', () => {
 	}
 
 	it('cannot be created with a negative retention window', () => {
-		expect(() => new RevisionValueCache<DummyValue>(1, -1)).to.throw(
-			'retentionWindowStart must be initialized >= 0'
+		assert.throws(
+			() => new RevisionValueCache<DummyValue>(1, -1),
+			(e: Error) => validateAssertionError(e, 'retentionWindowStart must be initialized >= 0')
 		);
 	});
 
 	it('cannot move the retention window backwards', () => {
 		const cache = new RevisionValueCache<DummyValue>(1, 0);
-		expect(() => cache.updateRetentionWindow(-1)).to.throw('retention window boundary must not move backwards');
+		assert.throws(
+			() => cache.updateRetentionWindow(-1),
+			(e: Error) => validateAssertionError(e, 'retention window boundary must not move backwards')
+		);
 	});
 
 	it('can find closest entry to a queried revision', () => {
-		const cache = new RevisionValueCache<DummyValue>(1, 0, [[0, dummyValue]]);
+		const cache = new RevisionValueCache<DummyValue>(1, 0, [0, dummyValue]);
 		cache.cacheValue(2, dummyValue);
 		expect(closestEntry(cache, 1)).to.equal(0);
 		expect(closestEntry(cache, 2)).to.equal(2);
@@ -39,7 +45,7 @@ describe('RevisionValueCache', () => {
 		const cache = new RevisionValueCache<DummyValue>(
 			size,
 			size * 3 /* ensure all entries are outside of window */,
-			[[0, dummyValue]]
+			[0, dummyValue]
 		);
 
 		// Fill the cache
@@ -60,7 +66,7 @@ describe('RevisionValueCache', () => {
 	it('retains entries within the retention window', () => {
 		const windowStart = 3;
 		const windowEnd = windowStart + 3;
-		const cache = new RevisionValueCache<DummyValue>(1, windowStart, [[0, dummyValue]]);
+		const cache = new RevisionValueCache<DummyValue>(1, windowStart, [0, dummyValue]);
 
 		// Add entries within retention window
 		for (let i = windowStart; i <= windowEnd; i++) {
@@ -88,20 +94,20 @@ describe('RevisionValueCache', () => {
 		expect(closestEntry(cache, 5)).to.equal(2);
 	});
 
-	it('never evicts explicitly retained values', () => {
-		const cache = new RevisionValueCache<DummyValue>(1, 3, [[0, dummyValue]]);
+	it('only keeps one explicitly retained value', () => {
+		const cache = new RevisionValueCache<DummyValue>(1, 3, [0, dummyValue]);
 		cache.cacheValue(1, dummyValue);
 		// Add a retained entry outside of the retention window
-		cache.cacheRetainedValue(5, dummyValue); // Should not evict 1
+		cache.cacheRetainedValue(5, dummyValue); // This evicts the previously retained value, 0
 		expect(closestEntry(cache, 1)).to.equal(1);
 		expect(closestEntry(cache, 5)).to.equal(5);
 		cache.cacheValue(2, dummyValue); // Evict 1
 		cache.updateRetentionWindow(10); // Should not add 5, so 2 will still be in cache
-		expect(closestEntry(cache, 1)).to.equal(0);
+		assert.throws(() => closestEntry(cache, 1)); // 0 will no longer be retained so 1 should be inaccessible
 		expect(closestEntry(cache, 2)).to.equal(2);
 		expect(closestEntry(cache, 5)).to.equal(5);
 		cache.cacheValue(3, dummyValue); // Evict 2
-		expect(closestEntry(cache, 2)).to.equal(0);
+		assert.throws(() => closestEntry(cache, 2));
 		expect(closestEntry(cache, 5)).to.equal(5);
 	});
 

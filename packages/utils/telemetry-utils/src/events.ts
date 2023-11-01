@@ -3,24 +3,25 @@
  * Licensed under the MIT License.
  */
 
+// False positive: this is an import from the `events` package, not from Node.
+// eslint-disable-next-line unicorn/prefer-node-protocol
 import { EventEmitter } from "events";
-import {
-    ITelemetryLogger,
-} from "@fluidframework/common-definitions";
+import { ITelemetryLoggerExt } from "./telemetryTypes";
 
 export const connectedEventName = "connected";
 export const disconnectedEventName = "disconnected";
 
 export function safeRaiseEvent(
-    emitter: EventEmitter,
-    logger: ITelemetryLogger,
-    event: string,
-    ...args) {
-    try {
-        emitter.emit(event, ...args);
-    } catch (error) {
-        logger.sendErrorEvent({ eventName: "RaiseEventError", event }, error);
-    }
+	emitter: EventEmitter,
+	logger: ITelemetryLoggerExt,
+	event: string,
+	...args: unknown[]
+): void {
+	try {
+		emitter.emit(event, ...args);
+	} catch (error) {
+		logger.sendErrorEvent({ eventName: "RaiseEventError", event }, error);
+	}
 }
 
 /**
@@ -32,18 +33,19 @@ export function safeRaiseEvent(
  * @param disconnectedReason - The reason for the connection to be disconnected (Used for telemetry purposes only)
  */
 export function raiseConnectedEvent(
-    logger: ITelemetryLogger,
-    emitter: EventEmitter,
-    connected: boolean,
-    clientId?: string,
-    disconnectedReason?: string) {
-    try {
-        if (connected) {
-            emitter.emit(connectedEventName, clientId);
-        } else {
-            emitter.emit(disconnectedEventName, disconnectedReason);
-        }
-    } catch (error) {
-        logger.sendErrorEvent({ eventName: "RaiseConnectedEventError" }, error);
-    }
+	logger: ITelemetryLoggerExt,
+	emitter: EventEmitter,
+	connected: boolean,
+	clientId?: string,
+	disconnectedReason?: string,
+): void {
+	try {
+		if (connected) {
+			emitter.emit(connectedEventName, clientId);
+		} else {
+			emitter.emit(disconnectedEventName, disconnectedReason);
+		}
+	} catch (error) {
+		logger.sendErrorEvent({ eventName: "RaiseConnectedEventError" }, error);
+	}
 }

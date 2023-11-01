@@ -3,39 +3,58 @@
  * Licensed under the MIT License.
  */
 
-import * as child_process from "child_process";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
+import { spawnSync } from "child_process";
+import fs from "fs";
+import os from "os";
+import path from "path";
 
-function main() {
-    // Get the lerna output
-    let lernaOutput;
-    try {
-        lernaOutput = JSON.parse(child_process.execSync("npx lerna list --all --json").toString());
-        if (!Array.isArray(lernaOutput)) {
-            // eslint-disable-next-line unicorn/prefer-type-error
-            throw new Error("stdin input was not package array");
-        }
-    } catch (e) {
-        console.error(e);
-        process.exit(-1);
-    }
-
-    // Assign a unique port to each package
-    const portMap: { [pkgName: string]: number; } = {};
-    let port = 8081;
-    lernaOutput.forEach((pkg: { name: string; }) => {
-        if (pkg.name === undefined) {
-            console.error("missing name in lerna package entry");
-            process.exit(-1);
-        }
-        portMap[pkg.name] = port++;
-    });
-
-    // Write the mappings to a temporary file as kv pairs
-    const portMapPath = path.join(os.tmpdir(), "testportmap.json");
-    fs.writeFileSync(portMapPath, JSON.stringify(portMap));
+export interface PackageInfo {
+	name: string;
+	version: string;
+	private: string;
+	path: string;
 }
 
-main();
+/**
+ * Gets and parses a PackageInfo for packages in the workspace.
+ */
+export function getPackageInfo(): PackageInfo[] {
+	try {
+		const child = spawnSync("pnpm", ["recursive", "list", "--json", "--depth=-1"], {
+			encoding: "utf-8",
+			// shell:true is required for Windows without a resolved path to pnpm.
+			shell: true,
+		});
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		const info: PackageInfo[] = JSON.parse(child.stdout);
+		if (!Array.isArray(info)) {
+			// eslint-disable-next-line unicorn/prefer-type-error
+			throw new Error(
+				`stdin input was not package array. Spawn result: ${JSON.stringify(child)}`,
+			);
+		}
+		return info;
+	} catch (error) {
+		console.error(error);
+		process.exit(-1);
+	}
+}
+
+export function writePortMapFile(): void {
+	const info: PackageInfo[] = getPackageInfo();
+
+	// Assign a unique port to each package
+	const portMap: { [pkgName: string]: number } = {};
+	let port = 8081;
+	for (const pkg of info) {
+		if (pkg.name === undefined) {
+			console.error("missing name in package info");
+			process.exit(-1);
+		}
+		portMap[pkg.name] = port++;
+	}
+
+	// Write the mappings to a temporary file as kv pairs
+	const portMapPath = path.join(os.tmpdir(), "testportmap.json");
+	fs.writeFileSync(portMapPath, JSON.stringify(portMap));
+}

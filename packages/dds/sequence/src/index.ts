@@ -15,29 +15,70 @@
  *
  * @packageDocumentation
  */
-export { IMapMessageLocalMetadata, IValueOpEmitter } from "./defaultMapInterfaces";
+export { IMapMessageLocalMetadata, IValueOpEmitter, SequenceOptions } from "./defaultMapInterfaces";
 export {
-    DeserializeCallback,
-    IIntervalCollectionEvent,
-    IIntervalHelpers,
-    Interval,
-    IntervalCollection,
-    IntervalCollectionIterator,
-    IntervalLocator,
-    intervalLocatorFromEndpoint,
-    IntervalType,
-    ISerializableInterval,
-    ISerializedInterval,
-    SequenceInterval,
-    ISerializedIntervalCollectionV2,
-    CompressedSerializedInterval,
-    SerializedIntervalDelta,
+	IInterval,
+	Interval,
+	IntervalOpType,
+	IntervalType,
+	ISerializableInterval,
+	ISerializedInterval,
+	SequenceInterval,
+	SerializedIntervalDelta,
+	IntervalStickiness,
+	IIntervalHelpers,
+	sequenceIntervalHelpers,
+} from "./intervals";
+export {
+	DeserializeCallback,
+	IIntervalCollectionEvent,
+	IIntervalCollection,
+	IntervalLocator,
+	intervalLocatorFromEndpoint,
+	Side,
+	InteriorSequencePlace,
+	SequencePlace,
 } from "./intervalCollection";
-export { IInterval, IntervalConflictResolver } from "./intervalTree";
+export {
+	IntervalIndex,
+	SequenceIntervalIndexes,
+	IOverlappingIntervalsIndex,
+	createOverlappingIntervalsIndex,
+	createOverlappingSequenceIntervalsIndex,
+	IEndpointInRangeIndex,
+	IStartpointInRangeIndex,
+	createEndpointInRangeIndex,
+	createStartpointInRangeIndex,
+	IIdIntervalIndex,
+	createIdIntervalIndex,
+	IEndpointIndex,
+	createEndpointIndex,
+} from "./intervalIndex";
+export {
+	appendAddIntervalToRevertibles,
+	appendChangeIntervalToRevertibles,
+	appendDeleteIntervalToRevertibles,
+	appendIntervalPropertyChangedToRevertibles,
+	appendSharedStringDeltaToRevertibles,
+	discardSharedStringRevertibles,
+	IntervalRevertible,
+	revertSharedStringRevertibles,
+	SharedStringRevertible,
+} from "./revertibles";
 export { ISharedSegmentSequenceEvents, SharedSegmentSequence } from "./sequence";
-export { ISequenceDeltaRange, SequenceDeltaEvent, SequenceEvent, SequenceMaintenanceEvent } from "./sequenceDeltaEvent";
+export {
+	ISequenceDeltaRange,
+	SequenceDeltaEvent,
+	SequenceEvent,
+	SequenceMaintenanceEvent,
+} from "./sequenceDeltaEvent";
 export { SharedStringFactory } from "./sequenceFactory";
-export { getTextAndMarkers, ISharedString, SharedString, SharedStringSegment } from "./sharedString";
+export {
+	getTextAndMarkers,
+	ISharedString,
+	SharedString,
+	SharedStringSegment,
+} from "./sharedString";
 export {
 	ISharedIntervalCollection,
 	SharedIntervalCollection,

@@ -3,36 +3,31 @@
  * Licensed under the MIT License.
  */
 
-import { Mode, processContent, testCollateralExists } from "../replayMultipleFiles";
+import { Mode, processContent } from "../replayMultipleFiles";
+import { getTestContent, skipOrFailIfTestContentMissing } from "../testContent";
 
-describe("Snapshots", function() {
-    this.timeout(300000);
+describe("Snapshots", function () {
+	this.timeout(300000);
 
-    let collateralExists = false;
+	const contentLocation = getTestContent("snapshotTestContent");
 
-    before(() => {
-        collateralExists = testCollateralExists();
-    });
+	beforeEach(function () {
+		skipOrFailIfTestContentMissing(this, contentLocation);
+	});
 
-    beforeEach(function() {
-        if (!collateralExists) {
-            this.skip();
-        }
-    });
+	it("Stress Test", async () => {
+		await processContent(Mode.Stress);
+	});
 
-    it("Stress Test", async () => {
-        await processContent(Mode.Stress);
-    });
+	it("writes snapshot in correct format", async () => {
+		await processContent(Mode.Compare);
+	});
 
-    it("writes snapshot in correct format", async () => {
-        await processContent(Mode.Compare);
-    });
+	it("loads snapshots in old format", async () => {
+		await processContent(Mode.Validate);
+	});
 
-    it("loads snapshots in old format", async () => {
-        await processContent(Mode.Validate);
-    });
-
-    it("loads snapshots in old format and writes in correct format", async () => {
-        await processContent(Mode.BackCompat);
-    });
+	it("loads snapshots in old format and writes in correct format", async () => {
+		await processContent(Mode.BackCompat);
+	});
 });

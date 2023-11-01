@@ -2,16 +2,17 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+/* eslint-disable import/no-deprecated */
 
 import { ISegment, Marker } from "./mergeTreeNodes";
 import {
-    ICombiningOp,
-    IMergeTreeAnnotateMsg,
-    IMergeTreeGroupMsg,
-    IMergeTreeInsertMsg,
-    IMergeTreeRemoveMsg,
-    MergeTreeDeltaType,
-    IMergeTreeDeltaOp,
+	ICombiningOp,
+	IMergeTreeAnnotateMsg,
+	IMergeTreeGroupMsg,
+	IMergeTreeInsertMsg,
+	IMergeTreeRemoveMsg,
+	MergeTreeDeltaType,
+	IMergeTreeDeltaOp,
 } from "./ops";
 import { PropertySet } from "./properties";
 
@@ -21,21 +22,26 @@ import { PropertySet } from "./properties";
  * @param props - The properties to annotate the marker with
  * @param combiningOp - Optional. Specifies how to combine values for the property, such as "incr" for increment.
  * @returns The annotate op
+ *
+ * @deprecated This functionality was not meant to be exported and will be removed in a future release
  */
 export function createAnnotateMarkerOp(
-    marker: Marker, props: PropertySet, combiningOp?: ICombiningOp): IMergeTreeAnnotateMsg | undefined {
-    const id = marker.getId();
-    if (!id) {
-        return undefined;
-    }
+	marker: Marker,
+	props: PropertySet,
+	combiningOp?: ICombiningOp,
+): IMergeTreeAnnotateMsg | undefined {
+	const id = marker.getId();
+	if (!id) {
+		return undefined;
+	}
 
-    return {
-        combiningOp,
-        props,
-        relativePos1: { id, before: true },
-        relativePos2: { id },
-        type: MergeTreeDeltaType.ANNOTATE,
-    };
+	return {
+		combiningOp,
+		props,
+		relativePos1: { id, before: true },
+		relativePos2: { id },
+		type: MergeTreeDeltaType.ANNOTATE,
+	};
 }
 
 /**
@@ -45,16 +51,22 @@ export function createAnnotateMarkerOp(
  * @param props - The properties to annotate the range with
  * @param combiningOp - Optional. Specifies how to combine values for the property, such as "incr" for increment.
  * @returns The annotate op
+ *
+ * @deprecated This functionality was not meant to be exported and will be removed in a future release
  */
 export function createAnnotateRangeOp(
-    start: number, end: number, props: PropertySet, combiningOp: ICombiningOp | undefined): IMergeTreeAnnotateMsg {
-    return {
-        combiningOp,
-        pos1: start,
-        pos2: end,
-        props,
-        type: MergeTreeDeltaType.ANNOTATE,
-    };
+	start: number,
+	end: number,
+	props: PropertySet,
+	combiningOp: ICombiningOp | undefined,
+): IMergeTreeAnnotateMsg {
+	return {
+		combiningOp,
+		pos1: start,
+		pos2: end,
+		props,
+		type: MergeTreeDeltaType.ANNOTATE,
+	};
 }
 
 /**
@@ -62,42 +74,48 @@ export function createAnnotateRangeOp(
  *
  * @param start - The inclusive start of the range to remove
  * @param end - The exclusive end of the range to remove
+ *
+ * @deprecated This functionality was not meant to be exported and will be removed in a future release
  */
 export function createRemoveRangeOp(start: number, end: number): IMergeTreeRemoveMsg {
-    return {
-        pos1: start,
-        pos2: end,
-        type: MergeTreeDeltaType.REMOVE,
-    };
+	return {
+		pos1: start,
+		pos2: end,
+		type: MergeTreeDeltaType.REMOVE,
+	};
 }
 
 /**
  *
  * @param pos - The position to insert the segment at
  * @param segment - The segment to insert
+ *
+ * @deprecated This functionality was not meant to be exported and will be removed in a future release
  */
 export function createInsertSegmentOp(pos: number, segment: ISegment): IMergeTreeInsertMsg {
-    return createInsertOp(
-        pos,
-        segment.toJSONObject());
+	return createInsertOp(pos, segment.toJSONObject());
 }
 
+/**
+ * @deprecated This functionality was not meant to be exported and will be removed in a future release
+ */
 export function createInsertOp(pos: number, segSpec: any): IMergeTreeInsertMsg {
-    return {
-        pos1: pos,
-        seg: segSpec,
-        type: MergeTreeDeltaType.INSERT,
-    };
+	return {
+		pos1: pos,
+		seg: segSpec,
+		type: MergeTreeDeltaType.INSERT,
+	};
 }
 
 /**
  *
  * @param ops - The ops to group
+ *
+ * @deprecated The ability to create group ops will be removed in an upcoming release, as group ops are redundant with he native batching capabilities of the runtime
  */
-export function createGroupOp(
-    ...ops: IMergeTreeDeltaOp[]): IMergeTreeGroupMsg {
-    return {
-        ops,
-        type: MergeTreeDeltaType.GROUP,
-    };
+export function createGroupOp(...ops: IMergeTreeDeltaOp[]): IMergeTreeGroupMsg {
+	return {
+		ops,
+		type: MergeTreeDeltaType.GROUP,
+	};
 }

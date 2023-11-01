@@ -3,23 +3,31 @@
  * Licensed under the MIT License.
  */
 
+export {
+	IAttributionCollection,
+	IAttributionCollectionSerializer,
+	IAttributionCollectionSpec,
+	SerializedAttributionCollection,
+	SequenceOffsets,
+} from "./attributionCollection";
+export { createInsertOnlyAttributionPolicy } from "./attributionPolicy";
 export { IIntegerRange } from "./base";
 export { Client } from "./client";
-export 	{
-    ConflictAction,
-    Dictionary,
-    IRBAugmentation,
-    IRBMatcher,
-    KeyComparer,
-    Property,
-    PropertyAction,
-    QProperty,
-    RBColor,
-    RBNode,
-    RBNodeActions,
-    RedBlackTree,
-    SortedDictionary,
-    Stack,
+export {
+	ConflictAction,
+	Dictionary,
+	IRBAugmentation,
+	IRBMatcher,
+	KeyComparer,
+	Property,
+	PropertyAction,
+	QProperty,
+	RBColor,
+	RBNode,
+	RBNodeActions,
+	RedBlackTree,
+	SortedDictionary,
+	Stack,
 } from "./collections";
 export {
 	LocalClientId,
@@ -29,10 +37,17 @@ export {
 	UniversalSequenceNumber,
 } from "./constants";
 export {
-    createDetachedLocalReferencePosition,
-    LocalReferenceCollection,
-    LocalReferencePosition,
+	createDetachedLocalReferencePosition,
+	LocalReferenceCollection,
+	LocalReferencePosition,
+	SlidingPreference,
 } from "./localReference";
+export {
+	AttributionPolicy,
+	IMergeTreeAttributionOptions,
+	IMergeTreeOptions,
+	getSlideToSegoff,
+} from "./mergeTree";
 export {
 	IMergeTreeClientSequenceArgs,
 	IMergeTreeDeltaCallbackArgs,
@@ -47,47 +62,32 @@ export {
 } from "./mergeTreeDeltaCallback";
 export {
 	BaseSegment,
-	BlockAction,
-	BlockUpdateActions,
 	CollaborationWindow,
 	compareNumbers,
 	compareStrings,
 	debugMarkerToString,
 	IConsensusInfo,
-	IHierBlock,
 	IJSONMarkerSegment,
 	IMarkerModifiedAction,
-	IMergeBlock,
-	IMergeNode,
 	IMergeNodeCommon,
-	IncrementalBlockAction,
-	IncrementalExecOp,
-	IncrementalMapState,
-	IncrementalSegmentAction,
-	IncrementalSegmentActions,
-	InsertContext,
 	internedSpaces,
 	IRemovalInfo,
 	ISegment,
 	ISegmentAction,
-	ISegmentChanges,
 	Marker,
-	MaxNodesInBlock,
-	MergeBlock,
 	MergeNode,
-	MergeTreeStats,
-	MinListener,
-	NodeAction,
-	ordinalToArray,
 	reservedMarkerIdKey,
 	reservedMarkerSimpleTypeKey,
-	SearchResult,
 	SegmentAccumulator,
-	SegmentActions,
 	SegmentGroup,
 	toRemovalInfo,
 } from "./mergeTreeNodes";
-export { Trackable, TrackingGroup, TrackingGroupCollection } from "./mergeTreeTracking";
+export {
+	Trackable,
+	TrackingGroup,
+	ITrackingGroup,
+	TrackingGroupCollection,
+} from "./mergeTreeTracking";
 export {
 	createAnnotateMarkerOp,
 	createAnnotateRangeOp,
@@ -146,9 +146,10 @@ export { SortedSet } from "./sortedSet";
 export { SortedSegmentSet, SortedSegmentSetItem } from "./sortedSegmentSet";
 export { IJSONTextSegment, IMergeTreeTextHelper, TextSegment } from "./textSegment";
 export {
-    appendToMergeTreeDeltaRevertibles,
-    discardMergeTreeDeltaRevertible,
-    MergeTreeDeltaRevertible,
-    MergeTreeRevertibleDriver,
-    revertMergeTreeDeltaRevertibles,
+	appendToMergeTreeDeltaRevertibles,
+	discardMergeTreeDeltaRevertible,
+	isMergeTreeDeltaRevertible,
+	MergeTreeDeltaRevertible,
+	MergeTreeRevertibleDriver,
+	revertMergeTreeDeltaRevertibles,
 } from "./revertibles";

@@ -2,116 +2,150 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import child_process from "child_process";
+import { ConnectionState } from "@fluidframework/container-loader";
+import { IFluidContainer } from "@fluidframework/fluid-static";
+import { PerformanceEvent } from "@fluidframework/telemetry-utils";
+import { timeoutPromise } from "@fluidframework/test-utils";
 
-import { TypedEventEmitter } from "@fluidframework/common-utils";
-import { IRunConfig, IRunner, IRunnerEvents, IRunnerStatus, RunnnerStatus } from "./interface";
-import { delay } from "./utils";
+import { IRunConfig, IScenarioConfig, IScenarioRunConfig } from "./interface";
+import {
+	createAzureClient,
+	getScenarioRunnerTelemetryEventMap,
+	loadInitialObjSchema,
+} from "./utils";
+import { getLogger } from "./logger";
+import { ScenarioRunner } from "./ScenarioRunner";
 
-export interface AzureClientConfig {
-    type: "remote" | "local";
-    endpoint: string;
-    key?: string;
-    tenantId?: string;
+const eventMap = getScenarioRunnerTelemetryEventMap("DocLoader");
+
+export interface DocLoaderRunnerConfig extends IScenarioConfig {
+	docIds: string[];
+	clientStartDelayMs: number;
+	numOfLoads?: number;
 }
 
-export interface DocLoaderSchema {
-    initialObjects: { [key: string]: string };
-    dynamicObjects?: { [key: string]: string };
+export interface DocLoaderRunConfig extends IScenarioRunConfig {
+	docId: string;
 }
 
-export interface DocLoaderRunnerConfig {
-    connectionConfig: AzureClientConfig;
-    schema: DocLoaderSchema;
-    docIds: string[];
-    clientStartDelayMs: number;
-}
+export class DocLoaderRunner extends ScenarioRunner<
+	DocLoaderRunnerConfig,
+	DocLoaderRunConfig,
+	void,
+	IFluidContainer
+> {
+	protected runnerClientFilePath: string = "./dist/docLoaderRunnerClient.js";
 
-export class DocLoaderRunner extends TypedEventEmitter<IRunnerEvents> implements IRunner {
-    private status: RunnnerStatus = "notStarted";
-    constructor(public readonly c: DocLoaderRunnerConfig) {
-        super();
-    }
+	constructor(scenarioConfig: DocLoaderRunnerConfig) {
+		super({
+			...scenarioConfig,
+			numClients: scenarioConfig.docIds.length,
+			numRunsPerClient: scenarioConfig.numOfLoads,
+		});
+	}
 
-    public async run(config: IRunConfig): Promise<void> {
-        this.status = "running";
-        await this.execRun(config);
-        this.status = "success";
-    }
+	public static async execRun(runConfig: DocLoaderRunConfig): Promise<IFluidContainer> {
+		let schema;
+		const logger =
+			runConfig.logger ??
+			(await getLogger(
+				{
+					runId: runConfig.runId,
+					scenarioName: runConfig.scenarioName,
+					namespace: "scenario:runner:DocLoader",
+				},
+				["scenario:runner"],
+				eventMap,
+			));
 
-    public async execRun(config: IRunConfig): Promise<void> {
-        this.status = "running";
-        const runnerArgs: string[][] = [];
-        let i = 0;
-        for (const docId of this.c.docIds) {
-            const connection = this.c.connectionConfig;
-            const childArgs: string[] = [
-                "./dist/docLoaderRunnerClient.js",
-                "--runId",
-                config.runId,
-                "--scenarioName",
-                config.scenarioName,
-                "--childId",
-                (i++).toString(),
-                "--docId",
-                docId,
-                "--schema",
-                JSON.stringify(this.c.schema),
-                "--connType",
-                connection.type,
-                "--connEndpoint",
-                connection.endpoint,
-            ];
-            childArgs.push("--verbose");
-            runnerArgs.push(childArgs);
-        }
+		const ac =
+			runConfig.client ??
+			(await createAzureClient({
+				userId: `testUserId_${runConfig.childId}`,
+				userName: `testUserName_${runConfig.childId}`,
+				logger,
+			}));
 
-        const children: Promise<boolean>[] = [];
-        for (const runnerArg of runnerArgs) {
-            try {
-                children.push(this.createChild(runnerArg));
-            } catch {
-                throw new Error("Failed to spawn child");
-            }
-            await delay(this.c.clientStartDelayMs);
-        }
+		try {
+			schema = loadInitialObjSchema(runConfig.schema);
+		} catch {
+			throw new Error("Invalid schema provided.");
+		}
 
-        try {
-            await Promise.all(children);
-        } catch {
-            throw new Error("Not all clients closed sucesfully.");
-        }
-    }
+		let container: IFluidContainer;
+		try {
+			({ container } = await PerformanceEvent.timedExecAsync(
+				logger,
+				{ eventName: "load" },
+				async () => {
+					return ac.getContainer(runConfig.docId, schema);
+				},
+				{ start: true, end: true, cancel: "generic" },
+			));
+		} catch {
+			throw new Error("Unable to load container.");
+		}
 
-    public stop(): void {}
+		await PerformanceEvent.timedExecAsync(
+			logger,
+			{ eventName: "connected" },
+			async () => {
+				if (container.connectionState !== ConnectionState.Connected) {
+					return timeoutPromise(
+						(resolve) => container.once("connected", () => resolve()),
+						{
+							durationMs: 60000,
+							errorMsg: "container connect() timeout",
+						},
+					);
+				}
+			},
+			{ start: true, end: true, cancel: "generic" },
+		);
 
-    public getStatus(): IRunnerStatus {
-        return {
-            status: this.status,
-            description: this.description(),
-            details: {},
-        };
-    }
+		return container;
+	}
 
-    private description(): string {
-        return `This stage loads a list of documents, given their IDs`;
-    }
+	protected runCore(config: IRunConfig, info: { clientIndex: number }): DocLoaderRunConfig {
+		return this.buildScenarioRunConfig(config, {
+			childId: info.clientIndex,
+			docId: this.scenarioConfig.docIds[info.clientIndex],
+			isSync: false,
+		});
+	}
 
-    private async createChild(childArgs: string[]): Promise<boolean> {
-        const envVar = { ...process.env };
-        const runnerProcess = child_process.spawn("node", childArgs, {
-            stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-            env: envVar,
-        });
+	protected async runSyncCore(
+		config: IRunConfig,
+		info: { clientIndex: number },
+	): Promise<IFluidContainer> {
+		return DocLoaderRunner.execRun(
+			this.buildScenarioRunConfig(config, {
+				childId: info.clientIndex,
+				docId: this.scenarioConfig.docIds[info.clientIndex],
+				isSync: true,
+			}),
+		);
+	}
 
-        return new Promise((resolve, reject) =>
-            runnerProcess.once("close", (status) => {
-                if (status === 0) {
-                    resolve(true);
-                } else {
-                    reject(new Error("Client failed to complete the tests sucesfully."));
-                }
-            }),
-        );
-    }
+	protected buildScenarioRunConfig(
+		runConfig: IRunConfig,
+		options: { childId: number; docId: string; isSync?: boolean },
+	): DocLoaderRunConfig {
+		const scenarioRunConfig: DocLoaderRunConfig = {
+			...runConfig,
+			childId: options.childId,
+			docId: options.docId,
+			schema: this.scenarioConfig.schema,
+			client: this.scenarioConfig.client,
+		};
+		if (!options.isSync) {
+			delete scenarioRunConfig.logger;
+			delete scenarioRunConfig.client;
+		}
+		return scenarioRunConfig;
+	}
+
+	protected description(): string {
+		return `This stage loads a list of documents, given their IDs`;
+	}
 }

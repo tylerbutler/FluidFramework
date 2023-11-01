@@ -5,25 +5,38 @@
 
 import { IUser } from "@fluidframework/protocol-definitions";
 
-export const IFluidLastEditedTracker: keyof IProvideFluidLastEditedTracker = "IFluidLastEditedTracker";
+/**
+ * @public
+ */
+export const IFluidLastEditedTracker: keyof IProvideFluidLastEditedTracker =
+	"IFluidLastEditedTracker";
 
+/**
+ * @public
+ */
 export interface IProvideFluidLastEditedTracker {
-    readonly IFluidLastEditedTracker: IFluidLastEditedTracker;
+	readonly IFluidLastEditedTracker: IFluidLastEditedTracker;
 }
 
+/**
+ * @public
+ */
 export interface IFluidLastEditedTracker extends IProvideFluidLastEditedTracker {
-    /**
-     * Returns the details of the last edit to the container.
-     */
-    getLastEditDetails(): ILastEditDetails | undefined;
+	/**
+	 * Returns the details of the last edit to the container.
+	 */
+	getLastEditDetails(): ILastEditDetails | undefined;
 
-    /**
-     * Updates the details of last edit to the container.
-     */
-    updateLastEditDetails(lastEditDetails: ILastEditDetails): void;
+	/**
+	 * Updates the details of last edit to the container.
+	 */
+	updateLastEditDetails(lastEditDetails: ILastEditDetails): void;
 }
 
+/**
+ * @public
+ */
 export interface ILastEditDetails {
-    user: IUser;
-    timestamp: number;
+	user: IUser;
+	timestamp: number;
 }

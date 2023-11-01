@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryBaseEvent, ITelemetryProperties } from '@fluidframework/common-definitions';
+import { ITelemetryBaseEvent, ITelemetryProperties } from '@fluidframework/core-interfaces';
 import BTree from 'sorted-btree';
 
 const defaultFailMessage = 'Assertion failed';
@@ -77,12 +77,16 @@ export function compareStrings<T extends string>(a: T, b: T): number {
  * Use when violations are logic errors in the program.
  * @param condition - A condition to assert is truthy
  * @param message - Message to be printed if assertion fails. Will print "Assertion failed" by default
- * @param containsPII - boolean flag for whether the message passed in contains personally identifying information (PII).
+ * @param notLogSafe - boolean flag for whether the message passed in contains data that shouldn't be logged for privacy reasons.
+ *
+ * @remarks
+ * To avoid collisions with assertShortCode tagging in Fluid Framework, this cannot be named "assert".
+ * When a non constant message is not needed, use `assert` from `@fluidframework/core-utils`;
  */
-export function assert(condition: unknown, message?: string, containsPII = false): asserts condition {
+export function assertWithMessage(condition: unknown, message?: string, notLogSafe = false): asserts condition {
 	// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
 	if (!condition) {
-		fail(message, containsPII);
+		fail(message, notLogSafe);
 	}
 }
 
@@ -90,15 +94,15 @@ export function assert(condition: unknown, message?: string, containsPII = false
  * Fails an assertion. Throws an Error that the assertion failed.
  * Use when violations are logic errors in the program.
  * @param message - Message to be printed if assertion fails. Will print "Assertion failed" by default
- * @param containsPII - boolean flag for whether the message passed in contains personally identifying information (PII).
+ * @param notLogSafe - boolean flag for whether the message passed in contains data that shouldn't be logged for privacy reasons.
  */
-export function fail(message: string = defaultFailMessage, containsPII = false): never {
+export function fail(message: string = defaultFailMessage, notLogSafe = false): never {
 	if (process.env.NODE_ENV !== 'production') {
 		debugger;
 		console.error(message);
 	}
 
-	throw new SharedTreeAssertionError(containsPII ? 'Assertion failed' : message);
+	throw new SharedTreeAssertionError(notLogSafe ? 'Assertion failed' : message);
 }
 
 /**
@@ -125,7 +129,7 @@ export function fail(message: string = defaultFailMessage, containsPII = false):
  * @param message - Message to be printed if assertion fails.
  */
 export function assertNotUndefined<T>(value: T | undefined, message = 'value must not be undefined'): T {
-	assert(value !== undefined, message);
+	assertWithMessage(value !== undefined, message);
 	return value;
 }
 
@@ -135,19 +139,8 @@ export function assertNotUndefined<T>(value: T | undefined, message = 'value mus
  * @param message - Message to be printed if assertion fails.
  */
 export function assertArrayOfOne<T>(array: readonly T[], message = 'array value must contain exactly one item'): T {
-	assert(array.length === 1, message);
+	assertWithMessage(array.length === 1, message);
 	return array[0];
-}
-
-/**
- * Assign a property and value to a given object.
- * @param object - The object to add the property to
- * @param property - The property key
- * @param value - The value of the property
- * @returns `object` after assigning `value` to the property `property`.
- */
-export function assign<T, K extends keyof never, V>(object: T, property: K, value: V): With<T, K, V> {
-	return Object.assign(object, { [property]: value }) as With<T, K, V>;
 }
 
 /**
@@ -155,6 +148,7 @@ export function assign<T, K extends keyof never, V>(object: T, property: K, valu
  * `Object.defineProperty`, but it is useful for caching public getters on first read.
  *
  * @example
+ *
  * ```typescript
  * // `randomOnce()` will return a random number, but always the same random number.
  * {
@@ -163,6 +157,7 @@ export function assign<T, K extends keyof never, V>(object: T, property: K, valu
  *   }
  * }
  * ```
+ *
  * @param object - The object containing the property
  * @param propName - The name of the property on the object
  * @param value - The value of the property
@@ -278,31 +273,6 @@ function compareIterators<T, TReturn extends T = T>(
 }
 
 /**
- * Compare two arrays and return true if their elements are equivalent and in the same order.
- * @param arrayA - The first array to compare
- * @param arrayB - The second array to compare
- * @param elementComparator - The function used to check if two `T`s are equivalent.
- * Defaults to `Object.is()` equality (a shallow compare)
- */
-export function compareArrays<T>(
-	arrayA: readonly T[],
-	arrayB: readonly T[],
-	elementComparator: (a: T, b: T) => boolean = Object.is
-): boolean {
-	if (arrayA.length !== arrayB.length) {
-		return false;
-	}
-
-	for (let i = 0; i < arrayA.length; i++) {
-		if (!elementComparator(arrayA[i], arrayB[i])) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
-/**
  * Compare two maps and return true if their contents are equivalent.
  * @param mapA - The first array to compare
  * @param mapB - The second array to compare
@@ -385,6 +355,7 @@ export function setPropertyIfDefined<TDst, P extends keyof TDst>(
 
 /**
  * @example
+ *
  * ```typescript
  * function (thing: ObjectWithMaybeFoo) {
  * 	   const x: MyActualType = {
@@ -396,7 +367,6 @@ export function setPropertyIfDefined<TDst, P extends keyof TDst>(
  * }
  * ```
  */
-
 function breakOnDifference(): { break: boolean } {
 	return { break: true };
 }

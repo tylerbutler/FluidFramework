@@ -1,11 +1,12 @@
 {
-  "extends": "@fluidframework/build-common/ts-common-config.json",
-  "compilerOptions": {
-    "composite": true,
-    "rootDir": "./src",
-    "outDir": "./lib",
-    "types": ["node"],
-  },
-  "include": ["src/**/*"],
-  "exclude": ["src/test/**/*"],
+	"extends": "@fluidframework/build-common/ts-common-config.json",
+	"compilerOptions": {
+		"composite": true,
+		"rootDir": "./src",
+		"outDir": "./lib",
+		"types": ["node"],
+		"noImplicitAny": true,
+	},
+	"include": ["src/**/*"],
+	"exclude": ["src/test/**/*"],
 }

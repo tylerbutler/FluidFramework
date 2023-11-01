@@ -2,6 +2,27 @@
 
 An Ioc type library for synthesizing a FluidObject based on FluidObject providers.
 
+<!-- AUTO-GENERATED-CONTENT:START (README_DEPENDENCY_GUIDELINES_SECTION:includeHeading=TRUE) -->
+
+<!-- prettier-ignore-start -->
+<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
+
+## Using Fluid Framework libraries
+
+When taking a dependency on a Fluid Framework library, we recommend using a `^` (caret) version range, such as `^1.3.4`.
+While Fluid Framework libraries may use different ranges with interdependencies between other Fluid Framework libraries,
+library consumers should always prefer `^`.
+
+Note that when depending on a library version of the form `2.0.0-internal.x.y.z`, called the Fluid internal version scheme,
+you must use a `>= <` dependency range (such as `>=2.0.0-internal.x.y.z <2.0.0-internal.w.0.0` where `w` is `x+1`).
+Standard `^` and `~` ranges will not work as expected.
+See the [@fluid-tools/version-tools](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/version-tools/README.md)
+package for more information including tools to convert between version schemes.
+
+<!-- prettier-ignore-end -->
+
+<!-- AUTO-GENERATED-CONTENT:END -->
+
 It allows for the creation of a `DependencyContainer` that can have FluidObjects registered with it
 based on their interface Symbol. So for example if I wanted to register something as `IFoo` I would
 need to provide and object that implements `IFoo` along side it.
@@ -13,8 +34,8 @@ So if I wanted an object with an optional `IFoo` and a required `IBar` I would g
 
 ```typescript
 {
-    IFoo: Promise<IFoo | undefined>
-    IBar: Promise<IBar>
+	IFoo: Promise<IFoo | undefined>;
+	IBar: Promise<IBar>;
 }
 ```
 
@@ -31,16 +52,16 @@ console.log(s.IFoo?.foo;)
 
 # API
 
-- [Providers](##Providers)
-  - [`InstanceProvider`](###Instance-Provider)
-  - [`SingletonProvider`](###Singleton-Provider)
-  - [`ValueProvider`](###Value-Provider)
-  - [`FactoryProvider`](###Factory-Provider)
-- [Synthesize](##Synthesize)
-  - [Optional Types](###Optional-Types)
-  - [Required Types](###Required-Types)
-  - [Multiple Types](###Multiple-Types)
-- [Parent](##Parent)
+-   [Providers](##Providers)
+    -   [`InstanceProvider`](###Instance-Provider)
+    -   [`SingletonProvider`](###Singleton-Provider)
+    -   [`ValueProvider`](###Value-Provider)
+    -   [`FactoryProvider`](###Factory-Provider)
+-   [Synthesize](##Synthesize)
+    -   [Optional Types](###Optional-Types)
+    -   [Required Types](###Required-Types)
+    -   [Multiple Types](###Multiple-Types)
+-   [Parent](##Parent)
 
 ## Fluid object Providers
 
@@ -55,10 +76,10 @@ There are four types of providers:
 
 ```typescript
 type FluidObjectProvider<T> =
-    NonNullable<T>
-    | Promise<NonNullable<T>>
-    | ((dependencyContainer: IFluidDependencySynthesizer) => NonNullable<T>)
-    | ((dependencyContainer: IFluidDependencySynthesizer) => Promise<NonNullable<T>>);
+	| NonNullable<T>
+	| Promise<NonNullable<T>>
+	| ((dependencyContainer: IFluidDependencySynthesizer) => NonNullable<T>)
+	| ((dependencyContainer: IFluidDependencySynthesizer) => Promise<NonNullable<T>>);
 ```
 
 ### Value Provider
@@ -145,8 +166,8 @@ If I wanted an object with an optional `IFoo` and a required `IBar` I would get 
 
 ```typescript
 {
-    IFoo: Promise<IFoo | undefined>
-    IBar: Promise<IBar>
+	IFoo: Promise<IFoo | undefined>;
+	IBar: Promise<IBar>;
 }
 ```
 
@@ -155,19 +176,19 @@ is a TypeScript `type` that ensures the types being passed match the ones in the
 
 ### Optional Types
 
-Optional types will return a Promise to it's corresponding FluidObject  or undefined. Because of this we need to do
+Optional types will return a Promise to it's corresponding FluidObject or undefined. Because of this we need to do
 an if check to validate the object or use the `?` like in the example below.
 
 ```typescript
 const dc = new DependencyContainer<FluidObject<IFoo>>();
 
-const s = dc.synthesize<IFoo>({IFoo}, {});
+const s = dc.synthesize<IFoo>({ IFoo }, {});
 const foo = await s.IFoo;
 console.log(foo?.foo);
 ```
 
-*Note: Because of how generics in TypeScript work we need to provide an empty `requiredTypes` object even though we don't
-need to provide the type.*
+_Note: Because of how generics in TypeScript work we need to provide an empty `requiredTypes` object even though we don't
+need to provide the type._
 
 ### Required Types
 
@@ -178,7 +199,7 @@ You can see below that we don't need to add the `?` to check our requested type.
 ```typescript
 const dc = new DependencyContainer<FluidObject<IFoo>>();
 
-const scope = dc.synthesize<{}, IFoo>({}, {IFoo});
+const scope = dc.synthesize<{}, IFoo>({}, { IFoo });
 const foo = await s.IFoo;
 console.log(foo.foo);
 ```
@@ -190,7 +211,7 @@ You can declare multiple types for both Optional and Required using the `&` or c
 ```typescript
 const dc = new DependencyContainer<FluidObject<IFoo & IBar>>();
 
-const scope = dc.synthesize<IFoo & IBar>({IFoo, IBar}, {});
+const scope = dc.synthesize<IFoo & IBar>({ IFoo, IBar }, {});
 const fooP = s.IFoo;
 const barP = s.IBar;
 const [foo, bar] = Promise.all([foo, bar]);
@@ -201,7 +222,7 @@ console.log(bar?.bar);
 ```typescript
 const dc = new DependencyContainer<FluidObject<IFoo & IBar>>();
 
-const scope = dc.synthesize<{}, IFoo & IBar>({}, {IFoo, IBar});
+const scope = dc.synthesize<{}, IFoo & IBar>({}, { IFoo, IBar });
 const fooP = s.IFoo;
 const barP = s.IBar;
 const [foo, bar] = Promise.all([foo, bar]);
@@ -212,7 +233,7 @@ console.log(bar.bar);
 ```typescript
 const dc = new DependencyContainer<FluidObject<IFoo & IBar>>();
 
-const scope = dc.synthesize<IFoo, IBar>({IFoo}, {IBar});
+const scope = dc.synthesize<IFoo, IBar>({ IFoo }, { IBar });
 const fooP = s.IFoo;
 const barP = s.IBar;
 const [foo, bar] = Promise.all([foo, bar]);
@@ -225,3 +246,20 @@ console.log(bar.bar);
 The `DependencyContainer` takes one optional parameter which is the `parent`. When resolving providers the `DependencyContainer` will first
 check the current container then look in the parent.
 
+<!-- AUTO-GENERATED-CONTENT:START (README_TRADEMARK_SECTION:includeHeading=TRUE) -->
+
+<!-- prettier-ignore-start -->
+<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
+
+## Trademark
+
+This project may contain Microsoft trademarks or logos for Microsoft projects, products, or services.
+
+Use of these trademarks or logos must follow Microsoft's [Trademark & Brand
+Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+
+Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
+
+<!-- prettier-ignore-end -->
+
+<!-- AUTO-GENERATED-CONTENT:END -->

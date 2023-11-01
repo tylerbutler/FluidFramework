@@ -4,41 +4,39 @@
  */
 
 module.exports = {
-    extends: [require.resolve("@fluidframework/eslint-config-fluid/strict"), "prettier"],
-    plugins: ["eslint-plugin-jsdoc"],
-    parserOptions: {
-        project: ["./tsconfig.json", "./src/test/tsconfig.json"],
-    },
-    rules: {
-        // Require jsdoc/tsdoc comments on public/exported API items.
-        "jsdoc/require-jsdoc": [
-            "error",
-            {
-                // Indicates that only module exports should be flagged for lacking jsdoc comments
-                publicOnly: true,
-                enableFixer: false, // Prevents eslint from adding empty comment blocks when run with `--fix`
-                require: {
-                    ClassDeclaration: true,
-                    FunctionDeclaration: true,
+	extends: [require.resolve("@fluidframework/eslint-config-fluid/strict"), "prettier"],
+	parserOptions: {
+		project: ["./tsconfig.json", "./src/test/tsconfig.json"],
+	},
+	rules: {
+		// Useful for developer accessibility
+		"unicorn/prevent-abbreviations": [
+			"error",
+			{
+				// Exact variable name checks.
+				// See: https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prevent-abbreviations.md#allowlist
+				allowList: {
+					// Industry-standard index variable name.
+					i: true,
+				},
 
-                    // Will report for *any* methods on exported classes, regardless of whether or not they are public
-                    MethodDefinition: false,
-                },
-                contexts: ["TSEnumDeclaration", "TSInterfaceDeclaration", "TSTypeAliasDeclaration"],
-            },
-        ],
-
-        // Ensure jsdoc/tsdoc comments contain a main description component
-        // (disallows empty comments / only tags).
-        "jsdoc/require-description": ["error", { checkConstructors: false }],
-    },
-    overrides: [
-        {
-            files: ["packageVersion.ts"],
-            rules: {
-                "jsdoc/require-jsdoc": "off",
-                "jsdoc/require-description": "off",
-            },
-        },
-    ],
+				// RegEx-based exclusions
+				// See: https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prevent-abbreviations.md#ignore
+				ignore: [
+					// "props" has become something of an industry standard abbreviation for "properties".
+					// Allow names to include "props" / "Props".
+					"[pP]rops",
+				],
+			},
+		],
+	},
+	overrides: [
+		{
+			// Overrides for type-tests
+			files: ["src/test/types/*"],
+			rules: {
+				"unicorn/prevent-abbreviations": "off",
+			},
+		},
+	],
 };

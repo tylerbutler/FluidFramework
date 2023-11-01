@@ -2,128 +2,164 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import child_process from "child_process";
+import { ChildProcess } from "child_process";
+import { ConnectionState } from "@fluidframework/container-loader";
+import { PerformanceEvent } from "@fluidframework/telemetry-utils";
+import { IFluidContainer } from "@fluidframework/fluid-static";
+import { timeoutPromise } from "@fluidframework/test-utils";
 
-import { TypedEventEmitter } from "@fluidframework/common-utils";
-import { IRunConfig, IRunner, IRunnerEvents, IRunnerStatus, RunnnerStatus } from "./interface";
-import { delay } from "./utils";
+import { IRunConfig, IScenarioConfig, IScenarioRunConfig } from "./interface";
+import {
+	createAzureClient,
+	getScenarioRunnerTelemetryEventMap,
+	loadInitialObjSchema,
+} from "./utils";
+import { getLogger } from "./logger";
+import { ScenarioRunner } from "./ScenarioRunner";
 
-export interface AzureClientConfig {
-    type: "remote" | "local";
-    endpoint: string;
-    key?: string;
-    tenantId?: string;
+const eventMap = getScenarioRunnerTelemetryEventMap("DocCreator");
+
+export interface DocCreatorRunnerConfig extends IScenarioConfig {
+	numDocs: number;
+	clientStartDelayMs: number;
 }
 
-export interface DocSchema {
-    initialObjects: { [key: string]: string };
-    dynamicObjects?: { [key: string]: string };
-}
+export type DocCreatorRunConfig = IScenarioRunConfig;
 
-export interface DocCreatorRunnerConfig {
-    connectionConfig: AzureClientConfig;
-    schema: DocSchema;
-    numDocs: number;
-    clientStartDelayMs: number;
-}
+export class DocCreatorRunner extends ScenarioRunner<
+	DocCreatorRunnerConfig,
+	DocCreatorRunConfig,
+	string
+> {
+	protected runnerClientFilePath: string = "./dist/docCreatorRunnerClient.js";
 
-export class DocCreatorRunner extends TypedEventEmitter<IRunnerEvents> implements IRunner {
-    private status: RunnnerStatus = "notStarted";
-    private readonly docIds: string[] = [];
-    constructor(public readonly c: DocCreatorRunnerConfig) {
-        super();
-    }
+	constructor(scenarioConfig: DocCreatorRunnerConfig) {
+		super({
+			...scenarioConfig,
+			numClients: scenarioConfig.numDocs,
+		});
+	}
 
-    public async run(config: IRunConfig): Promise<string | string[] | undefined> {
-        this.status = "running";
+	public static async execRun(runConfig: DocCreatorRunConfig): Promise<string> {
+		let schema;
+		const logger =
+			runConfig.logger ??
+			(await getLogger(
+				{
+					runId: runConfig.runId,
+					scenarioName: runConfig.scenarioName,
+					namespace: "scenario:runner:DocCreator",
+				},
+				["scenario:runner"],
+				eventMap,
+			));
 
-        const r = await this.execRun(config);
-        this.status = "success";
-        return r;
-    }
+		const ac =
+			runConfig.client ??
+			(await createAzureClient({
+				userId: `testUserId_${runConfig.childId}`,
+				userName: `testUserName_${runConfig.childId}`,
+				logger,
+			}));
 
-    public async execRun(config: IRunConfig): Promise<string | string[] | undefined> {
-        this.status = "running";
-        const runnerArgs: string[][] = [];
-        for (let i = 0; i < this.c.numDocs; i++) {
-            const connection = this.c.connectionConfig;
-            const childArgs: string[] = [
-                "./dist/docCreatorRunnerClient.js",
-                "--runId",
-                config.runId,
-                "--scenarioName",
-                config.scenarioName,
-                "--childId",
-                i.toString(),
-                "--schema",
-                JSON.stringify(this.c.schema),
-                "--connType",
-                connection.type,
-                "--connEndpoint",
-                connection.endpoint,
-            ];
-            childArgs.push("--verbose");
-            runnerArgs.push(childArgs);
-        }
+		try {
+			schema = loadInitialObjSchema(runConfig.schema);
+		} catch {
+			throw new Error("Invalid schema provided.");
+		}
 
-        const children: Promise<boolean>[] = [];
-        for (const runnerArg of runnerArgs) {
-            try {
-                children.push(this.createChild(runnerArg));
-            } catch {
-                throw new Error("Failed to spawn child");
-            }
-            await delay(this.c.clientStartDelayMs);
-        }
+		let container: IFluidContainer;
+		try {
+			({ container } = await PerformanceEvent.timedExecAsync(
+				logger,
+				{ eventName: "create" },
+				async () => {
+					return ac.createContainer(schema);
+				},
+				{ start: true, end: true, cancel: "generic" },
+			));
+		} catch (error) {
+			throw new Error(`Unable to create container. ${error}`);
+		}
 
-        try {
-            await Promise.all(children);
-        } catch {
-            throw new Error("Not all clients closed sucesfully.");
-        }
+		let id: string;
+		try {
+			id = await PerformanceEvent.timedExecAsync(
+				logger,
+				{ eventName: "attach" },
+				async () => {
+					return container.attach();
+				},
+				{ start: true, end: true, cancel: "generic" },
+			);
+		} catch {
+			throw new Error("Unable to attach container.");
+		}
 
-        if(this.docIds.length > 0) {
-            return this.docIds.length === 1 ? this.docIds[0] : this.docIds;
-        }
-    }
+		await PerformanceEvent.timedExecAsync(
+			logger,
+			{ eventName: "connected" },
+			async () => {
+				if (container.connectionState !== ConnectionState.Connected) {
+					return timeoutPromise(
+						(resolve) => container.once("connected", () => resolve()),
+						{
+							durationMs: 60000,
+							errorMsg: "container connect() timeout",
+						},
+					);
+				}
+			},
+			{ start: true, end: true, cancel: "generic" },
+		);
 
-    public stop(): void {}
+		return id;
+	}
 
-    public getStatus(): IRunnerStatus {
-        return {
-            status: this.status,
-            description: this.description(),
-            details: {},
-        };
-    }
+	protected runCore(config: IRunConfig, info: { clientIndex: number }): DocCreatorRunConfig {
+		return this.buildScenarioRunConfig(config, {
+			childId: info.clientIndex,
+			isSync: false,
+		});
+	}
 
-    private description(): string {
-        return `This stage creates empty document for the given schema.`;
-    }
+	protected async runSyncCore(
+		config: IRunConfig,
+		info: { clientIndex: number },
+	): Promise<string> {
+		return DocCreatorRunner.execRun(
+			this.buildScenarioRunConfig(config, { childId: info.clientIndex, isSync: true }),
+		);
+	}
 
-    private async createChild(childArgs: string[]): Promise<boolean> {
-        const envVar = { ...process.env };
-        const runnerProcess = child_process.spawn("node", childArgs, {
-            stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-            env: envVar,
-        });
+	protected buildScenarioRunConfig(
+		runConfig: IRunConfig,
+		options: { childId: number; isSync?: boolean },
+	): DocCreatorRunConfig {
+		const scenarioRunConfig: DocCreatorRunConfig = {
+			...runConfig,
+			childId: options.childId,
+			schema: this.scenarioConfig.schema,
+			client: this.scenarioConfig.client,
+		};
+		if (!options.isSync) {
+			delete scenarioRunConfig.logger;
+			delete scenarioRunConfig.client;
+		}
+		return scenarioRunConfig;
+	}
 
-        runnerProcess.stdout?.once("data", (data) => {
-            this.docIds.push(String(data))
-        });
+	protected description(): string {
+		return `This stage creates empty document for the given schema.`;
+	}
 
-        runnerProcess.on('message', (id) => {
-            this.docIds.push(String(id))
-        });
+	protected additionalChildProcessSetup(runnerProcess: ChildProcess): void {
+		runnerProcess.stdout?.once("data", (data) => {
+			this.childResults.push(String(data));
+		});
 
-        return new Promise((resolve, reject) =>
-            runnerProcess.once("close", (status) => {
-                if (status === 0) {
-                    resolve(true);
-                } else {
-                    reject(new Error("Client failed to complete the tests sucesfully."));
-                }
-            }),
-        );
-    }
+		runnerProcess.on("message", (id) => {
+			this.childResults.push(String(id));
+		});
+	}
 }

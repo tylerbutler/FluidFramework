@@ -5,216 +5,332 @@
 
 import { strict as assert } from "assert";
 
-import { ITelemetryBaseLogger } from "@fluidframework/common-definitions";
+import { generatePairwiseOptions } from "@fluid-internal/test-pairwise-generator";
+import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
 import { IContainerLoadMode, LoaderHeader } from "@fluidframework/container-definitions";
-import { Container } from "@fluidframework/container-loader";
+
 import { SummaryCollection, DefaultSummaryConfiguration } from "@fluidframework/container-runtime";
-import { IDocumentService, IDocumentServiceFactory, IResolvedUrl } from "@fluidframework/driver-definitions";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import { TelemetryNullLogger } from "@fluidframework/telemetry-utils";
-import { generatePairwiseOptions } from "@fluidframework/test-pairwise-generator";
 import {
-    createLoader,
-    ITestContainerConfig,
-    ITestFluidObject,
-    ITestObjectProvider,
-    timeoutPromise,
+	IDocumentService,
+	IDocumentServiceFactory,
+	IResolvedUrl,
+} from "@fluidframework/driver-definitions";
+import { requestFluidObject } from "@fluidframework/runtime-utils";
+import { createChildLogger } from "@fluidframework/telemetry-utils";
+import {
+	createLoader,
+	ITestContainerConfig,
+	ITestFluidObject,
+	ITestObjectProvider,
+	timeoutPromise,
 } from "@fluidframework/test-utils";
-import { describeFullCompat } from "@fluidframework/test-version-utils";
+import { describeFullCompat } from "@fluid-internal/test-version-utils";
 
-const loadOptions: IContainerLoadMode[] =
-    generatePairwiseOptions<IContainerLoadMode>({
-        deltaConnection: [undefined, "none", "delayed"],
-        opsBeforeReturn: [undefined, "cached", "all"],
-    });
+const loadOptions: IContainerLoadMode[] = generatePairwiseOptions<IContainerLoadMode>({
+	deltaConnection: [undefined, "none", "delayed"],
+	opsBeforeReturn: [undefined, "sequenceNumber", "cached", "all"],
+	pauseAfterLoad: [undefined, true, false],
+});
 
-const testConfigs =
-    generatePairwiseOptions({
-        loadOptions,
-        waitForSummary: [true, false],
-    });
+const testConfigs = generatePairwiseOptions({
+	loadOptions,
+	waitForSummary: [true, false],
+});
 
 const maxOps = 10;
 const testContainerConfig: ITestContainerConfig = {
-    runtimeOptions: {
-        // strictly control summarization
-        summaryOptions: {
-            summaryConfigOverrides: {
-                ...DefaultSummaryConfiguration,
-                ...{
-                    minIdleTime: 1000,
-                    maxIdleTime: 1000,
-                    maxTime: 1000 * 5,
-                    initialSummarizerDelayMs: 0,
-                    maxOps,
-                    nonRuntimeOpWeight: 1.0,
-                    runtimeOpWeight: 1.0,
-                },
-            },
-            initialSummarizerDelayMs: 0,
-        },
-    },
+	runtimeOptions: {
+		// strictly control summarization
+		summaryOptions: {
+			summaryConfigOverrides: {
+				...DefaultSummaryConfiguration,
+				...{
+					// Wasn't getting summaryAck before timeout (since we weight on number of ops, and the number of ops is lower in RunningSummarizer.ctor)
+					minIdleTime: 500,
+					maxIdleTime: 500,
+					maxTime: 1000 * 5,
+					initialSummarizerDelayMs: 0,
+					maxOps,
+					nonRuntimeOpWeight: 1.0,
+					runtimeOpWeight: 1.0,
+				},
+			},
+			initialSummarizerDelayMs: 0,
+		},
+	},
 };
 
 const testContainerConfigDisabled: ITestContainerConfig = {
-    runtimeOptions: {
-        // strictly control summarization
-        summaryOptions: {
-            summaryConfigOverrides: {
-                state: "disabled",
-            },
-        },
-    },
+	runtimeOptions: {
+		// strictly control summarization
+		summaryOptions: {
+			summaryConfigOverrides: {
+				state: "disabled",
+			},
+		},
+	},
 };
 
 describeFullCompat("No Delta stream loading mode testing", (getTestObjectProvider) => {
-    const scenarioToContainerUrl = new Map<string, string>();
-    before(() => {
-        // clear first, so each version combination gets a new container
-        scenarioToContainerUrl.clear();
-    });
-    async function getContainerUrl(
-        provider: ITestObjectProvider,
-        waitForSummary: boolean,
-        timeout: number,
-    ) {
-        const scenario = JSON.stringify(waitForSummary ?? "undefined");
-        if (!scenarioToContainerUrl.has(scenario)) {
-            let containerResolvedUrl: IResolvedUrl | undefined;
-            // initialize the container and its data
-            {
-                const initLoader = createLoader(
-                    [[provider.defaultCodeDetails, provider.createFluidEntryPoint(testContainerConfigDisabled)]],
-                    provider.documentServiceFactory,
-                    provider.urlResolver,
-                );
+	const scenarioToContainerUrl = new Map<string, string>();
+	const scenarioToSeqNum = new Map<string, number>();
 
-                const initContainer = await initLoader.createDetachedContainer(provider.defaultCodeDetails);
-                await initContainer.attach(provider.driver.createCreateNewRequest(provider.documentId));
-                containerResolvedUrl = initContainer.resolvedUrl;
+	before(() => {
+		// clear first, so each version combination gets a new container
+		scenarioToContainerUrl.clear();
+		scenarioToSeqNum.clear();
+	});
+	async function setupContainer(
+		provider: ITestObjectProvider,
+		waitForSummary: boolean,
+		timeout: number,
+	) {
+		const scenario = JSON.stringify(waitForSummary ?? "undefined");
+		if (!scenarioToContainerUrl.has(scenario)) {
+			let containerResolvedUrl: IResolvedUrl | undefined;
+			// initialize the container and its data
+			{
+				const initLoader = createLoader(
+					[
+						[
+							provider.defaultCodeDetails,
+							provider.createFluidEntryPoint(testContainerConfigDisabled),
+						],
+					],
+					provider.documentServiceFactory,
+					provider.urlResolver,
+				);
 
-                const initDataObject = await requestFluidObject<ITestFluidObject>(initContainer, "default");
-                for (let i = 0; i < maxOps; i++) {
-                    initDataObject.root.set(i.toString(), i);
-                }
-                if (initContainer.isDirty) {
-                    await timeoutPromise(
-                        (res) => initContainer.once("saved", () => res()),
-                        { durationMs: timeout / 2, errorMsg: "Not saved before timeout" });
-                }
-                initContainer.close();
-            }
-            const containerUrl = await provider.driver.createContainerUrl(provider.documentId, containerResolvedUrl);
-            scenarioToContainerUrl.set(scenario, containerUrl);
+				const initContainer = await initLoader.createDetachedContainer(
+					provider.defaultCodeDetails,
+				);
+				await initContainer.attach(
+					provider.driver.createCreateNewRequest(provider.documentId),
+				);
+				containerResolvedUrl = initContainer.resolvedUrl;
 
-            // if we want there to be a summary before we load the storage only container
-            // wait for it here
-            if (waitForSummary) {
-                const summaryLoader = createLoader(
-                    [[provider.defaultCodeDetails, provider.createFluidEntryPoint({
-                        ...testContainerConfig,
-                        runtimeOptions: {
-                            ...testContainerConfig.runtimeOptions,
-                            summaryOptions: {
-                                ...testContainerConfig.runtimeOptions?.summaryOptions,
-                                disableSummaries: false,
-                            },
-                        },
-                    })]],
-                    provider.documentServiceFactory,
-                    provider.urlResolver,
-                );
-                const summaryContainer = await summaryLoader.resolve({
-                    url: containerUrl,
-                });
+				const initDataObject = await requestFluidObject<ITestFluidObject>(
+					initContainer,
+					"default",
+				);
+				for (let i = 0; i < maxOps; i++) {
+					initDataObject.root.set(i.toString(), i);
+				}
+				if (initContainer.isDirty) {
+					await timeoutPromise((res) => initContainer.once("saved", () => res()), {
+						durationMs: timeout / 2,
+						errorMsg: "Not saved before timeout",
+					});
+				}
+				scenarioToSeqNum.set(scenario, initContainer.deltaManager.lastSequenceNumber);
+				initContainer.close();
+			}
+			const containerUrl = await provider.driver.createContainerUrl(
+				provider.documentId,
+				containerResolvedUrl,
+			);
+			scenarioToContainerUrl.set(scenario, containerUrl);
 
-                const summaryCollection =
-                    new SummaryCollection(summaryContainer.deltaManager, new TelemetryNullLogger());
+			// if we want there to be a summary before we load the storage only container
+			// wait for it here
+			if (waitForSummary) {
+				const summaryLoader = createLoader(
+					[
+						[
+							provider.defaultCodeDetails,
+							provider.createFluidEntryPoint({
+								...testContainerConfig,
+								runtimeOptions: {
+									...testContainerConfig.runtimeOptions,
+									summaryOptions: {
+										...testContainerConfig.runtimeOptions?.summaryOptions,
+									},
+								},
+							}),
+						],
+					],
+					provider.documentServiceFactory,
+					provider.urlResolver,
+				);
+				const summaryContainer = await summaryLoader.resolve({
+					url: containerUrl,
+				});
 
-                await timeoutPromise(
-                    (res) => summaryCollection.once("summaryAck", () => res()),
-                    { durationMs: timeout / 2, errorMsg: "Not summary acked before timeout" });
-                summaryContainer.close();
-            }
-        }
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return scenarioToContainerUrl.get(scenario)!;
-    }
+				// Force the container into write mode to ensure a summary will be created
+				const dataObject = await requestFluidObject<ITestFluidObject>(
+					summaryContainer,
+					"default",
+				);
+				dataObject.root.set("Force write", 0);
 
-    for (const testConfig of testConfigs) {
-        it(`Validate Load Modes: ${JSON.stringify(testConfig ?? "undefined")}`, async function() {
-            const provider = getTestObjectProvider();
-            switch (provider.driver.type) {
-                case "local":
-                    break;
-                default:
-                    this.skip();
-            }
-            const containerUrl = await getContainerUrl(provider, testConfig.waitForSummary, this.timeout());
+				const summaryCollection = new SummaryCollection(
+					summaryContainer.deltaManager,
+					createChildLogger(),
+				);
 
-            // spin up a validation (normal) and a storage only client, and check that they see the same things
-            {
-                const validationLoader = createLoader(
-                    [[provider.defaultCodeDetails, provider.createFluidEntryPoint(testContainerConfigDisabled)]],
-                    provider.documentServiceFactory,
-                    provider.urlResolver,
-                );
-                const validationContainer = await validationLoader.resolve({
-                    url: containerUrl,
-                });
-                const validationDataObject = await requestFluidObject<ITestFluidObject>(validationContainer, "default");
+				await timeoutPromise((res) => summaryCollection.once("summaryAck", () => res()), {
+					durationMs: timeout / 2,
+					errorMsg: "Not summary acked before timeout",
+				});
+				scenarioToSeqNum.set(scenario, summaryContainer.deltaManager.lastSequenceNumber);
+				summaryContainer.close();
+			}
+		}
+		return {
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			containerUrl: scenarioToContainerUrl.get(scenario)!,
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			lastKnownSeqNum: scenarioToSeqNum.get(scenario)!,
+		};
+	}
 
-                const storageOnlyDsF: IDocumentServiceFactory = {
-                    createContainer:
-                        provider.documentServiceFactory.createContainer.bind(provider.documentServiceFactory),
-                    protocolName: provider.documentServiceFactory.protocolName,
-                    createDocumentService: async (resolvedUrl: IResolvedUrl, logger?: ITelemetryBaseLogger) =>
-                        new Proxy(
-                            await provider.documentServiceFactory.createDocumentService(resolvedUrl, logger),
-                            {
-                                get: (target, prop: keyof IDocumentService, r) => {
-                                    if (prop === "policies") {
-                                        const policies: IDocumentService["policies"] = {
-                                            ...target.policies,
-                                            storageOnly: true,
-                                        };
-                                        return policies;
-                                    }
+	for (const testConfig of testConfigs) {
+		it(`Validate Load Modes: ${JSON.stringify(testConfig ?? "undefined")}`, async function () {
+			const provider = getTestObjectProvider();
+			switch (provider.driver.type) {
+				case "local":
+					break;
+				default:
+					this.skip();
+			}
+			const { containerUrl, lastKnownSeqNum } = await setupContainer(
+				provider,
+				testConfig.waitForSummary,
+				this.timeout(),
+			);
 
-                                    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                                    return Reflect.get(target, prop, r);
-                                },
-                            }),
-                };
+			// spin up a validation (normal) and a storage only client, and check that they see the same things
+			{
+				const validationLoader = createLoader(
+					[
+						[
+							provider.defaultCodeDetails,
+							provider.createFluidEntryPoint(testContainerConfigDisabled),
+						],
+					],
+					provider.documentServiceFactory,
+					provider.urlResolver,
+				);
+				const validationContainer = await validationLoader.resolve({
+					url: containerUrl,
+				});
+				const validationDataObject = await requestFluidObject<ITestFluidObject>(
+					validationContainer,
+					"default",
+				);
 
-                const storageOnlyLoader = createLoader(
-                    [[provider.defaultCodeDetails, provider.createFluidEntryPoint(testContainerConfigDisabled)]],
-                    storageOnlyDsF,
-                    provider.urlResolver,
-                );
+				const storageOnlyDsF: IDocumentServiceFactory = {
+					createContainer: provider.documentServiceFactory.createContainer.bind(
+						provider.documentServiceFactory,
+					),
+					createDocumentService: async (
+						resolvedUrl: IResolvedUrl,
+						logger?: ITelemetryBaseLogger,
+					) =>
+						new Proxy(
+							await provider.documentServiceFactory.createDocumentService(
+								resolvedUrl,
+								logger,
+							),
+							{
+								get: (target, prop: keyof IDocumentService, r) => {
+									if (prop === "policies") {
+										const policies: IDocumentService["policies"] = {
+											...target.policies,
+											storageOnly: true,
+										};
+										return policies;
+									}
 
-                const storageOnlyContainer = await storageOnlyLoader.resolve({
-                    url: containerUrl,
-                    headers: { [LoaderHeader.loadMode]: testConfig.loadOptions },
-                }) as Container;
+									// eslint-disable-next-line @typescript-eslint/no-unsafe-return -- Reflection
+									return Reflect.get(target, prop, r);
+								},
+							},
+						),
+				};
 
-                storageOnlyContainer.connect();
-                const deltaManager = storageOnlyContainer.deltaManager;
-                assert.strictEqual(deltaManager.active, false, "deltaManager.active");
-                assert.ok(deltaManager.readOnlyInfo.readonly, "deltaManager.readOnlyInfo.readonly");
-                assert.ok(deltaManager.readOnlyInfo.permissions, "deltaManager.readOnlyInfo.permissions");
-                assert.ok(deltaManager.readOnlyInfo.storageOnly, "deltaManager.readOnlyInfo.storageOnly");
+				const storageOnlyLoader = createLoader(
+					[
+						[
+							provider.defaultCodeDetails,
+							provider.createFluidEntryPoint(testContainerConfigDisabled),
+						],
+					],
+					storageOnlyDsF,
+					provider.urlResolver,
+				);
 
-                const storageOnlyDataObject =
-                    await requestFluidObject<ITestFluidObject>(storageOnlyContainer, "default");
+				// Define sequenceNumber if opsBeforeReturn is set to "sequenceNumber", otherwise leave undefined
+				const sequenceNumber =
+					testConfig.loadOptions.opsBeforeReturn === "sequenceNumber"
+						? lastKnownSeqNum
+						: undefined;
 
-                for (const key of validationDataObject.root.keys()) {
-                    assert.strictEqual(
-                        storageOnlyDataObject.root.get(key),
-                        storageOnlyDataObject.root.get(key),
-                        `${storageOnlyDataObject.root.get(key)} !== ${storageOnlyDataObject.root.get(key)}`);
-                }
-            }
-        });
-    }
+				const storageOnlyContainer = await storageOnlyLoader.resolve({
+					url: containerUrl,
+					headers: {
+						[LoaderHeader.loadMode]: testConfig.loadOptions,
+						[LoaderHeader.sequenceNumber]: sequenceNumber,
+					},
+				});
+
+				const deltaManager = storageOnlyContainer.deltaManager;
+
+				const loadedSeqNum = deltaManager.lastSequenceNumber;
+				if (testConfig.loadOptions.opsBeforeReturn === "sequenceNumber") {
+					// We should have at loaded to at least the specified sequence number.
+					assert.ok(
+						loadedSeqNum >= lastKnownSeqNum,
+						"loadedSeqNum >= lastSequenceNumber",
+					);
+				}
+
+				if (testConfig.loadOptions.pauseAfterLoad !== true) {
+					storageOnlyContainer.connect();
+					assert.strictEqual(deltaManager.active, false, "deltaManager.active");
+					assert.ok(
+						deltaManager.readOnlyInfo.readonly,
+						"deltaManager.readOnlyInfo.readonly",
+					);
+					assert.ok(
+						deltaManager.readOnlyInfo.permissions,
+						"deltaManager.readOnlyInfo.permissions",
+					);
+					assert.ok(
+						deltaManager.readOnlyInfo.storageOnly,
+						"deltaManager.readOnlyInfo.storageOnly",
+					);
+
+					const storageOnlyDataObject = await requestFluidObject<ITestFluidObject>(
+						storageOnlyContainer,
+						"default",
+					);
+					for (const key of validationDataObject.root.keys()) {
+						assert.strictEqual(
+							storageOnlyDataObject.root.get(key),
+							storageOnlyDataObject.root.get(key),
+							`${storageOnlyDataObject.root.get(
+								key,
+							)} !== ${storageOnlyDataObject.root.get(key)}`,
+						);
+					}
+				} else {
+					if (testConfig.loadOptions.opsBeforeReturn === "sequenceNumber") {
+						// If we tried to freeze after loading a specific sequence number, the loaded sequence number should be the same as the last known sequence number.
+						assert.strictEqual(
+							loadedSeqNum,
+							lastKnownSeqNum,
+							"loadedSeqNum === lastKnownSeqNum",
+						);
+					}
+					// The sequence number should still be the same as when we loaded.
+					assert.strictEqual(
+						deltaManager.lastSequenceNumber,
+						loadedSeqNum,
+						"deltaManager.lastSequenceNumber === loadedSeqNum",
+					);
+				}
+			}
+		});
+	}
 });

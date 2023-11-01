@@ -2,18 +2,18 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+import { ITokenProvider } from "@fluidframework/azure-client";
+import { InsecureTokenProvider } from "@fluidframework/test-runtime-utils";
 
-import {
-    AzureFunctionTokenProvider
-} from "@fluidframework/azure-client";
-
-export function createAzureTokenProvider(
-    userID?: string,
-    userName?: string,
-): AzureFunctionTokenProvider {
-    const fnUrl = process.env.azure__fluid__relay__service__function__url as string;
-    return new AzureFunctionTokenProvider(`${fnUrl}/api/GetFrsToken`, {
-        userId: userID ?? "foo",
-        userName: userName ?? "bar",
-    });
+export function createAzureTokenProvider(userId: string, userName: string): ITokenProvider {
+	const key = process.env.azure__fluid__relay__service__key as string;
+	if (key) {
+		const userConfig = {
+			id: userId,
+			name: userName,
+		};
+		return new InsecureTokenProvider(key, userConfig);
+	} else {
+		throw new Error("Cannot create token provider.");
+	}
 }

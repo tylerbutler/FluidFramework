@@ -22,6 +22,17 @@ parameters:
     - default
     - skip
     - force
+- name: interdependencyRange
+  displayName: Range to use for interdependencies (only affects releases) (default = ~)
+  type: string
+  default: "~"
+  # The " " value (a space) is a hacky workaround. ADO doesn't support empty string, but we ultimately use this value as
+  # an environment variable in a bash script (the 'update package versions' step), where it gets coerced back to the
+  # empty string.
+  values:
+    - "^"
+    - "~"
+    - " "
 - name: buildToolsVersionToInstall
   displayName: Fluid build tools version (default = installs version in repo)
   type: string
@@ -40,9 +51,13 @@ trigger:
     - tools/pipelines/templates/build-npm-package.yml
     - tools/pipelines/templates/include-set-package-version.yml
     - tools/pipelines/templates/include-vars.yml
+    - tools/pipelines/templates/include-install-pnpm.yml
     - tools/pipelines/templates/include-publish-npm-package.yml
     - tools/pipelines/templates/include-publish-npm-package-deployment.yml
     - tools/pipelines/templates/include-publish-npm-package-steps.yml
+    - tools/pipelines/templates/include-use-node-version.yml
+    - tools/pipelines/templates/include-process-test-results.yml
+    - scripts/*
 
 pr:
   branches:
@@ -58,6 +73,10 @@ pr:
     - tools/pipelines/templates/build-npm-package.yml
     - tools/pipelines/templates/include-set-package-version.yml
     - tools/pipelines/templates/include-vars.yml
+    - tools/pipelines/templates/include-install-pnpm.yml
+    - tools/pipelines/templates/include-use-node-version.yml
+    - tools/pipelines/templates/include-process-test-results.yml
+    - scripts/*
 
 extends:
   template: templates/build-npm-package.yml
@@ -65,42 +84,23 @@ extends:
     publishOverride: ${{ parameters.publishOverride }}
     releaseBuildOverride: ${{ parameters.releaseBuildOverride }}
     buildToolsVersionToInstall: ${{ parameters.buildToolsVersionToInstall }}
+    interdependencyRange: ${{ parameters.interdependencyRange }}
+    packageManagerInstallCommand: 'pnpm i --frozen-lockfile'
+    packageManager: pnpm
     buildDirectory: build-tools
     tagName: build-tools
     taskBuild: build
     taskBuildDocs: false
+    tasktest:
+    - ci:test
+    - test:copyresults
     taskLint: true
+    taskLintName: ci:eslint
     poolBuild: Large
-    cgSubDirectory: packages
     checkoutSubmodules: true
     taskBundleAnalysis: false
-
-    preCG:
-    - task: UseNode@1
-      displayName: Use Node 14.x
-      inputs:
-        version: 14.x
-    - task: Npm@1
-      displayName: npm ci
-      inputs:
-        command: 'custom'
-        customCommand: 'ci'
-        customRegistry: 'useNpmrc'
-        workingDir: '$(Build.SourcesDirectory)/build-tools'
-    # Build the build-tools locally so it can be used to generate the monorepo package.json
-    - task: Npm@1
-      displayName: 'npm run build:full'
-      inputs:
-        command: 'custom'
-        customCommand: 'run build:full'
-        workingDir: '$(Build.SourcesDirectory)/build-tools'
-    - task: Bash@3
-      displayName: 'Generate Mono repo package json'
-      inputs:
-        targetType: 'inline'
-        script: |
-          # Generate the package/package lock for the lerna project so we would scan it.
-          cd build-tools
-          node packages/build-tools/dist/genMonoRepoPackageJson/genMonoRepoPackageJson.js --build-tools
-          cp repo-package.json packages/package.json
-          cp repo-package-lock.json packages/package-lock.json
+    checks:
+    - syncpack:deps
+    - syncpack:versions
+    - generate:packageList
+    - prettier

@@ -5,10 +5,10 @@
 
 /**
  * A range [start, end)
- * @deprecated  for internal use only. public export will be removed.
+ * @deprecated for internal use only. public export will be removed.
  * @internal
  */
 export interface IIntegerRange {
-    start: number;
-    end: number;
+	start: number;
+	end: number;
 }

@@ -3,113 +3,148 @@
  * Licensed under the MIT License.
  */
 
-import { IDisposable, IEvent, IEventProvider, ITelemetryLogger } from "@fluidframework/common-definitions";
 import {
-    IFluidHandleContext,
-    IFluidRouter,
-    IFluidHandle,
+	IEvent,
+	IEventProvider,
+	ITelemetryLogger,
+	IDisposable,
+	IFluidHandleContext,
+	// eslint-disable-next-line import/no-deprecated
+	IFluidRouter,
+	IFluidHandle,
+	FluidObject,
+	IRequest,
+	IResponse,
 } from "@fluidframework/core-interfaces";
 import {
-    IAudience,
-    IDeltaManager,
-    AttachState,
-    ILoaderOptions,
+	IAudience,
+	IDeltaManager,
+	AttachState,
+	ILoaderOptions,
 } from "@fluidframework/container-definitions";
 import {
-    IDocumentMessage,
-    IQuorumClients,
-    ISequencedDocumentMessage,
+	IDocumentMessage,
+	IQuorumClients,
+	ISequencedDocumentMessage,
 } from "@fluidframework/protocol-definitions";
-import { IInboundSignalMessage, IProvideFluidDataStoreRegistry } from "@fluidframework/runtime-definitions";
+import {
+	IIdCompressor,
+	IInboundSignalMessage,
+	IProvideFluidDataStoreRegistry,
+} from "@fluidframework/runtime-definitions";
 import { IChannel } from ".";
 
 export interface IFluidDataStoreRuntimeEvents extends IEvent {
-    (
-        // eslint-disable-next-line @typescript-eslint/unified-signatures
-        event: "disconnected" | "dispose" | "attaching" | "attached",
-        listener: () => void,
-    );
-    (event: "op", listener: (message: ISequencedDocumentMessage) => void);
-    (event: "signal", listener: (message: IInboundSignalMessage, local: boolean) => void);
-    (event: "connected", listener: (clientId: string) => void);
+	(event: "disconnected" | "dispose" | "attaching" | "attached", listener: () => void);
+	(event: "op", listener: (message: ISequencedDocumentMessage) => void);
+	(event: "signal", listener: (message: IInboundSignalMessage, local: boolean) => void);
+	(event: "connected", listener: (clientId: string) => void);
 }
 
 /**
  * Represents the runtime for the data store. Contains helper functions/state of the data store.
  */
-export interface IFluidDataStoreRuntime extends
-    IFluidRouter,
-    IEventProvider<IFluidDataStoreRuntimeEvents>,
-    IDisposable,
-    Partial<IProvideFluidDataStoreRegistry> {
+export interface IFluidDataStoreRuntime
+	extends IEventProvider<IFluidDataStoreRuntimeEvents>,
+		IDisposable,
+		Partial<IProvideFluidDataStoreRegistry> {
+	readonly id: string;
 
-    readonly id: string;
+	readonly IFluidHandleContext: IFluidHandleContext;
 
-    readonly IFluidHandleContext: IFluidHandleContext;
+	readonly rootRoutingContext: IFluidHandleContext;
+	readonly channelsRoutingContext: IFluidHandleContext;
+	readonly objectsRoutingContext: IFluidHandleContext;
 
-    readonly rootRoutingContext: IFluidHandleContext;
-    readonly channelsRoutingContext: IFluidHandleContext;
-    readonly objectsRoutingContext: IFluidHandleContext;
+	readonly options: ILoaderOptions;
 
-    readonly options: ILoaderOptions;
+	readonly deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
 
-    readonly deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
+	readonly clientId: string | undefined;
 
-    readonly clientId: string | undefined;
+	readonly connected: boolean;
 
-    readonly connected: boolean;
+	readonly logger: ITelemetryLogger;
 
-    readonly logger: ITelemetryLogger;
+	/**
+	 * Indicates the attachment state of the data store to a host service.
+	 */
+	readonly attachState: AttachState;
 
-    /**
-     * Indicates the attachment state of the data store to a host service.
-     */
-    readonly attachState: AttachState;
+	readonly idCompressor?: IIdCompressor;
 
-    /**
-     * Returns the channel with the given id
-     */
-    getChannel(id: string): Promise<IChannel>;
+	/**
+	 * Returns the channel with the given id
+	 */
+	getChannel(id: string): Promise<IChannel>;
 
-    /**
-     * Creates a new channel of the given type.
-     * @param id - ID of the channel to be created.  A unique ID will be generated if left undefined.
-     * @param type - Type of the channel.
-     */
-    createChannel(id: string | undefined, type: string): IChannel;
+	/**
+	 * Invokes the given callback and expects that no ops are submitted
+	 * until execution finishes. If an op is submitted, an error will be raised.
+	 *
+	 * Can be disabled by feature gate `Fluid.ContainerRuntime.DisableOpReentryCheck`
+	 *
+	 * @param callback - the callback to be invoked
+	 */
+	ensureNoDataModelChanges<T>(callback: () => T): T;
 
-    /**
-     * Bind the channel with the data store runtime. If the runtime
-     * is attached then we attach the channel to make it live.
-     */
-    bindChannel(channel: IChannel): void;
+	/**
+	 * Creates a new channel of the given type.
+	 * @param id - ID of the channel to be created.  A unique ID will be generated if left undefined.
+	 * @param type - Type of the channel.
+	 */
+	createChannel(id: string | undefined, type: string): IChannel;
 
-    // Blob related calls
-    /**
-     * Api to upload a blob of data.
-     * @param blob - blob to be uploaded.
-     */
-    uploadBlob(blob: ArrayBufferLike): Promise<IFluidHandle<ArrayBufferLike>>;
+	/**
+	 * Bind the channel with the data store runtime. If the runtime
+	 * is attached then we attach the channel to make it live.
+	 */
+	bindChannel(channel: IChannel): void;
 
-    /**
-     * Submits the signal to be sent to other clients.
-     * @param type - Type of the signal.
-     * @param content - Content of the signal.
-     */
-    submitSignal(type: string, content: any): void;
+	// Blob related calls
+	/**
+	 * Api to upload a blob of data.
+	 * @param blob - blob to be uploaded.
+	 */
+	uploadBlob(blob: ArrayBufferLike, signal?: AbortSignal): Promise<IFluidHandle<ArrayBufferLike>>;
 
-    /**
-     * Returns the current quorum.
-     */
-    getQuorum(): IQuorumClients;
+	/**
+	 * Submits the signal to be sent to other clients.
+	 * @param type - Type of the signal.
+	 * @param content - Content of the signal.
+	 * @param targetClientId - When specified, the signal is only sent to the provided client id.
+	 */
+	submitSignal(type: string, content: any, targetClientId?: string): void;
 
-    /**
-     * Returns the current audience.
-     */
-    getAudience(): IAudience;
+	/**
+	 * Returns the current quorum.
+	 */
+	getQuorum(): IQuorumClients;
 
-    /**
-     * Resolves when a local data store is attached.
-     */
-    waitAttached(): Promise<void>;
+	/**
+	 * Returns the current audience.
+	 */
+	getAudience(): IAudience;
+
+	/**
+	 * Resolves when a local data store is attached.
+	 */
+	waitAttached(): Promise<void>;
+
+	/**
+	 * Exposes a handle to the root object / entryPoint of the data store. Use this as the primary way of interacting
+	 * with it.
+	 */
+	readonly entryPoint: IFluidHandle<FluidObject>;
+
+	/**
+	 * @deprecated Will be removed in future major release. Migrate all usage of IFluidRouter to the "entryPoint" pattern. Refer to Removing-IFluidRouter.md
+	 */
+	request(request: IRequest): Promise<IResponse>;
+
+	/**
+	 * @deprecated Will be removed in future major release. Migrate all usage of IFluidRouter to the "entryPoint" pattern. Refer to Removing-IFluidRouter.md
+	 */
+	// eslint-disable-next-line import/no-deprecated
+	readonly IFluidRouter: IFluidRouter;
 }

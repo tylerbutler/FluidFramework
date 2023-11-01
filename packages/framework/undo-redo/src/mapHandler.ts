@@ -9,38 +9,46 @@ import { IRevertible, UndoRedoStackManager } from "./undoRedoStackManager";
 /**
  * A shared map undo redo handler that will add all local map changes to the provided
  * undo redo stack manager
+ *
+ * @public
  */
 export class SharedMapUndoRedoHandler {
-    constructor(private readonly stackManager: UndoRedoStackManager) { }
+	constructor(private readonly stackManager: UndoRedoStackManager) {}
 
-    public attachMap(map: ISharedMap) {
-        map.on("valueChanged", this.mapDeltaHandler);
-    }
-    public detachMap(map: ISharedMap) {
-        map.off("valueChanged", this.mapDeltaHandler);
-    }
+	public attachMap(map: ISharedMap) {
+		map.on("valueChanged", this.mapDeltaHandler);
+	}
+	public detachMap(map: ISharedMap) {
+		map.off("valueChanged", this.mapDeltaHandler);
+	}
 
-    private readonly mapDeltaHandler = (changed: IValueChanged, local: boolean, target: ISharedMap) => {
-        if (local) {
-            this.stackManager.pushToCurrentOperation(new SharedMapRevertible(changed, target));
-        }
-    };
+	private readonly mapDeltaHandler = (
+		changed: IValueChanged,
+		local: boolean,
+		target: ISharedMap,
+	) => {
+		if (local) {
+			this.stackManager.pushToCurrentOperation(new SharedMapRevertible(changed, target));
+		}
+	};
 }
 
 /**
  * Tracks a change on a shared map allows reverting it
+ *
+ * @public
  */
 export class SharedMapRevertible implements IRevertible {
-    constructor(
-        private readonly changed: IValueChanged,
-        private readonly map: ISharedMap,
-    ) { }
+	constructor(
+		private readonly changed: IValueChanged,
+		private readonly map: ISharedMap,
+	) {}
 
-    public revert() {
-        this.map.set(this.changed.key, this.changed.previousValue);
-    }
+	public revert() {
+		this.map.set(this.changed.key, this.changed.previousValue);
+	}
 
-    public discard() {
-        return;
-    }
+	public discard() {
+		return;
+	}
 }

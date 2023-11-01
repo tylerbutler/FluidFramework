@@ -12,21 +12,22 @@
 export { AzureAudience } from "./AzureAudience";
 export { AzureClient } from "./AzureClient";
 export { AzureFunctionTokenProvider } from "./AzureFunctionTokenProvider";
-export {
-    AzureClientProps,
-    AzureConnectionConfig,
-    AzureConnectionConfigType,
-    AzureContainerServices,
-    AzureContainerVersion,
-    AzureGetVersionsOptions,
-    AzureLocalConnectionConfig,
-    AzureMember,
-    AzureRemoteConnectionConfig,
-    AzureUser,
-    IAzureAudience,
-    ITelemetryBaseEvent,
-    ITelemetryBaseLogger,
+export type {
+	AzureClientProps,
+	AzureConnectionConfig,
+	AzureConnectionConfigType,
+	AzureContainerServices,
+	AzureContainerVersion,
+	AzureGetVersionsOptions,
+	AzureLocalConnectionConfig,
+	AzureMember,
+	AzureRemoteConnectionConfig,
+	AzureUser,
+	IAzureAudience,
+	ITelemetryBaseEvent,
+	ITelemetryBaseLogger,
 } from "./interfaces";
 
-export { ITokenProvider, ITokenResponse } from "@fluidframework/routerlicious-driver";
-export { ITokenClaims, IUser, ScopeType } from "@fluidframework/protocol-definitions";
+export type { ITokenProvider, ITokenResponse } from "@fluidframework/routerlicious-driver";
+export type { ITokenClaims, IUser } from "@fluidframework/protocol-definitions";
+export { ScopeType } from "@fluidframework/protocol-definitions";

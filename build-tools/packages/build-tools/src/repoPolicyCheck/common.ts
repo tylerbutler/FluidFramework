@@ -29,9 +29,9 @@ export interface Handler {
 }
 
 export function readFile(file: string) {
-    return fs.readFileSync(file, { encoding: "utf8" });
+	return fs.readFileSync(file, { encoding: "utf8" });
 }
 
 export function writeFile(file: string, data: string) {
-    fs.writeFileSync(file, data, { encoding: "utf8" });
+	fs.writeFileSync(file, data, { encoding: "utf8" });
 }

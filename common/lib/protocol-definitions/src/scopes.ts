@@ -4,21 +4,23 @@
  */
 
 /**
- * Defines scope access for a Container/Document
+ * Defines scope access for a Container/Document.
+ *
+ * @public
  */
 export enum ScopeType {
-    /**
-     * Read access is supported on the Container/Document
-     */
-    DocRead = "doc:read",
+	/**
+	 * Read access is supported on the Container/Document
+	 */
+	DocRead = "doc:read",
 
-    /**
-     * Write access is supported on the Container/Document
-     */
-    DocWrite = "doc:write",
+	/**
+	 * Write access is supported on the Container/Document
+	 */
+	DocWrite = "doc:write",
 
-    /**
-     * User can generate new summaries operations
-     */
-    SummaryWrite = "summary:write",
+	/**
+	 * User can generate new summaries operations
+	 */
+	SummaryWrite = "summary:write",
 }

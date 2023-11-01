@@ -4,7 +4,8 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { compareArrays, copyPropertyIfDefined, fail, Mutable } from './Common';
+import { compareArrays } from '@fluidframework/core-utils';
+import { copyPropertyIfDefined, fail, Mutable } from './Common';
 import { Definition, DetachedSequenceId, EditId, NodeId, StableNodeId, TraitLabel } from './Identifiers';
 import { NodeIdContext, NodeIdConverter } from './NodeIdUtilities';
 import {
@@ -81,7 +82,7 @@ export function convertTreeNodes<TIn extends HasVariadicTraits<TIn>, TOut extend
 export function convertTreeNodes<
 	TIn extends HasVariadicTraits<TIn | TPlaceholder>,
 	TOut extends HasTraits<TOut | TPlaceholder>,
-	TPlaceholder
+	TPlaceholder,
 >(
 	root: TIn | TPlaceholder,
 	convert: (node: TIn) => NoTraits<TOut>,
@@ -99,7 +100,7 @@ export function convertTreeNodes<
 export function convertTreeNodes<
 	TIn extends HasVariadicTraits<TIn | TPlaceholder>,
 	TOut extends HasTraits<TOut | TPlaceholder>,
-	TPlaceholder
+	TPlaceholder,
 >(
 	root: TIn | TPlaceholder,
 	convert: (node: TIn) => NoTraits<TOut>,

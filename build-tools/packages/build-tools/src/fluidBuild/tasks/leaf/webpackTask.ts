@@ -3,97 +3,108 @@
  * Licensed under the MIT License.
  */
 import * as path from "path";
+import * as fs from "fs";
 
 import { globFn, toPosixPath } from "../../../common/utils";
-import { LeafTask, LeafWithDoneFileTask } from "./leafTask";
+import { LeafWithDoneFileTask } from "./leafTask";
 import { TscTask } from "./tscTask";
 
 interface DoneFileContent {
-    config: { [configFile: string]: string };
-    sources: { [srcFile: string]: string };
-    dependencies: { [pkgName: string]: { [command: string]: any } };
+	version: string;
+	config: any;
+	sources: { [srcFile: string]: string };
+	dependencies: { [pkgName: string]: { [command: string]: any } };
 }
 export class WebpackTask extends LeafWithDoneFileTask {
-    protected async getDoneFileContent() {
-        try {
-            const content: DoneFileContent = {
-                config: {},
-                sources: {},
-                dependencies: {},
-            };
-            const srcGlob = toPosixPath(this.node.pkg.directory) + "/src/**/*.*";
-            const srcFiles = await globFn(srcGlob);
-            for (const srcFile of srcFiles) {
-                content.sources[srcFile] = await this.node.buildContext.fileHashCache.getFileHash(
-                    srcFile,
-                );
-            }
+	protected get taskWeight() {
+		return 5; // generally expensive relative to other tasks
+	}
+	protected async getDoneFileContent() {
+		try {
+			// eslint-disable-next-line @typescript-eslint/no-var-requires
+			const config = require(this.configFileFullPath);
+			const content: DoneFileContent = {
+				version: await this.getVersion(),
+				config: typeof config === "function" ? config(this.getEnvArguments()) : config,
+				sources: {},
+				dependencies: {},
+			};
 
-            const configFiles = await globFn(
-                toPosixPath(this.node.pkg.directory) + "/webpack.*.js",
-            );
-            configFiles.push(this.configFileFullPath);
-            for (const configFile of configFiles) {
-                content.config[configFile] = await this.node.buildContext.fileHashCache.getFileHash(
-                    configFile,
-                );
-            }
+			const srcGlob = toPosixPath(this.node.pkg.directory) + "/src/**/*.*";
+			const srcFiles = await globFn(srcGlob);
+			for (const srcFile of srcFiles) {
+				content.sources[srcFile] =
+					await this.node.buildContext.fileHashCache.getFileHash(srcFile);
+			}
 
-            for (const dep of this.allDependentTasks) {
-                if (dep.executable === "tsc") {
-                    if (!content.dependencies[dep.package.name]) {
-                        content.dependencies[dep.package.name] = {};
-                    }
-                    const tsBuildInfo = await (dep as TscTask).readTsBuildInfo();
-                    if (tsBuildInfo === undefined) {
-                        return undefined;
-                    }
-                    content.dependencies[dep.package.name][dep.command] = tsBuildInfo;
-                }
-            }
+			for (const dep of this.allDependentTasks) {
+				if (dep.executable === "tsc") {
+					if (!content.dependencies[dep.package.name]) {
+						content.dependencies[dep.package.name] = {};
+					}
+					const tsBuildInfo = await (dep as TscTask).readTsBuildInfo();
+					if (tsBuildInfo === undefined) {
+						return undefined;
+					}
+					content.dependencies[dep.package.name][dep.command] = tsBuildInfo;
+				}
+			}
 
-            return JSON.stringify(content);
-        } catch {
-            return undefined;
-        }
-    }
+			return JSON.stringify(content);
+		} catch (e) {
+			this.traceError(`error generating done file content ${e}`);
+			return undefined;
+		}
+	}
 
-    protected addDependentTasks(dependentTasks: LeafTask[]) {
-        for (const child of this.node.dependentPackages) {
-            // TODO: Need to look at the output from tsconfig
-            if (this.addChildTask(dependentTasks, child, "npm run build:esnext")) {
-                this.logVerboseDependency(child, "build:esnext");
-                if (this.addChildTask(dependentTasks, child, "npm run build:copy")) {
-                    this.logVerboseDependency(child, "build:copy");
-                }
-            } else if (this.addChildTask(dependentTasks, child, "npm run webpack")) {
-                this.logVerboseDependency(child, "webpack");
-                if (this.addChildTask(dependentTasks, child, "npm run build:copy")) {
-                    this.logVerboseDependency(child, "build:copy");
-                }
-            } else if (this.addChildTask(dependentTasks, child, "tsc")) {
-                this.logVerboseDependency(child, "tsc");
-                if (this.addChildTask(dependentTasks, child, "npm run build:copy")) {
-                    this.logVerboseDependency(child, "build:copy");
-                }
-            } else if (child.task) {
-                child.task.collectLeafTasks(dependentTasks);
-                this.logVerboseDependency(child, "*");
-            }
-        }
-    }
+	private get configFileFullPath() {
+		// TODO: parse the command line for real, split space for now.
+		const args = this.command.split(" ");
+		for (let i = 1; i < args.length; i++) {
+			if (args[i] === "--config" && i + 1 < args.length) {
+				return path.join(this.package.directory, args[i + 1]);
+			}
+		}
 
-    private get configFileFullPath() {
-        // TODO: parse the command line for real, split space for now.
-        const args = this.command.split(" ");
-        let configFile = "webpack.config.js";
-        for (let i = 0; i < args.length; i++) {
-            if (args[i] === "--config" && i + 1 < args.length) {
-                configFile = args[i + 1];
-                break;
-            }
-        }
+		return this.getDefaultConfigFile();
+	}
 
-        return path.join(this.package.directory, configFile);
-    }
+	private getDefaultConfigFile() {
+		const defaultConfigFileNames = [
+			"webpack.config",
+			".webpack/webpack.config",
+			".webpack/webpackfile",
+		];
+		// TODO: webpack support more default config file extensions.  Just implement the ones that we use.
+		const defaultConfigExtensions = [".js", ".cjs"];
+		for (const name of defaultConfigFileNames) {
+			for (const ext of defaultConfigExtensions) {
+				const file = path.join(this.package.directory, `${name}${ext}`);
+				if (fs.existsSync(file)) {
+					return file;
+				}
+			}
+		}
+		// return webpack.config.js if nothing exist
+		return path.join(this.package.directory, "webpack.config.js");
+	}
+
+	private getEnvArguments() {
+		// TODO: parse the command line for real, split space for now.
+		const args = this.command.split(" ");
+		const env = {};
+		// Ignore trailing --env
+		for (let i = 1; i < args.length - 1; i++) {
+			if (args[i] == "--env") {
+				const value = args[++i].split("=");
+				env[value[0]] = value.length === 1 ? true : value[1];
+			}
+		}
+	}
+
+	private async getVersion() {
+		// TODO:  We can get webpack version with "webpack --version", but harder to get the plug-ins
+		// For now we just use the big hammer of the monorepo lock file as are guard against version change
+		return this.node.getLockFileHash();
+	}
 }

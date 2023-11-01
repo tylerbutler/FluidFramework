@@ -4,10 +4,17 @@
  */
 
 export {
+	AttributionInfo,
+	AttributionKey,
+	DetachedAttributionKey,
+	LocalAttributionKey,
+	OpAttributionKey,
+} from "./attribution";
+export {
 	AliasResult,
-	BindState,
 	CreateChildSummarizerNodeFn,
 	FlushMode,
+	FlushModeExperimental,
 	IContainerRuntimeBase,
 	IContainerRuntimeBaseEvents,
 	IDataStore,
@@ -25,15 +32,27 @@ export {
 	NamedFluidDataStoreRegistryEntries,
 	NamedFluidDataStoreRegistryEntry,
 } from "./dataStoreRegistry";
-export { gcBlobKey, IGarbageCollectionData, IGarbageCollectionDetailsBase } from "./garbageCollection";
-export { IAttachMessage, IEnvelope, IInboundSignalMessage, InboundAttachMessage, ISignalEnvelope } from "./protocol";
+export {
+	gcBlobPrefix,
+	gcDeletedBlobKey,
+	gcTombstoneBlobKey,
+	gcTreeKey,
+	IGarbageCollectionData,
+	IGarbageCollectionDetailsBase,
+} from "./garbageCollection";
+export {
+	IAttachMessage,
+	IEnvelope,
+	IInboundSignalMessage,
+	InboundAttachMessage,
+	ISignalEnvelope,
+} from "./protocol";
 export {
 	blobCountPropertyName,
 	channelsTreeName,
 	CreateChildSummarizerNodeParam,
 	CreateSummarizerNodeSource,
-	IGarbageCollectionNodeData,
-	IGarbageCollectionState,
+	IExperimentalIncrementalSummaryContext,
 	ISummarizeInternalResult,
 	ISummarizeResult,
 	ISummarizerNode,
@@ -46,3 +65,17 @@ export {
 	SummarizeInternalFn,
 	totalBlobSizePropertyName,
 } from "./summary";
+export {
+	IIdCompressorCore,
+	IIdCompressor,
+	SerializedIdCompressor,
+	SerializedIdCompressorWithOngoingSession,
+	SerializedIdCompressorWithNoSession,
+	SessionSpaceCompressedId,
+	OpSpaceCompressedId,
+	SessionId,
+	StableId,
+	IdCreationRange,
+	IdCreationRangeWithStashedState,
+	initialClusterCapacity,
+} from "./id-compressor";

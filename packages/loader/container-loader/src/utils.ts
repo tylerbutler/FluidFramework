@@ -5,45 +5,97 @@
 
 import { parse } from "url";
 import { v4 as uuid } from "uuid";
-import {
-    assert,
-    stringToBuffer,
-    Uint8ArrayToArrayBuffer,
-    unreachableCase,
-} from "@fluidframework/common-utils";
+import { stringToBuffer, Uint8ArrayToArrayBuffer } from "@fluid-internal/client-utils";
+import { assert, unreachableCase } from "@fluidframework/core-utils";
 import { ISummaryTree, ISnapshotTree, SummaryType } from "@fluidframework/protocol-definitions";
 import { LoggingError } from "@fluidframework/telemetry-utils";
+import {
+	CombinedAppAndProtocolSummary,
+	DeltaStreamConnectionForbiddenError,
+	isCombinedAppAndProtocolSummary,
+} from "@fluidframework/driver-utils";
+import { DriverErrorTypes } from "@fluidframework/driver-definitions";
 
 // This is used when we rehydrate a container from the snapshot. Here we put the blob contents
 // in separate property: blobContents.
 export interface ISnapshotTreeWithBlobContents extends ISnapshotTree {
-    blobsContents: { [path: string]: ArrayBufferLike; };
-    trees: { [path: string]: ISnapshotTreeWithBlobContents; };
+	blobsContents: { [path: string]: ArrayBufferLike };
+	trees: { [path: string]: ISnapshotTreeWithBlobContents };
 }
 
+/**
+ * Interface to represent the parsed parts of IResolvedUrl.url to help
+ * in getting info about different parts of the url.
+ * May not be compatible or relevant for any Url Resolver
+ */
 export interface IParsedUrl {
-    id: string;
-    path: string;
-    query: string;
-    /**
-     * Null means do not use snapshots, undefined means load latest snapshot
-     * otherwise it's version ID passed to IDocumentStorageService.getVersions() to figure out what snapshot to use.
-     * If needed, can add undefined which is treated by Container.load() as load latest snapshot.
-     */
-    version: string | null | undefined;
+	/**
+	 * It is combination of tenantid/docId part of the url.
+	 */
+	id: string;
+	/**
+	 * It is the deep link path in the url.
+	 */
+	path: string;
+	/**
+	 * Query string part of the url.
+	 */
+	query: string;
+	/**
+	 * Null means do not use snapshots, undefined means load latest snapshot
+	 * otherwise it's version ID passed to IDocumentStorageService.getVersions() to figure out what snapshot to use.
+	 * If needed, can add undefined which is treated by Container.load() as load latest snapshot.
+	 */
+	version: string | null | undefined;
 }
 
-export function parseUrl(url: string): IParsedUrl | undefined {
-    const parsed = parse(url, true);
-    if (typeof parsed.pathname !== "string") {
-        throw new LoggingError("Failed to parse pathname");
-    }
-    const query = parsed.search ?? "";
-    const regex = /^\/([^/]*\/[^/]*)(\/?.*)$/;
-    const match = regex.exec(parsed.pathname);
-    return (match?.length === 3)
-        ? { id: match[1], path: match[2], query, version: parsed.query.version as string }
-        : undefined;
+/**
+ * Utility api to parse the IResolvedUrl.url into specific parts like querystring, path to get
+ * deep link info etc.
+ * Warning - This function may not be compatible with any Url Resolver's resolved url. It works
+ * with urls of type: protocol://<string>/.../..?<querystring>
+ * @param url - This is the IResolvedUrl.url part of the resolved url.
+ * @returns The IParsedUrl representing the input URL, or undefined if the format was not supported
+ */
+export function tryParseCompatibleResolvedUrl(url: string): IParsedUrl | undefined {
+	const parsed = parse(url, true);
+	if (typeof parsed.pathname !== "string") {
+		throw new LoggingError("Failed to parse pathname");
+	}
+	const query = parsed.search ?? "";
+	const regex = /^\/([^/]*\/[^/]*)(\/?.*)$/;
+	const match = regex.exec(parsed.pathname);
+	return match?.length === 3
+		? { id: match[1], path: match[2], query, version: parsed.query.version as string }
+		: undefined;
+}
+
+/**
+ * Combine the app summary and protocol summary in 1 tree.
+ * @param appSummary - Summary of the app.
+ * @param protocolSummary - Summary of the protocol.
+ * @internal
+ */
+export function combineAppAndProtocolSummary(
+	appSummary: ISummaryTree,
+	protocolSummary: ISummaryTree,
+): CombinedAppAndProtocolSummary {
+	assert(
+		!isCombinedAppAndProtocolSummary(appSummary),
+		0x5a8 /* app summary is already a combined tree! */,
+	);
+	assert(
+		!isCombinedAppAndProtocolSummary(protocolSummary),
+		0x5a9 /* protocol summary is already a combined tree! */,
+	);
+	const createNewSummary: CombinedAppAndProtocolSummary = {
+		type: SummaryType.Tree,
+		tree: {
+			".protocol": protocolSummary,
+			".app": appSummary,
+		},
+	};
+	return createNewSummary;
 }
 
 /**
@@ -57,44 +109,49 @@ export function parseUrl(url: string): IParsedUrl | undefined {
  * @param summary - summary to convert
  */
 function convertSummaryToSnapshotWithEmbeddedBlobContents(
-    summary: ISummaryTree,
+	summary: ISummaryTree,
 ): ISnapshotTreeWithBlobContents {
-    const treeNode: ISnapshotTreeWithBlobContents = {
-        blobs: {},
-        blobsContents: {},
-        trees: {},
-        id: uuid(),
-        unreferenced: summary.unreferenced,
-    };
-    const keys = Object.keys(summary.tree);
-    for (const key of keys) {
-        const summaryObject = summary.tree[key];
+	const treeNode: ISnapshotTreeWithBlobContents = {
+		blobs: {},
+		blobsContents: {},
+		trees: {},
+		id: uuid(),
+		unreferenced: summary.unreferenced,
+	};
+	const keys = Object.keys(summary.tree);
+	for (const key of keys) {
+		const summaryObject = summary.tree[key];
 
-        switch (summaryObject.type) {
-            case SummaryType.Tree: {
-                treeNode.trees[key] = convertSummaryToSnapshotWithEmbeddedBlobContents(summaryObject);
-                break;
-            }
-            case SummaryType.Attachment:
-                treeNode.blobs[key] = summaryObject.id;
-                break;
-            case SummaryType.Blob: {
-                const blobId = uuid();
-                treeNode.blobs[key] = blobId;
-                const contentBuffer = typeof summaryObject.content === "string" ?
-                    stringToBuffer(summaryObject.content, "utf8") : Uint8ArrayToArrayBuffer(summaryObject.content);
-                treeNode.blobsContents[blobId] = contentBuffer;
-                break;
-            }
-            case SummaryType.Handle:
-                throw new LoggingError("No handles should be there in summary in detached container!!");
-                break;
-            default: {
-                unreachableCase(summaryObject, `Unknown tree type ${(summaryObject as any).type}`);
-            }
-        }
-    }
-    return treeNode;
+		switch (summaryObject.type) {
+			case SummaryType.Tree: {
+				treeNode.trees[key] =
+					convertSummaryToSnapshotWithEmbeddedBlobContents(summaryObject);
+				break;
+			}
+			case SummaryType.Attachment:
+				treeNode.blobs[key] = summaryObject.id;
+				break;
+			case SummaryType.Blob: {
+				const blobId = uuid();
+				treeNode.blobs[key] = blobId;
+				const contentBuffer =
+					typeof summaryObject.content === "string"
+						? stringToBuffer(summaryObject.content, "utf8")
+						: Uint8ArrayToArrayBuffer(summaryObject.content);
+				treeNode.blobsContents[blobId] = contentBuffer;
+				break;
+			}
+			case SummaryType.Handle:
+				throw new LoggingError(
+					"No handles should be there in summary in detached container!!",
+				);
+				break;
+			default: {
+				unreachableCase(summaryObject, `Unknown tree type ${(summaryObject as any).type}`);
+			}
+		}
+	}
+	return treeNode;
 }
 
 /**
@@ -103,35 +160,49 @@ function convertSummaryToSnapshotWithEmbeddedBlobContents(
  * @param appSummaryTree - App Summary Tree
  */
 export function convertProtocolAndAppSummaryToSnapshotTree(
-    protocolSummaryTree: ISummaryTree,
-    appSummaryTree: ISummaryTree,
+	protocolSummaryTree: ISummaryTree,
+	appSummaryTree: ISummaryTree,
 ): ISnapshotTreeWithBlobContents {
-    // Shallow copy is fine, since we are doing a deep clone below.
-    const combinedSummary: ISummaryTree = {
-        type: SummaryType.Tree,
-        tree: { ...appSummaryTree.tree },
-    };
+	// Shallow copy is fine, since we are doing a deep clone below.
+	const combinedSummary: ISummaryTree = {
+		type: SummaryType.Tree,
+		tree: { ...appSummaryTree.tree },
+	};
 
-    combinedSummary.tree[".protocol"] = protocolSummaryTree;
-    const snapshotTreeWithBlobContents =
-        convertSummaryToSnapshotWithEmbeddedBlobContents(combinedSummary);
-    return snapshotTreeWithBlobContents;
+	combinedSummary.tree[".protocol"] = protocolSummaryTree;
+	const snapshotTreeWithBlobContents =
+		convertSummaryToSnapshotWithEmbeddedBlobContents(combinedSummary);
+	return snapshotTreeWithBlobContents;
 }
 
 // This function converts the snapshot taken in detached container(by serialize api) to snapshotTree with which
 // a detached container can be rehydrated.
-export const getSnapshotTreeFromSerializedContainer = (detachedContainerSnapshot: ISummaryTree) => {
-    const protocolSummaryTree = detachedContainerSnapshot.tree[".protocol"] as ISummaryTree;
-    const appSummaryTree = detachedContainerSnapshot.tree[".app"] as ISummaryTree;
-    assert(protocolSummaryTree !== undefined && appSummaryTree !== undefined,
-        0x1e0 /* "Protocol and App summary trees should be present" */);
-    const snapshotTreeWithBlobContents = convertProtocolAndAppSummaryToSnapshotTree(
-        protocolSummaryTree,
-        appSummaryTree,
-    );
-    return snapshotTreeWithBlobContents;
+export const getSnapshotTreeFromSerializedContainer = (
+	detachedContainerSnapshot: ISummaryTree,
+): ISnapshotTreeWithBlobContents => {
+	assert(
+		isCombinedAppAndProtocolSummary(detachedContainerSnapshot),
+		0x1e0 /* "Protocol and App summary trees should be present" */,
+	);
+	const protocolSummaryTree = detachedContainerSnapshot.tree[".protocol"];
+	const appSummaryTree = detachedContainerSnapshot.tree[".app"];
+	const snapshotTreeWithBlobContents = convertProtocolAndAppSummaryToSnapshotTree(
+		protocolSummaryTree,
+		appSummaryTree,
+	);
+	return snapshotTreeWithBlobContents;
 };
 
 export function getProtocolSnapshotTree(snapshot: ISnapshotTree): ISnapshotTree {
-    return ".protocol" in snapshot.trees ? snapshot.trees[".protocol"] : snapshot;
+	return ".protocol" in snapshot.trees ? snapshot.trees[".protocol"] : snapshot;
+}
+
+export function isDeltaStreamConnectionForbiddenError(
+	error: any,
+): error is DeltaStreamConnectionForbiddenError {
+	return (
+		typeof error === "object" &&
+		error !== null &&
+		error?.errorType === DriverErrorTypes.deltaStreamConnectionForbidden
+	);
 }

@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+export { combineReducers, combineReducersAsync } from "./combineReducers";
 export {
 	createFuzzDescribe,
 	defaultOptions,
@@ -20,6 +21,7 @@ export {
 	chainIterables,
 	createWeightedAsyncGenerator,
 	createWeightedGenerator,
+	ExitBehavior,
 	generatorFromArray,
 	interleave,
 	interleaveAsync,
@@ -29,7 +31,7 @@ export {
 	takeAsync,
 } from "./generators";
 export { PerformanceWordMarkovChain, SpaceEfficientWordMarkovChain } from "./markovChain";
-export { performFuzzActions, performFuzzActionsAsync } from "./performActions";
+export { performFuzzActions, performFuzzActionsAsync, saveOpsToFile } from "./performActions";
 export { makeRandom } from "./random";
 export {
 	AcceptanceCondition,

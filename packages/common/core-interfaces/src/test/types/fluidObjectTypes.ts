@@ -2,7 +2,12 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { IFluidLoadable, IProvideFluidLoadable, FluidObject, FluidObjectKeys, IFluidObject } from "../../";
+
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
+import { IFluidLoadable, IProvideFluidLoadable, FluidObject, FluidObjectKeys } from "../../";
 
 declare function getFluidObject(): FluidObject;
 
@@ -15,7 +20,7 @@ declare function useProviderKey<T, TKey extends FluidObjectKeys<T> = FluidObject
 declare function useLoadable(params: FluidObject<IFluidLoadable> | undefined): void;
 declare function getLoadable(): IFluidLoadable;
 
-declare function use(obj: any);
+declare function use(obj: unknown);
 // test implicit conversions between FluidObject and a FluidObject with a provides interface
 {
     const provider: FluidObject<IProvideFluidLoadable> = getFluidObject();
@@ -86,21 +91,6 @@ declare function use(obj: any);
     useProvider(unknown);
     useProvider<IFoo>(unknown);
     useLoadable(unknown);
-}
-
-// test implicit conversions between FluidObject and IFluidObject for backcompat
-declare function getIFluidObject(): IFluidObject;
-{
-    const fluidObject: FluidObject = getIFluidObject();
-    const legacy: IFluidObject = getFluidObject();
-    useLoadable(fluidObject);
-    useLoadable(legacy);
-    useFluidObject(fluidObject);
-    useFluidObject(legacy);
-    useProvider(legacy);
-    useProvider(fluidObject);
-    useProvider<IFluidLoadable>(legacy);
-    useProvider<IFluidLoadable>(fluidObject);
 }
 
 // validate nested property is FluidObject too

@@ -18,14 +18,6 @@ export { getNormalizedObjectStoragePathParts, listBlobsAtTreePath } from "./obje
 export { RequestParser } from "./requestParser";
 export { RuntimeFactoryHelper } from "./runtimeFactoryHelper";
 export {
-	createRootSummarizerNode,
-	createRootSummarizerNodeWithGC,
-	IRootSummarizerNode,
-	IRootSummarizerNodeWithGC,
-	ISummarizerNodeRootContract,
-	RefreshSummaryResult,
-} from "./summarizerNode";
-export {
 	addBlobToSummary,
 	addSummarizeResultToSummary,
 	addTreeToSummary,
@@ -34,10 +26,12 @@ export {
 	convertSummaryTreeToITree,
 	convertToSummaryTree,
 	convertToSummaryTreeWithStats,
+	GCDataBuilder,
 	getBlobSize,
 	mergeStats,
 	SummaryTreeBuilder,
 	TelemetryContext,
 	utf8ByteLength,
 } from "./summaryUtils";
+export { unpackChildNodesUsedRoutes } from "./unpackUsedRoutes";
 export { ReadAndParseBlob, seqFromTree } from "./utils";

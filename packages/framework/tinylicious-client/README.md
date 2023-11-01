@@ -2,6 +2,27 @@
 
 The tinylicious-client package provides a simple and powerful way to consume collaborative Fluid data with the Tinylicious service.
 
+<!-- AUTO-GENERATED-CONTENT:START (README_DEPENDENCY_GUIDELINES_SECTION:includeHeading=TRUE) -->
+
+<!-- prettier-ignore-start -->
+<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
+
+## Using Fluid Framework libraries
+
+When taking a dependency on a Fluid Framework library, we recommend using a `^` (caret) version range, such as `^1.3.4`.
+While Fluid Framework libraries may use different ranges with interdependencies between other Fluid Framework libraries,
+library consumers should always prefer `^`.
+
+Note that when depending on a library version of the form `2.0.0-internal.x.y.z`, called the Fluid internal version scheme,
+you must use a `>= <` dependency range (such as `>=2.0.0-internal.x.y.z <2.0.0-internal.w.0.0` where `w` is `x+1`).
+Standard `^` and `~` ranges will not work as expected.
+See the [@fluid-tools/version-tools](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/version-tools/README.md)
+package for more information including tools to convert between version schemes.
+
+<!-- prettier-ignore-end -->
+
+<!-- AUTO-GENERATED-CONTENT:END -->
+
 ## Using tinylicious-client
 
 The tinylicious-client package has a default `TinyliciousClient` class that allows you to interact with Fluid.
@@ -37,11 +58,13 @@ See [`ContainerSchema`](./src/types.ts) in [`./src/types/ts`](./src/types.ts) fo
 
 ```javascript
 const schema = {
-    initialObjects: {
-        /* ... */
-    },
-    dynamicObjectTypes: [ /*...*/ ],
-}
+	initialObjects: {
+		/* ... */
+	},
+	dynamicObjectTypes: [
+		/*...*/
+	],
+};
 const tinyliciousClient = new TinyliciousClient();
 const { container, services } = await tinyliciousClient.createContainer(schema);
 
@@ -49,6 +72,7 @@ const { container, services } = await tinyliciousClient.createContainer(schema);
 // Returned ID can be used to fetch the container via `getContainer` below
 const id = await container.attach();
 ```
+
 ## Using Fluid Containers
 
 Using the default `TinyliciousClient` object the developer can create and get Fluid containers. Because Fluid needs to be connected to a server containers need to be created and retrieved asynchronously.
@@ -70,11 +94,11 @@ The most common way to use Fluid is through initial collaborative objects that a
 
 ```javascript
 const schema = {
-    initialObjects: {
-        map1: SharedMap,
-        text1: SharedString,
-    }
-}
+	initialObjects: {
+		map1: SharedMap,
+		text1: SharedString,
+	},
+};
 const tinyliciousClient = new TinyliciousClient();
 const { container, services } = await tinyliciousClient.getContainer("_unique-id_", schema);
 
@@ -93,11 +117,11 @@ Dynamic objects are loaded on-demand to optimize for data virtualization. To get
 
 ```javascript
 const schema = {
-    initialObjects: {
-        map1: SharedMap,
-    },
-    dynamicObjectTypes: [ SharedString ],
-}
+	initialObjects: {
+		map1: SharedMap,
+	},
+	dynamicObjectTypes: [SharedString],
+};
 const tinyliciousClient = new TinyliciousClient();
 const { container, services } = await tinyliciousClient.getContainer("_unique-id_", schema);
 const map1 = container.initialObjects.map1;
@@ -115,4 +139,20 @@ const text = await map1.get(); // Resolve the handle to get the object
 const text = await map1.get("text-unique-id").get();
 ```
 
-See [GitHub](https://github.com/microsoft/FluidFramework) for more details on the Fluid Framework and packages within.
+<!-- AUTO-GENERATED-CONTENT:START (README_TRADEMARK_SECTION:includeHeading=TRUE) -->
+
+<!-- prettier-ignore-start -->
+<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
+
+## Trademark
+
+This project may contain Microsoft trademarks or logos for Microsoft projects, products, or services.
+
+Use of these trademarks or logos must follow Microsoft's [Trademark & Brand
+Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+
+Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
+
+<!-- prettier-ignore-end -->
+
+<!-- AUTO-GENERATED-CONTENT:END -->

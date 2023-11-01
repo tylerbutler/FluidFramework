@@ -3,9 +3,28 @@
  * Licensed under the MIT License.
  */
 
-export { IOdspError, IOdspErrorAugmentations, OdspError, OdspErrorType } from "./errors";
-export { HostStoragePolicy, ICollabSessionOptions, IOpsCachingPolicy, ISnapshotOptions } from "./factory";
-export { CacheContentType, ICacheEntry, IEntry, IFileEntry, IPersistedCache, snapshotKey } from "./odspCache";
+export {
+	IOdspError,
+	IOdspErrorAugmentations,
+	OdspError,
+	OdspErrorType,
+	OdspErrorTypes,
+} from "./errors";
+export {
+	HostStoragePolicy,
+	ICollabSessionOptions,
+	IOpsCachingPolicy,
+	ISnapshotOptions,
+} from "./factory";
+export {
+	CacheContentType,
+	getKeyForCacheEntry,
+	ICacheEntry,
+	IEntry,
+	IFileEntry,
+	IPersistedCache,
+	snapshotKey,
+} from "./odspCache";
 export {
 	IOdspResolvedUrl,
 	IOdspUrlParts,
@@ -26,3 +45,8 @@ export {
 	tokenFromResponse,
 	TokenResponse,
 } from "./tokenFetch";
+export {
+	IProvideSessionAwareDriverFactory,
+	IRelaySessionAwareDriverFactory,
+	ISocketStorageDiscovery,
+} from "./sessionProvider";

@@ -3,274 +3,315 @@
  * Licensed under the MIT License.
  */
 
-import {
-    IPersistedCache,
-    ICacheEntry,
-    IFileEntry,
-} from "@fluidframework/odsp-driver-definitions";
-import {
-    ITelemetryBaseLogger,
-    ITelemetryLogger,
-} from "@fluidframework/common-definitions";
-import { ChildLogger } from "@fluidframework/telemetry-utils";
+import { IDBPDatabase } from "idb";
+import { assert } from "@fluidframework/core-utils";
+import { IPersistedCache, ICacheEntry, IFileEntry } from "@fluidframework/odsp-driver-definitions";
+import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
+import { ITelemetryLoggerExt, createChildLogger } from "@fluidframework/telemetry-utils";
 import { scheduleIdleTask } from "./scheduleIdleTask";
 import {
-    getFluidCacheIndexedDbInstance,
-    FluidDriverObjectStoreName,
-    getKeyForCacheEntry,
+	getFluidCacheIndexedDbInstance,
+	FluidCacheDBSchema,
+	FluidDriverObjectStoreName,
+	getKeyForCacheEntry,
 } from "./FluidCacheIndexedDb";
 import {
-    FluidCacheErrorEvent,
-    FluidCacheEventSubCategories,
-    FluidCacheGenericEvent,
+	FluidCacheErrorEvent,
+	FluidCacheEventSubCategories,
+	FluidCacheGenericEvent,
 } from "./fluidCacheTelemetry";
+import { pkgVersion } from "./packageVersion";
 
 // Some browsers have a usageDetails property that will tell you more detailed information
 // on how the storage is being used
 interface StorageQuotaUsageDetails {
-    indexedDB: number | undefined;
-}
-
-export interface FluidCacheConfig {
-    /**
-     * A string to specify what partition of the cache you wish to use (e.g. a user id).
-     * Null can be used to explicity indicate no partitioning, and has been chosen
-     * vs undefined so that it is clear this is an intentional choice by the caller.
-     * A null value should only be used when the host can ensure that the cache is not able
-     * to be shared with multiple users.
-     */
-    // eslint-disable-next-line @rushstack/no-new-null
-    partitionKey: string | null;
-
-    /**
-     * A logger that can be used to get insight into cache performance and errors
-     */
-    logger?: ITelemetryBaseLogger;
-
-    /**
-     * A value in milliseconds that determines the maximum age of a cache entry to return.
-     * If an entry exists in the cache, but is older than this value, the cached value will not be returned.
-     */
-    maxCacheItemAge: number;
+	indexedDB: number | undefined;
 }
 
 /**
- * A cache that can be used by the Fluid ODSP driver to cache data for faster performance
+ * @public
+ */
+export interface FluidCacheConfig {
+	/**
+	 * A string to specify what partition of the cache you wish to use (e.g. a user id).
+	 * Null can be used to explicity indicate no partitioning, and has been chosen
+	 * vs undefined so that it is clear this is an intentional choice by the caller.
+	 * A null value should only be used when the host can ensure that the cache is not able
+	 * to be shared with multiple users.
+	 */
+	// eslint-disable-next-line @rushstack/no-new-null
+	partitionKey: string | null;
+
+	/**
+	 * A logger that can be used to get insight into cache performance and errors
+	 */
+	logger?: ITelemetryBaseLogger;
+
+	/**
+	 * A value in milliseconds that determines the maximum age of a cache entry to return.
+	 * If an entry exists in the cache, but is older than this value, the cached value will not be returned.
+	 */
+	maxCacheItemAge: number;
+
+	/**
+	 * Each time db is opened, it will remain open for this much time. To improve perf, if this property is set as
+	 * any number greater than 0, then db will not be closed immediately after usage. This value is in milliseconds.
+	 */
+	closeDbAfterMs?: number;
+}
+
+/**
+ * A cache that can be used by the Fluid ODSP driver to cache data for faster performance.
+ *
+ * @public
  */
 export class FluidCache implements IPersistedCache {
-    private readonly logger: ITelemetryLogger;
+	private readonly logger: ITelemetryLoggerExt;
 
-    private readonly partitionKey: string | null;
+	private readonly partitionKey: string | null;
 
-    private readonly maxCacheItemAge: number;
+	private readonly maxCacheItemAge: number;
+	private readonly closeDbImmediately: boolean = true;
+	private readonly closeDbAfterMs: number;
+	private db: IDBPDatabase<FluidCacheDBSchema> | undefined;
+	private dbCloseTimer: ReturnType<typeof setTimeout> | undefined;
+	private dbReuseCount: number = -1;
 
-    constructor(config: FluidCacheConfig) {
-        this.logger = ChildLogger.create(config.logger);
-        this.partitionKey = config.partitionKey;
-        this.maxCacheItemAge = config.maxCacheItemAge;
+	constructor(config: FluidCacheConfig) {
+		this.logger = createChildLogger({ logger: config.logger });
+		this.partitionKey = config.partitionKey;
+		this.maxCacheItemAge = config.maxCacheItemAge;
+		this.closeDbAfterMs = config.closeDbAfterMs ?? 0;
+		if (this.closeDbAfterMs > 0) {
+			this.closeDbImmediately = false;
+		}
 
-        scheduleIdleTask(async () => {
-            // Log how much storage space is currently being used by indexed db.
-            // NOTE: This API is not supported in all browsers and it doesn't let you see the size of a specific DB.
-            // Exception added when eslint rule was added, this should be revisited when modifying this code
-            if (navigator.storage?.estimate) {
-                const estimate = await navigator.storage.estimate();
+		scheduleIdleTask(async () => {
+			// Log how much storage space is currently being used by indexed db.
+			// NOTE: This API is not supported in all browsers and it doesn't let you see the size of a specific DB.
+			// Exception added when eslint rule was added, this should be revisited when modifying this code
+			if (navigator.storage?.estimate) {
+				const estimate = await navigator.storage.estimate();
 
-                // Some browsers have a usageDetails property that will tell you
-                // more detailed information on how the storage is being used
-                let indexedDBSize: number | undefined;
-                if ("usageDetails" in estimate) {
-                    indexedDBSize = (
-                        (estimate as any)
-                            .usageDetails as StorageQuotaUsageDetails
-                    ).indexedDB;
-                }
+				// Some browsers have a usageDetails property that will tell you
+				// more detailed information on how the storage is being used
+				let indexedDBSize: number | undefined;
+				if ("usageDetails" in estimate) {
+					indexedDBSize = ((estimate as any).usageDetails as StorageQuotaUsageDetails)
+						.indexedDB;
+				}
 
-                this.logger.sendTelemetryEvent({
-                    eventName: FluidCacheGenericEvent.FluidCacheStorageInfo,
-                    subCategory: FluidCacheEventSubCategories.FluidCache,
-                    quota: estimate.quota,
-                    usage: estimate.usage,
-                    indexedDBSize,
-                });
-            }
-        });
+				this.logger.sendTelemetryEvent({
+					eventName: FluidCacheGenericEvent.FluidCacheStorageInfo,
+					subCategory: FluidCacheEventSubCategories.FluidCache,
+					quota: estimate.quota,
+					usage: estimate.usage,
+					indexedDBSize,
+					pkgVersion,
+				});
+			}
+		});
 
-        scheduleIdleTask(async () => {
-            // Delete entries that have not been accessed recently to clean up space
-            try {
-                const db = await getFluidCacheIndexedDbInstance(this.logger);
+		scheduleIdleTask(async () => {
+			let db: IDBPDatabase<FluidCacheDBSchema> | undefined;
 
-                const transaction = db.transaction(
-                    FluidDriverObjectStoreName,
-                    "readwrite",
-                );
-                const index = transaction.store.index("lastAccessTimeMs");
-                // Get items that have not been accessed in 4 weeks
-                const keysToDelete = await index.getAllKeys(
-                    IDBKeyRange.upperBound(
-                        new Date().getTime() - 4 * 7 * 24 * 60 * 60 * 1000,
-                    ),
-                );
+			// Delete entries that have not been accessed recently to clean up space
+			try {
+				db = await getFluidCacheIndexedDbInstance(this.logger);
 
-                await Promise.all(
-                    keysToDelete.map((key) => transaction.store.delete(key)),
-                );
-                await transaction.done;
-            } catch (error: any) {
-                this.logger.sendErrorEvent(
-                    {
-                        eventName:
-                            FluidCacheErrorEvent.FluidCacheDeleteOldEntriesError,
-                    },
-                    error,
-                );
-            }
-        });
-    }
+				const transaction = db.transaction(FluidDriverObjectStoreName, "readwrite");
+				const index = transaction.store.index("createdTimeMs");
+				// Get items which were cached before the maxCacheItemAge.
+				const keysToDelete = await index.getAllKeys(
+					IDBKeyRange.upperBound(new Date().getTime() - this.maxCacheItemAge),
+				);
 
-    public async removeEntries(file: IFileEntry): Promise<void> {
-        try {
-            const db = await getFluidCacheIndexedDbInstance(this.logger);
+				await Promise.all(keysToDelete.map((key) => transaction.store.delete(key)));
+				await transaction.done;
+			} catch (error: any) {
+				this.logger.sendErrorEvent(
+					{
+						eventName: FluidCacheErrorEvent.FluidCacheDeleteOldEntriesError,
+						pkgVersion,
+					},
+					error,
+				);
+			} finally {
+				db?.close();
+			}
+		});
+	}
 
-            const transaction = db.transaction(
-                FluidDriverObjectStoreName,
-                "readwrite",
-            );
-            const index = transaction.store.index("fileId");
+	private async openDb() {
+		if (this.closeDbImmediately) {
+			return getFluidCacheIndexedDbInstance(this.logger);
+		}
+		if (this.db === undefined) {
+			const dbInstance = await getFluidCacheIndexedDbInstance(this.logger);
+			if (this.db === undefined) {
+				// Reset the counter on first open.
+				this.dbReuseCount = -1;
+				this.db = dbInstance;
+			} else {
+				dbInstance.close();
+				this.dbReuseCount += 1;
+				return this.db;
+			}
+			// Need to close the db on version change if opened.
+			this.db.onversionchange = (ev) => {
+				this.db?.close();
+				this.db = undefined;
+				clearTimeout(this.dbCloseTimer);
+				this.dbCloseTimer = undefined;
+			};
+			this.db.addEventListener("close", (ev) => {
+				clearTimeout(this.dbCloseTimer);
+				this.dbCloseTimer = undefined;
+				this.db = undefined;
+			});
+			// Schedule db close after this.closeDbAfterMs.
+			assert(this.dbCloseTimer === undefined, 0x6c6 /* timer should not be set yet!! */);
+			this.dbCloseTimer = setTimeout(() => {
+				this.db?.close();
+				this.db = undefined;
+				this.dbCloseTimer = undefined;
+			}, this.closeDbAfterMs);
+		}
+		assert(this.db !== undefined, 0x6c7 /* db should be intialized by now */);
+		this.dbReuseCount += 1;
+		return this.db;
+	}
 
-            const keysToDelete = await index.getAllKeys(file.docId);
+	private closeDb(db?: IDBPDatabase<FluidCacheDBSchema>) {
+		if (this.closeDbImmediately) {
+			db?.close();
+		}
+	}
 
-            await Promise.all(
-                keysToDelete.map((key) => transaction.store.delete(key)),
-            );
-            await transaction.done;
-        } catch (error: any) {
-            this.logger.sendErrorEvent(
-                {
-                    eventName:
-                        FluidCacheErrorEvent.FluidCacheDeleteOldEntriesError,
-                },
-                error,
-            );
-        }
-    }
+	public async removeEntries(file: IFileEntry): Promise<void> {
+		let db: IDBPDatabase<FluidCacheDBSchema> | undefined;
+		try {
+			db = await this.openDb();
 
-    public async get(cacheEntry: ICacheEntry): Promise<any> {
-        const startTime = performance.now();
+			const transaction = db.transaction(FluidDriverObjectStoreName, "readwrite");
+			const index = transaction.store.index("fileId");
 
-        const cachedItem = await this.getItemFromCache(cacheEntry);
+			const keysToDelete = await index.getAllKeys(file.docId);
 
-        this.logger.sendPerformanceEvent({
-            eventName: "FluidCacheAccess",
-            cacheHit: cachedItem !== undefined,
-            type: cacheEntry.type,
-            duration: performance.now() - startTime,
-        });
+			await Promise.all(keysToDelete.map((key) => transaction.store.delete(key)));
+			await transaction.done;
+		} catch (error: any) {
+			this.logger.sendErrorEvent(
+				{
+					eventName: FluidCacheErrorEvent.FluidCacheDeleteOldEntriesError,
+					pkgVersion,
+				},
+				error,
+			);
+		} finally {
+			this.closeDb(db);
+		}
+	}
 
-        // Value will contain metadata like the expiry time, we just want to return the object we were asked to cache
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return cachedItem?.cachedObject;
-    }
+	public async get(cacheEntry: ICacheEntry): Promise<any> {
+		const startTime = performance.now();
 
-    private async getItemFromCache(cacheEntry: ICacheEntry) {
-        try {
-            const key = getKeyForCacheEntry(cacheEntry);
+		const cachedItem = await this.getItemFromCache(cacheEntry);
 
-            const db = await getFluidCacheIndexedDbInstance(this.logger);
+		this.logger.sendPerformanceEvent({
+			eventName: "FluidCacheAccess",
+			cacheHit: cachedItem !== undefined,
+			type: cacheEntry.type,
+			duration: performance.now() - startTime,
+			dbOpenPerf: cachedItem?.dbOpenPerf,
+			dbReuseCount: this.dbReuseCount,
+			pkgVersion,
+		});
 
-            const value = await db.get(FluidDriverObjectStoreName, key);
+		// Value will contain metadata like the expiry time, we just want to return the object we were asked to cache
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+		return cachedItem?.cachedObject;
+	}
 
-            if (!value) {
-                return undefined;
-            }
+	private async getItemFromCache(cacheEntry: ICacheEntry) {
+		let db: IDBPDatabase<FluidCacheDBSchema> | undefined;
+		try {
+			const key = getKeyForCacheEntry(cacheEntry);
 
-            // If the data does not come from the same partition, don't return it
-            if (value.partitionKey !== this.partitionKey) {
-                this.logger.sendTelemetryEvent({
-                    eventName:
-                        FluidCacheGenericEvent.FluidCachePartitionKeyMismatch,
-                    subCategory: FluidCacheEventSubCategories.FluidCache,
-                });
+			const dbOpenStartTime = performance.now();
+			db = await this.openDb();
+			const dbOpenPerf = performance.now() - dbOpenStartTime;
+			const value = await db.get(FluidDriverObjectStoreName, key);
 
-                return undefined;
-            }
+			if (!value) {
+				this.closeDb(db);
+				return undefined;
+			}
 
-            const currentTime = new Date().getTime();
+			// If the data does not come from the same partition, don't return it
+			if (value.partitionKey !== this.partitionKey) {
+				this.logger.sendTelemetryEvent({
+					eventName: FluidCacheGenericEvent.FluidCachePartitionKeyMismatch,
+					subCategory: FluidCacheEventSubCategories.FluidCache,
+					pkgVersion,
+				});
 
-            // If too much time has passed since this cache entry was used, we will also return undefined
-            if (currentTime - value.createdTimeMs > this.maxCacheItemAge) {
-                return undefined;
-            }
+				this.closeDb(db);
+				return undefined;
+			}
 
-            const transaction = db.transaction(
-                FluidDriverObjectStoreName,
-                "readwrite",
-            );
-            // We don't want to block the get return of this function on updating the last accessed time
-            // We catch this promise because there is no user bad if this is rejected.
-            transaction.store
-                .get(key)
-                .then(async (valueToUpdate) => {
-                    // This value in the database could have been updated concurrently by other tabs/iframes
-                    // since we first read it. Only update the last accessed time if the current value in the
-                    // DB was the same one we returned.
-                    if (
-                        valueToUpdate !== undefined &&
-                        valueToUpdate.createdTimeMs === value.createdTimeMs &&
-                        (valueToUpdate.lastAccessTimeMs === undefined ||
-                            valueToUpdate.lastAccessTimeMs < currentTime)
-                    ) {
-                        await transaction.store.put(
-                            { ...valueToUpdate, lastAccessTimeMs: currentTime },
-                            key,
-                        );
-                    }
-                    await transaction.done;
+			const currentTime = new Date().getTime();
 
-                    db.close();
-                })
-                .catch(() => { });
-            return value;
-        } catch (error: any) {
-            // We can fail to open the db for a variety of reasons,
-            // such as the database version having upgraded underneath us. Return undefined in this case
-            this.logger.sendErrorEvent(
-                { eventName: FluidCacheErrorEvent.FluidCacheGetError },
-                error,
-            );
-            return undefined;
-        }
-    }
+			// If too much time has passed since this cache entry was used, we will also return undefined
+			if (currentTime - value.createdTimeMs > this.maxCacheItemAge) {
+				this.closeDb(db);
+				return undefined;
+			}
 
-    public async put(entry: ICacheEntry, value: any): Promise<void> {
-        try {
-            const db = await getFluidCacheIndexedDbInstance(this.logger);
+			this.closeDb(db);
+			return { ...value, dbOpenPerf };
+		} catch (error: any) {
+			// We can fail to open the db for a variety of reasons,
+			// such as the database version having upgraded underneath us. Return undefined in this case
+			this.logger.sendErrorEvent(
+				{ eventName: FluidCacheErrorEvent.FluidCacheGetError, pkgVersion },
+				error,
+			);
+			this.closeDb(db);
+			return undefined;
+		}
+	}
 
-            const currentTime = new Date().getTime();
+	public async put(entry: ICacheEntry, value: any): Promise<void> {
+		let db: IDBPDatabase<FluidCacheDBSchema> | undefined;
+		try {
+			db = await this.openDb();
 
-            await db.put(
-                FluidDriverObjectStoreName,
-                {
-                    cachedObject: value,
-                    fileId: entry.file.docId,
-                    type: entry.type,
-                    cacheItemId: entry.key,
-                    partitionKey: this.partitionKey,
-                    createdTimeMs: currentTime,
-                    lastAccessTimeMs: currentTime,
-                },
-                getKeyForCacheEntry(entry),
-            );
+			const currentTime = new Date().getTime();
 
-            db.close();
-        } catch (error: any) {
-            // We can fail to open the db for a variety of reasons,
-            // such as the database version having upgraded underneath us
-            this.logger.sendErrorEvent(
-                { eventName: FluidCacheErrorEvent.FluidCachePutError },
-                error,
-            );
-        }
-    }
+			await db.put(
+				FluidDriverObjectStoreName,
+				{
+					cachedObject: value,
+					fileId: entry.file.docId,
+					type: entry.type,
+					cacheItemId: entry.key,
+					partitionKey: this.partitionKey,
+					createdTimeMs: currentTime,
+					lastAccessTimeMs: currentTime,
+				},
+				getKeyForCacheEntry(entry),
+			);
+			this.closeDb(db);
+		} catch (error: any) {
+			// We can fail to open the db for a variety of reasons,
+			// such as the database version having upgraded underneath us
+			this.logger.sendErrorEvent(
+				{ eventName: FluidCacheErrorEvent.FluidCachePutError, pkgVersion },
+				error,
+			);
+		} finally {
+			this.closeDb(db);
+		}
+	}
 }

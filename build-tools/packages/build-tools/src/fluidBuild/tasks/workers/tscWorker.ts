@@ -2,84 +2,85 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import type { Diagnostic, SortedReadonlyArray } from "typescript";
-import * as tsLib from "typescript";
-
-import { getTscUtil } from "../../tscUtils";
+import type * as tsTypes from "typescript";
+import path from "path";
+import { getTscUtils } from "../../../common/tscUtils";
 import type { WorkerExecResult, WorkerMessage } from "./worker";
 
 export async function compile(msg: WorkerMessage): Promise<WorkerExecResult> {
-    const { command, cwd } = msg;
-    // Load the typescript version that is in the cwd scope
-    // Load the eslint version that is in the cwd scope
-    const tsPath = require.resolve("typescript", { paths: [cwd] });
-    const ts: typeof tsLib = require(tsPath);
+	const { command, cwd } = msg;
+	// Load the typescript version that is in the cwd scope
+	const tscUtils = getTscUtils(cwd);
 
-    const TscUtils = getTscUtil(ts);
-    function convertDiagnostics(diagnostics: SortedReadonlyArray<Diagnostic>) {
-        const messages: string[] = [];
-        diagnostics.forEach((diagnostic) => {
-            if (diagnostic.file) {
-                const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(
-                    diagnostic.start!,
-                );
-                const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
-                messages.push(
-                    `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`,
-                );
-            } else {
-                messages.push(ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
-            }
-        });
-        return messages.join("\n");
-    }
+	const ts = tscUtils.tsLib;
+	let commandLine = tscUtils.parseCommandLine(command);
+	const diagnostics: tsTypes.Diagnostic[] = [];
+	if (commandLine) {
+		const configFileName = tscUtils.findConfigFile(cwd, commandLine);
+		if (configFileName) {
+			commandLine = ts.getParsedCommandLineOfConfigFile(configFileName, commandLine.options, {
+				...ts.sys,
+				getCurrentDirectory: () => cwd,
+				onUnRecoverableConfigFileDiagnostic: (diagnostic: tsTypes.Diagnostic) => {
+					diagnostics.push(diagnostic);
+				},
+			});
+		} else {
+			throw new Error("Unknown config file in command line");
+		}
+	}
 
-    let commandLine = TscUtils.parseCommandLine(command);
-    const diagnostics: Diagnostic[] = [];
+	let code = ts.ExitStatus.DiagnosticsPresent_OutputsSkipped;
+	if (commandLine && diagnostics.length === 0) {
+		const incremental = !!(commandLine.options.incremental || commandLine.options.composite);
+		const param = {
+			rootNames: commandLine.fileNames,
+			options: tscUtils.convertOptionPaths(commandLine.options, cwd, path.resolve),
+			projectReferences: commandLine.projectReferences,
+		};
+		const program = incremental ? ts.createIncrementalProgram(param) : ts.createProgram(param);
 
-    if (commandLine) {
-        const configFileName = TscUtils.findConfigFile(cwd, commandLine);
-        if (configFileName) {
-            commandLine = ts.getParsedCommandLineOfConfigFile(configFileName, commandLine.options, {
-                ...ts.sys,
-                getCurrentDirectory: () => cwd,
-                onUnRecoverableConfigFileDiagnostic: (diagnostic: Diagnostic) => {
-                    diagnostics.push(diagnostic);
-                },
-            })!;
-        } else {
-            throw new Error("Unknown config file in commane line");
-        }
-    }
+		diagnostics.push(...program.getConfigFileParsingDiagnostics());
+		diagnostics.push(...program.getSyntacticDiagnostics());
+		diagnostics.push(...program.getOptionsDiagnostics());
+		diagnostics.push(...program.getGlobalDiagnostics());
+		diagnostics.push(...program.getSemanticDiagnostics());
 
-    let code = ts.ExitStatus.DiagnosticsPresent_OutputsSkipped;
-    if (commandLine && diagnostics.length === 0) {
-        const incremental = !!(commandLine.options.incremental || commandLine.options.composite);
-        const param = {
-            rootNames: commandLine.fileNames,
-            options: TscUtils.convertToOptionsWithAbsolutePath(commandLine.options, cwd),
-            projectReferences: commandLine.projectReferences,
-        };
-        const program = incremental ? ts.createIncrementalProgram(param) : ts.createProgram(param);
+		const emitResult = program.emit();
+		diagnostics.push(...emitResult.diagnostics);
 
-        diagnostics.push(...program.getConfigFileParsingDiagnostics());
-        diagnostics.push(...program.getSyntacticDiagnostics());
-        diagnostics.push(...program.getOptionsDiagnostics());
-        diagnostics.push(...program.getGlobalDiagnostics());
-        diagnostics.push(...program.getSemanticDiagnostics());
+		if (emitResult.emitSkipped && diagnostics.length > 0) {
+			code = ts.ExitStatus.DiagnosticsPresent_OutputsSkipped;
+		} else {
+			code =
+				diagnostics.length !== 0
+					? ts.ExitStatus.DiagnosticsPresent_OutputsGenerated
+					: ts.ExitStatus.Success;
+		}
+	}
 
-        const emitResult = program.emit();
-        diagnostics.push(...emitResult.diagnostics);
+	if (diagnostics.length > 0) {
+		const sortedDiagnostics = ts.sortAndDeduplicateDiagnostics(diagnostics);
 
-        if (!emitResult.emitSkipped) {
-            code =
-                diagnostics.length !== 0
-                    ? ts.ExitStatus.DiagnosticsPresent_OutputsGenerated
-                    : ts.ExitStatus.Success;
-        }
-    }
+		const formatDiagnosticsHost: tsTypes.FormatDiagnosticsHost = {
+			getCurrentDirectory: () => ts.sys.getCurrentDirectory(),
+			getCanonicalFileName: tscUtils.getCanonicalFileName,
+			getNewLine: () => ts.sys.newLine,
+		};
 
-    const sortedDiagnostics = ts.sortAndDeduplicateDiagnostics(diagnostics);
-    console.log(convertDiagnostics(sortedDiagnostics));
-    return { code };
+		// TODO: tsc has more complicated summary than this
+		if (commandLine?.options?.pretty !== false) {
+			console.log(
+				ts.formatDiagnosticsWithColorAndContext(sortedDiagnostics, formatDiagnosticsHost),
+			);
+			console.log(
+				`${ts.sys.newLine}Found ${sortedDiagnostics.length} error${
+					sortedDiagnostics.length > 1 ? "s" : ""
+				}.`,
+			);
+		} else {
+			console.log(ts.formatDiagnostics(sortedDiagnostics, formatDiagnosticsHost));
+		}
+	}
+	return { code };
 }

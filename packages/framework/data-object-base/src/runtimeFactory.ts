@@ -4,58 +4,68 @@
  */
 
 import { IContainerContext } from "@fluidframework/container-definitions";
+import { ContainerRuntime } from "@fluidframework/container-runtime";
+import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
+import { FluidObject } from "@fluidframework/core-interfaces";
+// eslint-disable-next-line import/no-deprecated
+import { RuntimeRequestHandler, buildRuntimeRequestHandler } from "@fluidframework/request-handler";
 import {
-    ContainerRuntime,
-} from "@fluidframework/container-runtime";
-import {
-    buildRuntimeRequestHandler,
-    RuntimeRequestHandler,
-} from "@fluidframework/request-handler";
-import {
-    NamedFluidDataStoreRegistryEntries,
-    IFluidDataStoreFactory,
+	NamedFluidDataStoreRegistryEntries,
+	IFluidDataStoreFactory,
 } from "@fluidframework/runtime-definitions";
 import { RuntimeFactoryHelper } from "@fluidframework/runtime-utils";
 
 const defaultStoreId = "" as const;
 
+/**
+ * @public
+ */
 export class RuntimeFactory extends RuntimeFactoryHelper {
-    private readonly registry: NamedFluidDataStoreRegistryEntries;
+	private readonly registry: NamedFluidDataStoreRegistryEntries;
 
-    constructor(
-        private readonly defaultStoreFactory: IFluidDataStoreFactory,
-        storeFactories: IFluidDataStoreFactory[] = [defaultStoreFactory],
-        private readonly requestHandlers: RuntimeRequestHandler[] = [],
-    ) {
-        super();
-        this.registry =
-            (storeFactories.includes(defaultStoreFactory)
-                ? storeFactories
-                : storeFactories.concat(defaultStoreFactory)
-            ).map(
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                (factory) => [factory.type, factory]) as NamedFluidDataStoreRegistryEntries;
-    }
+	private readonly defaultStoreFactory: IFluidDataStoreFactory;
+	private readonly requestHandlers: RuntimeRequestHandler[];
+	private readonly provideEntryPoint: (runtime: IContainerRuntime) => Promise<FluidObject>;
 
-    public async instantiateFirstTime(runtime: ContainerRuntime): Promise<void> {
-        const dataStore = await runtime.createDataStore(this.defaultStoreFactory.type);
-        await dataStore.trySetAlias(defaultStoreId);
-    }
+	constructor(props: {
+		defaultStoreFactory: IFluidDataStoreFactory;
+		storeFactories: IFluidDataStoreFactory[];
+		/** @deprecated Will be removed in future major release. Migrate all usage of IFluidRouter to the "entryPoint" pattern. Refer to Removing-IFluidRouter.md */
+		requestHandlers?: RuntimeRequestHandler[];
+		provideEntryPoint: (runtime: IContainerRuntime) => Promise<FluidObject>;
+	}) {
+		super();
 
-    public async preInitialize(
-        context: IContainerContext,
-        existing: boolean,
-    ): Promise<ContainerRuntime> {
-        const runtime: ContainerRuntime = await ContainerRuntime.load(
-            context,
-            this.registry,
-            buildRuntimeRequestHandler(
-                ...this.requestHandlers),
-            undefined, // runtimeOptions
-            undefined, // containerScope
-            existing,
-        );
+		this.defaultStoreFactory = props.defaultStoreFactory;
+		this.provideEntryPoint = props.provideEntryPoint;
+		this.requestHandlers = props.requestHandlers ?? [];
+		const storeFactories = props.storeFactories ?? [this.defaultStoreFactory];
 
-        return runtime;
-    }
+		this.registry = (
+			storeFactories.includes(this.defaultStoreFactory)
+				? storeFactories
+				: storeFactories.concat(this.defaultStoreFactory)
+		).map((factory) => [factory.type, factory]) as NamedFluidDataStoreRegistryEntries;
+	}
+
+	public async instantiateFirstTime(runtime: ContainerRuntime): Promise<void> {
+		const dataStore = await runtime.createDataStore(this.defaultStoreFactory.type);
+		await dataStore.trySetAlias(defaultStoreId);
+	}
+
+	public async preInitialize(
+		context: IContainerContext,
+		existing: boolean,
+	): Promise<ContainerRuntime> {
+		const runtime: ContainerRuntime = await ContainerRuntime.loadRuntime({
+			context,
+			registryEntries: this.registry,
+			existing,
+			// eslint-disable-next-line import/no-deprecated
+			requestHandler: buildRuntimeRequestHandler(...this.requestHandlers),
+			provideEntryPoint: this.provideEntryPoint,
+		});
+
+		return runtime;
+	}
 }

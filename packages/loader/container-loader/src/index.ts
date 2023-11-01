@@ -4,24 +4,20 @@
  */
 
 export { ConnectionState } from "./connectionState";
+export { IContainerExperimental, waitContainerToCatchUp } from "./container";
 export {
-    Container,
-    IContainerLoadOptions,
-    IContainerConfig,
-    IPendingContainerState,
-    waitContainerToCatchUp,
-} from "./container";
-export {
-    ICodeDetailsLoader,
-    IDetachedBlobStorage,
-    IFluidModuleWithDetails,
-    ILoaderOptions,
-    ILoaderProps,
-    ILoaderServices,
-    Loader,
-    RelativeLoader,
+	ICodeDetailsLoader,
+	IDetachedBlobStorage,
+	IFluidModuleWithDetails,
+	ILoaderOptions,
+	ILoaderProps,
+	ILoaderServices,
+	Loader,
+	requestResolvedObjectFromContainer,
 } from "./loader";
 export {
-    IProtocolHandler,
-    ProtocolHandlerBuilder,
-} from "./protocol";
+	isLocationRedirectionError,
+	resolveWithLocationRedirectionHandling,
+} from "./location-redirection-utilities";
+export { IProtocolHandler, ProtocolHandlerBuilder } from "./protocol";
+export { tryParseCompatibleResolvedUrl, IParsedUrl } from "./utils";

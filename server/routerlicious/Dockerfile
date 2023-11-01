@@ -3,10 +3,11 @@
 
 # DisableDockerDetector "No feasible secure solution for OSS repos yet"
 
-FROM node:14.19.1-stretch-slim AS base
+FROM node:18.17.1-buster-slim AS base
 
 # node-gyp dependencies
 RUN apt-get update && apt-get install -y \
+    build-essential \
     python3 \
     make \
     git \
@@ -21,13 +22,17 @@ ENV TINI_VERSION v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 
+# There are some packages outside the routerlicious folder that we need to build, so we copy the package to the /usr directory
+WORKDIR /usr
+COPY --from=root tools/changelog-generator-wrapper/package*.json tools/changelog-generator-wrapper/
+
 # Copy over and build the server
 WORKDIR /usr/src/server
 
 # Copy over the package and package-lock and install prior to the other code to optimize Docker's file system cache on rebuilds
 COPY package*.json ./
-COPY lerna.json .
-COPY lerna-package-lock.json .
+COPY pnpm*.yaml ./
+COPY scripts/*.* ./scripts/
 
 COPY packages/gitresources/package*.json packages/gitresources/
 COPY packages/kafka-orderer/package*.json packages/kafka-orderer/
@@ -48,12 +53,14 @@ COPY packages/services-telemetry/package*.json packages/services-telemetry/
 COPY packages/services-utils/package*.json packages/services-utils/
 COPY packages/test-utils/package*.json packages/test-utils/
 COPY packages/protocol-base/package*.json packages/protocol-base/
+COPY packages/tinylicious/package*.json packages/tinylicious/
 
+RUN corepack enable
 
 # Need to set the --unsafe-perm flag since we are doing the install as root. Consider adding an 'app' accout so we
 # can do the install as node but then switch to 'app' to run. As app we won't be able to write to installed files
 # and be able to change them.
-RUN npm install --unsafe-perm
+RUN pnpm install --unsafe-perm
 
 # And now copy over our actual code and build
 COPY . .

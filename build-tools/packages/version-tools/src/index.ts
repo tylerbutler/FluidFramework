@@ -4,28 +4,40 @@
  */
 
 export {
-    isVersionBumpType,
-    isVersionBumpTypeExtended,
-    ReleaseVersion,
-    VersionBumpType,
-    VersionBumpTypeExtended,
-    VersionChangeType,
-    VersionChangeTypeExtended,
+	isInterdependencyRange,
+	isRangeOperator,
+	isVersionBumpType,
+	isVersionBumpTypeExtended,
+	isWorkspaceRange,
+	DEFAULT_INTERDEPENDENCY_RANGE,
+	InterdependencyRange,
+	RangeOperator,
+	RangeOperators,
+	RangeOperatorWithVersion,
+	ReleaseVersion,
+	VersionBumpType,
+	VersionBumpTypeExtended,
+	VersionChangeType,
+	VersionChangeTypeExtended,
+	WorkspaceRange,
+	WorkspaceRanges,
 } from "./bumpTypes";
 export {
-    changePreReleaseIdentifier,
-    getVersionRange,
-    fromInternalScheme,
-    isInternalVersionScheme,
-    toInternalScheme,
+	changePreReleaseIdentifier,
+	getVersionRange,
+	fromInternalScheme,
+	isInternalVersionRange,
+	isInternalVersionScheme,
+	toInternalScheme,
 } from "./internalVersionScheme";
 export {
-    bumpVersionScheme,
-    detectVersionScheme,
-    getLatestReleaseFromList,
-    isVersionScheme,
-    sortVersions,
-    VersionScheme,
+	bumpVersionScheme,
+	detectVersionScheme,
+	getLatestReleaseFromList,
+	isVersionScheme,
+	sortVersions,
+	VersionScheme,
 } from "./schemes";
 export { bumpRange, detectBumpType, isPrereleaseVersion, getPreviousVersions } from "./semver";
+export { getIsLatest, getSimpleVersion } from "./versions";
 export { fromVirtualPatchScheme, toVirtualPatchScheme } from "./virtualPatchScheme";

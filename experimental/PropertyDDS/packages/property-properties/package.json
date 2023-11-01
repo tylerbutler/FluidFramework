@@ -1,95 +1,97 @@
 {
-  "name": "@fluid-experimental/property-properties",
-  "version": "2.0.0-internal.2.1.0",
-  "description": "definitions of properties",
-  "homepage": "https://fluidframework.com",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/microsoft/FluidFramework.git",
-    "directory": "experimental/PropertyDDS/packages/property-properties"
-  },
-  "license": "MIT",
-  "author": "Microsoft and contributors",
-  "main": "dist/index.js",
-  "module": "lib/index.js",
-  "types": "src/index.d.ts",
-  "files": [
-    "dist/**/*",
-    "lib/**/*",
-    "src/index.d.ts"
-  ],
-  "scripts": {
-    "build": "concurrently npm:build:compile npm:lint",
-    "build:commonjs": "npm run tsc && npm run build:test",
-    "build:compile": "concurrently npm:build:commonjs npm:build:esnext",
-    "build:esnext": "tsc --project ./tsconfig.esnext.json",
-    "build:full": "npm run build",
-    "build:full:compile": "npm run build:compile",
-    "build:test": "tsc --project ./src/test/tsconfig.json",
-    "clean": "rimraf dist lib *.tsbuildinfo *.build.log",
-    "coverage": "npx nyc --silent --cwd .. --nycrc-path `pwd`/.nycrc npm run test && npx nyc --no-clean --silent --cwd .. --nycrc-path `pwd`/.nycrc npm run test:changeset && npx nyc --no-clean --cwd .. --nycrc-path `pwd`/.nycrc npm run test:common",
-    "eslint": "eslint --format stylish src",
-    "eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
-    "lint": "npm run eslint",
-    "lint:fix": "npm run eslint:fix",
-    "test": "npm run test:mocha",
-    "test:coverage": "nyc npm test -- --reporter xunit --reporter-option output=nyc/junit-report.xml",
-    "test:mocha": "mocha --recursive dist/test -r node_modules/@fluidframework/mocha-test-setup --unhandled-rejections=strict",
-    "test:mocha:verbose": "cross-env FLUID_TEST_VERBOSE=1 npm run test:mocha",
-    "tsc": "tsc",
-    "tsfmt": "tsfmt --verify",
-    "tsfmt:fix": "tsfmt --replace"
-  },
-  "nyc": {
-    "all": true,
-    "cache-dir": "nyc/.cache",
-    "exclude": [
-      "src/test/**/*.ts",
-      "dist/test/**/*.js"
-    ],
-    "exclude-after-remap": false,
-    "include": [
-      "src/**/*.ts",
-      "dist/**/*.js"
-    ],
-    "report-dir": "nyc/report",
-    "reporter": [
-      "cobertura",
-      "html",
-      "text"
-    ],
-    "temp-directory": "nyc/.nyc_output"
-  },
-  "dependencies": {
-    "@fluid-experimental/property-changeset": ">=2.0.0-internal.2.1.0 <2.0.0-internal.3.0.0",
-    "@fluid-experimental/property-common": ">=2.0.0-internal.2.1.0 <2.0.0-internal.3.0.0",
-    "ajv": "7.1.1",
-    "async": "^3.2.0",
-    "fastest-json-copy": "^1.0.1",
-    "lodash": "^4.17.21",
-    "semver": "^7.3.4",
-    "traverse": "0.6.6",
-    "underscore": "^1.12.1"
-  },
-  "devDependencies": {
-    "@fluid-experimental/property-properties-previous": "npm:@fluid-experimental/property-properties@2.0.0-internal.2.0.0",
-    "@fluidframework/build-common": "^1.0.0",
-    "@fluidframework/mocha-test-setup": ">=2.0.0-internal.2.1.0 <2.0.0-internal.3.0.0",
-    "@types/mocha": "^9.1.1",
-    "chai": "^4.2.0",
-    "concurrently": "^6.2.0",
-    "cross-env": "^7.0.2",
-    "eslint": "~8.6.0",
-    "mocha": "^10.0.0",
-    "nock": "^10.0.1",
-    "nyc": "^15.0.0",
-    "rimraf": "^2.6.2",
-    "sinon": "^7.4.2",
-    "typescript": "~4.5.5",
-    "typescript-formatter": "7.1.0"
-  },
-  "typeValidation": {
-    "version": "2.0.0-internal.2.1.0",
-    "broken": {}
-  }
+	"name": "@fluid-experimental/property-properties",
+	"version": "2.0.0-internal.7.3.0",
+	"description": "definitions of properties",
+	"homepage": "https://fluidframework.com",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/microsoft/FluidFramework.git",
+		"directory": "experimental/PropertyDDS/packages/property-properties"
+	},
+	"license": "MIT",
+	"author": "Microsoft and contributors",
+	"main": "dist/index.js",
+	"module": "lib/index.js",
+	"types": "src/index.d.ts",
+	"files": [
+		"dist/**/*",
+		"lib/**/*",
+		"src/index.d.ts"
+	],
+	"scripts": {
+		"build": "fluid-build . --task build",
+		"build:commonjs": "fluid-build . --task commonjs",
+		"build:compile": "fluid-build . --task compile",
+		"build:esnext": "tsc --project ./tsconfig.esnext.json",
+		"build:test": "tsc --project ./src/test/tsconfig.json",
+		"clean": "rimraf --glob dist lib \"*.tsbuildinfo\" \"*.build.log\" nyc",
+		"coverage": "npx nyc --silent --cwd .. --nycrc-path `pwd`/.nycrc npm run test && npx nyc --no-clean --silent --cwd .. --nycrc-path `pwd`/.nycrc npm run test:changeset && npx nyc --no-clean --cwd .. --nycrc-path `pwd`/.nycrc npm run test:common",
+		"eslint": "eslint --format stylish src",
+		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
+		"format": "npm run prettier:fix",
+		"lint": "npm run prettier && npm run eslint",
+		"lint:fix": "npm run prettier:fix && npm run eslint:fix",
+		"prettier": "prettier --check . --ignore-path ../../../../.prettierignore",
+		"prettier:fix": "prettier --write . --ignore-path ../../../../.prettierignore",
+		"test": "npm run test:mocha",
+		"test:coverage": "c8 npm test",
+		"test:mocha": "mocha --recursive dist/test -r node_modules/@fluidframework/mocha-test-setup",
+		"test:mocha:verbose": "cross-env FLUID_TEST_VERBOSE=1 npm run test:mocha",
+		"tsc": "tsc"
+	},
+	"c8": {
+		"all": true,
+		"cache-dir": "nyc/.cache",
+		"exclude": [
+			"src/test/**/*.ts",
+			"dist/test/**/*.js"
+		],
+		"exclude-after-remap": false,
+		"include": [
+			"src/**/*.ts",
+			"dist/**/*.js"
+		],
+		"report-dir": "nyc/report",
+		"reporter": [
+			"cobertura",
+			"html",
+			"text"
+		],
+		"temp-directory": "nyc/.nyc_output"
+	},
+	"dependencies": {
+		"@fluid-experimental/property-changeset": "workspace:~",
+		"@fluid-experimental/property-common": "workspace:~",
+		"ajv": "7.1.1",
+		"async": "^3.2.2",
+		"fastest-json-copy": "^1.0.1",
+		"lodash": "^4.17.21",
+		"semver": "^7.5.3",
+		"traverse": "0.6.6",
+		"underscore": "^1.13.6"
+	},
+	"devDependencies": {
+		"@fluidframework/build-common": "^2.0.3",
+		"@fluidframework/build-tools": "^0.26.1",
+		"@fluidframework/mocha-test-setup": "workspace:~",
+		"@types/mocha": "^9.1.1",
+		"@types/node": "^16.18.38",
+		"c8": "^7.7.1",
+		"chai": "^4.2.0",
+		"cross-env": "^7.0.3",
+		"eslint": "~8.50.0",
+		"mocha": "^10.2.0",
+		"mocha-json-output-reporter": "^2.0.1",
+		"mocha-multi-reporters": "^1.5.1",
+		"moment": "^2.21.0",
+		"nock": "^13.3.3",
+		"prettier": "~3.0.3",
+		"rimraf": "^4.4.0",
+		"sinon": "^7.4.2",
+		"typescript": "~5.1.6"
+	},
+	"typeValidation": {
+		"disabled": true,
+		"broken": {}
+	}
 }

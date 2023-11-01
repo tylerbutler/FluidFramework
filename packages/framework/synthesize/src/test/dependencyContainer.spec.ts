@@ -6,428 +6,555 @@
 import { strict as assert } from "assert";
 
 import {
-    IFluidLoadable,
-    IFluidHandleContext,
-    IFluidHandle,
-    IProvideFluidLoadable,
-    IProvideFluidRouter,
-    IProvideFluidHandle,
-    FluidObject,
-    IFluidRouter,
+	IFluidLoadable,
+	IFluidHandleContext,
+	IFluidHandle,
+	IProvideFluidLoadable,
+	IProvideFluidRouter,
+	IProvideFluidHandle,
+	FluidObject,
+	IFluidRouter,
 } from "@fluidframework/core-interfaces";
 import { FluidObjectHandle } from "@fluidframework/datastore";
 
+import { LazyPromise } from "@fluidframework/core-utils";
 import { DependencyContainer } from "..";
 import { IFluidDependencySynthesizer } from "../IFluidDependencySynthesizer";
 import { AsyncFluidObjectProvider, FluidObjectProvider, FluidObjectSymbolProvider } from "../types";
 
 const mockHandleContext: IFluidHandleContext = {
-    absolutePath: "",
-    isAttached: false,
-    IFluidHandleContext: undefined as any,
+	absolutePath: "",
+	isAttached: false,
+	IFluidHandleContext: undefined as any,
 
-    attachGraph: () => {
-        throw new Error("Method not implemented.");
-    },
-    resolveHandle: () => {
-        throw new Error("Method not implemented.");
-    },
+	attachGraph: () => {
+		throw new Error("Method not implemented.");
+	},
+	resolveHandle: () => {
+		throw new Error("Method not implemented.");
+	},
 };
 
 class MockLoadable implements IFluidLoadable {
-    public get IFluidLoadable() { return this; }
-    public get handle() { return new FluidObjectHandle(this, "", mockHandleContext); }
+	public get IFluidLoadable() {
+		return this;
+	}
+	public get handle() {
+		return new FluidObjectHandle(this, "", mockHandleContext);
+	}
 }
 
 class MockFluidRouter implements IFluidRouter {
-    public get IFluidRouter() { return this; }
-    public async request() {
-        return {
-            mimeType: "",
-            status: 200,
-            value: "",
-        };
-    }
+	public get IFluidRouter() {
+		return this;
+	}
+	public async request() {
+		return {
+			mimeType: "",
+			status: 200,
+			value: "",
+		};
+	}
 }
 
 describe("Routerlicious", () => {
-    describe("Aqueduct", () => {
-        describe("DependencyContainer", () => {
-            it(`One Optional Provider registered via value`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const mock = new MockLoadable();
-                dc.register(IFluidLoadable, mock);
+	describe("Aqueduct", () => {
+		describe("DependencyContainer", () => {
+			it(`One Optional Provider registered via value`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				dc.register(IFluidLoadable, mock);
 
-                const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Optional IFluidLoadable was registered");
-                assert(loadable === mock, "IFluidLoadable is expected");
-                assert(loadable?.handle.absolutePath === mock.handle.absolutePath, "IFluidLoadable is valid");
-            });
+				const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Optional IFluidLoadable was registered");
+				assert(loadable === mock, "IFluidLoadable is expected");
+				assert(
+					loadable?.handle.absolutePath === mock.handle.absolutePath,
+					"IFluidLoadable is valid",
+				);
+			});
 
-            it(`One Optional Provider registered via Promise value`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const mock = new MockLoadable();
-                dc.register(IFluidLoadable, Promise.resolve(mock));
+			it(`One Optional Provider registered via Promise value`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				dc.register(IFluidLoadable, Promise.resolve(mock));
 
-                const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Optional IFluidLoadable was registered");
-                assert(loadable === mock, "IFluidLoadable is expected");
-                assert(loadable?.handle.absolutePath === mock.handle.absolutePath, "IFluidLoadable is valid");
-            });
+				const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Optional IFluidLoadable was registered");
+				assert(loadable === mock, "IFluidLoadable is expected");
+				assert(
+					loadable?.handle.absolutePath === mock.handle.absolutePath,
+					"IFluidLoadable is valid",
+				);
+			});
 
-            it(`One Optional Provider registered via factory`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const mock = new MockLoadable();
-                const factory = () => mock;
-                dc.register(IFluidLoadable, factory);
+			it(`One Optional Provider registered via factory`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				const factory = () => mock;
+				dc.register(IFluidLoadable, factory);
 
-                const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Optional IFluidLoadable was registered");
-                assert(loadable === mock, "IFluidLoadable is expected");
-                assert(loadable?.handle.absolutePath === mock.handle.absolutePath, "IFluidLoadable is valid");
-            });
+				const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Optional IFluidLoadable was registered");
+				assert(loadable === mock, "IFluidLoadable is expected");
+				assert(
+					loadable?.handle.absolutePath === mock.handle.absolutePath,
+					"IFluidLoadable is valid",
+				);
+			});
 
-            it(`One Optional Provider registered via Promise factory`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const mock = new MockLoadable();
-                const factory = async () => mock;
-                dc.register(IFluidLoadable, factory);
+			it(`One Optional Provider registered via Promise factory`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				const factory = async () => mock;
+				dc.register(IFluidLoadable, factory);
 
-                const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Optional IFluidLoadable was registered");
-                assert(loadable === mock, "IFluidLoadable is expected");
-                assert(loadable?.handle.absolutePath === mock.handle.absolutePath, "IFluidLoadable is valid");
-            });
+				const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Optional IFluidLoadable was registered");
+				assert(loadable === mock, "IFluidLoadable is expected");
+				assert(
+					loadable?.handle.absolutePath === mock.handle.absolutePath,
+					"IFluidLoadable is valid",
+				);
+			});
 
-            it(`One Required Provider registered via value`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const mock = new MockLoadable();
-                dc.register(IFluidLoadable, mock);
+			it(`One Optional Provider registered via LazyPromise factory`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				let lazyPromiseFlag = false;
+				const lazyFactory = new LazyPromise(async () => {
+					lazyPromiseFlag = true;
+					return mock;
+				});
+				dc.register(IFluidLoadable, lazyFactory);
 
-                const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, { IFluidLoadable });
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Required IFluidLoadable was registered");
-                assert(loadable === mock, "IFluidLoadable is expected");
-                assert(loadable?.handle.absolutePath === mock.handle.absolutePath, "IFluidLoadable is valid");
-            });
+				const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
+				const loadable_promise = s.IFluidLoadable;
+				// This stacking of promises is done in order to make sure that the loadable_promise would have been executed by the time the assertion is done
+				await Promise.resolve().then(async () => {
+					assert(!lazyPromiseFlag, "Optional IFluidLoadable was correctly lazy loaded");
+					const loadable = await loadable_promise;
+					assert(loadable, "Optional IFluidLoadable was registered");
+					assert(loadable === mock, "IFluidLoadable is expected");
+					assert(
+						loadable?.handle.absolutePath === mock.handle.absolutePath,
+						"IFluidLoadable is valid",
+					);
+				});
+			});
 
-            it(`One Required Provider registered via Promise value`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const mock = new MockLoadable();
-                dc.register(IFluidLoadable, Promise.resolve(mock));
+			it(`One Required Provider registered via value`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				dc.register(IFluidLoadable, mock);
 
-                const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, { IFluidLoadable });
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Required IFluidLoadable was registered");
-                assert(loadable === mock, "IFluidLoadable is expected");
-                assert(loadable?.handle.absolutePath === mock.handle.absolutePath, "IFluidLoadable is valid");
-            });
+				const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, {
+					IFluidLoadable,
+				});
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Required IFluidLoadable was registered");
+				assert(loadable === mock, "IFluidLoadable is expected");
+				assert(
+					loadable?.handle.absolutePath === mock.handle.absolutePath,
+					"IFluidLoadable is valid",
+				);
+			});
 
-            it(`One Required Provider registered via factory`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const mock = new MockLoadable();
-                const factory = () => mock;
-                dc.register(IFluidLoadable, factory);
+			it(`One Required Provider registered via Promise value`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				dc.register(IFluidLoadable, Promise.resolve(mock));
 
-                const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, { IFluidLoadable });
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Required IFluidLoadable was registered");
-                assert(loadable === mock, "IFluidLoadable is expected");
-                assert(loadable?.handle.absolutePath === mock.handle.absolutePath, "IFluidLoadable is valid");
-            });
+				const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, {
+					IFluidLoadable,
+				});
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Required IFluidLoadable was registered");
+				assert(loadable === mock, "IFluidLoadable is expected");
+				assert(
+					loadable?.handle.absolutePath === mock.handle.absolutePath,
+					"IFluidLoadable is valid",
+				);
+			});
 
-            it(`One Required Provider registered via Promise factory`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const mock = new MockLoadable();
-                const factory = async () => mock;
-                dc.register(IFluidLoadable, factory);
+			it(`One Required Provider registered via factory`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				const factory = () => mock;
+				dc.register(IFluidLoadable, factory);
 
-                const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, { IFluidLoadable });
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Required IFluidLoadable was registered");
-                assert(loadable === mock, "IFluidLoadable is expected");
-                assert(loadable?.handle.absolutePath === mock.handle.absolutePath, "IFluidLoadable is valid");
-            });
+				const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, {
+					IFluidLoadable,
+				});
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Required IFluidLoadable was registered");
+				assert(loadable === mock, "IFluidLoadable is expected");
+				assert(
+					loadable?.handle.absolutePath === mock.handle.absolutePath,
+					"IFluidLoadable is valid",
+				);
+			});
 
-            it(`Two Optional Modules all registered`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable & IFluidRouter>>();
-                const loadableMock = new MockLoadable();
-                dc.register(IFluidLoadable, loadableMock);
-                const routerMock = new MockFluidRouter();
-                dc.register(IFluidRouter, routerMock);
+			it(`One Required Provider registered via Promise factory`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				const factory = async () => mock;
+				dc.register(IFluidLoadable, factory);
 
-                const s = dc.synthesize<IFluidLoadable & IFluidRouter>(
-                    { IFluidLoadable, IFluidRouter }, undefined);
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Optional IFluidLoadable was registered");
-                assert(loadable === loadableMock, "IFluidLoadable is expected");
+				const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, {
+					IFluidLoadable,
+				});
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Required IFluidLoadable was registered");
+				assert(loadable === mock, "IFluidLoadable is expected");
+				assert(
+					loadable?.handle.absolutePath === mock.handle.absolutePath,
+					"IFluidLoadable is valid",
+				);
+			});
 
-                const router = await s.IFluidRouter;
-                assert(router, "Optional IFluidRouter was registered");
-                assert(router === routerMock, "IFluidRouter is expected");
-            });
+			it(`One Required Provider registered via LazyPromise factory`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				let lazyPromiseFlag = false;
+				const lazyFactory = new LazyPromise(async () => {
+					lazyPromiseFlag = true;
+					return mock;
+				});
+				dc.register(IFluidLoadable, lazyFactory);
 
-            it(`Two Optional Modules one registered`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable & IFluidRouter>>();
-                const loadableMock = new MockLoadable();
-                dc.register(IFluidLoadable, loadableMock);
+				const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, {
+					IFluidLoadable,
+				});
+				const loadable_promise = s.IFluidLoadable;
+				// This stacking of promises is done in order to make sure that the loadable_promise would have been executed by the time the assertion is done
+				await Promise.resolve().then(async () => {
+					assert(!lazyPromiseFlag, "Required IFluidLoadable was correctly lazy loaded");
+					const loadable = await loadable_promise;
+					assert(loadable, "Required IFluidLoadable was registered");
+					assert(loadable === mock, "IFluidLoadable is expected");
+					assert(
+						loadable?.handle.absolutePath === mock.handle.absolutePath,
+						"IFluidLoadable is valid",
+					);
+				});
+			});
 
-                const s = dc.synthesize<IFluidLoadable & IFluidRouter>(
-                    { IFluidLoadable, IFluidRouter }, undefined);
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Optional IFluidLoadable was registered");
-                assert(loadable === loadableMock, "IFluidLoadable is expected");
+			it(`Two Optional Modules all registered`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable & IFluidRouter>>();
+				const loadableMock = new MockLoadable();
+				dc.register(IFluidLoadable, loadableMock);
+				const routerMock = new MockFluidRouter();
+				dc.register(IFluidRouter, routerMock);
 
-                const router = await s.IFluidRouter;
-                assert(!router, "Optional IFluidRouter was not registered");
-            });
+				const s = dc.synthesize<IFluidLoadable & IFluidRouter>(
+					{ IFluidLoadable, IFluidRouter },
+					undefined,
+				);
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Optional IFluidLoadable was registered");
+				assert(loadable === loadableMock, "IFluidLoadable is expected");
 
-            it(`Two Optional Modules none registered`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable & IFluidRouter>>();
+				const router = await s.IFluidRouter;
+				assert(router, "Optional IFluidRouter was registered");
+				assert(router === routerMock, "IFluidRouter is expected");
+			});
 
-                const s = dc.synthesize<IFluidLoadable & IFluidRouter>(
-                    { IFluidLoadable, IFluidRouter }, undefined);
-                const loadable = await s.IFluidLoadable;
-                assert(!loadable, "Optional IFluidLoadable was not registered");
-                const router = await s.IFluidRouter;
-                assert(!router, "Optional IFluidRouter was not registered");
-            });
+			it(`Two Optional Modules one registered`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable & IFluidRouter>>();
+				const loadableMock = new MockLoadable();
+				dc.register(IFluidLoadable, loadableMock);
 
-            it(`Two Required Modules all registered`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable & IFluidRouter>>();
-                const loadableMock = new MockLoadable();
-                dc.register(IFluidLoadable, loadableMock);
-                const routerMock = new MockFluidRouter();
-                dc.register(IFluidRouter, routerMock);
+				const s = dc.synthesize<IFluidLoadable & IFluidRouter>(
+					{ IFluidLoadable, IFluidRouter },
+					undefined,
+				);
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Optional IFluidLoadable was registered");
+				assert(loadable === loadableMock, "IFluidLoadable is expected");
 
-                const s = dc.synthesize<undefined, IProvideFluidLoadable & IProvideFluidRouter>(
-                    undefined, { IFluidLoadable, IFluidRouter });
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Required IFluidLoadable was registered");
-                assert(loadable === loadableMock, "IFluidLoadable is expected");
+				const router = await s.IFluidRouter;
+				assert(!router, "Optional IFluidRouter was not registered");
+			});
 
-                const router = await s.IFluidRouter;
-                assert(router, "Required IFluidRouter was registered");
-                assert(router === routerMock, "IFluidRouter is expected");
-            });
+			it(`Two Optional Modules none registered`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable & IFluidRouter>>();
 
-            it(`Required Provider not registered should throw`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const s = dc.synthesize<IFluidLoadable & IFluidRouter>(
+					{ IFluidLoadable, IFluidRouter },
+					undefined,
+				);
+				const loadable = await s.IFluidLoadable;
+				assert(!loadable, "Optional IFluidLoadable was not registered");
+				const router = await s.IFluidRouter;
+				assert(!router, "Optional IFluidRouter was not registered");
+			});
 
-                assert.throws(() => dc.synthesize<undefined, IProvideFluidLoadable>(
-                    undefined,
-                    { IFluidLoadable },
-                ), Error);
-            });
+			it(`Two Required Modules all registered`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable & IFluidRouter>>();
+				const loadableMock = new MockLoadable();
+				dc.register(IFluidLoadable, loadableMock);
+				const routerMock = new MockFluidRouter();
+				dc.register(IFluidRouter, routerMock);
 
-            it(`Optional Provider found in Parent`, async () => {
-                const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const mock = new MockLoadable();
-                parentDc.register(IFluidLoadable, mock);
-                const dc = new DependencyContainer(parentDc);
+				const s = dc.synthesize<undefined, IProvideFluidLoadable & IProvideFluidRouter>(
+					undefined,
+					{ IFluidLoadable, IFluidRouter },
+				);
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Required IFluidLoadable was registered");
+				assert(loadable === loadableMock, "IFluidLoadable is expected");
 
-                const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Optional IFluidLoadable was registered");
-                assert(loadable === mock, "IFluidLoadable is expected");
-                assert(loadable?.handle.absolutePath === mock.handle.absolutePath, "IFluidLoadable is valid");
-            });
+				const router = await s.IFluidRouter;
+				assert(router, "Required IFluidRouter was registered");
+				assert(router === routerMock, "IFluidRouter is expected");
+			});
 
-            it(`Optional Modules found in Parent and Child`, async () => {
-                const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const loadableMock = new MockLoadable();
-                parentDc.register(IFluidLoadable, loadableMock);
-                const dc = new DependencyContainer<FluidObject<IFluidRouter>>(parentDc);
-                const routerMock = new MockFluidRouter();
-                dc.register(IFluidRouter, routerMock);
+			it(`Required Provider not registered should throw`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
 
-                const s = dc.synthesize<IFluidLoadable & IFluidRouter>(
-                    { IFluidLoadable, IFluidRouter }, undefined);
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Optional IFluidLoadable was registered");
-                assert(loadable === loadableMock, "IFluidLoadable is expected");
+				assert.throws(
+					() =>
+						dc.synthesize<undefined, IProvideFluidLoadable>(undefined, {
+							IFluidLoadable,
+						}),
+					Error,
+				);
+			});
 
-                const router = await s.IFluidRouter;
-                assert(router, "Optional IFluidRouter was registered");
-                assert(router === routerMock, "IFluidRouter is expected");
-            });
+			it(`Optional Provider found in Parent`, async () => {
+				const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				parentDc.register(IFluidLoadable, mock);
+				const dc = new DependencyContainer(parentDc);
 
-            it(`Optional Provider found in Parent and Child resolves Child`, async () => {
-                const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                parentDc.register(IFluidLoadable, new MockLoadable());
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>(parentDc);
-                const loadableMock = new MockLoadable();
-                dc.register(IFluidLoadable, loadableMock);
+				const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Optional IFluidLoadable was registered");
+				assert(loadable === mock, "IFluidLoadable is expected");
+				assert(
+					loadable?.handle.absolutePath === mock.handle.absolutePath,
+					"IFluidLoadable is valid",
+				);
+			});
 
-                const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Optional IFluidLoadable was registered");
-                assert(loadable === loadableMock, "IFluidLoadable is expected");
-            });
+			it(`Optional Modules found in Parent and Child`, async () => {
+				const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const loadableMock = new MockLoadable();
+				parentDc.register(IFluidLoadable, loadableMock);
+				const dc = new DependencyContainer<FluidObject<IFluidRouter>>(parentDc);
+				const routerMock = new MockFluidRouter();
+				dc.register(IFluidRouter, routerMock);
 
-            it(`Required Provider found in Parent`, async () => {
-                const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const mock = new MockLoadable();
-                parentDc.register(IFluidLoadable, mock);
-                const dc = new DependencyContainer(parentDc);
+				const s = dc.synthesize<IFluidLoadable & IFluidRouter>(
+					{ IFluidLoadable, IFluidRouter },
+					undefined,
+				);
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Optional IFluidLoadable was registered");
+				assert(loadable === loadableMock, "IFluidLoadable is expected");
 
-                const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, { IFluidLoadable });
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Required IFluidLoadable was registered");
-                assert(loadable === mock, "IFluidLoadable is expected");
-                assert(loadable?.handle.absolutePath === mock.handle.absolutePath, "IFluidLoadable is valid");
-            });
+				const router = await s.IFluidRouter;
+				assert(router, "Optional IFluidRouter was registered");
+				assert(router === routerMock, "IFluidRouter is expected");
+			});
 
-            it(`Required Modules found in Parent and Child`, async () => {
-                const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const loadableMock = new MockLoadable();
-                parentDc.register(IFluidLoadable, loadableMock);
-                const dc = new DependencyContainer<FluidObject<IFluidRouter>>(parentDc);
-                const routerMock = new MockFluidRouter();
-                dc.register(IFluidRouter, routerMock);
+			it(`Optional Provider found in Parent and Child resolves Child`, async () => {
+				const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				parentDc.register(IFluidLoadable, new MockLoadable());
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>(parentDc);
+				const loadableMock = new MockLoadable();
+				dc.register(IFluidLoadable, loadableMock);
 
-                const s = dc.synthesize<undefined, IProvideFluidLoadable & IProvideFluidRouter>(
-                    undefined, { IFluidLoadable, IFluidRouter });
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Required IFluidLoadable was registered");
-                assert(loadable === loadableMock, "IFluidLoadable is expected");
+				const s = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, undefined);
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Optional IFluidLoadable was registered");
+				assert(loadable === loadableMock, "IFluidLoadable is expected");
+			});
 
-                const router = await s.IFluidRouter;
-                assert(router, "Required IFluidRouter was registered");
-                assert(router === routerMock, "IFluidRouter is expected");
-            });
+			it(`Required Provider found in Parent`, async () => {
+				const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const mock = new MockLoadable();
+				parentDc.register(IFluidLoadable, mock);
+				const dc = new DependencyContainer(parentDc);
 
-            it(`Required Provider found in Parent and Child resolves Child`, async () => {
-                const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                parentDc.register(IFluidLoadable, new MockLoadable());
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>(parentDc);
-                const loadableMock = new MockLoadable();
-                dc.register(IFluidLoadable, loadableMock);
+				const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, {
+					IFluidLoadable,
+				});
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Required IFluidLoadable was registered");
+				assert(loadable === mock, "IFluidLoadable is expected");
+				assert(
+					loadable?.handle.absolutePath === mock.handle.absolutePath,
+					"IFluidLoadable is valid",
+				);
+			});
 
-                const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, { IFluidLoadable });
-                const loadable = await s.IFluidLoadable;
-                assert(loadable, "Required IFluidLoadable was registered");
-                assert(loadable === loadableMock, "IFluidLoadable is expected");
-            });
+			it(`Required Modules found in Parent and Child`, async () => {
+				const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const loadableMock = new MockLoadable();
+				parentDc.register(IFluidLoadable, loadableMock);
+				const dc = new DependencyContainer<FluidObject<IFluidRouter>>(parentDc);
+				const routerMock = new MockFluidRouter();
+				dc.register(IFluidRouter, routerMock);
 
-            it(`Registering`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                dc.register(IFluidLoadable, new MockLoadable());
-                assert(dc.has(IFluidLoadable), "DependencyContainer has IFluidLoadable");
-            });
+				const s = dc.synthesize<undefined, IProvideFluidLoadable & IProvideFluidRouter>(
+					undefined,
+					{ IFluidLoadable, IFluidRouter },
+				);
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Required IFluidLoadable was registered");
+				assert(loadable === loadableMock, "IFluidLoadable is expected");
 
-            it(`Registering the same type twice throws`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                dc.register(IFluidLoadable, new MockLoadable());
-                assert.throws(() => dc.register(IFluidLoadable, new MockLoadable()), Error);
-            });
+				const router = await s.IFluidRouter;
+				assert(router, "Required IFluidRouter was registered");
+				assert(router === routerMock, "IFluidRouter is expected");
+			});
 
-            it(`Registering then Unregistering`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                dc.register(IFluidLoadable, new MockLoadable());
-                dc.unregister(IFluidLoadable);
-                assert(!dc.has(IFluidLoadable), "DependencyContainer doesn't have IFluidLoadable");
-            });
+			it(`Required Provider found in Parent and Child resolves Child`, async () => {
+				const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				parentDc.register(IFluidLoadable, new MockLoadable());
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>(parentDc);
+				const loadableMock = new MockLoadable();
+				dc.register(IFluidLoadable, loadableMock);
 
-            it(`Registering then Unregistering then Registering`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                dc.register(IFluidLoadable, new MockLoadable());
-                dc.unregister(IFluidLoadable);
-                dc.register(IFluidLoadable, new MockLoadable());
-                assert(dc.has(IFluidLoadable), "DependencyContainer has IFluidLoadable");
-            });
+				const s = dc.synthesize<undefined, IProvideFluidLoadable>(undefined, {
+					IFluidLoadable,
+				});
+				const loadable = await s.IFluidLoadable;
+				assert(loadable, "Required IFluidLoadable was registered");
+				assert(loadable === loadableMock, "IFluidLoadable is expected");
+			});
 
-            it(`has() resolves correctly in all variations`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable & IFluidRouter>>();
-                dc.register(IFluidLoadable, new MockLoadable());
-                dc.register(IFluidRouter, new MockFluidRouter());
-                assert(dc.has(IFluidLoadable), "Manager has IFluidLoadable");
-                assert(dc.has(IFluidRouter), "Manager has IFluidRouter");
-                assert(
-                    dc.has(IFluidLoadable) && dc.has(IFluidRouter),
-                    "Manager has IFluidLoadable & IFluidRouter");
-            });
+			it(`Registering`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				dc.register(IFluidLoadable, new MockLoadable());
+				assert(dc.has(IFluidLoadable), "DependencyContainer has IFluidLoadable");
+			});
 
-            it(`Child has Parent modules`, async () => {
-                const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const loadableMock = new MockLoadable();
-                parentDc.register(IFluidLoadable, loadableMock);
-                const dc = new DependencyContainer<FluidObject<IFluidRouter>>(parentDc);
-                const routerMock = new MockFluidRouter();
-                dc.register(IFluidRouter, routerMock);
+			it(`Registering the same type twice throws`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				dc.register(IFluidLoadable, new MockLoadable());
+				assert.throws(() => dc.register(IFluidLoadable, new MockLoadable()), Error);
+			});
 
-                assert(dc.has(IFluidLoadable), "has includes parent registered");
-                assert(!dc.has(IFluidLoadable, true), "has does not include excluded parent registered");
-                assert(dc.has(IFluidRouter), "has includes registered");
-                assert(!dc.has(IFluidHandle), "does not include not registered");
-            });
+			it(`Registering then Unregistering`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				dc.register(IFluidLoadable, new MockLoadable());
+				dc.unregister(IFluidLoadable);
+				assert(!dc.has(IFluidLoadable), "DependencyContainer doesn't have IFluidLoadable");
+			});
 
-            it(`Parent Resolved from Child`, async () => {
-                const parentDc = new DependencyContainer<FluidObject<IFluidHandle>>();
-                const loadableToHandle: FluidObjectProvider<IProvideFluidHandle> =
-                    async (fds: IFluidDependencySynthesizer) => {
-                        const loadable =
-                            fds.synthesize<undefined, IProvideFluidLoadable>(undefined, { IFluidLoadable });
-                        return (await loadable.IFluidLoadable).handle;
-                    };
-                parentDc.register(IFluidHandle, loadableToHandle);
+			it(`Registering then Unregistering then Registering`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				dc.register(IFluidLoadable, new MockLoadable());
+				dc.unregister(IFluidLoadable);
+				dc.register(IFluidLoadable, new MockLoadable());
+				assert(dc.has(IFluidLoadable), "DependencyContainer has IFluidLoadable");
+			});
 
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>(parentDc);
-                const loadableMock = new MockLoadable();
-                dc.register(IFluidLoadable, loadableMock);
+			it(`has() resolves correctly in all variations`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable & IFluidRouter>>();
+				dc.register(IFluidLoadable, new MockLoadable());
+				dc.register(IFluidRouter, new MockFluidRouter());
+				assert(dc.has(IFluidLoadable), "Manager has IFluidLoadable");
+				assert(dc.has(IFluidRouter), "Manager has IFluidRouter");
+				assert(
+					dc.has(IFluidLoadable) && dc.has(IFluidRouter),
+					"Manager has IFluidLoadable & IFluidRouter",
+				);
+			});
 
-                const deps = dc.synthesize<IFluidHandle>({ IFluidHandle }, undefined);
-                assert(await deps.IFluidHandle !== undefined, "handle undefined");
-            });
+			it(`Child has Parent modules`, async () => {
+				const parentDc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const loadableMock = new MockLoadable();
+				parentDc.register(IFluidLoadable, loadableMock);
+				const dc = new DependencyContainer<FluidObject<IFluidRouter>>(parentDc);
+				const routerMock = new MockFluidRouter();
+				dc.register(IFluidRouter, routerMock);
 
-            it(`Undefined Provider is not Undefined`, async () => {
-                const dc = new DependencyContainer();
-                const deps = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, {});
-                assert(deps.IFluidLoadable !== undefined, "handle undefined");
-                assert(await deps.IFluidLoadable === undefined, "handle undefined");
-            });
+				assert(dc.has(IFluidLoadable), "has includes parent registered");
+				assert(
+					!dc.has(IFluidLoadable, true),
+					"has does not include excluded parent registered",
+				);
+				assert(dc.has(IFluidRouter), "has includes registered");
+				assert(!dc.has(IFluidHandle), "does not include not registered");
+			});
 
-            it(`test getProvider backcompat`, async () => {
-                const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
-                const loadableMock = new MockLoadable();
-                dc.register(IFluidLoadable, loadableMock);
-                const testGetProvider = (deps: IFluidDependencySynthesizer, scenario: string) => {
-                    const old = deps as any as {
-                        getProvider(key: "IFluidLoadable"): FluidObjectProvider<FluidObject<IFluidLoadable>>;
-                    };
-                    const provider = old.getProvider("IFluidLoadable");
-                    assert.equal(provider, loadableMock, scenario);
-                };
-                testGetProvider(dc, "direct");
-                testGetProvider(new DependencyContainer(dc), "parent");
-                testGetProvider(new PassThru<FluidObject<IFluidLoadable>>(dc), "pass thru");
-                testGetProvider(new DependencyContainer(new PassThru<FluidObject<IFluidLoadable>>(dc)),
-                    "pass thru as child");
-            });
-        });
-    });
+			it(`Parent Resolved from Child`, async () => {
+				const parentDc = new DependencyContainer<FluidObject<IFluidHandle>>();
+				const loadableToHandle: FluidObjectProvider<IProvideFluidHandle> = async (
+					fds: IFluidDependencySynthesizer,
+				) => {
+					const loadable = fds.synthesize<undefined, IProvideFluidLoadable>(undefined, {
+						IFluidLoadable,
+					});
+					return (await loadable.IFluidLoadable).handle;
+				};
+				parentDc.register(IFluidHandle, loadableToHandle);
+
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>(parentDc);
+				const loadableMock = new MockLoadable();
+				dc.register(IFluidLoadable, loadableMock);
+
+				const deps = dc.synthesize<IFluidHandle>({ IFluidHandle }, undefined);
+				assert((await deps.IFluidHandle) !== undefined, "handle undefined");
+			});
+
+			it(`Undefined Provider is not Undefined`, async () => {
+				const dc = new DependencyContainer();
+				const deps = dc.synthesize<IFluidLoadable>({ IFluidLoadable }, {});
+				assert(deps.IFluidLoadable !== undefined, "handle undefined");
+				assert((await deps.IFluidLoadable) === undefined, "handle undefined");
+			});
+
+			it(`test getProvider backcompat`, async () => {
+				const dc = new DependencyContainer<FluidObject<IFluidLoadable>>();
+				const loadableMock = new MockLoadable();
+				dc.register(IFluidLoadable, loadableMock);
+				const testGetProvider = (deps: IFluidDependencySynthesizer, scenario: string) => {
+					const old = deps as any as {
+						getProvider(
+							key: "IFluidLoadable",
+						): FluidObjectProvider<FluidObject<IFluidLoadable>>;
+					};
+					const provider = old.getProvider("IFluidLoadable");
+					assert.equal(provider, loadableMock, scenario);
+				};
+				testGetProvider(dc, "direct");
+				testGetProvider(new DependencyContainer(dc), "parent");
+				testGetProvider(new PassThru<FluidObject<IFluidLoadable>>(dc), "pass thru");
+				testGetProvider(
+					new DependencyContainer(new PassThru<FluidObject<IFluidLoadable>>(dc)),
+					"pass thru as child",
+				);
+			});
+		});
+	});
 });
 
 class PassThru<TMap> implements IFluidDependencySynthesizer {
-    constructor(private readonly parent: IFluidDependencySynthesizer) {}
-    synthesize<O, R = Record<string, never> | undefined>(
-        optionalTypes: FluidObjectSymbolProvider<O>, requiredTypes: Required<FluidObjectSymbolProvider<R>>,
-    ): AsyncFluidObjectProvider<O, R> {
-        return this.parent.synthesize(optionalTypes, requiredTypes);
-    }
-    has(type: string): boolean {
-        return this.parent.has(type);
-    }
-    readonly IFluidDependencySynthesizer = this;
+	constructor(private readonly parent: IFluidDependencySynthesizer) {}
+	synthesize<O, R = Record<string, never> | undefined>(
+		optionalTypes: FluidObjectSymbolProvider<O>,
+		requiredTypes: Required<FluidObjectSymbolProvider<R>>,
+	): AsyncFluidObjectProvider<O, R> {
+		return this.parent.synthesize(optionalTypes, requiredTypes);
+	}
+	has(type: string): boolean {
+		return this.parent.has(type);
+	}
+	readonly IFluidDependencySynthesizer = this;
 
-    getProvider<K extends keyof TMap>(key: K): FluidObjectProvider<TMap[K]> | undefined {
-        const maybe = this.parent as any as Partial<this>;
-        if (maybe.getProvider) {
-            return maybe.getProvider(key);
-        }
-    }
+	getProvider<K extends keyof TMap>(key: K): FluidObjectProvider<TMap[K]> | undefined {
+		const maybe = this.parent as any as Partial<this>;
+		if (maybe.getProvider) {
+			return maybe.getProvider(key);
+		}
+	}
 }

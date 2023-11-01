@@ -5,28 +5,49 @@ storing of user content on the user's machine in order to provide faster boot ex
 containers more than once. This implementation has a dependency on indexeddb, so it is intended to only be used in a browser
 context.
 
+<!-- AUTO-GENERATED-CONTENT:START (README_DEPENDENCY_GUIDELINES_SECTION:includeHeading=TRUE) -->
+
+<!-- prettier-ignore-start -->
+<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
+
+## Using Fluid Framework libraries
+
+When taking a dependency on a Fluid Framework library, we recommend using a `^` (caret) version range, such as `^1.3.4`.
+While Fluid Framework libraries may use different ranges with interdependencies between other Fluid Framework libraries,
+library consumers should always prefer `^`.
+
+Note that when depending on a library version of the form `2.0.0-internal.x.y.z`, called the Fluid internal version scheme,
+you must use a `>= <` dependency range (such as `>=2.0.0-internal.x.y.z <2.0.0-internal.w.0.0` where `w` is `x+1`).
+Standard `^` and `~` ranges will not work as expected.
+See the [@fluid-tools/version-tools](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/version-tools/README.md)
+package for more information including tools to convert between version schemes.
+
+<!-- prettier-ignore-end -->
+
+<!-- AUTO-GENERATED-CONTENT:END -->
+
 ## Usage
 
 ```typescript
-import { FluidCache } from '@fluidframework/driver-web-cache';
+import { FluidCache } from "@fluidframework/driver-web-cache";
 
 new FluidCache({
-          partitionKey: userId,
-          logger,
-          maxCacheItemAge
-        })
+	partitionKey: userId,
+	logger,
+	maxCacheItemAge,
+});
 ```
 
 ### Parameters
 
-- `partitionKey` - Used to determine what partition of the cache is being used, and can prevent multiple users on the
-   same machine from sharing a snapshot cache. If you absolutely know that users will not share the cache,
-   can also be set to `null`. Currently optional, but is proposed to be required in the next major bump.
-   The recommendation is to use this key to differentiate users for the cache data.
-- `logger` - An optional implementation of the logger contract where diagnostic data  can be logged.
-- `maxCacheItemAge` - The cache tracks a timestamp with each entry. This flag specifies the maximum age (in milliseconds)
-   for a cache entry to be used. This flag does not control when cached content is deleted since different scenarios and
-   applications may have different staleness thresholds for the same data.
+-   `partitionKey` - Used to determine what partition of the cache is being used, and can prevent multiple users on the
+    same machine from sharing a snapshot cache. If you absolutely know that users will not share the cache,
+    can also be set to `null`. Currently optional, but is proposed to be required in the next major bump.
+    The recommendation is to use this key to differentiate users for the cache data.
+-   `logger` - An optional implementation of the logger contract where diagnostic data can be logged.
+-   `maxCacheItemAge` - The cache tracks a timestamp with each entry. This flag specifies the maximum age (in milliseconds)
+    for a cache entry to be used. This flag does not control when cached content is deleted since different scenarios and
+    applications may have different staleness thresholds for the same data.
 
 ## Clearing cache entries
 
@@ -41,16 +62,29 @@ are on point for ensuring responsible usage of the snapshot caching capability t
 customer promises, such as clearing out storage when appropriate or disabling snapshot caching under certain circumstances,
 such as when it is known the user is logged in to a public computer.
 
-
 ```typescript
-import { deleteFluidCacheIndexDbInstance } from '@fluidframework/driver-web-cache';
+import { deleteFluidCacheIndexDbInstance } from "@fluidframework/driver-web-cache";
 
-  // We put a catch here because Firefox Incognito will throw an error here. This is why we claim this method is a "best effort", since sometimes the browser won't let us access storage
+// We put a catch here because Firefox Incognito will throw an error here. This is why we claim this method is a "best effort", since sometimes the browser won't let us access storage
 deleteFluidCacheIndexDbInstance().catch(() => {});
 ```
 
 ## Trademark
 
-This project may contain Microsoft trademarks or logos for Microsoft projects, products, or services. Use of these trademarks
-or logos must follow Microsoft's [Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+<!-- AUTO-GENERATED-CONTENT:START (README_TRADEMARK_SECTION:includeHeading=TRUE) -->
+
+<!-- prettier-ignore-start -->
+<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
+
+## Trademark
+
+This project may contain Microsoft trademarks or logos for Microsoft projects, products, or services.
+
+Use of these trademarks or logos must follow Microsoft's [Trademark & Brand
+Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
+
+<!-- prettier-ignore-end -->
+
+<!-- AUTO-GENERATED-CONTENT:END -->

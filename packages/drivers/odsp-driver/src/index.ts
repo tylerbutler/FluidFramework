@@ -24,7 +24,10 @@ export { getApiRoot, getOdspUrlParts, isOdcOrigin, isOdcUrl, isSpoUrl } from "./
 export { prefetchLatestSnapshot } from "./prefetchLatestSnapshot";
 
 // Factory
-export { createLocalOdspDocumentServiceFactory, OdspDocumentServiceFactory } from "./odspDocumentServiceFactory";
+export {
+	createLocalOdspDocumentServiceFactory,
+	OdspDocumentServiceFactory,
+} from "./odspDocumentServiceFactory";
 export { OdspDocumentServiceFactoryCore } from "./odspDocumentServiceFactoryCore";
 export { OdspDocumentServiceFactoryWithCodeSplit } from "./odspDocumentServiceFactoryWithCodeSplit";
 
@@ -33,7 +36,10 @@ export { createOdspCreateContainerRequest } from "./createOdspCreateContainerReq
 
 // URI Resolver functionality, URI management
 export { OdspDriverUrlResolver } from "./odspDriverUrlResolver";
-export { OdspDriverUrlResolverForShareLink, ShareLinkFetcherProps } from "./odspDriverUrlResolverForShareLink";
+export {
+	OdspDriverUrlResolverForShareLink,
+	ShareLinkFetcherProps,
+} from "./odspDriverUrlResolverForShareLink";
 
 // It's used by URL resolve code, but also has some public functions
 export {
@@ -43,4 +49,13 @@ export {
 	storeLocatorInOdspUrl,
 } from "./odspFluidFileLink";
 
-export { parseCompactSnapshotResponse } from "./compactSnapshotParser";
+export {
+	IOdspCache,
+	IPersistedFileCache,
+	INonPersistentCache,
+	IPrefetchSnapshotContents,
+} from "./odspCache";
+export { ICacheAndTracker, type EpochTracker, FetchType, FetchTypeInternal } from "./epochTracker";
+export { IOdspResponse } from "./odspUtils";
+export { SnapshotFormatSupportType } from "./fetchSnapshot";
+export { ISnapshotContentsWithProps, parseCompactSnapshotResponse } from "./compactSnapshotParser";

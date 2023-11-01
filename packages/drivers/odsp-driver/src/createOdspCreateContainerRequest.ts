@@ -15,24 +15,25 @@ import { buildOdspShareLinkReqParams } from "./odspUtils";
  * @param fileName - name of the new file to be created
  * @param createShareLinkType - type of sharing link you would like to create for this file. ShareLinkTypes
  * will be deprecated soon, so for any new implementation please provide createShareLinkType of type ShareLink
+ * @public
  */
 export function createOdspCreateContainerRequest(
-    siteUrl: string,
-    driveId: string,
-    filePath: string,
-    fileName: string,
-    createShareLinkType?: ShareLinkTypes | ISharingLinkKind,
+	siteUrl: string,
+	driveId: string,
+	filePath: string,
+	fileName: string,
+	createShareLinkType?: ShareLinkTypes | ISharingLinkKind,
 ): IRequest {
-    const shareLinkRequestParams = buildOdspShareLinkReqParams(createShareLinkType);
-    const createNewRequest: IRequest = {
-        url: `${siteUrl}?driveId=${encodeURIComponent(
-            driveId,
-        )}&path=${encodeURIComponent(filePath)}${shareLinkRequestParams ? `&${shareLinkRequestParams}` : ""}`,
-        headers: {
-            [DriverHeader.createNew]: {
-                fileName,
-            },
-        },
-    };
-    return createNewRequest;
+	const shareLinkRequestParams = buildOdspShareLinkReqParams(createShareLinkType);
+	const createNewRequest: IRequest = {
+		url: `${siteUrl}?driveId=${encodeURIComponent(driveId)}&path=${encodeURIComponent(
+			filePath,
+		)}${shareLinkRequestParams ? `&${shareLinkRequestParams}` : ""}`,
+		headers: {
+			[DriverHeader.createNew]: {
+				fileName,
+			},
+		},
+	};
+	return createNewRequest;
 }

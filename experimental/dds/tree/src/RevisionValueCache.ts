@@ -3,9 +3,10 @@
  * Licensed under the MIT License.
  */
 
+import { assert } from '@fluidframework/core-utils';
 import BTree from 'sorted-btree';
 import LRU from 'lru-cache';
-import { assert, fail, compareFiniteNumbers } from './Common';
+import { fail, compareFiniteNumbers } from './Common';
 
 /**
  * A revision corresponds to an index in an `EditLog`.
@@ -49,9 +50,9 @@ export class RevisionValueCache<TValue> {
 	private readonly evictableRevisions: LRU<Revision, TValue>;
 
 	/**
-	 * Set of all revisions that should never be evicted.
+	 * The oldest revision that must be retained in memory.
 	 */
-	private readonly retainedRevisions = new Set<Revision>();
+	private retainedRevision?: Revision;
 
 	public constructor(
 		/**
@@ -64,11 +65,11 @@ export class RevisionValueCache<TValue> {
 		 */
 		private retentionWindowStart: Revision,
 		/**
-		 * Optional list of entries to permanently retain.
+		 * The oldest revision that must be retained in memory.
 		 */
-		retainedEntries?: [Revision, TValue][]
+		retainedRevision?: [Revision, TValue]
 	) {
-		assert(retentionWindowStart >= 0, 'retentionWindowStart must be initialized >= 0');
+		assert(retentionWindowStart >= 0, 0x62c /* retentionWindowStart must be initialized >= 0 */);
 		this.evictableRevisions = new LRU({
 			max: evictableSize,
 			noDisposeOnSet: true,
@@ -76,14 +77,15 @@ export class RevisionValueCache<TValue> {
 				if (revision >= this.retentionWindowStart) {
 					fail('Entries in retention window should never be evicted.');
 				}
-				if (this.retainedRevisions.has(revision)) {
+				if (this.retainedRevision === revision) {
 					fail('Retained entries should not be evicted');
 				}
 				this.sortedEntries.delete(revision);
 			},
 		});
-		if (retainedEntries !== undefined) {
-			retainedEntries.forEach(([revision, entry]) => this.cacheRetainedValue(revision, entry));
+
+		if (retainedRevision !== undefined) {
+			this.cacheRetainedValue(retainedRevision[0], retainedRevision[1]);
 		}
 	}
 
@@ -110,7 +112,7 @@ export class RevisionValueCache<TValue> {
 			this.retentionWindowStart,
 			false,
 			(windowRevision, windowEntry) => {
-				if (!this.retainedRevisions.has(windowRevision)) {
+				if (this.retainedRevision !== windowRevision) {
 					// Adding to the LRU can cause eviction which in turn mutates the b-tree we are enumerating. Thus, store list of
 					// old window entries separately.
 					oldWindowEntries.push([windowRevision, windowEntry]);
@@ -136,9 +138,13 @@ export class RevisionValueCache<TValue> {
 
 	/**
 	 * Caches the supplied value and guarantees it will never be evicted.
+	 * This will make the previously retained value evictable.
 	 */
 	public cacheRetainedValue(revision: Revision, value: TValue): void {
-		this.retainedRevisions.add(revision);
+		if (this.retainedRevision !== undefined) {
+			this.sortedEntries.delete(this.retainedRevision);
+		}
+		this.retainedRevision = revision;
 		this.sortedEntries.set(revision, value);
 	}
 
@@ -150,7 +156,7 @@ export class RevisionValueCache<TValue> {
 	 * updateRetentionWindow it is then subject to eviction.
 	 */
 	public cacheValue(revision: Revision, value: TValue): void {
-		if (this.retainedRevisions.has(revision)) {
+		if (this.retainedRevision === revision) {
 			return;
 		}
 		this.sortedEntries.set(revision, value);
