@@ -4,6 +4,7 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
+import { StableId } from "@fluidframework/runtime-definitions";
 import {
 	FieldKey,
 	TreeNavigationResult,
@@ -24,8 +25,9 @@ import {
 	SequenceFieldEditBuilder,
 	ValueFieldEditBuilder,
 } from "../default-field-kinds";
-import { assertValidIndex, assertValidRangeIndices, disposeSymbol, fail } from "../../util";
-import { AllowedTypes, FieldSchema } from "../typed-schema";
+import { assertValidIndex, assertValidRangeIndices, brand, disposeSymbol, fail } from "../../util";
+import { AllowedTypes, TreeFieldSchema } from "../typed-schema";
+import { LocalNodeKey, StableNodeKey, nodeKeyTreeIdentifier } from "../node-key";
 import { Context } from "./context";
 import {
 	FlexibleNodeContent,
@@ -38,8 +40,8 @@ import {
 	TreeNode,
 	RequiredField,
 	boxedIterator,
-	CheckTypesOverlap,
 	TreeStatus,
+	NodeKeyField,
 } from "./editableTreeTypes";
 import { makeTree } from "./lazyTree";
 import {
@@ -57,7 +59,7 @@ import { treeStatusFromAnchorCache, treeStatusFromDetachedField } from "./utilit
 
 export function makeField(
 	context: Context,
-	schema: FieldSchema,
+	schema: TreeFieldSchema,
 	cursor: ITreeSubscriptionCursor,
 ): TreeField {
 	const fieldAnchor = cursor.buildFieldAnchor();
@@ -75,7 +77,7 @@ export function makeField(
 		const anchorNode =
 			context.forest.anchors.locate(fieldAnchor.parent) ??
 			fail("parent anchor node should always exist since field is under a node");
-		anchorNode.on("afterDelete", () => {
+		anchorNode.on("afterDestroy", () => {
 			field[disposeSymbol]();
 		});
 	}
@@ -87,14 +89,14 @@ export function makeField(
  * the nodes of {@link EditableField} by means of the cursors.
  */
 export abstract class LazyField<TKind extends FieldKind, TTypes extends AllowedTypes>
-	extends LazyEntity<FieldSchema<TKind, TTypes>, FieldAnchor>
+	extends LazyEntity<TreeFieldSchema<TKind, TTypes>, FieldAnchor>
 	implements TreeField
 {
 	public readonly key: FieldKey;
 
 	public constructor(
 		context: Context,
-		schema: FieldSchema<TKind, TTypes>,
+		schema: TreeFieldSchema<TKind, TTypes>,
 		cursor: ITreeSubscriptionCursor,
 		fieldAnchor: FieldAnchor,
 	) {
@@ -105,7 +107,7 @@ export abstract class LazyField<TKind extends FieldKind, TTypes extends AllowedT
 		makePropertyNotEnumerable(this, "key");
 	}
 
-	public is<TSchema extends FieldSchema>(schema: TSchema): this is TypedField<TSchema> {
+	public is<TSchema extends TreeFieldSchema>(schema: TSchema): this is TypedField<TSchema> {
 		assert(
 			this.context.schema.policy.fieldKinds.get(schema.kind.identifier) === schema.kind,
 			0x77c /* Narrowing must be done to a kind that exists in this context */,
@@ -154,7 +156,7 @@ export abstract class LazyField<TKind extends FieldKind, TTypes extends AllowedT
 		return this[cursorSymbol].getFieldLength();
 	}
 
-	public at(index: number): UnboxNodeUnion<TTypes> {
+	public atIndex(index: number): UnboxNodeUnion<TTypes> {
 		return inCursorNode(this[cursorSymbol], index, (cursor) =>
 			unboxedUnion(this.context, this.schema, cursor),
 		);
@@ -227,7 +229,7 @@ export class LazySequence<TTypes extends AllowedTypes>
 {
 	public constructor(
 		context: Context,
-		schema: FieldSchema<typeof FieldKinds.sequence, TTypes>,
+		schema: TreeFieldSchema<typeof FieldKinds.sequence, TTypes>,
 		cursor: ITreeSubscriptionCursor,
 		fieldAnchor: FieldAnchor,
 	) {
@@ -236,6 +238,23 @@ export class LazySequence<TTypes extends AllowedTypes>
 		makePropertyEnumerableOwn(this, "asArray", LazySequence.prototype);
 	}
 
+	public at(index: number): UnboxNodeUnion<TTypes> | undefined {
+		// The logic here follows what Array.prototype.at does to handle any kind of index at runtime.
+		// See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/at for details.
+		let finalIndex = Math.trunc(+index);
+		if (isNaN(finalIndex)) {
+			finalIndex = 0;
+		}
+		if (finalIndex < -this.length || finalIndex >= this.length) {
+			return undefined;
+		}
+		if (finalIndex < 0) {
+			finalIndex = finalIndex + this.length;
+		}
+		return inCursorNode(this[cursorSymbol], finalIndex, (cursor) =>
+			unboxedUnion(this.context, this.schema, cursor),
+		);
+	}
 	public get asArray(): readonly UnboxNodeUnion<TTypes>[] {
 		return this.map((x) => x);
 	}
@@ -246,18 +265,18 @@ export class LazySequence<TTypes extends AllowedTypes>
 		return fieldEditor;
 	}
 
-	public insertAt(index: number, value: FlexibleNodeContent<TTypes>[]): void {
+	public insertAt(index: number, value: Iterable<FlexibleNodeContent<TTypes>>): void {
 		const fieldEditor = this.sequenceEditor();
-		const content = this.normalizeNewContent(Array.isArray(value) ? value : [value]);
+		const content = this.normalizeNewContent(Array.isArray(value) ? value : Array.from(value));
 		assertValidIndex(index, this, true);
 		fieldEditor.insert(index, content);
 	}
 
-	public insertAtStart(value: FlexibleNodeContent<TTypes>[]): void {
+	public insertAtStart(value: Iterable<FlexibleNodeContent<TTypes>>): void {
 		this.insertAt(0, value);
 	}
 
-	public insertAtEnd(value: FlexibleNodeContent<TTypes>[]): void {
+	public insertAtEnd(value: Iterable<FlexibleNodeContent<TTypes>>): void {
 		this.insertAt(this.length, value);
 	}
 
@@ -275,82 +294,98 @@ export class LazySequence<TTypes extends AllowedTypes>
 		fieldEditor.delete(removeStart, removeEnd - removeStart);
 	}
 
-	public moveToStart(sourceStart: number, sourceEnd: number): void;
-	public moveToStart<TTypesSource extends AllowedTypes>(
-		sourceStart: number,
-		sourceEnd: number,
-		source: Sequence<CheckTypesOverlap<TTypesSource, TTypes>>,
-	): void;
-	public moveToStart<TTypesSource extends AllowedTypes>(
-		sourceStart: number,
-		sourceEnd: number,
-		source?: Sequence<CheckTypesOverlap<TTypesSource, TTypes>>,
-	): void {
-		this._moveToIndex(0, sourceStart, sourceEnd, source);
+	public moveToStart(sourceIndex: number): void;
+	public moveToStart(sourceIndex: number, source: Sequence<AllowedTypes>): void;
+	public moveToStart(sourceIndex: number, source?: Sequence<AllowedTypes>): void {
+		this._moveRangeToIndex(0, sourceIndex, sourceIndex + 1, source);
+	}
+	public moveToEnd(sourceIndex: number): void;
+	public moveToEnd(sourceIndex: number, source: Sequence<AllowedTypes>): void;
+	public moveToEnd(sourceIndex: number, source?: Sequence<AllowedTypes>): void {
+		this._moveRangeToIndex(this.length, sourceIndex, sourceIndex + 1, source);
+	}
+	public moveToIndex(index: number, sourceIndex: number): void;
+	public moveToIndex(index: number, sourceIndex: number, source: Sequence<AllowedTypes>): void;
+	public moveToIndex(index: number, sourceIndex: number, source?: Sequence<AllowedTypes>): void {
+		this._moveRangeToIndex(index, sourceIndex, sourceIndex + 1, source);
 	}
 
-	public moveToEnd(sourceStart: number, sourceEnd: number): void;
-	public moveToEnd<TTypesSource extends AllowedTypes>(
+	public moveRangeToStart(sourceStart: number, sourceEnd: number): void;
+	public moveRangeToStart(
 		sourceStart: number,
 		sourceEnd: number,
-		source: Sequence<CheckTypesOverlap<TTypesSource, TTypes>>,
+		source: Sequence<AllowedTypes>,
 	): void;
-	public moveToEnd<TTypesSource extends AllowedTypes>(
+	public moveRangeToStart(
 		sourceStart: number,
 		sourceEnd: number,
-		source?: Sequence<CheckTypesOverlap<TTypesSource, TTypes>>,
+		source?: Sequence<AllowedTypes>,
 	): void {
-		this._moveToIndex(this.length, sourceStart, sourceEnd, source);
+		this._moveRangeToIndex(0, sourceStart, sourceEnd, source);
 	}
 
-	public moveToIndex(index: number, sourceStart: number, sourceEnd: number): void;
-	public moveToIndex<TTypesSource extends AllowedTypes>(
+	public moveRangeToEnd(sourceStart: number, sourceEnd: number): void;
+	public moveRangeToEnd(
+		sourceStart: number,
+		sourceEnd: number,
+		source: Sequence<AllowedTypes>,
+	): void;
+	public moveRangeToEnd(
+		sourceStart: number,
+		sourceEnd: number,
+		source?: Sequence<AllowedTypes>,
+	): void {
+		this._moveRangeToIndex(this.length, sourceStart, sourceEnd, source);
+	}
+
+	public moveRangeToIndex(index: number, sourceStart: number, sourceEnd: number): void;
+	public moveRangeToIndex(
 		index: number,
 		sourceStart: number,
 		sourceEnd: number,
-		source: Sequence<CheckTypesOverlap<TTypesSource, TTypes>>,
+		source: Sequence<AllowedTypes>,
 	): void;
-	public moveToIndex<TTypesSource extends AllowedTypes>(
+	public moveRangeToIndex(
 		index: number,
 		sourceStart: number,
 		sourceEnd: number,
-		source?: Sequence<CheckTypesOverlap<TTypesSource, TTypes>>,
+		source?: Sequence<AllowedTypes>,
 	): void {
-		this._moveToIndex(index, sourceStart, sourceEnd, source);
+		this._moveRangeToIndex(index, sourceStart, sourceEnd, source);
 	}
 
-	private _moveToIndex<TTypesSource extends AllowedTypes>(
+	private _moveRangeToIndex(
 		index: number,
 		sourceStart: number,
 		sourceEnd: number,
-		source?: Sequence<CheckTypesOverlap<TTypesSource, TTypes>>,
+		source?: Sequence<AllowedTypes>,
 	): void {
 		const sourceField = source !== undefined ? (this.isSameAs(source) ? this : source) : this;
+
+		// TODO: determine support for move across different sequence types
+		assert(
+			sourceField instanceof LazySequence,
+			0x7b1 /* Unsupported sequence implementation. */,
+		);
 		assertValidRangeIndices(sourceStart, sourceEnd, sourceField);
 		if (this.schema.types !== undefined && sourceField !== this) {
 			for (let i = sourceStart; i < sourceEnd; i++) {
-				const sourceNode = sourceField.at(sourceStart);
+				const sourceNode = sourceField.boxedAt(sourceStart);
 				if (!this.schema.types.has(sourceNode.schema.name)) {
 					throw new Error("Type in source sequence is not allowed in destination.");
 				}
 			}
 		}
-		const count = sourceEnd - sourceStart;
-		let destinationIndex = index;
-		if (sourceField === this) {
-			destinationIndex -= count;
-		}
-		assertValidIndex(destinationIndex, this, true);
-		// TODO: determine support for move across different sequence types
-		assert(source instanceof LazySequence, "Unsupported sequence implementation.");
-		const sourceFieldPath = (sourceField as LazySequence<TTypesSource>).getFieldPath();
+		const movedCount = sourceEnd - sourceStart;
+		assertValidIndex(index, this, true);
+		const sourceFieldPath = sourceField.getFieldPath();
 		const destinationFieldPath = this.getFieldPath();
 		this.context.editor.move(
 			sourceFieldPath,
 			sourceStart,
-			count,
+			movedCount,
 			destinationFieldPath,
-			destinationIndex,
+			index,
 		);
 	}
 }
@@ -361,7 +396,7 @@ export class LazyValueField<TTypes extends AllowedTypes>
 {
 	public constructor(
 		context: Context,
-		schema: FieldSchema<typeof FieldKinds.required, TTypes>,
+		schema: TreeFieldSchema<typeof FieldKinds.required, TTypes>,
 		cursor: ITreeSubscriptionCursor,
 		fieldAnchor: FieldAnchor,
 	) {
@@ -377,18 +412,18 @@ export class LazyValueField<TTypes extends AllowedTypes>
 	}
 
 	public get content(): UnboxNodeUnion<TTypes> {
-		return this.at(0);
+		return this.atIndex(0);
 	}
 
-	public get boxedContent(): TypedNodeUnion<TTypes> {
-		return this.boxedAt(0);
-	}
-
-	public setContent(newContent: FlexibleNodeContent<TTypes>): void {
+	public set content(newContent: FlexibleNodeContent<TTypes>) {
 		const content = this.normalizeNewContent(newContent);
 		const fieldEditor = this.valueFieldEditor();
 		assert(content.length === 1, 0x780 /* value field content should normalize to one item */);
 		fieldEditor.set(content[0]);
+	}
+
+	public get boxedContent(): TypedNodeUnion<TTypes> {
+		return this.boxedAt(0);
 	}
 }
 
@@ -398,7 +433,7 @@ export class LazyOptionalField<TTypes extends AllowedTypes>
 {
 	public constructor(
 		context: Context,
-		schema: FieldSchema<typeof FieldKinds.optional, TTypes>,
+		schema: TreeFieldSchema<typeof FieldKinds.optional, TTypes>,
 		cursor: ITreeSubscriptionCursor,
 		fieldAnchor: FieldAnchor,
 	) {
@@ -414,14 +449,10 @@ export class LazyOptionalField<TTypes extends AllowedTypes>
 	}
 
 	public get content(): UnboxNodeUnion<TTypes> | undefined {
-		return this.length === 0 ? undefined : this.at(0);
+		return this.length === 0 ? undefined : this.atIndex(0);
 	}
 
-	public get boxedContent(): TypedNodeUnion<TTypes> | undefined {
-		return this.length === 0 ? undefined : this.boxedAt(0);
-	}
-
-	public setContent(newContent: FlexibleNodeContent<TTypes> | undefined): void {
+	public set content(newContent: FlexibleNodeContent<TTypes> | undefined) {
 		const content = this.normalizeNewContent(newContent);
 		const fieldEditor = this.optionalEditor();
 		assert(
@@ -429,6 +460,42 @@ export class LazyOptionalField<TTypes extends AllowedTypes>
 			0x781 /* optional field content should normalize at most one item */,
 		);
 		fieldEditor.set(content.length === 0 ? undefined : content[0], this.length === 0);
+	}
+
+	public get boxedContent(): TypedNodeUnion<TTypes> | undefined {
+		return this.length === 0 ? undefined : this.boxedAt(0);
+	}
+}
+
+export class LazyNodeKeyField<TTypes extends AllowedTypes>
+	extends LazyField<typeof FieldKinds.nodeKey, TTypes>
+	implements NodeKeyField
+{
+	public constructor(
+		context: Context,
+		schema: TreeFieldSchema<typeof FieldKinds.nodeKey, TTypes>,
+		cursor: ITreeSubscriptionCursor,
+		fieldAnchor: FieldAnchor,
+	) {
+		super(context, schema, cursor, fieldAnchor);
+
+		makePropertyEnumerableOwn(this, "stableNodeKey", LazyNodeKeyField.prototype);
+	}
+
+	public get localNodeKey(): LocalNodeKey {
+		// TODO: Optimize this to be a fast path that gets a LocalNodeKey directly from the
+		// forest rather than getting the StableNodeKey and the compressing it.
+		return this.context.nodeKeys.localize(this.stableNodeKey);
+	}
+
+	public get stableNodeKey(): StableNodeKey {
+		const cursor = this[cursorSymbol];
+		cursor.enterNode(0);
+		assert(cursor.type === nodeKeyTreeIdentifier, 0x7b2 /* invalid node key type */);
+		const stableKey = cursor.value;
+		assert(typeof stableKey === "string", 0x7b3 /* invalid node key type */);
+		cursor.exitNode();
+		return brand(stableKey as StableId);
 	}
 }
 
@@ -439,14 +506,14 @@ export class LazyForbiddenField<TTypes extends AllowedTypes> extends LazyField<
 
 type Builder = new <TTypes extends AllowedTypes>(
 	context: Context,
-	schema: FieldSchema<any, TTypes>,
+	schema: TreeFieldSchema<any, TTypes>,
 	cursor: ITreeSubscriptionCursor,
 	fieldAnchor: FieldAnchor,
 ) => LazyField<any, TTypes>;
 
 const builderList: [FieldKind, Builder][] = [
 	[FieldKinds.forbidden, LazyForbiddenField],
-	[FieldKinds.nodeKey, LazyOptionalField], // TODO
+	[FieldKinds.nodeKey, LazyNodeKeyField],
 	[FieldKinds.optional, LazyOptionalField],
 	[FieldKinds.sequence, LazySequence],
 	[FieldKinds.required, LazyValueField],
