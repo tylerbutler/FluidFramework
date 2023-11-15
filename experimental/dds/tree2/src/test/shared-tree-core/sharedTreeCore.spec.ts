@@ -32,15 +32,15 @@ import {
 	DefaultChangeset,
 	DefaultEditBuilder,
 	FieldKinds,
-	SchemaBuilder,
-	singleTextCursor,
+	TreeFieldSchema,
+	cursorForJsonableTreeNode,
 	typeNameSymbol,
 } from "../../feature-libraries";
 import { brand } from "../../util";
 import { ISubscribable } from "../../events";
 import { SharedTreeTestFactory } from "../utils";
 import { InitializeAndSchematizeConfiguration } from "../../shared-tree";
-import { leaf } from "../../domains";
+import { leaf, SchemaBuilder } from "../../domains";
 import { TestSharedTreeCore } from "./utils";
 
 describe("SharedTreeCore", () => {
@@ -246,6 +246,11 @@ describe("SharedTreeCore", () => {
 			objectStorage: new MockStorage(),
 		});
 
+		// discard revertibles so that the trunk can be trimmed based on the minimum sequence number
+		tree.getLocalBranch().on("revertible", (revertible) => {
+			revertible.discard();
+		});
+
 		changeTree(tree);
 		factory.processAllMessages(); // Minimum sequence number === 0
 		assert.equal(getTrunkLength(tree), 1);
@@ -270,6 +275,11 @@ describe("SharedTreeCore", () => {
 		tree.connect({
 			deltaConnection: runtime.createDeltaConnection(),
 			objectStorage: new MockStorage(),
+		});
+
+		// discard revertibles so that the trunk can be trimmed based on the minimum sequence number
+		tree.getLocalBranch().on("revertible", (revertible) => {
+			revertible.discard();
 		});
 
 		// The following scenario tests that branches are tracked across rebases and untracked after disposal.
@@ -329,11 +339,11 @@ describe("SharedTreeCore", () => {
 			objectStorage: new MockStorage(),
 		});
 
-		const b = new SchemaBuilder("0x4a6 repro", {}, leaf.library);
-		const node = b.structRecursive("test node", {
-			child: SchemaBuilder.fieldRecursive(FieldKinds.optional, () => node, leaf.number),
+		const b = new SchemaBuilder({ scope: "0x4a6 repro" });
+		const node = b.objectRecursive("test node", {
+			child: TreeFieldSchema.createUnsafe(FieldKinds.optional, [() => node, leaf.number]),
 		});
-		const schema = b.intoDocumentSchema(SchemaBuilder.fieldOptional(node));
+		const schema = b.intoSchema(b.optional(node));
 
 		const tree2 = await factory.load(
 			dataStoreRuntime2,
@@ -345,24 +355,24 @@ describe("SharedTreeCore", () => {
 			factory.attributes,
 		);
 
-		const config: InitializeAndSchematizeConfiguration = {
+		const config = {
 			schema,
 			initialTree: undefined,
 			allowedSchemaModifications: AllowedUpdateType.None,
-		};
+		} satisfies InitializeAndSchematizeConfiguration;
 
-		const view1 = tree1.schematize(config);
-		const view2 = tree2.schematize(config);
-		const editable1 = view1.editableTree2(schema);
-		const editable2 = view2.editableTree2(schema);
+		const view1 = tree1.schematizeInternal(config);
+		const view2 = tree2.schematizeInternal(config);
+		const editable1 = view1.editableTree;
+		const editable2 = view2.editableTree;
 
-		editable2.setContent({ [typeNameSymbol]: "test node", child: undefined });
-		editable1.setContent({ [typeNameSymbol]: "test node", child: undefined });
+		editable2.content = { [typeNameSymbol]: node.name, child: undefined };
+		editable1.content = { [typeNameSymbol]: node.name, child: undefined };
 		const rootNode = editable2.content;
 		assert(rootNode?.is(node), "Expected set operation to set root node");
-		rootNode.boxedChild.setContent(42);
-		editable1.setContent({ [typeNameSymbol]: "test node", child: undefined });
-		rootNode.boxedChild.setContent(43);
+		rootNode.boxedChild.content = 42;
+		editable1.content = { [typeNameSymbol]: node.name, child: undefined };
+		rootNode.boxedChild.content = 43;
 		containerRuntimeFactory.processAllMessages();
 	});
 
@@ -445,7 +455,7 @@ function changeTree<TChange, TEditor extends DefaultEditBuilder>(
 	tree: SharedTreeCore<TEditor, TChange>,
 ): void {
 	const field = tree.editor.sequenceField({ parent: undefined, field: rootFieldKey });
-	field.insert(0, singleTextCursor({ type: brand("Node"), value: 42 }));
+	field.insert(0, cursorForJsonableTreeNode({ type: brand("Node"), value: 42 }));
 }
 
 /** Returns the length of the trunk branch in the given tree. Acquired via unholy cast; use for glass-box tests only. */
