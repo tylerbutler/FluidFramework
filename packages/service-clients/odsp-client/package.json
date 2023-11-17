@@ -12,20 +12,7 @@
 	"license": "MIT",
 	"author": "Microsoft and contributors",
 	"sideEffects": false,
-	"exports": {
-		".": {
-			"import": {
-				"types": "./lib/index.d.ts",
-				"default": "./lib/index.mjs"
-			},
-			"require": {
-				"types": "./dist/index.d.ts",
-				"default": "./dist/index.cjs"
-			}
-		}
-	},
 	"main": "dist/index.cjs",
-	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"scripts": {
 		"build": "fluid-build . --task build",
@@ -40,6 +27,7 @@
 		"lint:fix": "npm run prettier:fix && npm run eslint:fix",
 		"prettier": "prettier --check . --ignore-path ../../../.prettierignore",
 		"prettier:fix": "prettier --write . --ignore-path ../../../.prettierignore",
+		"test": "echo \"No tests\"",
 		"tsc": "tsc-multi --config ../../../common/build/build-common/tsc-multi.cjs.json"
 	},
 	"c8": {
