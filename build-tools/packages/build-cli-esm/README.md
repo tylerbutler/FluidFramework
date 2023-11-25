@@ -24,7 +24,7 @@ like base command classes and whatnot.
 $ npm install -g @fluid-tools/build-cli-esm
 $ flubx COMMAND
 running command...
-$ flubx (--version)
+$ flubx (--version|-V)
 @fluid-tools/build-cli-esm/1.0.0
 $ flubx --help [COMMAND]
 USAGE

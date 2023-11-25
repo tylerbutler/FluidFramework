@@ -49,7 +49,10 @@
 	"dependencies": {
 		"@fluid-tools/build-cli": "workspace:~",
 		"@oclif/core": "^3.9.0",
+		"@oclif/plugin-autocomplete": "^2.3.10",
+		"@oclif/plugin-commands": "^3.0.4",
 		"@oclif/plugin-help": "^6.0.4",
+		"@oclif/plugin-not-found": "^3.0.2",
 		"@oclif/plugin-plugins": "^4.1.8"
 	},
 	"devDependencies": {
@@ -79,11 +82,35 @@
 		"bin": "flubx",
 		"dirname": "flubx",
 		"commands": "./lib/commands",
+		"flexibleTaxonomy": true,
+		"additionalHelpFlags": [
+			"-h"
+		],
+		"additionalVersionFlags": [
+			"-V"
+		],
 		"plugins": [
 			"@fluid-tools/build-cli",
-			"@oclif/plugin-help"
+			"@oclif/plugin-autocomplete",
+			"@oclif/plugin-commands",
+			"@oclif/plugin-help",
+			"@oclif/plugin-not-found"
 		],
 		"repositoryPrefix": "<%- repo %>/blob/main/build-tools/packages/build-cli-esm/<%- commandPath %>",
-		"topicSeparator": " "
+		"topicSeparator": " ",
+		"topics": {
+			"bump": {
+				"description": "Bump the version of packages, release groups, and their dependencies."
+			},
+			"check": {
+				"description": "Check commands are used to verify repo state, apply policy, etc."
+			},
+			"generate": {
+				"description": "Generate commands are used to create/update code, docs, readmes, etc."
+			},
+			"release": {
+				"description": "Release commands are used to manage the Fluid release process."
+			}
+		}
 	}
 }

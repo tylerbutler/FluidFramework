@@ -224,7 +224,10 @@ importers:
       '@fluidframework/build-common': ^2.0.3
       '@fluidframework/eslint-config-fluid': ^3.1.0
       '@oclif/core': ^3.9.0
+      '@oclif/plugin-autocomplete': ^2.3.10
+      '@oclif/plugin-commands': ^3.0.4
       '@oclif/plugin-help': ^6.0.4
+      '@oclif/plugin-not-found': ^3.0.2
       '@oclif/plugin-plugins': ^4.1.8
       '@oclif/prettier-config': ^0.2.1
       '@oclif/test': ~3.1.2
@@ -244,7 +247,10 @@ importers:
     dependencies:
       '@fluid-tools/build-cli': link:../build-cli
       '@oclif/core': 3.9.0
+      '@oclif/plugin-autocomplete': 2.3.10_fw7rjau6lbmauwrvieqeq6x7va
+      '@oclif/plugin-commands': 3.0.4_typescript@5.1.6
       '@oclif/plugin-help': 6.0.4_typescript@5.1.6
+      '@oclif/plugin-not-found': 3.0.2_typescript@5.1.6
       '@oclif/plugin-plugins': 4.1.8_typescript@5.1.6
     devDependencies:
       '@fluid-private/readme-command': link:../readme-command
@@ -1578,7 +1584,6 @@ packages:
       - '@swc/wasm'
       - '@types/node'
       - typescript
-    dev: true
 
   /@oclif/core/2.15.0_typescript@5.1.6:
     resolution: {integrity: sha512-fNEMG5DzJHhYmI3MgpByTvltBOMyFcnRIUMxbiz2ai8rhaYgaTHMG3Q38HcosfIvtw9nCjxpcQtC8MN8QtVCcA==}
@@ -1688,6 +1693,21 @@ packages:
     engines: {node: '>=12.0.0'}
     dependencies:
       '@oclif/core': 2.15.0_6aghfyf5eabo7u6nxooxqsbtpq
+      chalk: 4.1.2
+      debug: 4.3.4
+    transitivePeerDependencies:
+      - '@swc/core'
+      - '@swc/wasm'
+      - '@types/node'
+      - supports-color
+      - typescript
+    dev: false
+
+  /@oclif/plugin-autocomplete/2.3.10_fw7rjau6lbmauwrvieqeq6x7va:
+    resolution: {integrity: sha512-Ow1AR8WtjzlyCtiWWPgzMyT8SbcDJFr47009riLioHa+MHX2BCDtVn2DVnN/E6b9JlPV5ptQpjefoRSNWBesmg==}
+    engines: {node: '>=12.0.0'}
+    dependencies:
+      '@oclif/core': 2.15.0_fw7rjau6lbmauwrvieqeq6x7va
       chalk: 4.1.2
       debug: 4.3.4
     transitivePeerDependencies:
@@ -10856,7 +10876,6 @@ packages:
       typescript: 5.1.6
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
-    dev: true
 
   /ts-node/10.9.1_typescript@5.1.6:
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
