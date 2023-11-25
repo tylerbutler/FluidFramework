@@ -1,21 +1,25 @@
 {
-	"name": "@fluid-private/readme-command",
-	"version": "0.29.0",
+	"name": "@fluid-tools/build-cli-esm",
+	"version": "0.0.0",
 	"private": true,
-	"description": "CLI to generate readmes for Fluid build-tools",
+	"description": "Plugin for ESM-only build-cli commands.",
+	"keywords": [
+		"oclif"
+	],
 	"homepage": "https://fluidframework.com",
+	"bugs": "https://github.com/microsoft/FluidFramework/issues",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/microsoft/FluidFramework.git",
-		"directory": "build-tools/packages/readme-command"
+		"directory": "build-tools/packages/build-cli-esm"
 	},
 	"license": "MIT",
 	"author": "Microsoft and contributors",
-	"sideEffects": false,
-	"main": "lib/index.js",
+	"type": "module",
+	"exports": "./lib/index.js",
 	"types": "lib/index.d.ts",
 	"bin": {
-		"fluid-readme": "./bin/run.js"
+		"flub-esm": "./bin/run.js"
 	},
 	"files": [
 		"/bin",
@@ -23,11 +27,13 @@
 		"/oclif.manifest.json"
 	],
 	"scripts": {
-		"build": "concurrently npm:build:compile npm:lint",
+		"build": "concurrently npm:build:compile npm:lint && concurrently npm:build:docs npm:build:diagrams",
 		"build:compile": "npm run tsc && npm run build:readme",
+		"build:docs": "api-extractor run --local",
 		"build:manifest": "oclif manifest",
-		"build:readme": "node ./bin/dev generate readme",
-		"clean": "rimraf --glob dist lib oclif.manifest.json \"**/*.tsbuildinfo\" \"**/*.build.log\"",
+		"build:readme": "fluid-readme generate readme --multi",
+		"ci:build:docs": "api-extractor run",
+		"clean": "rimraf --glob dist lib oclif.manifest.json \"**/*.tsbuildinfo\" \"**/*.build.log\" _api-extractor-temp nyc",
 		"clean:manifest": "rimraf --glob oclif.manifest.json",
 		"compile": "fluid-build . --task compile",
 		"eslint": "eslint --format stylish src",
@@ -38,58 +44,49 @@
 		"postpack": "npm run clean:manifest",
 		"prettier": "prettier --check . --cache --ignore-path ../../../.prettierignore",
 		"prettier:fix": "prettier --write . --cache --ignore-path ../../../.prettierignore",
+		"test": "npm run test:mocha",
+		"test:coverage": "c8 npm run test",
+		"test:mocha": "mocha --forbid-only \"test/**/*.test.ts\"",
 		"tsc": "tsc"
 	},
 	"dependencies": {
+		"@fluid-tools/build-cli": "workspace:~",
 		"@oclif/core": "^3.9.0",
 		"@oclif/plugin-help": "^6.0.4",
-		"@oclif/plugin-plugins": "^4.1.8",
-		"oclif": "^4.0.3",
-		"semver": "^7.5.4"
+		"@oclif/plugin-plugins": "^4.1.8"
 	},
 	"devDependencies": {
+		"@fluid-private/readme-command": "workspace:~",
 		"@fluidframework/build-common": "^2.0.3",
 		"@fluidframework/eslint-config-fluid": "^3.1.0",
+		"@oclif/prettier-config": "^0.2.1",
 		"@oclif/test": "~3.1.2",
 		"@types/chai": "^4.3.5",
-		"@types/chai-arrays": "^2.0.0",
+		"@types/mocha": "^10.0.5",
 		"@types/node": "^18.18.6",
-		"@types/semver": "^7.5.0",
 		"chai": "^4.3.7",
-		"chai-arrays": "^2.2.0",
-		"concurrently": "^8.2.1",
 		"eslint": "~8.51.0",
 		"eslint-config-oclif": "^5.0.0",
 		"eslint-config-oclif-typescript": "^3.0.8",
 		"eslint-config-prettier": "~9.0.0",
-		"prettier": "~3.0.3",
-		"rimraf": "^4.4.1",
+		"mocha": "^10.2.0",
+		"oclif": "^4.0.3",
+		"shx": "^0.3.4",
 		"ts-node": "^10.9.1",
-		"tslib": "^2.6.0",
 		"typescript": "~5.1.6"
 	},
 	"engines": {
 		"node": ">=18.0.0"
 	},
 	"oclif": {
-		"bin": "fluid-readme",
-		"flexibleTaxonomy": true,
+		"bin": "flub-esm",
+		"dirname": "flub-esm",
 		"commands": "./lib/commands",
-		"additionalHelpFlags": [
-			"-h"
+		"plugins": [
+			"@fluid-tools/build-cli",
+			"@oclif/plugin-help"
 		],
-		"additionalVersionFlags": [
-			"-V"
-		],
-		"plugins": [],
-		"repositoryPrefix": "<%- repo %>/blob/main/build-tools/packages/readme-command/<%- commandPath %>",
+		"repositoryPrefix": "<%- repo %>/blob/main/build-tools/packages/build-cli-esm/<%- commandPath %>",
 		"topicSeparator": " "
-	},
-	"pnpm": {
-		"updateConfig": {
-			"ignoreDependencies": [
-				"typescript"
-			]
-		}
 	}
 }

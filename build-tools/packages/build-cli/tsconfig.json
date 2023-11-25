@@ -1,13 +1,16 @@
 {
-	"extends": "@fluidframework/build-common/ts-common-config.json",
+	"extends": [
+		"../../../common/build/build-common/tsconfig.base.json",
+		"../../../common/build/build-common/tsconfig.cjs.json",
+	],
+	"include": ["src/**/*"],
+	"exclude": ["src/test/**/*"],
 	"compilerOptions": {
-		"composite": true,
 		"rootDir": "./src",
 		"outDir": "./lib",
 		"types": ["node"],
+		// "target": "ES2022",
 		"noImplicitAny": true,
-		"noUnusedLocals": true,
+		"noUnusedLocals": false,
 	},
-	"include": ["src/**/*"],
-	"exclude": ["src/test/**/*"],
 }

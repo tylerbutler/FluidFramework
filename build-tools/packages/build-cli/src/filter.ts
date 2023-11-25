@@ -19,11 +19,15 @@ export interface PackageSelectionCriteria {
 
 	/**
 	 * An array of release groups whose packages are selected.
+	 *
+	 * @internal
 	 */
 	releaseGroups: ReleaseGroup[];
 
 	/**
 	 * An array of release groups whose root packages are selected.
+	 *
+	 * @internal
 	 */
 	releaseGroupRoots: ReleaseGroup[];
 

@@ -4,10 +4,162 @@
 
 ```ts
 
+import { BooleanFlag } from '@oclif/core/lib/interfaces';
+import { Command } from '@oclif/core';
+import { Context } from '@fluidframework/build-tools';
+import { CustomOptions } from '@oclif/core/lib/interfaces';
+import { Interfaces } from '@oclif/core';
+import { Logger } from '@fluidframework/build-tools';
+import { OptionFlag } from '@oclif/core/lib/interfaces';
+import { Package } from '@fluidframework/build-tools';
+import { PrettyPrintableError } from '@oclif/core/lib/interfaces';
 import { run } from '@oclif/core';
+
+// @public (undocumented)
+export type Args<T extends typeof Command> = Interfaces.InferredArgs<T["args"]>;
+
+// @public
+export abstract class BaseCommand<T extends typeof Command> extends Command implements CommandLogger {
+    // (undocumented)
+    protected args: Args<T>;
+    static readonly baseFlags: {
+        readonly root: Interfaces.OptionFlag<string | undefined, Interfaces.CustomOptions>;
+        readonly verbose: Interfaces.BooleanFlag<boolean>;
+        readonly quiet: Interfaces.BooleanFlag<boolean>;
+        readonly timer: Interfaces.BooleanFlag<boolean>;
+    };
+    // (undocumented)
+    protected catch(err: Error & {
+        exitCode?: number;
+    }): Promise<unknown>;
+    error(input: string | Error, options: {
+        code?: string | undefined;
+        exit: false;
+    } & PrettyPrintableError): void;
+    error(input: string | Error, options?: ({
+        code?: string | undefined;
+        exit?: number | undefined;
+    } & PrettyPrintableError) | undefined): never;
+    errorLog(message: string | Error | undefined): void;
+    // (undocumented)
+    protected finally(_: Error | undefined): Promise<unknown>;
+    // (undocumented)
+    protected flags: CommandFlags<T>;
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: This type of declaration is not supported yet by the resolver
+    // Warning: (ae-unresolved-link) The @link reference could not be resolved: This type of declaration is not supported yet by the resolver
+    getContext(): Promise<Context>;
+    info(message: string | Error | undefined): void;
+    // (undocumented)
+    init(): Promise<void>;
+    protected get logger(): CommandLogger;
+    logHr(): void;
+    logIndent(input: string, indentNumber?: number): void;
+    verbose(message: string | Error | undefined): void;
+    // @deprecated (undocumented)
+    warn(input: string | Error): string | Error;
+    warning(message: string | Error | undefined): void;
+    warningWithDebugTrace(message: string | Error): string | Error;
+}
+
+// @public
+export const checkFlags: {
+    commit: BooleanFlag<boolean>;
+    install: BooleanFlag<boolean>;
+    branchCheck: BooleanFlag<boolean>;
+    updateCheck: BooleanFlag<boolean>;
+    policyCheck: BooleanFlag<boolean>;
+};
+
+// @public
+export type CommandFlags<T extends typeof Command> = Interfaces.InferredFlags<(typeof BaseCommand)["baseFlags"] & T["flags"]>;
+
+// Warning: (ae-unresolved-link) The @link reference could not be resolved: The package "@fluid-tools/build-cli" does not have an export "Logger"
+//
+// @public
+export interface CommandLogger extends Logger {
+    logHr(): void;
+    logIndent(msg: string, indent: number): void;
+}
+
+export { Context }
 
 // @internal
 export const knownReleaseGroups: readonly ["build-tools", "client", "server", "gitrest", "historian"];
+
+// @public
+export abstract class PackageCommand<T extends typeof Command & {
+    flags: typeof PackageCommand.flags;
+}> extends BaseCommand<T> {
+    protected filteredPackages: PackageWithKind[] | undefined;
+    // (undocumented)
+    protected filterOptions: PackageFilterOptions | undefined;
+    // (undocumented)
+    static readonly flags: {
+        private: BooleanFlag<boolean>;
+        scope: OptionFlag<string[] | undefined, CustomOptions>;
+        skipScope: OptionFlag<string[] | undefined, CustomOptions>;
+        all: BooleanFlag<boolean>;
+        dir: OptionFlag<string | undefined, CustomOptions>;
+        packages: BooleanFlag<boolean>;
+        releaseGroup: OptionFlag<("client" | "server" | "build-tools" | "all" | "gitrest" | "historian")[] | undefined, CustomOptions>;
+        releaseGroupRoot: OptionFlag<("client" | "server" | "build-tools" | "all" | "gitrest" | "historian")[] | undefined, CustomOptions>;
+        concurrency: OptionFlag<number, CustomOptions>;
+    };
+    // (undocumented)
+    protected parseFlags(): void;
+    protected abstract processPackage<TPkg extends Package>(pkg: TPkg, kind: PackageKind): Promise<void>;
+    // (undocumented)
+    protected processPackages(packages: PackageWithKind[]): Promise<void>;
+    // (undocumented)
+    run(): Promise<unknown>;
+    // (undocumented)
+    protected selectAndFilterPackages(): Promise<void>;
+    protected selectedPackages: PackageWithKind[] | undefined;
+    // (undocumented)
+    protected selectionOptions: PackageSelectionCriteria | undefined;
+}
+
+// @public
+export interface PackageFilterOptions {
+    private: boolean | undefined;
+    scope?: string[];
+    skipScope?: string[];
+}
+
+// @public
+export type PackageKind =
+/**
+* Package is an independent package.
+*/
+"independentPackage"
+/**
+* Package is part of a release group, but is _not_ the root.
+*/
+| "releaseGroupChildPackage"
+/**
+* Package is the root package of a release group.
+*/
+| "releaseGroupRootPackage"
+/**
+* Package is being loaded from a directory. The package may be one of the other three kinds. This kind is only used
+* when running on a package directly using its directory.
+*/
+| "packageFromDirectory";
+
+// @public
+export interface PackageSelectionCriteria {
+    directory?: string;
+    independentPackages: boolean;
+    // @internal
+    releaseGroupRoots: ReleaseGroup[];
+    // @internal
+    releaseGroups: ReleaseGroup[];
+}
+
+// @public
+export type PackageWithKind = Package & {
+    kind: PackageKind;
+};
 
 // @internal
 export type ReleaseGroup = (typeof knownReleaseGroups)[number];
@@ -16,6 +168,9 @@ export type ReleaseGroup = (typeof knownReleaseGroups)[number];
 export type ReleasePackage = string;
 
 export { run }
+
+// @public
+export const skipCheckFlag: BooleanFlag<boolean>;
 
 // (No @packageDocumentation comment for this package)
 

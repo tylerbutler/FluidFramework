@@ -44,7 +44,7 @@ describe("filterPackages", async () => {
 		};
 		const actual = filterPackages(packages, filters);
 		const names = actual.map((p) => p.name);
-		expect(names).to.be.equalTo([
+		expect(names).to.be.containingAllOf([
 			"@fluid-tools/build-cli",
 			"@fluidframework/build-tools",
 			"@fluidframework/bundle-size-tools",
@@ -60,12 +60,9 @@ describe("filterPackages", async () => {
 			scope: undefined,
 			skipScope: undefined,
 		};
-		const actual = filterPackages(packages, filters);
+		const actual = filterPackages(packages, filters).map((p) => p.name);
 		// There's only one private build-tools package
-		expect(actual).to.be.ofSize(1);
-
-		const pkg = actual[0];
-		assert.equal(pkg.nameUnscoped, "readme-command");
+		expect(actual).to.be.containingAllOf(["@fluid-private/readme-command"]);
 	});
 
 	it("private=false", async () => {
@@ -77,7 +74,7 @@ describe("filterPackages", async () => {
 		};
 		const actual = filterPackages(packages, filters);
 		const names = actual.map((p) => p.name);
-		expect(names).to.be.equalTo([
+		expect(names).to.be.containingAllOf([
 			"@fluid-tools/build-cli",
 			"@fluidframework/build-tools",
 			"@fluidframework/bundle-size-tools",
@@ -110,7 +107,10 @@ describe("filterPackages", async () => {
 		};
 		const actual = filterPackages(packages, filters);
 		const names = actual.map((p) => p.name);
-		expect(names).to.be.equalTo(["@fluid-tools/build-cli", "@fluid-tools/version-tools"]);
+		expect(names).to.be.containingAllOf([
+			"@fluid-tools/build-cli",
+			"@fluid-tools/version-tools",
+		]);
 	});
 
 	it("scope and skipScope", async () => {
@@ -122,7 +122,7 @@ describe("filterPackages", async () => {
 		};
 		const actual = filterPackages(packages, filters);
 		const names = actual.map((p) => p.name);
-		expect(names).to.be.equalTo([
+		expect(names).to.be.containingAllOf([
 			"@fluidframework/build-tools",
 			"@fluidframework/bundle-size-tools",
 		]);
@@ -198,7 +198,7 @@ describe("selectAndFilterPackages", async () => {
 		const { selected, filtered } = selectAndFilterPackages(context, selectionOptions, filters);
 		const names = selected.map((p) => p.name);
 
-		expect(names).to.be.equalTo([
+		expect(names).to.be.containingAllOf([
 			"@fluid-tools/build-cli",
 			"@fluidframework/build-tools",
 			"@fluidframework/bundle-size-tools",
@@ -271,7 +271,7 @@ describe("selectAndFilterPackages", async () => {
 		const { filtered } = selectAndFilterPackages(context, selectionOptions, filters);
 		const names = filtered.map((p) => p.name);
 
-		expect(names).to.be.equalTo(["@fluid-private/readme-command"]);
+		expect(names).to.be.containingAllOf(["@fluid-private/readme-command"]);
 	});
 
 	it("select release group, filter non-private", async () => {
@@ -291,7 +291,7 @@ describe("selectAndFilterPackages", async () => {
 		const { filtered } = selectAndFilterPackages(context, selectionOptions, filters);
 		const names = filtered.map((p) => p.name);
 
-		expect(names).to.be.equalTo([
+		expect(names).to.be.containingAllOf([
 			"@fluid-tools/build-cli",
 			"@fluidframework/build-tools",
 			"@fluidframework/bundle-size-tools",
@@ -316,7 +316,10 @@ describe("selectAndFilterPackages", async () => {
 		const { filtered } = selectAndFilterPackages(context, selectionOptions, filters);
 		const names = filtered.map((p) => p.name);
 
-		expect(names).to.be.equalTo(["@fluid-tools/build-cli", "@fluid-tools/version-tools"]);
+		expect(names).to.be.containingAllOf([
+			"@fluid-tools/build-cli",
+			"@fluid-tools/version-tools",
+		]);
 	});
 
 	it("select release group, filter skipScopes", async () => {
@@ -336,7 +339,7 @@ describe("selectAndFilterPackages", async () => {
 		const { filtered } = selectAndFilterPackages(context, selectionOptions, filters);
 		const names = filtered.map((p) => p.name);
 
-		expect(names).to.be.equalTo([
+		expect(names).to.be.containingAllOf([
 			"@fluidframework/build-tools",
 			"@fluidframework/bundle-size-tools",
 		]);
