@@ -1,22 +1,22 @@
-`flub-esm release`
-==================
+`flubx release`
+===============
 
 Release commands are used to manage the Fluid release process.
 
-* [`flub-esm release`](#flub-esm-release)
-* [`flub-esm release fromTag TAG`](#flub-esm-release-fromtag-tag)
-* [`flub-esm release history`](#flub-esm-release-history)
-* [`flub-esm release report`](#flub-esm-release-report)
-* [`flub-esm release report-unreleased`](#flub-esm-release-report-unreleased)
-* [`flub-esm release setPackageTypesField`](#flub-esm-release-setpackagetypesfield)
+* [`flubx release`](#flubx-release)
+* [`flubx release fromTag TAG`](#flubx-release-fromtag-tag)
+* [`flubx release history`](#flubx-release-history)
+* [`flubx release report`](#flubx-release-report)
+* [`flubx release report-unreleased`](#flubx-release-report-unreleased)
+* [`flubx release setPackageTypesField`](#flubx-release-setpackagetypesfield)
 
-## `flub-esm release`
+## `flubx release`
 
 Releases a package or release group.
 
 ```
 USAGE
-  $ flub-esm release [-v | --quiet] [-g client|server|azure|build-tools|gitrest|historian | -p <value>] [-t
+  $ flubx release [-v | --quiet] [-g client|server|azure|build-tools|gitrest|historian | -p <value>] [-t
     major|minor|patch] [-x | --install | --commit | --branchCheck | --updateCheck | --policyCheck]
 
 FLAGS
@@ -54,13 +54,13 @@ DESCRIPTION
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/release.ts)_
 
-## `flub-esm release fromTag TAG`
+## `flubx release fromTag TAG`
 
 Determines release information based on a git tag argument.
 
 ```
 USAGE
-  $ flub-esm release fromTag TAG [--json] [-v | --quiet]
+  $ flubx release fromTag TAG [--json] [-v | --quiet]
 
 ARGUMENTS
   TAG  A git tag that represents a release. May begin with 'refs/tags/'.
@@ -80,23 +80,23 @@ DESCRIPTION
 EXAMPLES
   Get release information based on a git tag.
 
-    $ flub-esm release fromTag build-tools_v0.13.0
+    $ flubx release fromTag build-tools_v0.13.0
 
   You can include the refs/tags/ part of a tag ref.
 
-    $ flub-esm release fromTag refs/tags/2.0.0-internal.2.0.2
+    $ flubx release fromTag refs/tags/2.0.0-internal.2.0.2
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/release/fromTag.ts)_
 
-## `flub-esm release history`
+## `flubx release history`
 
 Prints a list of released versions of a package or release group. Releases are gathered from the git tags in repo containing the working directory.
 
 ```
 USAGE
-  $ flub-esm release history [--json] [-v | --quiet] [-g client|server|azure|build-tools|gitrest|historian | -p
-    <value>] [-l <value>]
+  $ flubx release history [--json] [-v | --quiet] [-g client|server|azure|build-tools|gitrest|historian | -p <value>]
+    [-l <value>]
 
 FLAGS
   -g, --releaseGroup=<option>  Name of a release group.
@@ -124,22 +124,22 @@ DESCRIPTION
 EXAMPLES
   List all the releases of the azure release group.
 
-    $ flub-esm release history -g azure
+    $ flubx release history -g azure
 
   List the 10 most recent client releases.
 
-    $ flub-esm release history -g client --limit 10
+    $ flubx release history -g client --limit 10
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/release/history.ts)_
 
-## `flub-esm release report`
+## `flubx release report`
 
 Generates a report of Fluid Framework releases.
 
 ```
 USAGE
-  $ flub-esm release report [--json] [-v | --quiet] [-i | -r | -s] [-g
+  $ flubx release report [--json] [-v | --quiet] [-i | -r | -s] [-g
     client|server|azure|build-tools|gitrest|historian] [-o <value>]
 
 FLAGS
@@ -193,26 +193,26 @@ EXAMPLES
   Generate a release report of the highest semver release for each package and release group and display it in the
   terminal only.
 
-    $ flub-esm release report
+    $ flubx release report
 
   Output all release report files to the current directory.
 
-    $ flub-esm release report -o .
+    $ flubx release report -o .
 
   Generate a release report for each package and release group in the repo interactively.
 
-    $ flub-esm release report -i
+    $ flubx release report -i
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/release/report.ts)_
 
-## `flub-esm release report-unreleased`
+## `flubx release report-unreleased`
 
 Creates a release report for the most recent build of the client release group published to an internal ADO feed. It does this by finding the most recent build in ADO produced from a provided branch, and creates a report using that version. The report is a combination of the "simple" and "caret" report formats. Packages released as part of the client release group will have an exact version range, while other packages, such as server packages or independent packages, will have a caret-equivalent version range.
 
 ```
 USAGE
-  $ flub-esm release report-unreleased --repo <value> --ado_pat <value> --sourceBranch <value> --output <value> [-v |
+  $ flubx release report-unreleased --repo <value> --ado_pat <value> --sourceBranch <value> --output <value> [-v |
   --quiet]
 
 FLAGS
@@ -236,14 +236,14 @@ DESCRIPTION
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/release/report-unreleased.ts)_
 
-## `flub-esm release setPackageTypesField`
+## `flubx release setPackageTypesField`
 
 Updates which .d.ts file is referenced by the `types` field in package.json. This command is used during package publishing (by CI) to select the d.ts file which corresponds to the selected API-Extractor release tag.
 
 ```
 USAGE
-  $ flub-esm release setPackageTypesField --types <value> [--json] [-v | --quiet] [--checkFileExists] [--concurrency <value>]
-    [--all | --dir <value> | --packages | -g client|server|azure|build-tools|gitrest|historian|all | --releaseGroupRoot
+  $ flubx release setPackageTypesField --types <value> [--json] [-v | --quiet] [--checkFileExists] [--concurrency <value>] [--all
+    | --dir <value> | --packages | -g client|server|azure|build-tools|gitrest|historian|all | --releaseGroupRoot
     client|server|azure|build-tools|gitrest|historian|all] [--private] [--scope <value> | --skipScope <value>]
 
 FLAGS

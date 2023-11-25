@@ -1,22 +1,22 @@
-`flub-esm generate`
-===================
+`flubx generate`
+================
 
 Generate commands are used to create/update code, docs, readmes, etc.
 
-* [`flub-esm generate assertTags`](#flub-esm-generate-asserttags)
-* [`flub-esm generate buildVersion`](#flub-esm-generate-buildversion)
-* [`flub-esm generate bundleStats`](#flub-esm-generate-bundlestats)
-* [`flub-esm generate changelog`](#flub-esm-generate-changelog)
-* [`flub-esm generate changeset`](#flub-esm-generate-changeset)
-* [`flub-esm generate upcoming`](#flub-esm-generate-upcoming)
+* [`flubx generate assertTags`](#flubx-generate-asserttags)
+* [`flubx generate buildVersion`](#flubx-generate-buildversion)
+* [`flubx generate bundleStats`](#flubx-generate-bundlestats)
+* [`flubx generate changelog`](#flubx-generate-changelog)
+* [`flubx generate changeset`](#flubx-generate-changeset)
+* [`flubx generate upcoming`](#flubx-generate-upcoming)
 
-## `flub-esm generate assertTags`
+## `flubx generate assertTags`
 
 Tags asserts by replacing their message with a unique numerical value.
 
 ```
 USAGE
-  $ flub-esm generate assertTags [-v | --quiet] [--disableConfig] [--concurrency <value>] [--all | --dir <value> |
+  $ flubx generate assertTags [-v | --quiet] [--disableConfig] [--concurrency <value>] [--all | --dir <value> |
     --packages | -g client|server|azure|build-tools|gitrest|historian|all | --releaseGroupRoot
     client|server|azure|build-tools|gitrest|historian|all] [--private] [--scope <value> | --skipScope <value>]
 
@@ -62,13 +62,13 @@ DESCRIPTION
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/generate/assertTags.ts)_
 
-## `flub-esm generate buildVersion`
+## `flubx generate buildVersion`
 
 This command is used to compute the version number of Fluid packages. The release version number is based on what's in the lerna.json/package.json. The CI pipeline will supply the build number and branch to determine the prerelease suffix if it is not a tagged build
 
 ```
 USAGE
-  $ flub-esm generate buildVersion --build <value> [-v | --quiet] [--testBuild <value>] [--release release|prerelease|none]
+  $ flubx generate buildVersion --build <value> [-v | --quiet] [--testBuild <value>] [--release release|prerelease|none]
     [--patch <value>] [--base <value>] [--tag <value>] [-i <value>] [--packageTypes none|alpha|beta|public|untrimmed]
 
 FLAGS
@@ -96,18 +96,18 @@ DESCRIPTION
   suffix if it is not a tagged build
 
 EXAMPLES
-  $ flub-esm generate buildVersion
+  $ flubx generate buildVersion
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/generate/buildVersion.ts)_
 
-## `flub-esm generate bundleStats`
+## `flubx generate bundleStats`
 
 Find all bundle analysis artifacts and copy them into a central location to upload as build artifacts for later consumption
 
 ```
 USAGE
-  $ flub-esm generate bundleStats [-v | --quiet] [--smallestAssetSize <value>]
+  $ flubx generate bundleStats [-v | --quiet] [--smallestAssetSize <value>]
 
 FLAGS
   --smallestAssetSize=<value>  [default: 100] The smallest asset size in bytes to consider correct. Adjust when testing
@@ -124,13 +124,13 @@ DESCRIPTION
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/generate/bundleStats.ts)_
 
-## `flub-esm generate changelog`
+## `flubx generate changelog`
 
 Generate a changelog for packages based on changesets.
 
 ```
 USAGE
-  $ flub-esm generate changelog -g client|server|azure|build-tools|gitrest|historian [-v | --quiet] [--version <value>]
+  $ flubx generate changelog -g client|server|azure|build-tools|gitrest|historian [-v | --quiet] [--version <value>]
 
 FLAGS
   -g, --releaseGroup=<option>  (required) Name of a release group.
@@ -148,18 +148,18 @@ DESCRIPTION
 EXAMPLES
   Generate changelogs for the client release group.
 
-    $ flub-esm generate changelog --releaseGroup client
+    $ flubx generate changelog --releaseGroup client
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/generate/changelog.ts)_
 
-## `flub-esm generate changeset`
+## `flubx generate changeset`
 
 Generates a new changeset file. You will be prompted to select the packages affected by this change. You can also create an empty changeset to include with this change that can be updated later.
 
 ```
 USAGE
-  $ flub-esm generate changeset [--json] [-v | --quiet] [-b <value>] [--empty -g
+  $ flubx generate changeset [--json] [-v | --quiet] [-b <value>] [--empty -g
     client|server|azure|build-tools|gitrest|historian] [--all] [--uiMode default|simple]
 
 FLAGS
@@ -187,37 +187,37 @@ EXPERIMENTAL FLAGS
                      <options: default|simple>
 
 ALIASES
-  $ flub-esm changeset add
+  $ flubx changeset add
 
 EXAMPLES
   Create an empty changeset using the --empty flag.
 
-    $ flub-esm generate changeset --empty
+    $ flubx generate changeset --empty
 
   Create a changeset interactively. Any package whose contents has changed relative to the 'main' branch will be
   selected by default.
 
-    $ flub-esm generate changeset
+    $ flubx generate changeset
 
   You can compare with a different branch using --branch (-b).
 
-    $ flub-esm generate changeset --branch next
+    $ flubx generate changeset --branch next
 
   By default example and private packages are excluded, but they can be included with --all.
 
-    $ flub-esm generate changeset --all
+    $ flubx generate changeset --all
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/generate/changeset.ts)_
 
-## `flub-esm generate upcoming`
+## `flubx generate upcoming`
 
 Generates a summary of all changesets. This is used to generate an UPCOMING.md file that provides a single place where developers can see upcoming changes.
 
 ```
 USAGE
-  $ flub-esm generate upcoming -g client|server|azure|build-tools|gitrest|historian -t major|minor [--json] [-v |
-    --quiet] [--out <value>]
+  $ flubx generate upcoming -g client|server|azure|build-tools|gitrest|historian -t major|minor [--json] [-v | --quiet]
+    [--out <value>]
 
 FLAGS
   -g, --releaseGroup=<option>  (required) Name of a release group.
@@ -236,11 +236,11 @@ GLOBAL FLAGS
 EXAMPLES
   Generate UPCOMING.md for the client release group using the minor changesets.
 
-    $ flub-esm generate upcoming -g client -t minor
+    $ flubx generate upcoming -g client -t minor
 
   You can output a different file using the --out flag.
 
-    $ flub-esm generate upcoming -g client -t minor --out testOutput.md
+    $ flubx generate upcoming -g client -t minor --out testOutput.md
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/generate/upcoming.ts)_

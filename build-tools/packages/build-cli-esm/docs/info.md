@@ -1,17 +1,17 @@
-`flub-esm info`
-===============
+`flubx info`
+============
 
 Get info about the repo, release groups, and packages.
 
-* [`flub-esm info`](#flub-esm-info)
+* [`flubx info`](#flubx-info)
 
-## `flub-esm info`
+## `flubx info`
 
 Get info about the repo, release groups, and packages.
 
 ```
 USAGE
-  $ flub-esm info [--json] [-v | --quiet] [-g client|server|azure|build-tools|gitrest|historian] [-p]
+  $ flubx info [--json] [-v | --quiet] [-g client|server|azure|build-tools|gitrest|historian] [-p]
 
 FLAGS
   -g, --releaseGroup=<option>  Name of a release group.

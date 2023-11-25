@@ -1,17 +1,17 @@
-`flub-esm exec`
-===============
+`flubx exec`
+============
 
 Run a shell command in the context of a package or release group.
 
-* [`flub-esm exec CMD`](#flub-esm-exec-cmd)
+* [`flubx exec CMD`](#flubx-exec-cmd)
 
-## `flub-esm exec CMD`
+## `flubx exec CMD`
 
 Run a shell command in the context of a package or release group.
 
 ```
 USAGE
-  $ flub-esm exec CMD [-v | --quiet] [--concurrency <value>] [--all | --dir <value> | --packages | -g
+  $ flubx exec CMD [-v | --quiet] [--concurrency <value>] [--all | --dir <value> | --packages | -g
     client|server|azure|build-tools|gitrest|historian|all | --releaseGroupRoot
     client|server|azure|build-tools|gitrest|historian|all] [--private] [--scope <value> | --skipScope <value>]
 

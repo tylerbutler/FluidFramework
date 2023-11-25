@@ -1,19 +1,19 @@
-`flub-esm bump`
-===============
+`flubx bump`
+============
 
 Bump the version of packages, release groups, and their dependencies.
 
-* [`flub-esm bump PACKAGE_OR_RELEASE_GROUP`](#flub-esm-bump-package_or_release_group)
-* [`flub-esm bump deps PACKAGE_OR_RELEASE_GROUP`](#flub-esm-bump-deps-package_or_release_group)
+* [`flubx bump PACKAGE_OR_RELEASE_GROUP`](#flubx-bump-package_or_release_group)
+* [`flubx bump deps PACKAGE_OR_RELEASE_GROUP`](#flubx-bump-deps-package_or_release_group)
 
-## `flub-esm bump PACKAGE_OR_RELEASE_GROUP`
+## `flubx bump PACKAGE_OR_RELEASE_GROUP`
 
 Bumps the version of a release group or package to the next minor, major, or patch version, or to a specific version, with control over the interdependency version ranges.
 
 ```
 USAGE
-  $ flub-esm bump PACKAGE_OR_RELEASE_GROUP [-v | --quiet] [-t major|minor|patch | --exact <value>]
-    [--scheme semver|internal|virtualPatch | ] [--exactDepType ^|~||workspace:*|workspace:^|workspace:~] [-d
+  $ flubx bump PACKAGE_OR_RELEASE_GROUP [-v | --quiet] [-t major|minor|patch | --exact <value>] [--scheme
+    semver|internal|virtualPatch | ] [--exactDepType ^|~||workspace:*|workspace:^|workspace:~] [-d
     ^|~||workspace:*|workspace:^|workspace:~] [-x | --install | --commit |  |  | ]
 
 ARGUMENTS
@@ -55,37 +55,37 @@ DESCRIPTION
 EXAMPLES
   Bump @fluidframework/build-common to the next minor version.
 
-    $ flub-esm bump @fluidframework/build-common -t minor
+    $ flubx bump @fluidframework/build-common -t minor
 
   Bump the server release group to the next major version, forcing the semver version scheme.
 
-    $ flub-esm bump server -t major --scheme semver
+    $ flubx bump server -t major --scheme semver
 
   By default, the bump command will run npm install in any affected packages and commit the results to a new branch.
   You can skip these steps using the --no-commit and --no-install flags.
 
-    $ flub-esm bump server -t major --no-commit --no-install
+    $ flubx bump server -t major --no-commit --no-install
 
   You can control how interdependencies between packages in a release group are expressed using the
   --interdependencyRange flag.
 
-    $ flub-esm bump client --exact 2.0.0-internal.4.1.0 --interdependencyRange "~"
+    $ flubx bump client --exact 2.0.0-internal.4.1.0 --interdependencyRange "~"
 
   You can set interdependencies using the workspace protocol as well. The interdependency range will be set to the
   workspace string specified.
 
-    $ flub-esm bump client --exact 2.0.0-internal.4.1.0 --interdependencyRange "workspace:~"
+    $ flubx bump client --exact 2.0.0-internal.4.1.0 --interdependencyRange "workspace:~"
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/bump.ts)_
 
-## `flub-esm bump deps PACKAGE_OR_RELEASE_GROUP`
+## `flubx bump deps PACKAGE_OR_RELEASE_GROUP`
 
 Update the dependency version of a specified package or release group. That is, if one or more packages in the repo depend on package A, then this command will update the dependency range on package A. The dependencies and the packages updated can be filtered using various flags.
 
 ```
 USAGE
-  $ flub-esm bump deps PACKAGE_OR_RELEASE_GROUP [-v | --quiet] [--prerelease -t
+  $ flubx bump deps PACKAGE_OR_RELEASE_GROUP [-v | --quiet] [--prerelease -t
     latest|newest|greatest|minor|patch|@next|@canary] [--onlyBumpPrerelease] [-g
     client|server|azure|build-tools|gitrest|historian | -p <value>] [-x | --install | --commit |  |  | ]
     [--updateChecker ncu|homegrown]
@@ -128,21 +128,21 @@ DESCRIPTION
 EXAMPLES
   Bump dependencies on @fluidframework/build-common to the latest release version across all release groups.
 
-    $ flub-esm bump deps @fluidframework/build-common -t latest
+    $ flubx bump deps @fluidframework/build-common -t latest
 
   Bump dependencies on @fluidframework/build-common to the next minor version in the azure release group.
 
-    $ flub-esm bump deps @fluidframework/build-common -t minor -g azure
+    $ flubx bump deps @fluidframework/build-common -t minor -g azure
 
   Bump dependencies on packages in the server release group to the greatest released version in the client release
   group. Include pre-release versions.
 
-    $ flub-esm bump deps server -g client -t greatest --prerelease
+    $ flubx bump deps server -g client -t greatest --prerelease
 
   Bump dependencies on server packages to the current version across the repo, replacing any pre-release ranges with
   release ranges.
 
-    $ flub-esm bump deps server -t latest
+    $ flubx bump deps server -t latest
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/bump/deps.ts)_

@@ -1,19 +1,18 @@
-`flub-esm merge`
-================
+`flubx merge`
+=============
 
 Sync branches depending on the batch size passed
 
-* [`flub-esm merge branches`](#flub-esm-merge-branches)
-* [`flub-esm merge info`](#flub-esm-merge-info)
+* [`flubx merge branches`](#flubx-merge-branches)
+* [`flubx merge info`](#flubx-merge-info)
 
-## `flub-esm merge branches`
+## `flubx merge branches`
 
 Sync branches depending on the batch size passed
 
 ```
 USAGE
-  $ flub-esm merge branches -p <value> -s <value> -t <value> -b <value> --reviewers <value> [-v | --quiet] [-r
-    <value>]
+  $ flubx merge branches -p <value> -s <value> -t <value> -b <value> --reviewers <value> [-v | --quiet] [-r <value>]
 
 FLAGS
   -b, --batchSize=<value>  (required) Maximum number of commits to include in the pull request
@@ -35,13 +34,13 @@ DESCRIPTION
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/merge/branches.ts)_
 
-## `flub-esm merge info`
+## `flubx merge info`
 
 Get info about the merge status of branches in the repo. Uses "main" and "next" if no branch names are provided. Output the data as JSON using --json.
 
 ```
 USAGE
-  $ flub-esm merge info [--json] [-v | --quiet] [-b <value>]
+  $ flubx merge info [--json] [-v | --quiet] [-b <value>]
 
 FLAGS
   -b, --branch=<value>...  A branch name. Use this argument multiple times to provide multiple branch names.
@@ -60,11 +59,11 @@ DESCRIPTION
 EXAMPLES
   Get info about the merge status of the main and next branch in the repo.
 
-    $ flub-esm merge info
+    $ flubx merge info
 
   Output the merge status as JSON using --json.
 
-    $ flub-esm merge info --json
+    $ flubx merge info --json
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/merge/info.ts)_

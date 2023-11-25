@@ -1,18 +1,18 @@
-`flub-esm commands`
-===================
+`flubx commands`
+================
 
 list all the commands
 
-* [`flub-esm commands`](#flub-esm-commands)
+* [`flubx commands`](#flubx-commands)
 
-## `flub-esm commands`
+## `flubx commands`
 
 list all the commands
 
 ```
 USAGE
-  $ flub-esm commands [--json] [-h] [--hidden] [--tree] [--columns <value> | -x] [--filter <value>]
-    [--no-header | [--csv | --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]
+  $ flubx commands [--json] [-h] [--hidden] [--tree] [--columns <value> | -x] [--filter <value>] [--no-header
+    | [--csv | --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]
 
 FLAGS
   -h, --help         Show CLI help.

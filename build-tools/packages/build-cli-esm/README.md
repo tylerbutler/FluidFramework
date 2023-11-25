@@ -1,6 +1,14 @@
 # @fluid-tools/build-cli-esm
 
-This package is not typically used alone, but rather through the [main @fluid-tools/build-cli package](../build-cli/README.md).
+This package is an eventual "replacement" for the [main @fluid-tools/build-cli package](../build-cli/README.md). This
+package is ESM-only, but exposes all the commands from the build-cli package using oclif's plugin's capabilities.
+Because of this, any new commands that don't rely on a lot of internals in build-cli should live in this package. Some
+commands may make sense to migrate from build-cli to this package, but that is very rare. Most can stay where they are,
+in the CommonJS build-cli package.
+
+However, if you want to use a command that uses ESM-only dependencies, then they can live in this package. If shared
+code needs to be exposed from build-cli, that's OK -- it serves as both a CLI and houses the shared CLI infrastructure
+like base command classes and whatnot.
 
 <!-- toc -->
 * [@fluid-tools/build-cli-esm](#fluid-toolsbuild-cli-esm)
@@ -14,13 +22,13 @@ This package is not typically used alone, but rather through the [main @fluid-to
 <!-- usage -->
 ```sh-session
 $ npm install -g @fluid-tools/build-cli-esm
-$ flub-esm COMMAND
+$ flubx COMMAND
 running command...
-$ flub-esm (--version)
+$ flubx (--version)
 @fluid-tools/build-cli-esm/1.0.0
-$ flub-esm --help [COMMAND]
+$ flubx --help [COMMAND]
 USAGE
-  $ flub-esm COMMAND
+  $ flubx COMMAND
 ...
 ```
 <!-- usagestop -->
@@ -30,19 +38,19 @@ USAGE
 <!-- commands -->
 # Command Topics
 
-* [`flub-esm autocomplete`](docs/autocomplete.md) - display autocomplete installation instructions
-* [`flub-esm bump`](docs/bump.md) - Bump the version of packages, release groups, and their dependencies.
-* [`flub-esm check`](docs/check.md) - Check commands are used to verify repo state, apply policy, etc.
-* [`flub-esm commands`](docs/commands.md) - list all the commands
-* [`flub-esm doctor`](docs/doctor.md) - Checks a project for common dependency and configuration problems when using the Fluid Framework.
-* [`flub-esm exec`](docs/exec.md) - Run a shell command in the context of a package or release group.
-* [`flub-esm generate`](docs/generate.md) - Generate commands are used to create/update code, docs, readmes, etc.
-* [`flub-esm help`](docs/help.md) - Display help for flub-esm.
-* [`flub-esm info`](docs/info.md) - Get info about the repo, release groups, and packages.
-* [`flub-esm list`](docs/list.md) - List packages in a release group in topological order.
-* [`flub-esm merge`](docs/merge.md) - Sync branches depending on the batch size passed
-* [`flub-esm release`](docs/release.md) - Release commands are used to manage the Fluid release process.
-* [`flub-esm run`](docs/run.md) - Generate a report from input bundle stats collected through the collect bundleStats command.
-* [`flub-esm typetests`](docs/typetests.md) - Updates configuration for type tests in package.json files. If the previous version changes after running preparation, then npm install must be run before building.
+* [`flubx autocomplete`](docs/autocomplete.md) - display autocomplete installation instructions
+* [`flubx bump`](docs/bump.md) - Bump the version of packages, release groups, and their dependencies.
+* [`flubx check`](docs/check.md) - Check commands are used to verify repo state, apply policy, etc.
+* [`flubx commands`](docs/commands.md) - list all the commands
+* [`flubx doctor`](docs/doctor.md) - Checks a project for common dependency and configuration problems when using the Fluid Framework.
+* [`flubx exec`](docs/exec.md) - Run a shell command in the context of a package or release group.
+* [`flubx generate`](docs/generate.md) - Generate commands are used to create/update code, docs, readmes, etc.
+* [`flubx help`](docs/help.md) - Display help for flubx.
+* [`flubx info`](docs/info.md) - Get info about the repo, release groups, and packages.
+* [`flubx list`](docs/list.md) - List packages in a release group in topological order.
+* [`flubx merge`](docs/merge.md) - Sync branches depending on the batch size passed
+* [`flubx release`](docs/release.md) - Release commands are used to manage the Fluid release process.
+* [`flubx run`](docs/run.md) - Generate a report from input bundle stats collected through the collect bundleStats command.
+* [`flubx typetests`](docs/typetests.md) - Updates configuration for type tests in package.json files. If the previous version changes after running preparation, then npm install must be run before building.
 
 <!-- commandsstop -->

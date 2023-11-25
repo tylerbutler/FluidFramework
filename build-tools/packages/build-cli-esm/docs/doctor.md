@@ -1,17 +1,17 @@
-`flub-esm doctor`
-=================
+`flubx doctor`
+==============
 
 Checks a project for common dependency and configuration problems when using the Fluid Framework.
 
-* [`flub-esm doctor`](#flub-esm-doctor)
+* [`flubx doctor`](#flubx-doctor)
 
-## `flub-esm doctor`
+## `flubx doctor`
 
 Checks a project for common dependency and configuration problems when using the Fluid Framework.
 
 ```
 USAGE
-  $ flub-esm doctor -n <value> [-v | --quiet]
+  $ flubx doctor -n <value> [-v | --quiet]
 
 FLAGS
   -n, --name=<value>  (required) Name to print.

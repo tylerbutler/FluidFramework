@@ -1,3 +1,8 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 import { BaseCommand } from "@fluid-tools/build-cli";
 import { Flags } from "@oclif/core";
 

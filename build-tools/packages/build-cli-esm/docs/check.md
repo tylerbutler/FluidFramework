@@ -1,21 +1,21 @@
-`flub-esm check`
-================
+`flubx check`
+=============
 
 Check commands are used to verify repo state, apply policy, etc.
 
-* [`flub-esm check buildVersion`](#flub-esm-check-buildversion)
-* [`flub-esm check changeset`](#flub-esm-check-changeset)
-* [`flub-esm check layers`](#flub-esm-check-layers)
-* [`flub-esm check policy`](#flub-esm-check-policy)
+* [`flubx check buildVersion`](#flubx-check-buildversion)
+* [`flubx check changeset`](#flubx-check-changeset)
+* [`flubx check layers`](#flubx-check-layers)
+* [`flubx check policy`](#flubx-check-policy)
 
-## `flub-esm check buildVersion`
+## `flubx check buildVersion`
 
 Checks that all packages have the same version set in package.json. The packages checked can be filtered by standard criteria. THIS COMMAND IS INTENDED FOR USE IN FLUID FRAMEWORK CI PIPELINES ONLY.
 
 ```
 USAGE
-  $ flub-esm check buildVersion [-v | --quiet] [--version <value> | --path <value>] [--fix] [--concurrency <value>]
-    [--all | --dir <value> | --packages | -g client|server|azure|build-tools|gitrest|historian|all | --releaseGroupRoot
+  $ flubx check buildVersion [-v | --quiet] [--version <value> | --path <value>] [--fix] [--concurrency <value>] [--all
+    | --dir <value> | --packages | -g client|server|azure|build-tools|gitrest|historian|all | --releaseGroupRoot
     client|server|azure|build-tools|gitrest|historian|all] [--private] [--scope <value> | --skipScope <value>]
 
 FLAGS
@@ -59,13 +59,13 @@ DESCRIPTION
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/check/buildVersion.ts)_
 
-## `flub-esm check changeset`
+## `flubx check changeset`
 
 Checks if a changeset was added when compared against a branch. This is used in CI to enforce that changesets are present for a PR.
 
 ```
 USAGE
-  $ flub-esm check changeset -b <value> [--json] [-v | --quiet]
+  $ flubx check changeset -b <value> [--json] [-v | --quiet]
 
 FLAGS
   -b, --branch=<value>  (required) The branch to compare against.
@@ -80,22 +80,22 @@ GLOBAL FLAGS
 EXAMPLES
   Check if a changeset was added when compared to the 'main' branch.
 
-    $ flub-esm check changeset -b main
+    $ flubx check changeset -b main
 
   Check if a changeset was added when compared to the 'next' branch.
 
-    $ flub-esm check changeset -b next
+    $ flubx check changeset -b next
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/check/changeset.ts)_
 
-## `flub-esm check layers`
+## `flubx check layers`
 
 Checks that the dependencies between Fluid Framework packages are properly layered.
 
 ```
 USAGE
-  $ flub-esm check layers --info <value> [-v | --quiet] [--md <value>] [--dot <value>] [--logtime]
+  $ flubx check layers --info <value> [-v | --quiet] [--md <value>] [--dot <value>] [--logtime]
 
 FLAGS
   --dot=<value>   Generate *.dot for GraphViz
@@ -113,13 +113,13 @@ DESCRIPTION
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/check/layers.ts)_
 
-## `flub-esm check policy`
+## `flubx check policy`
 
 Checks and applies policies to the files in the repository, such as ensuring a consistent header comment in files, assert tagging, etc.
 
 ```
 USAGE
-  $ flub-esm check policy [-v | --quiet] [-D <value> | -d <value>] [-e <value>] [--listHandlers | --stdin | -p
+  $ flubx check policy [-v | --quiet] [-D <value> | -d <value>] [-e <value>] [--listHandlers | --stdin | -p
     <value> | -f | ]
 
 FLAGS

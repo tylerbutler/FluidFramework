@@ -1,17 +1,17 @@
-`flub-esm autocomplete`
-=======================
+`flubx autocomplete`
+====================
 
 display autocomplete installation instructions
 
-* [`flub-esm autocomplete [SHELL]`](#flub-esm-autocomplete-shell)
+* [`flubx autocomplete [SHELL]`](#flubx-autocomplete-shell)
 
-## `flub-esm autocomplete [SHELL]`
+## `flubx autocomplete [SHELL]`
 
 display autocomplete installation instructions
 
 ```
 USAGE
-  $ flub-esm autocomplete [SHELL] [-r]
+  $ flubx autocomplete [SHELL] [-r]
 
 ARGUMENTS
   SHELL  (zsh|bash|powershell) Shell type
@@ -23,15 +23,15 @@ DESCRIPTION
   display autocomplete installation instructions
 
 EXAMPLES
-  $ flub-esm autocomplete
+  $ flubx autocomplete
 
-  $ flub-esm autocomplete bash
+  $ flubx autocomplete bash
 
-  $ flub-esm autocomplete zsh
+  $ flubx autocomplete zsh
 
-  $ flub-esm autocomplete powershell
+  $ flubx autocomplete powershell
 
-  $ flub-esm autocomplete --refresh-cache
+  $ flubx autocomplete --refresh-cache
 ```
 
 _See code: [@oclif/plugin-autocomplete](https://github.com/oclif/plugin-autocomplete/blob/v2.3.10/src/commands/autocomplete/index.ts)_

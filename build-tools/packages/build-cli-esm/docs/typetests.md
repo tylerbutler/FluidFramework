@@ -1,5 +1,5 @@
-`flub-esm typetests`
-====================
+`flubx typetests`
+=================
 
 Updates configuration for type tests in package.json files. If the previous version changes after running preparation, then npm install must be run before building.
 
@@ -7,15 +7,15 @@ Updates configuration for type tests in package.json files. If the previous vers
 
     To learn more about how to configure type tests, see the detailed documentation at <https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/docs/typetestDetails.md>.
 
-* [`flub-esm typetests`](#flub-esm-typetests)
+* [`flubx typetests`](#flubx-typetests)
 
-## `flub-esm typetests`
+## `flubx typetests`
 
 Updates configuration for type tests in package.json files. If the previous version changes after running preparation, then npm install must be run before building.
 
 ```
 USAGE
-  $ flub-esm typetests [-v | --quiet] [--reset] [-p | --exact <value> | -r | --disable] [-n | --enable]
+  $ flubx typetests [-v | --quiet] [--reset] [-p | --exact <value> | -r | --disable] [-n | --enable]
     [--concurrency <value>] [--all | --dir <value> | --packages | -g
     client|server|azure|build-tools|gitrest|historian|all | --releaseGroupRoot
     client|server|azure|build-tools|gitrest|historian|all] [--private] [--scope <value> | --skipScope <value>]
@@ -101,11 +101,11 @@ EXAMPLES
   minor releases on both the release branch and the main branch after the version bump and publishing of the first
   point release of that minor.
 
-    $ flub-esm typetests -g client --reset --previous
+    $ flubx typetests -g client --reset --previous
 
   Disable type tests and cleanup anything left related to them in the package.json other than the disable flag.
 
-    $ flub-esm typetests --reset --normalize --disable
+    $ flubx typetests --reset --normalize --disable
 ```
 
 _See code: [@fluid-tools/build-cli](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/typetests.ts)_

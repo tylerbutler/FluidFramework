@@ -1,17 +1,17 @@
-`flub-esm list`
-===============
+`flubx list`
+============
 
 List packages in a release group in topological order.
 
-* [`flub-esm list`](#flub-esm-list)
+* [`flubx list`](#flubx-list)
 
-## `flub-esm list`
+## `flubx list`
 
 List packages in a release group in topological order.
 
 ```
 USAGE
-  $ flub-esm list -g client|server|azure|build-tools|gitrest|historian [--json] [-v | --quiet] [--feed
+  $ flubx list -g client|server|azure|build-tools|gitrest|historian [--json] [-v | --quiet] [--feed
     public|internal-build|internal-test|internal-dev|official|internal] [--private] [--scope <value> | --skipScope
     <value>] [--tarball] [--outFile <value>]
 

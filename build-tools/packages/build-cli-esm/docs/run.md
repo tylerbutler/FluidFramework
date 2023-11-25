@@ -1,17 +1,17 @@
-`flub-esm run`
-==============
+`flubx run`
+===========
 
 Generate a report from input bundle stats collected through the collect bundleStats command.
 
-* [`flub-esm run bundleStats`](#flub-esm-run-bundlestats)
+* [`flubx run bundleStats`](#flubx-run-bundlestats)
 
-## `flub-esm run bundleStats`
+## `flubx run bundleStats`
 
 Generate a report from input bundle stats collected through the collect bundleStats command.
 
 ```
 USAGE
-  $ flub-esm run bundleStats [-v | --quiet] [--dangerfile <value>]
+  $ flubx run bundleStats [-v | --quiet] [--dangerfile <value>]
 
 FLAGS
   --dangerfile=<value>  Path to dangerfile
