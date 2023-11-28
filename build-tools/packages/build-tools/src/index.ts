@@ -13,12 +13,7 @@ export {
 } from "./common/fluidRepo";
 export { getResolvedFluidRoot, getFluidBuildConfig } from "./common/fluidUtils";
 export type { Logger, ErrorLoggingFunction, LoggingFunction } from "./common/logging";
-export {
-	isMonoRepoKind,
-	MonoRepoKind,
-	supportedMonoRepoValues,
-	Workspace,
-} from "./common/monoRepo";
+export { supportedMonoRepoValues, Workspace } from "./common/monoRepo";
 export {
 	Package,
 	type PackageJson,

@@ -7,7 +7,7 @@ import chalk from "chalk";
 import prompts from "prompts";
 import stripAnsi from "strip-ansi";
 
-import { FluidRepo, Workspace, MonoRepoKind } from "@fluidframework/build-tools";
+import { FluidRepo, Workspace } from "@fluidframework/build-tools";
 
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../../args";
 import { BaseCommand } from "../../base";
@@ -26,7 +26,7 @@ import {
 	isDependencyUpdateType,
 	npmCheckUpdates,
 } from "../../lib";
-import { ReleaseGroup } from "../../releaseGroups";
+import { ReleaseGroup, knownReleaseGroupsEnum } from "../../releaseGroups";
 // eslint-disable-next-line import/no-internal-modules
 import { npmCheckUpdatesHomegrown } from "../../lib/package";
 
@@ -137,7 +137,10 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 
 		const branchName = await context.gitRepo.getCurrentBranchName();
 
-		if (args.package_or_release_group === MonoRepoKind.Server && branchName !== "next") {
+		if (
+			args.package_or_release_group === knownReleaseGroupsEnum.server &&
+			branchName !== "next"
+		) {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const { confirmed } = await prompts({
 				type: "confirm",

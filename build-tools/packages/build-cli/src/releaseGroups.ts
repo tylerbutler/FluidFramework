@@ -28,12 +28,29 @@ export const knownReleaseGroups = [
 	"historian",
 ] as const;
 
+export const knownReleaseGroupsEnum = {
+	"build-tools": "build-tools",
+	"client": "client",
+	"server": "server",
+	"gitrest": "gitrest",
+	"historian": "historian",
+} as const;
+
 /**
  * A type that represents release groups.
  *
  * @internal
  */
 export type ReleaseGroup = (typeof knownReleaseGroups)[number];
+
+// export type KnownReleaseGroups = {
+// 	[K in ReleaseGroup]: K;
+// }
+
+// export const KnownReleaseGroups: Record<string, string> = {};
+// for (const key of knownReleaseGroups) {
+// 	KnownReleaseGroups[key] = key;
+// }
 
 /**
  * A type guard used to determine if a string is a ReleaseGroup.

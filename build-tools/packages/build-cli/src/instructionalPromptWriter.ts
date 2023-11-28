@@ -5,11 +5,9 @@
 import { StringBuilder } from "@rushstack/node-core-library";
 import chalk from "chalk";
 
-import { MonoRepoKind } from "@fluidframework/build-tools";
-
 import { indentString } from "./lib";
 import { CommandLogger } from "./logging";
-import { ReleaseGroup, ReleasePackage } from "./releaseGroups";
+import { ReleaseGroup, ReleasePackage, knownReleaseGroupsEnum } from "./releaseGroups";
 
 /**
  * An instructional prompt to display to a user in a terminal. A prompt can have any number of sections, and each
@@ -51,11 +49,17 @@ interface Section {
  * Map release groups to ADO pipeline
  */
 export const ADOPipelineLinks = new Map<ReleasePackage | ReleaseGroup | undefined, string>([
-	[MonoRepoKind.Client, "https://dev.azure.com/fluidframework/internal/_build?definitionId=12"],
-	[MonoRepoKind.Server, "https://dev.azure.com/fluidframework/internal/_build?definitionId=30"],
-	[MonoRepoKind.Azure, "https://dev.azure.com/fluidframework/internal/_build?definitionId=85"],
 	[
-		MonoRepoKind.BuildTools,
+		knownReleaseGroupsEnum.client,
+		"https://dev.azure.com/fluidframework/internal/_build?definitionId=12",
+	],
+	[
+		knownReleaseGroupsEnum.server,
+		"https://dev.azure.com/fluidframework/internal/_build?definitionId=30",
+	],
+	["azure", "https://dev.azure.com/fluidframework/internal/_build?definitionId=85"],
+	[
+		knownReleaseGroupsEnum["build-tools"],
 		"https://dev.azure.com/fluidframework/internal/_build?definitionId=14",
 	],
 	[
