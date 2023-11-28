@@ -6,7 +6,7 @@ import { strict as assert } from "node:assert";
 import chalk from "chalk";
 import { Machine } from "jssm";
 
-import { FluidRepo, Workspace as MonoRepo } from "@fluidframework/build-tools";
+import { FluidRepo, Workspace } from "@fluidframework/build-tools";
 
 import { bumpVersionScheme, detectVersionScheme } from "@fluid-tools/version-tools";
 
@@ -159,7 +159,7 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 
 	const scheme = detectVersionScheme(releaseVersion);
 	const newVersion = bumpVersionScheme(releaseVersion, bumpType, scheme);
-	const packages = rgRepo instanceof MonoRepo ? rgRepo.packages : [rgRepo];
+	const packages = rgRepo instanceof Workspace ? rgRepo.packages : [rgRepo];
 
 	log.info(
 		`Bumping ${releaseGroup} from ${releaseVersion} to ${newVersion.version} (${chalk.blue(
@@ -171,7 +171,7 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 		context,
 		rgRepo,
 		newVersion,
-		rgRepo instanceof MonoRepo ? rgRepo.interdependencyRange : undefined,
+		rgRepo instanceof Workspace ? rgRepo.interdependencyRange : undefined,
 		log,
 	);
 

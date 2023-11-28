@@ -2,12 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import {
-	Context,
-	Workspace as MonoRepo,
-	Package,
-	isMonoRepoKind,
-} from "@fluidframework/build-tools";
+import { Context, Workspace, Package, isMonoRepoKind } from "@fluidframework/build-tools";
 import { Args } from "@oclif/core";
 
 /**
@@ -26,7 +21,7 @@ export const packageOrReleaseGroupArg = Args.string({
 export const findPackageOrReleaseGroup = (
 	name: string,
 	context: Context,
-): Package | MonoRepo | undefined => {
+): Package | Workspace | undefined => {
 	if (isMonoRepoKind(name)) {
 		return context.repo.releaseGroups.get(name);
 	}

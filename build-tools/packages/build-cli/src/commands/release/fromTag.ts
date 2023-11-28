@@ -2,7 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Workspace as MonoRepo, MonoRepoKind, Package } from "@fluidframework/build-tools";
+import { Workspace, MonoRepoKind, Package } from "@fluidframework/build-tools";
 import { ReleaseVersion, VersionBumpType, detectBumpType } from "@fluid-tools/version-tools";
 import { Args } from "@oclif/core";
 import semver from "semver";
@@ -117,7 +117,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 	 * @param input - A git tag as a string.
 	 * @returns A 3-tuple of the release group, the semver version, and the original tag.
 	 */
-	private async parseTag(input: string): Promise<[MonoRepo | Package, semver.SemVer, string]> {
+	private async parseTag(input: string): Promise<[Workspace | Package, semver.SemVer, string]> {
 		const tag = input.startsWith(tagRefPrefix) ? input.slice(tagRefPrefix.length) : input;
 		const [rg, ver] = tag.split("_v");
 

@@ -8,7 +8,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import * as semver from "semver";
 
-import { FluidRepo, Workspace as MonoRepo, Package } from "@fluidframework/build-tools";
+import { FluidRepo, Workspace, Package } from "@fluidframework/build-tools";
 
 import {
 	InterdependencyRange,
@@ -153,7 +153,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		}
 
 		let repoVersion: ReleaseVersion;
-		let packageOrReleaseGroup: Package | MonoRepo;
+		let packageOrReleaseGroup: Package | Workspace;
 		let scheme: VersionScheme | undefined;
 		const exactVersion: semver.SemVer | null = semver.parse(flags.exact);
 		const updatedPackages: Package[] = [];
@@ -162,7 +162,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 			this.error(`--exact value invalid: ${flags.exact}`);
 		}
 
-		if (rgOrPackage instanceof MonoRepo) {
+		if (rgOrPackage instanceof Workspace) {
 			const releaseRepo = rgOrPackage;
 			assert(releaseRepo !== undefined, `Release repo not found for ${rgOrPackage.name}`);
 

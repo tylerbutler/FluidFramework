@@ -7,7 +7,7 @@ import chalk from "chalk";
 import prompts from "prompts";
 import stripAnsi from "strip-ansi";
 
-import { FluidRepo, Workspace as MonoRepo, MonoRepoKind } from "@fluidframework/build-tools";
+import { FluidRepo, Workspace, MonoRepoKind } from "@fluidframework/build-tools";
 
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../../args";
 import { BaseCommand } from "../../base";
@@ -166,7 +166,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 		 */
 		const depsToUpdate: string[] = [];
 
-		if (rgOrPackage instanceof MonoRepo) {
+		if (rgOrPackage instanceof Workspace) {
 			depsToUpdate.push(
 				...rgOrPackage.packages
 					.filter((pkg) => pkg.packageJson.private !== true)
@@ -216,7 +216,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 						context,
 						flags.releaseGroup ?? flags.package, // if undefined the whole repo will be checked
 						depsToUpdate,
-						rgOrPackage instanceof MonoRepo ? rgOrPackage.releaseGroup : undefined,
+						rgOrPackage instanceof Workspace ? rgOrPackage.releaseGroup : undefined,
 						/* prerelease */ flags.prerelease,
 						/* writeChanges */ !flags.testMode,
 						this.logger,
@@ -225,7 +225,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 						context,
 						flags.releaseGroup ?? flags.package, // if undefined the whole repo will be checked
 						depsToUpdate,
-						rgOrPackage instanceof MonoRepo ? rgOrPackage.releaseGroup : undefined,
+						rgOrPackage instanceof Workspace ? rgOrPackage.releaseGroup : undefined,
 						flags.updateType,
 						/* prerelease */ flags.prerelease,
 						/* writeChanges */ !flags.testMode,
