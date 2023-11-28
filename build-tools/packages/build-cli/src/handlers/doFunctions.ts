@@ -6,7 +6,7 @@ import { strict as assert } from "node:assert";
 import chalk from "chalk";
 import { Machine } from "jssm";
 
-import { FluidRepo, MonoRepo } from "@fluidframework/build-tools";
+import { FluidRepo, Workspace as MonoRepo } from "@fluidframework/build-tools";
 
 import { bumpVersionScheme, detectVersionScheme } from "@fluid-tools/version-tools";
 

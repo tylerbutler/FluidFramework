@@ -2,7 +2,12 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Context, MonoRepo, Package, isMonoRepoKind } from "@fluidframework/build-tools";
+import {
+	Context,
+	Workspace as MonoRepo,
+	Package,
+	isMonoRepoKind,
+} from "@fluidframework/build-tools";
 import { Args } from "@oclif/core";
 
 /**

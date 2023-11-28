@@ -7,7 +7,7 @@ import chalk from "chalk";
 import prompts from "prompts";
 import stripAnsi from "strip-ansi";
 
-import { FluidRepo, MonoRepo, MonoRepoKind } from "@fluidframework/build-tools";
+import { FluidRepo, Workspace as MonoRepo, MonoRepoKind } from "@fluidframework/build-tools";
 
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../../args";
 import { BaseCommand } from "../../base";

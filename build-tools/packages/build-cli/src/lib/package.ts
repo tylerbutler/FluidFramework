@@ -5,7 +5,7 @@
 import {
 	Context,
 	Logger,
-	MonoRepo,
+	Workspace as MonoRepo,
 	Package,
 	VersionDetails,
 	updatePackageJsonFile,

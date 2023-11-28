@@ -8,7 +8,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import * as semver from "semver";
 
-import { FluidRepo, MonoRepo, Package } from "@fluidframework/build-tools";
+import { FluidRepo, Workspace as MonoRepo, Package } from "@fluidframework/build-tools";
 
 import {
 	InterdependencyRange,

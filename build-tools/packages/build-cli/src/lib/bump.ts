@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { Context, MonoRepo, Logger, Package } from "@fluidframework/build-tools";
+import { Context, Workspace as MonoRepo, Logger, Package } from "@fluidframework/build-tools";
 import {
 	DEFAULT_INTERDEPENDENCY_RANGE,
 	InterdependencyRange,
