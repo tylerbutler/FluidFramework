@@ -57,7 +57,7 @@ export function* supportedMonoRepoValues(): IterableIterator<MonoRepoKind> {
 }
 
 /**
- * A monorepo is a collection of packages that are versioned and released together.
+ * A workspace is a collection of packages that are versioned and released together.
  *
  * @remarks
  *
@@ -78,7 +78,7 @@ export function* supportedMonoRepoValues(): IterableIterator<MonoRepoKind> {
  *
  * @internal
  */
-export class MonoRepo {
+export class Workspace {
 	public readonly packages: Package[] = [];
 	public readonly version: string;
 	public readonly workspaceGlobs: string[];
@@ -139,7 +139,7 @@ export class MonoRepo {
 			return undefined;
 		}
 
-		return new MonoRepo(
+		return new Workspace(
 			group,
 			directory,
 			defaultInterdependencyRange ?? DEFAULT_INTERDEPENDENCY_RANGE,
@@ -223,7 +223,7 @@ export class MonoRepo {
 		}
 	}
 
-	public static isSame(a: MonoRepo | undefined, b: MonoRepo | undefined) {
+	public static isSame(a: Workspace | undefined, b: Workspace | undefined) {
 		return a !== undefined && a === b;
 	}
 

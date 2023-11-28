@@ -12,7 +12,7 @@ import {
 } from "@fluid-tools/version-tools";
 
 import { getFluidBuildConfig } from "./fluidUtils";
-import { MonoRepo } from "./monoRepo";
+import { Workspace } from "./monoRepo";
 import { Package, Packages } from "./npmPackage";
 import { ExecAsyncResult } from "./utils";
 import { TaskDefinitionsOnDisk } from "./fluidTaskDefinitions";
@@ -274,7 +274,7 @@ export interface IFluidRepoPackage {
 export type IFluidRepoPackageEntry = string | IFluidRepoPackage | (string | IFluidRepoPackage)[];
 
 export class FluidRepo {
-	private readonly monoRepos = new Map<string, MonoRepo>();
+	private readonly monoRepos = new Map<string, Workspace>();
 
 	public get releaseGroups() {
 		return this.monoRepos;
@@ -322,7 +322,7 @@ export class FluidRepo {
 				}
 				continue;
 			}
-			const monoRepo = MonoRepo.load(group, item);
+			const monoRepo = Workspace.load(group, item);
 			if (monoRepo) {
 				this.releaseGroups.set(group, monoRepo);
 				loadedPackages.push(...monoRepo.packages);
@@ -342,7 +342,7 @@ export class FluidRepo {
 	}
 
 	public static async ensureInstalled(packages: Package[]) {
-		const installedMonoRepo = new Set<MonoRepo>();
+		const installedMonoRepo = new Set<Workspace>();
 		const installPromises: Promise<ExecAsyncResult>[] = [];
 		for (const pkg of packages) {
 			if (pkg.monoRepo) {

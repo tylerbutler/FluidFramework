@@ -4,7 +4,7 @@
  */
 import * as semver from "semver";
 
-import { MonoRepo } from "../common/monoRepo";
+import { Workspace } from "../common/monoRepo";
 import { Package } from "../common/npmPackage";
 import { exec, execNoError, fatal } from "./utils";
 
@@ -185,7 +185,7 @@ export class ReferenceVersionBag extends VersionBag {
 					`Private package not a dev dependency\n   ${pkg.name}@${pkg.version}\n  ${dep.name}@${dep.version}`,
 				);
 			}
-			if (!MonoRepo.isSame(pkg.monoRepo, dep.monoRepo)) {
+			if (!Workspace.isSame(pkg.monoRepo, dep.monoRepo)) {
 				fatal(
 					`Private package not in the same monorepo\n   ${pkg.name}@${pkg.version}\n  ${dep.name}@${dep.version}`,
 				);

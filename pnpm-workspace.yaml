@@ -3,3 +3,10 @@ packages:
   - "examples/**"
   - "experimental/**"
   - "packages/**"
+
+  # build-tools
+  - "build-tools/packages/**"
+  
+  # independent packages
+  - "common/**"
+  - "tools/**"

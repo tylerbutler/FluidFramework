@@ -7,7 +7,7 @@ import chalk from "chalk";
 import { FluidRepo } from "../common/fluidRepo";
 import { getFluidBuildConfig } from "../common/fluidUtils";
 import { defaultLogger } from "../common/logging";
-import { MonoRepo } from "../common/monoRepo";
+import { Workspace } from "../common/monoRepo";
 import { Package, Packages } from "../common/npmPackage";
 import {
 	existsSync,
@@ -134,7 +134,7 @@ export class FluidRepoBuild extends FluidRepo {
 			getFluidBuildConfig(this.resolvedRoot)?.tasks,
 			(pkg: Package) => {
 				return (dep: Package) => {
-					return options.fullSymlink || MonoRepo.isSame(pkg.monoRepo, dep.monoRepo);
+					return options.fullSymlink || Workspace.isSame(pkg.monoRepo, dep.monoRepo);
 				};
 			},
 		);
@@ -201,7 +201,7 @@ export class FluidRepoBuild extends FluidRepo {
 		}
 	}
 
-	private setMatchedReleaseGroup(monoRepo: MonoRepo) {
+	private setMatchedReleaseGroup(monoRepo: Workspace) {
 		this.setMatchedPackage(monoRepo.pkg);
 	}
 

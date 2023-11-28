@@ -95,6 +95,53 @@ module.exports = {
 			script: false,
 		},
 	},
+
+	repoLayout: {
+		workspaces: {
+			main: {
+				directory: ".",
+				independentPackages: ["common", "tools"],
+				releaseGroups: {
+					"client": {
+						include: [
+							"@fluidframework",
+							"@fluid-experimental",
+							// "@fluid-example",
+							"@fluid-tools",
+						],
+						defaultInterdependencyRange: "workspace:~",
+					},
+					"examples": {
+						include: ["@fluid-example"],
+						defaultInterdependencyRange: "workspace:~",
+					},
+					"build-tools": {
+						include: [
+							"@fluid-private/readme-command",
+							"@fluid-tools/build-cli",
+							"@fluid-tools/version-tools",
+							"@fluidframework/build--tools",
+							"@fluidframework/bundle-size-tools",
+						],
+						defaultInterdependencyRange: "workspace:~",
+					},
+				},
+			},
+			server: {
+				directory: "./server/routerlicious",
+				defaultInterdependencyRange: "workspace:~",
+			},
+			gitrest: {
+				directory: "server/gitrest",
+				defaultInterdependencyRange: "^",
+			},
+			historian: {
+				directory: "server/historian",
+				defaultInterdependencyRange: "^",
+			},
+		},
+	},
+
 	// This defines the layout of the repo for fluid-build. It applies to the whole repo.
 	repoPackages: {
 		// Release groups

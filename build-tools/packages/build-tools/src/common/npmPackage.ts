@@ -16,7 +16,7 @@ import type { PackageJson as StandardPackageJson, SetRequired } from "type-fest"
 import { options } from "../fluidBuild/options";
 import { type IFluidBuildConfig, type ITypeValidationConfig } from "./fluidRepo";
 import { defaultLogger } from "./logging";
-import { MonoRepo, PackageManager } from "./monoRepo";
+import { Workspace, PackageManager } from "./monoRepo";
 import {
 	ExecAsyncResult,
 	execWithErrorAsync,
@@ -104,7 +104,7 @@ export class Package {
 	constructor(
 		public readonly packageJsonFileName: string,
 		public readonly group: string,
-		public readonly monoRepo?: MonoRepo,
+		public readonly monoRepo?: Workspace,
 		additionalProperties: any = {},
 	) {
 		[this._packageJson, this._indent] = readPackageJsonAndIndent(packageJsonFileName);
@@ -302,7 +302,7 @@ export class Package {
 		this: T,
 		packageJsonFileName: string,
 		group: string,
-		monoRepo?: MonoRepo,
+		monoRepo?: Workspace,
 		additionalProperties?: TAddProps,
 	) {
 		return new this(
@@ -328,7 +328,7 @@ export class Package {
 		this: T,
 		packageDir: string,
 		group: string,
-		monoRepo?: MonoRepo,
+		monoRepo?: Workspace,
 		additionalProperties?: TAddProps,
 	) {
 		return Package.load(
@@ -386,7 +386,7 @@ export class Packages {
 		dirFullPath: string,
 		group: string,
 		ignoredDirFullPaths: string[] | undefined,
-		monoRepo?: MonoRepo,
+		monoRepo?: Workspace,
 	) {
 		const packageJsonFileName = path.join(dirFullPath, "package.json");
 		if (existsSync(packageJsonFileName)) {
