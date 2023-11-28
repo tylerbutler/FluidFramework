@@ -543,7 +543,7 @@ export const checkReleaseGroupIsBumped: StateHandlerFunction = async (
 	const { context, releaseGroup, releaseVersion, bumpType } = data;
 
 	context.repo.reload();
-	const repoVersion = context.getVersion(releaseGroup);
+	const repoVersion = context.repo.getVersion(releaseGroup);
 	const targetVersion = bumpVersionScheme(releaseVersion, bumpType).version;
 
 	if (repoVersion !== targetVersion) {

@@ -170,7 +170,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 			const data = await this.collectRawReleaseData(
 				context,
 				rg,
-				rgVerMap?.[rg] ?? context.getVersion(rg),
+				rgVerMap?.[rg] ?? context.repo.getVersion(rg),
 				mode,
 			);
 			if (data !== undefined) {
@@ -209,7 +209,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 		repoVersion: string,
 		latestReleaseChooseMode?: ReleaseSelectionMode,
 	): Promise<RawReleaseData | undefined> {
-		const versions = await context.getAllVersions(releaseGroupOrPackage);
+		const versions = await context.repo.getAllVersions(releaseGroupOrPackage);
 
 		if (versions === undefined) {
 			return undefined;
@@ -443,7 +443,7 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 				`${chalk.yellow.bold("\nIMPORTANT")}: This report only includes the ${chalk.blue(
 					flags.releaseGroup,
 				)} release group (version ${chalk.blue(
-					context.getVersion(flags.releaseGroup),
+					context.repo.getVersion(flags.releaseGroup),
 				)}) and its ${chalk.bold("direct Fluid dependencies")}.`,
 			);
 			this.log(
@@ -678,7 +678,7 @@ async function writeReport(
 		releaseGroup === undefined
 			? // Use container-runtime as a proxy for the client release group.
 			  report["@fluidframework/container-runtime"].version
-			: context.getVersion(releaseGroup);
+			: context.repo.getVersion(releaseGroup);
 
 	const reportName = generateReportFileName(kind, version, releaseGroup);
 	const reportPath = path.join(dir, reportName);

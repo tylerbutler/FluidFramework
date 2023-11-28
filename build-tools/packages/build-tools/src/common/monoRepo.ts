@@ -47,16 +47,6 @@ export function isMonoRepoKind(str: string | undefined): str is MonoRepoKind {
 }
 
 /**
- * An iterator that returns only the Enum values of MonoRepoKind.
- * @deprecated Don't use
- */
-export function* supportedMonoRepoValues(): IterableIterator<MonoRepoKind> {
-	for (const [, flag] of Object.entries(MonoRepoKind)) {
-		yield flag;
-	}
-}
-
-/**
  * A workspace is a collection of packages that are versioned and released together.
  *
  * @remarks

@@ -42,7 +42,7 @@ export async function createBumpBranch(
 	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
 	bumpType: VersionBumpType,
 ): Promise<string> {
-	const version = context.getVersion(releaseGroupOrPackage);
+	const version = context.repo.getVersion(releaseGroupOrPackage);
 	const name = generateBumpVersionBranchName(releaseGroupOrPackage, bumpType, version);
 	await context.createBranch(name);
 	return name;

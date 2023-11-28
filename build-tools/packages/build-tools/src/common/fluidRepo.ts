@@ -10,12 +10,16 @@ import {
 	ReleaseVersion,
 	VersionBumpType,
 } from "@fluid-tools/version-tools";
+import { PackageName } from "@rushstack/node-core-library";
 
 import { getFluidBuildConfig } from "./fluidUtils";
-import { Workspace } from "./monoRepo";
+import { Workspace, isMonoRepoKind } from "./monoRepo";
 import { Package, Packages } from "./npmPackage";
 import { ExecAsyncResult } from "./utils";
 import { TaskDefinitionsOnDisk } from "./fluidTaskDefinitions";
+import { getVersionFromTag } from "./tags";
+import { GitRepo } from "./gitRepo";
+
 import registerDebug from "debug";
 const traceInit = registerDebug("fluid-build:init");
 
@@ -275,6 +279,7 @@ export type IFluidRepoPackageEntry = string | IFluidRepoPackage | (string | IFlu
 
 export class FluidRepo {
 	private readonly monoRepos = new Map<string, Workspace>();
+	private readonly gitRepo: GitRepo;
 
 	public get releaseGroups() {
 		return this.monoRepos;
@@ -284,7 +289,7 @@ export class FluidRepo {
 
 	constructor(public readonly resolvedRoot: string) {
 		const packageManifest = getFluidBuildConfig(resolvedRoot);
-
+		this.gitRepo = new GitRepo(resolvedRoot);
 		// Expand to full IFluidRepoPackage and full path
 		const normalizeEntry = (
 			item: IFluidRepoPackageEntry,
@@ -333,8 +338,95 @@ export class FluidRepo {
 		this.packages = new Packages(loadedPackages);
 	}
 
+	private _fullPackageMap: Map<string, Package> | undefined;
+	public fullPackageMap(recreate = false) {
+		if (this._fullPackageMap === undefined || recreate) {
+			this._fullPackageMap = this.createPackageMap();
+		}
+		return this._fullPackageMap;
+	}
 	public createPackageMap() {
 		return new Map<string, Package>(this.packages.packages.map((pkg) => [pkg.name, pkg]));
+	}
+
+	public getVersion(packageOrReleaseGroup: string): string {
+		const releaseGroup = this.releaseGroups.get(packageOrReleaseGroup);
+		if (releaseGroup === undefined) {
+			const pkg = this.fullPackageMap().get(packageOrReleaseGroup);
+			if (pkg === undefined) {
+				throw new Error(`Package or release group not found: ${packageOrReleaseGroup}`);
+			}
+			return pkg.version;
+		}
+
+		return releaseGroup.version;
+	}
+
+	private _versions: Map<string, VersionDetails[]> = new Map();
+
+	/**
+	 * Gets all the versions for a release group or independent package. This function only considers the tags in the
+	 * repo to determine releases and dates.
+	 *
+	 * @param releaseGroupOrPackage - The release group or independent package to get versions for.
+	 * @returns An array of {@link ReleaseDetails} containing the version and date for each version.
+	 *
+	 * @internal
+	 */
+	public async getAllVersions(
+		releaseGroupOrPackage: string,
+	): Promise<VersionDetails[] | undefined> {
+		const cacheEntry = this._versions.get(releaseGroupOrPackage);
+		if (cacheEntry !== undefined) {
+			return cacheEntry;
+		}
+
+		const versions = new Map<string, Date>();
+		const tags = await this.getTagsForReleaseGroup(releaseGroupOrPackage);
+
+		for (const tag of tags) {
+			const ver = getVersionFromTag(tag);
+			if (ver !== undefined && ver !== "" && ver !== null) {
+				// eslint-disable-next-line no-await-in-loop
+				const date = await this.gitRepo.getCommitDate(tag);
+				versions.set(ver, date);
+			}
+		}
+
+		if (versions.size === 0) {
+			return undefined;
+		}
+
+		const toReturn: VersionDetails[] = [];
+		for (const [version, date] of versions) {
+			toReturn.push({ version, date });
+		}
+
+		this._versions.set(releaseGroupOrPackage, toReturn);
+		return toReturn;
+	}
+
+	private _tags: Map<string, string[]> = new Map();
+
+	/**
+	 * Returns an array of all the git tags associated with a release group.
+	 *
+	 * @param releaseGroupOrPackage - The release group or independent package to get tags for.
+	 * @returns An array of all all the tags for the release group or package.
+	 *
+	 * @internal
+	 */
+	public async getTagsForReleaseGroup(releaseGroupOrPackage: string): Promise<string[]> {
+		const prefix = isMonoRepoKind(releaseGroupOrPackage)
+			? releaseGroupOrPackage.toLowerCase()
+			: PackageName.getUnscopedName(releaseGroupOrPackage);
+		const cacheEntry = this._tags.get(prefix);
+		if (cacheEntry !== undefined) {
+			return cacheEntry;
+		}
+
+		const tagList = await this.gitRepo.getAllTags(`${prefix}_v*`);
+		return tagList;
 	}
 
 	public reload() {
