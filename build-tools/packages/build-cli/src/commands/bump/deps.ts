@@ -7,7 +7,7 @@ import chalk from "chalk";
 import prompts from "prompts";
 import stripAnsi from "strip-ansi";
 
-import { FluidRepo, MonoRepo, MonoRepoKind } from "@fluidframework/build-tools";
+import { FluidRepo, Workspace, MonoRepoKind } from "@fluidframework/build-tools";
 
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../../args";
 import { BaseCommand } from "../../base";
@@ -166,7 +166,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 		 */
 		const depsToUpdate: string[] = [];
 
-		if (rgOrPackage instanceof MonoRepo) {
+		if (rgOrPackage instanceof Workspace) {
 			depsToUpdate.push(
 				...rgOrPackage.packages
 					.filter((pkg) => pkg.packageJson.private !== true)
@@ -184,8 +184,8 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 				this.error(`Package not found: ${rgOrPackage.name}`);
 			}
 
-			if (pkg.monoRepo !== undefined) {
-				const rg = pkg.monoRepo.kind;
+			if (pkg.workspace !== undefined) {
+				const rg = pkg.workspace.name;
 				this.errorLog(`${pkg.name} is part of the ${rg} release group.`);
 				this.errorLog(
 					`If you want to update dependencies on that package, run the following command:\n\n    ${
@@ -216,7 +216,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 						context,
 						flags.releaseGroup ?? flags.package, // if undefined the whole repo will be checked
 						depsToUpdate,
-						rgOrPackage instanceof MonoRepo ? rgOrPackage.releaseGroup : undefined,
+						rgOrPackage instanceof Workspace ? rgOrPackage.name : undefined,
 						/* prerelease */ flags.prerelease,
 						/* writeChanges */ !flags.testMode,
 						this.logger,
@@ -225,7 +225,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 						context,
 						flags.releaseGroup ?? flags.package, // if undefined the whole repo will be checked
 						depsToUpdate,
-						rgOrPackage instanceof MonoRepo ? rgOrPackage.releaseGroup : undefined,
+						rgOrPackage instanceof Workspace ? rgOrPackage.name : undefined,
 						flags.updateType,
 						/* prerelease */ flags.prerelease,
 						/* writeChanges */ !flags.testMode,
@@ -241,23 +241,23 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 				this.warning(`Skipping installation. Lockfiles might be outdated.`);
 			}
 
-			const updatedReleaseGroups: ReleaseGroup[] = [
+			const updatedWorkspaces: ReleaseGroup[] = [
 				...new Set(
 					updatedPackages
-						.filter((p) => p.monoRepo !== undefined)
-						// eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-return
-						.map((p) => p.monoRepo!.releaseGroup),
+						.filter((p) => p.workspace !== undefined)
+						// eslint-disable-next-line @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unnecessary-type-assertion
+						.map((p) => p.workspace!.name),
 				),
 			];
 
 			const changedVersionsString = [`Updated the following:`, ""];
 
-			for (const rg of updatedReleaseGroups) {
+			for (const rg of updatedWorkspaces) {
 				changedVersionsString.push(indentString(`${rg} (release group)`));
 			}
 
 			for (const pkg of updatedPackages) {
-				if (pkg.monoRepo === undefined) {
+				if (pkg.workspace === undefined) {
 					changedVersionsString.push(indentString(`${pkg.name}`));
 				}
 			}

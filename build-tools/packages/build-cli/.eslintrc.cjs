@@ -50,6 +50,9 @@ module.exports = {
 		// In commands, destructuring is useful in some places but makes others less legible, so consistency isn't preferred.
 		"unicorn/consistent-destructuring": "off",
 
+		// temporary
+		"unicorn/no-empty-file": "off",
+
 		// Deprecated in 2018: https://eslint.org/blog/2018/11/jsdoc-end-of-life/
 		"valid-jsdoc": "off",
 

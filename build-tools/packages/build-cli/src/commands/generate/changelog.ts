@@ -77,30 +77,34 @@ export default class GenerateChangeLogCommand extends BaseCommand<typeof Generat
 
 		const gitRoot = context.gitRepo.resolvedRoot;
 
-		const { releaseGroup } = this.flags;
+		const { releaseGroup: releaseGroupFlagValue } = this.flags;
 
-		if (releaseGroup === undefined) {
+		if (releaseGroupFlagValue === undefined) {
 			this.error("ReleaseGroup is possibly 'undefined'");
 		}
 
-		const monorepo =
-			releaseGroup === undefined ? undefined : context.repo.releaseGroups.get(releaseGroup);
-		if (monorepo === undefined) {
-			this.error(`Release group ${releaseGroup} not found in repo config`, { exit: 1 });
+		const workspace =
+			releaseGroupFlagValue === undefined
+				? undefined
+				: context.repo.workspaces.get(releaseGroupFlagValue);
+		if (workspace === undefined) {
+			this.error(`Release group ${releaseGroupFlagValue} not found in repo config`, {
+				exit: 1,
+			});
 		}
 
-		const execDir = monorepo?.directory ?? gitRoot;
+		const execDir = workspace?.directory ?? gitRoot;
 		await execCommand("pnpm exec changeset version", { cwd: execDir });
 
-		const packagesToCheck = isReleaseGroup(releaseGroup)
-			? context.packagesInReleaseGroup(releaseGroup)
+		const packagesToCheck = isReleaseGroup(releaseGroupFlagValue)
+			? context.packagesInReleaseGroup(releaseGroupFlagValue)
 			: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			  [context.fullPackageMap.get(releaseGroup)!];
+			  [context.fullPackageMap.get(releaseGroupFlagValue)!];
 
 		const installed = await FluidRepo.ensureInstalled(packagesToCheck);
 
 		if (!installed) {
-			this.error(`Error installing dependencies for: ${releaseGroup}`);
+			this.error(`Error installing dependencies for: ${releaseGroupFlagValue}`);
 		}
 
 		this.repo = new Repository({ baseDir: execDir });

@@ -25,7 +25,7 @@ export class FlubListTask extends LeafWithDoneFileTask {
 			return undefined;
 		}
 		const packages = Array.from(this.node.buildContext.repoPackageMap.values()).filter(
-			(pkg) => pkg.monoRepo?.kind === resourceGroup,
+			(pkg) => pkg.workspace?.name === resourceGroup,
 		);
 		if (packages.length === 0) {
 			return undefined;

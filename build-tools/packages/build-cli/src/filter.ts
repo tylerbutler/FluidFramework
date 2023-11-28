@@ -143,8 +143,8 @@ const selectPackagesFromContext = (
 	if (selection.directory !== undefined) {
 		const pkg = Package.load(
 			path.join(selection.directory, "package.json"),
-			"none",
-			undefined,
+			undefined /* workspace */,
+			undefined /* releaseGroupMap */,
 			{
 				kind: "packageFromDirectory" as PackageKind,
 			},
@@ -154,9 +154,9 @@ const selectPackagesFromContext = (
 
 	// Select independent packages
 	if (selection.independentPackages === true) {
-		for (const pkg of context.independentPackages) {
+		for (const pkg of context.repo.independentPackages) {
 			selected.push(
-				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, {
+				Package.load(pkg.packageJsonFileName, pkg.workspace, undefined, {
 					kind: "independentPackage",
 				}),
 			);
@@ -167,7 +167,7 @@ const selectPackagesFromContext = (
 	for (const rg of selection.releaseGroups) {
 		for (const pkg of context.packagesInReleaseGroup(rg)) {
 			selected.push(
-				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, {
+				Package.load(pkg.packageJsonFileName, pkg.workspace, undefined, {
 					kind: "releaseGroupChildPackage",
 				}),
 			);
@@ -175,19 +175,21 @@ const selectPackagesFromContext = (
 	}
 
 	// Select release group root packages
-	for (const rg of selection.releaseGroupRoots ?? []) {
-		const packages = context.packagesInReleaseGroup(rg);
+	for (const rgName of selection.releaseGroupRoots ?? []) {
+		const packages = context.packagesInReleaseGroup(rgName);
 		if (packages.length === 0) {
 			continue;
 		}
 
-		if (packages[0].monoRepo === undefined) {
-			throw new Error(`No release group found for package: ${packages[0].name}`);
+		if (packages[0].workspace === undefined) {
+			throw new Error(`No workspace found for package: ${packages[0].name}`);
 		}
 
-		const dir = packages[0].monoRepo.directory;
-		const pkg = Package.loadDir(dir, rg);
-		selected.push(Package.loadDir(dir, rg, pkg.monoRepo, { kind: "releaseGroupRootPackage" }));
+		const dir = packages[0].workspace.directory;
+		const pkg = Package.load(dir, undefined);
+		selected.push(
+			Package.load(dir, pkg.workspace, undefined, { kind: "releaseGroupRootPackage" }),
+		);
 	}
 
 	return selected;

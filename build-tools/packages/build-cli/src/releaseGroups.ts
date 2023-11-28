@@ -33,7 +33,8 @@ export const knownReleaseGroups = [
  *
  * @internal
  */
-export type ReleaseGroup = (typeof knownReleaseGroups)[number];
+// export type ReleaseGroup = (typeof knownReleaseGroups)[number];
+export type ReleaseGroup = string;
 
 /**
  * A type guard used to determine if a string is a ReleaseGroup.

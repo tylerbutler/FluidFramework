@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { Context, MonoRepo, Logger, Package } from "@fluidframework/build-tools";
+import { Context, Workspace, Logger, Package } from "@fluidframework/build-tools";
 import {
 	DEFAULT_INTERDEPENDENCY_RANGE,
 	InterdependencyRange,
@@ -59,7 +59,7 @@ export function isDependencyUpdateType(str: string | undefined): str is Dependen
 // eslint-disable-next-line max-params
 export async function bumpReleaseGroup(
 	context: Context,
-	releaseGroupOrPackage: MonoRepo | Package,
+	releaseGroupOrPackage: Workspace | Package,
 	bumpType: VersionChangeType,
 	scheme?: VersionScheme,
 	// eslint-disable-next-line default-param-last

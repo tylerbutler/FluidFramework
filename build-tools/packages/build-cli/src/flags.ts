@@ -30,6 +30,7 @@ export const rootPathFlag = Flags.custom({
 /**
  * A re-usable CLI flag to parse release groups.
  */
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-arguments
 export const releaseGroupFlag = Flags.custom<ReleaseGroup>({
 	char: "g",
 	description: "Name of a release group.",
@@ -48,6 +49,7 @@ export const releaseGroupFlag = Flags.custom<ReleaseGroup>({
 /**
  * A re-usable CLI flag to parse release groups along with the value "all" to indicate all release groups.
  */
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-arguments
 export const releaseGroupWithAllFlag = Flags.custom<ReleaseGroup | "all">({
 	char: "g",
 	description: "Name of a release group.",

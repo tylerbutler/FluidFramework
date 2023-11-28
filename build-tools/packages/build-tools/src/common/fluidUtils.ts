@@ -10,6 +10,7 @@ import findUp from "find-up";
 
 import { commonOptions } from "./commonOptions";
 import { IFluidBuildConfig } from "./fluidRepo";
+import { type PackageJson } from "./npmPackage";
 import { realpathAsync } from "./utils";
 import { readJson } from "fs-extra";
 
@@ -23,7 +24,7 @@ async function isFluidRootPackage(dir: string) {
 		return false;
 	}
 
-	const parsed = await readJson(filename);
+	const parsed: PackageJson = await readJson(filename);
 	if (parsed.private === true) {
 		return true;
 	}

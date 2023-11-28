@@ -71,7 +71,7 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 
 	public async run(): Promise<ListItem[]> {
 		const context = await this.getContext();
-		const releaseGroup = context.repo.releaseGroups.get(this.flags.releaseGroup);
+		const releaseGroup = context.repo.workspaces.get(this.flags.releaseGroup);
 
 		if (releaseGroup === undefined) {
 			// exits the process
@@ -79,7 +79,7 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 		}
 
 		const filterOptions = parsePackageFilterFlags(this.flags);
-		const packageList = await pnpmList(releaseGroup.repoPath);
+		const packageList = await pnpmList(releaseGroup.directory);
 		const filtered = filterPackages(packageList, filterOptions)
 			.reverse()
 			.filter((item): item is ListItem => {

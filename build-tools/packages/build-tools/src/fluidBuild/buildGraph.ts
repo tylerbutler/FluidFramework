@@ -85,7 +85,7 @@ export class BuildPackage {
 		this._taskDefinitions = getTaskDefinitions(
 			this.pkg.packageJson,
 			globalTaskDefinitions,
-			this.pkg.isReleaseGroupRoot,
+			this.pkg.isWorkspaceRoot,
 		);
 		traceTaskDef(
 			`${pkg.nameColored}: Task def: ${JSON.stringify(this._taskDefinitions, undefined, 2)}`,
@@ -118,7 +118,7 @@ export class BuildPackage {
 
 	private getTaskDefinition(taskName: string): TaskConfig | undefined {
 		let taskDefinition = this._taskDefinitions[taskName];
-		if (taskDefinition === undefined && this.pkg.isReleaseGroupRoot) {
+		if (taskDefinition === undefined && this.pkg.isWorkspaceRoot) {
 			const isReleaseGroupRootScriptEnabled =
 				this.pkg.packageJson.fluidBuild?.tasks !== undefined;
 			const script = this.pkg.getScript(taskName);
@@ -566,9 +566,9 @@ export class BuildGraph {
 			if (node === undefined) {
 				break;
 			}
-			if (node.pkg.isReleaseGroupRoot) {
+			if (node.pkg.isWorkspaceRoot) {
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				for (const dep of node.pkg.monoRepo!.packages) {
+				for (const dep of node.pkg.workspace!.packages) {
 					traceGraph(`Package dependency: ${node.pkg.nameColored} => ${dep.nameColored}`);
 					node.dependentPackages.push(
 						this.getBuildPackage(dep, globalTaskDefinitions, pendingInitDep),

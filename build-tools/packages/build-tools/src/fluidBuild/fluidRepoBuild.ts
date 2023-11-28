@@ -7,7 +7,7 @@ import chalk from "chalk";
 import { FluidRepo } from "../common/fluidRepo";
 import { getFluidBuildConfig } from "../common/fluidUtils";
 import { defaultLogger } from "../common/logging";
-import { MonoRepo } from "../common/monoRepo";
+import { Workspace } from "../common/monoRepo";
 import { Package, Packages } from "../common/npmPackage";
 import {
 	existsSync,
@@ -43,7 +43,7 @@ export class FluidRepoBuild extends FluidRepo {
 	public async uninstall() {
 		const cleanPackageNodeModules = this.packages.cleanNodeModules();
 		const removePromise: Promise<ExecAsyncResult>[] = [];
-		for (const g of this.releaseGroups.values()) {
+		for (const g of this.workspaces.values()) {
 			removePromise.push(g.uninstall());
 		}
 
@@ -70,7 +70,7 @@ export class FluidRepoBuild extends FluidRepo {
 			});
 
 			options.releaseGroups.forEach((releaseGroupName) => {
-				const releaseGroup = this.releaseGroups.get(releaseGroupName);
+				const releaseGroup = this.workspaces.get(releaseGroupName);
 				if (releaseGroup === undefined) {
 					throw new Error(
 						`Release group '${releaseGroupName}' specified is not defined in the repo.`,
@@ -134,7 +134,7 @@ export class FluidRepoBuild extends FluidRepo {
 			getFluidBuildConfig(this.resolvedRoot)?.tasks,
 			(pkg: Package) => {
 				return (dep: Package) => {
-					return options.fullSymlink || MonoRepo.isSame(pkg.monoRepo, dep.monoRepo);
+					return options.fullSymlink || Workspace.isSame(pkg.workspace, dep.workspace);
 				};
 			},
 		);
@@ -142,7 +142,7 @@ export class FluidRepoBuild extends FluidRepo {
 
 	private getReleaseGroupPackages() {
 		const releaseGroupPackages: Package[] = [];
-		for (const releaseGroup of this.releaseGroups.values()) {
+		for (const releaseGroup of this.workspaces.values()) {
 			releaseGroupPackages.push(releaseGroup.pkg);
 		}
 		return releaseGroupPackages;
@@ -167,14 +167,10 @@ export class FluidRepoBuild extends FluidRepo {
 			throw new Error(`Unable to look up package in directory '${dir}'.`);
 		}
 
-		for (const releaseGroup of this.releaseGroups.values()) {
-			if (isSameFileOrDir(releaseGroup.repoPath, pkgDir)) {
-				log(
-					`Release group ${chalk.cyanBright(
-						releaseGroup.kind,
-					)} matched (directory: ${dir})`,
-				);
-				this.setMatchedReleaseGroup(releaseGroup);
+		for (const workspace of this.workspaces.values()) {
+			if (isSameFileOrDir(workspace.directory, pkgDir)) {
+				log(`Workspace ${chalk.cyanBright(workspace.name)} matched (directory: ${dir})`);
+				this.setMatchedReleaseGroup(workspace);
 				return;
 			}
 		}
@@ -188,20 +184,20 @@ export class FluidRepoBuild extends FluidRepo {
 			);
 		}
 
-		if (matchReleaseGroup && foundPackage.monoRepo !== undefined) {
+		if (matchReleaseGroup && foundPackage.workspace !== undefined) {
 			log(
-				`\tRelease group ${chalk.cyanBright(
-					foundPackage.monoRepo.kind,
+				`Workspace ${chalk.cyanBright(
+					foundPackage.workspace.name,
 				)} matched (directory: ${dir})`,
 			);
-			this.setMatchedReleaseGroup(foundPackage.monoRepo);
+			this.setMatchedReleaseGroup(foundPackage.workspace);
 		} else {
 			log(`\t${foundPackage.nameColored} matched (${dir})`);
 			this.setMatchedPackage(foundPackage);
 		}
 	}
 
-	private setMatchedReleaseGroup(monoRepo: MonoRepo) {
+	private setMatchedReleaseGroup(monoRepo: Workspace) {
 		this.setMatchedPackage(monoRepo.pkg);
 	}
 

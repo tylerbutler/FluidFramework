@@ -19,6 +19,7 @@ import { VersionBag } from "./versionBag";
  * Context provides access to data about the Fluid repo, and exposes methods to interrogate the repo state.
  */
 export class Context {
+	d;
 	public readonly repo: FluidRepo;
 	public readonly fullPackageMap: Map<string, Package>;
 	public readonly rootFluidBuildConfig: IFluidBuildConfig;
@@ -59,7 +60,7 @@ export class Context {
 	 * @returns An array of packages that belong to the release group
 	 */
 	public packagesInReleaseGroup(releaseGroup: string): Package[] {
-		const packages = this.packages.filter((pkg) => pkg.monoRepo?.kind === releaseGroup);
+		const packages = this.packages.filter((pkg) => pkg.workspace?.name === releaseGroup);
 		return packages;
 	}
 
@@ -74,7 +75,7 @@ export class Context {
 		if (releaseGroup instanceof Package) {
 			packages = this.packages.filter((p) => p.name !== releaseGroup.name);
 		} else {
-			packages = this.packages.filter((pkg) => pkg.monoRepo?.kind !== releaseGroup);
+			packages = this.packages.filter((pkg) => pkg.workspace?.name !== releaseGroup);
 		}
 
 		return packages;
@@ -83,10 +84,10 @@ export class Context {
 	/**
 	 * @returns An array of packages in the repo that are not associated with a release group.
 	 */
-	public get independentPackages(): Package[] {
-		const packages = this.packages.filter((pkg) => pkg.monoRepo === undefined);
-		return packages;
-	}
+	// public get independentPackages(): Package[] {
+	// 	const packages = this.packages.filter((pkg) => pkg.workspace === undefined);
+	// 	return packages;
+	// }
 
 	/**
 	 * @returns An array of all packages in the repo.
@@ -109,7 +110,7 @@ export class Context {
 			ver = versionBag.get(key);
 		} else {
 			if (isMonoRepoKind(key)) {
-				const rgRepo = this.repo.releaseGroups.get(key);
+				const rgRepo = this.repo.workspaces.get(key);
 				if (rgRepo === undefined) {
 					throw new Error(`Release group not found: ${key}`);
 				}
@@ -159,10 +160,10 @@ export class Context {
 		}
 
 		const releasePromises: Promise<VersionDetails[] | undefined>[] = [];
-		for (const [kind] of this.repo.releaseGroups) {
+		for (const [kind] of this.repo.workspaces) {
 			releasePromises.push(this.getAllVersions(kind));
 		}
-		for (const p of this.independentPackages) {
+		for (const p of this.repo.independentPackages) {
 			releasePromises.push(this.getAllVersions(p.name));
 		}
 

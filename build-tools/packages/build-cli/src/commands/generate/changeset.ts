@@ -105,18 +105,20 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 		changesetPath?: string;
 	}> {
 		const context = await this.getContext();
-		const { all, empty, releaseGroup, uiMode } = this.flags;
+		const { all, empty, releaseGroup: releaseGroupFlagValue, uiMode } = this.flags;
 		let { branch } = this.flags;
 
-		const monorepo =
-			releaseGroup === undefined ? undefined : context.repo.releaseGroups.get(releaseGroup);
-		if (monorepo === undefined) {
-			this.error(`Release group ${releaseGroup} not found in repo config`, { exit: 1 });
+		const workspace =
+			releaseGroupFlagValue === undefined
+				? undefined
+				: context.repo.workspaces.get(releaseGroupFlagValue);
+		if (workspace === undefined) {
+			this.error(`Workspace ${releaseGroupFlagValue} not found in repo config`, { exit: 1 });
 		}
 
 		if (empty) {
 			const emptyFile = await createChangesetFile(
-				monorepo.directory ?? context.gitRepo.resolvedRoot,
+				workspace.directory ?? context.gitRepo.resolvedRoot,
 				new Map(),
 			);
 			// eslint-disable-next-line @typescript-eslint/no-shadow
@@ -176,10 +178,10 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 		this.verbose(`files: ${changedFiles.join(", ")}`);
 
 		const changedPackages = packages.filter((pkg) => {
-			const inReleaseGroup = pkg.monoRepo?.name === releaseGroup;
+			const inReleaseGroup = pkg.workspace?.name === releaseGroupFlagValue;
 			if (!inReleaseGroup) {
 				this.warning(
-					`${pkg.name}: Ignoring changed package because it is not in the ${releaseGroup} release group.`,
+					`${pkg.name}: Ignoring changed package because it is not in the ${releaseGroupFlagValue} release group.`,
 				);
 			}
 			return inReleaseGroup;
@@ -193,7 +195,7 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 			this.error(`No changed packages when compared to ${branch}.`, { exit: 1 });
 		}
 
-		if (changedReleaseGroups.length > 1 && releaseGroup === undefined) {
+		if (changedReleaseGroups.length > 1 && releaseGroupFlagValue === undefined) {
 			this.error(
 				`More than one release group changed when compared to ${branch} (${changedReleaseGroups.join(
 					", ",
@@ -205,8 +207,8 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 
 		// Handle the selected release group first so it shows up in the list first.
 		choices.push(
-			{ title: `${chalk.bold(monorepo.name)}`, heading: true, disabled: true },
-			...monorepo.packages
+			{ title: `${chalk.bold(workspace.name)}`, heading: true, disabled: true },
+			...workspace.packages
 				.filter((pkg) => (all ? true : isIncludedByDefault(pkg)))
 				.sort((a, b) => packageComparer(a, b, changedPackages))
 				.map((pkg) => {
@@ -221,7 +223,7 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 			{ title: chalk.bold("Independent Packages"), heading: true, disabled: true },
 		);
 
-		for (const pkg of context.independentPackages) {
+		for (const pkg of context.repo.independentPackages) {
 			if (!all && !isIncludedByDefault(pkg)) {
 				continue;
 			}
@@ -234,11 +236,11 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 		}
 
 		// Finally list the remaining (unchanged) release groups and their packages
-		for (const rg of context.repo.releaseGroups.values()) {
-			if (rg.name !== releaseGroup) {
+		for (const ws of context.repo.workspaces.values()) {
+			if (ws.name !== releaseGroupFlagValue) {
 				choices.push(
-					{ title: `${chalk.bold(rg.kind)}`, heading: true, disabled: true },
-					...rg.packages
+					{ title: `${chalk.bold(ws.name)}`, heading: true, disabled: true },
+					...ws.packages
 						.filter((pkg) => (all ? true : isIncludedByDefault(pkg)))
 						.sort((a, b) => packageComparer(a, b, changedPackages))
 						.map((pkg) => {
@@ -301,10 +303,10 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 		const response = await prompts(questions);
 		// eslint-disable-next-line prefer-destructuring, @typescript-eslint/no-unsafe-assignment
 		const selectedPackages: Package[] = response.selectedPackages;
-		const bumpType = getDefaultBumpTypeForBranch(branch, releaseGroup) ?? "minor";
+		const bumpType = getDefaultBumpTypeForBranch(branch, releaseGroupFlagValue) ?? "minor";
 
 		const newFile = await createChangesetFile(
-			monorepo.directory ?? context.gitRepo.resolvedRoot,
+			workspace.directory ?? context.gitRepo.resolvedRoot,
 			new Map(selectedPackages.map((p) => [p, bumpType])),
 			`${(response.summary as string).trim()}\n\n${response.description}`,
 		);
