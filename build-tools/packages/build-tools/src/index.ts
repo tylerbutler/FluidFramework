@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-export { FluidRepoContext as Context } from "./common/context";
+export { FluidRepoContext } from "./common/context";
 export { GitRepo } from "./common/gitRepo";
 export {
 	type BrokenCompatTypes,

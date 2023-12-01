@@ -12,7 +12,7 @@ import path from "node:path";
 import sortJson from "sort-json";
 import { table } from "table";
 
-import { Context, VersionDetails } from "@fluidframework/build-tools";
+import { FluidRepoContext, VersionDetails } from "@fluidframework/build-tools";
 
 import {
 	ReleaseVersion,
@@ -109,14 +109,14 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 	/**
 	 * Collect release data from the repo. Subclasses should call this in their init or run methods.
 	 *
-	 * @param context - The {@link Context}.
+	 * @param context - The {@link FluidRepoContext}.
 	 * @param mode - The {@link ReleaseSelectionMode} to use to determine the release to report on.
 	 * @param releaseGroup - If provided, the release data collected will be limited to only the pakages in this release
 	 * group and its direct Fluid dependencies.
 	 * @param includeDependencies - If true, the release data will include the Fluid dependencies of the release group.
 	 */
 	protected async collectReleaseData(
-		context: Context,
+		context: FluidRepoContext,
 		// eslint-disable-next-line default-param-last
 		mode: ReleaseSelectionMode = this.defaultMode,
 		releaseGroupOrPackage?: ReleaseGroup | ReleasePackage,
@@ -197,14 +197,14 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 	/**
 	 * Collects the releases of a given release group or package.
 	 *
-	 * @param context - The {@link Context}.
+	 * @param context - The {@link FluidRepoContext}.
 	 * @param releaseGroupOrPackage - The release group or package to collect release data for.
 	 * @param repoVersion - The version of the release group or package in the repo.
 	 * @param latestReleaseChooseMode - Controls which release is considered the latest.
 	 * @returns The collected release data.
 	 */
 	private async collectRawReleaseData(
-		context: Context,
+		context: FluidRepoContext,
 		releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
 		repoVersion: string,
 		latestReleaseChooseMode?: ReleaseSelectionMode,
@@ -667,7 +667,7 @@ function generateReportFileName(
  */
 // eslint-disable-next-line max-params
 async function writeReport(
-	context: Context,
+	context: FluidRepoContext,
 	report: ReleaseReport,
 	kind: ReportKind,
 	dir: string,

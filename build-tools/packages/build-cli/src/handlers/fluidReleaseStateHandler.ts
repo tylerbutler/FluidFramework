@@ -6,7 +6,7 @@ import { Command } from "@oclif/core";
 import chalk from "chalk";
 import { Machine } from "jssm";
 
-import { Context } from "@fluidframework/build-tools";
+import { FluidRepoContext } from "@fluidframework/build-tools";
 
 import { ReleaseVersion, VersionBumpType, VersionScheme } from "@fluid-tools/version-tools";
 
@@ -57,9 +57,9 @@ import { BaseStateHandler } from "./stateHandlers";
  */
 export interface FluidReleaseStateHandlerData {
 	/**
-	 * The {@link Context}.
+	 * The {@link FluidRepoContext}.
 	 */
-	context: Context;
+	context: FluidRepoContext;
 
 	/**
 	 * The release group or package that is being released.

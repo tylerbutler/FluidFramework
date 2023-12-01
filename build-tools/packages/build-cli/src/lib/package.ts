@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 import {
-	Context,
+	FluidRepoContext,
 	Logger,
 	Workspace,
 	Package,
@@ -55,7 +55,7 @@ export interface PackageVersionMap {
 /**
  * Checks the npm registry for updates for a release group's dependencies.
  *
- * @param context - The {@link Context}.
+ * @param context - The {@link FluidRepoContext}.
  * @param releaseGroup - The release group to check. If it is `undefined`, the whole repo is checked.
  * @param depsToUpdate - An array of packages on which dependencies should be checked.
  * @param releaseGroupFilter - If provided, this release group won't be checked for dependencies. Set this when you are
@@ -69,7 +69,7 @@ export interface PackageVersionMap {
  */
 // eslint-disable-next-line max-params
 export async function npmCheckUpdates(
-	context: Context,
+	context: FluidRepoContext,
 	releaseGroup: ReleaseGroup | ReleasePackage | undefined,
 	depsToUpdate: ReleasePackage[] | RegExp[],
 	releaseGroupFilter: ReleaseGroup | undefined,
@@ -244,7 +244,7 @@ export interface PreReleaseDependencies {
  * @returns A {@link PreReleaseDependencies} object containing the pre-release dependency names and versions.
  */
 export async function getPreReleaseDependencies(
-	context: Context,
+	context: FluidRepoContext,
 	releaseGroup: ReleaseGroup | ReleasePackage,
 	// depsToUpdate: ReleasePackage[],
 ): Promise<PreReleaseDependencies> {
@@ -320,7 +320,7 @@ export async function getPreReleaseDependencies(
  * This function exclusively uses the tags in the repo to determine whether a release has bee done or not.
  */
 export async function isReleased(
-	context: Context,
+	context: FluidRepoContext,
 	releaseGroupOrPackage: Workspace | Package | string,
 	version: string,
 	log?: Logger,
@@ -415,13 +415,13 @@ export function filterVersionsOlderThan(
  * Gets the direct Fluid dependencies for a given package or release group. A Fluid dependency is a dependency on
  * other packages or release groups in the repo.
  *
- * @param context - The {@link Context}.
+ * @param context - The {@link FluidRepoContext}.
  * @param releaseGroupOrPackage - The release group or package to check.
  * @returns A tuple of {@link PackageVersionMap} objects, one of which contains release groups on which the package
  * depends, and the other contains independent packages on which the package depends.
  */
 export function getFluidDependencies(
-	context: Context,
+	context: FluidRepoContext,
 	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
 ): [releaseGroups: PackageVersionMap, packages: PackageVersionMap] {
 	const releaseGroups: PackageVersionMap = {};
@@ -475,7 +475,7 @@ export interface DependencyWithRange {
 /**
  * Sets the version of a release group or standalone package.
  *
- * @param context - The {@link Context}.
+ * @param context - The {@link FluidRepoContext}.
  * @param releaseGroupOrPackage - A release group repo or package to bump.
  * @param version - The version to set.
  * @param interdependencyRange - The type of dependency to use on packages within the release group.
@@ -483,7 +483,7 @@ export interface DependencyWithRange {
  * @param log - A logger to use.
  */
 export async function setVersion(
-	context: Context,
+	context: FluidRepoContext,
 	releaseGroupOrPackage: Workspace | Package,
 	version: semver.SemVer,
 	// eslint-disable-next-line default-param-last
@@ -730,7 +730,7 @@ async function findDepUpdates(
 /**
  * Checks the npm registry for updates for a release group's dependencies.
  *
- * @param context - The {@link Context}.
+ * @param context - The {@link FluidRepoContext}.
  * @param releaseGroup - The release group to check. If it is `undefined`, the whole repo is checked.
  * @param depsToUpdate - An array of packages on which dependencies should be checked.
  * @param releaseGroupFilter - If provided, this release group won't be checked for dependencies. Set this when you are
@@ -743,7 +743,7 @@ async function findDepUpdates(
  */
 // eslint-disable-next-line max-params
 export async function npmCheckUpdatesHomegrown(
-	context: Context,
+	context: FluidRepoContext,
 	releaseGroup: ReleaseGroup | ReleasePackage | undefined,
 	depsToUpdate: ReleasePackage[],
 	releaseGroupFilter: ReleaseGroup | undefined,

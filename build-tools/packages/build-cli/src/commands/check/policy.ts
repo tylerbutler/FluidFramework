@@ -8,7 +8,12 @@ import * as path from "node:path";
 import { readJson } from "fs-extra";
 import { EOL as newline } from "node:os";
 
-import { Context, getFluidBuildConfig, Handler, policyHandlers } from "@fluidframework/build-tools";
+import {
+	FluidRepoContext,
+	getFluidBuildConfig,
+	Handler,
+	policyHandlers,
+} from "@fluidframework/build-tools";
 
 import { BaseCommand } from "../../base";
 import { Repository } from "../../lib";
@@ -51,7 +56,7 @@ interface CheckPolicyCommandContext {
 	/**
 	 * The repo context.
 	 */
-	context: Context;
+	context: FluidRepoContext;
 }
 
 /**

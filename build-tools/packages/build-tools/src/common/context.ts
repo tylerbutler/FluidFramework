@@ -18,9 +18,7 @@ export class FluidRepoContext {
 		this.repo = new FluidRepo(repoRoot);
 	}
 
-	public static async InitializeContext(
-		upstreamGitHubRepoName: string,
-	): Promise<FluidRepoContext> {
+	public static async initialize(upstreamGitHubRepoName: string): Promise<FluidRepoContext> {
 		const resolvedRoot = await getResolvedFluidRoot();
 		const gitRepo = new GitRepo(resolvedRoot);
 		const branch = await gitRepo.getCurrentBranchName();

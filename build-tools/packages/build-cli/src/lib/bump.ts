@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { Context, Workspace, Logger, Package } from "@fluidframework/build-tools";
+import { FluidRepoContext, Workspace, Logger, Package } from "@fluidframework/build-tools";
 import {
 	DEFAULT_INTERDEPENDENCY_RANGE,
 	InterdependencyRange,
@@ -47,7 +47,7 @@ export function isDependencyUpdateType(str: string | undefined): str is Dependen
 /**
  * Bumps a release group or standalone package by the bumpType.
  *
- * @param context - The {@link Context}.
+ * @param context - The {@link FluidRepoContext}.
  * @param releaseGroupOrPackage - A release group repo or package to bump.
  * @param bumpType - The bump type. Can be a SemVer object to set an exact version.
  * @param scheme - The version scheme to use.
@@ -58,7 +58,7 @@ export function isDependencyUpdateType(str: string | undefined): str is Dependen
  */
 // eslint-disable-next-line max-params
 export async function bumpReleaseGroup(
-	context: Context,
+	context: FluidRepoContext,
 	releaseGroupOrPackage: Workspace | Package,
 	bumpType: VersionChangeType,
 	scheme?: VersionScheme,

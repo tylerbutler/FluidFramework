@@ -5,7 +5,7 @@
 import { PackageName } from "@rushstack/node-core-library";
 import * as semver from "semver";
 
-import { Context } from "@fluidframework/build-tools";
+import { FluidRepoContext } from "@fluidframework/build-tools";
 
 import {
 	ReleaseVersion,
@@ -26,7 +26,7 @@ import { DependencyUpdateType } from "./bump";
 /**
  * Creates an appropriate branch for a release group and bump type. Does not commit!
  *
- * @param context - The {@link Context}.
+ * @param context - The {@link FluidRepoContext}.
  * @param releaseGroupOrPackage - The release group or independent package to create a branch for.
  * @param bumpType - The bump type.
  * @returns The name of the newly created branch.
@@ -38,7 +38,7 @@ import { DependencyUpdateType } from "./bump";
  * @internal
  */
 export async function createBumpBranch(
-	context: Context,
+	context: FluidRepoContext,
 	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
 	bumpType: VersionBumpType,
 ): Promise<string> {

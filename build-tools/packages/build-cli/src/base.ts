@@ -7,7 +7,7 @@ import { Command, Flags, Interfaces } from "@oclif/core";
 import { type PrettyPrintableError } from "@oclif/core/lib/interfaces";
 import chalk from "chalk";
 
-import { Context, GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
+import { FluidRepoContext } from "@fluidframework/build-tools";
 
 import { rootPathFlag } from "./flags";
 import { indentString } from "./lib";
@@ -70,7 +70,7 @@ export abstract class BaseCommand<T extends typeof Command>
 	 */
 	private suppressLogging: boolean = false;
 
-	private _context: Context | undefined;
+	private _context: FluidRepoContext | undefined;
 	private _logger: CommandLogger | undefined;
 
 	public async init(): Promise<void> {
@@ -126,16 +126,11 @@ export abstract class BaseCommand<T extends typeof Command>
 	 *
 	 * @returns The repo {@link Context}.
 	 */
-	async getContext(): Promise<Context> {
+	async getContext(): Promise<FluidRepoContext> {
 		if (this._context === undefined) {
-			const resolvedRoot = await (this.flags.root ?? getResolvedFluidRoot());
-			const gitRepo = new GitRepo(resolvedRoot);
-			const branch = await gitRepo.getCurrentBranchName();
-
-			this.verbose(`Repo: ${resolvedRoot}`);
-			this.verbose(`Branch: ${branch}`);
-
-			this._context = new Context(resolvedRoot, gitRepo, "microsoft/FluidFramework", branch);
+			this._context = await FluidRepoContext.initialize("microsoft/FluidFramework");
+			this.verbose(`Repo: ${this._context.repoRoot}`);
+			this.verbose(`Branch: ${this._context.startingBranchName}`);
 		}
 
 		return this._context;

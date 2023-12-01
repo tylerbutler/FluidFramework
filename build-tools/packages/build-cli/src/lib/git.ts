@@ -2,7 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Context, Package } from "@fluidframework/build-tools";
+import { FluidRepoContext, Package } from "@fluidframework/build-tools";
 import path from "node:path";
 import readPkgUp from "read-pkg-up";
 import { SimpleGit, SimpleGitOptions, simpleGit } from "simple-git";
@@ -141,7 +141,7 @@ export class Repository {
 	 *
 	 * @param ref - The ref to compare against.
 	 * @param remote - The remote to compare against.
-	 * @param context - The Context.
+	 * @param context - The FluidRepoContext.
 	 * @returns An object containing the changed files, directories, release groups, and packages. The groups may overlap.
 	 * That is, if a single package in a release group is changed, the releaseGroups value will contain that group, and
 	 * the packages value will contain only the single package. Also, if two packages are changed, one within a release
@@ -150,7 +150,7 @@ export class Repository {
 	public async getChangedSinceRef(
 		ref: string,
 		remote: string,
-		context: Context,
+		context: FluidRepoContext,
 	): Promise<{
 		files: string[];
 		dirs: string[];

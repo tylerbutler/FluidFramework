@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { Context, Package } from "@fluidframework/build-tools";
+import { FluidRepoContext, Package } from "@fluidframework/build-tools";
 import path from "node:path";
 import { filterFlags, selectionFlags } from "./flags";
 import { knownReleaseGroups, ReleaseGroup } from "./releaseGroups";
@@ -135,7 +135,7 @@ export type PackageWithKind = Package & { kind: PackageKind };
  * @returns An array containing the selected packages.
  */
 const selectPackagesFromContext = (
-	context: Context,
+	context: FluidRepoContext,
 	selection: PackageSelectionCriteria,
 ): PackageWithKind[] => {
 	const selected: PackageWithKind[] = [];
@@ -203,7 +203,7 @@ const selectPackagesFromContext = (
  * @returns An object containing the selected packages and the filtered packages.
  */
 export const selectAndFilterPackages = (
-	context: Context,
+	context: FluidRepoContext,
 	selection: PackageSelectionCriteria,
 	filter?: PackageFilterOptions,
 ): { selected: PackageWithKind[]; filtered: PackageWithKind[] } => {

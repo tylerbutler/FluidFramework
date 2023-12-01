@@ -2,7 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Context, Workspace, Package } from "@fluidframework/build-tools";
+import { FluidRepoContext, Workspace, Package } from "@fluidframework/build-tools";
 import { Args } from "@oclif/core";
 import { isReleaseGroup } from "./releaseGroups";
 
@@ -21,7 +21,7 @@ export const packageOrReleaseGroupArg = Args.string({
  */
 export const findPackageOrReleaseGroup = (
 	name: string,
-	context: Context,
+	context: FluidRepoContext,
 ): Package | Workspace | undefined => {
 	if (isReleaseGroup(name)) {
 		return context.repo.releaseGroups.get(name);
