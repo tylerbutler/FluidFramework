@@ -100,7 +100,7 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 
 		const branchPolicyCheckDefault = getRunPolicyCheckDefault(
 			releaseGroup,
-			context.originalBranchName,
+			context.startingBranchName,
 		);
 
 		this.handler = new FluidReleaseStateHandler(machine, logger);

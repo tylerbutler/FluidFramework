@@ -22,7 +22,7 @@ async function getContext() {
 	const resolvedRoot = await getResolvedFluidRoot();
 	const gitRepo = new GitRepo(resolvedRoot);
 	const branch = await gitRepo.getCurrentBranchName();
-	const context = new Context(gitRepo, "microsoft/FluidFramework", branch);
+	const context = new Context(resolvedRoot, gitRepo, "microsoft/FluidFramework", branch);
 	return context;
 }
 

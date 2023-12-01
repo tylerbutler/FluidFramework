@@ -294,7 +294,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 				await context.gitRepo.createBranch(bumpBranch);
 				await context.gitRepo.commit(commitMessage, "Error committing");
 				this.finalMessages.push(
-					`You can now create a PR for branch ${bumpBranch} targeting ${context.originalBranchName}`,
+					`You can now create a PR for branch ${bumpBranch} targeting ${context.startingBranchName}`,
 				);
 			} else {
 				this.warning(`Skipping commit. You'll need to manually commit changes.`);

@@ -51,10 +51,10 @@ export const checkBranchName: StateHandlerFunction = async (
 	if (shouldCheckBranch === true) {
 		switch (bumpType) {
 			case "patch": {
-				log.verbose(`Checking if ${context.originalBranchName} starts with release/`);
-				if (!context.originalBranchName.startsWith("release/")) {
+				log.verbose(`Checking if ${context.startingBranchName} starts with release/`);
+				if (!context.startingBranchName.startsWith("release/")) {
 					log.warning(
-						`Patch release should only be done on 'release/*' branches, but current branch is '${context.originalBranchName}'.\nYou can skip this check with --no-branchCheck.'`,
+						`Patch release should only be done on 'release/*' branches, but current branch is '${context.startingBranchName}'.\nYou can skip this check with --no-branchCheck.'`,
 					);
 					BaseStateHandler.signalFailure(machine, state);
 				}
@@ -65,11 +65,11 @@ export const checkBranchName: StateHandlerFunction = async (
 			case "major":
 			case "minor": {
 				log.verbose(
-					`Checking if ${context.originalBranchName} is 'main', 'next', or 'lts'.`,
+					`Checking if ${context.startingBranchName} is 'main', 'next', or 'lts'.`,
 				);
-				if (!["main", "next", "lts"].includes(context.originalBranchName)) {
+				if (!["main", "next", "lts"].includes(context.startingBranchName)) {
 					log.warning(
-						`Release prep should only be done on 'main', 'next', or 'lts' branches, but current branch is '${context.originalBranchName}'.`,
+						`Release prep should only be done on 'main', 'next', or 'lts' branches, but current branch is '${context.startingBranchName}'.`,
 					);
 					BaseStateHandler.signalFailure(machine, state);
 					return true;
@@ -82,7 +82,7 @@ export const checkBranchName: StateHandlerFunction = async (
 		}
 	} else {
 		log.warning(
-			`Not checking if current branch is a release branch: ${context.originalBranchName}`,
+			`Not checking if current branch is a release branch: ${context.startingBranchName}`,
 		);
 	}
 
@@ -111,9 +111,9 @@ export const checkBranchUpToDate: StateHandlerFunction = async (
 
 	const { context, shouldCheckBranchUpdate } = data;
 
-	const remote = await context.gitRepo.getRemote(context.originRemotePartialUrl);
+	const remote = await context.gitRepo.getRemote(context.upstreamGitHubRepoName);
 	const isBranchUpToDate = await context.gitRepo.isBranchUpToDate(
-		context.originalBranchName,
+		context.startingBranchName,
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		remote!,
 	);
@@ -121,7 +121,7 @@ export const checkBranchUpToDate: StateHandlerFunction = async (
 		if (!isBranchUpToDate) {
 			BaseStateHandler.signalFailure(machine, state);
 			log.errorLog(
-				`Local '${context.originalBranchName}' branch not up to date with remote. Please pull from '${remote}'.`,
+				`Local '${context.startingBranchName}' branch not up to date with remote. Please pull from '${remote}'.`,
 			);
 		}
 
@@ -205,10 +205,10 @@ export const checkHasRemote: StateHandlerFunction = async (
 
 	const { context } = data;
 
-	const remote = await context.gitRepo.getRemote(context.originRemotePartialUrl);
+	const remote = await context.gitRepo.getRemote(context.upstreamGitHubRepoName);
 	if (remote === undefined) {
 		BaseStateHandler.signalFailure(machine, state);
-		log.errorLog(`Unable to find remote for '${context.originRemotePartialUrl}'`);
+		log.errorLog(`Unable to find remote for '${context.upstreamGitHubRepoName}'`);
 	}
 
 	BaseStateHandler.signalSuccess(machine, state);
@@ -394,9 +394,9 @@ export const checkPolicy: StateHandlerFunction = async (
 
 	log.info(`Checking policy`);
 	if (shouldCheckPolicy === true) {
-		if (!getRunPolicyCheckDefault(releaseGroup, context.originalBranchName)) {
+		if (!getRunPolicyCheckDefault(releaseGroup, context.startingBranchName)) {
 			log.warning(
-				`Policy check fixes for ${releaseGroup} are not expected on the ${context.originalBranchName} branch! Make sure you know what you are doing.`,
+				`Policy check fixes for ${releaseGroup} are not expected on the ${context.startingBranchName} branch! Make sure you know what you are doing.`,
 			);
 		}
 
@@ -418,9 +418,9 @@ export const checkPolicy: StateHandlerFunction = async (
 			BaseStateHandler.signalFailure(machine, state);
 			return false;
 		}
-	} else if (getRunPolicyCheckDefault(releaseGroup, context.originalBranchName) === false) {
+	} else if (getRunPolicyCheckDefault(releaseGroup, context.startingBranchName) === false) {
 		log.verbose(
-			`Skipping policy check for ${releaseGroup} because it does not run on the ${context.originalBranchName} branch by default. Pass --policyCheck to force it to run.`,
+			`Skipping policy check for ${releaseGroup} because it does not run on the ${context.startingBranchName} branch by default. Pass --policyCheck to force it to run.`,
 		);
 	} else {
 		log.warning("Skipping policy check.");
@@ -452,9 +452,9 @@ export const checkAssertTagging: StateHandlerFunction = async (
 	const { context, releaseGroup, shouldCheckPolicy } = data;
 
 	if (shouldCheckPolicy === true) {
-		if (!getRunPolicyCheckDefault(releaseGroup, context.originalBranchName)) {
+		if (!getRunPolicyCheckDefault(releaseGroup, context.startingBranchName)) {
 			log.warning(
-				`Assert tagging for ${releaseGroup} is not expected on the ${context.originalBranchName} branch! Make sure you know what you are doing.`,
+				`Assert tagging for ${releaseGroup} is not expected on the ${context.startingBranchName} branch! Make sure you know what you are doing.`,
 			);
 		}
 
@@ -476,9 +476,9 @@ export const checkAssertTagging: StateHandlerFunction = async (
 			BaseStateHandler.signalFailure(machine, state);
 			return false;
 		}
-	} else if (getRunPolicyCheckDefault(releaseGroup, context.originalBranchName) === false) {
+	} else if (getRunPolicyCheckDefault(releaseGroup, context.startingBranchName) === false) {
 		log.verbose(
-			`Skipping assert tagging for ${releaseGroup} because it does not run on the ${context.originalBranchName} branch by default. Pass --policyCheck to force it to run.`,
+			`Skipping assert tagging for ${releaseGroup} because it does not run on the ${context.startingBranchName} branch by default. Pass --policyCheck to force it to run.`,
 		);
 	} else {
 		log.warning("Skipping assert tagging.");
@@ -714,7 +714,7 @@ export const checkTypeTestGenerate: StateHandlerFunction = async (
 	const genQuestion: inquirer.ConfirmQuestion = {
 		type: "confirm",
 		name: "typetestsGen",
-		message: `Have you run typetests:gen on the ${context.originalBranchName} branch?`,
+		message: `Have you run typetests:gen on the ${context.startingBranchName} branch?`,
 	};
 
 	const answer = await inquirer.prompt(genQuestion);
@@ -751,7 +751,7 @@ export const checkTypeTestPrepare: StateHandlerFunction = async (
 	const prepQuestion: inquirer.ConfirmQuestion = {
 		type: "confirm",
 		name: "typetestsPrep",
-		message: `Have you run typetests:prepare on the ${context.originalBranchName} branch?`,
+		message: `Have you run typetests:prepare on the ${context.startingBranchName} branch?`,
 	};
 
 	const answer = await inquirer.prompt(prepQuestion);

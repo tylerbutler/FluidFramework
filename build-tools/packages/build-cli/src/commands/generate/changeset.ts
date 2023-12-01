@@ -132,12 +132,12 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 
 		const repo = new Repository({ baseDir: context.gitRepo.resolvedRoot });
 		// context.originRemotePartialUrl is 'microsoft/FluidFramework'; see BaseCommand.getContext().
-		const remote = await repo.getRemote(context.originRemotePartialUrl);
+		const remote = await repo.getRemote(context.upstreamGitHubRepoName);
 
 		if (remote === undefined) {
-			this.error(`Can't find a remote with ${context.originRemotePartialUrl}`, { exit: 1 });
+			this.error(`Can't find a remote with ${context.upstreamGitHubRepoName}`, { exit: 1 });
 		}
-		this.log(`Remote for ${context.originRemotePartialUrl} is: ${chalk.bold(remote)}`);
+		this.log(`Remote for ${context.upstreamGitHubRepoName} is: ${chalk.bold(remote)}`);
 
 		// If the branch flag was passed explicitly, we don't want to prompt the user to select one. We can't check for
 		// undefined because there's a default value for the flag.

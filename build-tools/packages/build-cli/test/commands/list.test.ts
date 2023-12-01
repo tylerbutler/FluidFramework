@@ -11,7 +11,7 @@ describe("feeds", async () => {
 	const gitRepo = new GitRepo(resolvedRoot);
 	const branch = await gitRepo.getCurrentBranchName();
 
-	const context = new Context(gitRepo, "microsoft/FluidFramework", branch);
+	const context = new Context(resolvedRoot, gitRepo, "microsoft/FluidFramework", branch);
 	const config = context.repo.fluidBuildConfig.policy?.packageNames!;
 	const packages = FeedsForPackages(context.repo.packages.packages, config);
 

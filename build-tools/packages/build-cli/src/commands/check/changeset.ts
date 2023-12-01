@@ -41,11 +41,11 @@ export default class CheckChangesetCommand extends BaseCommand<typeof CheckChang
 	}> {
 		const context = await this.getContext();
 		const repo = new Repository({ baseDir: context.gitRepo.resolvedRoot });
-		const remote = await repo.getRemote(context.originRemotePartialUrl);
+		const remote = await repo.getRemote(context.upstreamGitHubRepoName);
 		const { branch } = this.flags;
 
 		if (remote === undefined) {
-			this.error(`Can't find a remote with ${context.originRemotePartialUrl}`);
+			this.error(`Can't find a remote with ${context.upstreamGitHubRepoName}`);
 		}
 		this.verbose(`Remote is: ${remote}`);
 

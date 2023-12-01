@@ -39,7 +39,7 @@ export const promptToCommitChanges: StateHandlerFunction = async (
 		sections: [
 			{
 				title: "FIRST",
-				message: `Commit the local changes and create a PR targeting the ${context.originalBranchName} branch.`,
+				message: `Commit the local changes and create a PR targeting the ${context.startingBranchName} branch.`,
 			},
 			{
 				title: "NEXT",
@@ -132,11 +132,11 @@ export const promptToIntegrateNext: StateHandlerFunction = async (
 		sections: [
 			{
 				title: "DETAILS",
-				message: `The 'next' branch has not been integrated into the '${context.originalBranchName}' branch.`,
+				message: `The 'next' branch has not been integrated into the '${context.startingBranchName}' branch.`,
 			},
 			{
 				title: "NEXT",
-				message: `Merge 'next' into the '${context.originalBranchName}' branch, then run the release command again:`,
+				message: `Merge 'next' into the '${context.startingBranchName}' branch, then run the release command again:`,
 			},
 		],
 	};
@@ -172,7 +172,7 @@ export const promptToPRBump: StateHandlerFunction = async (
 		sections: [
 			{
 				title: "FIRST",
-				message: `Push and create a PR for branch ${bumpBranch} targeting the ${context.originalBranchName} branch.`,
+				message: `Push and create a PR for branch ${bumpBranch} targeting the ${context.startingBranchName} branch.`,
 			},
 		],
 	};
@@ -223,7 +223,7 @@ export const promptToPRDeps: StateHandlerFunction = async (
 			{
 				title: "FIRST",
 				message: `Push and create a PR for branch ${await context.gitRepo.getCurrentBranchName()} targeting the ${
-					context.originalBranchName
+					context.startingBranchName
 				} branch.`,
 			},
 			{
@@ -267,7 +267,7 @@ export const promptToRelease: StateHandlerFunction = async (
 				message: `Queue a ${chalk.green(
 					chalk.bold("release"),
 				)} build for the following release group in ADO for branch ${chalk.blue(
-					chalk.bold(context.originalBranchName),
+					chalk.bold(context.startingBranchName),
 				)}:\n\n    ${chalk.green(chalk.bold(releaseGroup))}: ${mapADOLinks(releaseGroup)}`,
 			},
 			{
@@ -395,14 +395,14 @@ export const promptToRunMinorReleaseCommand: StateHandlerFunction = async (
 	prompt.sections.push(
 		{
 			title: "FIRST: do a minor release",
-			message: `A minor release needs to be run in order to continue with the major release. To continue with the release, run the following command on the ${context.originalBranchName} branch:`,
+			message: `A minor release needs to be run in order to continue with the major release. To continue with the release, run the following command on the ${context.startingBranchName} branch:`,
 			cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup} -t minor ${chalk.gray(
 				uniqueArgs.join(" "),
 			)}`,
 		},
 		{
 			title: "NEXT: run the major release again",
-			message: `Once the minor release is fully complete, run the following command on the ${context.originalBranchName} branch to continue the major release.`,
+			message: `Once the minor release is fully complete, run the following command on the ${context.startingBranchName} branch to continue the major release.`,
 			cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup} -t major ${chalk.gray(
 				uniqueArgs.join(" "),
 			)}`,
