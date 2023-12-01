@@ -3,7 +3,10 @@
  * Licensed under the MIT License.
  */
 
-module.exports = {
+// @ts-check
+
+/** @type {import("syncpack").RcFile} */
+const config = {
 	indent: "\t",
 
 	// Custom types are used to define additional fields in package.json that contain versions that should be
@@ -18,6 +21,9 @@ module.exports = {
 			strategy: "name@version",
 		},
 	},
+
+	// The local dependency type is not used because we use the workspace protocol, which syncpack does not support.
+	dependencyTypes: ["!local"],
 
 	/**
 	 * SemverGroups are used to ensure that groups of packages use the same semver range for dependencies.
@@ -114,6 +120,19 @@ module.exports = {
 			range: "~",
 		},
 
+		{
+			label: "Ignore interdependencies on other Fluid packages within the workspace. This is needed because syncpack doesn't understand the workspace protocol.",
+			isIgnored: true,
+			dependencies: [
+				"@fluid-internal/readme-command",
+				"@fluid-tools/build-cli",
+				"@fluid-tools/version-tools",
+				"@fluidframework/build-tools",
+				"@fluidframework/bundle-size-tools",
+			],
+			packages: ["**"],
+		},
+
 		// All deps should use caret ranges unless previously overridden
 		{
 			label: "Dependencies should use caret dependency ranges",
@@ -179,3 +198,5 @@ module.exports = {
 		},
 	],
 };
+
+module.exports = config;
