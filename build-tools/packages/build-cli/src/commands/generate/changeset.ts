@@ -221,7 +221,7 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 			{ title: chalk.bold("Independent Packages"), heading: true, disabled: true },
 		);
 
-		for (const pkg of context.independentPackages) {
+		for (const pkg of context.repo.independentPackages) {
 			if (!all && !isIncludedByDefault(pkg)) {
 				continue;
 			}

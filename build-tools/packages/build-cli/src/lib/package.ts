@@ -104,10 +104,10 @@ export async function npmCheckUpdates(
 
 	const packagesToCheck =
 		releaseGroup === undefined // run on the whole repo
-			? [...context.independentPackages] // include all independent packages
+			? [...context.repo.independentPackages] // include all independent packages
 			: isReleaseGroup(releaseGroup)
 			? [] // run on a release group so no independent packages should be included
-			: [context.fullPackageMap.get(releaseGroup)]; // the releaseGroup argument must be a package
+			: [context.repo.fullPackageMap().get(releaseGroup)]; // the releaseGroup argument must be a package
 
 	if (releaseGroupsToCheck !== undefined) {
 		for (const group of releaseGroupsToCheck) {
@@ -174,7 +174,7 @@ export async function npmCheckUpdates(
 				const jsonPath = path.join(repoPath, pkgJsonPath);
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				const { name } = readJsonSync(jsonPath);
-				const pkg = context.fullPackageMap.get(name as string);
+				const pkg = context.repo.fullPackageMap().get(name as string);
 				if (pkg === undefined) {
 					log?.warning(`Package not found in context: ${name}`);
 					continue;
@@ -193,7 +193,7 @@ export async function npmCheckUpdates(
 			const jsonPath = path.join(repoPath, glob, "package.json");
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const { name } = readJsonSync(jsonPath);
-			const pkg = context.fullPackageMap.get(name as string);
+			const pkg = context.repo.fullPackageMap().get(name as string);
 			if (pkg === undefined) {
 				log?.warning(`Package not found in context: ${name}`);
 				continue;
@@ -260,15 +260,15 @@ export async function getPreReleaseDependencies(
 		}
 
 		packagesToCheck = monorepo.packages;
-		depsToUpdate = context.packagesNotInReleaseGroup(releaseGroup).map((p) => p.name);
+		depsToUpdate = context.repo.packagesNotInReleaseGroup(releaseGroup).map((p) => p.name);
 	} else {
-		const pkg = context.fullPackageMap.get(releaseGroup);
+		const pkg = context.repo.fullPackageMap().get(releaseGroup);
 		if (pkg === undefined) {
 			throw new Error(`Can't find package in context: ${releaseGroup}`);
 		}
 
 		packagesToCheck = [pkg];
-		depsToUpdate = context.packagesNotInReleaseGroup(pkg).map((p) => p.name);
+		depsToUpdate = context.repo.packagesNotInReleaseGroup(pkg).map((p) => p.name);
 	}
 
 	for (const pkg of packagesToCheck) {
@@ -286,7 +286,7 @@ export async function getPreReleaseDependencies(
 
 			// If the min version has a pre-release section, then it needs to be released.
 			if (isPrereleaseVersion(minVer) === true) {
-				const depPkg = context.fullPackageMap.get(depName);
+				const depPkg = context.repo.fullPackageMap().get(depName);
 				if (depPkg === undefined) {
 					throw new Error(`Can't find package in context: ${depName}`);
 				}
@@ -429,9 +429,9 @@ export function getFluidDependencies(
 	let packagesToCheck: Package[];
 
 	if (isReleaseGroup(releaseGroupOrPackage)) {
-		packagesToCheck = context.packagesInReleaseGroup(releaseGroupOrPackage);
+		packagesToCheck = context.repo.packagesInReleaseGroup(releaseGroupOrPackage);
 	} else {
-		const independentPackage = context.fullPackageMap.get(releaseGroupOrPackage);
+		const independentPackage = context.repo.fullPackageMap().get(releaseGroupOrPackage);
 		assert(
 			independentPackage !== undefined,
 			`Package not found in context: ${releaseGroupOrPackage}`,
@@ -441,7 +441,7 @@ export function getFluidDependencies(
 
 	for (const p of packagesToCheck) {
 		for (const dep of p.combinedDependencies) {
-			const pkg = context.fullPackageMap.get(dep.name);
+			const pkg = context.repo.fullPackageMap().get(dep.name);
 			if (pkg === undefined) {
 				continue;
 			}
@@ -819,7 +819,7 @@ export async function npmCheckUpdatesHomegrown(
 	// eslint-disable-next-line @typescript-eslint/no-base-to-string
 	log?.verbose(`Calculated new range: ${range}`);
 	for (const dep of Object.keys(dependencyVersionMap)) {
-		const pkg = context.fullPackageMap.get(dep);
+		const pkg = context.repo.fullPackageMap().get(dep);
 
 		if (pkg === undefined) {
 			log?.warning(`Package not found: ${dep}. Skipping.`);

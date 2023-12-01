@@ -93,9 +93,9 @@ export default class GenerateChangeLogCommand extends BaseCommand<typeof Generat
 		await execCommand("pnpm exec changeset version", { cwd: execDir });
 
 		const packagesToCheck = isReleaseGroup(releaseGroup)
-			? context.packagesInReleaseGroup(releaseGroup)
+			? context.repo.packagesInReleaseGroup(releaseGroup)
 			: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			  [context.fullPackageMap.get(releaseGroup)!];
+			  [context.repo.fullPackageMap().get(releaseGroup)!];
 
 		const installed = await FluidRepo.ensureInstalled(packagesToCheck);
 

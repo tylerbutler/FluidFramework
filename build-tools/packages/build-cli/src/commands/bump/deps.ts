@@ -182,7 +182,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 			depsToUpdate.push(rgOrPackage.name);
 
 			// Check that the package can be found in the context.
-			const pkg = context.fullPackageMap.get(rgOrPackage.name);
+			const pkg = context.repo.fullPackageMap().get(rgOrPackage.name);
 			if (pkg === undefined) {
 				this.error(`Package not found: ${rgOrPackage.name}`);
 			}
@@ -291,7 +291,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 					flags.releaseGroup,
 				);
 				this.log(`Creating branch ${bumpBranch}`);
-				await context.createBranch(bumpBranch);
+				await context.gitRepo.createBranch(bumpBranch);
 				await context.gitRepo.commit(commitMessage, "Error committing");
 				this.finalMessages.push(
 					`You can now create a PR for branch ${bumpBranch} targeting ${context.originalBranchName}`,

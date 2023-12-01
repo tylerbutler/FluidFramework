@@ -154,7 +154,7 @@ const selectPackagesFromContext = (
 
 	// Select independent packages
 	if (selection.independentPackages === true) {
-		for (const pkg of context.independentPackages) {
+		for (const pkg of context.repo.independentPackages) {
 			selected.push(
 				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, {
 					kind: "independentPackage",
@@ -165,7 +165,7 @@ const selectPackagesFromContext = (
 
 	// Select release group packages
 	for (const rg of selection.releaseGroups) {
-		for (const pkg of context.packagesInReleaseGroup(rg)) {
+		for (const pkg of context.repo.packagesInReleaseGroup(rg)) {
 			selected.push(
 				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, {
 					kind: "releaseGroupChildPackage",
@@ -176,7 +176,7 @@ const selectPackagesFromContext = (
 
 	// Select release group root packages
 	for (const rg of selection.releaseGroupRoots ?? []) {
-		const packages = context.packagesInReleaseGroup(rg);
+		const packages = context.repo.packagesInReleaseGroup(rg);
 		if (packages.length === 0) {
 			continue;
 		}

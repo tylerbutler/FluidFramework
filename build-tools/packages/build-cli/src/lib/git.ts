@@ -168,7 +168,7 @@ export class Repository {
 			.filter((name): name is string => name !== undefined);
 
 		const changedPackages = [...new Set(changedPackageNames)]
-			.map((name) => context.fullPackageMap.get(name))
+			.map((name) => context.repo.fullPackageMap().get(name))
 			.filter((pkg): pkg is Package => pkg !== undefined);
 
 		const changedReleaseGroups = [

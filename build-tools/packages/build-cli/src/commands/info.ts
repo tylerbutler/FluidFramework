@@ -38,8 +38,8 @@ export default class InfoCommand extends BaseCommand<typeof InfoCommand> {
 		const context = await this.getContext();
 		let packages =
 			flags.releaseGroup !== undefined && isReleaseGroup(flags.releaseGroup)
-				? context.packagesInReleaseGroup(flags.releaseGroup)
-				: [...context.fullPackageMap.values()];
+				? context.repo.packagesInReleaseGroup(flags.releaseGroup)
+				: [...context.repo.fullPackageMap().values()];
 
 		// Filter out private packages
 		if (!flags.private) {

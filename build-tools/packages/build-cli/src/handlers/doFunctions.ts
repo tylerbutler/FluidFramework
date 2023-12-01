@@ -50,7 +50,7 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 
 	const packagesToBump = new Set(packages.keys());
 	for (const rg of releaseGroups.keys()) {
-		for (const p of context.packagesInReleaseGroup(rg)) {
+		for (const p of context.repo.packagesInReleaseGroup(rg)) {
 			packagesToBump.add(p.name);
 		}
 	}
@@ -81,7 +81,7 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 
 	const updatedDeps = new Set<string>();
 	for (const p of Object.keys(updatedDependencies)) {
-		const pkg = context.fullPackageMap.get(p);
+		const pkg = context.repo.fullPackageMap().get(p);
 		if (pkg === undefined) {
 			log.verbose(`Package not in context: ${p}`);
 			continue;
@@ -116,9 +116,9 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 		log?.verbose(`Running install if needed.`);
 		await FluidRepo.ensureInstalled(
 			isReleaseGroup(releaseGroup)
-				? context.packagesInReleaseGroup(releaseGroup)
+				? context.repo.packagesInReleaseGroup(releaseGroup)
 				: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				  [context.fullPackageMap.get(releaseGroup)!],
+				  [context.repo.fullPackageMap().get(releaseGroup)!],
 		);
 		// There were updates, which is considered a failure.
 		BaseStateHandler.signalFailure(machine, state);
@@ -155,7 +155,7 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 		? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		  context.repo.releaseGroups.get(releaseGroup)!
 		: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		  context.fullPackageMap.get(releaseGroup)!;
+		  context.repo.fullPackageMap().get(releaseGroup)!;
 
 	const scheme = detectVersionScheme(releaseVersion);
 	const newVersion = bumpVersionScheme(releaseVersion, bumpType, scheme);

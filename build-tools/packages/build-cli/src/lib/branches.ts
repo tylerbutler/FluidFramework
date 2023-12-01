@@ -44,7 +44,7 @@ export async function createBumpBranch(
 ): Promise<string> {
 	const version = context.repo.getVersion(releaseGroupOrPackage);
 	const name = generateBumpVersionBranchName(releaseGroupOrPackage, bumpType, version);
-	await context.createBranch(name);
+	await context.gitRepo.createBranch(name);
 	return name;
 }
 

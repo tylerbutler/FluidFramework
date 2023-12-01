@@ -153,7 +153,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 		} else if (releaseGroupOrPackage === undefined) {
 			// No filter, so include all release groups and packages
 			rgs.push(...([...context.repo.releaseGroups.keys()] as ReleaseGroup[]));
-			pkgs.push(...context.independentPackages.map((p) => p.name));
+			pkgs.push(...context.repo.independentPackages.map((p) => p.name));
 		} else {
 			// Filter to only the specified package
 			pkgs.push(releaseGroupOrPackage);
@@ -179,7 +179,7 @@ export abstract class ReleaseReportBaseCommand<T extends typeof Command> extends
 		}
 
 		for (const pkg of pkgs) {
-			const repoVersion = pkgVerMap?.[pkg] ?? context.fullPackageMap.get(pkg)?.version;
+			const repoVersion = pkgVerMap?.[pkg] ?? context.repo.fullPackageMap().get(pkg)?.version;
 			assert(repoVersion !== undefined, `version of ${pkg} is undefined.`);
 
 			ux.action.status = `${pkg} (package)`;
@@ -539,7 +539,7 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 
 			// Expand the release group to its constituent packages.
 			if (isReleaseGroup(pkgName)) {
-				for (const pkg of context.packagesInReleaseGroup(pkgName)) {
+				for (const pkg of context.repo.packagesInReleaseGroup(pkgName)) {
 					report[pkg.name] = {
 						version: latestVer,
 						versionScheme: scheme,

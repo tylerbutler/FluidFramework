@@ -280,6 +280,7 @@ export type IFluidRepoPackageEntry = string | IFluidRepoPackage | (string | IFlu
 export class FluidRepo {
 	private readonly monoRepos = new Map<string, Workspace>();
 	private readonly gitRepo: GitRepo;
+	public readonly fluidBuildConfig: IFluidBuildConfig;
 
 	public get releaseGroups() {
 		return this.monoRepos;
@@ -288,7 +289,7 @@ export class FluidRepo {
 	public readonly packages: Packages;
 
 	constructor(public readonly resolvedRoot: string) {
-		const packageManifest = getFluidBuildConfig(resolvedRoot);
+		this.fluidBuildConfig = getFluidBuildConfig(resolvedRoot);
 		this.gitRepo = new GitRepo(resolvedRoot);
 		// Expand to full IFluidRepoPackage and full path
 		const normalizeEntry = (
@@ -319,8 +320,8 @@ export class FluidRepo {
 		};
 
 		const loadedPackages: Package[] = [];
-		for (const group in packageManifest.repoPackages) {
-			const item = normalizeEntry(packageManifest.repoPackages[group]);
+		for (const group in this.fluidBuildConfig.repoPackages) {
+			const item = normalizeEntry(this.fluidBuildConfig.repoPackages[group]);
 			if (Array.isArray(item)) {
 				for (const i of item) {
 					loadedPackages.push(...loadOneEntry(i, group));
@@ -427,6 +428,44 @@ export class FluidRepo {
 
 		const tagList = await this.gitRepo.getAllTags(`${prefix}_v*`);
 		return tagList;
+	}
+
+	/**
+	 * Returns the packages that belong to the specified release group.
+	 *
+	 * @param releaseGroup - The release group to filter by
+	 * @returns An array of packages that belong to the release group
+	 */
+	public packagesInReleaseGroup(releaseGroup: string): Package[] {
+		const packages = this.packages.packages.filter(
+			(pkg) => pkg.monoRepo?.kind === releaseGroup,
+		);
+		return packages;
+	}
+
+	/**
+	 * Returns the packages that do not belong to the specified release group.
+	 *
+	 * @param releaseGroup - The release group or package to filter by.
+	 * @returns An array of packages that do not belong to the release group.
+	 */
+	public packagesNotInReleaseGroup(releaseGroup: string | Package): Package[] {
+		let packages: Package[];
+		if (releaseGroup instanceof Package) {
+			packages = this.packages.packages.filter((p) => p.name !== releaseGroup.name);
+		} else {
+			packages = this.packages.packages.filter((pkg) => pkg.monoRepo?.kind !== releaseGroup);
+		}
+
+		return packages;
+	}
+
+	/**
+	 * @returns An array of packages in the repo that are not associated with a release group.
+	 */
+	public get independentPackages(): Package[] {
+		const packages = this.packages.packages.filter((pkg) => pkg.monoRepo === undefined);
+		return packages;
 	}
 
 	public reload() {

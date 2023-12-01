@@ -237,9 +237,9 @@ export const checkDependenciesInstalled: StateHandlerFunction = async (
 	const { context, releaseGroup } = data;
 
 	const packagesToCheck = isReleaseGroup(releaseGroup)
-		? context.packagesInReleaseGroup(releaseGroup)
+		? context.repo.packagesInReleaseGroup(releaseGroup)
 		: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		  [context.fullPackageMap.get(releaseGroup)!];
+		  [context.repo.fullPackageMap().get(releaseGroup)!];
 
 	const installed = await FluidRepo.ensureInstalled(packagesToCheck);
 
@@ -319,7 +319,7 @@ export const checkOnReleaseBranch: StateHandlerFunction = async (
 	if (!isReleaseGroup(releaseGroup)) {
 		// must be a package
 		assert(
-			context.fullPackageMap.has(releaseGroup),
+			context.repo.fullPackageMap().has(releaseGroup),
 			`Package ${releaseGroup} not found in context.`,
 		);
 	}
@@ -357,7 +357,7 @@ export const checkNoPrereleaseDependencies: StateHandlerFunction = async (
 
 	const packagesToBump = new Set(packages.keys());
 	for (const rg of releaseGroups.keys()) {
-		for (const p of context.packagesInReleaseGroup(rg)) {
+		for (const p of context.repo.packagesInReleaseGroup(rg)) {
 			packagesToBump.add(p.name);
 		}
 	}
@@ -616,7 +616,7 @@ export const checkShouldCommit: StateHandlerFunction = async (
 	const branchName = generateBumpVersionBranchName(releaseGroup, bumpType, releaseVersion);
 	const commitMsg = generateBumpVersionCommitMessage(releaseGroup, bumpType, releaseVersion);
 
-	await context.createBranch(branchName);
+	await context.gitRepo.createBranch(branchName);
 	log.verbose(`Created bump branch: ${branchName}`);
 
 	await context.gitRepo.commit(commitMsg, `Error committing to ${branchName}`);
@@ -788,7 +788,7 @@ export const checkValidReleaseGroup: StateHandlerFunction = async (
 	if (isReleaseGroup(releaseGroup)) {
 		BaseStateHandler.signalSuccess(machine, state);
 		// eslint-disable-next-line unicorn/no-negated-condition
-	} else if (context.fullPackageMap.get(releaseGroup) !== undefined) {
+	} else if (context.repo.fullPackageMap().get(releaseGroup) !== undefined) {
 		BaseStateHandler.signalSuccess(machine, state);
 	} else {
 		BaseStateHandler.signalFailure(machine, state);

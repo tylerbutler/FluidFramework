@@ -30,7 +30,7 @@ async function getBuildToolsPackages() {
 	const context = await getContext();
 	// Use the build-tools packages as test cases. It's brittle, but functional. Ideally, we would have mocks for
 	// context/package/release group/etc., but we don't.
-	const packages = context.packagesInReleaseGroup("build-tools");
+	const packages = context.repo.packagesInReleaseGroup("build-tools");
 	return packages;
 }
 
