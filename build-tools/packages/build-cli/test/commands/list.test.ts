@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 import { expect } from "chai";
-import { Context, GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
+import { FluidRepoContext, GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
 import { FeedsForPackages } from "../../src/commands/list";
 
 describe("feeds", async () => {
@@ -11,7 +11,7 @@ describe("feeds", async () => {
 	const gitRepo = new GitRepo(resolvedRoot);
 	const branch = await gitRepo.getCurrentBranchName();
 
-	const context = new Context(resolvedRoot, gitRepo, "microsoft/FluidFramework", branch);
+	const context = new FluidRepoContext(resolvedRoot, gitRepo, "microsoft/FluidFramework", branch);
 	const config = context.repo.fluidBuildConfig.policy?.packageNames!;
 	const packages = FeedsForPackages(context.repo.packages.packages, config);
 

@@ -90,7 +90,7 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 		if (pkg.monoRepo === undefined) {
 			updatedDeps.add(pkg.name);
 		} else {
-			updatedDeps.add(pkg.monoRepo.kind);
+			updatedDeps.add(pkg.monoRepo.name);
 		}
 	}
 

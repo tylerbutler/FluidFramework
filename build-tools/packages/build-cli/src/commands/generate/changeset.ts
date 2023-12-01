@@ -237,7 +237,7 @@ export default class GenerateChangesetCommand extends BaseCommand<typeof Generat
 		for (const rg of context.repo.releaseGroups.values()) {
 			if (rg.name !== releaseGroup) {
 				choices.push(
-					{ title: `${chalk.bold(rg.kind)}`, heading: true, disabled: true },
+					{ title: `${chalk.bold(rg.name)}`, heading: true, disabled: true },
 					...rg.packages
 						.filter((pkg) => (all ? true : isIncludedByDefault(pkg)))
 						.sort((a, b) => packageComparer(a, b, changedPackages))

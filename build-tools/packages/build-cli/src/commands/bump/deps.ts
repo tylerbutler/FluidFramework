@@ -188,7 +188,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 			}
 
 			if (pkg.monoRepo !== undefined) {
-				const rg = pkg.monoRepo.kind;
+				const rg = pkg.monoRepo.name;
 				this.errorLog(`${pkg.name} is part of the ${rg} release group.`);
 				this.errorLog(
 					`If you want to update dependencies on that package, run the following command:\n\n    ${

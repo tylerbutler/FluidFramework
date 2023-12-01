@@ -124,7 +124,7 @@ export async function npmCheckUpdates(
 			}
 
 			log?.verbose(
-				`Adding ${releaseGroupRoot.workspaceGlobs.length} globs for release group ${releaseGroupRoot.kind}.`,
+				`Adding ${releaseGroupRoot.workspaceGlobs.length} globs for release group ${releaseGroupRoot.name}.`,
 			);
 
 			searchGlobs.push(
@@ -352,7 +352,7 @@ export function generateReleaseGitTagName(
 	let tagName = "";
 
 	if (releaseGroupOrPackage instanceof Workspace) {
-		const kindLowerCase = releaseGroupOrPackage.kind.toLowerCase();
+		const kindLowerCase = releaseGroupOrPackage.name.toLowerCase();
 		tagName = `${kindLowerCase}_v${version ?? releaseGroupOrPackage.version}`;
 	} else if (releaseGroupOrPackage instanceof Package) {
 		tagName = `${PackageName.getUnscopedName(releaseGroupOrPackage.name)}_v${
@@ -456,7 +456,7 @@ export function getFluidDependencies(
 			}
 
 			if (pkg.monoRepo !== undefined) {
-				releaseGroups[pkg.monoRepo.kind] = newVersion.version;
+				releaseGroups[pkg.monoRepo.name] = newVersion.version;
 				continue;
 			}
 

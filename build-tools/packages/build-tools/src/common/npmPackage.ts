@@ -16,7 +16,7 @@ import type { PackageJson as StandardPackageJson, SetRequired } from "type-fest"
 import { options } from "../fluidBuild/options";
 import { type IFluidBuildConfig, type ITypeValidationConfig } from "./fluidRepo";
 import { defaultLogger } from "./logging";
-import { Workspace, PackageManager } from "./monoRepo";
+import { Workspace, PackageManager, ReleaseGroup } from "./monoRepo";
 import {
 	ExecAsyncResult,
 	execWithErrorAsync,
@@ -103,10 +103,16 @@ export class Package {
 	 */
 	constructor(
 		public readonly packageJsonFileName: string,
-		public readonly group: string,
+		public readonly group?: ReleaseGroup,
 		public readonly monoRepo?: Workspace,
 		additionalProperties: any = {},
 	) {
+		if (group === undefined && monoRepo === undefined) {
+			throw new Error("Package contructor requires either a release group or a workspace.");
+		}
+
+		group ??= monoRepo?.name;
+
 		[this._packageJson, this._indent] = readPackageJsonAndIndent(packageJsonFileName);
 		const pnpmWorkspacePath = path.join(this.directory, "pnpm-workspace.yaml");
 		const yarnLockPath = path.join(this.directory, "yarn.lock");
@@ -169,6 +175,10 @@ export class Package {
 	public get isReleaseGroupRoot(): boolean {
 		return this.monoRepo !== undefined && this.directory === this.monoRepo.repoPath;
 	}
+
+	// public get releaseGroup(): ReleaseGroup {
+	// 	const config = this.
+	// }
 
 	public get matched() {
 		return this._matched;
@@ -301,7 +311,7 @@ export class Package {
 	public static load<T extends typeof Package, TAddProps>(
 		this: T,
 		packageJsonFileName: string,
-		group: string,
+		group?: ReleaseGroup,
 		monoRepo?: Workspace,
 		additionalProperties?: TAddProps,
 	) {
@@ -327,7 +337,7 @@ export class Package {
 	public static loadDir<T extends typeof Package, TAddProps>(
 		this: T,
 		packageDir: string,
-		group: string,
+		group: ReleaseGroup,
 		monoRepo?: Workspace,
 		additionalProperties?: TAddProps,
 	) {
@@ -384,7 +394,7 @@ export class Packages {
 
 	public static loadDir(
 		dirFullPath: string,
-		group: string,
+		group: ReleaseGroup,
 		ignoredDirFullPaths: string[] | undefined,
 		monoRepo?: Workspace,
 	) {

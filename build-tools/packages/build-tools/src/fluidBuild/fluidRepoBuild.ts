@@ -171,7 +171,7 @@ export class FluidRepoBuild extends FluidRepo {
 			if (isSameFileOrDir(releaseGroup.repoPath, pkgDir)) {
 				log(
 					`Release group ${chalk.cyanBright(
-						releaseGroup.kind,
+						releaseGroup.name,
 					)} matched (directory: ${dir})`,
 				);
 				this.setMatchedReleaseGroup(releaseGroup);
@@ -191,7 +191,7 @@ export class FluidRepoBuild extends FluidRepo {
 		if (matchReleaseGroup && foundPackage.monoRepo !== undefined) {
 			log(
 				`\tRelease group ${chalk.cyanBright(
-					foundPackage.monoRepo.kind,
+					foundPackage.monoRepo.name,
 				)} matched (directory: ${dir})`,
 			);
 			this.setMatchedReleaseGroup(foundPackage.monoRepo);

@@ -438,7 +438,7 @@ export class FluidRepo {
 	 */
 	public packagesInReleaseGroup(releaseGroup: string): Package[] {
 		const packages = this.packages.packages.filter(
-			(pkg) => pkg.monoRepo?.kind === releaseGroup,
+			(pkg) => pkg.monoRepo?.name === releaseGroup,
 		);
 		return packages;
 	}
@@ -454,7 +454,7 @@ export class FluidRepo {
 		if (releaseGroup instanceof Package) {
 			packages = this.packages.packages.filter((p) => p.name !== releaseGroup.name);
 		} else {
-			packages = this.packages.packages.filter((pkg) => pkg.monoRepo?.kind !== releaseGroup);
+			packages = this.packages.packages.filter((pkg) => pkg.monoRepo?.name !== releaseGroup);
 		}
 
 		return packages;

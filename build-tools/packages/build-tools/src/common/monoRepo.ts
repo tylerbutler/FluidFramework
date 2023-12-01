@@ -18,6 +18,8 @@ const traceInit = registerDebug("fluid-build:init");
 
 export type PackageManager = "npm" | "pnpm" | "yarn";
 
+export type ReleaseGroup = string;
+
 /**
  * Represents the different types of release groups supported by the build tools. Each of these groups should be defined
  * in the fluid-build section of the root package.json.
@@ -148,7 +150,7 @@ export class Workspace {
 	 * @param ignoredDirs - Paths to ignore when loading the monorepo.
 	 */
 	constructor(
-		public readonly kind: string,
+		private readonly kind: string,
 		public readonly repoPath: string,
 		public readonly interdependencyRange: InterdependencyRange,
 		private readonly packageManager: PackageManager,

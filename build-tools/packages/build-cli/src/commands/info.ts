@@ -53,7 +53,7 @@ export default class InfoCommand extends BaseCommand<typeof InfoCommand> {
 		for (const pkg of packages) {
 			const version = pkg.monoRepo ? pkg.monoRepo.version : pkg.version;
 			tableData.push([
-				pkg.monoRepo?.kind ?? "n/a",
+				pkg.monoRepo?.name ?? "n/a",
 				pkg.name,
 				pkg.packageJson.private === true ? "-private-" : "",
 				version,

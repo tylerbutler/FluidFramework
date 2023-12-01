@@ -51,7 +51,7 @@ export class VersionBag {
 
 	protected static getEntryName(pkg: Package): string {
 		if (pkg.monoRepo !== undefined) {
-			return pkg.monoRepo.kind;
+			return pkg.monoRepo.name;
 		} else {
 			return pkg.name;
 		}

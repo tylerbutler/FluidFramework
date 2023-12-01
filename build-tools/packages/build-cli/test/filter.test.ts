@@ -4,7 +4,7 @@
  */
 import chai, { assert, expect } from "chai";
 
-import { Context, GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
+import { FluidRepoContext, GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
 import assertArrays from "chai-arrays";
 
 import {
@@ -22,7 +22,7 @@ async function getContext() {
 	const resolvedRoot = await getResolvedFluidRoot();
 	const gitRepo = new GitRepo(resolvedRoot);
 	const branch = await gitRepo.getCurrentBranchName();
-	const context = new Context(resolvedRoot, gitRepo, "microsoft/FluidFramework", branch);
+	const context = new FluidRepoContext(resolvedRoot, gitRepo, "microsoft/FluidFramework", branch);
 	return context;
 }
 
