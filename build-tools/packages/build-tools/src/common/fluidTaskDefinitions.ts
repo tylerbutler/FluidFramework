@@ -151,14 +151,15 @@ export function normalizeGlobalTaskDefinitions(
 
 /**
  * Combine and fill in default values for task definitions for a package.
- * @param json package.json content for the package
- * @param root root for the Fluid repo
+ * @param json - package.json content for the package
+ * @param globalTaskDefinitions - task definitions that should apply globally.
+ * @param isWorkspaceRoot - set this to true if the package is the root of a workspace.
  * @returns full task definitions for the package.
  */
 export function getTaskDefinitions(
 	json: PackageJson,
 	globalTaskDefinitions: TaskDefinitions,
-	isReleaseGroupRoot: boolean,
+	isWorkspaceRoot: boolean,
 ) {
 	const packageTaskDefinitions = json.fluidBuild?.tasks;
 	const taskDefinitions: TaskDefinitions = {};
@@ -224,7 +225,7 @@ export function getTaskDefinitions(
 	// Check to make sure all the dependencies either is an target or script
 	// For release group root, the default for any task is to run all the tasks in the group
 	// even if there is not task definition or script for it.
-	if (!isReleaseGroupRoot) {
+	if (!isWorkspaceRoot) {
 		const packageInvalid = (value) =>
 			!value.includes("#") &&
 			!value.startsWith("^") &&

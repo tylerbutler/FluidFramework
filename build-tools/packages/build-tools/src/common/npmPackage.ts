@@ -96,14 +96,22 @@ export class Package {
 	 * Create a new package from a package.json file. Prefer the .load method to calling the contructor directly.
 	 *
 	 * @param packageJsonFileName - The path to a package.json file.
-	 * @param group - A group that this package is a part of.
+	 * @param group - A release group that this package is a part of.
 	 * @param monoRepo - Set this if the package is part of a release group (monorepo).
 	 * @param additionalProperties - An object with additional properties that should be added to the class. This is
 	 * useful to augment the package class with additional properties.
 	 */
 	constructor(
 		public readonly packageJsonFileName: string,
+
+		/**
+		 * @deprecated Use the releaseGroup property instead.
+		 */
 		public readonly group?: ReleaseGroup,
+
+		/**
+		 * @deprecated Use the workspace property instead.
+		 */
 		public readonly monoRepo?: Workspace,
 		additionalProperties: any = {},
 	) {
@@ -171,15 +179,31 @@ export class Package {
 	}
 
 	/**
+	 * The workspace this package belongs to.
+	 */
+	public get workspace(): Workspace | undefined {
+		return this.monoRepo;
+	}
+
+	/**
 	 * Returns true if the package is a release group root package based on its directory path.
+	 *
+	 * @deprecated Use {@link Package.isWorkspaceRoot} instead.
 	 */
 	public get isReleaseGroupRoot(): boolean {
 		return this.monoRepo !== undefined && this.directory === this.monoRepo.repoPath;
 	}
 
-	// public get releaseGroup(): ReleaseGroup {
-	// 	const config = this.
-	// }
+	/**
+	 * Returns true if the package is a workspace root package based on its directory path.
+	 */
+	public get isWorkspaceRoot(): boolean {
+		return this.workspace !== undefined && this.directory === this.workspace.repoPath;
+	}
+
+	public get releaseGroup(): ReleaseGroup | undefined {
+		return this.group;
+	}
 
 	public get matched() {
 		return this._matched;
@@ -223,7 +247,7 @@ export class Package {
 	 * @returns full path for the lock file, or undefined if one doesn't exist
 	 */
 	public getLockFilePath() {
-		const directory = this.monoRepo ? this.monoRepo.repoPath : this.directory;
+		const directory = this.workspace ? this.workspace.repoPath : this.directory;
 		const lockFileNames = ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"];
 		for (const lockFileName of lockFileNames) {
 			const full = path.join(directory, lockFileName);
@@ -292,8 +316,10 @@ export class Package {
 	}
 
 	public async install() {
-		if (this.monoRepo) {
-			throw new Error("Package in a monorepo shouldn't be installed");
+		if (this.workspace) {
+			throw new Error(
+				"Package in a workspace shouldn't be installed directly. Install the workspace instead.",
+			);
 		}
 
 		log(`${this.nameColored}: Installing - ${this.installCommand}`);

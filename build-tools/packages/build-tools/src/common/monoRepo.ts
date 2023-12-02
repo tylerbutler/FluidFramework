@@ -176,16 +176,8 @@ export class Workspace {
 			this.packages.push(Package.load(path.join(pkgDir, "package.json"), name, this));
 		}
 
+		// Load the workspace root package
 		this.pkg = Package.load(packagePath, undefined, this);
-
-		// const rootPackage = this.packages.find((pkg) => {
-		// 	return pkg.packageJsonFileName === packagePath;
-		// });
-		// if (rootPackage === undefined) {
-		// 	throw new Error(`Can't find root package for workspace '${name}'`);
-		// }
-		// this.pkg = rootPackage;
-
 		if (this.packageManager !== this.pkg.packageManager) {
 			throw new Error(
 				`Package manager mismatch between ${packageManager} and ${this.pkg.packageManager}`,
