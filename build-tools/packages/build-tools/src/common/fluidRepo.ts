@@ -38,15 +38,17 @@ export interface IFluidBuildConfig {
 	};
 
 	workspaces?: {
+		/**
+		 * A mapping of workspace name to folder containing a workspace config file (e.g. pnpm-workspace.yaml)
+		 */
 		[name: string]: WorkspaceDefinition;
 	};
 
 	releaseGroups?: {
-		[releaseGroupName: string]: {
-			include: string[];
-			exclude: string[];
-		};
+		[releaseGroupName: string]: ReleaseGroupDefinition;
 	};
+
+	independentPackages?: string[];
 
 	/**
 	 * Policy configuration for the `check:policy` command. This can only be configured in the rrepo-wide Fluid build
@@ -68,6 +70,78 @@ export interface IFluidBuildConfig {
 		[name: string]: VersionBumpType | PreviousVersionStyle;
 	};
 }
+
+// export interface WorkspaceDefinition {
+// 	directory: string;
+// 	/**
+// 	 * The interdependencyRange controls the type of semver range to use between packages in the same release
+// 	 * group. This setting controls the default range that will be used when updating the version of a release
+// 	 * group. The default can be overridden using the `--interdependencyRange` flag in the `flub bump` command.
+// 	 */
+// 	defaultInterdependencyRange?: InterdependencyRange;
+// 	independentPackages?: {
+// 		[name: string]: string;
+// 	};
+// 	releaseGroups?: {
+// 		[name: string]: ReleaseGroupDefinition;
+// 	};
+// }
+
+export interface ReleaseGroupDefinition {
+	workspace: string;
+
+	/**
+	 * An array of scopes or package names that should be included in the release group. Each package must
+	 * belong to a single release group.
+	 */
+	include: string[];
+
+	/**
+	 * An array of scopes or package names that should be excluded. Exclusions are applied AFTER inclusions, so
+	 * this can be used to exclude specific packages in a certain scope.
+	 */
+	exclude?: string[];
+	/**
+	 * The interdependencyRange controls the type of semver range to use between packages in the same release
+	 * group. This setting controls the default range that will be used when updating the version of a release
+	 * group. The default can be overridden using the `--interdependencyRange` flag in the `flub bump` command.
+	 */
+	defaultInterdependencyRange: InterdependencyRange;
+}
+
+export function matchesReleaseGroupDefinition(
+	pkg: Package,
+	definition: ReleaseGroupDefinition,
+): boolean {
+	const { workspace, include, exclude } = definition;
+
+	if (workspace !== pkg.workspace?.name) {
+		return false;
+	}
+
+	let shouldInclude = false;
+	if (
+		// If the package name matches an entry in the include list, it should be included
+		include.includes(pkg.name) ||
+		// If the package name starts with any of the include list entries, it should be included
+		include.some((scope) => pkg.name.startsWith(scope))
+	) {
+		shouldInclude = true;
+	}
+
+	return shouldInclude && !exclude?.includes(pkg.name);
+}
+
+// export function findReleaseGroupForPackage(
+// 	pkg: Package,
+// 	definition: Map<string, ReleaseGroupDefinition>,
+// ): string | undefined {
+// 	for (const [rgName, def] of definition) {
+// 		if (matchesReleaseGroupDefinition(pkg, def)) {
+// 			return rgName;
+// 		}
+// 	}
+// }
 
 /**
  * A type representing the different version constraint styles we use when determining the previous version for type

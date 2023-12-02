@@ -27,6 +27,7 @@ import {
 } from "./utils";
 
 import registerDebug from "debug";
+import { getFluidBuildConfig } from "./fluidUtils";
 const traceInit = registerDebug("fluid-build:init");
 
 const { log, errorLog: error } = defaultLogger;
@@ -331,7 +332,7 @@ export class Package {
 	 *
 	 * @param packageJsonFileName - The path to a package.json file.
 	 * @param group - A group that this package is a part of.
-	 * @param monoRepo - Set this if the package is part of a release group (monorepo).
+	 * @param workspace - Set this if the package is part of a workspace.
 	 * @param additionalProperties - An object with additional properties that should be added to the class. This is
 	 * useful to augment the package class with additional properties.
 	 */
@@ -339,13 +340,50 @@ export class Package {
 		this: T,
 		packageJsonFileName: string,
 		group?: ReleaseGroup,
-		monoRepo?: Workspace,
+		workspace?: Workspace,
 		additionalProperties?: TAddProps,
 	) {
+		const rootConfig = getFluidBuildConfig(packageJsonFileName);
+		const releaseGroupConfig = rootConfig.releaseGroups;
+
+		const shouldIncludePackage = (
+			packageJson: PackageJson,
+			include: string[],
+			exclude?: string[],
+		) => {
+			const { name } = packageJson;
+
+			let shouldInclude = false;
+			if (
+				// If the package name matches an entry in the include list, it should be included
+				include.includes(name) ||
+				// If the package name starts with any of the include list entries, it should be included
+				include.some((scope) => name.startsWith(scope))
+			) {
+				shouldInclude = true;
+			}
+
+			return shouldInclude && !exclude?.includes(name);
+		};
+
+		const [packageJson] = readPackageJsonAndIndent(packageJsonFileName);
+
+		if (releaseGroupConfig !== undefined) {
+			for (const [groupName, definition] of Object.entries(releaseGroupConfig)) {
+				const { workspace: releaseGroupWorkspace, include, exclude } = definition;
+				if (releaseGroupWorkspace === workspace?.name) {
+					if (shouldIncludePackage(packageJson, include, exclude)) {
+						group = groupName;
+						break;
+					}
+				}
+			}
+		}
+
 		return new this(
 			packageJsonFileName,
 			group,
-			monoRepo,
+			workspace,
 			additionalProperties,
 		) as InstanceType<T> & TAddProps;
 	}
