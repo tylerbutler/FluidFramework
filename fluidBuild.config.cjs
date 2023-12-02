@@ -96,58 +96,11 @@ module.exports = {
 		},
 	},
 
-	repoLayout: {
-		workspaces: {
-			main: {
-				directory: ".",
-				independentPackages: ["common", "tools"],
-				releaseGroups: {
-					"client": {
-						include: [
-							"@fluidframework",
-							"@fluid-experimental",
-							// "@fluid-example",
-							"@fluid-tools",
-						],
-						defaultInterdependencyRange: "workspace:~",
-					},
-					"examples": {
-						include: ["@fluid-example"],
-						defaultInterdependencyRange: "workspace:~",
-					},
-					"build-tools": {
-						include: [
-							"@fluid-private/readme-command",
-							"@fluid-tools/build-cli",
-							"@fluid-tools/version-tools",
-							"@fluidframework/build--tools",
-							"@fluidframework/bundle-size-tools",
-						],
-						defaultInterdependencyRange: "workspace:~",
-					},
-				},
-			},
-			server: {
-				directory: "./server/routerlicious",
-				defaultInterdependencyRange: "workspace:~",
-			},
-			gitrest: {
-				directory: "server/gitrest",
-				defaultInterdependencyRange: "^",
-			},
-			historian: {
-				directory: "server/historian",
-				defaultInterdependencyRange: "^",
-			},
-		},
-	},
-
 	// This defines the layout of the repo for fluid-build. It applies to the whole repo.
 	repoPackages: {
 		// Release groups
 		"client": {
 			directory: "",
-			ignoredDirs: [],
 			defaultInterdependencyRange: "workspace:~",
 		},
 		"build-tools": {
@@ -166,21 +119,57 @@ module.exports = {
 			directory: "server/historian",
 			defaultInterdependencyRange: "^",
 		},
+	},
 
-		// Independent packages
-		"build": "common/build",
-		"common-def": "common/lib/common-definitions",
-		"common-utils": "common/lib/common-utils",
-		"protocol-def": "common/lib/protocol-definitions",
+	// This defines the layout of the repo for fluid-build. It applies to the whole repo.
+	workspaces: {
+		// Release groups
+		client: {
+			directory: ".",
+			defaultInterdependencyRange: "workspace:~",
+		},
+		"build-tools": {
+			directory: "build-tools",
+			defaultInterdependencyRange: "workspace:~",
+		},
+		server: {
+			directory: "server/routerlicious",
+			defaultInterdependencyRange: "workspace:~",
+		},
+		gitrest: {
+			directory: "server/gitrest",
+			defaultInterdependencyRange: "^",
+		},
+		historian: {
+			directory: "server/historian",
+			defaultInterdependencyRange: "^",
+		},
+	},
 
-		// Tools
-		"tools": [
-			"tools/api-markdown-documenter",
-			"tools/benchmark",
-			"tools/changelog-generator-wrapper",
-			"tools/getkeys",
-			"tools/test-tools",
-		],
+	releaseGroups: {
+		"client-rg": {
+			include: [
+				"@fluidframework",
+				"@fluid-experimental",
+				// "@fluid-example",
+				"@fluid-tools",
+			],
+			defaultInterdependencyRange: "workspace:~",
+		},
+		"examples": {
+			include: ["@fluid-example"],
+			defaultInterdependencyRange: "workspace:~",
+		},
+		"build-tools": {
+			include: [
+				"@fluid-private/readme-command",
+				"@fluid-tools/build-cli",
+				"@fluid-tools/version-tools",
+				"@fluidframework/build--tools",
+				"@fluidframework/bundle-size-tools",
+			],
+			defaultInterdependencyRange: "workspace:~",
+		},
 	},
 
 	// `flub check policy` config. It applies to the whole repo.

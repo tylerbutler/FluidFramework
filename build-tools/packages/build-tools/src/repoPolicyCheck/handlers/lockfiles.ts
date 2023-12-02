@@ -5,7 +5,7 @@
 import { unlinkSync } from "fs";
 import path from "path";
 
-import { IFluidBuildConfig, IFluidRepoPackageEntry } from "../../common/fluidRepo";
+import { IFluidBuildConfig } from "../../common/fluidRepo";
 import { getFluidBuildConfig } from "../../common/fluidUtils";
 import { Handler, readFile } from "../common";
 
@@ -23,22 +23,20 @@ const getKnownPaths = (manifest: IFluidBuildConfig) => {
 		// Add additional paths from the manifest
 		_knownPaths.push(...(manifest.policy?.additionalLockfilePaths ?? []));
 
-		if (manifest.repoPackages) {
+		if (manifest.workspaces !== undefined) {
 			// Add paths to known monorepos and packages
-			const vals = Object.values(manifest.repoPackages).filter(
-				(p) => typeof p === "string",
-			) as string[];
+			const vals = Object.values(manifest.workspaces).map((ws) => ws.directory);
 			_knownPaths.push(...vals);
 
-			// Add paths from entries that are arrays
-			const arrayVals = Object.values(manifest.repoPackages).filter(
-				(p) => typeof p !== "string",
-			) as IFluidRepoPackageEntry[];
-			for (const arr of arrayVals) {
-				if (Array.isArray(arr)) {
-					_knownPaths.push(...arr.map((p) => p.toString()));
-				}
-			}
+			// // Add paths from entries that are arrays
+			// const arrayVals = Object.values(manifest.workspaces).filter(
+			// 	(p) => typeof p !== "string",
+			// ) as IFluidRepoPackageEntry[];
+			// for (const arr of arrayVals) {
+			// 	if (Array.isArray(arr)) {
+			// 		_knownPaths.push(...arr.map((p) => p.toString()));
+			// 	}
+			// }
 		}
 	}
 	return _knownPaths;

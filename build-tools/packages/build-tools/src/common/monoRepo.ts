@@ -4,11 +4,11 @@
  */
 import { InterdependencyRange, DEFAULT_INTERDEPENDENCY_RANGE } from "@fluid-tools/version-tools";
 import { getPackagesSync } from "@manypkg/get-packages";
-import { readFileSync, readJsonSync } from "fs-extra";
+import { readFileSync } from "fs-extra";
 import * as path from "path";
 import YAML from "yaml";
 
-import { IFluidBuildConfig, IFluidRepoPackage } from "./fluidRepo";
+import { IFluidBuildConfig, WorkspaceDefinition } from "./fluidRepo";
 import { Logger, defaultLogger } from "./logging";
 import { Package } from "./npmPackage";
 import { execWithErrorAsync, existsSync, rimrafWithErrorAsync } from "./utils";
@@ -76,9 +76,9 @@ export class Workspace {
 	public readonly workspaceGlobs: string[];
 	public readonly pkg: Package;
 
-	public get name(): string {
-		return this.kind;
-	}
+	// public get name(): string {
+	// 	return this.name;
+	// }
 
 	/**
 	 * The directory of the root of the release group.
@@ -88,47 +88,54 @@ export class Workspace {
 	}
 
 	public get releaseGroup(): "build-tools" | "client" | "server" | "gitrest" | "historian" {
-		return this.kind as "build-tools" | "client" | "server" | "gitrest" | "historian";
+		return this.name as "build-tools" | "client" | "server" | "gitrest" | "historian";
 	}
 
-	static load(group: string, repoPackage: IFluidRepoPackage) {
-		const { directory, ignoredDirs, defaultInterdependencyRange } = repoPackage;
+	static load(
+		group: string,
+		workspaceDefinition: WorkspaceDefinition,
+		repoRoot: string,
+	): Workspace {
+		const { directory: origDirectory, defaultInterdependencyRange } = workspaceDefinition;
+		const directory = path.join(repoRoot, origDirectory);
 		let packageManager: PackageManager;
-		let packageDirs: string[];
 
-		try {
-			const { tool, rootDir, packages } = getPackagesSync(directory);
-			if (path.resolve(rootDir) !== directory) {
-				// This is a sanity check. directory is the path passed in when creating the MonoRepo object, while rootDir is
-				// the dir that manypkg found. They should be the same.
-				throw new Error(`rootDir ${rootDir} does not match repoPath ${directory}`);
-			}
-			switch (tool.type) {
-				case "lerna":
-					// Treat lerna as "npm"
-					packageManager = "npm";
-					break;
-				case "npm":
-				case "pnpm":
-				case "yarn":
-					packageManager = tool.type;
-					break;
-				default:
-					throw new Error(`Unknown package manager ${tool.type}`);
-			}
-			if (packages.length === 1 && packages[0].dir === directory) {
-				// this is a independent package
-				return undefined;
-			}
-			packageDirs = packages.filter((pkg) => pkg.relativeDir !== ".").map((pkg) => pkg.dir);
+		const { tool, rootDir, packages } = getPackagesSync(directory);
+		if (path.resolve(rootDir) !== directory) {
+			// This is a sanity check. directory is the path passed in when creating the MonoRepo object, while rootDir is
+			// the dir that manypkg found. They should be the same.
+			throw new Error(
+				`rootDir ${rootDir} does not match repoPath ${directory} (resolved from ${origDirectory})`,
+			);
+		}
+		switch (tool.type) {
+			case "lerna":
+				// Treat lerna as "npm"
+				packageManager = "npm";
+				break;
+			case "npm":
+			case "pnpm":
+			case "yarn":
+				packageManager = tool.type;
+				break;
+			default:
+				throw new Error(`Unknown package manager ${tool.type}`);
+		}
+		if (packages.length === 1 && packages[0].dir === directory) {
+			throw new Error(
+				`Found a single package '${packages[0].packageJson.name}' unexpectedly.`,
+			);
+		}
+		const packageDirs: string[] = packages
+			.filter((pkg) => pkg.relativeDir !== ".")
+			.map((pkg) => pkg.dir);
+		// packageDirs.unshift(directory);
+		// console.debug(packageDirs.slice(5));
 
-			if (defaultInterdependencyRange === undefined) {
-				traceInit(
-					`No defaultinterdependencyRange specified for ${group} release group. Defaulting to "${DEFAULT_INTERDEPENDENCY_RANGE}".`,
-				);
-			}
-		} catch {
-			return undefined;
+		if (defaultInterdependencyRange === undefined) {
+			traceInit(
+				`No defaultinterdependencyRange specified for ${group} release group. Defaulting to "${DEFAULT_INTERDEPENDENCY_RANGE}".`,
+			);
 		}
 
 		return new Workspace(
@@ -137,38 +144,47 @@ export class Workspace {
 			defaultInterdependencyRange ?? DEFAULT_INTERDEPENDENCY_RANGE,
 			packageManager,
 			packageDirs,
-			ignoredDirs,
 		);
 	}
 
 	/**
 	 * Creates a new monorepo.
 	 *
-	 * @param kind - The 'kind' of monorepo this object represents.
+	 * @param name - The name of the workspace.
 	 * @param repoPath - The path on the filesystem to the monorepo. This location is expected to have either a
 	 * package.json file with a workspaces field, or a lerna.json file with a packages field.
-	 * @param ignoredDirs - Paths to ignore when loading the monorepo.
 	 */
 	constructor(
-		private readonly kind: string,
+		public readonly name: string,
 		public readonly repoPath: string,
 		public readonly interdependencyRange: InterdependencyRange,
-		private readonly packageManager: PackageManager,
+		public readonly packageManager: PackageManager,
 		packageDirs: string[],
-		ignoredDirs?: string[],
 		private readonly logger: Logger = defaultLogger,
 	) {
 		this.version = "";
 		this.workspaceGlobs = [];
 
 		const packagePath = path.join(repoPath, "package.json");
-		let versionFromLerna = false;
 
 		if (!existsSync(packagePath)) {
 			throw new Error(`ERROR: package.json not found in ${repoPath}`);
 		}
 
-		this.pkg = Package.load(packagePath, kind, this);
+		for (const pkgDir of packageDirs) {
+			traceInit(`${name}: Loading packages from ${pkgDir}`);
+			this.packages.push(Package.load(path.join(pkgDir, "package.json"), name, this));
+		}
+
+		this.pkg = Package.load(packagePath, undefined, this);
+
+		// const rootPackage = this.packages.find((pkg) => {
+		// 	return pkg.packageJsonFileName === packagePath;
+		// });
+		// if (rootPackage === undefined) {
+		// 	throw new Error(`Can't find root package for workspace '${name}'`);
+		// }
+		// this.pkg = rootPackage;
 
 		if (this.packageManager !== this.pkg.packageManager) {
 			throw new Error(
@@ -176,43 +192,39 @@ export class Workspace {
 			);
 		}
 
-		for (const pkgDir of packageDirs) {
-			traceInit(`${kind}: Loading packages from ${pkgDir}`);
-			this.packages.push(Package.load(path.join(pkgDir, "package.json"), kind, this));
-		}
-
 		// only needed for bump tools
-		const lernaPath = path.join(repoPath, "lerna.json");
-		if (existsSync(lernaPath)) {
-			const lerna = readJsonSync(lernaPath);
-			if (packageManager === "pnpm") {
-				const pnpmWorkspace = path.join(repoPath, "pnpm-workspace.yaml");
-				const workspaceString = readFileSync(pnpmWorkspace, "utf-8");
-				this.workspaceGlobs = YAML.parse(workspaceString).packages;
-			} else if (lerna.packages !== undefined) {
-				this.workspaceGlobs = lerna.packages;
-			}
-
-			if (lerna.version !== undefined) {
-				traceInit(`${kind}: Loading version (${lerna.version}) from ${lernaPath}`);
-				this.version = lerna.version;
-				versionFromLerna = true;
-			}
-		} else {
-			// Load globs from package.json directly
-			if (this.pkg.packageJson.workspaces instanceof Array) {
-				this.workspaceGlobs = this.pkg.packageJson.workspaces;
-			} else {
-				this.workspaceGlobs = (this.pkg.packageJson.workspaces as any).packages;
-			}
+		// const lernaPath = path.join(repoPath, "lerna.json");
+		// if (existsSync(lernaPath)) {
+		// 	const lerna = readJsonSync(lernaPath);
+		if (packageManager === "pnpm") {
+			const pnpmWorkspace = path.join(repoPath, "pnpm-workspace.yaml");
+			const workspaceString = readFileSync(pnpmWorkspace, "utf-8");
+			this.workspaceGlobs = YAML.parse(workspaceString).packages;
 		}
+		// } else if (lerna.packages !== undefined) {
+		// 	this.workspaceGlobs = lerna.packages;
+		// }
 
-		if (!versionFromLerna) {
-			this.version = this.pkg.packageJson.version;
-			traceInit(
-				`${kind}: Loading version (${this.pkg.packageJson.version}) from ${packagePath}`,
-			);
-		}
+		// if (lerna.version !== undefined) {
+		// 	traceInit(`${kind}: Loading version (${lerna.version}) from ${lernaPath}`);
+		// 	this.version = lerna.version;
+		// 	versionFromLerna = true;
+		// }
+		// } else {
+		// 	// Load globs from package.json directly
+		// 	if (this.pkg.packageJson.workspaces instanceof Array) {
+		// 		this.workspaceGlobs = this.pkg.packageJson.workspaces;
+		// 	} else {
+		// 		this.workspaceGlobs = (this.pkg.packageJson.workspaces as any).packages;
+		// 	}
+		// }
+
+		// if (!versionFromLerna) {
+		// 	this.version = this.pkg.packageJson.version;
+		// 	traceInit(
+		// 		`${kind}: Loading version (${this.pkg.packageJson.version}) from ${packagePath}`,
+		// 	);
+		// }
 	}
 
 	public static isSame(a: Workspace | undefined, b: Workspace | undefined) {
@@ -236,7 +248,7 @@ export class Workspace {
 	}
 
 	public async install() {
-		this.logger.log(`Release group ${this.kind}: Installing - ${this.installCommand}`);
+		this.logger.log(`Release group ${this.name}: Installing - ${this.installCommand}`);
 		return execWithErrorAsync(this.installCommand, { cwd: this.repoPath }, this.repoPath);
 	}
 	public async uninstall() {

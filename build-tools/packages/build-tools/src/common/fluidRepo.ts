@@ -4,12 +4,7 @@
  */
 import * as path from "path";
 
-import {
-	DEFAULT_INTERDEPENDENCY_RANGE,
-	InterdependencyRange,
-	ReleaseVersion,
-	VersionBumpType,
-} from "@fluid-tools/version-tools";
+import { InterdependencyRange, ReleaseVersion, VersionBumpType } from "@fluid-tools/version-tools";
 import { PackageName } from "@rushstack/node-core-library";
 
 import { getFluidBuildConfig } from "./fluidUtils";
@@ -20,8 +15,8 @@ import { TaskDefinitionsOnDisk } from "./fluidTaskDefinitions";
 import { getVersionFromTag } from "./tags";
 import { GitRepo } from "./gitRepo";
 
-import registerDebug from "debug";
-const traceInit = registerDebug("fluid-build:init");
+// import registerDebug from "debug";
+// const traceInit = registerDebug("fluid-build:init");
 
 /**
  * Fluid build configuration that is expected in the repo-root package.json.
@@ -39,7 +34,18 @@ export interface IFluidBuildConfig {
 	 * configured in the repo-wide Fluid build config (the repo-root package.json).
 	 */
 	repoPackages?: {
-		[name: string]: IFluidRepoPackageEntry;
+		[name: string]: WorkspaceDefinition;
+	};
+
+	workspaces?: {
+		[name: string]: WorkspaceDefinition;
+	};
+
+	releaseGroups?: {
+		[releaseGroupName: string]: {
+			include: string[];
+			exclude: string[];
+		};
 	};
 
 	/**
@@ -254,18 +260,18 @@ export interface ITypeValidationConfig {
 }
 
 /**
- * Configures a package or release group
+ * Configures a workspace
  */
-export interface IFluidRepoPackage {
+export interface WorkspaceDefinition {
 	/**
 	 * The path to the package. For release groups this should be the path to the root of the release group.
 	 */
 	directory: string;
 
-	/**
-	 * An array of paths under `directory` that should be ignored.
-	 */
-	ignoredDirs?: string[];
+	// /**
+	//  * An array of paths under `directory` that should be ignored.
+	//  */
+	// ignoredDirs?: string[];
 
 	/**
 	 * The interdependencyRange controls the type of semver range to use between packages in the same release group. This
@@ -275,14 +281,21 @@ export interface IFluidRepoPackage {
 	defaultInterdependencyRange: InterdependencyRange;
 }
 
-export type IFluidRepoPackageEntry = string | IFluidRepoPackage | (string | IFluidRepoPackage)[];
+// export type IFluidRepoPackageEntry = string | IFluidRepoPackage | (string | IFluidRepoPackage)[];
 
 export class FluidRepo {
 	private readonly monoRepos = new Map<string, Workspace>();
 	private readonly gitRepo: GitRepo;
 	public readonly fluidBuildConfig: IFluidBuildConfig;
 
+	/**
+	 * @deprecated Should use the workspaces property instead.
+	 */
 	public get releaseGroups() {
+		return this.monoRepos;
+	}
+
+	public get workspaces() {
 		return this.monoRepos;
 	}
 
@@ -292,49 +305,40 @@ export class FluidRepo {
 		this.fluidBuildConfig = getFluidBuildConfig(resolvedRoot);
 		this.gitRepo = new GitRepo(resolvedRoot);
 		// Expand to full IFluidRepoPackage and full path
-		const normalizeEntry = (
-			item: IFluidRepoPackageEntry,
-		): IFluidRepoPackage | IFluidRepoPackage[] => {
-			if (Array.isArray(item)) {
-				return item.map((entry) => normalizeEntry(entry) as IFluidRepoPackage);
-			}
-			if (typeof item === "string") {
-				traceInit(
-					`No defaultInterdependencyRange setting found for '${item}'. Defaulting to "${DEFAULT_INTERDEPENDENCY_RANGE}".`,
-				);
-				return {
-					directory: path.join(resolvedRoot, item),
-					ignoredDirs: undefined,
-					defaultInterdependencyRange: DEFAULT_INTERDEPENDENCY_RANGE,
-				};
-			}
-			const directory = path.join(resolvedRoot, item.directory);
-			return {
-				directory,
-				ignoredDirs: item.ignoredDirs?.map((dir) => path.join(directory, dir)),
-				defaultInterdependencyRange: item.defaultInterdependencyRange,
-			};
-		};
-		const loadOneEntry = (item: IFluidRepoPackage, group: string) => {
-			return Packages.loadDir(item.directory, group, item.ignoredDirs);
-		};
+		// const normalizeEntry = (
+		// 	item: IFluidRepoPackageEntry,
+		// ): IFluidRepoPackage | IFluidRepoPackage[] => {
+		// 	if (Array.isArray(item)) {
+		// 		return item.map((entry) => normalizeEntry(entry) as IFluidRepoPackage);
+		// 	}
+		// 	if (typeof item === "string") {
+		// 		traceInit(
+		// 			`No defaultInterdependencyRange setting found for '${item}'. Defaulting to "${DEFAULT_INTERDEPENDENCY_RANGE}".`,
+		// 		);
+		// 		return {
+		// 			directory: path.join(resolvedRoot, item),
+		// 			ignoredDirs: undefined,
+		// 			defaultInterdependencyRange: DEFAULT_INTERDEPENDENCY_RANGE,
+		// 		};
+		// 	}
+		// 	const directory = path.join(resolvedRoot, item.directory);
+		// 	return {
+		// 		directory,
+		// 		ignoredDirs: item.ignoredDirs?.map((dir) => path.join(directory, dir)),
+		// 		defaultInterdependencyRange: item.defaultInterdependencyRange,
+		// 	};
+		// };
+		// const loadOneEntry = (item: IFluidRepoPackage, group: string) => {
+		// 	return Packages.loadDir(item.directory, group, item.ignoredDirs);
+		// };
 
 		const loadedPackages: Package[] = [];
-		for (const group in this.fluidBuildConfig.repoPackages) {
-			const item = normalizeEntry(this.fluidBuildConfig.repoPackages[group]);
-			if (Array.isArray(item)) {
-				for (const i of item) {
-					loadedPackages.push(...loadOneEntry(i, group));
-				}
-				continue;
-			}
-			const monoRepo = Workspace.load(group, item);
-			if (monoRepo) {
-				this.releaseGroups.set(group, monoRepo);
-				loadedPackages.push(...monoRepo.packages);
-			} else {
-				loadedPackages.push(...loadOneEntry(item, group));
-			}
+		for (const [name, workspaceDefinition] of Object.entries(
+			this.fluidBuildConfig.workspaces ?? {},
+		)) {
+			const workspace = Workspace.load(name, workspaceDefinition, resolvedRoot);
+			this.workspaces.set(name, workspace);
+			loadedPackages.push(...workspace.packages);
 		}
 		this.packages = new Packages(loadedPackages);
 	}

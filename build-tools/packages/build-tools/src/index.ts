@@ -27,7 +27,7 @@ export { type Handler } from "./repoPolicyCheck/common";
 export { policyHandlers } from "./repoPolicyCheck/handlers";
 export type {
 	IFluidBuildConfig,
-	IFluidRepoPackage,
+	WorkspaceDefinition,
 	PackageNamePolicyConfig,
 	PolicyConfig,
 	PreviousVersionStyle,
