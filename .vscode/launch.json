@@ -144,6 +144,15 @@
 			"args": ["test-only-filter", "--all"],
 		},
 		{
+			"name": "flub packages",
+			"program": "${workspaceFolder}/build-tools/packages/build-cli/bin/dev.js",
+			"cwd": "${workspaceFolder}/build-tools/packages/build-cli",
+			"request": "launch",
+			"skipFiles": ["<node_internals>/**"],
+			"type": "node",
+			"args": ["packages", "--scope", "@fluid-example"],
+		},
+		{
 			"name": "flub bump deps",
 			"program": "${workspaceFolder}/build-tools/packages/build-cli/bin/dev.js",
 			"cwd": "${workspaceFolder}",
