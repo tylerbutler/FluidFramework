@@ -21,7 +21,7 @@ export type PackageManager = "npm" | "pnpm" | "yarn";
 /**
  * Represents the different types of release groups supported by the build tools. Each of these groups should be defined
  * in the fluid-build section of the root package.json.
- * @deprecated
+ * @deprecated Don't use
  */
 export enum MonoRepoKind {
 	Client = "client",
@@ -34,7 +34,7 @@ export enum MonoRepoKind {
 
 /**
  * A type guard used to determine if a string is a MonoRepoKind.
- * @deprecated
+ * @deprecated Don't use
  */
 export function isMonoRepoKind(str: string | undefined): str is MonoRepoKind {
 	if (str === undefined) {
@@ -48,7 +48,7 @@ export function isMonoRepoKind(str: string | undefined): str is MonoRepoKind {
 
 /**
  * An iterator that returns only the Enum values of MonoRepoKind.
- * @deprecated
+ * @deprecated Don't use
  */
 export function* supportedMonoRepoValues(): IterableIterator<MonoRepoKind> {
 	for (const [, flag] of Object.entries(MonoRepoKind)) {
@@ -75,6 +75,8 @@ export function* supportedMonoRepoValues(): IterableIterator<MonoRepoKind> {
  * - If package.json contains a workspaces field, then packages will be loaded based on the globs in that field.
  *
  * - If the version was not defined in lerna.json, then the version value in package.json will be used.
+ *
+ * @internal
  */
 export class MonoRepo {
 	public readonly packages: Package[] = [];
@@ -150,10 +152,10 @@ export class MonoRepo {
 	/**
 	 * Creates a new monorepo.
 	 *
-	 * @param kind The 'kind' of monorepo this object represents.
-	 * @param repoPath The path on the filesystem to the monorepo. This location is expected to have either a
+	 * @param kind - The 'kind' of monorepo this object represents.
+	 * @param repoPath - The path on the filesystem to the monorepo. This location is expected to have either a
 	 * package.json file with a workspaces field, or a lerna.json file with a packages field.
-	 * @param ignoredDirs Paths to ignore when loading the monorepo.
+	 * @param ignoredDirs - Paths to ignore when loading the monorepo.
 	 */
 	constructor(
 		public readonly kind: string,

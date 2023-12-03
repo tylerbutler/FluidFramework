@@ -17,6 +17,8 @@ import { VersionBag } from "./versionBag";
 
 /**
  * Context provides access to data about the Fluid repo, and exposes methods to interrogate the repo state.
+ *
+ * @internal
  */
 export class Context {
 	public readonly repo: FluidRepo;
@@ -42,7 +44,7 @@ export class Context {
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated Don't use
 	 */
 	public async createBranch(branchName: string) {
 		if (await this.gitRepo.getShaForBranch(branchName)) {
@@ -101,7 +103,7 @@ export class Context {
 	 *
 	 * @returns A version string.
 	 *
-	 * @deprecated
+	 * @deprecated Don't use
 	 */
 	public getVersion(key: string, versionBag?: VersionBag): string {
 		let ver = "";
@@ -181,7 +183,7 @@ export class Context {
 	 *
 	 * @internal
 	 *
-	 * @deprecated
+	 * @deprecated Don't use
 	 */
 	public async getAllVersions(
 		releaseGroupOrPackage: string,

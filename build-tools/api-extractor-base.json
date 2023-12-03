@@ -12,6 +12,18 @@
 			// TODO: Add missing documentation and remove this rule override
 			"ae-undocumented": {
 				"logLevel": "none"
+			},
+			"ae-unresolved-link": {
+				"logLevel": "warning",
+				"addToApiReportFile": true
+			},
+			"ae-forgotten-export": {
+				"logLevel": "warning",
+				"addToApiReportFile": true
+			},
+			"ae-incompatible-release-tags": {
+				"logLevel": "warning",
+				"addToApiReportFile": true
 			}
 		}
 	}

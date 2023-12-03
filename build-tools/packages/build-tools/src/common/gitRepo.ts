@@ -19,7 +19,7 @@ export class GitRepo {
 	/**
 	 * Get the remote based on the partial Url.
 	 * It will match the first remote that contains the partialUrl case insensitively
-	 * @param partialUrl partial url to match case insensitively
+	 * @param partialUrl - partial url to match case insensitively
 	 */
 	public async getRemote(partialUrl: string) {
 		const lowerPartialUrl = partialUrl.toLowerCase();
@@ -74,7 +74,7 @@ export class GitRepo {
 	/**
 	 * Add a tag to the current commit
 	 *
-	 * @param tag the tag to add
+	 * @param tag - the tag to add
 	 */
 	public async addTag(tag: string) {
 		await this.exec(`tag ${tag}`, `adding tag ${tag}`);
@@ -84,7 +84,7 @@ export class GitRepo {
 	 * Delete a tag
 	 * NOTE: this doesn't fail on error
 	 *
-	 * @param tag the tag to add
+	 * @param tag - the tag to add
 	 */
 	public async deleteTag(tag: string) {
 		await this.execNoError(`tag -d ${tag}`);
@@ -109,7 +109,7 @@ export class GitRepo {
 	/**
 	 * Create a new branch
 	 *
-	 * @param branchName name of the new branch
+	 * @param branchName - name of the new branch
 	 */
 	public async createBranch(branchName: string) {
 		await this.exec(`checkout -b ${branchName}`, `create branch ${branchName}`);
@@ -117,7 +117,7 @@ export class GitRepo {
 
 	/**
 	 * Push branch
-	 * @param branchName
+	 * @param branchName - branch to push
 	 */
 	public async pushBranch(remote: string, fromBranchName: string, toBranchName: string) {
 		await this.exec(
@@ -130,7 +130,7 @@ export class GitRepo {
 	 * Delete a branch
 	 * NOTE: this doesn't fail on error
 	 *
-	 * @param branchName name of the new branch
+	 * @param branchName - name of the new branch
 	 */
 	public async deleteBranch(branchName: string) {
 		await this.execNoError(`branch -D ${branchName}`);
@@ -139,7 +139,7 @@ export class GitRepo {
 	/**
 	 * Switch branch
 	 *
-	 * @param branchName name of the new branch
+	 * @param branchName - name of the new branch
 	 */
 	public async switchBranch(branchName: string) {
 		await this.exec(`checkout ${branchName}`, `switch branch ${branchName}`);
@@ -148,7 +148,7 @@ export class GitRepo {
 	/**
 	 * Commit changes
 	 *
-	 * @param message the commit message
+	 * @param message - the commit message
 	 */
 	public async commit(message: string, error: string) {
 		await this.exec(`commit -a -F -`, error, message);
@@ -174,7 +174,7 @@ export class GitRepo {
 	/**
 	 * Get Tags
 	 *
-	 * @param pattern pattern of tags to get
+	 * @param pattern - pattern of tags to get
 	 */
 	public async getTags(pattern: string) {
 		return await this.exec(`tag -l ${pattern}`, `get tags ${pattern}`);
@@ -238,8 +238,8 @@ export class GitRepo {
 	/**
 	 * Execute git command
 	 *
-	 * @param command the git command
-	 * @param error description of command line to print when error happens
+	 * @param command - the git command
+	 * @param error - description of command line to print when error happens
 	 */
 	private async exec(command: string, error: string, pipeStdIn?: string) {
 		return exec(`git ${command}`, this.resolvedRoot, error, pipeStdIn);
@@ -248,8 +248,8 @@ export class GitRepo {
 	/**
 	 * Execute git command
 	 *
-	 * @param command the git command
-	 * @param error description of command line to print when error happens
+	 * @param command - the git command
+	 * @param error -  description of command line to print when error happens
 	 */
 	private async execNoError(command: string, pipeStdIn?: string) {
 		return execNoError(`git ${command}`, this.resolvedRoot, pipeStdIn);

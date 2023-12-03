@@ -21,6 +21,8 @@ const traceInit = registerDebug("fluid-build:init");
 
 /**
  * Fluid build configuration that is expected in the repo-root package.json.
+ *
+ * @internal
  */
 export interface IFluidBuildConfig {
 	/**
@@ -73,6 +75,7 @@ export interface IFluidBuildConfig {
  *
  * @example
  *
+ * ```text
  * Given the version 2.3.5:
  *
  * baseMajor: 2.0.0
@@ -85,9 +88,11 @@ export interface IFluidBuildConfig {
  * ^previousMinor: ^2.2.0
  * ~previousMajor: ~1.0.0
  * ~previousMinor: ~2.2.0
+ * ```
  *
  * @example
  *
+ * ```text
  * Given the version 2.0.0-internal.2.3.5:
  *
  * baseMajor: 2.0.0-internal.2.0.0
@@ -100,9 +105,11 @@ export interface IFluidBuildConfig {
  * ^previousMinor: >=2.0.0-internal.2.2.0 <2.0.0-internal.3.0.0
  * ~previousMajor: >=2.0.0-internal.1.0.0 <2.0.0-internal.1.1.0
  * ~previousMinor: >=2.0.0-internal.2.2.0 <2.0.0-internal.2.2.0
+ * ```
  *
  * @example
  *
+ * ```text
  * Given the version 2.0.0-internal.2.0.0:
  *
  * baseMajor: 2.0.0-internal.2.0.0
@@ -115,6 +122,7 @@ export interface IFluidBuildConfig {
  * ^previousMinor: >=2.0.0-internal.2.0.0 <2.0.0-internal.3.0.0
  * ~previousMajor: >=2.0.0-internal.1.0.0 <2.0.0-internal.1.1.0
  * ~previousMinor: >=2.0.0-internal.2.0.0 <2.0.0-internal.2.1.0
+ * ```
  *
  * @internal
  */

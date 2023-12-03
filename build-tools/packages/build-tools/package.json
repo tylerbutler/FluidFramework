@@ -18,10 +18,12 @@
 		"fluid-type-test-generator": "bin/fluid-type-test-generator"
 	},
 	"scripts": {
-		"build": "concurrently npm:build:compile npm:lint",
+		"build": "concurrently npm:build:compile npm:lint && npm run build:docs",
 		"build:commonjs": "npm run tsc && npm run build:test",
 		"build:compile": "npm run build:commonjs",
+		"build:docs": "api-extractor run --local",
 		"build:test": "tsc --project ./src/test/tsconfig.json",
+		"ci:build:docs": "api-extractor run",
 		"clean": "rimraf --glob dist lib \"**/*.tsbuildinfo\" \"**/*.build.log\" nyc",
 		"compile": "fluid-build . --task compile",
 		"eslint": "eslint --format stylish src",
@@ -69,6 +71,7 @@
 	"devDependencies": {
 		"@fluidframework/build-common": "^2.0.3",
 		"@fluidframework/eslint-config-fluid": "^3.1.0",
+		"@microsoft/api-extractor": "^7.38.3",
 		"@types/async": "^3.2.20",
 		"@types/fs-extra": "^8.1.2",
 		"@types/glob": "^7.2.0",
