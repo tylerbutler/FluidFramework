@@ -8,7 +8,7 @@ import { InterdependencyRange, ReleaseVersion, VersionBumpType } from "@fluid-to
 import { PackageName } from "@rushstack/node-core-library";
 
 import { getFluidBuildConfig } from "./fluidUtils";
-import { Workspace, isMonoRepoKind } from "./monoRepo";
+import { ReleaseGroup, Workspace, isMonoRepoKind } from "./monoRepo";
 import { Package, Packages } from "./npmPackage";
 import { ExecAsyncResult } from "./utils";
 import { TaskDefinitionsOnDisk } from "./fluidTaskDefinitions";
@@ -373,6 +373,16 @@ export class FluidRepo {
 		return this.monoRepos;
 	}
 
+	public get groups(): ReleaseGroup[] {
+		return [
+			...new Set(
+				this.packages.packages
+					.filter((p) => p !== undefined)
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+					.map<string>((p) => p.releaseGroup!),
+			),
+		];
+	}
 	public readonly packages: Packages;
 
 	constructor(public readonly resolvedRoot: string) {

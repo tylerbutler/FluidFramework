@@ -343,39 +343,27 @@ export class Package {
 		workspace?: Workspace,
 		additionalProperties?: TAddProps,
 	) {
-		const rootConfig = getFluidBuildConfig(packageJsonFileName);
+		const rootConfig = getFluidBuildConfig();
 		const releaseGroupConfig = rootConfig.releaseGroups;
-
-		const shouldIncludePackage = (
-			packageJson: PackageJson,
-			include: string[],
-			exclude?: string[],
-		) => {
-			const { name } = packageJson;
-
-			let shouldInclude = false;
-			if (
-				// If the package name matches an entry in the include list, it should be included
-				include.includes(name) ||
-				// If the package name starts with any of the include list entries, it should be included
-				include.some((scope) => name.startsWith(scope))
-			) {
-				shouldInclude = true;
-			}
-
-			return shouldInclude && !exclude?.includes(name);
-		};
 
 		const [packageJson] = readPackageJsonAndIndent(packageJsonFileName);
 
+		const matchingGroups: string[] = [];
 		if (releaseGroupConfig !== undefined) {
 			for (const [groupName, definition] of Object.entries(releaseGroupConfig)) {
 				const { workspace: releaseGroupWorkspace, include, exclude } = definition;
+
 				if (releaseGroupWorkspace === workspace?.name) {
 					if (shouldIncludePackage(packageJson, include, exclude)) {
-						group = groupName;
-						break;
+						matchingGroups.push(groupName);
 					}
+				}
+			}
+
+			if (matchingGroups.length > 0) {
+				group = matchingGroups[0];
+				if (matchingGroups.length > 1) {
+					error(`${packageJson.name} matched multiple release groups: ${matchingGroups}`);
 				}
 			}
 		}
@@ -613,4 +601,28 @@ export function readPackageJsonAndIndent(pathToJson: string): [json: PackageJson
  */
 function writePackageJson(packagePath: string, pkgJson: PackageJson, indent: string) {
 	return writeJsonSync(packagePath, sortPackageJson(pkgJson), { spaces: indent });
+}
+
+function shouldIncludePackage(
+	packageJson: PackageJson,
+	include: string[],
+	exclude?: string[],
+): boolean {
+	const { name } = packageJson;
+
+	let shouldInclude = false;
+	if (
+		// If the package name matches an entry in the include list, it should be included
+		include.includes(name) ||
+		// If the package name starts with any of the include list entries, it should be included
+		include.some((scope) => name.startsWith(scope))
+	) {
+		shouldInclude = true;
+	}
+
+	if (exclude === undefined) {
+		return shouldInclude;
+	}
+
+	return shouldInclude && !exclude.includes(name);
 }

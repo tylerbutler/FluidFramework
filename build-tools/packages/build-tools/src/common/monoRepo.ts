@@ -87,8 +87,22 @@ export class Workspace {
 		return this.repoPath;
 	}
 
+	/**
+	 * @deprecated Use the name or releaseGroups property instead.
+	 */
 	public get releaseGroup(): "build-tools" | "client" | "server" | "gitrest" | "historian" {
 		return this.name as "build-tools" | "client" | "server" | "gitrest" | "historian";
+	}
+
+	public get releaseGroups(): ReleaseGroup[] {
+		return [
+			...new Set(
+				this.packages
+					.filter((p) => p.releaseGroup !== undefined)
+					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+					.map<string>((p) => p.releaseGroup!),
+			),
+		];
 	}
 
 	static load(

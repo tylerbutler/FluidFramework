@@ -7,23 +7,22 @@ import * as path from "node:path";
 import { existsSync } from "node:fs";
 import { cosmiconfigSync } from "cosmiconfig";
 import findUp from "find-up";
+import { readJsonSync, realpathSync } from "fs-extra";
 
 import { commonOptions } from "./commonOptions";
 import { IFluidBuildConfig } from "./fluidRepo";
-import { realpathAsync } from "./utils";
-import { readJson } from "fs-extra";
 
 import registerDebug from "debug";
 const traceInit = registerDebug("fluid-build:init");
 
-async function isFluidRootPackage(dir: string) {
+function isFluidRootPackage(dir: string) {
 	const filename = path.join(dir, "package.json");
 	if (!existsSync(filename)) {
 		traceInit(`InferRoot: package.json not found`);
 		return false;
 	}
 
-	const parsed = await readJson(filename);
+	const parsed = readJsonSync(filename);
 	if (parsed.private === true) {
 		return true;
 	}
@@ -31,7 +30,7 @@ async function isFluidRootPackage(dir: string) {
 	return false;
 }
 
-async function inferRoot() {
+function inferRoot(): string | undefined {
 	let fluidConfig = findUp.sync("fluidBuild.config.cjs", { cwd: process.cwd(), type: "file" });
 	if (fluidConfig === undefined) {
 		traceInit(`No fluidBuild.config.cjs found. Falling back to git root.`);
@@ -45,7 +44,7 @@ async function inferRoot() {
 			return undefined;
 		}
 	}
-	const isRoot = await isFluidRootPackage(path.dirname(fluidConfig));
+	const isRoot = isFluidRootPackage(path.dirname(fluidConfig));
 	if (isRoot) {
 		return path.dirname(fluidConfig);
 	}
@@ -53,13 +52,13 @@ async function inferRoot() {
 	return undefined;
 }
 
-export async function getResolvedFluidRoot() {
+export function getResolvedFluidRoot() {
 	let checkFluidRoot = true;
 	let root = commonOptions.root;
 	if (root) {
 		traceInit(`Using argument root @ ${root}`);
 	} else {
-		root = await inferRoot();
+		root = inferRoot();
 		if (root) {
 			checkFluidRoot = false;
 			traceInit(`Using inferred root @ ${root}`);
@@ -83,7 +82,7 @@ export async function getResolvedFluidRoot() {
 	}
 
 	// Use realpath.native to get the case-sensitive path on windows
-	return await realpathAsync(resolvedRoot);
+	return realpathSync(resolvedRoot);
 }
 
 /**
@@ -103,12 +102,14 @@ const configExplorer = cosmiconfigSync("fluidBuild", {
  * @param noCache - If true, the config cache will be cleared and the config will be reloaded.
  * @returns The fluidBuild section of the package.json.
  */
-export function getFluidBuildConfig(rootDir: string, noCache = false): IFluidBuildConfig {
+export function getFluidBuildConfig(rootDir?: string, noCache = false): IFluidBuildConfig {
 	if (noCache === true) {
 		configExplorer.clearCaches();
 	}
 
-	const config = configExplorer.search(rootDir);
+	const searchDir = rootDir ?? getResolvedFluidRoot();
+
+	const config = configExplorer.search(searchDir);
 	if (config?.config === undefined) {
 		throw new Error(`Error loading config.`);
 	}

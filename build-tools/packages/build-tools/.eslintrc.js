@@ -5,11 +5,22 @@
 
 module.exports = {
 	extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
-	plugins: ["@typescript-eslint"],
+	plugins: ["@typescript-eslint", "import"],
 	parser: "@typescript-eslint/parser",
 	parserOptions: {
 		project: ["./tsconfig.json", "./src/test/tsconfig.json"],
 	},
+	// settings: {
+	// 	"import/extensions": [".ts", ".tsx", ".d.ts", ".js", ".jsx"],
+	// 	"import/parsers": {
+	// 		"@typescript-eslint/parser": [".ts", ".tsx", ".d.ts"],
+	// 	},
+	// 	"import/resolver": {
+	// 		node: {
+	// 			extensions: [".ts", ".tsx", ".d.ts", ".js", ".jsx"],
+	// 		},
+	// 	},
+	// },
 	rules: {
 		// TODO: Enable these ASAP
 		"@typescript-eslint/no-explicit-any": "off",
@@ -24,5 +35,6 @@ module.exports = {
 
 		// This package is exclusively used in a Node.js context
 		"import/no-nodejs-modules": "off",
+		"import/no-deprecated": "error",
 	},
 };

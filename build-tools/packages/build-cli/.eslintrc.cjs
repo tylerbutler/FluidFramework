@@ -19,6 +19,8 @@ module.exports = {
 		// This package is exclusively used in a Node.js context
 		"import/no-nodejs-modules": "off",
 
+		"import/no-deprecated": "error",
+
 		// oclif uses default exports for commands
 		"import/no-default-export": "off",
 
