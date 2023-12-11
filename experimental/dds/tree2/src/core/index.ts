@@ -4,20 +4,6 @@
  */
 
 export {
-	Dependee,
-	Dependent,
-	NamedComputation,
-	ObservingDependent,
-	InvalidationToken,
-	recordDependency,
-	SimpleDependee,
-	cachedValue,
-	ICachedValue,
-	DisposingDependee,
-	SimpleObservingDependent,
-} from "./dependency-tracking";
-
-export {
 	EmptyKey,
 	TreeType,
 	Value,
@@ -42,7 +28,6 @@ export {
 	GenericTreeNode,
 	JsonableTree,
 	EncodedJsonableTree,
-	Delta,
 	rootFieldKey,
 	rootField,
 	ITreeCursor,
@@ -86,6 +71,7 @@ export {
 	emptyFieldChanges,
 	isEmptyFieldChanges,
 	makeDetachedNodeId,
+	offsetDetachId,
 	emptyDelta,
 	AnchorSlot,
 	AnchorNode,
@@ -101,6 +87,17 @@ export {
 	DetachedFieldIndex,
 	ForestRootId,
 	getDetachedFieldContainingPath,
+	aboveRootPlaceholder,
+	DeltaRoot,
+	DeltaProtoNode,
+	DeltaMark,
+	DeltaDetachedNodeId,
+	DeltaFieldMap,
+	DeltaDetachedNodeChanges,
+	DeltaDetachedNodeBuild,
+	DeltaDetachedNodeDestruction,
+	DeltaDetachedNodeRename,
+	DeltaFieldChanges,
 } from "./tree";
 
 export {
@@ -125,7 +122,6 @@ export {
 	TreeSchemaIdentifierSchema,
 	TreeFieldStoredSchema,
 	ValueSchema,
-	PrimitiveValueSchema,
 	TreeNodeStoredSchema,
 	StoredSchemaRepository,
 	FieldKindIdentifier,
@@ -135,15 +131,9 @@ export {
 	TreeStoredSchema,
 	InMemoryStoredSchemaRepository,
 	schemaDataIsEmpty,
-	fieldSchema,
-	TreeSchemaBuilder,
-	emptyMap,
-	emptySet,
-	treeSchema,
 	SchemaEvents,
 	forbiddenFieldKindIdentifier,
 	storedEmptyFieldSchema,
-	cloneSchemaData,
 	StoredSchemaCollection,
 } from "./schema-stored";
 
@@ -161,6 +151,7 @@ export {
 	RevisionTagSchema,
 	ChangesetLocalId,
 	ChangeAtomId,
+	ChangeAtomIdMap,
 	TaggedChange,
 	makeAnonChange,
 	tagChange,
@@ -173,7 +164,14 @@ export {
 	mintCommit,
 	mintRevisionTag,
 	rebaseBranch,
+	BranchRebaseResult,
 	rebaseChange,
+	rebaseChangeOverChanges,
+	RevisionMetadataSource,
+	revisionMetadataSourceFromInfo,
+	RevisionInfo,
+	EncodedRevisionTag,
+	EncodedChangeAtomId,
 } from "./rebase";
 
 export {

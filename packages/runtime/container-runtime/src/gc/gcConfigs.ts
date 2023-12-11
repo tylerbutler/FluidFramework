@@ -3,7 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { MonitoringContext, UsageError } from "@fluidframework/telemetry-utils";
+import {
+	MonitoringContext,
+	UsageError,
+	validatePrecondition,
+} from "@fluidframework/telemetry-utils";
 import { IContainerRuntimeMetadata } from "../summary";
 import {
 	nextGCVersion,
@@ -24,8 +28,12 @@ import {
 	runSessionExpiryKey,
 	runSweepKey,
 	stableGCVersion,
+	throwOnTombstoneLoadOverrideKey,
+	throwOnTombstoneUsageKey,
+	gcDisableThrowOnTombstoneLoadOptionName,
+	defaultSweepGracePeriodMs,
 } from "./gcDefinitions";
-import { getGCVersion, shouldAllowGcSweep } from "./gcHelpers";
+import { getGCVersion, shouldAllowGcSweep, shouldAllowGcTombstoneEnforcement } from "./gcHelpers";
 
 /**
  * Generates configurations for the Garbage Collector that it uses to determine what to run and how.
@@ -42,6 +50,7 @@ export function generateGCConfigs(
 		gcOptions: IGCRuntimeOptions;
 		metadata: IContainerRuntimeMetadata | undefined;
 		existing: boolean;
+		isSummarizerClient: boolean;
 	},
 ): IGarbageCollectorConfigs {
 	let gcEnabled: boolean;
@@ -152,15 +161,37 @@ export function generateGCConfigs(
 		throw new UsageError("inactive timeout should not be greater than the sweep timeout");
 	}
 
-	const throwOnInactiveLoad: boolean | undefined = createParams.gcOptions.throwOnInactiveLoad;
-
 	// Whether we are running in test mode. In this mode, unreferenced nodes are immediately deleted.
 	const testMode =
 		mc.config.getBoolean(gcTestModeKey) ?? createParams.gcOptions.runGCInTestMode === true;
-	// Whether we are running in tombstone mode. This is enabled by default if sweep won't run. It can be disabled
-	// via feature flags.
-	const tombstoneMode = !shouldRunSweep && mc.config.getBoolean(disableTombstoneKey) !== true;
+	// Whether we are running in tombstone mode. If disabled, tombstone data will not be written to or read from snapshots,
+	// and objects will not be marked as tombstoned even if they pass to the "TombstoneReady" state during the session.
+	const tombstoneMode = mc.config.getBoolean(disableTombstoneKey) !== true;
 	const runFullGC = createParams.gcOptions.runFullGC;
+
+	const sweepGracePeriodMs =
+		createParams.gcOptions.sweepGracePeriodMs ?? defaultSweepGracePeriodMs;
+	validatePrecondition(sweepGracePeriodMs >= 0, "sweepGracePeriodMs must be non-negative", {
+		sweepGracePeriodMs,
+	});
+
+	const throwOnInactiveLoad: boolean | undefined = createParams.gcOptions.throwOnInactiveLoad;
+	const tombstoneEnforcementAllowed = shouldAllowGcTombstoneEnforcement(
+		createParams.metadata?.gcFeatureMatrix?.tombstoneGeneration /* persisted */,
+		createParams.gcOptions[gcTombstoneGenerationOptionName] /* current */,
+	);
+
+	const throwOnTombstoneLoadConfig =
+		mc.config.getBoolean(throwOnTombstoneLoadOverrideKey) ??
+		createParams.gcOptions[gcDisableThrowOnTombstoneLoadOptionName] !== true;
+	const throwOnTombstoneLoad =
+		throwOnTombstoneLoadConfig &&
+		tombstoneEnforcementAllowed &&
+		!createParams.isSummarizerClient;
+	const throwOnTombstoneUsage =
+		mc.config.getBoolean(throwOnTombstoneUsageKey) === true &&
+		tombstoneEnforcementAllowed &&
+		!createParams.isSummarizerClient;
 
 	return {
 		gcEnabled,
@@ -172,11 +203,15 @@ export function generateGCConfigs(
 		tombstoneMode,
 		sessionExpiryTimeoutMs,
 		sweepTimeoutMs,
+		sweepGracePeriodMs,
 		inactiveTimeoutMs,
-		throwOnInactiveLoad,
 		persistedGcFeatureMatrix,
 		gcVersionInBaseSnapshot,
 		gcVersionInEffect,
+		throwOnInactiveLoad,
+		tombstoneEnforcementAllowed,
+		throwOnTombstoneLoad,
+		throwOnTombstoneUsage,
 	};
 }
 

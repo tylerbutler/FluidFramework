@@ -5,17 +5,25 @@
 
 import { IdAllocator, idAllocatorFromMaxId } from "../../util";
 import { FieldKey } from "../schema-stored";
-import * as Delta from "./delta";
+import { ICodecOptions } from "../../codec";
 import { PlaceIndex, Range } from "./pathTree";
 import { ForestRootId, DetachedFieldIndex } from "./detachedFieldIndex";
 import { DeltaVisitor, visitDelta } from "./visitDelta";
+import { ProtoNodes, Root } from "./delta";
 
-export function makeDetachedFieldIndex(prefix: string = "Temp"): DetachedFieldIndex {
-	return new DetachedFieldIndex(prefix, idAllocatorFromMaxId() as IdAllocator<ForestRootId>);
+export function makeDetachedFieldIndex(
+	prefix: string = "Temp",
+	options?: ICodecOptions,
+): DetachedFieldIndex {
+	return new DetachedFieldIndex(
+		prefix,
+		idAllocatorFromMaxId() as IdAllocator<ForestRootId>,
+		options,
+	);
 }
 
 export function applyDelta(
-	delta: Delta.Root,
+	delta: Root,
 	deltaProcessor: { acquireVisitor: () => DeltaVisitor },
 	detachedFieldIndex: DetachedFieldIndex,
 ): void {
@@ -25,7 +33,7 @@ export function applyDelta(
 }
 
 export function announceDelta(
-	delta: Delta.Root,
+	delta: Root,
 	deltaProcessor: { acquireVisitor: () => DeltaVisitor & AnnouncedVisitor },
 	detachedFieldIndex: DetachedFieldIndex,
 ): void {
@@ -87,7 +95,7 @@ export interface AnnouncedVisitor {
 	/**
 	 * A hook that is called after all nodes have been created.
 	 */
-	afterCreate(content: Delta.ProtoNodes, destination: FieldKey): void;
+	afterCreate(content: ProtoNodes, destination: FieldKey): void;
 	beforeDestroy(field: FieldKey, count: number): void;
 	beforeAttach(source: FieldKey, count: number, destination: PlaceIndex): void;
 	afterAttach(source: FieldKey, destination: Range): void;

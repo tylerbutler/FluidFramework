@@ -30,7 +30,19 @@ export {
 	CursorMarker,
 	isCursor,
 } from "./cursor";
-export { ProtoNodes } from "./delta";
+export {
+	ProtoNodes,
+	Root as DeltaRoot,
+	ProtoNode as DeltaProtoNode,
+	Mark as DeltaMark,
+	DetachedNodeId as DeltaDetachedNodeId,
+	FieldMap as DeltaFieldMap,
+	DetachedNodeChanges as DeltaDetachedNodeChanges,
+	DetachedNodeBuild as DeltaDetachedNodeBuild,
+	DetachedNodeDestruction as DeltaDetachedNodeDestruction,
+	DetachedNodeRename as DeltaDetachedNodeRename,
+	FieldChanges as DeltaFieldChanges,
+} from "./delta";
 export { getMapTreeField, MapTree } from "./mapTree";
 export {
 	clonePath,
@@ -75,6 +87,7 @@ export {
 	rootFieldKey,
 	NodeData,
 	rootField,
+	aboveRootPlaceholder,
 } from "./types";
 export { DeltaVisitor, visitDelta } from "./visitDelta";
 export {
@@ -86,10 +99,6 @@ export {
 } from "./visitorUtils";
 export { PathVisitor } from "./visitPath";
 
-// Split this up into separate import and export for compatibility with API-Extractor.
-import * as Delta from "./delta";
-export { Delta };
-
 export { SparseNode, getDescendant } from "./sparseTree";
 
 export {
@@ -98,6 +107,7 @@ export {
 	emptyFieldChanges,
 	isEmptyFieldChanges,
 	makeDetachedNodeId,
+	offsetDetachId,
 	emptyDelta,
 } from "./deltaUtil";
 

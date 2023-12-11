@@ -30,7 +30,7 @@ import { IFluidCodeDetails, IFluidPackage, IProvideFluidCodeDetailsComparer } fr
 
 /**
  * Encapsulates a module entry point with corresponding code details.
- * @public
+ * @internal
  */
 export interface IFluidModuleWithDetails {
 	/**
@@ -50,7 +50,7 @@ export interface IFluidModuleWithDetails {
 /**
  * Fluid code loader resolves a code module matching the document schema, i.e. code details, such as
  * a package name and package version range.
- * @public
+ * @internal
  */
 export interface ICodeDetailsLoader extends Partial<IProvideFluidCodeDetailsComparer> {
 	/**
@@ -65,7 +65,7 @@ export interface ICodeDetailsLoader extends Partial<IProvideFluidCodeDetailsComp
 /**
  * The interface returned from a IFluidCodeResolver which represents IFluidCodeDetails
  * that have been resolved and are ready to load
- * @public
+ * @internal
  */
 export interface IResolvedFluidCodeDetails extends IFluidCodeDetails {
 	/**
@@ -84,7 +84,7 @@ export interface IResolvedFluidCodeDetails extends IFluidCodeDetails {
  * The Fluid code resolver is coupled to a specific cdn and knows how to resolve
  * the code detail for loading from that cdn. This include resolving to the most recent
  * version of package that supports the provided code details.
- * @public
+ * @internal
  */
 export interface IFluidCodeResolver {
 	/**
@@ -98,7 +98,7 @@ export interface IFluidCodeResolver {
 
 /**
  * Events emitted by the {@link IContainer} "upwards" to the Loader and Host.
- * @public
+ * @alpha
  */
 export interface IContainerEvents extends IEvent {
 	/**
@@ -258,7 +258,7 @@ export interface IContainerEvents extends IEvent {
 /**
  * Namespace for the different connection states a container can be in.
  * PLEASE NOTE: The sequence of the numerical values does no correspond to the typical connection state progression.
- * @public
+ * @alpha
  */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ConnectionState {
@@ -266,29 +266,33 @@ export namespace ConnectionState {
 	 * The container is not connected to the delta server.
 	 * Note - When in this state the container may be about to reconnect,
 	 * or may remain disconnected until explicitly told to connect.
+	 * @alpha
 	 */
 	export type Disconnected = 0;
 
 	/**
 	 * The container is disconnected but actively trying to establish a new connection.
 	 * PLEASE NOTE that this numerical value falls out of the order you may expect for this state.
+	 * @alpha
 	 */
 	export type EstablishingConnection = 3;
 
 	/**
 	 * The container has an inbound connection only, and is catching up to the latest known state from the service.
+	 * @alpha
 	 */
 	export type CatchingUp = 1;
 
 	/**
 	 * The container is fully connected and syncing.
+	 * @alpha
 	 */
 	export type Connected = 2;
 }
 
 /**
  * Type defining the different states of connectivity a Container can be in.
- * @public
+ * @alpha
  */
 export type ConnectionState =
 	| ConnectionState.Disconnected
@@ -298,7 +302,7 @@ export type ConnectionState =
 
 /**
  * The Host's view of a Container and its connection to storage
- * @public
+ * @alpha
  */
 // eslint-disable-next-line import/no-deprecated
 export interface IContainer extends IEventProvider<IContainerEvents>, IFluidRouter {
@@ -384,7 +388,10 @@ export interface IContainer extends IEventProvider<IContainerEvents>, IFluidRout
 	 * TODO - in the case of failure options should give a retry policy.
 	 * Or some continuation function that allows attachment to a secondary document.
 	 */
-	attach(request: IRequest): Promise<void>;
+	attach(
+		request: IRequest,
+		attachProps?: { deltaConnection?: "none" | "delayed" },
+	): Promise<void>;
 
 	/**
 	 * Extract a snapshot of the container as long as it is in detached state. Calling this on an attached container
@@ -494,7 +501,6 @@ export interface IContainer extends IEventProvider<IContainerEvents>, IFluidRout
 	/**
 	 * Allows the host to have the container force to be in read-only mode
 	 * @param readonly - Boolean that toggles if read-only policies will be enforced
-	 * @alpha
 	 */
 	forceReadonly?(readonly: boolean);
 
@@ -507,7 +513,7 @@ export interface IContainer extends IEventProvider<IContainerEvents>, IFluidRout
 
 /**
  * The Runtime's view of the Loader, used for loading Containers
- * @public
+ * @alpha
  */
 export interface ILoader extends Partial<IProvideLoader> {
 	/**
@@ -535,24 +541,36 @@ export interface ILoader extends Partial<IProvideLoader> {
 
 /**
  * The Host's view of the Loader, used for loading Containers
- * @public
+ * @alpha
  */
 export interface IHostLoader extends ILoader {
 	/**
 	 * Creates a new container using the specified chaincode but in an unattached state. While unattached all
 	 * updates will only be local until the user explicitly attaches the container to a service provider.
 	 */
-	createDetachedContainer(codeDetails: IFluidCodeDetails): Promise<IContainer>;
+	createDetachedContainer(
+		codeDetails: IFluidCodeDetails,
+		createDetachedProps?: {
+			canReconnect?: boolean;
+			clientDetailsOverride?: IClientDetails;
+		},
+	): Promise<IContainer>;
 
 	/**
 	 * Creates a new container using the specified snapshot but in an unattached state. While unattached all
 	 * updates will only be local until the user explicitly attaches the container to a service provider.
 	 */
-	rehydrateDetachedContainerFromSnapshot(snapshot: string): Promise<IContainer>;
+	rehydrateDetachedContainerFromSnapshot(
+		snapshot: string,
+		createDetachedProps?: {
+			canReconnect?: boolean;
+			clientDetailsOverride?: IClientDetails;
+		},
+	): Promise<IContainer>;
 }
 
 /**
- * @public
+ * @alpha
  */
 export type ILoaderOptions = {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -586,7 +604,7 @@ export type ILoaderOptions = {
 
 /**
  * Accepted header keys for requests coming to the Loader
- * @public
+ * @internal
  */
 export enum LoaderHeader {
 	/**
@@ -618,7 +636,7 @@ export enum LoaderHeader {
 }
 
 /**
- * @public
+ * @internal
  */
 export interface IContainerLoadMode {
 	opsBeforeReturn?: /*
@@ -673,7 +691,7 @@ export interface IContainerLoadMode {
 
 /**
  * Set of Request Headers that the Loader understands and may inspect or modify
- * @public
+ * @internal
  */
 export interface ILoaderHeader {
 	/**
@@ -692,7 +710,7 @@ export interface ILoaderHeader {
 }
 
 /**
- * @public
+ * @alpha
  */
 export interface IProvideLoader {
 	readonly ILoader: ILoader;
@@ -702,7 +720,7 @@ export interface IProvideLoader {
  * @deprecated 0.48, This API will be removed in 0.50
  * No replacement since it is not expected anyone will depend on this outside container-loader
  * See {@link https://github.com/microsoft/FluidFramework/issues/9711} for context.
- * @public
+ * @internal
  */
 export interface IPendingLocalState {
 	url: string;
@@ -714,7 +732,7 @@ export interface IPendingLocalState {
  * in separate property: {@link ISnapshotTreeWithBlobContents.blobsContents}.
  *
  * @remarks This is used as the `ContainerContext`'s base snapshot when attaching.
- * @public
+ * @alpha
  */
 export interface ISnapshotTreeWithBlobContents extends ISnapshotTree {
 	blobsContents: { [path: string]: ArrayBufferLike };

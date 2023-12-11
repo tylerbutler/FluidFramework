@@ -3,7 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { SchemaAware, typeNameSymbol, valueSymbol, SchemaBuilder, leaf } from "../../../";
+import { SchemaBuilder, leaf } from "../../../domains";
+import { InsertableFlexNode, typeNameSymbol } from "../../../feature-libraries";
 
 const builder = new SchemaBuilder({ scope: "Simple Schema" });
 
@@ -16,20 +17,14 @@ export const pointSchema = builder.object("point", {
 export const appSchemaData = builder.intoSchema(builder.sequence(pointSchema));
 
 // Schema aware types
-export type Number = SchemaAware.TypedNode<typeof leaf.number>;
-
-export type Point = SchemaAware.TypedNode<typeof pointSchema>;
 
 // Example Use
-function dotProduct(a: Point, b: Point): number {
-	return a.x * b.x + a.y * b.y;
-}
 
 // More Schema aware APIs
 {
-	type FlexibleNumber = SchemaAware.TypedNode<typeof leaf.number, SchemaAware.ApiMode.Flexible>;
+	type FlexibleNumber = InsertableFlexNode<typeof leaf.number>;
 
-	type FlexiblePoint = SchemaAware.TypedNode<typeof pointSchema, SchemaAware.ApiMode.Flexible>;
+	type FlexiblePoint = InsertableFlexNode<typeof pointSchema>;
 
 	const point: FlexiblePoint = {
 		x: 1,
@@ -39,6 +34,6 @@ function dotProduct(a: Point, b: Point): number {
 	const point2: FlexiblePoint = {
 		[typeNameSymbol]: pointSchema.name,
 		x: 1,
-		y: { [valueSymbol]: 1 },
+		y: 1,
 	};
 }

@@ -12,14 +12,8 @@ import {
 	defaultSchemaPolicy,
 	NewFieldContent,
 } from "../../feature-libraries";
-import { ViewEvents } from "../../shared-tree";
-import {
-	AllowedUpdateType,
-	SimpleObservingDependent,
-	InMemoryStoredSchemaRepository,
-	TreeStoredSchema,
-	cloneSchemaData,
-} from "../../core";
+import { CheckoutEvents } from "../../shared-tree";
+import { AllowedUpdateType, InMemoryStoredSchemaRepository, TreeStoredSchema } from "../../core";
 import { jsonSequenceRootSchema } from "../utils";
 // eslint-disable-next-line import/no-internal-modules
 import { TreeContent, initializeContent, schematize } from "../../shared-tree/schematizedTree";
@@ -78,22 +72,16 @@ describe("schematizeTree", () => {
 					// this test should be updated to use it to greatly increase its validation.
 
 					const storedSchema = new InMemoryStoredSchemaRepository();
-					let previousSchema: TreeStoredSchema = cloneSchemaData(storedSchema);
+					let previousSchema: TreeStoredSchema = new InMemoryStoredSchemaRepository(
+						storedSchema,
+					);
 					expectSchema(storedSchema, previousSchema);
 
+					storedSchema.on("afterSchemaChange", () => {
+						previousSchema = new InMemoryStoredSchemaRepository(storedSchema);
+					});
+
 					let currentData: NewFieldContent;
-
-					storedSchema.registerDependent(
-						new SimpleObservingDependent(() => {
-							// This should run after the schema change.
-
-							// TODO: check currentData compatible with previousSchema.
-							// TODO: check currentData compatible with storedSchema.
-
-							previousSchema = cloneSchemaData(storedSchema);
-						}),
-					);
-
 					initializeContent(storedSchema, content.schema, () => {
 						// TODO: check currentData is compatible with current schema.
 						// TODO: check data in cursors is compatible with current schema.
@@ -109,9 +97,9 @@ describe("schematizeTree", () => {
 					const storedSchema = new InMemoryStoredSchemaRepository();
 					const log: string[] = [];
 
-					storedSchema.registerDependent(
-						new SimpleObservingDependent(() => log.push("schema")),
-					);
+					storedSchema.on("afterSchemaChange", () => {
+						log.push("schema");
+					});
 					initializeContent(storedSchema, content.schema, () => log.push("content"));
 
 					assert.deepEqual(
@@ -141,11 +129,13 @@ describe("schematizeTree", () => {
 			];
 			for (const [name, data] of testCases) {
 				it(name, () => {
-					const events = createEmitter<ViewEvents>();
+					const events = createEmitter<CheckoutEvents>();
 					const storedSchema = new InMemoryStoredSchemaRepository(data);
 
 					// Error if modified
-					storedSchema.registerDependent(new SimpleObservingDependent(() => fail()));
+					storedSchema.on("afterSchemaChange", () => {
+						fail();
+					});
 
 					// No op upgrade with AllowedUpdateType.None does not error
 					schematize(events, storedSchema, {
@@ -157,7 +147,7 @@ describe("schematizeTree", () => {
 		});
 
 		it("upgrade works", () => {
-			const events = createEmitter<ViewEvents>();
+			const events = createEmitter<CheckoutEvents>();
 			const storedSchema = new InMemoryStoredSchemaRepository(schema);
 
 			schematize(events, storedSchema, {
@@ -168,7 +158,7 @@ describe("schematizeTree", () => {
 		});
 
 		it("upgrade schema errors when in AllowedUpdateType.None", () => {
-			const events = createEmitter<ViewEvents>();
+			const events = createEmitter<CheckoutEvents>();
 			const storedSchema = new InMemoryStoredSchemaRepository(schema);
 			assert.throws(() => {
 				schematize(events, storedSchema, {
@@ -179,15 +169,13 @@ describe("schematizeTree", () => {
 		});
 
 		it("incompatible upgrade errors and does not modify schema", () => {
-			const events = createEmitter<ViewEvents>();
+			const events = createEmitter<CheckoutEvents>();
 			const storedSchema = new InMemoryStoredSchemaRepository(schemaGeneralized);
 
 			let modified = false;
-			storedSchema.registerDependent(
-				new SimpleObservingDependent(() => {
-					modified = true;
-				}),
-			);
+			storedSchema.on("afterSchemaChange", () => {
+				modified = true;
+			});
 
 			assert.throws(() => {
 				schematize(events, storedSchema, {
@@ -202,7 +190,7 @@ describe("schematizeTree", () => {
 		});
 
 		it("errors at correct time when schema changes to not be compatible with view schema", () => {
-			const events = createEmitter<ViewEvents>();
+			const events = createEmitter<CheckoutEvents>();
 			const storedSchema = new InMemoryStoredSchemaRepository(schema);
 
 			schematize(events, storedSchema, {

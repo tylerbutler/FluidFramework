@@ -33,6 +33,14 @@ export type RecursiveReadonly<T> = {
 export type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
 /**
+ * Make all field required and omits fields whose ony valid value would be `undefined`.
+ * This is analogous to `Required<T>` except it tolerates 'optional undefined'.
+ */
+export type Populated<T> = {
+	[P in keyof T as Exclude<P, T[P] extends undefined ? P : never>]-?: T[P];
+};
+
+/**
  * Casts a readonly object to a mutable one.
  * Better than casting to `Mutable<Foo>` because it doesn't risk casting a non-`Foo` to a `Mutable<Foo>`.
  * @param readonly - The object with readonly fields.
@@ -258,7 +266,7 @@ export function assertValidRangeIndices(
 	endIndex: number,
 	array: { readonly length: number },
 ) {
-	assert(endIndex > startIndex, 0x79c /* Range indices are malformed. */);
+	assert(endIndex >= startIndex, 0x79c /* Range indices are malformed. */);
 	assertValidIndex(startIndex, array, false);
 	assertValidIndex(endIndex, array, true);
 }
@@ -303,7 +311,7 @@ export function assertNonNegativeSafeInteger(index: number) {
  *
  * @alpha
  */
-export type Assume<TInput, TAssumeToBe> = TInput extends TAssumeToBe ? TInput : TAssumeToBe;
+export type Assume<TInput, TAssumeToBe> = [TInput] extends [TAssumeToBe] ? TInput : TAssumeToBe;
 
 /**
  * The counter used to generate deterministic stable ids for testing purposes.
@@ -455,11 +463,15 @@ export interface Named<TName> {
  * Placeholder for `Symbol.dispose`.
  *
  * Replace this with `Symbol.dispose` when it is available.
+ * @beta
  */
-export const disposeSymbol: unique symbol = Symbol("Symbol.dispose");
+export const disposeSymbol: unique symbol = Symbol("Symbol.dispose placeholder");
 
 /**
  * An object with an explicit lifetime that can be ended.
+ * @privateRemarks
+ * TODO: align this with core-utils/IDisposable and {@link https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management| TypeScript's Disposable}.
+ * @beta
  */
 export interface IDisposable {
 	/**
@@ -491,4 +503,11 @@ export function capitalize<S extends string>(s: S): Capitalize<S> {
 	}
 
 	return (iterated.value.toUpperCase() + s.slice(iterated.value.length)) as Capitalize<S>;
+}
+
+/**
+ * Compares strings lexically to form a strict partial ordering.
+ */
+export function compareStrings<T extends string>(a: T, b: T): number {
+	return a > b ? 1 : a === b ? 0 : -1;
 }

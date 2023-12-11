@@ -3,8 +3,17 @@
  * Licensed under the MIT License.
  */
 
-import { Delta, makeAnonChange, tagChange, TaggedChange } from "../../core";
+import {
+	DeltaDetachedNodeId,
+	DeltaFieldChanges,
+	DeltaMark,
+	makeAnonChange,
+	RevisionMetadataSource,
+	tagChange,
+	TaggedChange,
+} from "../../core";
 import { fail, IdAllocator } from "../../util";
+import { Multiplicity } from "../multiplicity";
 import { CrossFieldManager } from "./crossFieldQueries";
 import {
 	FieldChangeHandler,
@@ -12,9 +21,10 @@ import {
 	NodeChangeComposer,
 	NodeChangeInverter,
 	NodeChangeRebaser,
-	RevisionMetadataSource,
+	RelevantRemovedRootsFromChild,
+	NodeChangePruner,
 } from "./fieldChangeHandler";
-import { FieldKindWithEditor, Multiplicity } from "./fieldKind";
+import { FieldKindWithEditor } from "./fieldKind";
 import { makeGenericChangeCodec } from "./genericFieldKindCodecs";
 import { GenericChange, GenericChangeset } from "./genericFieldKindTypes";
 import { NodeChangeset } from "./modularChangeTypes";
@@ -71,13 +81,12 @@ export const genericChangeHandler: FieldChangeHandler<GenericChangeset> = {
 			return change.map(
 				({ index, nodeChange }: GenericChange): GenericChange => ({
 					index,
-					nodeChange: invertChild(nodeChange, index),
+					nodeChange: invertChild(nodeChange),
 				}),
 			);
 		},
-		amendInvert: () => fail("Not implemented"),
 		rebase: rebaseGenericChange,
-		amendRebase: rebaseGenericChange,
+		prune: pruneGenericChange,
 	},
 	codecsFactory: makeGenericChangeCodec,
 	editor: {
@@ -88,9 +97,9 @@ export const genericChangeHandler: FieldChangeHandler<GenericChangeset> = {
 	intoDelta: (
 		{ change }: TaggedChange<GenericChangeset>,
 		deltaFromChild: ToDelta,
-	): Delta.FieldChanges => {
+	): DeltaFieldChanges => {
 		let nodeIndex = 0;
-		const markList: Delta.Mark[] = [];
+		const markList: DeltaMark[] = [];
 		for (const { index, nodeChange } of change) {
 			if (nodeIndex < index) {
 				const offset = index - nodeIndex;
@@ -102,6 +111,7 @@ export const genericChangeHandler: FieldChangeHandler<GenericChangeset> = {
 		}
 		return { local: markList };
 	},
+	relevantRemovedRoots,
 	isEmpty: (change: GenericChangeset): boolean => change.length === 0,
 };
 
@@ -147,6 +157,20 @@ function rebaseGenericChange(
 	}
 
 	return rebased;
+}
+
+function pruneGenericChange(
+	changeset: GenericChangeset,
+	pruneChild: NodeChangePruner,
+): GenericChangeset {
+	const pruned: GenericChangeset = [];
+	for (const change of changeset) {
+		const prunedNode = pruneChild(change.nodeChange);
+		if (prunedNode !== undefined) {
+			pruned.push({ ...change, nodeChange: prunedNode });
+		}
+	}
+	return pruned;
 }
 
 /**
@@ -195,4 +219,13 @@ const invalidCrossFieldManager: CrossFieldManager = {
 
 export function newGenericChangeset(): GenericChangeset {
 	return [];
+}
+
+function* relevantRemovedRoots(
+	{ change }: TaggedChange<GenericChangeset>,
+	relevantRemovedRootsFromChild: RelevantRemovedRootsFromChild,
+): Iterable<DeltaDetachedNodeId> {
+	for (const { nodeChange } of change) {
+		yield* relevantRemovedRootsFromChild(nodeChange);
+	}
 }

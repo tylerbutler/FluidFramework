@@ -5,35 +5,32 @@
 
 import { strict as assert } from "assert";
 import {
-	AllowedUpdateType,
 	ForestType,
-	TypedTreeFactory,
+	TreeConfiguration,
+	TreeFactory,
 	typeboxValidator,
 } from "@fluid-experimental/tree2";
 import { MockFluidDataStoreRuntime } from "@fluidframework/test-runtime-utils";
 import React from "react";
 import { SinonSandbox, createSandbox } from "sinon";
-import { useTreeContext } from "..";
-import { Inventory, schema } from "./schema";
+import { Inventory } from "./schema";
 
 // TODO: why do failing tests in this suite not cause CI to fail?
 describe("useTree()", () => {
 	function createLocalTree(id: string): Inventory {
-		const factory = new TypedTreeFactory({
+		const factory = new TreeFactory({
 			jsonValidator: typeboxValidator,
 			forest: ForestType.Reference,
 
 			subtype: "InventoryList",
 		});
 		const tree = factory.create(new MockFluidDataStoreRuntime(), id);
-		return tree.schematize({
-			initialTree: {
+		return tree.schematize(
+			new TreeConfiguration(Inventory, () => ({
 				nuts: 0,
 				bolts: 0,
-			},
-			allowedSchemaModifications: AllowedUpdateType.None,
-			schema,
-		});
+			})),
+		).root;
 	}
 
 	// Mock 'React.setState()'
@@ -72,11 +69,10 @@ describe("useTree()", () => {
 
 	it("works", () => {
 		const tree = createLocalTree("tree");
-		useTreeContext(tree.context);
-		assert.deepEqual(JSON.parse(JSON.stringify(tree.content)), {
+		// TODO test use functions
+		assert.deepEqual(JSON.parse(JSON.stringify(tree)), {
 			nuts: 0,
 			bolts: 0,
-			type: "tree-react-api.Contoso:Inventory-1.0.0",
 		});
 	});
 });

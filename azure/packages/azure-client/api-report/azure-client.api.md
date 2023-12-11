@@ -7,7 +7,7 @@
 import { ContainerSchema } from '@fluidframework/fluid-static';
 import { IClient } from '@fluidframework/protocol-definitions';
 import { ICompressionStorageConfig } from '@fluidframework/driver-utils';
-import { IConfigProviderBase } from '@fluidframework/telemetry-utils';
+import { IConfigProviderBase } from '@fluidframework/core-interfaces';
 import { IFluidContainer } from '@fluidframework/fluid-static';
 import { IMember } from '@fluidframework/fluid-static';
 import { IServiceAudience } from '@fluidframework/fluid-static';
@@ -20,31 +20,30 @@ import { IUser } from '@fluidframework/protocol-definitions';
 import { ScopeType } from '@fluidframework/protocol-definitions';
 import { ServiceAudience } from '@fluidframework/fluid-static';
 
-// @public
+// @internal @deprecated
 export class AzureAudience extends ServiceAudience<AzureMember> implements IAzureAudience {
-    // @internal
     protected createServiceMember(audienceMember: IClient): AzureMember;
 }
 
-// @public
+// @alpha
 export class AzureClient {
     constructor(properties: AzureClientProps);
-    copyContainer(id: string, containerSchema: ContainerSchema, version?: AzureContainerVersion): Promise<{
-        container: IFluidContainer;
+    copyContainer<TContainerSchema extends ContainerSchema>(id: string, containerSchema: TContainerSchema, version?: AzureContainerVersion): Promise<{
+        container: IFluidContainer<TContainerSchema>;
         services: AzureContainerServices;
     }>;
-    createContainer(containerSchema: ContainerSchema): Promise<{
-        container: IFluidContainer;
+    createContainer<TContainerSchema extends ContainerSchema>(containerSchema: TContainerSchema): Promise<{
+        container: IFluidContainer<TContainerSchema>;
         services: AzureContainerServices;
     }>;
-    getContainer(id: string, containerSchema: ContainerSchema): Promise<{
-        container: IFluidContainer;
+    getContainer<TContainerSchema extends ContainerSchema>(id: string, containerSchema: TContainerSchema): Promise<{
+        container: IFluidContainer<TContainerSchema>;
         services: AzureContainerServices;
     }>;
     getContainerVersions(id: string, options?: AzureGetVersionsOptions): Promise<AzureContainerVersion[]>;
 }
 
-// @public
+// @alpha
 export interface AzureClientProps {
     readonly configProvider?: IConfigProviderBase;
     readonly connection: AzureRemoteConnectionConfig | AzureLocalConnectionConfig;
@@ -53,28 +52,28 @@ export interface AzureClientProps {
     readonly summaryCompression?: boolean | ICompressionStorageConfig;
 }
 
-// @public
+// @alpha
 export interface AzureConnectionConfig {
     endpoint: string;
     tokenProvider: ITokenProvider;
     type: AzureConnectionConfigType;
 }
 
-// @public
+// @alpha
 export type AzureConnectionConfigType = "local" | "remote";
 
-// @public
+// @alpha
 export interface AzureContainerServices {
     audience: IAzureAudience;
 }
 
-// @public
+// @alpha
 export interface AzureContainerVersion {
     date?: string;
     id: string;
 }
 
-// @public @deprecated
+// @internal @deprecated
 export class AzureFunctionTokenProvider implements ITokenProvider {
     constructor(azFunctionUrl: string, user?: Pick<AzureMember<any>, "userId" | "userName" | "additionalDetails"> | undefined);
     // (undocumented)
@@ -83,35 +82,35 @@ export class AzureFunctionTokenProvider implements ITokenProvider {
     fetchStorageToken(tenantId: string, documentId: string): Promise<ITokenResponse>;
 }
 
-// @public
+// @alpha
 export interface AzureGetVersionsOptions {
     maxCount: number;
 }
 
-// @public
+// @alpha
 export interface AzureLocalConnectionConfig extends AzureConnectionConfig {
     type: "local";
 }
 
-// @public
+// @alpha
 export interface AzureMember<T = any> extends IMember {
     additionalDetails?: T;
     userName: string;
 }
 
-// @public
+// @alpha
 export interface AzureRemoteConnectionConfig extends AzureConnectionConfig {
     tenantId: string;
     type: "remote";
 }
 
-// @public
+// @internal
 export interface AzureUser<T = any> extends IUser {
     additionalDetails?: T;
     name: string;
 }
 
-// @public
+// @alpha
 export type IAzureAudience = IServiceAudience<AzureMember>;
 
 export { ITelemetryBaseEvent }

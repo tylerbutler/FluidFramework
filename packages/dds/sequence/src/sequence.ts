@@ -2,6 +2,9 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
+/* eslint-disable import/no-deprecated */
+
 import { assert, Deferred } from "@fluidframework/core-utils";
 import { bufferToString } from "@fluid-internal/client-utils";
 import { LoggingError, createChildLogger } from "@fluidframework/telemetry-utils";
@@ -14,7 +17,6 @@ import {
 import {
 	Client,
 	createAnnotateRangeOp,
-	// eslint-disable-next-line import/no-deprecated
 	createGroupOp,
 	createInsertOp,
 	createRemoveRangeOp,
@@ -29,7 +31,6 @@ import {
 	ISegment,
 	ISegmentAction,
 	LocalReferencePosition,
-	// eslint-disable-next-line import/no-deprecated
 	matchProperties,
 	MergeTreeDeltaType,
 	PropertySet,
@@ -97,7 +98,7 @@ const contentPath = "content";
  * - `event` - Various information on the segments that were modified.
  *
  * - `target` - The sequence itself.
- * @public
+ * @alpha
  */
 export interface ISharedSegmentSequenceEvents extends ISharedObjectEvents {
 	(
@@ -115,7 +116,7 @@ export interface ISharedSegmentSequenceEvents extends ISharedObjectEvents {
 }
 
 /**
- * @public
+ * @alpha
  */
 export abstract class SharedSegmentSequence<T extends ISegment>
 	extends SharedObject<ISharedSegmentSequenceEvents>
@@ -136,7 +137,6 @@ export abstract class SharedSegmentSequence<T extends ISegment>
 	 *
 	 * An application using SharedString which explicitly wants to opt in to allowing reentrancy anyway can set `sharedStringPreventReentrancy`
 	 * on the data store options to `false`.
-	 * @internal
 	 */
 	protected guardReentrancy: <TRet>(callback: () => TRet) => TRet;
 
@@ -153,7 +153,6 @@ export abstract class SharedSegmentSequence<T extends ISegment>
 					if (
 						lastAnnotate &&
 						lastAnnotate.pos2 === r.position &&
-						// eslint-disable-next-line import/no-deprecated
 						matchProperties(lastAnnotate.props, props)
 					) {
 						lastAnnotate.pos2 += r.segment.cachedLength;
@@ -764,7 +763,6 @@ export abstract class SharedSegmentSequence<T extends ISegment>
 				stashMessage = {
 					...message,
 					referenceSequenceNumber: stashMessage.sequenceNumber - 1,
-					// eslint-disable-next-line import/no-deprecated
 					contents: ops.length !== 1 ? createGroupOp(...ops) : ops[0],
 				};
 			}

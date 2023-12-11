@@ -3,6 +3,8 @@
  * Licensed under the MIT License.
  */
 
+/* eslint-disable import/no-deprecated */
+
 import { assert, unreachableCase } from "@fluidframework/core-utils";
 import { UsageError } from "@fluidframework/telemetry-utils";
 import { List } from "./collections";
@@ -13,13 +15,12 @@ import { IMergeLeaf, ISegment, toRemovalInfo } from "./mergeTreeNodes";
 import { depthFirstNodeWalk } from "./mergeTreeNodeWalk";
 import { ITrackingGroup, Trackable, UnorderedTrackingGroup } from "./mergeTreeTracking";
 import { IJSONSegment, MergeTreeDeltaType, ReferenceType } from "./ops";
-// eslint-disable-next-line import/no-deprecated
 import { matchProperties, PropertySet } from "./properties";
 import { DetachedReferencePosition } from "./referencePositions";
 import { MergeTree, findRootMergeBlock } from "./mergeTree";
 
 /**
- * @alpha
+ * @internal
  */
 export type MergeTreeDeltaRevertible =
 	| {
@@ -38,8 +39,7 @@ export type MergeTreeDeltaRevertible =
 
 /**
  * Tests whether x is a MergeTreeDeltaRevertible
- *
- * @alpha
+ * @internal
  */
 export function isMergeTreeDeltaRevertible(x: unknown): x is MergeTreeDeltaRevertible {
 	return !!x && typeof x === "object" && "operation" in x && "trackingGroup" in x;
@@ -173,7 +173,6 @@ function appendLocalAnnotateToRevertibles(
 		if (propertyDeltas) {
 			if (
 				last?.operation === MergeTreeDeltaType.ANNOTATE &&
-				// eslint-disable-next-line import/no-deprecated
 				matchProperties(last?.propertyDeltas, propertyDeltas)
 			) {
 				last.trackingGroup.link(ds.segment);
@@ -192,7 +191,7 @@ function appendLocalAnnotateToRevertibles(
 }
 
 /**
- * @alpha
+ * @internal
  */
 export function appendToMergeTreeDeltaRevertibles(
 	deltaArgs: IMergeTreeDeltaCallbackArgs,
@@ -222,7 +221,7 @@ export function appendToMergeTreeDeltaRevertibles(
 }
 
 /**
- * @alpha
+ * @internal
  */
 export function discardMergeTreeDeltaRevertible(revertibles: MergeTreeDeltaRevertible[]) {
 	revertibles.forEach((r) => {
@@ -384,7 +383,7 @@ function getPosition(mergeTreeWithRevert: MergeTreeWithRevert, segment: ISegment
 }
 
 /**
- * @alpha
+ * @internal
  */
 export function revertMergeTreeDeltaRevertibles(
 	driver: MergeTreeRevertibleDriver,

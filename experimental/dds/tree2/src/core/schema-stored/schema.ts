@@ -6,13 +6,16 @@
 import { Brand, brand, brandedStringType } from "../../util";
 
 /**
- * SchemaIdentifier for a TreeNode.
+ * Identifier for a TreeNode schema.
  * Also known as "Definition"
  *
  * Stable identifier, used when persisting data.
  * @alpha
  */
-export type TreeNodeSchemaIdentifier = Brand<string, "tree.TreeNodeSchemaIdentifier">;
+export type TreeNodeSchemaIdentifier<TName extends string = string> = Brand<
+	TName,
+	"tree.TreeNodeSchemaIdentifier"
+>;
 
 /**
  * TypeBox Schema for encoding {@link TreeNodeSchemaIdentifiers} in persisted data.
@@ -58,14 +61,6 @@ export enum ValueSchema {
 	FluidHandle,
 	Null,
 }
-
-/**
- * {@link ValueSchema} for privative types.
- * @privateRemarks
- * TODO: remove when old editable tree API is removed.
- * @alpha
- */
-export type PrimitiveValueSchema = ValueSchema.Number | ValueSchema.String | ValueSchema.Boolean;
 
 /**
  * Set of allowed tree types.
@@ -135,9 +130,15 @@ export interface TreeFieldStoredSchema {
  */
 export const forbiddenFieldKindIdentifier = "Forbidden";
 
+/**
+ * A schema for empty fields (fields which must always be empty).
+ * There are multiple ways this could be encoded, but this is the most explicit.
+ */
 export const storedEmptyFieldSchema: TreeFieldStoredSchema = {
+	// This kind requires the field to be empty.
 	kind: { identifier: brand(forbiddenFieldKindIdentifier) },
-	types: undefined,
+	// This type set also forces the field to be empty not not allowing any types as all.
+	types: new Set(),
 };
 
 /**
@@ -202,12 +203,12 @@ export interface TreeStoredSchema extends StoredSchemaCollection {
  *
  * @remarks
  * Note: the owner of this may modify it over time:
- * thus if needing to hand onto a specific version, make a copy.
+ * thus if needing to hang onto a specific version, make a copy.
  * @alpha
  */
 export interface StoredSchemaCollection {
 	/**
 	 * {@inheritdoc StoredSchemaCollection}
 	 */
-	readonly treeSchema: ReadonlyMap<TreeNodeSchemaIdentifier, TreeNodeStoredSchema>;
+	readonly nodeSchema: ReadonlyMap<TreeNodeSchemaIdentifier, TreeNodeStoredSchema>;
 }

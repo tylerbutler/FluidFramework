@@ -18,11 +18,6 @@ import {
 import { createSingleBlobSummary } from "@fluidframework/shared-object-base";
 import { ICodecOptions, IJsonCodec, SchemaValidationFunction } from "../codec";
 import {
-	cachedValue,
-	Dependee,
-	Dependent,
-	ICachedValue,
-	recordDependency,
 	TreeFieldStoredSchema,
 	TreeStoredSchema,
 	StoredSchemaRepository,
@@ -32,8 +27,8 @@ import {
 	SchemaEvents,
 } from "../core";
 import { Summarizable, SummaryElementParser, SummaryElementStringifier } from "../shared-tree-core";
-import { isJsonObject, JsonCompatibleReadOnly } from "../util";
-import { makeSchemaCodec, Format } from "./schemaIndexFormat";
+import { isJsonObject, JsonCompatible, JsonCompatibleReadOnly } from "../util";
+import { makeSchemaCodec, Format, encodeRepo } from "./schemaIndexFormat";
 
 /**
  * The storage key for the blob in the summary containing schema data
@@ -48,7 +43,7 @@ const schemaStringKey = "SchemaString";
 export class SchemaSummarizer implements Summarizable {
 	public readonly key = "Schema";
 
-	private readonly schemaBlob: ICachedValue<Promise<IFluidHandle<ArrayBufferLike>>>;
+	private schemaBlobCache: IFluidHandle<ArrayBufferLike> | undefined;
 	private readonly codec: IJsonCodec<TreeStoredSchema, Format>;
 
 	public constructor(
@@ -57,13 +52,9 @@ export class SchemaSummarizer implements Summarizable {
 		options: ICodecOptions,
 	) {
 		this.codec = makeSchemaCodec(options);
-		this.schemaBlob = cachedValue(async (observer) => {
-			recordDependency(observer, this.schema);
-			// Currently no Fluid handles are used, so just use JSON.stringify.
-			const schemaText = JSON.stringify(this.codec.encode(this.schema));
-
-			// For now we are not chunking the the schema, but still put it in a reusable blob:
-			return this.runtime.uploadBlob(IsoBuffer.from(schemaText));
+		this.schema.on("afterSchemaChange", () => {
+			// Invalidate the cache, as we need to regenerate the blob if the schema changes
+			this.schemaBlobCache = undefined;
 		});
 	}
 
@@ -84,8 +75,14 @@ export class SchemaSummarizer implements Summarizable {
 		trackState?: boolean,
 		telemetryContext?: ITelemetryContext,
 	): Promise<ISummaryTreeWithStats> {
-		const schemaBlobHandle = await this.schemaBlob.get();
-		return createSingleBlobSummary(schemaBlobKey, stringify(schemaBlobHandle));
+		if (this.schemaBlobCache === undefined) {
+			// Currently no Fluid handles are used, so just use JSON.stringify.
+			const schemaText = JSON.stringify(this.codec.encode(this.schema));
+
+			// For now we are not chunking the the schema, but still put it in a reusable blob:
+			this.schemaBlobCache = await this.runtime.uploadBlob(IsoBuffer.from(schemaText));
+		}
+		return createSingleBlobSummary(schemaBlobKey, stringify(this.schemaBlobCache));
 	}
 
 	public getGCData(fullGC?: boolean): IGarbageCollectionData {
@@ -209,28 +206,12 @@ export class SchemaEditor<TRepository extends StoredSchemaRepository>
 		this.inner.update(newSchema);
 	}
 
-	public registerDependent(dependent: Dependent): boolean {
-		return this.inner.registerDependent(dependent);
-	}
-
-	public removeDependent(dependent: Dependent): void {
-		return this.inner.removeDependent(dependent);
-	}
-
-	public get computationName(): string {
-		return this.inner.computationName;
-	}
-
-	public get listDependees(): undefined | (() => Iterable<Dependee>) {
-		return this.inner.listDependees?.bind(this.inner);
-	}
-
 	public get rootFieldSchema(): TreeFieldStoredSchema {
 		return this.inner.rootFieldSchema;
 	}
 
-	public get treeSchema(): ReadonlyMap<TreeNodeSchemaIdentifier, TreeNodeStoredSchema> {
-		return this.inner.treeSchema;
+	public get nodeSchema(): ReadonlyMap<TreeNodeSchemaIdentifier, TreeNodeStoredSchema> {
+		return this.inner.nodeSchema;
 	}
 
 	private tryDecodeOp(encodedOp: JsonCompatibleReadOnly): TreeStoredSchema | undefined {
@@ -240,4 +221,21 @@ export class SchemaEditor<TRepository extends StoredSchemaRepository>
 
 		return undefined;
 	}
+}
+
+/**
+ * Dumps schema into a deterministic JSON compatible semi-human readable but unspecified format.
+ *
+ * @remarks
+ * This can be used to help inspect schema for debugging, and to save a snapshot of schema to help detect and review changes to an applications schema.
+ *
+ * This format may change across major versions of this package: such changes are considered breaking.
+ * Beyond that, no compatibility guarantee is provided for this format: it should never be relied upon to load data, it should only be used for comparing outputs from this function.
+ * @privateRemarks
+ * This currently uses the schema summary format, but that could be changed to something more human readable (particularly if the encoded format becomes less human readable).
+ * This intentionally does not leak the format types in the API.
+ * @alpha
+ */
+export function encodeTreeSchema(schema: TreeStoredSchema): JsonCompatible {
+	return encodeRepo(schema);
 }

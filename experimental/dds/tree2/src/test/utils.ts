@@ -4,7 +4,7 @@
  */
 
 import { strict as assert } from "assert";
-import { LocalServerTestDriver } from "@fluid-internal/test-drivers";
+import { LocalServerTestDriver } from "@fluid-private/test-drivers";
 import { IContainer } from "@fluidframework/container-definitions";
 import { Loader } from "@fluidframework/container-loader";
 import {
@@ -12,7 +12,6 @@ import {
 	IChannelServices,
 	IFluidDataStoreRuntime,
 } from "@fluidframework/datastore-definitions";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
 import {
 	ITestObjectProvider,
 	ChannelFactoryRegistry,
@@ -30,18 +29,19 @@ import {
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
 import { ISummarizer } from "@fluidframework/container-runtime";
-import { ConfigTypes, IConfigProviderBase } from "@fluidframework/telemetry-utils";
+import { ConfigTypes, IConfigProviderBase } from "@fluidframework/core-interfaces";
 import {
 	ISharedTree,
-	ISharedTreeView,
+	ITreeCheckout,
 	SharedTreeFactory,
 	TreeContent,
-	ViewEvents,
-	createSharedTreeView,
+	CheckoutEvents,
+	createTreeCheckout,
 	SharedTree,
 	InitializeAndSchematizeConfiguration,
-	ISharedTreeBranchView,
 	runSynchronous,
+	SharedTreeContentSnapshot,
+	CheckoutFlexTreeView,
 } from "../shared-tree";
 import {
 	Any,
@@ -57,16 +57,14 @@ import {
 	nodeKeyFieldKey as nodeKeyFieldKeyDefault,
 	NodeKeyManager,
 	normalizeNewFieldContent,
-	RevisionInfo,
-	RevisionMetadataSource,
-	revisionMetadataSourceFromInfo,
-	singleTextCursor,
-	TypedField,
+	cursorForJsonableTreeNode,
+	FlexTreeTypedField,
+	jsonableTreeFromForest,
+	nodeKeyFieldKey as defaultNodeKeyFieldKey,
+	ContextuallyTypedNodeData,
+	mapRootChanges,
 } from "../feature-libraries";
 import {
-	Delta,
-	InvalidationToken,
-	SimpleObservingDependent,
 	moveToDetachedField,
 	mapCursorField,
 	JsonableTree,
@@ -78,12 +76,7 @@ import {
 	ChangeFamilyEditor,
 	ChangeFamily,
 	TaggedChange,
-	TreeSchemaBuilder,
-	treeSchema,
 	FieldUpPath,
-	TreeNodeSchemaIdentifier,
-	TreeNodeStoredSchema,
-	IForestSubscription,
 	InMemoryStoredSchemaRepository,
 	initializeForest,
 	AllowedUpdateType,
@@ -97,8 +90,17 @@ import {
 	FieldKey,
 	Revertible,
 	RevertibleKind,
+	RevisionMetadataSource,
+	revisionMetadataSourceFromInfo,
+	RevisionInfo,
+	RevisionTag,
+	DeltaFieldChanges,
+	DeltaMark,
+	DeltaFieldMap,
+	DeltaRoot,
+	DeltaProtoNode,
 } from "../core";
-import { JsonCompatible, Named, brand } from "../util";
+import { JsonCompatible, brand } from "../util";
 import { ICodecFamily, withSchemaValidation } from "../codec";
 import { typeboxValidator } from "../external-utilities";
 import {
@@ -144,6 +146,9 @@ function freezeObjectMethods<T>(object: T, methods: (keyof T)[]): void {
  * @param object - The object to freeze.
  */
 export function deepFreeze<T>(object: T): void {
+	if (object === undefined || object === null) {
+		return;
+	}
 	if (object instanceof Map) {
 		for (const [key, value] of object.entries()) {
 			deepFreeze(key);
@@ -167,13 +172,6 @@ export function deepFreeze<T>(object: T): void {
 		}
 	}
 	Object.freeze(object);
-}
-
-export class MockDependent extends SimpleObservingDependent {
-	public readonly tokens: (InvalidationToken | undefined)[] = [];
-	public constructor(name: string = "MockDependent") {
-		super((token) => this.tokens.push(token), name);
-	}
 }
 
 /**
@@ -256,7 +254,7 @@ export class TestTreeProvider {
 
 		if (summarizeType === SummarizeType.onDemand) {
 			const container = await objProvider.makeTestContainer();
-			const dataObject = await requestFluidObject<ITestFluidObject>(container, "/");
+			const dataObject = (await container.getEntryPoint()) as ITestFluidObject;
 			const firstTree = await dataObject.getSharedObject<SharedTree>(TestTreeProvider.treeId);
 			const { summarizer } = await createSummarizer(objProvider, container);
 			const provider = new TestTreeProvider(objProvider, [
@@ -299,7 +297,7 @@ export class TestTreeProvider {
 				: await this.provider.loadTestContainer();
 
 		this._containers.push(container);
-		const dataObject = await requestFluidObject<ITestFluidObject>(container, "/");
+		const dataObject = (await container.getEntryPoint()) as ITestFluidObject;
 		return (this._trees[this.trees.length] = await dataObject.getSharedObject<SharedTree>(
 			TestTreeProvider.treeId,
 		));
@@ -439,7 +437,7 @@ export function spyOnMethod(
 /**
  * @returns `true` iff the given delta has a visible impact on the document tree.
  */
-export function isDeltaVisible(delta: Delta.FieldChanges): boolean {
+export function isDeltaVisible(delta: DeltaFieldChanges): boolean {
 	for (const mark of delta.local ?? []) {
 		if (mark.attach !== undefined || mark.detach !== undefined) {
 			return true;
@@ -458,7 +456,7 @@ export function isDeltaVisible(delta: Delta.FieldChanges): boolean {
 /**
  * Assert two MarkList are equal, handling cursors.
  */
-export function assertFieldChangesEqual(a: Delta.FieldChanges, b: Delta.FieldChanges): void {
+export function assertFieldChangesEqual(a: DeltaFieldChanges, b: DeltaFieldChanges): void {
 	const aTree = mapFieldChanges(a, mapTreeFromCursor);
 	const bTree = mapFieldChanges(b, mapTreeFromCursor);
 	assert.deepStrictEqual(aTree, bTree);
@@ -467,7 +465,7 @@ export function assertFieldChangesEqual(a: Delta.FieldChanges, b: Delta.FieldCha
 /**
  * Assert two MarkList are equal, handling cursors.
  */
-export function assertMarkListEqual(a: readonly Delta.Mark[], b: readonly Delta.Mark[]): void {
+export function assertMarkListEqual(a: readonly DeltaMark[], b: readonly DeltaMark[]): void {
 	const aTree = mapMarkList(a, mapTreeFromCursor);
 	const bTree = mapMarkList(b, mapTreeFromCursor);
 	assert.deepStrictEqual(aTree, bTree);
@@ -476,9 +474,18 @@ export function assertMarkListEqual(a: readonly Delta.Mark[], b: readonly Delta.
 /**
  * Assert two Delta are equal, handling cursors.
  */
-export function assertDeltaEqual(a: Delta.FieldMap, b: Delta.FieldMap): void {
+export function assertDeltaFieldMapEqual(a: DeltaFieldMap, b: DeltaFieldMap): void {
 	const aTree = mapFieldsChanges(a, mapTreeFromCursor);
 	const bTree = mapFieldsChanges(b, mapTreeFromCursor);
+	assert.deepStrictEqual(aTree, bTree);
+}
+
+/**
+ * Assert two Delta are equal, handling cursors.
+ */
+export function assertDeltaEqual(a: DeltaRoot, b: DeltaRoot): void {
+	const aTree = mapRootChanges(a, mapTreeFromCursor);
+	const bTree = mapRootChanges(b, mapTreeFromCursor);
 	assert.deepStrictEqual(aTree, bTree);
 }
 
@@ -515,20 +522,28 @@ export class SharedTreeTestFactory extends SharedTreeFactory {
 	}
 }
 
-export function noRepair(): Delta.ProtoNode[] {
+export function noRepair(): DeltaProtoNode[] {
 	assert.fail("Unexpected request for repair data");
 }
 
-export function validateTree(tree: ISharedTreeView, expected: JsonableTree[]): void {
+export function validateTree(tree: ITreeCheckout, expected: JsonableTree[]): void {
 	const actual = toJsonableTree(tree);
 	assert.deepEqual(actual, expected);
 }
 
 const schemaCodec = makeSchemaCodec({ jsonValidator: typeboxValidator });
 
+/**
+ * This does NOT check that the trees have the same edits, same edit manager state or anything like that.
+ * This ONLY checks if the content of the forest of the main branch of the trees match.
+ */
 export function validateTreeConsistency(treeA: ISharedTree, treeB: ISharedTree): void {
 	// TODO: validate other aspects of these trees are consistent, for example their collaboration window information.
-	validateViewConsistency(treeA.view, treeB.view, `id: ${treeA.id} vs id: ${treeB.id}`);
+	validateSnapshotConsistency(
+		treeA.contentSnapshot(),
+		treeB.contentSnapshot(),
+		`id: ${treeA.id} vs id: ${treeB.id}`,
+	);
 }
 
 function contentToJsonableTree(content: TreeContent): JsonableTree[] {
@@ -539,41 +554,81 @@ function contentToJsonableTree(content: TreeContent): JsonableTree[] {
 	).map(jsonableTreeFromCursor);
 }
 
-export function validateTreeContent(tree: ISharedTreeView, content: TreeContent): void {
+export function validateTreeContent(tree: ITreeCheckout, content: TreeContent): void {
 	assert.deepEqual(toJsonableTree(tree), contentToJsonableTree(content));
-	assert.deepEqual(schemaCodec.encode(tree.storedSchema), schemaCodec.encode(content.schema));
+	expectSchemaEqual(tree.storedSchema, content.schema);
 }
 
-export function validateViewConsistency(
-	treeA: ISharedTreeView,
-	treeB: ISharedTreeView,
+export function expectSchemaEqual(
+	a: TreeStoredSchema,
+	b: TreeStoredSchema,
 	idDifferentiator: string | undefined = undefined,
 ): void {
 	assert.deepEqual(
-		toJsonableTree(treeA),
-		toJsonableTree(treeB),
-		`Inconsistent json representation: ${idDifferentiator}`,
-	);
-	assert.deepEqual(
-		schemaCodec.encode(treeA.storedSchema),
-		schemaCodec.encode(treeB.storedSchema),
+		schemaCodec.encode(a),
+		schemaCodec.encode(b),
 		`Inconsistent schema: ${idDifferentiator}`,
 	);
 }
 
-export function viewWithContent(
+export function validateViewConsistency(
+	treeA: ITreeCheckout,
+	treeB: ITreeCheckout,
+	idDifferentiator: string | undefined = undefined,
+): void {
+	validateSnapshotConsistency(
+		{ tree: toJsonableTree(treeA), schema: treeA.storedSchema },
+		{ tree: toJsonableTree(treeB), schema: treeB.storedSchema },
+		idDifferentiator,
+	);
+}
+
+export function validateSnapshotConsistency(
+	treeA: SharedTreeContentSnapshot,
+	treeB: SharedTreeContentSnapshot,
+	idDifferentiator: string | undefined = undefined,
+): void {
+	assert.deepEqual(
+		treeA.tree,
+		treeB.tree,
+		`Inconsistent json representation: ${idDifferentiator}`,
+	);
+	expectSchemaEqual(treeA.schema, treeB.schema, idDifferentiator);
+}
+
+export function checkoutWithContent(
 	content: TreeContent,
 	args?: {
-		events?: ISubscribable<ViewEvents> & IEmitter<ViewEvents> & HasListeners<ViewEvents>;
+		events?: ISubscribable<CheckoutEvents> &
+			IEmitter<CheckoutEvents> &
+			HasListeners<CheckoutEvents>;
 	},
-): ISharedTreeView {
+): ITreeCheckout {
+	return flexTreeViewWithContent(content, args).checkout;
+}
+
+export function flexTreeViewWithContent<TRoot extends TreeFieldSchema>(
+	content: TreeContent<TRoot>,
+	args?: {
+		events?: ISubscribable<CheckoutEvents> &
+			IEmitter<CheckoutEvents> &
+			HasListeners<CheckoutEvents>;
+		nodeKeyManager?: NodeKeyManager;
+		nodeKeyFieldKey?: FieldKey;
+	},
+): CheckoutFlexTreeView<TRoot> {
 	const forest = forestWithContent(content);
-	const view = createSharedTreeView({
+	const view = createTreeCheckout({
 		...args,
 		forest,
 		schema: new InMemoryStoredSchemaRepository(content.schema),
 	});
-	return view;
+	return new CheckoutFlexTreeView(
+		view,
+		content.schema,
+		args?.nodeKeyManager ?? createMockNodeKeyManager(),
+		args?.nodeKeyFieldKey ?? brand(defaultNodeKeyFieldKey),
+	);
 }
 
 export function forestWithContent(content: TreeContent): IEditableForest {
@@ -589,70 +644,79 @@ export function forestWithContent(content: TreeContent): IEditableForest {
 	return forest;
 }
 
-export function treeWithContent<TRoot extends TreeFieldSchema>(
+export function flexTreeWithContent<TRoot extends TreeFieldSchema>(
 	content: TreeContent<TRoot>,
 	args?: {
 		nodeKeyManager?: NodeKeyManager;
 		nodeKeyFieldKey?: FieldKey;
-		events?: ISubscribable<ViewEvents> & IEmitter<ViewEvents> & HasListeners<ViewEvents>;
+		events?: ISubscribable<CheckoutEvents> &
+			IEmitter<CheckoutEvents> &
+			HasListeners<CheckoutEvents>;
 	},
-): TypedField<TRoot> {
+): FlexTreeTypedField<TRoot> {
 	const forest = forestWithContent(content);
-	const view = createSharedTreeView({
+	const branch = createTreeCheckout({
 		...args,
 		forest,
 		schema: new InMemoryStoredSchemaRepository(content.schema),
 	});
 	const manager = args?.nodeKeyManager ?? createMockNodeKeyManager();
-	return view.editableTree2(
+	const view = new CheckoutFlexTreeView(
+		branch,
 		content.schema,
 		manager,
 		args?.nodeKeyFieldKey ?? brand(nodeKeyFieldKeyDefault),
 	);
+	return view.editableTree;
 }
 
-const jsonSequenceRootField = SchemaBuilder.sequence(jsonRoot);
 export const jsonSequenceRootSchema = new SchemaBuilder({
 	scope: "JsonSequenceRoot",
 	libraries: [jsonSchema],
-}).intoSchema(jsonSequenceRootField);
+}).intoSchema(SchemaBuilder.sequence(jsonRoot));
 
-export const emptyJsonSequenceConfig: InitializeAndSchematizeConfiguration = {
+export const stringSequenceRootSchema = new SchemaBuilder({
+	scope: "StringSequenceRoot",
+}).intoSchema(SchemaBuilder.sequence(leaf.string));
+
+export const numberSequenceRootSchema = new SchemaBuilder({
+	scope: "NumberSequenceRoot",
+}).intoSchema(SchemaBuilder.sequence(leaf.number));
+
+export const emptyJsonSequenceConfig = {
 	schema: jsonSequenceRootSchema,
 	allowedSchemaModifications: AllowedUpdateType.None,
 	initialTree: [],
-};
+} satisfies InitializeAndSchematizeConfiguration;
+
+export const emptyStringSequenceConfig = {
+	schema: stringSequenceRootSchema,
+	allowedSchemaModifications: AllowedUpdateType.None,
+	initialTree: [],
+} satisfies InitializeAndSchematizeConfiguration;
 
 /**
  * If the root is an array, this creates a sequence field at the root instead of a JSON array node.
  *
  * If the root is not an array, a single item root sequence is used.
  */
-export function makeTreeFromJson(json: JsonCompatible[] | JsonCompatible): ISharedTreeView {
+export function makeTreeFromJson(json: JsonCompatible[] | JsonCompatible): ITreeCheckout {
 	const cursors = (Array.isArray(json) ? json : [json]).map(singleJsonCursor);
-	const tree = viewWithContent({
+	const tree = checkoutWithContent({
 		schema: jsonSequenceRootSchema,
 		initialTree: cursors,
 	});
 	return tree;
 }
 
-export function toJsonableTree(tree: ISharedTreeView): JsonableTree[] {
+export function toJsonableTree(tree: ITreeCheckout): JsonableTree[] {
 	return jsonableTreeFromForest(tree.forest);
-}
-
-export function jsonableTreeFromForest(forest: IForestSubscription): JsonableTree[] {
-	const readCursor = forest.allocateCursor();
-	moveToDetachedField(forest, readCursor);
-	const jsonable = mapCursorField(readCursor, jsonableTreeFromCursor);
-	readCursor.free();
-	return jsonable;
 }
 
 /**
  * Assumes `tree` is in the json domain and returns its content as a json compatible object.
  */
-export function toJsonTree(tree: ISharedTreeView): JsonCompatible[] {
+export function toJsonTree(tree: ITreeCheckout): JsonCompatible[] {
 	const readCursor = tree.forest.allocateCursor();
 	moveToDetachedField(tree.forest, readCursor);
 	const copy = mapCursorField(readCursor, cursorToJsonObject);
@@ -661,25 +725,35 @@ export function toJsonTree(tree: ISharedTreeView): JsonCompatible[] {
 }
 
 /**
- * Helper function to insert a jsonString at a given index of the documents root field.
+ * Helper function to insert node at a given index.
+ *
+ * TODO: delete once the JSON editing API is ready for use.
  *
  * @param tree - The tree on which to perform the insert.
  * @param index - The index in the root field at which to insert.
- * @param value - The value of the inserted node.
+ * @param value - The value of the inserted nodes.
  */
-export function insert(tree: ISharedTreeView, index: number, ...values: string[]): void {
-	const field = tree.editor.sequenceField({ parent: undefined, field: rootFieldKey });
-	const nodes = values.map((value) => singleTextCursor({ type: leaf.string.name, value }));
-	field.insert(index, nodes);
+export function insert(
+	tree: ITreeCheckout,
+	index: number,
+	...values: ContextuallyTypedNodeData[]
+): void {
+	const fieldEditor = tree.editor.sequenceField({ field: rootFieldKey, parent: undefined });
+	const content = normalizeNewFieldContent(
+		{ schema: jsonSequenceRootSchema },
+		jsonSequenceRootSchema.rootFieldSchema,
+		values,
+	);
+	fieldEditor.insert(index, content);
 }
 
-export function remove(tree: ISharedTreeView, index: number, count: number): void {
+export function remove(tree: ITreeCheckout, index: number, count: number): void {
 	const field = tree.editor.sequenceField({ parent: undefined, field: rootFieldKey });
 	field.delete(index, count);
 }
 
 export function expectJsonTree(
-	actual: ISharedTreeView | ISharedTreeView[],
+	actual: ITreeCheckout | ITreeCheckout[],
 	expected: JsonCompatible[],
 ): void {
 	const trees = Array.isArray(actual) ? actual : [actual];
@@ -694,7 +768,7 @@ export function expectJsonTree(
  */
 // TODO: replace use of this with initialize or schematize, and/or move them out of this file and use viewWithContent
 export function initializeTestTree(
-	tree: ISharedTreeView,
+	tree: ITreeCheckout,
 	state: JsonableTree | JsonableTree[] | undefined,
 	schema: TreeStoredSchema = wrongSchema,
 ): void {
@@ -710,7 +784,7 @@ export function initializeTestTree(
 
 		// Apply an edit to the tree which inserts a node with a value
 		runSynchronous(tree, () => {
-			const writeCursors = state.map(singleTextCursor);
+			const writeCursors = state.map(cursorForJsonableTreeNode);
 			const field = tree.editor.sequenceField({
 				parent: undefined,
 				field: rootFieldKey,
@@ -734,7 +808,7 @@ export function expectEqualFieldPaths(path: FieldUpPath, expectedPath: FieldUpPa
 	assert.equal(path.field, expectedPath.field);
 }
 
-export const mockIntoDelta = (delta: Delta.Root) => delta;
+export const mockIntoDelta = (delta: DeltaRoot) => delta;
 
 export interface EncodingTestData<TDecoded, TEncoded> {
 	/**
@@ -849,28 +923,37 @@ export function testChangeReceiver<TChange>(
 export function defaultRevisionMetadataFromChanges(
 	changes: readonly TaggedChange<unknown>[],
 ): RevisionMetadataSource {
+	return revisionMetadataSourceFromInfo(defaultRevInfosFromChanges(changes));
+}
+
+export function defaultRevInfosFromChanges(
+	changes: readonly TaggedChange<unknown>[],
+): RevisionInfo[] {
 	const revInfos: RevisionInfo[] = [];
+	const revisions = new Set<RevisionTag>();
+	const rolledBackRevisions: RevisionTag[] = [];
 	for (const change of changes) {
 		if (change.revision !== undefined) {
 			revInfos.push({
 				revision: change.revision,
 				rollbackOf: change.rollbackOf,
 			});
+
+			revisions.add(change.revision);
+			if (change.rollbackOf !== undefined) {
+				rolledBackRevisions.push(change.rollbackOf);
+			}
 		}
 	}
-	return revisionMetadataSourceFromInfo(revInfos);
-}
 
-/**
- * Helper for building {@link Named} {@link TreeNodeStoredSchema} without using {@link SchemaBuilder}.
- */
-export function namedTreeSchema(
-	data: TreeSchemaBuilder & Named<string>,
-): Named<TreeNodeSchemaIdentifier> & TreeNodeStoredSchema {
-	return {
-		name: brand(data.name),
-		...treeSchema({ ...data }),
-	};
+	rolledBackRevisions.reverse();
+	for (const revision of rolledBackRevisions) {
+		if (!revisions.has(revision)) {
+			revInfos.push({ revision });
+		}
+	}
+
+	return revInfos;
 }
 
 /**
@@ -889,40 +972,27 @@ export const wrongSchema = new SchemaBuilder({
 	},
 }).intoSchema(SchemaBuilder.sequence(Any));
 
-/**
- * Schematize config Schema which is not correct.
- * Use as a transitionary tool when migrating code that does not provide a schema toward one that provides a correct schema.
- * Using this allows representing an intermediate state that still has an incorrect schema, but is explicit about it.
- * This is particularly useful when modifying APIs to require schema, and a lot of code has to be updated.
- *
- * @deprecated This in invalid and only used to explicitly mark code as using the wrong schema. All usages of this should be fixed to use correct schema.
- */
-// TODO: remove all usages of this.
-export const wrongSchemaConfig: InitializeAndSchematizeConfiguration<
-	typeof wrongSchema.rootFieldSchema
-> = {
-	schema: wrongSchema,
-	allowedSchemaModifications: AllowedUpdateType.None,
-	initialTree: [],
-};
-
 export function applyTestDelta(
-	delta: Delta.Root,
+	delta: DeltaFieldMap,
 	deltaProcessor: { acquireVisitor: () => DeltaVisitor },
 	detachedFieldIndex?: DetachedFieldIndex,
 ): void {
-	applyDelta(delta, deltaProcessor, detachedFieldIndex ?? makeDetachedFieldIndex());
+	const rootDelta: DeltaRoot = { fields: delta };
+	applyDelta(rootDelta, deltaProcessor, detachedFieldIndex ?? makeDetachedFieldIndex());
 }
 
 export function announceTestDelta(
-	delta: Delta.Root,
+	delta: DeltaFieldMap,
 	deltaProcessor: { acquireVisitor: () => DeltaVisitor & AnnouncedVisitor },
 	detachedFieldIndex?: DetachedFieldIndex,
 ): void {
-	announceDelta(delta, deltaProcessor, detachedFieldIndex ?? makeDetachedFieldIndex());
+	const rootDelta: DeltaRoot = { fields: delta };
+	announceDelta(rootDelta, deltaProcessor, detachedFieldIndex ?? makeDetachedFieldIndex());
 }
 
-export function createTestUndoRedoStacks(view: ISharedTreeBranchView | ISharedTreeView): {
+export function createTestUndoRedoStacks(
+	events: ISubscribable<{ revertible(type: Revertible): void }>,
+): {
 	undoStack: Revertible[];
 	redoStack: Revertible[];
 	unsubscribe: () => void;
@@ -930,7 +1000,7 @@ export function createTestUndoRedoStacks(view: ISharedTreeBranchView | ISharedTr
 	const undoStack: Revertible[] = [];
 	const redoStack: Revertible[] = [];
 
-	const unsubscribe = view.events.on("revertible", (revertible) => {
+	const unsubscribe = events.on("revertible", (revertible) => {
 		if (revertible.kind === RevertibleKind.Undo) {
 			redoStack.push(revertible);
 		} else {
