@@ -4,6 +4,15 @@
 	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 	"version": "0.2.0",
 	"configurations": [
+    {
+      "name": "remark",
+      "program": "${workspaceFolder}/.remarkrc.mjs",
+      "request": "launch",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
+    },
 		{
 			// Update /build-tools/packages/bundle-size-tools/src/utilities/gitCommands.ts to your remote (i.e. upstream instead of main)
 			// Don't forget to run `npm run bundle-analysis:collect`

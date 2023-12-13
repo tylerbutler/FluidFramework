@@ -1,70 +1,83 @@
 import remarkToc from "remark-toc";
+import { read } from "to-vfile";
+import { remark } from "remark";
 import { visit } from "unist-util-visit";
 import { headingRange } from "mdast-util-heading-range";
+// const u = require('unist-builder');
 
-function remarkSortSections() {
-	return (tree) => {
-		const sections = [];
-		let currentSection = null;
+function sortSectionsSimple() {
+  console.log(`plugin called`);
+	return function (tree) {
+		let sections = [];
+    console.log(`inside plugin function`);
 
-		visit(tree, (node, index, parent) => {
-			if (parent !== tree) return; // Only consider top-level nodes
+		headingRange(
+			tree,
+			(value, node) => node.type === "heading" && node.depth >= 2,
+      // /.*/,
+			(start, nodes, end) => {
+        sections.push([ start, nodes, end ]);
+        // sections.push(nodes);
+			},
+		);
 
-			if (node.type === "heading") {
-				if (currentSection && node.depth <= currentSection.node.depth) {
-					// End of current section
-					currentSection.end = index;
-					sections.push(currentSection);
-					currentSection = null;
-				}
-
-				if (!currentSection) {
-					// Start of new section
-					currentSection = { start: index, node };
-				}
-			}
+		sections.sort((a, b) => {
+			const textA = a[0].children[0].value;
+			const textB = b[0].children[0].value;
+			console.error(`Comparing ${textA} with ${textB}`);
+			return textA.localeCompare(textB);
 		});
 
-		// End of last section
-		if (currentSection) {
-			currentSection.end = tree.children.length;
+		tree.children = sections.flat();
+	};
+}
+
+function sortSections() {
+	return (tree) => {
+		let sections = [];
+		let currentSection = [];
+
+		visit(tree, (node, index, parent) => {
+			if (node.type === "heading" && node.depth <= 2) {
+				if (currentSection.length > 0) {
+					sections.push(currentSection);
+					currentSection = [];
+				}
+			}
+			currentSection.push(node);
+		});
+
+		if (currentSection.length > 0) {
 			sections.push(currentSection);
 		}
 
 		sections.sort((a, b) => {
-			const aTitle = a.node.children[0].value;
-			const bTitle = b.node.children[0].value;
-			console.warn(`comparing '${aTitle}' to '${bTitle}'`);
-			return aTitle.localeCompare(bTitle);
+			const textA = a[0].children[0].value;
+			const textB = b[0].children[0].value;
+			return textA.localeCompare(textB);
 		});
 
-		const newChildren = [];
-		sections.forEach((section, i) => {
-			if (i === 0) {
-				newChildren.push(...tree.children.slice(0, section.start));
-			} else {
-				newChildren.push(...tree.children.slice(sections[i - 1].end, section.start));
-			}
-			newChildren.push(...tree.children.slice(section.start, section.end));
-			if (i === sections.length - 1) {
-				newChildren.push(...tree.children.slice(section.end));
-			}
-		});
-
-		tree.children = newChildren;
+		tree.children = sections.flat();
 	};
 }
 
-const remarkConfig = {
-	settings: {
-		bullet: "-", // Use `*` for list item bullets (default)
-		// See <https://github.com/remarkjs/remark/tree/main/packages/remark-stringify> for more options.
-	},
-	plugins: [
-		remarkSortSections,
-		// Generate a table of contents in `## Contents`
-		// [remarkToc, { heading: "contents" }],
-	],
-};
+const file = await remark()
+	.use(sortSectionsSimple)
+	.process(await read("RELEASE_NOTES/2.0.0-internal.7.4.0.md"));
 
-export default remarkConfig;
+console.log(String(file));
+
+// const remarkConfig = {
+// 	settings: {
+// 		bullet: "-", // Use `*` for list item bullets (default)
+// 		// See <https://github.com/remarkjs/remark/tree/main/packages/remark-stringify> for more options.
+// 	},
+// 	plugins: [
+// 		sortSectionsSimple,
+// 		// sortSections,
+// 		// Generate a table of contents in `## Contents`
+// 		// [remarkToc, { heading: "contents" }],
+// 	],
+// };
+
+// export default remarkConfig;
