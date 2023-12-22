@@ -4,7 +4,7 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-import { BTree } from "sorted-btree";
+import { BTree } from "@fluid-internal/sorted-btree";
 import { SessionId, StableId } from "./types";
 import {
 	compareBigints,

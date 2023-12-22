@@ -1,12 +1,12 @@
 {
-	"name": "@fluidframework/id-compressor",
+	"name": "@fluid-internal/sorted-btree",
 	"version": "2.0.0-rc.1.0.0",
-	"description": "ID compressor",
+	"description": "Not intended for use outside the Fluid Framework.",
 	"homepage": "https://fluidframework.com",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/microsoft/FluidFramework.git",
-		"directory": "packages/runtime/id-compressor"
+		"directory": "packages/common/sorted-btree"
 	},
 	"license": "MIT",
 	"author": "Microsoft and contributors",
@@ -19,46 +19,6 @@
 			},
 			"require": {
 				"types": "./dist/index.d.ts",
-				"default": "./dist/index.js"
-			}
-		},
-		"./alpha": {
-			"import": {
-				"types": "./lib/id-compressor-alpha.d.mts",
-				"default": "./lib/index.mjs"
-			},
-			"require": {
-				"types": "./dist/id-compressor-alpha.d.ts",
-				"default": "./dist/index.js"
-			}
-		},
-		"./beta": {
-			"import": {
-				"types": "./lib/id-compressor-beta.d.mts",
-				"default": "./lib/index.mjs"
-			},
-			"require": {
-				"types": "./dist/id-compressor-beta.d.ts",
-				"default": "./dist/index.js"
-			}
-		},
-		"./internal": {
-			"import": {
-				"types": "./lib/index.d.mts",
-				"default": "./lib/index.mjs"
-			},
-			"require": {
-				"types": "./dist/index.d.ts",
-				"default": "./dist/index.js"
-			}
-		},
-		"./public": {
-			"import": {
-				"types": "./lib/id-compressor-public.d.mts",
-				"default": "./lib/index.mjs"
-			},
-			"require": {
-				"types": "./dist/id-compressor-public.d.ts",
 				"default": "./dist/index.js"
 			}
 		}
@@ -75,12 +35,10 @@
 		"build:compile": "fluid-build . --task compile",
 		"build:docs": "fluid-build . --task api",
 		"build:esnext": "tsc-multi --config ../../../common/build/build-common/tsc-multi.esm.json",
-		"build:genver": "gen-version",
-		"build:test": "tsc --project ./src/test/tsconfig.json",
-		"check:are-the-types-wrong": "attw --pack . --entrypoints .",
+		"check:are-the-types-wrong": "attw --pack",
 		"check:release-tags": "api-extractor run --local --config ./api-extractor-lint.json",
 		"ci:build:docs": "api-extractor run",
-		"clean": "rimraf --glob dist lib \"**/*.tsbuildinfo\" \"**/*.build.log\" _api-extractor-temp nyc",
+		"clean": "rimraf --glob _api-extractor-temp dist lib \"**/*.tsbuildinfo\" \"**/*.build.log\" nyc",
 		"eslint": "eslint --format stylish src",
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
 		"format": "npm run prettier:fix",
@@ -88,13 +46,7 @@
 		"lint:fix": "npm run prettier:fix && npm run eslint:fix",
 		"prettier": "prettier --check . --cache --ignore-path ../../../.prettierignore",
 		"prettier:fix": "prettier --write . --cache --ignore-path ../../../.prettierignore",
-		"test": "npm run test:mocha",
-		"test:benchmark:report": "mocha --timeout 999999 --perfMode --parentProcess --fgrep @Benchmark --reporter @fluid-tools/benchmark/dist/MochaReporter.js \"./dist/**/*.perf.spec.*js\"",
-		"test:coverage": "c8 npm test",
-		"test:mocha": "mocha --ignore \"dist/test/types/*\" --recursive dist/test -r node_modules/@fluidframework/mocha-test-setup",
-		"test:mocha:verbose": "cross-env FLUID_TEST_VERBOSE=1 npm run test:mocha",
-		"tsc": "tsc",
-		"tsc:watch": "tsc --watch"
+		"tsc": "tsc"
 	},
 	"c8": {
 		"all": true,
@@ -116,37 +68,27 @@
 		],
 		"temp-directory": "nyc/.nyc_output"
 	},
-	"dependencies": {
-		"@fluid-internal/client-utils": "workspace:~",
-		"@fluid-internal/sorted-btree": "workspace:~",
-		"@fluidframework/core-interfaces": "workspace:~",
-		"@fluidframework/core-utils": "workspace:~",
-		"@fluidframework/telemetry-utils": "workspace:~",
-		"uuid": "^9.0.0"
-	},
+	"dependencies": {},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.13.3",
-		"@fluid-private/stochastic-test-utils": "workspace:~",
-		"@fluid-tools/benchmark": "^0.48.0",
 		"@fluid-tools/build-cli": "0.29.0-225750",
 		"@fluidframework/build-common": "^2.0.3",
 		"@fluidframework/build-tools": "0.29.0-225750",
 		"@fluidframework/eslint-config-fluid": "^3.2.0",
-		"@fluidframework/id-compressor-previous": "npm:@fluidframework/id-compressor@2.0.0-internal.8.0.0",
-		"@fluidframework/mocha-test-setup": "workspace:~",
 		"@microsoft/api-extractor": "^7.38.3",
-		"@types/mocha": "^9.1.1",
-		"@types/uuid": "^9.0.2",
+		"@types/bintrees": "^1.0.2",
+		"@types/collections": "^5.0.2",
+		"@types/node": "^18.19.0",
+		"bintrees": "^1.0.2",
 		"c8": "^8.0.1",
-		"copyfiles": "^2.4.1",
-		"cross-env": "^7.0.3",
+		"collections": "^5.1.11",
+		"concurrently": "^8.2.1",
 		"eslint": "~8.50.0",
-		"mocha": "^10.2.0",
-		"mocha-json-output-reporter": "^2.0.1",
-		"mocha-multi-reporters": "^1.5.1",
-		"moment": "^2.21.0",
+		"eslint-config-prettier": "~9.0.0",
+		"functional-red-black-tree": "^1.0.1",
 		"prettier": "~3.0.3",
 		"rimraf": "^4.4.0",
+		"testpack-cli": "^1.1.4",
 		"tsc-multi": "^1.1.0",
 		"typescript": "~5.1.6"
 	},
@@ -163,6 +105,6 @@
 		}
 	},
 	"typeValidation": {
-		"broken": {}
+		"enabled": "false"
 	}
 }

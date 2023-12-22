@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { BTree } from "sorted-btree";
+import { BTree } from "@fluid-internal/sorted-btree";
 import { createEmitter, ISubscribable } from "../../events";
 import { compareStrings } from "../../util";
 import {

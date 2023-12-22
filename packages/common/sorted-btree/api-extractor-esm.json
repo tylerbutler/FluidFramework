@@ -1,0 +1,21 @@
+{
+	"$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+	"extends": "../../../common/build/build-common/api-extractor-base-esm.json",
+	"messages": {
+		// We copied the code from https://github.com/qwertie/btree-typescript verbatim, just applied Prettier to it.
+		// It's very non-compliant with our rules, so ignore all issues for now because otherwise we risk introducing bugs.
+		"tsdocMessageReporting": {
+			"default": {
+				"logLevel": "none"
+			}
+		},
+		"extractorMessageReporting": {
+			"ae-missing-release-tag": {
+				"logLevel": "none"
+			},
+			"ae-forgotten-export": {
+				"logLevel": "none"
+			}
+		}
+	}
+}

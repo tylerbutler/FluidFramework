@@ -1,0 +1,6 @@
+# We copied the code from https://github.com/qwertie/btree-typescript verbatim, just applied Prettier to it.
+# It's very non-compliant with our rules, so ignore all issues for now because otherwise we risk introducing bugs.
+src/b+tree.ts
+src/benchmarks.ts
+src/sorted-array.ts
+src/interfaces.ts
