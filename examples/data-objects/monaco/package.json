@@ -59,7 +59,7 @@
 		"html-loader": "^3.1.0",
 		"loader-utils": "^1.1.0",
 		"monaco-editor-webpack-plugin": "^6.0.0",
-		"prettier": "~3.0.3",
+		"prettier": "4.0.0-alpha.8",
 		"rimraf": "^4.4.0",
 		"sass": "^1.42.1",
 		"sass-loader": "^7.1.0",

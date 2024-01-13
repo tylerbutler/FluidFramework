@@ -73,7 +73,7 @@
 		"copyfiles": "^2.4.1",
 		"eslint": "~8.50.0",
 		"eslint-plugin-deprecation": "~2.0.0",
-		"prettier": "~3.0.3",
+		"prettier": "4.0.0-alpha.8",
 		"rimraf": "^4.4.0",
 		"tsc-multi": "^1.1.0",
 		"typescript": "~5.1.6"

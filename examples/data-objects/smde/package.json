@@ -68,7 +68,7 @@
 		"@types/simplemde": "^1.11.7",
 		"css-loader": "^1.0.0",
 		"eslint": "~8.50.0",
-		"prettier": "~3.0.3",
+		"prettier": "4.0.0-alpha.8",
 		"rimraf": "^4.4.0",
 		"style-loader": "^1.0.0",
 		"ts-loader": "^9.3.0",

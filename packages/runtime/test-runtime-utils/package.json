@@ -120,7 +120,7 @@
 		"mocha-json-output-reporter": "^2.0.1",
 		"mocha-multi-reporters": "^1.5.1",
 		"moment": "^2.21.0",
-		"prettier": "~3.0.3",
+		"prettier": "4.0.0-alpha.8",
 		"rimraf": "^4.4.0",
 		"typescript": "~5.1.6"
 	},

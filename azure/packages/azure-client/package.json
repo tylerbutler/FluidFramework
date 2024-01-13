@@ -135,7 +135,7 @@
 		"eslint": "~8.50.0",
 		"eslint-config-prettier": "~9.0.0",
 		"mocha": "^10.2.0",
-		"prettier": "~3.0.3",
+		"prettier": "4.0.0-alpha.8",
 		"rimraf": "^4.4.0",
 		"start-server-and-test": "^1.11.7",
 		"tsc-multi": "^1.1.0",
