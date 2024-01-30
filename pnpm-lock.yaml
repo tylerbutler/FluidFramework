@@ -6378,7 +6378,6 @@ importers:
       '@fluidframework/core-utils': workspace:~
       '@fluidframework/datastore-definitions': workspace:~
       '@fluidframework/driver-utils': workspace:~
-      '@fluidframework/eslint-config-fluid': ^3.3.0
       '@fluidframework/map-previous': npm:@fluidframework/map@2.0.0-internal.8.0.0
       '@fluidframework/merge-tree': workspace:~
       '@fluidframework/mocha-test-setup': workspace:~
@@ -6396,6 +6395,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.50.0
+      eslint-plugin-fluid-internal: link:../../../common/build/eslint-plugin-fluid-internal
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -6427,7 +6427,6 @@ importers:
       '@fluid-tools/build-cli': 0.29.0_mhw3tufvtaceew37hrkkevjcli
       '@fluidframework/build-common': 2.0.3
       '@fluidframework/build-tools': 0.29.0_@types+node@18.19.1
-      '@fluidframework/eslint-config-fluid': 3.3.0_loebgezstcsvd2poh2d55fifke
       '@fluidframework/map-previous': /@fluidframework/map/2.0.0-internal.8.0.0
       '@fluidframework/mocha-test-setup': link:../../test/mocha-test-setup
       '@fluidframework/test-runtime-utils': link:../../runtime/test-runtime-utils
@@ -6439,6 +6438,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.50.0
+      eslint-plugin-fluid-internal: link:../../../common/build/eslint-plugin-fluid-internal
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0

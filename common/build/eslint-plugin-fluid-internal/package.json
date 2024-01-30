@@ -1,0 +1,51 @@
+{
+  "name": "eslint-plugin-fluid-internal",
+  "version": "1.0.0",
+  "description": "Fluid internal eslint rules",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin"
+  ],
+  "author": "microsoft",
+  "main": "./index.js",
+  "exports": "./index.js",
+  "scripts": {
+    "lint": "npm-run-all \"lint:*\"",
+    "lint:eslint-docs": "npm-run-all \"update:eslint-docs -- --check\"",
+    "lint:js": "eslint .",
+    "test": "mocha tests --recursive",
+    "update:eslint-docs": "eslint-doc-generator"
+  },
+  "dependencies": {
+    "@rushstack/eslint-plugin": "~0.13.0",
+		"@rushstack/eslint-plugin-security": "~0.7.0",
+		"@typescript-eslint/eslint-plugin": "~6.7.2",
+		"@typescript-eslint/parser": "~6.7.2",
+		"eslint-config-prettier": "~9.0.0",
+		"eslint-import-resolver-typescript": "~3.6.1",
+		"eslint-plugin-eslint-comments": "~3.2.0",
+		"eslint-plugin-import": "npm:eslint-plugin-i@~2.29.0",
+		"eslint-plugin-jsdoc": "~46.8.1",
+		"eslint-plugin-promise": "~6.1.1",
+		"eslint-plugin-react": "~7.33.2",
+		"eslint-plugin-react-hooks": "~4.6.0",
+		"eslint-plugin-tsdoc": "~0.2.17",
+		"eslint-plugin-unicorn": "~48.0.1",
+		"eslint-plugin-unused-imports": "~3.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "~3.0.0",
+    "eslint": "^8.50.0",
+    "eslint-doc-generator": "^1.0.0",
+    "eslint-plugin-eslint-plugin": "^5.0.0",
+    "mocha": "^10.0.0"
+  },
+  "engines": {
+    "node": ">= 18.0.0"
+  },
+  "peerDependencies": {
+    "eslint": ">=7"
+  },
+  "license": "ISC"
+}

@@ -25,8 +25,6 @@ export interface IValueChanged {
 	/**
 	 * The value that was stored at the key prior to the change.
 	 */
-	// TODO: Use `unknown` instead (breaking change).
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	previousValue: any;
 }
 
