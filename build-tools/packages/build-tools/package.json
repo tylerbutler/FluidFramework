@@ -10,7 +10,30 @@
 	},
 	"license": "MIT",
 	"author": "Microsoft and contributors",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./lib/index.d.ts",
+				"default": "./lib/index.js"
+			},
+			"require": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			}
+		},
+		"./npmPackages": {
+			"import": {
+				"types": "./lib/repoPolicyCheck/handlers/npmPackages.d.ts",
+				"default": "./lib/repoPolicyCheck/handlers/npmPackages.js"
+			},
+			"require": {
+				"types": "./dist/repoPolicyCheck/handlers/npmPackages.d.ts",
+				"default": "./dist/repoPolicyCheck/handlers/npmPackages.js"
+			}
+		}
+	},
 	"main": "dist/index.js",
+	"module": "lib/index.js",
 	"types": "dist/index.d.ts",
 	"bin": {
 		"fluid-build": "bin/fluid-build",
@@ -21,7 +44,8 @@
 	"scripts": {
 		"build": "concurrently npm:build:compile npm:lint",
 		"build:commonjs": "npm run tsc && npm run build:test",
-		"build:compile": "npm run build:commonjs",
+		"build:compile": "npm run build:commonjs && npm run build:esnext",
+		"build:esnext": "tsc --project ./tsconfig.esnext.json",
 		"build:test": "tsc --project ./src/test/tsconfig.json",
 		"clean": "rimraf --glob dist lib \"**/*.tsbuildinfo\" \"**/*.build.log\" nyc",
 		"compile": "fluid-build . --task compile",

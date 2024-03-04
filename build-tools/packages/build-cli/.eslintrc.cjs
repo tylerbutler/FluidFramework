@@ -31,6 +31,8 @@ module.exports = {
 			},
 		],
 
+		"import/no-deprecated": "off",
+
 		// Superseded by prettier and @trivago/prettier-plugin-sort-imports
 		"import/order": "off",
 
