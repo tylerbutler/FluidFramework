@@ -6,6 +6,11 @@ overrides:
   qs: ^6.11.0
   sharp: ^0.33.2
 
+patchedDependencies:
+  jssm@5.97.1:
+    hash: o7ae4pa54bihz3jcdiij7iyi4q
+    path: patches/jssm@5.97.1.patch
+
 importers:
 
   .:
@@ -112,8 +117,8 @@ importers:
       human-id: ^4.0.0
       inquirer: ^8.2.5
       json5: ^2.2.3
-      jssm: ^5.89.2
-      jssm-viz-cli: ^5.89.2
+      jssm: ^5.97.1
+      jssm-viz-cli: ^5.97.1
       latest-version: ^5.1.0
       minimatch: ^7.4.6
       mocha: ^10.2.0
@@ -166,7 +171,7 @@ importers:
       human-id: 4.0.0
       inquirer: 8.2.5
       json5: 2.2.3
-      jssm: 5.97.1
+      jssm: 5.97.1_o7ae4pa54bihz3jcdiij7iyi4q
       latest-version: 5.1.0
       minimatch: 7.4.6
       node-fetch: 2.6.9
@@ -1671,7 +1676,7 @@ packages:
       gray-matter: 4.0.3
       human-id: 4.0.0
       inquirer: 8.2.5
-      jssm: 5.97.1
+      jssm: 5.97.1_o7ae4pa54bihz3jcdiij7iyi4q
       latest-version: 5.1.0
       minimatch: 7.4.6
       node-fetch: 2.6.9
@@ -8674,20 +8679,21 @@ packages:
     dependencies:
       better_git_changelog: 1.6.2
       eslint: 8.57.0
-      jssm: 5.97.1
+      jssm: 5.97.1_o7ae4pa54bihz3jcdiij7iyi4q
       reduce-to-639-1: 1.1.0
       text_audit: 0.9.3
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /jssm/5.97.1:
+  /jssm/5.97.1_o7ae4pa54bihz3jcdiij7iyi4q:
     resolution: {integrity: sha512-3bxWNQfEy6ktC3CCAfBJRaWoLpOOpcUYCByE6NidGmGAH+Czn9Au4+dNXOj9/ye0j0HqtiIT9umwWCc8e3rvLQ==}
     engines: {node: '>=10.0.0'}
     dependencies:
       better_git_changelog: 1.6.2
       circular_buffer_js: 1.10.0
       reduce-to-639-1: 1.1.0
+    patched: true
 
   /jsx-ast-utils/3.3.3:
     resolution: {integrity: sha512-fYQHZTZ8jSfmWZ0iyzfwiU4WDX4HpHbMCZ3gPlWYiCl3BoeOTsqKBqnTVfH2rYT7eP5c3sVbeSPHnnJOaTrWiw==}

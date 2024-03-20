@@ -1,8 +1,5 @@
 {
-	"extends": [
-		"../../../common/build/build-common/tsconfig.base.json",
-		"../../../common/build/build-common/tsconfig.node16.json",
-	],
+	"extends": "../../../common/build/build-common/tsconfig.node16.json",
 	"include": ["src/**/*"],
 	"compilerOptions": {
 		"rootDir": "./src",
@@ -12,8 +9,8 @@
 		"noUnusedLocals": true,
 		"declaration": true,
 		"strict": true,
-		// "module": "ES2020",
-		// "moduleResolution": "Bundler",
+		"module": "ES2020",
+		"moduleResolution": "Bundler",
 		// "module": "Node16",
 		// "moduleResolution": "Node16",
 	},
