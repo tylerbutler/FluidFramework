@@ -1,43 +1,40 @@
 {
-	"name": "build-cli-esm",
+	"name": "@fluid-tools/build-cli-esm",
 	"version": "0.4.24",
+	"private": true,
 	"description": "Fluid Framework build tools (ESM)",
-	"keywords": ["oclif"],
-	"homepage": "https://github.com/packages/build-cli-esm",
+	"keywords": [
+		"oclif"
+	],
+	"homepage": "https://fluidframework.com",
 	"bugs": "https://github.com/packages/build-cli-esm/issues",
-	"repository": "packages/build-cli-esm",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/microsoft/FluidFramework.git",
+		"directory": "build-tools/packages/build-cli-esm"
+	},
 	"license": "MIT",
-	"author": "Microsoft",
+	"author": "Microsoft and contributors",
 	"type": "module",
 	"exports": "./lib/index.js",
 	"types": "dist/index.d.ts",
 	"bin": {
 		"flub": "./bin/run.js"
 	},
-	"files": ["/bin", "/dist", "/oclif.manifest.json"],
+	"files": [
+		"/bin",
+		"/dist",
+		"/oclif.manifest.json"
+	],
 	"scripts": {
-		"build": "shx rm -rf dist && tsc -b",
+		"clean": "shx rm -rf dist",
 		"lint": "eslint . --ext .ts",
-		"prepack": "yarn build && oclif manifest && oclif readme",
 		"postpack": "shx rm -f oclif.manifest.json",
-		"prepare": "yarn build",
 		"test": "mocha --forbid-only \"test/**/*.test.ts\"",
-		"posttest": "yarn lint",
-		"version": "oclif readme && git add README.md"
-	},
-	"oclif": {
-		"bin": "flub",
-		"commands": "./dist/commands",
-		"dirname": "flub",
-		"plugins": ["@oclif/plugin-help", "@oclif/plugin-plugins"],
-		"topicSeparator": " ",
-		"topics": {
-			"hello": {
-				"description": "Say hello to the world and others"
-			}
-		}
+		"tsc": "tsc -b"
 	},
 	"dependencies": {
+    "@fluid-tools/build-cli": "workspace:~",
 		"@oclif/core": "^3",
 		"@oclif/plugin-help": "^6",
 		"@oclif/plugin-plugins": "^4"
@@ -61,5 +58,21 @@
 	},
 	"engines": {
 		"node": ">=18.0.0"
+	},
+	"oclif": {
+		"bin": "flub",
+		"commands": "./dist/commands",
+		"dirname": "flub",
+		"plugins": [
+			"@fluid-tools/build-cli",
+			"@oclif/plugin-help",
+			"@oclif/plugin-plugins"
+		],
+		"topicSeparator": " ",
+		"topics": {
+			"hello": {
+				"description": "Say hello to the world and others"
+			}
+		}
 	}
 }
