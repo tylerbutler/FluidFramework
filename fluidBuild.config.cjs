@@ -220,17 +220,15 @@ module.exports = {
 				// These files all require a node shebang at the top of the file.
 				"azure/packages/azure-local-service/src/index.ts",
 				"experimental/PropertyDDS/packages/property-query/test/get_config.js",
+				"build-tools/.*/bin/dev.js",
+				"build-tools/.*/bin/run.js",
 			],
 			"no-js-file-extensions": [
 				// PropertyDDS uses .js files which should be renamed eventually.
 				"experimental/PropertyDDS/.*",
-				"build-tools/packages/build-cli/bin/dev.js",
-				"build-tools/packages/build-cli/bin/run.js",
+				"build-tools/.*/bin/dev.js",
+				"build-tools/.*/bin/run.js",
 				"build-tools/packages/build-cli/test/helpers/init.js",
-				"build-tools/packages/readme-command/bin/dev.js",
-				"build-tools/packages/readme-command/bin/run.js",
-				"build-tools/packages/version-tools/bin/dev.js",
-				"build-tools/packages/version-tools/bin/run.js",
 				"common/build/build-common/gen_version.js",
 				"common/build/eslint-config-fluid/.*",
 				"common/lib/common-utils/jest-puppeteer.config.js",
