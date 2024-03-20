@@ -1,7 +1,7 @@
 {
 	"extends": [
 		"../../../common/build/build-common/tsconfig.base.json",
-		"../../../common/build/build-common/tsconfig.node16.json",
+		"../../../common/build/build-common/tsconfig.esm-only.json",
 	],
 	"include": ["src/**/*"],
 	"compilerOptions": {
@@ -16,5 +16,8 @@
 		// "moduleResolution": "Bundler",
 		// "module": "Node16",
 		// "moduleResolution": "Node16",
+	},
+	"ts-node": {
+		"esm": true,
 	},
 }
