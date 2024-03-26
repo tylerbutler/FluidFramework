@@ -55,6 +55,7 @@
 			"skipFiles": ["<node_internals>/**"],
 			"type": "node",
 			"args": ["check", "policy"],
+			"outFiles": ["${workspaceFolder}/lib/**/*.js"],
 		},
 		{
 			"name": "flub check policy --fix",
