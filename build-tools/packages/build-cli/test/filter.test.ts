@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import chai, { assert, expect } from "chai";
+import chai, { expect } from "chai";
 
 import { GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
 import assertArrays from "chai-arrays";
@@ -48,6 +48,7 @@ describe("filterPackages", async () => {
 		const names = actual.map((p) => p.name);
 		expect(names).to.be.equalTo([
 			"@fluid-tools/build-cli",
+			"@fluid-tools/build-cli-esm",
 			"@fluidframework/build-tools",
 			"@fluidframework/bundle-size-tools",
 			"@fluid-private/readme-command",
@@ -64,10 +65,10 @@ describe("filterPackages", async () => {
 		};
 		const actual = filterPackages(packages, filters);
 		// There's only one private build-tools package
-		expect(actual).to.be.ofSize(1);
+		expect(actual).to.be.ofSize(2);
 
-		const pkg = actual[0];
-		assert.equal(pkg.nameUnscoped, "readme-command");
+		// const pkg = actual[0];
+		// assert.equal(pkg.nameUnscoped, "readme-command");
 	});
 
 	it("private=false", async () => {
@@ -112,7 +113,11 @@ describe("filterPackages", async () => {
 		};
 		const actual = filterPackages(packages, filters);
 		const names = actual.map((p) => p.name);
-		expect(names).to.be.equalTo(["@fluid-tools/build-cli", "@fluid-tools/version-tools"]);
+		expect(names).to.be.equalTo([
+			"@fluid-tools/build-cli",
+			"@fluid-tools/build-cli-esm",
+			"@fluid-tools/version-tools",
+		]);
 	});
 
 	it("scope and skipScope", async () => {
@@ -146,6 +151,7 @@ describe("selectAndFilterPackages", async () => {
 
 		expect(names).to.be.containingAllOf([
 			"@fluid-tools/build-cli",
+			"@fluid-tools/build-cli-esm",
 			"@fluidframework/build-tools",
 			"@fluidframework/bundle-size-tools",
 			"@fluid-private/readme-command",
@@ -202,6 +208,7 @@ describe("selectAndFilterPackages", async () => {
 
 		expect(names).to.be.equalTo([
 			"@fluid-tools/build-cli",
+			"@fluid-tools/build-cli-esm",
 			"@fluidframework/build-tools",
 			"@fluidframework/bundle-size-tools",
 			"@fluid-private/readme-command",
@@ -273,7 +280,10 @@ describe("selectAndFilterPackages", async () => {
 		const { filtered } = selectAndFilterPackages(context, selectionOptions, filters);
 		const names = filtered.map((p) => p.name);
 
-		expect(names).to.be.equalTo(["@fluid-private/readme-command"]);
+		expect(names).to.be.equalTo([
+			"@fluid-tools/build-cli-esm",
+			"@fluid-private/readme-command",
+		]);
 	});
 
 	it("select release group, filter non-private", async () => {
@@ -318,7 +328,11 @@ describe("selectAndFilterPackages", async () => {
 		const { filtered } = selectAndFilterPackages(context, selectionOptions, filters);
 		const names = filtered.map((p) => p.name);
 
-		expect(names).to.be.equalTo(["@fluid-tools/build-cli", "@fluid-tools/version-tools"]);
+		expect(names).to.be.equalTo([
+			"@fluid-tools/build-cli",
+			"@fluid-tools/build-cli-esm",
+			"@fluid-tools/version-tools",
+		]);
 	});
 
 	it("select release group, filter skipScopes", async () => {

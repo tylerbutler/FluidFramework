@@ -46,8 +46,8 @@ describe("flub test-only-filter", () => {
 		.it(`--releaseGroup selector`, (ctx) => {
 			const output: jsonOutput = JSON.parse(ctx.stdout);
 			const { selected, filtered } = output;
-			expect(selected).to.be.ofSize(5);
-			expect(filtered).to.be.ofSize(5);
+			expect(selected).to.be.ofSize(6);
+			expect(filtered).to.be.ofSize(6);
 		});
 
 	test

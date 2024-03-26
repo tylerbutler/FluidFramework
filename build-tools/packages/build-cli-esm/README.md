@@ -40,6 +40,7 @@ USAGE
 * [`flub info`](docs/info.md) - Get info about the repo, release groups, and packages.
 * [`flub list`](docs/list.md) - List packages in a release group in topological order.
 * [`flub merge`](docs/merge.md) - Sync branches depending on the batch size passed
+* [`flub modify`](docs/modify.md) - Modify commands are used to modify projects to add or remove dependencies, update Fluid imports, etc.
 * [`flub plugins`](docs/plugins.md) - List installed plugins.
 * [`flub release`](docs/release.md) - Release commands are used to manage the Fluid release process.
 * [`flub rename-types`](docs/rename-types.md) - Renames type declaration files from .d.ts to .d.mts.
