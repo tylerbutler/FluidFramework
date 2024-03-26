@@ -119,7 +119,7 @@
 		"@types/fs-extra": "^8.1.2",
 		"@types/inquirer": "^8.2.6",
 		"@types/json5": "^2.2.0",
-		"@types/mocha": "^9.1.1",
+		"@types/mocha": "^10.0.6",
 		"@types/node": "^18.18.6",
 		"@types/node-fetch": "^2.5.10",
 		"@types/prettier": "^2.7.3",
@@ -135,19 +135,19 @@
 		"eslint": "~8.55.0",
 		"eslint-config-oclif": "^5.1.1",
 		"eslint-config-oclif-typescript": "^3.1.3",
-		"eslint-config-prettier": "~9.0.0",
+		"eslint-config-prettier": "~9.1.0",
 		"jssm-viz-cli": "^5.89.2",
 		"mocha": "^10.2.0",
 		"mocha-json-output-reporter": "^2.1.0",
 		"mocha-multi-reporters": "^1.5.1",
 		"moment": "^2.29.4",
 		"rimraf": "^4.4.1",
-		"ts-node": "^10.9.1",
+		"ts-node": "^10.9.2",
 		"tslib": "^2.6.0",
 		"typescript": "~5.1.6"
 	},
 	"engines": {
-		"node": ">=14.17.0"
+		"node": ">=18.0.0"
 	},
 	"fluidBuild": {
 		"tasks": {
