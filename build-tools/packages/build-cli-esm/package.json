@@ -19,7 +19,7 @@
 	"bin": {
 		"flub": "./bin/run.js"
 	},
-	"files": ["/bin", "/dist", "/oclif.manifest.json"],
+	"files": ["/bin", "/lib", "/oclif.manifest.json"],
 	"scripts": {
 		"build": "concurrently npm:build:compile npm:lint && concurrently npm:build:docs npm:build:diagrams",
 		"build:compile": "npm run tsc && npm run build:test && npm run build:copy && npm run build:readme",
@@ -78,7 +78,7 @@
 	},
 	"oclif": {
 		"bin": "flub",
-		"commands": "./dist/commands",
+		"commands": "./lib/commands",
 		"dirname": "flub",
 		"plugins": [
 			"@fluid-tools/build-cli",
