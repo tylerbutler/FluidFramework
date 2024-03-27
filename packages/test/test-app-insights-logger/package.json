@@ -39,6 +39,7 @@
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
 		"format": "fluid-build --task format .",
 		"format:biome": "biome check --apply .",
+		"format:imports": "eslint-filtered-fix --rule import/order src",
 		"format:prettier": "prettier --write . --cache --ignore-path ../../../.prettierignore",
 		"full": "node ./dist/nodeStressTest.js --profile full",
 		"lint": "fluid-build . --task lint",
@@ -59,6 +60,7 @@
 		"@fluidframework/eslint-config-fluid": "^5.1.0",
 		"copyfiles": "^2.4.1",
 		"eslint": "~8.55.0",
+		"eslint-filtered-fix": "^0.3.0",
 		"prettier": "~3.0.3",
 		"rimraf": "^4.4.0",
 		"typescript": "~5.1.6"

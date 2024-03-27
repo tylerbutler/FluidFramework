@@ -82,6 +82,7 @@ importers:
       '@fluidframework/eslint-config-fluid': ^5.1.0
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       pm2: ^5.3.1
       prettier: ~3.0.3
       rimraf: ^4.4.0
@@ -97,6 +98,7 @@ importers:
       '@fluidframework/eslint-config-fluid': 5.1.0_bpztyfltmpuv6lhsgzfwtmxhte
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       pm2: 5.3.1
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -119,6 +121,7 @@ importers:
       copyfiles: ^2.4.1
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       jsrsasign: ^11.0.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
@@ -142,6 +145,7 @@ importers:
       copyfiles: 2.4.1
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -180,6 +184,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       js-yaml: ^4.1.0
       mocha: ^10.2.0
       nock: ^13.3.3
@@ -230,6 +235,7 @@ importers:
       c8: 8.0.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       nock: 13.4.0
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -254,6 +260,7 @@ importers:
       '@fluidframework/runtime-utils': workspace:~
       '@types/node': ^18.19.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       html-webpack-plugin: ^5.5.0
       prettier: ~3.0.3
       process: ^0.11.10
@@ -283,6 +290,7 @@ importers:
       '@fluidframework/eslint-config-fluid': 5.1.0_bpztyfltmpuv6lhsgzfwtmxhte
       '@types/node': 18.19.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       prettier: 3.0.3
       process: 0.11.10
@@ -318,6 +326,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -365,6 +374,7 @@ importers:
       '@types/react-dom': 17.0.25
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -405,6 +415,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -452,6 +463,7 @@ importers:
       clean-webpack-plugin: 4.0.0_webpack@5.89.0
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -505,6 +517,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-loader: ^3.1.0
       html-webpack-plugin: ^5.5.0
@@ -575,6 +588,7 @@ importers:
       cross-env: 7.0.3
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-loader: 3.1.2_webpack@5.89.0
       html-webpack-plugin: 5.5.3_webpack@5.89.0
@@ -620,6 +634,7 @@ importers:
       '@types/node': ^18.19.0
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       fluid-framework: workspace:~
       html-webpack-plugin: ^5.5.0
@@ -663,6 +678,7 @@ importers:
       '@types/node': 18.19.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -705,6 +721,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -749,6 +766,7 @@ importers:
       clean-webpack-plugin: 4.0.0_webpack@5.89.0
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -800,6 +818,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -859,6 +878,7 @@ importers:
       cross-env: 7.0.3
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -899,6 +919,7 @@ importers:
       '@types/react-dom': ^17.0.18
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       jest: ^29.6.2
       jest-environment-puppeteer: ^9.0.2
@@ -937,6 +958,7 @@ importers:
       '@types/react-dom': 17.0.25
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       jest: 29.7.0
       jest-environment-puppeteer: 9.0.2_typescript@5.1.6
@@ -970,6 +992,7 @@ importers:
       '@types/react-dom': ^17.0.18
       best-random: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       moment: ^2.21.0
       prettier: ~3.0.3
       react: ^17.0.1
@@ -997,6 +1020,7 @@ importers:
       '@types/react': 17.0.71
       '@types/react-dom': 17.0.25
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       moment: 2.29.4
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -1026,6 +1050,7 @@ importers:
       '@types/react-dom': ^17.0.18
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       jest: ^29.6.2
       jest-environment-puppeteer: ^9.0.2
@@ -1068,6 +1093,7 @@ importers:
       '@types/react-dom': 17.0.25
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       jest: 29.7.0_@types+node@18.19.1
       jest-environment-puppeteer: 9.0.2_typescript@5.1.6
@@ -1108,6 +1134,7 @@ importers:
       '@types/react-dom': ^17.0.18
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       jest: ^29.6.2
       jest-environment-puppeteer: ^9.0.2
@@ -1150,6 +1177,7 @@ importers:
       '@types/react-dom': 17.0.25
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       jest: 29.7.0_@types+node@18.19.1
       jest-environment-puppeteer: 9.0.2_typescript@5.1.6
@@ -1189,6 +1217,7 @@ importers:
       '@types/react-dom': ^17.0.18
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       jest: ^29.6.2
       jest-environment-puppeteer: ^9.0.2
@@ -1229,6 +1258,7 @@ importers:
       '@types/react-dom': 17.0.25
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       jest: 29.7.0_@types+node@18.19.1
       jest-environment-puppeteer: 9.0.2_typescript@5.1.6
@@ -1268,6 +1298,7 @@ importers:
       c8: ^8.0.1
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       express: ^4.19.2
       fs-extra: ^9.1.0
       prettier: ~3.0.3
@@ -1307,6 +1338,7 @@ importers:
       c8: 8.0.1
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       fs-extra: 9.1.0
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -1341,6 +1373,7 @@ importers:
       '@types/node': ^18.19.0
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -1376,6 +1409,7 @@ importers:
       '@types/node': 18.19.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -1418,6 +1452,7 @@ importers:
       cross-env: ^7.0.3
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       eslint-plugin-jest: ~27.4.2
       eslint-plugin-react: ~7.33.2
       eslint-plugin-react-hooks: ~4.6.0
@@ -1468,6 +1503,7 @@ importers:
       cross-env: 7.0.3
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       eslint-plugin-jest: 27.4.3_oqxbtqzkjhd5hdlnlrx4nuqdoa
       eslint-plugin-react: 7.33.2_eslint@8.55.0
       eslint-plugin-react-hooks: 4.6.0_eslint@8.55.0
@@ -1508,6 +1544,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       jest: ^29.6.2
       jest-environment-puppeteer: ^9.0.2
@@ -1548,6 +1585,7 @@ importers:
       cross-env: 7.0.3
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       jest: 29.7.0_@types+node@18.19.1
       jest-environment-puppeteer: 9.0.2_typescript@5.1.6
@@ -1589,6 +1627,7 @@ importers:
       '@types/react-dom': ^17.0.18
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       jest: ^29.6.2
       jest-environment-puppeteer: ^9.0.2
@@ -1628,6 +1667,7 @@ importers:
       '@types/react-dom': 17.0.25
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       jest: 29.7.0_@types+node@18.19.1
       jest-environment-puppeteer: 9.0.2_typescript@5.1.6
@@ -1671,6 +1711,7 @@ importers:
       copyfiles: ^2.4.1
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       react: ^17.0.1
       rimraf: ^4.4.0
@@ -1709,6 +1750,7 @@ importers:
       copyfiles: 2.4.1
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       style-loader: 1.3.0_webpack@5.89.0
@@ -1737,6 +1779,7 @@ importers:
       '@types/react-dom': ^17.0.18
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       jest: ^29.6.2
       jest-environment-puppeteer: ^9.0.2
@@ -1772,6 +1815,7 @@ importers:
       '@types/react-dom': 17.0.25
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       jest: 29.7.0_@types+node@18.19.1
       jest-environment-puppeteer: 9.0.2_typescript@5.1.6
@@ -1807,6 +1851,7 @@ importers:
       '@types/react-dom': ^17.0.18
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       jest: ^29.6.2
       jest-environment-puppeteer: ^9.0.2
@@ -1844,6 +1889,7 @@ importers:
       '@types/react-dom': 17.0.25
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       jest: 29.7.0
       jest-environment-puppeteer: 9.0.2_typescript@5.1.6
@@ -1877,6 +1923,7 @@ importers:
       '@types/react': ^17.0.44
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       html-loader: ^3.1.0
       loader-utils: ^1.1.0
       monaco-editor: ^0.30.0
@@ -1913,6 +1960,7 @@ importers:
       '@types/react': 17.0.71
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       html-loader: 3.1.2_webpack@5.89.0
       loader-utils: 1.4.2
       monaco-editor-webpack-plugin: 6.0.0_cnfda7b6avp6soqr5gbw6lvubq
@@ -1942,6 +1990,7 @@ importers:
       '@fluidframework/eslint-config-fluid': ^5.1.0
       '@fluidframework/map': workspace:~
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -1957,6 +2006,7 @@ importers:
       '@fluidframework/build-tools': 0.34.0
       '@fluidframework/eslint-config-fluid': 5.1.0_bpztyfltmpuv6lhsgzfwtmxhte
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -1972,6 +2022,7 @@ importers:
       '@types/react': ^17.0.44
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       react: ^17.0.1
       rimraf: ^4.4.0
@@ -1988,6 +2039,7 @@ importers:
       '@types/react': 17.0.71
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -2023,6 +2075,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       jest: ^29.6.2
       jest-environment-puppeteer: ^9.0.2
@@ -2072,6 +2125,7 @@ importers:
       cross-env: 7.0.3
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       jest: 29.7.0_@types+node@18.19.1
       jest-environment-puppeteer: 9.0.2_typescript@5.1.6
@@ -2099,6 +2153,7 @@ importers:
       '@fluidframework/eslint-config-fluid': ^5.1.0
       '@fluidframework/map': workspace:~
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -2112,6 +2167,7 @@ importers:
       '@fluidframework/build-tools': 0.34.0
       '@fluidframework/eslint-config-fluid': 5.1.0_bpztyfltmpuv6lhsgzfwtmxhte
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -2126,6 +2182,7 @@ importers:
       '@fluidframework/eslint-config-fluid': ^5.1.0
       '@types/react': ^17.0.44
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -2139,6 +2196,7 @@ importers:
       '@fluidframework/eslint-config-fluid': 5.1.0_bpztyfltmpuv6lhsgzfwtmxhte
       '@types/react': 17.0.71
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -2153,6 +2211,7 @@ importers:
       '@types/react': ^17.0.44
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       react: ^17.0.1
       rimraf: ^4.4.0
@@ -2168,6 +2227,7 @@ importers:
       '@types/react': 17.0.71
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -2182,6 +2242,7 @@ importers:
       '@types/react': ^17.0.44
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       react: ^17.0.1
       rimraf: ^4.4.0
@@ -2197,6 +2258,7 @@ importers:
       '@types/react': 17.0.71
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -2211,6 +2273,7 @@ importers:
       '@types/react': ^17.0.44
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       react: ^17.0.1
       rimraf: ^4.4.0
@@ -2226,6 +2289,7 @@ importers:
       '@types/react': 17.0.71
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -2261,6 +2325,7 @@ importers:
       copyfiles: ^2.4.1
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       orderedmap: ^2.1.0
       prettier: ~3.0.3
       prosemirror-example-setup: ^1.2.1
@@ -2323,6 +2388,7 @@ importers:
       copyfiles: 2.4.1
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       style-loader: 1.3.0_webpack@5.89.0
@@ -2358,6 +2424,7 @@ importers:
       '@types/simplemde': ^1.11.7
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       react: ^17.0.1
       rimraf: ^4.4.0
@@ -2396,6 +2463,7 @@ importers:
       '@types/simplemde': 1.11.11
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       style-loader: 1.3.0_webpack@5.89.0
@@ -2435,6 +2503,7 @@ importers:
       cross-env: ^7.0.3
       debug: ^4.3.4
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -2471,6 +2540,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -2504,6 +2574,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       jest: ^29.6.2
       jest-environment-puppeteer: ^9.0.2
@@ -2551,6 +2622,7 @@ importers:
       cross-env: 7.0.3
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       jest: 29.7.0_@types+node@18.19.1
       jest-environment-puppeteer: 9.0.2_typescript@5.1.6
@@ -2599,6 +2671,7 @@ importers:
       css-loader: ^1.0.0
       debug: ^4.3.4
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       esm-loader-css: ^1.0.4
       file-loader: ^3.0.1
       html-loader: ^3.1.0
@@ -2656,6 +2729,7 @@ importers:
       cross-env: 7.0.3
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       esm-loader-css: 1.0.6
       file-loader: 3.0.1_webpack@5.89.0
       html-loader: 3.1.2_webpack@5.89.0
@@ -2723,6 +2797,7 @@ importers:
       css-loader: ^1.0.0
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       express: ^4.19.2
       good-fences: ^1.1.1
@@ -2803,6 +2878,7 @@ importers:
       cross-env: 7.0.3
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       good-fences: 1.2.0
       html-webpack-plugin: 5.5.3_webpack@5.89.0
@@ -2853,6 +2929,7 @@ importers:
       clean-webpack-plugin: ^4.0.0
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       events_pkg: npm:events@^3.1.0
       expect-puppeteer: ^9.0.2
       fluid-framework: workspace:~
@@ -2905,6 +2982,7 @@ importers:
       clean-webpack-plugin: 4.0.0_webpack@5.89.0
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -2941,6 +3019,7 @@ importers:
       '@types/react-dom': ^17.0.18
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       fluid-framework: workspace:~
       html-webpack-plugin: ^5.5.0
       prettier: ~3.0.3
@@ -2976,6 +3055,7 @@ importers:
       '@types/react': 17.0.71
       '@types/react-dom': 17.0.25
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       prettier: 3.0.3
       process: 0.11.10
@@ -3011,6 +3091,7 @@ importers:
       '@mixer/webpack-bundle-compare': ^0.1.0
       '@types/node': ^18.19.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       fluid-framework: workspace:~
       prettier: ~3.0.3
       puppeteer: ^22.2.0
@@ -3047,6 +3128,7 @@ importers:
       '@mixer/webpack-bundle-compare': 0.1.1
       '@types/node': 18.19.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       puppeteer: 22.2.0_typescript@5.1.6
       rimraf: 4.4.1
@@ -3094,6 +3176,7 @@ importers:
       '@types/uuid': ^9.0.2
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       react: ^17.0.1
       react-dom: ^17.0.1
@@ -3140,6 +3223,7 @@ importers:
       '@types/uuid': 9.0.7
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -3182,6 +3266,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       express: ^4.19.2
       fs-extra: ^9.1.0
       isomorphic-fetch: ^3.0.0
@@ -3244,6 +3329,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       fs-extra: 9.1.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
@@ -3283,6 +3369,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -3328,6 +3415,7 @@ importers:
       clean-webpack-plugin: 4.0.0_webpack@5.89.0
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -3384,6 +3472,7 @@ importers:
       css-loader: ^1.0.0
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -3446,6 +3535,7 @@ importers:
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -3503,6 +3593,7 @@ importers:
       css-loader: ^1.0.0
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -3565,6 +3656,7 @@ importers:
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -3616,6 +3708,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -3676,6 +3769,7 @@ importers:
       cross-env: 7.0.3
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0
@@ -3721,6 +3815,7 @@ importers:
       clean-webpack-plugin: ^4.0.0
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -3765,6 +3860,7 @@ importers:
       clean-webpack-plugin: 4.0.0_webpack@5.89.0
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -3802,6 +3898,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -3841,6 +3938,7 @@ importers:
       clean-webpack-plugin: 4.0.0_webpack@5.89.0
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -3881,6 +3979,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -3928,6 +4027,7 @@ importers:
       clean-webpack-plugin: 4.0.0_webpack@5.89.0
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0_@types+node@18.19.1
@@ -3990,6 +4090,7 @@ importers:
       cross-env: ^7.0.3
       css-loader: ^1.0.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       expect-puppeteer: ^9.0.2
       html-webpack-plugin: ^5.5.0
       jest: ^29.6.2
@@ -4063,6 +4164,7 @@ importers:
       cross-env: 7.0.3
       css-loader: 1.0.1_webpack@5.89.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       jest: 29.7.0
@@ -4091,6 +4193,7 @@ importers:
       '@fluidframework/build-tools': ^0.34.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -4101,6 +4204,7 @@ importers:
       '@fluidframework/build-tools': 0.34.0
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -4139,6 +4243,7 @@ importers:
       chai: ^4.2.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       jest: ^29.6.2
       jest-junit: ^10.0.0
       jsdoc: 3.6.7
@@ -4187,6 +4292,7 @@ importers:
       chai: 4.3.10
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       jest: 29.7.0_@types+node@18.19.1
       jest-junit: 10.0.0
       jsdoc: 3.6.7
@@ -4219,6 +4325,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       fastest-json-copy: ^1.0.1
       lodash: ^4.17.21
       mocha: ^10.2.0
@@ -4257,6 +4364,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -4290,6 +4398,7 @@ importers:
       chai: ^4.2.0
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       events_pkg: npm:events@^3.1.0
       fastest-json-copy: ^1.0.1
       lodash: ^4.17.21
@@ -4334,6 +4443,7 @@ importers:
       chai: 4.3.10
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -4345,7 +4455,10 @@ importers:
       typescript: 5.1.6
 
   experimental/PropertyDDS/packages/property-common/platform-dependent:
-    specifiers: {}
+    specifiers:
+      eslint-filtered-fix: ^0.3.0
+    devDependencies:
+      eslint-filtered-fix: 0.3.0
 
   experimental/PropertyDDS/packages/property-dds:
     specifiers:
@@ -4388,6 +4501,7 @@ importers:
       easy-table: ^1.1.1
       env-cmd: ^10.1.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       fastest-json-copy: ^1.0.1
       lodash: ^4.17.21
       lz4js: ^0.2.0
@@ -4448,6 +4562,7 @@ importers:
       easy-table: 1.2.0
       env-cmd: 10.1.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -4493,6 +4608,7 @@ importers:
       copyfiles: ^2.4.1
       enzyme: ^3.10.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       html-webpack-plugin: ^5.5.0
       identity-obj-proxy: ^3.0.0
       istanbul-instrumenter-loader: ^3.0.1
@@ -4572,6 +4688,7 @@ importers:
       copyfiles: 2.4.1
       enzyme: 3.11.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       html-webpack-plugin: 5.5.3_webpack@5.89.0
       identity-obj-proxy: 3.0.0
       istanbul-instrumenter-loader: 3.0.1_webpack@5.89.0
@@ -4614,6 +4731,7 @@ importers:
       chai: ^4.2.0
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       fastest-json-copy: ^1.0.1
       lodash: ^4.17.21
       mocha: ^10.2.0
@@ -4650,6 +4768,7 @@ importers:
       chai: 4.3.10
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -4677,6 +4796,7 @@ importers:
       babel-loader: ^8.0.5
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       jest: ^29.6.2
       jest-junit: ^10.0.0
       prettier: ~3.0.3
@@ -4703,6 +4823,7 @@ importers:
       babel-loader: 8.3.0_rwp5n2556mrumtrwbeu2k2rar4
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       jest: 29.7.0_@types+node@18.19.1
       jest-junit: 10.0.0
       prettier: 3.0.3
@@ -4727,6 +4848,7 @@ importers:
       chai: ^4.2.0
       chai-as-promised: 7.1.1
       cross-env: ^7.0.3
+      eslint-filtered-fix: ^0.3.0
       http-status: 1.3.2
       http-status-codes: 1.3.0
       joi: 14.3.1
@@ -4766,6 +4888,7 @@ importers:
       chai: 4.3.10
       chai-as-promised: 7.1.1_chai@4.3.10
       cross-env: 7.0.3
+      eslint-filtered-fix: 0.3.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -4792,6 +4915,7 @@ importers:
       copyfiles: ^2.4.1
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       jest: ^29.6.2
       jest-junit: ^10.0.0
       prettier: ~3.0.3
@@ -4814,6 +4938,7 @@ importers:
       copyfiles: 2.4.1
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       jest: 29.7.0_@types+node@18.19.1
       jest-junit: 10.0.0
       prettier: 3.0.3
@@ -4853,6 +4978,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -4894,6 +5020,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -4927,6 +5054,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -4960,6 +5088,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -4993,6 +5122,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -5026,6 +5156,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -5060,6 +5191,7 @@ importers:
       cross-env: ^7.0.3
       diff: ^3.5.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -5093,6 +5225,7 @@ importers:
       cross-env: 7.0.3
       diff: 3.5.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -5145,6 +5278,7 @@ importers:
       env-cmd: ^10.1.0
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       lru-cache: ^6.0.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -5200,6 +5334,7 @@ importers:
       env-cmd: 10.1.0
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -5228,6 +5363,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -5251,6 +5387,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -5274,6 +5411,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -5296,6 +5434,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -5330,6 +5469,7 @@ importers:
       cross-env: ^7.0.3
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       events_pkg: npm:events@^3.1.0
       jest: ^29.6.2
       jest-environment-puppeteer: ^9.0.2
@@ -5382,6 +5522,7 @@ importers:
       cross-env: 7.0.3
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       jest: 29.7.0_5hr63yjncn3tlo6qh7e6tsd2me
       jest-environment-puppeteer: 9.0.2_typescript@5.1.6
       jest-junit: 10.0.0
@@ -5415,6 +5556,7 @@ importers:
       '@types/events_pkg': npm:@types/events@^3.0.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       eslint-plugin-deprecation: ~2.0.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
@@ -5435,6 +5577,7 @@ importers:
       '@microsoft/api-extractor': 7.42.3
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       eslint-plugin-deprecation: 2.0.0_bpztyfltmpuv6lhsgzfwtmxhte
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -5453,6 +5596,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -5468,6 +5612,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -5491,6 +5636,7 @@ importers:
       cross-env: ^7.0.3
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -5517,6 +5663,7 @@ importers:
       cross-env: 7.0.3
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -5540,6 +5687,7 @@ importers:
       '@microsoft/api-extractor': ^7.42.3
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -5557,6 +5705,7 @@ importers:
       '@microsoft/api-extractor': 7.42.3
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -5588,6 +5737,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -5623,6 +5773,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -5658,6 +5809,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -5692,6 +5844,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -5726,6 +5879,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -5761,6 +5915,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -5804,6 +5959,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -5848,6 +6004,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -5895,6 +6052,7 @@ importers:
       cross-env: ^7.0.3
       double-ended-queue: ^2.1.0-0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       hotloop: ^1.2.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -5945,6 +6103,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       hotloop: 1.2.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
@@ -5989,6 +6148,7 @@ importers:
       cross-env: ^7.0.3
       diff: ^3.5.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -6030,6 +6190,7 @@ importers:
       cross-env: 7.0.3
       diff: 3.5.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -6068,6 +6229,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -6107,6 +6269,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -6141,6 +6304,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-junit-reporter: ^1.18.0
@@ -6175,6 +6339,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-junit-reporter: 1.23.3_mocha@10.2.0
@@ -6212,6 +6377,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -6247,6 +6413,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -6293,6 +6460,7 @@ importers:
       diff: ^3.5.0
       double-ended-queue: ^2.1.0-0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -6341,6 +6509,7 @@ importers:
       cross-env: 7.0.3
       diff: 3.5.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -6384,6 +6553,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -6428,6 +6598,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -6465,6 +6636,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -6500,6 +6672,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -6539,6 +6712,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-junit-reporter: ^1.18.0
@@ -6578,6 +6752,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-junit-reporter: 1.23.3_mocha@10.2.0
@@ -6615,6 +6790,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       execa: ^5.1.1
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -6651,6 +6827,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       execa: 5.1.1
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -6707,6 +6884,7 @@ importers:
       easy-table: ^1.1.1
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -6764,6 +6942,7 @@ importers:
       easy-table: 1.2.0
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -6790,6 +6969,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       jsonschema: ^1.2.6
       prettier: ~3.0.3
       rimraf: ^4.4.0
@@ -6813,6 +6993,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -6841,6 +7022,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -6873,6 +7055,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -6900,6 +7083,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       fake-indexeddb: 3.1.4
       idb: ^6.1.2
       jest: ^29.6.2
@@ -6925,6 +7109,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       fake-indexeddb: 3.1.4
       jest: 29.7.0_@types+node@18.19.1
       prettier: 3.0.3
@@ -6951,6 +7136,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -6974,6 +7160,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -7011,6 +7198,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       jsrsasign: ^11.0.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -7056,6 +7244,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -7096,6 +7285,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -7141,6 +7331,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -7165,6 +7356,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -7183,6 +7375,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -7209,6 +7402,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -7238,6 +7432,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -7267,6 +7462,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       nock: ^13.3.3
       prettier: ~3.0.3
       rimraf: ^4.4.0
@@ -7292,6 +7488,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       nock: 13.4.0
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -7330,6 +7527,7 @@ importers:
       cross-env: ^7.0.3
       cross-fetch: ^3.1.5
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       json-stringify-safe: 5.0.1
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -7378,6 +7576,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -7410,6 +7609,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -7441,6 +7641,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -7472,6 +7673,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       jsrsasign: ^11.0.0
       mocha: ^10.2.0
       prettier: ~3.0.3
@@ -7503,6 +7705,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -7533,6 +7736,7 @@ importers:
       '@types/uuid': ^9.0.2
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -7563,6 +7767,7 @@ importers:
       '@types/uuid': 9.0.7
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -7597,6 +7802,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -7634,6 +7840,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -7674,6 +7881,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       lz4js: ^0.2.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -7715,6 +7923,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -7745,6 +7954,7 @@ importers:
       cross-env: ^7.0.3
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       eslint-plugin-jest: ~27.4.2
       eslint-plugin-react: ~7.33.2
       eslint-plugin-react-hooks: ~4.6.0
@@ -7776,6 +7986,7 @@ importers:
       cross-env: 7.0.3
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       eslint-plugin-jest: 27.4.3_bpztyfltmpuv6lhsgzfwtmxhte
       eslint-plugin-react: 7.33.2_eslint@8.55.0
       eslint-plugin-react-hooks: 4.6.0_eslint@8.55.0
@@ -7810,6 +8021,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -7837,6 +8049,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -7865,6 +8078,7 @@ importers:
       cross-env: ^7.0.3
       diff: ^3.5.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -7896,6 +8110,7 @@ importers:
       cross-env: 7.0.3
       diff: 3.5.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -7923,6 +8138,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -7945,6 +8161,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -7982,6 +8199,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -8022,6 +8240,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -8049,6 +8268,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -8071,6 +8291,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -8099,6 +8320,7 @@ importers:
       cross-env: ^7.0.3
       diff: ^3.5.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -8130,6 +8352,7 @@ importers:
       cross-env: 7.0.3
       diff: 3.5.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -8158,6 +8381,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -8185,6 +8409,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -8218,6 +8443,7 @@ importers:
       cross-env: ^7.0.3
       diff: ^3.5.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -8250,6 +8476,7 @@ importers:
       cross-env: 7.0.3
       diff: 3.5.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -8293,6 +8520,7 @@ importers:
       debug: ^4.3.4
       double-ended-queue: ^2.1.0-0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -8338,6 +8566,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -8375,6 +8604,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       lz4js: ^0.2.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -8415,6 +8645,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -8440,6 +8671,7 @@ importers:
       '@microsoft/api-extractor': ^7.42.3
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -8459,6 +8691,7 @@ importers:
       '@microsoft/api-extractor': 7.42.3
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -8503,6 +8736,7 @@ importers:
       cross-env: ^7.0.3
       double-ended-queue: ^2.1.0-0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       lz4js: ^0.2.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -8555,6 +8789,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -8581,6 +8816,7 @@ importers:
       '@microsoft/api-extractor': ^7.42.3
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -8601,6 +8837,7 @@ importers:
       '@microsoft/api-extractor': 7.42.3
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -8637,6 +8874,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       lodash: ^4.17.21
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -8680,6 +8918,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -8705,6 +8944,7 @@ importers:
       '@microsoft/api-extractor': ^7.42.3
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -8725,6 +8965,7 @@ importers:
       '@microsoft/api-extractor': 7.42.3
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -8754,6 +8995,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -8788,6 +9030,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -8813,6 +9056,7 @@ importers:
       '@microsoft/api-extractor': ^7.42.3
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       eslint-plugin-deprecation: ~2.0.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
@@ -8834,6 +9078,7 @@ importers:
       '@microsoft/api-extractor': 7.42.3
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       eslint-plugin-deprecation: 2.0.0_bpztyfltmpuv6lhsgzfwtmxhte
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -8867,6 +9112,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -8904,6 +9150,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -8946,6 +9193,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       jsrsasign: ^11.0.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -8989,6 +9237,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -9032,6 +9281,7 @@ importers:
       cross-env: ^7.0.3
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
@@ -9073,6 +9323,7 @@ importers:
       cross-env: 7.0.3
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -9108,6 +9359,7 @@ importers:
       c8: ^8.0.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -9156,6 +9408,7 @@ importers:
       '@types/uuid': 9.0.7
       c8: 8.0.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       nock: 13.4.0
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -9190,6 +9443,7 @@ importers:
       c8: ^8.0.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -9235,6 +9489,7 @@ importers:
       c8: 8.0.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       nock: 13.4.0
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -9270,6 +9525,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
@@ -9306,6 +9562,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -9342,6 +9599,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
@@ -9379,6 +9637,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -9419,6 +9678,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       events_pkg: npm:events@^3.1.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -9462,6 +9722,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       events_pkg: /events/3.3.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
@@ -9522,6 +9783,7 @@ importers:
       c8: ^8.0.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -9581,6 +9843,7 @@ importers:
       c8: 8.0.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -9609,6 +9872,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
@@ -9631,6 +9895,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -9671,6 +9936,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -9715,6 +9981,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
       moment: 2.29.4
@@ -9740,6 +10007,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -9766,6 +10034,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -9788,6 +10057,7 @@ importers:
       applicationinsights: ^2.1.9
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -9804,6 +10074,7 @@ importers:
       '@fluidframework/eslint-config-fluid': 5.1.0_bpztyfltmpuv6lhsgzfwtmxhte
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -9823,6 +10094,7 @@ importers:
       '@microsoft/api-extractor': ^7.42.3
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -9841,6 +10113,7 @@ importers:
       '@microsoft/api-extractor': 7.42.3
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -9877,6 +10150,7 @@ importers:
       axios: ^1.6.2
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       semver: ^7.5.3
@@ -9916,6 +10190,7 @@ importers:
       '@types/uuid': 9.0.7
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -9979,6 +10254,7 @@ importers:
       c8: ^8.0.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -10057,6 +10333,7 @@ importers:
       '@types/uuid': 9.0.7
       c8: 8.0.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
       moment: 2.29.4
@@ -10081,6 +10358,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       prettier: ~3.0.3
       random-js: ^2.1.0
@@ -10103,6 +10381,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -10146,6 +10425,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       prettier: ~3.0.3
       ps-node: ^0.1.6
@@ -10194,6 +10474,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       prettier: 3.0.3
       rimraf: 4.4.1
@@ -10242,6 +10523,7 @@ importers:
       debug: ^4.3.4
       diff: ^3.5.0
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -10295,6 +10577,7 @@ importers:
       cross-env: 7.0.3
       diff: 3.5.0
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
       moment: 2.29.4
@@ -10347,6 +10630,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -10410,6 +10694,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -10425,8 +10710,10 @@ importers:
 
   packages/test/types_jest-environment-puppeteer:
     specifiers:
+      eslint-filtered-fix: ^0.3.0
       jest-environment-puppeteer: ^9.0.2
     devDependencies:
+      eslint-filtered-fix: 0.3.0
       jest-environment-puppeteer: 9.0.2
 
   packages/tools/devtools/devtools:
@@ -10452,6 +10739,7 @@ importers:
       cross-env: ^7.0.3
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       eslint-plugin-chai-expect: ~3.0.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -10483,6 +10771,7 @@ importers:
       cross-env: 7.0.3
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       eslint-plugin-chai-expect: 3.0.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
@@ -10538,6 +10827,7 @@ importers:
       dotenv-webpack: ^7.0.3
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       eslint-plugin-chai-expect: ~3.0.0
       expect-puppeteer: ^9.0.2
       good-fences: ^1.1.1
@@ -10615,6 +10905,7 @@ importers:
       dotenv-webpack: 7.1.1_webpack@5.89.0
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       eslint-plugin-chai-expect: 3.0.0_eslint@8.55.0
       expect-puppeteer: 9.0.2
       good-fences: 1.2.0
@@ -10675,6 +10966,7 @@ importers:
       cross-env: ^7.0.3
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       eslint-plugin-chai-expect: ~3.0.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -10719,6 +11011,7 @@ importers:
       cross-env: 7.0.3
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       eslint-plugin-chai-expect: 3.0.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
@@ -10771,6 +11064,7 @@ importers:
       concurrently: ^8.2.1
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       eslint-plugin-jest: ~27.4.2
       eslint-plugin-react: ~7.33.2
       eslint-plugin-react-hooks: ~4.6.0
@@ -10841,6 +11135,7 @@ importers:
       concurrently: 8.2.2
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       eslint-plugin-jest: 27.4.3_oqxbtqzkjhd5hdlnlrx4nuqdoa
       eslint-plugin-react: 7.33.2_eslint@8.55.0
       eslint-plugin-react-hooks: 4.6.0_eslint@8.55.0
@@ -10906,6 +11201,7 @@ importers:
       cross-env: ^7.0.3
       eslint: ~8.55.0
       eslint-config-prettier: ~9.0.0
+      eslint-filtered-fix: ^0.3.0
       eslint-plugin-jest: ~27.4.2
       eslint-plugin-react: ~7.33.2
       eslint-plugin-react-hooks: ~4.6.0
@@ -10979,6 +11275,7 @@ importers:
       cross-env: 7.0.3
       eslint: 8.55.0
       eslint-config-prettier: 9.0.0_eslint@8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       eslint-plugin-jest: 27.4.3_oqxbtqzkjhd5hdlnlrx4nuqdoa
       eslint-plugin-react: 7.33.2_eslint@8.55.0
       eslint-plugin-react-hooks: 4.6.0_eslint@8.55.0
@@ -11024,6 +11321,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       prettier: ~3.0.3
       rimraf: ^4.4.0
       typescript: ~5.1.6
@@ -11053,6 +11351,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -11082,6 +11381,7 @@ importers:
       c8: ^8.0.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       json2csv: ^5.0.7
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -11118,6 +11418,7 @@ importers:
       c8: 8.0.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -11165,6 +11466,7 @@ importers:
       '@types/node': ^18.19.0
       copyfiles: ^2.4.1
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       json-stable-stringify: ^1.0.1
       prettier: ~3.0.3
       rimraf: ^4.4.0
@@ -11209,6 +11511,7 @@ importers:
       '@types/node': 18.19.1
       copyfiles: 2.4.1
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       prettier: 3.0.3
       rimraf: 4.4.1
       typescript: 5.1.6
@@ -11237,6 +11540,7 @@ importers:
       copyfiles: ^2.4.1
       cross-env: ^7.0.3
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       isomorphic-fetch: ^3.0.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -11270,6 +11574,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -11303,6 +11608,7 @@ importers:
       cross-env: ^7.0.3
       debug: ^4.3.4
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
       mocha-multi-reporters: ^1.5.1
@@ -11338,6 +11644,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -11371,6 +11678,7 @@ importers:
       cross-env: ^7.0.3
       debug: ^4.3.4
       eslint: ~8.55.0
+      eslint-filtered-fix: ^0.3.0
       jwt-decode: ^4.0.0
       mocha: ^10.2.0
       mocha-json-output-reporter: ^2.0.1
@@ -11406,6 +11714,7 @@ importers:
       copyfiles: 2.4.1
       cross-env: 7.0.3
       eslint: 8.55.0
+      eslint-filtered-fix: 0.3.0_eslint@8.55.0
       mocha: 10.2.0
       mocha-json-output-reporter: 2.1.0_mocha@10.2.0+moment@2.29.4
       mocha-multi-reporters: 1.5.1_mocha@10.2.0
@@ -28074,6 +28383,25 @@ packages:
       eslint: '>=7.0.0'
     dependencies:
       eslint: 8.55.0
+    dev: true
+
+  /eslint-filtered-fix/0.3.0:
+    resolution: {integrity: sha512-UMHOza9epEn9T+yVT8RiCFf0JdALpVzmoH62Ez/zvxM540IyUNAkr7aH2Frkv6zlm9a/gbmq/sc7C4SvzZQXcA==}
+    hasBin: true
+    peerDependencies:
+      eslint: '>=7.0.0'
+    dependencies:
+      optionator: 0.9.3
+    dev: true
+
+  /eslint-filtered-fix/0.3.0_eslint@8.55.0:
+    resolution: {integrity: sha512-UMHOza9epEn9T+yVT8RiCFf0JdALpVzmoH62Ez/zvxM540IyUNAkr7aH2Frkv6zlm9a/gbmq/sc7C4SvzZQXcA==}
+    hasBin: true
+    peerDependencies:
+      eslint: '>=7.0.0'
+    dependencies:
+      eslint: 8.55.0
+      optionator: 0.9.3
     dev: true
 
   /eslint-import-resolver-node/0.3.9:

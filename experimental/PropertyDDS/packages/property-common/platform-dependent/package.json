@@ -13,6 +13,12 @@
 	"author": "Microsoft and contributors",
 	"main": "server.js",
 	"browser": "browser.js",
+	"scripts": {
+		"format:imports": "eslint-filtered-fix --rule import/order src"
+	},
+	"devDependencies": {
+		"eslint-filtered-fix": "^0.3.0"
+	},
 	"typeValidation": {
 		"disabled": true,
 		"broken": {}
