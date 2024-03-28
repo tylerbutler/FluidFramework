@@ -11,14 +11,7 @@ import {
 	IVersion,
 } from "@fluidframework/protocol-definitions";
 import { UsageError } from "@fluidframework/telemetry-utils";
-import {
-	FetchSource,
-	IDocumentStorageService,
-	IDocumentStorageServicePolicies,
-	ISnapshot,
-	ISnapshotFetchOptions,
-	ISummaryContext,
-} from "@fluidframework/driver-definitions/internal";
+import { FetchSource, IDocumentStorageService, IDocumentStorageServicePolicies, ISnapshot, ISnapshotFetchOptions, ISummaryContext } from "@fluidframework/driver-definitions/internal";
 
 /**
  * @internal

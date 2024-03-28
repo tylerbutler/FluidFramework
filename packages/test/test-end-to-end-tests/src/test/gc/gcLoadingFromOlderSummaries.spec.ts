@@ -10,7 +10,6 @@ import {
 	describeCompat,
 	itExpects,
 } from "@fluid-private/test-version-utils";
-import { IContainer } from "@fluidframework/container-definitions";
 import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
 import { IFluidHandle } from "@fluidframework/core-interfaces";
 import { ISummaryTree } from "@fluidframework/protocol-definitions";
@@ -25,6 +24,7 @@ import {
 } from "@fluidframework/test-utils";
 import { defaultGCConfig } from "./gcTestConfigs.js";
 import { getGCStateFromSummary } from "./gcTestSummaryUtils.js";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 
 /**
  * Validates that when a summarizer loads from an older summary and gets an ack for a newer summary, it disposes

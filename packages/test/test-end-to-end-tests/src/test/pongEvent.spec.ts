@@ -4,8 +4,7 @@
  */
 
 import { strict as assert } from "assert";
-import { IContainer, IFluidCodeDetails } from "@fluidframework/container-definitions";
-import { ConnectionState, Loader } from "@fluidframework/container-loader";
+import { ConnectionState } from "@fluidframework/container-loader";
 
 import { describeCompat } from "@fluid-private/test-version-utils";
 import {
@@ -16,6 +15,8 @@ import {
 	timeoutPromise,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
+import { IContainer, IFluidCodeDetails } from "@fluidframework/container-definitions/internal";
+import { Loader } from "@fluidframework/container-loader/internal";
 
 const codeDetails: IFluidCodeDetails = { package: "test" };
 

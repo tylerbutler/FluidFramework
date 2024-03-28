@@ -4,10 +4,10 @@
  */
 
 /* eslint-disable @typescript-eslint/no-floating-promises */
+
 import { strict as assert } from "node:assert";
 import { stringToBuffer } from "@fluid-internal/client-utils";
 import { PromiseCache } from "@fluidframework/core-utils";
-import { FetchSource, ISnapshot } from "@fluidframework/driver-definitions";
 import {
 	ICacheEntry,
 	IOdspResolvedUrl,
@@ -31,6 +31,7 @@ import { getHashedDocumentId } from "../odspPublicUtils.js";
 import { INewFileInfo, createCacheSnapshotKey } from "../odspUtils.js";
 import { prefetchLatestSnapshot } from "../prefetchLatestSnapshot.js";
 import { createResponse, mockFetchSingle, notFound } from "./mockFetch.js";
+import { FetchSource, ISnapshot } from "@fluidframework/driver-definitions/internal";
 
 const createUtLocalCache = (): LocalPersistentCache => new LocalPersistentCache();
 

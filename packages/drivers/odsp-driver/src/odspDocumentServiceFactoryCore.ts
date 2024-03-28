@@ -43,11 +43,7 @@ import {
 	isNewFileInfo,
 	toInstrumentedOdspTokenFetcher,
 } from "./odspUtils.js";
-import {
-	IDocumentService,
-	IDocumentServiceFactory,
-	IResolvedUrl,
-} from "@fluidframework/driver-definitions/internal";
+import { IDocumentService, IDocumentServiceFactory, IResolvedUrl } from "@fluidframework/driver-definitions/internal";
 
 /**
  * Factory for creating the sharepoint document service. Use this if you want to

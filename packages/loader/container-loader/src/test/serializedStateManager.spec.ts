@@ -5,14 +5,6 @@
 
 import { strict as assert } from "assert";
 import { stringToBuffer } from "@fluid-internal/client-utils";
-import { IGetPendingLocalStateProps, IRuntime } from "@fluidframework/container-definitions";
-import {
-	FetchSource,
-	IDocumentStorageService,
-	IResolvedUrl,
-	ISnapshot,
-	ISnapshotFetchOptions,
-} from "@fluidframework/driver-definitions";
 import {
 	IDocumentAttributes,
 	ISequencedDocumentMessage,
@@ -22,6 +14,8 @@ import {
 } from "@fluidframework/protocol-definitions";
 import { ITelemetryLoggerExt, createChildLogger } from "@fluidframework/telemetry-utils";
 import { type IPendingContainerState, SerializedStateManager } from "../serializedStateManager.js";
+import { IGetPendingLocalStateProps, IRuntime } from "@fluidframework/container-definitions/internal";
+import { FetchSource, IDocumentStorageService, IResolvedUrl, ISnapshot, ISnapshotFetchOptions } from "@fluidframework/driver-definitions/internal";
 
 type ISerializedStateManagerDocumentStorageService = Pick<
 	IDocumentStorageService,

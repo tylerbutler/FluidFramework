@@ -10,7 +10,6 @@ import {
 	describeCompat,
 	itExpects,
 } from "@fluid-private/test-version-utils";
-import { IContainer } from "@fluidframework/container-definitions";
 import { ContainerRuntime, ISummarizer } from "@fluidframework/container-runtime";
 import { ISummaryTree, SummaryType } from "@fluidframework/protocol-definitions";
 import { channelsTreeName } from "@fluidframework/runtime-definitions";
@@ -22,6 +21,7 @@ import {
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
 import { defaultGCConfig } from "./gcTestConfigs.js";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 
 /**
  * Validates that unchanged Fluid objects are not summarized again. Basically, only objects that have changed since

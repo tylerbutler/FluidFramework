@@ -6,10 +6,7 @@
 import { DocumentServiceProxy } from "../../documentServiceProxy.js";
 import { ICompressionStorageConfig } from "./compressionTypes.js";
 import { DocumentStorageServiceCompressionAdapter as DocumentStorageServiceSummaryBlobCompressionAdapter } from "./summaryblob/index.js";
-import {
-	IDocumentService,
-	IDocumentStorageService,
-} from "@fluidframework/driver-definitions/internal";
+import { IDocumentService, IDocumentStorageService } from "@fluidframework/driver-definitions/internal";
 
 export class DocumentServiceCompressionAdapter extends DocumentServiceProxy {
 	constructor(

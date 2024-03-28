@@ -4,12 +4,7 @@
  */
 
 import { strict as assert } from "assert";
-import {
-	IBatchMessage,
-	IContainerContext,
-	ICriticalContainerError,
-	IDeltaManager,
-} from "@fluidframework/container-definitions";
+import { ICriticalContainerError, IDeltaManager } from "@fluidframework/container-definitions";
 import {
 	IDocumentMessage,
 	ISequencedDocumentMessage,
@@ -33,6 +28,7 @@ import {
 	Outbox,
 } from "../../opLifecycle/index.js";
 import { IPendingBatchMessage, PendingStateManager } from "../../pendingStateManager.js";
+import { IBatchMessage, IContainerContext } from "@fluidframework/container-definitions/internal";
 
 function typeFromBatchedOp(op: IBatchMessage) {
 	assert(op.contents !== undefined);

@@ -6,7 +6,6 @@
 import { strict as assert } from "assert";
 // eslint-disable-next-line import/no-nodejs-modules
 import * as crypto from "crypto";
-import { IContainer, LoaderHeader } from "@fluidframework/container-definitions";
 import {
 	ConfigTypes,
 	IConfigProviderBase,
@@ -38,6 +37,7 @@ import {
 	IDocumentProps,
 	ISummarizeResult,
 } from "./DocumentCreator.js";
+import { IContainer, LoaderHeader } from "@fluidframework/container-definitions/internal";
 
 const configProvider = (settings: Record<string, ConfigTypes>): IConfigProviderBase => ({
 	getRawConfig: (name: string): ConfigTypes => settings[name],

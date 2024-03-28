@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "node:assert";
-import { IDocumentStorageServicePolicies } from "@fluidframework/driver-definitions";
 import { type NonRetryableError, ThrottlingError } from "@fluidframework/driver-utils";
 import {
 	ICacheEntry,
@@ -21,6 +20,7 @@ import { LocalPersistentCache } from "../odspCache.js";
 import { getHashedDocumentId } from "../odspPublicUtils.js";
 import * as odspUtilsModule from "../odspUtils.js";
 import { createResponse, mockFetchOk, mockFetchSingle } from "./mockFetch.js";
+import { IDocumentStorageServicePolicies } from "@fluidframework/driver-definitions/internal";
 
 const createUtLocalCache = (): LocalPersistentCache => new LocalPersistentCache();
 

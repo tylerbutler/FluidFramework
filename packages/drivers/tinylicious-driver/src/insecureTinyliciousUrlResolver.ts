@@ -4,11 +4,7 @@
  */
 
 import { IRequest } from "@fluidframework/core-interfaces";
-import {
-	DriverHeader,
-	IResolvedUrl,
-	IUrlResolver,
-} from "@fluidframework/driver-definitions/internal";
+import { DriverHeader, IResolvedUrl, IUrlResolver } from "@fluidframework/driver-definitions/internal";
 
 /**
  * Default endpoint port. Will be used by the service if the consumer does not specify a port.

@@ -24,7 +24,6 @@ import {
 	IFluidHandle,
 } from "@fluidframework/core-interfaces";
 import { Deferred } from "@fluidframework/core-utils";
-import { IDocumentServiceFactory } from "@fluidframework/driver-definitions";
 import { ReferenceType } from "@fluidframework/merge-tree";
 import type { SharedString } from "@fluidframework/sequence";
 import {
@@ -41,6 +40,7 @@ import {
 	driverSupportsBlobs,
 	getUrlFromDetachedBlobStorage,
 } from "./mockDetachedBlobStorage.js";
+import { IDocumentServiceFactory } from "@fluidframework/driver-definitions/internal";
 
 const configProvider = (settings: Record<string, ConfigTypes>): IConfigProviderBase => ({
 	getRawConfig: (name: string): ConfigTypes => settings[name],

@@ -9,7 +9,6 @@ import {
 	TestDataObjectType,
 	describeCompat,
 } from "@fluid-private/test-version-utils";
-import { IContainer } from "@fluidframework/container-definitions";
 import { ContainerRuntime } from "@fluidframework/container-runtime";
 import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
 import {
@@ -21,6 +20,7 @@ import {
 } from "@fluidframework/test-utils";
 import { defaultGCConfig } from "./gcTestConfigs.js";
 import { getGCStateFromSummary } from "./gcTestSummaryUtils.js";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 
 /**
  * Validates this scenario: When a datastore is aliased it is always referenced.

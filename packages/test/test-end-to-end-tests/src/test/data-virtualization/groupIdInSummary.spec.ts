@@ -5,13 +5,11 @@
 
 import { strict as assert } from "assert";
 import { describeCompat } from "@fluid-private/test-version-utils";
-import { LoaderHeader } from "@fluidframework/container-definitions";
 import {
 	type ContainerRuntime,
 	type IContainerRuntimeOptions,
 } from "@fluidframework/container-runtime";
 import type { IFluidHandle } from "@fluidframework/core-interfaces";
-import type { ISnapshot } from "@fluidframework/driver-definitions";
 import { type ISnapshotTree, SummaryType } from "@fluidframework/protocol-definitions";
 import {
 	type ITestObjectProvider,
@@ -21,6 +19,8 @@ import {
 } from "@fluidframework/test-utils";
 
 import type { IFluidDataStoreContext } from "@fluidframework/runtime-definitions";
+import { LoaderHeader } from "@fluidframework/container-definitions/internal";
+import type { ISnapshot } from "@fluidframework/driver-definitions/internal";
 
 const interceptResult = <T>(
 	parent: any,

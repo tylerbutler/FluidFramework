@@ -9,7 +9,6 @@ import {
 	TestDataObjectType,
 	describeCompat,
 } from "@fluid-private/test-version-utils";
-import { IContainer, LoaderHeader } from "@fluidframework/container-definitions";
 import { ContainerRuntime, ISubmitSummaryOptions } from "@fluidframework/container-runtime";
 import { IFluidHandle } from "@fluidframework/core-interfaces";
 import type { ISharedMap } from "@fluidframework/map";
@@ -19,6 +18,7 @@ import {
 	createSummarizer,
 	summarizeNow,
 } from "@fluidframework/test-utils";
+import { IContainer, LoaderHeader } from "@fluidframework/container-definitions/internal";
 
 // These tests intend to ensure that summarization succeeds in edge case scenarios that rarely happen
 describeCompat("Summarization edge cases", "NoCompat", (getTestObjectProvider, apis) => {

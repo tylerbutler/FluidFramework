@@ -6,7 +6,6 @@
 import { strict as assert } from "assert";
 import { stringToBuffer } from "@fluid-internal/client-utils";
 import { ITestDataObject, describeCompat, itExpects } from "@fluid-private/test-version-utils";
-import { IContainer, LoaderHeader } from "@fluidframework/container-definitions";
 import {
 	ContainerMessageType,
 	ContainerRuntime,
@@ -44,6 +43,7 @@ import {
 	manufactureHandle,
 	waitForContainerWriteModeConnectionWrite,
 } from "./gcTestSummaryUtils.js";
+import { IContainer, LoaderHeader } from "@fluidframework/container-definitions/internal";
 
 /**
  * Validates that the given blob state is correct in the summary based on expectDelete and expectGCStateHandle.

@@ -4,24 +4,14 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 /* eslint-disable @typescript-eslint/dot-notation */
+
 import { strict as assert } from "assert";
 import { TypedEventEmitter } from "@fluid-internal/client-utils";
 import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
-import {
-	FetchSource,
-	IDocumentDeltaConnection,
-	IDocumentDeltaStorageService,
-	IDocumentService,
-	IDocumentServiceEvents,
-	IDocumentServiceFactory,
-	IDocumentServicePolicies,
-	IDocumentStorageService,
-	IDocumentStorageServicePolicies,
-	IResolvedUrl,
-	ISummaryContext,
-} from "@fluidframework/driver-definitions";
 import {
 	IClient,
 	ICreateBlobResponse,
@@ -40,6 +30,7 @@ import {
 } from "../adapters/index.js";
 import { DocumentStorageServiceProxy } from "../documentStorageServiceProxy.js";
 import { snapshotTree, summaryTemplate } from "./summaryCompressionData.js";
+import { FetchSource, IDocumentDeltaConnection, IDocumentDeltaStorageService, IDocumentService, IDocumentServiceEvents, IDocumentServiceFactory, IDocumentServicePolicies, IDocumentStorageService, IDocumentStorageServicePolicies, IResolvedUrl, ISummaryContext } from "@fluidframework/driver-definitions/internal";
 
 /**
  * This function clones the imported summary and returns a new summary with the same content.

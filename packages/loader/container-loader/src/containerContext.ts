@@ -3,12 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import {
-	AttachState,
-	IAudience,
-	ICriticalContainerError,
-	IDeltaManager,
-} from "@fluidframework/container-definitions";
+import { AttachState, IAudience, ICriticalContainerError, IDeltaManager } from "@fluidframework/container-definitions";
 import { type FluidObject, type ISignalEnvelope } from "@fluidframework/core-interfaces";
 import {
 	IClientDetails,
@@ -21,12 +16,7 @@ import {
 	MessageType,
 } from "@fluidframework/protocol-definitions";
 import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
-import {
-	IBatchMessage,
-	IContainerContext,
-	ILoader,
-	ILoaderOptions,
-} from "@fluidframework/container-definitions/internal";
+import { IBatchMessage, IContainerContext, ILoader, ILoaderOptions } from "@fluidframework/container-definitions/internal";
 import { IDocumentStorageService, ISnapshot } from "@fluidframework/driver-definitions/internal";
 
 /**

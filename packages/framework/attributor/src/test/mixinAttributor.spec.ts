@@ -4,14 +4,10 @@
  */
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import { strict as assert } from "node:assert";
-import {
-	AttachState,
-	type IContainerContext,
-	type ICriticalContainerError,
-} from "@fluidframework/container-definitions";
+import { AttachState, type ICriticalContainerError } from "@fluidframework/container-definitions";
 import { type ConfigTypes, type FluidObject } from "@fluidframework/core-interfaces";
-import { type IDocumentStorageService } from "@fluidframework/driver-definitions";
 import {
 	type ISequencedDocumentMessage,
 	type ISnapshotTree,
@@ -29,6 +25,8 @@ import {
 	mixinAttributor,
 } from "../mixinAttributor.js";
 import { makeMockAudience } from "./utils.js";
+import { type IContainerContext } from "@fluidframework/container-definitions/internal";
+import { type IDocumentStorageService } from "@fluidframework/driver-definitions/internal";
 
 type Mutable<T> = {
 	-readonly [P in keyof T]: T[P];

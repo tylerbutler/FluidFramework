@@ -9,7 +9,6 @@ import {
 	TestDataObjectType,
 	describeCompat,
 } from "@fluid-private/test-version-utils";
-import { IContainer } from "@fluidframework/container-definitions";
 import { ISummarizer } from "@fluidframework/container-runtime";
 import { ISummaryTree, SummaryType } from "@fluidframework/protocol-definitions";
 import {
@@ -26,6 +25,7 @@ import {
 } from "@fluidframework/test-utils";
 import { defaultGCConfig } from "./gcTestConfigs.js";
 import { getGCStateFromSummary } from "./gcTestSummaryUtils.js";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 
 /**
  * Validates that when GC is disabled on a document that had run GC previously, the GC state is removed from summary
