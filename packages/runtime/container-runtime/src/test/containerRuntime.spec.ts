@@ -65,8 +65,15 @@ import {
 	PendingStateManager,
 } from "../pendingStateManager.js";
 import { ISummaryCancellationToken, neverCancelledSummaryToken } from "../summary/index.js";
-import { ContainerErrorTypes, IContainerContext } from "@fluidframework/container-definitions/internal";
-import { IDocumentStorageService, ISnapshot, ISummaryContext } from "@fluidframework/driver-definitions/internal";
+import {
+	ContainerErrorTypes,
+	IContainerContext,
+} from "@fluidframework/container-definitions/internal";
+import {
+	IDocumentStorageService,
+	ISnapshot,
+	ISummaryContext,
+} from "@fluidframework/driver-definitions/internal";
 
 function submitDataStoreOp(
 	runtime: Pick<ContainerRuntime, "submitMessage">,

@@ -36,7 +36,12 @@ import {
 	StringProperty,
 } from "@fluid-experimental/property-properties";
 import { SharedPropertyTree } from "../propertyTree.js";
-import { IContainer, IFluidCodeDetails, IHostLoader, ILoaderOptions } from "@fluidframework/container-definitions/internal";
+import {
+	IContainer,
+	IFluidCodeDetails,
+	IHostLoader,
+	ILoaderOptions,
+} from "@fluidframework/container-definitions/internal";
 import { IUrlResolver } from "@fluidframework/driver-definitions/internal";
 
 // a "namespace" uuid to generate uuidv5 in fuzz tests

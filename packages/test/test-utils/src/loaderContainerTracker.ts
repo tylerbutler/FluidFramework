@@ -4,7 +4,11 @@
  */
 
 import { IDeltaQueue } from "@fluidframework/container-definitions";
-import { ConnectionState, IContainerCreateProps, IContainerLoadProps } from "@fluidframework/container-loader";
+import {
+	ConnectionState,
+	IContainerCreateProps,
+	IContainerLoadProps,
+} from "@fluidframework/container-loader";
 import { assert } from "@fluidframework/core-utils";
 import { canBeCoalescedByService } from "@fluidframework/driver-utils";
 import {

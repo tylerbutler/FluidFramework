@@ -30,7 +30,19 @@ import {
 } from "../adapters/index.js";
 import { DocumentStorageServiceProxy } from "../documentStorageServiceProxy.js";
 import { snapshotTree, summaryTemplate } from "./summaryCompressionData.js";
-import { FetchSource, IDocumentDeltaConnection, IDocumentDeltaStorageService, IDocumentService, IDocumentServiceEvents, IDocumentServiceFactory, IDocumentServicePolicies, IDocumentStorageService, IDocumentStorageServicePolicies, IResolvedUrl, ISummaryContext } from "@fluidframework/driver-definitions/internal";
+import {
+	FetchSource,
+	IDocumentDeltaConnection,
+	IDocumentDeltaStorageService,
+	IDocumentService,
+	IDocumentServiceEvents,
+	IDocumentServiceFactory,
+	IDocumentServicePolicies,
+	IDocumentStorageService,
+	IDocumentStorageServicePolicies,
+	IResolvedUrl,
+	ISummaryContext,
+} from "@fluidframework/driver-definitions/internal";
 
 /**
  * This function clones the imported summary and returns a new summary with the same content.

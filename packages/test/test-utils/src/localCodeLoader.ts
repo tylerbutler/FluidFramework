@@ -11,7 +11,14 @@ import {
 	IProvideFluidDataStoreRegistry,
 } from "@fluidframework/runtime-definitions";
 import { createDataStoreFactory } from "@fluidframework/runtime-utils";
-import { ICodeDetailsLoader, IFluidCodeDetails, IFluidModule, IFluidModuleWithDetails, IProvideFluidCodeDetailsComparer, IProvideRuntimeFactory } from "@fluidframework/container-definitions/internal";
+import {
+	ICodeDetailsLoader,
+	IFluidCodeDetails,
+	IFluidModule,
+	IFluidModuleWithDetails,
+	IProvideFluidCodeDetailsComparer,
+	IProvideRuntimeFactory,
+} from "@fluidframework/container-definitions/internal";
 
 /**
  * @internal

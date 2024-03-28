@@ -10,7 +10,10 @@ import { IOdspError, OdspError, OdspErrorTypes } from "@fluidframework/odsp-driv
 import { isILoggingError } from "@fluidframework/telemetry-utils";
 import { createOdspNetworkError, enrichOdspError } from "../odspErrorUtils.js";
 import { pkgVersion } from "../packageVersion.js";
-import { IGenericNetworkError, IThrottlingWarning } from "@fluidframework/driver-definitions/internal";
+import {
+	IGenericNetworkError,
+	IThrottlingWarning,
+} from "@fluidframework/driver-definitions/internal";
 
 describe("OdspErrorUtils", () => {
 	function assertCustomPropertySupport(err: any) {
