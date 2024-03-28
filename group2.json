@@ -1,0 +1,1559 @@
+{
+	"@fluidframework/container-runtime": [
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "AllowTombstoneRequestHeaderKey"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "CompressionAlgorithms"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "ContainerMessageType"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "ContainerRuntime"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "currentDocumentVersionSchema"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "DefaultSummaryConfiguration"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "disabledCompressionConfig"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "DocumentSchemaValueType"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "DocumentsSchemaController"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "EnqueueSummarizeResult"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "GCFeatureMatrix"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "GCNodeType"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "GCNodeType"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "GCVersion"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IAckedSummary"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IAckSummaryResult"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IBaseSummarizeResult"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IBlobManagerLoadInfo"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IBroadcastSummaryResult"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ICancellableSummarizerController"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ICancellationToken"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IClientSummaryWatcher"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ICompressionRuntimeOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IConnectableRuntime"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IContainerRuntimeMetadata"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IContainerRuntimeOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ICreateContainerMetadata"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "IdCompressorMode"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDocumentSchema"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "IDocumentSchemaChangeMessage"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "IDocumentSchemaCurrent"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDocumentSchemaFeatures"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IEnqueueSummarizeOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IGCMetadata"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IGCRuntimeOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IGCStats"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IGeneratedSummaryStats"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IGenerateSummaryTreeResult"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMarkPhaseStats"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "INackSummaryResult"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "InactiveResponseHeaderKey"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IOnDemandSummarizeOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IRefreshSummaryAckOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IRetriableFailureResult"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISerializedElection"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISubmitSummaryOpResult"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISubmitSummaryOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizeEventProps"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizeOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizer"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizeResults"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizerEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizerInternalsProvider"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizerRuntime"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummary"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummaryAckMessage"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummaryBaseConfiguration"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "ISummaryCancellationToken"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummaryCollectionOpEvents"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "ISummaryConfiguration"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummaryConfigurationDisableHeuristics"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummaryConfigurationDisableSummarizer"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummaryConfigurationHeuristics"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "ISummaryMetadataMessage"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummaryNackMessage"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummaryOpMessage"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummaryRuntimeOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISweepPhaseStats"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IUploadSummaryResult"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "OpActionEventListener"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "OpActionEventName"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "SubmitSummaryFailureData"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "SubmitSummaryResult"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "Summarizer"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "SummarizeResultPart"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "SummarizerStopReason"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SummaryCollection"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "SummaryStage"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "TombstoneResponseHeaderKey"
+		}
+	],
+	"@fluidframework/container-runtime-definitions": [
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IContainerRuntime"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "IContainerRuntimeBaseWithCombinedEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IContainerRuntimeEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IContainerRuntimeWithResolveHandle_Deprecated"
+		}
+	],
+	"@fluidframework/core-interfaces": [
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ConfigTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ExtendEventProvider"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "FluidErrorTypes"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "FluidErrorTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "FluidObject"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "FluidObjectKeys"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "FluidObjectProviderKeys"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IConfigProviderBase"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IDisposable"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IErrorBase"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IErrorEvent"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IEvent"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IEventProvider"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "IEventThisPlaceHolder"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "IEventTransformer"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IFluidHandle"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "IFluidHandle"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IFluidHandleContext"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "IFluidHandleContext"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IFluidLoadable"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "IFluidLoadable"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IProvideFluidHandle"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IProvideFluidHandleContext"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IProvideFluidLoadable"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IRequest"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IRequestHeader"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IResponse"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ITelemetryBaseEvent"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ITelemetryBaseLogger"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ITelemetryBaseProperties"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IThrottlingWarning"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "LogLevel"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "LogLevel"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ReplaceIEventThisPlaceHolder"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "Tagged"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TelemetryBaseEventPropertyType"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TransformedEvent"
+		}
+	],
+	"@fluidframework/core-utils": [
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "assert"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "compareArrays"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "Deferred"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "LazyPromise"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "PromiseCache"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "PromiseCacheExpiry"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "PromiseCacheOptions"
+		}
+	],
+	"@fluidframework/datastore": [
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "DataStoreMessageType"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "FluidDataStoreRuntime"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "FluidObjectHandle"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISharedObjectRegistry"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "mixinSummaryHandler"
+		}
+	],
+	"@fluidframework/datastore-definitions": [
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IChannel"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IChannelAttributes"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IChannelFactory"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IChannelServices"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IChannelStorageService"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IDeltaConnection"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IDeltaHandler"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IFluidDataStoreRuntime"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IFluidDataStoreRuntimeEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "Internal_InterfaceOfJsonableTypesWith"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "Jsonable"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "JsonableTypeWith"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "Serializable"
+		}
+	],
+	"@fluidframework/matrix": [
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IRevertible"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISharedMatrix"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISharedMatrixEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IUndoConsumer"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "MatrixItem"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SharedMatrix"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SharedMatrixFactory"
+		}
+	],
+	"@fluidframework/merge-tree": [
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "appendToMergeTreeDeltaRevertibles"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "AttributionPolicy"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "BaseSegment"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "Client"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "CollaborationWindow"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "discardMergeTreeDeltaRevertible"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IAttributionCollection"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IAttributionCollectionSerializer"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IAttributionCollectionSpec"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IClientEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IJSONMarkerSegment"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IJSONSegment"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IJSONTextSegment"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMarkerDef"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeNodeCommon"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeAnnotateMsg"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeAttributionOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeDelta"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeDeltaCallbackArgs"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "IMergeTreeDeltaOp"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeDeltaOpArgs"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeGroupMsg"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeInsertMsg"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeMaintenanceCallbackArgs"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeObliterateMsg"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "IMergeTreeOp"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeRemoveMsg"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeSegmentDelta"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMergeTreeTextHelper"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IMoveInfo"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IRelativePosition"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IRemovalInfo"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISegment"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISegmentAction"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ITrackingGroup"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "LocalReferenceCollection"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "LocalReferencePosition"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "MapLike"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "Marker"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "MergeNode"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "MergeTreeDeltaOperationType"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "MergeTreeDeltaOperationTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "MergeTreeDeltaRevertible"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "MergeTreeDeltaType"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "MergeTreeDeltaType"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "MergeTreeMaintenanceType"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "MergeTreeMaintenanceType"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "MergeTreeRevertibleDriver"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "PropertiesManager"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "PropertiesRollback"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "PropertySet"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ReferencePosition"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "ReferenceType"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "revertMergeTreeDeltaRevertibles"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "SegmentGroup"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SegmentGroupCollection"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "SequenceOffsets"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "SerializedAttributionCollection"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "SlidingPreference"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "SlidingPreference"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "TextSegment"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "Trackable"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "TrackingGroup"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "TrackingGroupCollection"
+		}
+	],
+	"@fluidframework/runtime-definitions": [
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "AliasResult"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "AttributionKey"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "CreateChildSummarizerNodeFn"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "CreateChildSummarizerNodeParam"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "CreateSummarizerNodeSource"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "DetachedAttributionKey"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "FluidDataStoreRegistryEntry"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "FlushMode"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IAttachMessage"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IContainerRuntimeBase"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IContainerRuntimeBaseEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDataStore"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IEnvelope"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IExperimentalIncrementalSummaryContext"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidDataStoreChannel"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidDataStoreContext"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidDataStoreContextDetached"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidDataStoreFactory"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "IFluidDataStoreFactory"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidDataStoreRegistry"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "IFluidDataStoreRegistry"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidParentContext"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IGarbageCollectionData"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IGarbageCollectionDetailsBase"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IInboundSignalMessage"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "InboundAttachMessage"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IProvideFluidDataStoreFactory"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IProvideFluidDataStoreRegistry"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizeInternalResult"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizeResult"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizerNode"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizerNodeConfig"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizerNodeConfigWithGC"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummarizerNodeWithGC"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ISummaryStats"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ISummaryTreeWithStats"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ITelemetryContext"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "LocalAttributionKey"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "NamedFluidDataStoreRegistryEntries"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "NamedFluidDataStoreRegistryEntry"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "OpAttributionKey"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "SummarizeInternalFn"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "VisibilityState"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "VisibilityState"
+		}
+	],
+	"@fluidframework/sequence": [
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "appendAddIntervalToRevertibles"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "appendChangeIntervalToRevertibles"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "appendDeleteIntervalToRevertibles"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "appendIntervalPropertyChangedToRevertibles"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "appendSharedStringDeltaToRevertibles"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "createOverlappingIntervalsIndex"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "DeserializeCallback"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "discardSharedStringRevertibles"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IInterval"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IIntervalCollection"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IIntervalCollectionEvent"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "InteriorSequencePlace"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IntervalIndex"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "IntervalOpType"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "IntervalOpType"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "IntervalRevertible"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "IntervalStickiness"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "IntervalStickiness"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "IntervalType"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IOverlappingIntervalsIndex"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISequenceDeltaRange"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISerializableInterval"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISerializedInterval"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISharedIntervalCollection"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISharedSegmentSequenceEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISharedString"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "revertSharedStringRevertibles"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SequenceDeltaEvent"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SequenceEvent"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SequenceInterval"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SequenceMaintenanceEvent"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "SequencePlace"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SharedSegmentSequence"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SharedString"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SharedStringFactory"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "SharedStringRevertible"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "SharedStringSegment"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "Side"
+		}
+	],
+	"@fluidframework/shared-object-base": [
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IFluidSerializer"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ISharedObject"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ISharedObjectEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ISharedObjectKind"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "makeHandlesSerializable"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "parseHandles"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SharedObject"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "SharedObjectCore"
+		}
+	]
+}
