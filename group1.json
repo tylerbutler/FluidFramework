@@ -1,0 +1,1478 @@
+{
+	"@fluidframework/azure-client": [
+		{
+			"kind": "class",
+			"level": "public",
+			"name": "AzureClient"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "AzureClientProps"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "AzureConnectionConfig"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "AzureConnectionConfigType"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "AzureContainerServices"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "AzureContainerVersion"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "AzureGetVersionsOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "AzureLocalConnectionConfig"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "AzureMember"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "AzureRemoteConnectionConfig"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "IAzureAudience"
+		}
+	],
+	"@fluidframework/container-definitions": [
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "AttachState"
+		},
+		{
+			"kind": "namespace",
+			"level": "public",
+			"name": "ConnectionState"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ConnectionState"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "ContainerErrorTypes"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "ContainerErrorTypes"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ContainerWarning"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IAudience"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IAudienceOwner"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IBatchMessage"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ICodeDetailsLoader"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IConnectionDetails"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IContainer"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IContainerContext"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IContainerEvents"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ICriticalContainerError"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IDeltaManager"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IDeltaManagerEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IDeltaQueue"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IDeltaQueueEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IDeltaSender"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidBrowserPackage"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidBrowserPackageEnvironment"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidCodeDetails"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidCodeDetailsComparer"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "IFluidCodeDetailsComparer"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidCodeDetailsConfig"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidModule"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidModuleWithDetails"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidPackage"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidPackageEnvironment"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IGetPendingLocalStateProps"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IHostLoader"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ILoader"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "ILoaderOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IProvideFluidCodeDetailsComparer"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IProvideLoader"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IProvideRuntimeFactory"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IRuntime"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IRuntimeFactory"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "IRuntimeFactory"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "isFluidBrowserPackage"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "isFluidPackage"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISnapshotTreeWithBlobContents"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "LoaderHeader"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ReadOnlyInfo"
+		}
+	],
+	"@fluidframework/container-loader": [
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "ConnectionState"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ICodeDetailsLoader"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "IDetachedBlobStorage"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IFluidModuleWithDetails"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ILoaderOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ILoaderProps"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ILoaderServices"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IProtocolHandler"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "Loader"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "ProtocolHandlerBuilder"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "resolveWithLocationRedirectionHandling"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "waitContainerToCatchUp"
+		}
+	],
+	"@fluidframework/driver-definitions": [
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "DriverError"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "DriverErrorTypes"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "DriverErrorTypes"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "DriverHeader"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "DriverPreCheckInfo"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "FetchSource"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "FiveDaysMs"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IAnyDriverError"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IAuthorizationError"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IContainerPackageInfo"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDocumentDeltaConnection"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDocumentDeltaConnectionEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDocumentDeltaStorageService"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDocumentService"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDocumentServiceEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDocumentServiceFactory"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDocumentServicePolicies"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDocumentStorageService"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDocumentStorageServicePolicies"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDriverBasicError"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IDriverErrorBase"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IGenericNetworkError"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ILocationRedirectionError"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IResolvedUrl"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISnapshot"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISnapshotFetchOptions"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IStream"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "IStreamResult"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISummaryContext"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IThrottlingWarning"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IUrlResolver"
+		},
+		{
+			"kind": "enum",
+			"level": "alpha",
+			"name": "LoaderCachingPolicy"
+		}
+	],
+	"@fluidframework/fluid-static": [
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ContainerAttachProps"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ContainerSchema"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "DataObjectClass"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IConnection"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IFluidContainer"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IFluidContainerEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IMember"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "InitialObjects"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IServiceAudience"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IServiceAudienceEvents"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "LoadableObjectClass"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "LoadableObjectClassRecord"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "MemberChangedListener"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "Myself"
+		}
+	],
+	"@fluidframework/map": [
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "DirectoryFactory"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDirectory"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDirectoryEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "IDirectoryValueChanged"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISharedDirectory"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ISharedDirectoryEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ISharedMap"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ISharedMapEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IValueChanged"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "MapFactory"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "SharedDirectory"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "SharedDirectory"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "SharedMap"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "SharedMap"
+		}
+	],
+	"@fluidframework/tree": [
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "AllowedTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ApplyKind"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ArrayToUnion"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "CommitKind"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "CommitMetadata"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "disposeSymbol"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "Events"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ExtractItemType"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "FieldKind"
+		},
+		{
+			"kind": "class",
+			"level": "public",
+			"name": "FieldSchema"
+		},
+		{
+			"kind": "interface",
+			"level": "beta",
+			"name": "FieldSchemaUnsafe"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "FlexList"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "FlexListToUnion"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IDisposable"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ImplicitAllowedTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ImplicitFieldSchema"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "InsertableObjectFromSchemaRecord"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "InsertableObjectFromSchemaRecordUnsafe"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "InsertableTreeFieldFromImplicitField"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "InsertableTreeFieldFromImplicitFieldUnsafe"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "InsertableTreeNodeFromImplicitAllowedTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "InsertableTreeNodeFromImplicitAllowedTypesUnsafe"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "InsertableTypedNode"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "InsertableTypedNodeUnsafe"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "IsEvent"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ISubscribable"
+		},
+		{
+			"kind": "class",
+			"level": "public",
+			"name": "IterableTreeArrayContent"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ITree"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "LazyItem"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "MakeNominal"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "NodeBuilderData"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "NodeBuilderDataUnsafe"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "NodeFromSchema"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "NodeFromSchemaUnsafe"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "NodeKind"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ObjectFromSchemaRecord"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "ObjectFromSchemaRecordUnsafe"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "RestrictiveReadonlyRecord"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "Revertible"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "RevertibleStatus"
+		},
+		{
+			"kind": "class",
+			"level": "public",
+			"name": "SchemaFactory"
+		},
+		{
+			"kind": "class",
+			"level": "beta",
+			"name": "SchemaFactoryRecursive"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "SchemaIncompatible"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ScopedSchemaName"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "SharedTree"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "Tree"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeApi"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeArrayNode"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "TreeArrayNode"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeArrayNodeBase"
+		},
+		{
+			"kind": "interface",
+			"level": "beta",
+			"name": "TreeArrayNodeUnsafe"
+		},
+		{
+			"kind": "class",
+			"level": "public",
+			"name": "TreeConfiguration"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TreeFieldFromImplicitField"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "TreeFieldFromImplicitFieldUnsafe"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TreeLeafValue"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeMapNode"
+		},
+		{
+			"kind": "interface",
+			"level": "beta",
+			"name": "TreeMapNodeUnsafe"
+		},
+		{
+			"kind": "class",
+			"level": "public",
+			"name": "TreeNode"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeNodeApi"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeNodeEvents"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TreeNodeFromImplicitAllowedTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "TreeNodeFromImplicitAllowedTypesUnsafe"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TreeNodeSchema"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeNodeSchemaClass"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeNodeSchemaCore"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeNodeSchemaNonClass"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TreeObjectNode"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "TreeObjectNodeUnsafe"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "TreeStatus"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeView"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeViewEvents"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "type"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "Unenforced"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "Unhydrated"
+		},
+		{
+			"kind": "typealias",
+			"level": "beta",
+			"name": "ValidateRecursiveSchema"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "WithType"
+		}
+	],
+	"fluid-framework": [
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "AllowedTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ApplyKind"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ArrayToUnion"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "AttachState"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "CommitKind"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "CommitMetadata"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "ConnectionState"
+		},
+		{
+			"kind": "namespace",
+			"level": "public",
+			"name": "ConnectionStateType"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ConnectionStateType"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ContainerAttachProps"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "ContainerErrorTypes"
+		},
+		{
+			"kind": "variable",
+			"level": "alpha",
+			"name": "ContainerErrorTypes"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ContainerSchema"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "DataObjectClass"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "disposeSymbol"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "DriverErrorTypes"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "DriverErrorTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "Events"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ExtractItemType"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "FieldKind"
+		},
+		{
+			"kind": "class",
+			"level": "public",
+			"name": "FieldSchema"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "FlexList"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "FlexListToUnion"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IConnection"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ICriticalContainerError"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IDisposable"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IFluidContainer"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IFluidContainerEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IMember"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ImplicitAllowedTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ImplicitFieldSchema"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "InitialObjects"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "InsertableObjectFromSchemaRecord"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "InsertableTreeFieldFromImplicitField"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "InsertableTreeNodeFromImplicitAllowedTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "InsertableTypedNode"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IServiceAudience"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IServiceAudienceEvents"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "IsEvent"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ISharedMap"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ISharedMapEvents"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ISubscribable"
+		},
+		{
+			"kind": "class",
+			"level": "public",
+			"name": "IterableTreeArrayContent"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "ITree"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "IValueChanged"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "LazyItem"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "LoadableObjectClass"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "LoadableObjectClassRecord"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "MakeNominal"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "MemberChangedListener"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "Myself"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "NodeBuilderData"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "NodeFromSchema"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "NodeKind"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ObjectFromSchemaRecord"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "RestrictiveReadonlyRecord"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "Revertible"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "RevertibleStatus"
+		},
+		{
+			"kind": "class",
+			"level": "public",
+			"name": "SchemaFactory"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "SchemaIncompatible"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "ScopedSchemaName"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "SharedMap"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "SharedMap"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "SharedTree"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "Tree"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeApi"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeArrayNode"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "TreeArrayNode"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeArrayNodeBase"
+		},
+		{
+			"kind": "class",
+			"level": "public",
+			"name": "TreeConfiguration"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TreeFieldFromImplicitField"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TreeLeafValue"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeMapNode"
+		},
+		{
+			"kind": "class",
+			"level": "public",
+			"name": "TreeNode"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeNodeApi"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeNodeEvents"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TreeNodeFromImplicitAllowedTypes"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TreeNodeSchema"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeNodeSchemaClass"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeNodeSchemaCore"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeNodeSchemaNonClass"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "TreeObjectNode"
+		},
+		{
+			"kind": "enum",
+			"level": "public",
+			"name": "TreeStatus"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeView"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "TreeViewEvents"
+		},
+		{
+			"kind": "variable",
+			"level": "public",
+			"name": "type"
+		},
+		{
+			"kind": "typealias",
+			"level": "public",
+			"name": "Unhydrated"
+		},
+		{
+			"kind": "interface",
+			"level": "public",
+			"name": "WithType"
+		}
+	]
+}
