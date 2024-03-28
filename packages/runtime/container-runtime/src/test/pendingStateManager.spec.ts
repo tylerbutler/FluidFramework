@@ -11,14 +11,12 @@ import { ISequencedDocumentMessage, MessageType } from "@fluidframework/protocol
 import { isILoggingError } from "@fluidframework/telemetry-utils";
 import Deque from "double-ended-queue";
 
-
 import type {
 	RecentlyAddedContainerRuntimeMessageDetails,
 	UnknownContainerRuntimeMessage,
 } from "../messageTypes.js";
 import { BatchManager, BatchMessage } from "../opLifecycle/index.js";
 import { IPendingMessage, PendingStateManager } from "../pendingStateManager.js";
-
 
 type PendingStateManager_WithPrivates = Omit<PendingStateManager, "initialMessages"> & {
 	initialMessages: Deque<IPendingMessage>;

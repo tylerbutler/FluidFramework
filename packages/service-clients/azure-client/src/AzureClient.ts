@@ -39,7 +39,6 @@ import {
 } from "./interfaces.js";
 import { isAzureRemoteConnectionConfig } from "./utils.js";
 
-
 /**
  * Strongly typed id for connecting to a local Azure Fluid Relay.
  */

@@ -7,7 +7,6 @@
 
 /* eslint-disable unicorn/no-null */
 
-
 import { SharedCell } from "@fluidframework/cell";
 import { type IFluidHandle } from "@fluidframework/core-interfaces";
 import { SharedCounter } from "@fluidframework/counter";

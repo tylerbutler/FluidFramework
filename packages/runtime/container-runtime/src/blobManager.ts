@@ -41,7 +41,6 @@ import { v4 as uuid } from "uuid";
 
 import { IBlobMetadata } from "./metadata.js";
 
-
 /**
  * This class represents blob (long string)
  * This object is used only when creating (writing) new blob and serialization purposes.

@@ -48,7 +48,6 @@ import { v4 as uuid } from "uuid";
 import { MockDeltaManager } from "./mockDeltas.js";
 import { MockHandle } from "./mockHandle.js";
 
-
 /**
  * Mock implementation of IDeltaConnection for testing
  * @alpha
