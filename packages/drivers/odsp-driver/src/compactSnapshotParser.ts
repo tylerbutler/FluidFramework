@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-import { ISnapshot } from "@fluidframework/driver-definitions";
 import { ISequencedDocumentMessage, ISnapshotTree } from "@fluidframework/protocol-definitions";
 import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
 import { ReadBuffer } from "./ReadBufferUtils.js";
@@ -20,6 +19,7 @@ import {
 	getNodeProps,
 	getStringInstance,
 } from "./zipItDataRepresentationUtils.js";
+import { ISnapshot } from "@fluidframework/driver-definitions/internal";
 
 export const snapshotMinReadVersion = "1.0";
 export const currentReadVersion = "1.0";

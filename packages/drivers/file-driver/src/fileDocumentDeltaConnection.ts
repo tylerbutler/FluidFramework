@@ -6,10 +6,6 @@
 import { TypedEventEmitter } from "@fluid-internal/client-utils";
 import { IDisposable } from "@fluidframework/core-interfaces";
 import {
-	IDocumentDeltaConnection,
-	IDocumentDeltaConnectionEvents,
-} from "@fluidframework/driver-definitions";
-import {
 	ConnectionMode,
 	IClientConfiguration,
 	IConnected,
@@ -21,6 +17,7 @@ import {
 	ScopeType,
 } from "@fluidframework/protocol-definitions";
 import { FileDeltaStorageService } from "./fileDeltaStorageService.js";
+import { IDocumentDeltaConnection, IDocumentDeltaConnectionEvents } from "@fluidframework/driver-definitions/internal";
 
 const MaxBatchDeltas = 2000;
 

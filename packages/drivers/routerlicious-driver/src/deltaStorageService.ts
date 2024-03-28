@@ -5,12 +5,7 @@
 
 import { ITelemetryBaseProperties } from "@fluidframework/core-interfaces";
 import { getW3CData, validateMessages } from "@fluidframework/driver-base";
-import {
-	IDeltaStorageService,
-	IDeltasFetchResult,
-	IDocumentDeltaStorageService,
-	IStream,
-} from "@fluidframework/driver-definitions";
+import { IDeltaStorageService, IDeltasFetchResult } from "@fluidframework/driver-definitions";
 import {
 	emptyMessageStream,
 	readAndParse,
@@ -21,6 +16,7 @@ import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions"
 import { ITelemetryLoggerExt, PerformanceEvent } from "@fluidframework/telemetry-utils";
 import { DocumentStorageService } from "./documentStorageService.js";
 import { RestWrapper } from "./restWrapperBase.js";
+import { IDocumentDeltaStorageService, IStream } from "@fluidframework/driver-definitions/internal";
 
 /**
  * Maximum number of ops we can fetch at a time. This should be kept at 2k, as

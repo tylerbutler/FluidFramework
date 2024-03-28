@@ -5,14 +5,6 @@
 
 import { IDisposable } from "@fluidframework/core-interfaces";
 import {
-	FetchSource,
-	IDocumentStorageService,
-	IDocumentStorageServicePolicies,
-	ISnapshot,
-	ISnapshotFetchOptions,
-	ISummaryContext,
-} from "@fluidframework/driver-definitions";
-import {
 	ICreateBlobResponse,
 	ISnapshotTree,
 	ISummaryHandle,
@@ -21,6 +13,7 @@ import {
 } from "@fluidframework/protocol-definitions";
 import { ITelemetryLoggerExt, LoggingError, UsageError } from "@fluidframework/telemetry-utils";
 import { runWithRetry } from "./retryUtils.js";
+import { FetchSource, IDocumentStorageService, IDocumentStorageServicePolicies, ISnapshot, ISnapshotFetchOptions, ISummaryContext } from "@fluidframework/driver-definitions/internal";
 
 export class RetryErrorsStorageAdapter implements IDocumentStorageService, IDisposable {
 	private _disposed = false;

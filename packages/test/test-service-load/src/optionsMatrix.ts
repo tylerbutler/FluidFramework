@@ -9,7 +9,6 @@ import {
 	generatePairwiseOptions,
 	numberCases,
 } from "@fluid-private/test-pairwise-generator";
-import { ILoaderOptions } from "@fluidframework/container-loader";
 import {
 	CompressionAlgorithms,
 	IContainerRuntimeOptions,
@@ -20,6 +19,7 @@ import { ConfigTypes } from "@fluidframework/core-interfaces";
 import { LoggingError } from "@fluidframework/telemetry-utils";
 import { TestDriverTypes } from "@fluidframework/test-driver-definitions";
 import { ILoadTestConfig, OptionOverride } from "./testConfigFile.js";
+import { ILoaderOptions } from "@fluidframework/container-loader/internal";
 
 const loaderOptionsMatrix: OptionsMatrix<ILoaderOptions> = {
 	cache: booleanCases,

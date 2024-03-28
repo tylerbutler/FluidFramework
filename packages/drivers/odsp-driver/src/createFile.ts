@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-import { ISnapshot } from "@fluidframework/driver-definitions";
 import { NonRetryableError } from "@fluidframework/driver-utils";
 import {
 	IFileEntry,
@@ -36,6 +35,7 @@ import {
 } from "./odspUtils.js";
 import { pkgVersion as driverVersion } from "./packageVersion.js";
 import { runWithRetry } from "./retryUtils.js";
+import { ISnapshot } from "@fluidframework/driver-definitions/internal";
 
 const isInvalidFileName = (fileName: string): boolean => {
 	const invalidCharsRegex = /["*/:<>?\\|]+/g;

@@ -10,7 +10,6 @@ import {
 	IChannelFactory,
 	IFluidDataStoreRuntime,
 } from "@fluidframework/datastore-definitions";
-import { IDocumentStorageService } from "@fluidframework/driver-definitions";
 import { readAndParse } from "@fluidframework/driver-utils";
 import { ISequencedDocumentMessage, ISnapshotTree } from "@fluidframework/protocol-definitions";
 import {
@@ -30,6 +29,7 @@ import {
 import { ChannelDeltaConnection } from "./channelDeltaConnection.js";
 import { ChannelStorageService } from "./channelStorageService.js";
 import { ISharedObjectRegistry } from "./dataStoreRuntime.js";
+import { IDocumentStorageService } from "@fluidframework/driver-definitions/internal";
 
 export const attributesBlobKey = ".attributes";
 

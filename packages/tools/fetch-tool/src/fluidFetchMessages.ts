@@ -5,7 +5,6 @@
 
 import fs from "fs";
 import { assert } from "@fluidframework/core-utils";
-import { IDocumentService } from "@fluidframework/driver-definitions";
 import {
 	IClient,
 	ISequencedDocumentMessage,
@@ -21,6 +20,7 @@ import {
 	overWrite,
 	paramActualFormatting,
 } from "./fluidFetchArgs.js";
+import { IDocumentService } from "@fluidframework/driver-definitions/internal";
 
 function filenameFromIndex(index: number): string {
 	return index === 0 ? "" : index.toString(); // support old tools...

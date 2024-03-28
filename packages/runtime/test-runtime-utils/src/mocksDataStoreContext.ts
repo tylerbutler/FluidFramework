@@ -6,8 +6,6 @@
 import { AttachState, IAudience, IDeltaManager } from "@fluidframework/container-definitions";
 import { FluidObject, IFluidHandle, IFluidHandleContext } from "@fluidframework/core-interfaces";
 import { ITelemetryLoggerExt, createChildLogger } from "@fluidframework/telemetry-utils";
-
-import { IDocumentStorageService } from "@fluidframework/driver-definitions";
 import { IIdCompressor, IIdCompressorCore } from "@fluidframework/id-compressor";
 import {
 	IClientDetails,
@@ -25,6 +23,7 @@ import {
 	IGarbageCollectionDetailsBase,
 } from "@fluidframework/runtime-definitions";
 import { v4 as uuid } from "uuid";
+import { IDocumentStorageService } from "@fluidframework/driver-definitions/internal";
 
 /**
  * @alpha

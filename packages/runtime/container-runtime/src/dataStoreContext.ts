@@ -15,7 +15,6 @@ import {
 } from "@fluidframework/core-interfaces";
 import { IEvent } from "@fluidframework/core-interfaces";
 import { assert, LazyPromise, unreachableCase } from "@fluidframework/core-utils";
-import { IDocumentStorageService } from "@fluidframework/driver-definitions";
 import { BlobTreeEntry, readAndParse } from "@fluidframework/driver-utils";
 import type { IIdCompressor } from "@fluidframework/id-compressor";
 import {
@@ -73,6 +72,7 @@ import {
 	summarizerClientType,
 	wrapSummaryInChannelsTree,
 } from "./summary/index.js";
+import { IDocumentStorageService } from "@fluidframework/driver-definitions/internal";
 
 function createAttributes(
 	pkg: readonly string[],
