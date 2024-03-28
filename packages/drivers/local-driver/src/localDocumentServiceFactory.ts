@@ -10,7 +10,12 @@ import { ILocalDeltaConnectionServer } from "@fluidframework/server-local-server
 import { createDocument } from "./localCreateDocument.js";
 import { LocalDocumentDeltaConnection } from "./localDocumentDeltaConnection.js";
 import { createLocalDocumentService } from "./localDocumentService.js";
-import { IDocumentService, IDocumentServiceFactory, IDocumentServicePolicies, IResolvedUrl } from "@fluidframework/driver-definitions/internal";
+import {
+	IDocumentService,
+	IDocumentServiceFactory,
+	IDocumentServicePolicies,
+	IResolvedUrl,
+} from "@fluidframework/driver-definitions/internal";
 
 /**
  * Implementation of document service factory for local use.

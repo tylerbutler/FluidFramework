@@ -20,7 +20,11 @@ import {
 } from "@fluidframework/replay-driver";
 import { IDebuggerController, IDebuggerUI } from "./fluidDebuggerUi.js";
 import { Sanitizer } from "./sanitizer.js";
-import { IDocumentDeltaStorageService, IDocumentService, IDocumentStorageService } from "@fluidframework/driver-definitions/internal";
+import {
+	IDocumentDeltaStorageService,
+	IDocumentService,
+	IDocumentStorageService,
+} from "@fluidframework/driver-definitions/internal";
 
 /**
  * @internal
