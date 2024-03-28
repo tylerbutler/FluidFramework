@@ -5,7 +5,6 @@
 
 import Tooltip from "@material-ui/core/Tooltip";
 import * as React from "react";
-
 import { Field } from "./Field.js";
 import { IEditableValueCellProps } from "./InspectorTableTypes.js";
 

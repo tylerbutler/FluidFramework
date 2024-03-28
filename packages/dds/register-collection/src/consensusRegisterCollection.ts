@@ -17,7 +17,6 @@ import {
 	SharedObject,
 	createSingleBlobSummary,
 } from "@fluidframework/shared-object-base";
-
 import { ConsensusRegisterCollectionFactory } from "./consensusRegisterCollectionFactory.js";
 import {
 	IConsensusRegisterCollection,

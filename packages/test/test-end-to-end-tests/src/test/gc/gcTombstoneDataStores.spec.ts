@@ -6,7 +6,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { strict as assert } from "assert";
-
 import { stringToBuffer } from "@fluid-internal/client-utils";
 import {
 	ITestDataObject,
@@ -14,7 +13,6 @@ import {
 	describeCompat,
 	itExpects,
 } from "@fluid-private/test-version-utils";
-import { IContainer, LoaderHeader } from "@fluidframework/container-definitions/internal";
 import {
 	AllowTombstoneRequestHeaderKey,
 	ContainerRuntime,
@@ -47,8 +45,8 @@ import {
 	summarizeNow,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
-
 import { getGCStateFromSummary, getGCTombstoneStateFromSummary } from "./gcTestSummaryUtils.js";
+import { IContainer, LoaderHeader } from "@fluidframework/container-definitions/internal";
 
 type ExpectedTombstoneError = Error & {
 	code: number;

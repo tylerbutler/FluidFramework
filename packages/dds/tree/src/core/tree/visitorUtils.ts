@@ -4,12 +4,10 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import { ICodecOptions } from "../../codec/index.js";
 import { IdAllocator, idAllocatorFromMaxId } from "../../util/index.js";
 import { RevisionTagCodec } from "../rebase/index.js";
 import { FieldKey } from "../schema-stored/index.js";
-
 import { ProtoNodes, Root } from "./delta.js";
 import { DetachedFieldIndex, ForestRootId } from "./detachedFieldIndex.js";
 import { PlaceIndex, Range } from "./pathTree.js";

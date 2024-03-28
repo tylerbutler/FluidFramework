@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { IsoBuffer, TypedEventEmitter } from "@fluid-internal/client-utils";
 import { IEvent } from "@fluidframework/core-interfaces";
 import { IChannelStorageService } from "@fluidframework/datastore-definitions";
@@ -22,7 +21,6 @@ import {
 	MockSharedObjectServices,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import {
 	AllowedUpdateType,
 	ChangeFamily,
@@ -38,7 +36,6 @@ import {
 	cursorForJsonableTreeNode,
 	typeNameSymbol,
 } from "../../feature-libraries/index.js";
-import { InitializeAndSchematizeConfiguration } from "../../shared-tree/index.js";
 import {
 	EditManager,
 	SharedTreeCore,
@@ -46,9 +43,9 @@ import {
 	SummaryElementParser,
 	SummaryElementStringifier,
 } from "../../shared-tree-core/index.js";
+import { InitializeAndSchematizeConfiguration } from "../../shared-tree/index.js";
 import { brand } from "../../util/index.js";
 import { SharedTreeTestFactory, schematizeFlexTree } from "../utils.js";
-
 import { TestSharedTreeCore } from "./utils.js";
 
 describe("SharedTreeCore", () => {

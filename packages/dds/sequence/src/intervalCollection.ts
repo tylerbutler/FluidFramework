@@ -29,7 +29,6 @@ import {
 import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
 import { LoggingError, UsageError } from "@fluidframework/telemetry-utils";
 import { v4 as uuid } from "uuid";
-
 import {
 	IIntervalCollectionFactory,
 	IIntervalCollectionOperation,

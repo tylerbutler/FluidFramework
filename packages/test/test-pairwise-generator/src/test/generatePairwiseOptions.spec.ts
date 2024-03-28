@@ -6,7 +6,6 @@
 /* eslint-disable @typescript-eslint/no-base-to-string */
 
 import { strict as assert } from "assert";
-
 import { OptionsMatrix, generatePairwiseOptions } from "../index.js";
 
 interface SimpleOptions {

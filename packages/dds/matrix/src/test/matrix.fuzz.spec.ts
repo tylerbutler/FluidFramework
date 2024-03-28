@@ -5,7 +5,6 @@
 
 import { strict as assert } from "assert";
 import * as path from "path";
-
 import {
 	AsyncGenerator,
 	Generator,
@@ -25,11 +24,9 @@ import {
 	IFluidDataStoreRuntime,
 } from "@fluidframework/datastore-definitions";
 import { FlushMode } from "@fluidframework/runtime-definitions";
-
 import { SharedMatrix } from "../matrix.js";
 import { MatrixItem } from "../ops.js";
 import { SharedMatrixFactory } from "../runtime.js";
-
 import { _dirname } from "./dirname.cjs";
 
 /**

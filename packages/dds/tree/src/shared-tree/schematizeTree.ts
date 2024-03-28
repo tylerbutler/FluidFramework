@@ -4,7 +4,6 @@
  */
 
 import { assert, unreachableCase } from "@fluidframework/core-utils";
-
 import {
 	AllowedUpdateType,
 	Compatibility,
@@ -25,7 +24,6 @@ import {
 	normalizeNewFieldContent,
 } from "../feature-libraries/index.js";
 import { fail } from "../util/index.js";
-
 import { ITreeCheckout } from "./treeCheckout.js";
 
 /**

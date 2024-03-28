@@ -15,7 +15,6 @@ import {
 	extensionViewMessageSource,
 	relayMessageToPort,
 } from "../messaging/index.js";
-
 import {
 	contentScriptMessageLoggingOptions,
 	formatContentScriptMessageForLogging,

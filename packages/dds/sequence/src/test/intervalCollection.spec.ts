@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { AttachState } from "@fluidframework/container-definitions";
 import { IChannelServices } from "@fluidframework/datastore-definitions";
 import {
@@ -21,13 +20,11 @@ import {
 	MockFluidDataStoreRuntime,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { IIntervalCollection, Side } from "../intervalCollection.js";
 import { IntervalIndex } from "../intervalIndex/index.js";
 import { ISerializableInterval, IntervalStickiness, SequenceInterval } from "../intervals/index.js";
 import { SharedStringFactory } from "../sequenceFactory.js";
 import { SharedString } from "../sharedString.js";
-
 import { assertSequenceIntervals } from "./intervalTestUtils.js";
 
 class MockIntervalIndex<TInterval extends ISerializableInterval>

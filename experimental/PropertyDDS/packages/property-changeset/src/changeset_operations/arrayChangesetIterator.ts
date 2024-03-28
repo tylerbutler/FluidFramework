@@ -7,14 +7,13 @@
  * @fileoverview Iterator to iterate over array ChangeSets
  */
 
-import { constants } from "@fluid-experimental/property-common";
 import isNumber from "lodash/isNumber.js";
 import isString from "lodash/isString.js";
 
 // @ts-ignore
+import { constants } from "@fluid-experimental/property-common";
 
 import { SerializedChangeSet } from "../changeset.js";
-
 import { ArrayIteratorOperationTypes } from "./operationTypes.js";
 
 const { MSG } = constants;

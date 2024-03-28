@@ -5,7 +5,6 @@
 
 import { encodeTreeSchema, intoStoredSchema } from "../../feature-libraries/index.js";
 import { testTrees } from "../testTrees.js";
-
 import { takeJsonSnapshot, useSnapshotDirectory } from "./snapshotTools.js";
 
 describe("schema snapshots", () => {

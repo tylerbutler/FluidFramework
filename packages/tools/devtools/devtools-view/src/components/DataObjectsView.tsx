@@ -4,6 +4,8 @@
  */
 
 import { Tree as FluentTree } from "@fluentui/react-components/unstable";
+import React from "react";
+
 import {
 	GetRootDataVisualizations,
 	type HasContainerKey,
@@ -13,11 +15,8 @@ import {
 	type RootHandleNode,
 	handleIncomingMessage,
 } from "@fluidframework/devtools-core";
-import React from "react";
-
 
 import { useMessageRelay } from "../MessageRelayContext.js";
-
 import { Waiting } from "./Waiting.js";
 import { TreeDataView } from "./data-visualization/index.js";
 

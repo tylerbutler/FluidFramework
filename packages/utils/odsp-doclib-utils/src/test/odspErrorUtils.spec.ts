@@ -4,18 +4,16 @@
  */
 
 import { strict as assert } from "assert";
-
 import { DriverErrorTypes } from "@fluidframework/driver-definitions";
+import { GenericNetworkError, createWriteError } from "@fluidframework/driver-utils";
+import { IOdspError, OdspError, OdspErrorTypes } from "@fluidframework/odsp-driver-definitions";
+import { isILoggingError } from "@fluidframework/telemetry-utils";
+import { createOdspNetworkError, enrichOdspError } from "../odspErrorUtils.js";
+import { pkgVersion } from "../packageVersion.js";
 import {
 	IGenericNetworkError,
 	IThrottlingWarning,
 } from "@fluidframework/driver-definitions/internal";
-import { GenericNetworkError, createWriteError } from "@fluidframework/driver-utils";
-import { IOdspError, OdspError, OdspErrorTypes } from "@fluidframework/odsp-driver-definitions";
-import { isILoggingError } from "@fluidframework/telemetry-utils";
-
-import { createOdspNetworkError, enrichOdspError } from "../odspErrorUtils.js";
-import { pkgVersion } from "../packageVersion.js";
 
 describe("OdspErrorUtils", () => {
 	function assertCustomPropertySupport(err: any) {

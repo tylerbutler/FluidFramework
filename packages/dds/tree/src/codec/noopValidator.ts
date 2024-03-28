@@ -4,7 +4,6 @@
  */
 
 import type { Static, TSchema } from "@sinclair/typebox";
-
 import { JsonValidator } from "./codec.js";
 
 /**

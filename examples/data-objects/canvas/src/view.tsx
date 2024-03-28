@@ -4,6 +4,7 @@
  */
 
 import { IColor, InkCanvas } from "@fluid-experimental/ink";
+
 import React, { useEffect, useRef, useState } from "react";
 
 import { Canvas } from "./canvas.js";

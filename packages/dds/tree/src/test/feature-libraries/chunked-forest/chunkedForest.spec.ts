@@ -3,7 +3,6 @@
  * Licensed under the MIT License.
  */
 
-import { TreeStoredSchemaSubscription } from "../../../core/index.js";
 import {
 	Chunker,
 	IChunker,
@@ -17,6 +16,8 @@ import {
 // Allow importing from this specific file which is being tested:
 // eslint-disable-next-line import/no-internal-modules
 import { buildChunkedForest } from "../../../feature-libraries/chunked-forest/chunkedForest.js";
+
+import { TreeStoredSchemaSubscription } from "../../../core/index.js";
 import { defaultSchemaPolicy } from "../../../feature-libraries/index.js";
 import { testForest } from "../../forestTestSuite.js";
 

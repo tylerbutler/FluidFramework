@@ -7,7 +7,6 @@
 
 import { assert } from "@fluidframework/core-utils";
 import { AttributionKey } from "@fluidframework/runtime-definitions";
-
 import { IAttributionCollection } from "./attributionCollection.js";
 import { LocalClientId, UnassignedSequenceNumber, UniversalSequenceNumber } from "./constants.js";
 import { LocalReferenceCollection } from "./localReference.js";

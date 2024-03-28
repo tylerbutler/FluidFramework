@@ -5,7 +5,6 @@
 
 /* eslint-disable import/no-internal-modules */
 import { assert, unreachableCase } from "@fluidframework/core-utils";
-
 import { ITreeCursorSynchronous, TreeNodeSchemaIdentifier } from "../core/index.js";
 import {
 	FieldKinds,
@@ -24,7 +23,6 @@ import {
 import { normalizeFlexListEager } from "../feature-libraries/typed-schema/flexList.js";
 import { TreeContent } from "../shared-tree/index.js";
 import { brand, fail, isReadonlyArray, mapIterable } from "../util/index.js";
-
 import {
 	InsertableContent,
 	extractFactoryContent,

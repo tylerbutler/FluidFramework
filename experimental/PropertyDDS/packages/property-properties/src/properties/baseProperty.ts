@@ -13,7 +13,6 @@ import {
 } from "@fluid-experimental/property-changeset";
 import { constants, ConsoleUtils } from "@fluid-experimental/property-common";
 import _ from "lodash";
-
 import { LazyLoadedProperties as Property } from "./lazyLoadedProperties";
 
 const { MSG, PROPERTY_PATH_DELIMITER } = constants;

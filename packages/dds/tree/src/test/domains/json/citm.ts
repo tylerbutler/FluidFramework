@@ -7,10 +7,8 @@
 /* eslint-disable @rushstack/no-new-null */
 
 import { IRandom, makeRandom } from "@fluid-private/stochastic-test-utils";
-
 import { FieldKey } from "../../../core/index.js";
 import { brand } from "../../../util/index.js";
-
 import { getRandomEnglishString, getSizeInBytes } from "./jsonGeneratorUtils.js";
 
 /**

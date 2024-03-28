@@ -8,9 +8,7 @@
 import { strict as assert } from "assert";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import path from "path";
-
 import { SessionId, createIdCompressor } from "../../index.js";
-
 import { _dirname } from "./dirname.cjs";
 
 const regenerateSnapshots = process.argv.includes("--snapshot");

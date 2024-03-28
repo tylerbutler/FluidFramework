@@ -4,7 +4,6 @@
  */
 
 import { assert, unreachableCase } from "@fluidframework/core-utils";
-
 import {
 	ChangeAtomId,
 	RevisionMetadataSource,
@@ -13,7 +12,6 @@ import {
 } from "../../core/index.js";
 import { IdAllocator, brand, fail } from "../../util/index.js";
 import { CrossFieldManager, CrossFieldTarget } from "../modular-schema/index.js";
-
 import { CellOrderingMethod, sequenceConfig } from "./config.js";
 import { EmptyInputCellMark, MoveMarkEffect } from "./helperTypes.js";
 import { MarkListFactory } from "./markListFactory.js";

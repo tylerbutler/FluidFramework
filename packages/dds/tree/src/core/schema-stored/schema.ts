@@ -13,7 +13,6 @@ import {
 	fail,
 	invertMap,
 } from "../../util/index.js";
-
 import {
 	FieldKey,
 	FieldKindIdentifier,

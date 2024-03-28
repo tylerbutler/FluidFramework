@@ -17,6 +17,7 @@ import {
 	SetProperty,
 	Uint64Property,
 } from "@fluid-experimental/property-properties";
+
 import memoize from "memoize-one";
 
 export class Utils {

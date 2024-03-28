@@ -4,10 +4,8 @@
  */
 
 import { strict as assert } from "assert";
-
 import { AsyncReducer, combineReducers } from "@fluid-private/stochastic-test-utils";
 import { DDSFuzzTestState } from "@fluid-private/test-dds-utils";
-
 import { Revertible, ValueSchema } from "../../../core/index.js";
 import {
 	DownPath,
@@ -21,7 +19,6 @@ import {
 import { ISharedTree, SharedTree, SharedTreeFactory } from "../../../shared-tree/index.js";
 import { brand, fail } from "../../../util/index.js";
 import { validateTreeConsistency } from "../../utils.js";
-
 import {
 	FuzzTestState,
 	FuzzTransactionView,

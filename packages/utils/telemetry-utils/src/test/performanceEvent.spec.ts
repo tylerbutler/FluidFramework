@@ -4,9 +4,7 @@
  */
 
 import { strict as assert } from "node:assert";
-
 import { ITelemetryBaseEvent } from "@fluidframework/core-interfaces";
-
 import { PerformanceEvent, TelemetryLogger } from "../logger.js";
 import { ITelemetryLoggerExt } from "../telemetryTypes.js";
 

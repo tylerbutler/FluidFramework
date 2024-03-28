@@ -12,11 +12,10 @@ const { ChangeSet } = require("@fluid-experimental/property-changeset");
 const { generateGUID } = require("@fluid-experimental/property-common").GuidUtils;
 const { MSG } = require("@fluid-experimental/property-common").constants;
 const _ = require("lodash");
-
 const { PropertyFactory } = require("../..");
 const { BaseProperty } = require("../..");
-const { MapProperty } = require("../../properties/mapProperty");
 const { NodeProperty } = require("../../properties/nodeProperty");
+const { MapProperty } = require("../../properties/mapProperty");
 
 describe("NodeProperty", function () {
 	var changeSetWithTwoMapEntries, changeSetWithTwoMapEntries_full, removalChangeSet;

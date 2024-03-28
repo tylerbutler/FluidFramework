@@ -5,7 +5,6 @@
 
 import { Brand } from "../../util/index.js";
 import { FieldKey } from "../schema-stored/index.js";
-
 import { DetachedField, keyAsDetachedField } from "./types.js";
 
 /**

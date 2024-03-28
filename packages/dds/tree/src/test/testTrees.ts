@@ -6,7 +6,6 @@
 import { strict as assert } from "assert";
 
 import { MockHandle } from "@fluidframework/test-runtime-utils";
-
 import { ITreeCursorSynchronous, JsonableTree } from "../core/index.js";
 import { leaf } from "../domains/index.js";
 import {

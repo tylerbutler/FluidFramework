@@ -3,10 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { makeStyles } from "@material-ui/styles";
 import React from "react";
 
+import { makeStyles } from "@material-ui/styles";
 import { IInspectorTableProps } from "./InspectorTableTypes.js";
+
 import { SearchBox } from "./SearchBox.js";
 
 const useStyles = makeStyles(

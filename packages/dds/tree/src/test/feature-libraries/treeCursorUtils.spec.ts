@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import {
 	CursorLocationType,
 	DetachedField,
@@ -14,6 +13,7 @@ import {
 	compareFieldUpPaths,
 	compareUpPaths,
 } from "../../core/index.js";
+
 import { leaf } from "../../domains/index.js";
 import {
 	PrefixedPath,

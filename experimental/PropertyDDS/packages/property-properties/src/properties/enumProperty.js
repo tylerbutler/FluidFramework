@@ -11,7 +11,6 @@ const { TypeIdHelper } = require("@fluid-experimental/property-changeset");
 const { MSG } = require("@fluid-experimental/property-common").constants;
 const { ConsoleUtils } = require("@fluid-experimental/property-common");
 const _ = require("lodash");
-
 const { Int32Property } = require("./intProperties");
 const { _castFunctors } = require("./primitiveTypeCasts");
 const { ValueProperty } = require("./valueProperty");

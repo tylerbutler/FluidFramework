@@ -10,7 +10,6 @@ import {
 	MockContainerRuntimeFactory,
 	MockFluidDataStoreRuntime,
 } from "@fluidframework/test-runtime-utils";
-
 import { IBenchmarkParameters, benchmarkAll } from "./DocumentCreator.js";
 
 function createLocalMatrix(id: string, dataStoreRuntime: MockFluidDataStoreRuntime) {

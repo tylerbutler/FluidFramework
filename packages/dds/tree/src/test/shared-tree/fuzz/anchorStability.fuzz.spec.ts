@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { TypedEventEmitter } from "@fluid-internal/client-utils";
 import { takeAsync } from "@fluid-private/stochastic-test-utils";
 import {
@@ -13,7 +12,6 @@ import {
 	DDSFuzzTestState,
 	createDDSFuzzSuite,
 } from "@fluid-private/test-dds-utils";
-
 import { Anchor, UpPath, Value } from "../../../core/index.js";
 import {
 	cursorsFromContextualData,
@@ -22,7 +20,6 @@ import {
 } from "../../../feature-libraries/index.js";
 import { TreeContent } from "../../../shared-tree/index.js";
 import { SharedTreeTestFactory, createTestUndoRedoStacks, validateTree } from "../../utils.js";
-
 import {
 	EditGeneratorOpWeights,
 	FuzzTestState,

@@ -8,7 +8,6 @@
 import { take } from "@fluid-private/stochastic-test-utils";
 import { BenchmarkType, benchmark } from "@fluid-tools/benchmark";
 import { assert } from "@fluidframework/core-utils";
-
 import {
 	IdCreationRange,
 	OpSpaceCompressedId,
@@ -19,7 +18,6 @@ import {
 } from "..//index.js";
 import { IdCompressor } from "../idCompressor.js";
 import { createSessionId } from "../utilities.js";
-
 import {
 	Client,
 	DestinationClient,

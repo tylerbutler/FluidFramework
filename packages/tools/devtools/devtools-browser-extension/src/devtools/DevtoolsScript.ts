@@ -4,7 +4,6 @@
  */
 
 import { browser } from "../Globals.js";
-
 import { formatDevtoolsScriptMessageForLogging } from "./Logging.js";
 
 /**

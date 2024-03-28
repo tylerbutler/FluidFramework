@@ -23,7 +23,6 @@ import {
 	refTypeIncludesFlag,
 	revertMergeTreeDeltaRevertibles,
 } from "@fluidframework/merge-tree";
-
 import { InteriorSequencePlace, Side } from "./intervalCollection.js";
 import { IntervalOpType, SequenceInterval } from "./intervals/index.js";
 import { ISequenceDeltaRange, SequenceDeltaEvent } from "./sequenceDeltaEvent.js";

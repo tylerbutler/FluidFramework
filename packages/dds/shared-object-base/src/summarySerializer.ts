@@ -4,7 +4,6 @@
  */
 
 import { IFluidHandle } from "@fluidframework/core-interfaces";
-
 import { FluidSerializer } from "./serializer.js";
 
 /**

@@ -14,9 +14,7 @@ import {
 } from "@fluidframework/devtools-core";
 import { type IClient } from "@fluidframework/protocol-definitions";
 import React from "react";
-
 import { useMessageRelay } from "../MessageRelayContext.js";
-
 import { AudienceHistoryTable } from "./AudienceHistoryTable.js";
 import { AudienceStateTable } from "./AudienceStateTable.js";
 import { Waiting } from "./Waiting.js";

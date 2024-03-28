@@ -10,7 +10,6 @@
  * - Extensible flags. See {@link ExtendedError.FLAGS}.
  */
 import _ from "lodash";
-
 import { FlaggedError } from "./flaggedError";
 
 /**

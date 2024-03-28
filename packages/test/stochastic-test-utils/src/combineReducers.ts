@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import { AsyncReducer, BaseFuzzTestState, Reducer } from "./types.js";
 
 /**

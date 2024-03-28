@@ -4,7 +4,6 @@
  */
 
 import { openDB } from "idb";
-
 import {
 	CurrentCacheVersion,
 	FluidDriverCacheDBName,

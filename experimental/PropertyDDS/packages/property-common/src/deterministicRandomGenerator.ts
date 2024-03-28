@@ -10,7 +10,6 @@
 /* eslint-disable no-bitwise */
 
 import _ from "lodash";
-
 import { GuidUtils } from "./guidUtils";
 import { calculateHash } from "./hashCalculator";
 

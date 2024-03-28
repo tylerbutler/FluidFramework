@@ -11,7 +11,6 @@ import { makeStyles } from "@material-ui/core/styles";
 import classNames from "classnames";
 import React, { useEffect, useState } from "react";
 import AutoSizer from "react-virtualized-auto-sizer";
-
 import {
 	DecoratedSelect,
 	type DecoratedSelectGroupedOptionsType,

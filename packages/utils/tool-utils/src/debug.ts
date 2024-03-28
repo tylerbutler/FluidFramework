@@ -4,7 +4,6 @@
  */
 
 import registerDebug from "debug";
-
 import { pkgName, pkgVersion } from "./packageVersion.js";
 
 export const debug = registerDebug("fluid:tool-utils");

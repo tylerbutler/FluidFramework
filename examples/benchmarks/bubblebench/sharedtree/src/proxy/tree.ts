@@ -14,7 +14,6 @@ import {
 	TraitLabel,
 } from "@fluid-experimental/tree";
 import { Serializable } from "@fluidframework/datastore-definitions";
-
 import { NodeKind, fromJson } from "./treeutils.js";
 
 function getChild(

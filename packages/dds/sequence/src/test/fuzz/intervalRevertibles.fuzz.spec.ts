@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { TypedEventEmitter } from "@fluid-internal/client-utils";
 import {
 	AsyncGenerator as Generator,
@@ -18,7 +17,6 @@ import {
 	createDDSFuzzSuite,
 } from "@fluid-private/test-dds-utils";
 import { FlushMode } from "@fluidframework/runtime-definitions";
-
 import {
 	appendAddIntervalToRevertibles,
 	appendChangeIntervalToRevertibles,
@@ -26,7 +24,6 @@ import {
 	appendIntervalPropertyChangedToRevertibles,
 	appendSharedStringDeltaToRevertibles,
 } from "../../revertibles.js";
-
 import {
 	FuzzTestState,
 	IntervalOperationGenerationConfig,

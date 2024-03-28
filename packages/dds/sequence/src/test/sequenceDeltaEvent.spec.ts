@@ -5,7 +5,6 @@
 
 import { strict as assert } from "assert";
 import { isNullOrUndefined } from "util";
-
 import {
 	IMergeTreeDeltaCallbackArgs,
 	PropertySet,
@@ -16,7 +15,6 @@ import {
 } from "@fluidframework/merge-tree";
 // eslint-disable-next-line import/no-internal-modules
 import { TestClient } from "@fluidframework/merge-tree/test";
-
 import { SequenceDeltaEvent } from "../sequenceDeltaEvent.js";
 
 interface IExpectedSegmentInfo {

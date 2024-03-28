@@ -4,7 +4,6 @@
  */
 
 import { SessionId } from "@fluidframework/id-compressor";
-
 import {
 	ChangeFamily,
 	ChangeFamilyEditor,

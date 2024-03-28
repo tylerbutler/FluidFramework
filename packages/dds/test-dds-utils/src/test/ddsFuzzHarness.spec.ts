@@ -18,7 +18,6 @@ import {
 	MockFluidDataStoreRuntime,
 } from "@fluidframework/test-runtime-utils";
 import execa from "execa";
-
 import { type Client, hasStashData } from "../clientLoading.js";
 import type {
 	BaseOperation,
@@ -42,7 +41,6 @@ import {
 	mixinSynchronization,
 	runTestForSeed,
 } from "../ddsFuzzHarness.js";
-
 import { _dirname } from "./dirname.cjs";
 import type { Operation, SharedNothingFactory } from "./sharedNothing.js";
 import { baseModel, isNoopOp } from "./sharedNothing.js";

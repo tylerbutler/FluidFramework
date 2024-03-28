@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "node:assert";
-
 import { AttachState } from "@fluidframework/container-definitions";
 import { ISummaryTree } from "@fluidframework/protocol-definitions";
 import {
@@ -15,7 +14,6 @@ import {
 	MockSharedObjectServices,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import {
 	DirectoryLocalOpMetadata,
 	IDirectoryOperation,

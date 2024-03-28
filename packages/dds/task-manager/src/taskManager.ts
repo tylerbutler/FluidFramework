@@ -20,7 +20,6 @@ import {
 	SharedObject,
 	createSingleBlobSummary,
 } from "@fluidframework/shared-object-base";
-
 import { ITaskManager, ITaskManagerEvents } from "./interfaces.js";
 import { TaskManagerFactory } from "./taskManagerFactory.js";
 

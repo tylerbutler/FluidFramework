@@ -4,7 +4,6 @@
  */
 
 import { FieldChangeHandler } from "../modular-schema/index.js";
-
 import { relevantRemovedRoots } from "./relevantRemovedRoots.js";
 import { sequenceFieldChangeRebaser } from "./sequenceFieldChangeRebaser.js";
 import { sequenceFieldChangeCodecFactory } from "./sequenceFieldCodecs.js";

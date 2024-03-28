@@ -15,7 +15,6 @@ import {
 	discardMergeTreeDeltaRevertible,
 	revertMergeTreeDeltaRevertibles,
 } from "@fluidframework/merge-tree";
-
 import { Handle, isHandleValid } from "./handletable.js";
 import { SharedMatrix } from "./matrix.js";
 import { MatrixItem } from "./ops.js";

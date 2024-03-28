@@ -11,7 +11,6 @@ import {
 	randomColor,
 } from "@fluid-example/bubblebench-common";
 import { SharedJson1 } from "@fluid-experimental/sharejs-json1";
-
 import { observe } from "./proxy/index.js";
 
 interface IApp {

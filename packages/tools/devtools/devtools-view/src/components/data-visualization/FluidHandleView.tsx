@@ -4,6 +4,8 @@
  */
 
 import { Spinner } from "@fluentui/react-components";
+import React from "react";
+
 import {
 	DataVisualization,
 	type FluidObjectNode,
@@ -14,11 +16,8 @@ import {
 	type InboundHandlers,
 	handleIncomingMessage,
 } from "@fluidframework/devtools-core";
-import React from "react";
-
 
 import { useMessageRelay } from "../../MessageRelayContext.js";
-
 import { type HasLabel } from "./CommonInterfaces.js";
 import { TreeDataView } from "./TreeDataView.js";
 import { TreeHeader } from "./TreeHeader.js";

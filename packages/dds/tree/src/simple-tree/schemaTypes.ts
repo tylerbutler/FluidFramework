@@ -4,10 +4,8 @@
  */
 
 import { IFluidHandle } from "@fluidframework/core-interfaces";
-
 import { FlexListToUnion, LazyItem } from "../feature-libraries/index.js";
 import { MakeNominal, RestrictiveReadonlyRecord } from "../util/index.js";
-
 import { TreeNode, Unhydrated } from "./types.js";
 
 /**

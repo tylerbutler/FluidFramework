@@ -4,9 +4,7 @@
  */
 
 import { strict as assert } from "assert";
-
 import { BenchmarkType, benchmark, isInPerformanceTestingMode } from "@fluid-tools/benchmark";
-
 import {
 	FieldKey,
 	JsonableTree,
@@ -44,7 +42,6 @@ import {
 	jsonableTreeFromCursor,
 } from "../../../index.js";
 import { testRevisionTagCodec } from "../../utils.js";
-
 import { averageTwoValues, sum, sumMap } from "./benchmarks.js";
 import { Canada, generateCanada } from "./canada.js";
 import { CitmCatalog, generateCitmJson } from "./citm.js";

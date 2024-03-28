@@ -4,10 +4,8 @@
  */
 
 import { strict as assert } from "assert";
-
 import { MergeTreeDeltaCallback } from "../mergeTreeDeltaCallback.js";
 import { MergeTreeDeltaType } from "../ops.js";
-
 import { ReconnectTestHelper } from "./reconnectHelper.js";
 import { useStrictPartialLengthChecks } from "./testUtils.js";
 

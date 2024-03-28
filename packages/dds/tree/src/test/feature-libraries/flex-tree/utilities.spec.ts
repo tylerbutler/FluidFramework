@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { AnchorSet, FieldKey, keyAsDetachedField, rootFieldKey } from "../../../core/index.js";
 import {
 	detachedFieldSlot,

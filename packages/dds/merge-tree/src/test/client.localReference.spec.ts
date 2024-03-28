@@ -6,9 +6,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { strict as assert } from "assert";
-
 import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-
 import { Client } from "../client.js";
 import {
 	LocalReferencePosition,
@@ -21,7 +19,6 @@ import { TrackingGroup, UnorderedTrackingGroup } from "../mergeTreeTracking.js";
 import { MergeTreeDeltaType, ReferenceType } from "../ops.js";
 import { DetachedReferencePosition } from "../referencePositions.js";
 import { TextSegment } from "../textSegment.js";
-
 import { TestClient } from "./testClient.js";
 import { createClientsAtInitialState } from "./testClientLogger.js";
 import { validateRefCount } from "./testUtils.js";

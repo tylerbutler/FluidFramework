@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import { Property, RedBlackTree } from "./collections/index.js";
 import { UnassignedSequenceNumber } from "./constants.js";
 import { MergeTree } from "./mergeTree.js";

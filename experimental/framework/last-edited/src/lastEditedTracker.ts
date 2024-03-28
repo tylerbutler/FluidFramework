@@ -4,7 +4,6 @@
  */
 
 import { SharedSummaryBlock } from "@fluidframework/shared-summary-block";
-
 import { IFluidLastEditedTracker, ILastEditDetails } from "./interfaces.js";
 
 /**

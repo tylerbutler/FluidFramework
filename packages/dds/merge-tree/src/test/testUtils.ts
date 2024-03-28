@@ -5,7 +5,6 @@
 
 import { strict as assert } from "assert";
 import fs from "fs";
-
 import { UnassignedSequenceNumber } from "../constants.js";
 import { LocalReferenceCollection } from "../localReference.js";
 import { MergeTree } from "../mergeTree.js";
@@ -20,7 +19,6 @@ import {
 } from "../partialLengths.js";
 import { PropertySet } from "../properties.js";
 import { TextSegment } from "../textSegment.js";
-
 import { loadText } from "./text.js";
 
 export function loadTextFromFile(filename: string, mergeTree: MergeTree, segLimit = 0) {

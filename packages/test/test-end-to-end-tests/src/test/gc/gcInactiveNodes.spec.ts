@@ -6,7 +6,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { strict as assert } from "assert";
-
 import { stringToBuffer } from "@fluid-internal/client-utils";
 import {
 	ITestDataObject,
@@ -14,7 +13,6 @@ import {
 	describeCompat,
 	itExpects,
 } from "@fluid-private/test-version-utils";
-import { IContainer, LoaderHeader } from "@fluidframework/container-definitions/internal";
 import {
 	AllowInactiveRequestHeaderKey,
 	ContainerRuntime,
@@ -23,8 +21,6 @@ import {
 } from "@fluidframework/container-runtime";
 import { IFluidHandle } from "@fluidframework/core-interfaces";
 import { delay } from "@fluidframework/core-utils";
-import { DriverHeader } from "@fluidframework/driver-definitions/internal";
-import type { ISharedDirectory } from "@fluidframework/map/internal";
 import { IContainerRuntimeBase } from "@fluidframework/runtime-definitions";
 import { MockLogger, TelemetryDataTag } from "@fluidframework/telemetry-utils";
 import {
@@ -34,11 +30,13 @@ import {
 	summarizeNow,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
-
 import {
 	manufactureHandle,
 	waitForContainerWriteModeConnectionWrite,
 } from "./gcTestSummaryUtils.js";
+import { IContainer, LoaderHeader } from "@fluidframework/container-definitions/internal";
+import { DriverHeader } from "@fluidframework/driver-definitions/internal";
+import type { ISharedDirectory } from "@fluidframework/map/internal";
 
 /**
  * Validates this scenario: When a GC node (data store or attachment blob) becomes inactive, i.e, it has been

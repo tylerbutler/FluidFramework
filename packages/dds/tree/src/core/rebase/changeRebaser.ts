@@ -4,7 +4,6 @@
  */
 
 import { Invariant } from "../../util/index.js";
-
 import type { RevisionTag } from "./types.js";
 
 /**

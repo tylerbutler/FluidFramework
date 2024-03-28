@@ -28,7 +28,6 @@ import {
 	FlexFieldSchema,
 } from "../../../feature-libraries/index.js";
 import { type TreeContent } from "../../../shared-tree/index.js";
-
 import { contextWithContentReadonly } from "./utils.js";
 
 const rootFieldAnchor: FieldAnchor = { parent: undefined, fieldKey: rootFieldKey };

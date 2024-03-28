@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import {
 	Generator,
 	IRandom,
@@ -14,7 +13,6 @@ import {
 	take,
 } from "@fluid-private/stochastic-test-utils";
 import { AttributionKey } from "@fluidframework/runtime-definitions";
-
 import {
 	AttributionCollection,
 	SerializedAttributionCollection,

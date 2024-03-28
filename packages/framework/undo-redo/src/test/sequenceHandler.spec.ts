@@ -4,14 +4,12 @@
  */
 
 import { strict as assert } from "assert";
-
 import { SharedString, SharedStringFactory } from "@fluidframework/sequence";
 import {
 	MockContainerRuntimeFactory,
 	MockFluidDataStoreRuntime,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { SharedSegmentSequenceUndoRedoHandler } from "../sequenceHandler.js";
 import { UndoRedoStackManager } from "../undoRedoStackManager.js";
 

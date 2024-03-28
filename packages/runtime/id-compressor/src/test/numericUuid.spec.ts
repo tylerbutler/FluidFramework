@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { StableId } from "..//index.js";
 import { readNumericUuid, writeNumericUuid } from "../persistanceUtilities.js";
 import {

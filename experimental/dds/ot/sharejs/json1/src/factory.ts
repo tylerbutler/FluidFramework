@@ -10,7 +10,6 @@ import {
 	IChannelServices,
 	IFluidDataStoreRuntime,
 } from "@fluidframework/datastore-definitions";
-
 import { SharedJson1 } from "./json1.js";
 import { pkgVersion } from "./packageVersion.js";
 

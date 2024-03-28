@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { ChangesetLocalId, RevisionTag } from "../../../core/index.js";
 import { SequenceField as SF } from "../../../feature-libraries/index.js";
 import {
@@ -14,7 +13,6 @@ import {
 } from "../../../feature-libraries/sequence-field/config.js";
 import { brand } from "../../../util/index.js";
 import { mintRevisionTag } from "../../utils.js";
-
 import { MarkMaker as Mark } from "./testEdits.js";
 import { describeForBothConfigs, withOrderingMethod } from "./utils.js";
 

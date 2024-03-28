@@ -10,9 +10,8 @@
  */
 
 const { Int64, Uint64 } = require("@fluid-experimental/property-common");
-
-const { PropertyFactory } = require("../..");
 const { ValueProperty } = require("../../properties/valueProperty");
+const { PropertyFactory } = require("../..");
 
 describe("ValueProperty", function () {
 	var OurTestTemplate;

@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { ISequencedDocumentMessage, ISummaryTree } from "@fluidframework/protocol-definitions";
 import {
 	MockContainerRuntimeFactoryForReconnection,
@@ -13,9 +12,7 @@ import {
 	MockFluidDataStoreRuntime,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { SharedMatrix, SharedMatrixFactory } from "../index.js";
-
 import { extract } from "./utils.js";
 
 async function createMatrixForReconnection(

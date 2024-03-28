@@ -4,8 +4,16 @@
  */
 
 import { strict as assert, fail } from "assert";
-
 import { TreeFieldStoredSchema, TreeNodeSchemaIdentifier } from "../../../../core/index.js";
+import {
+	FlexFieldSchema,
+	TreeCompressionStrategy,
+	cursorForJsonableTreeField,
+	defaultSchemaPolicy,
+	intoStoredSchema,
+	isFluidHandle,
+} from "../../../../feature-libraries/index.js";
+
 import { leaf } from "../../../../domains/index.js";
 // eslint-disable-next-line import/no-internal-modules
 import { IdentifierToken } from "../../../../feature-libraries/chunked-forest/codec/chunkEncodingGeneric.js";
@@ -33,14 +41,6 @@ import {
 } from "../../../../feature-libraries/chunked-forest/codec/schemaBasedEncoding.js";
 // eslint-disable-next-line import/no-internal-modules
 import { FieldKinds, fieldKinds } from "../../../../feature-libraries/default-schema/index.js";
-import {
-	FlexFieldSchema,
-	TreeCompressionStrategy,
-	cursorForJsonableTreeField,
-	defaultSchemaPolicy,
-	intoStoredSchema,
-	isFluidHandle,
-} from "../../../../feature-libraries/index.js";
 import { JsonCompatibleReadOnly, brand } from "../../../../util/index.js";
 import { ajvValidator } from "../../../codec/index.js";
 import { takeSnapshot, useSnapshotDirectory } from "../../../snapshots/index.js";
@@ -53,7 +53,6 @@ import {
 	testTrees,
 } from "../../../testTrees.js";
 import { jsonableTreesFromFieldCursor } from "../fieldCursorTestUtilities.js";
-
 import { checkFieldEncode, checkNodeEncode } from "./checkEncode.js";
 
 const anyNodeShape = new NodeShape(undefined, undefined, [], anyFieldEncoder);

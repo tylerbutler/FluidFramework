@@ -13,8 +13,6 @@
 
 /* eslint-disable jsdoc/check-line-alignment */
 
-import { constants, ConsoleUtils } from "@fluid-experimental/property-common";
-import { queue } from "async";
 import { copy as cloneDeep } from "fastest-json-copy";
 import difference from "lodash/difference.js";
 import each from "lodash/each.js";
@@ -28,9 +26,12 @@ import isObject from "lodash/isObject.js";
 import isString from "lodash/isString.js";
 import map from "lodash/map.js";
 import mapValues from "lodash/mapValues.js";
+
+import { queue } from "async";
 import { compare, diff, gt, major, valid } from "semver";
 import traverse from "traverse";
 
+import { constants, ConsoleUtils } from "@fluid-experimental/property-common";
 import { ajvFactory } from "./ajvFactory.cjs";
 import { TypeIdHelper } from "./helpers/typeidHelper.js";
 import { TemplateSchema } from "./templateSchema.js";

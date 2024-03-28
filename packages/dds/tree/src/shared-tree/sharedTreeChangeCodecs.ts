@@ -18,7 +18,6 @@ import {
 	makeSchemaChangeCodec,
 } from "../feature-libraries/index.js";
 import { Mutable } from "../util/index.js";
-
 import { EncodedSharedTreeChange, EncodedSharedTreeInnerChange } from "./sharedTreeChangeFormat.js";
 import { SharedTreeChange, SharedTreeInnerChange } from "./sharedTreeChangeTypes.js";
 

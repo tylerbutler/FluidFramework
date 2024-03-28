@@ -9,7 +9,6 @@
  */
 
 import _ from "lodash";
-
 import { Collection } from "./collection";
 
 /**

@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { IChannelServices } from "@fluidframework/datastore-definitions";
 import {
 	MockContainerRuntimeFactory,
@@ -13,7 +12,6 @@ import {
 	MockFluidDataStoreRuntime,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { SparseMatrix, SparseMatrixFactory, SparseMatrixItem } from "../sparsematrix.js";
 
 describe("SparseMatrix", () => {

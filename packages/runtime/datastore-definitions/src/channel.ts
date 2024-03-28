@@ -11,7 +11,6 @@ import type {
 	ISummaryTreeWithStats,
 	ITelemetryContext,
 } from "@fluidframework/runtime-definitions";
-
 import type { IFluidDataStoreRuntime } from "./dataStoreRuntime.js";
 import type { IChannelAttributes } from "./storage.js";
 

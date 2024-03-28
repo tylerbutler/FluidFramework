@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import { ICodecFamily, ICodecOptions } from "../codec/index.js";
 import {
 	ChangeEncodingContext,
@@ -23,7 +22,6 @@ import {
 	fieldKinds,
 } from "../feature-libraries/index.js";
 import { Mutable, fail } from "../util/index.js";
-
 import { makeSharedTreeChangeCodecFamily } from "./sharedTreeChangeCodecs.js";
 import { SharedTreeChange } from "./sharedTreeChangeTypes.js";
 import { SharedTreeEditBuilder } from "./sharedTreeEditBuilder.js";

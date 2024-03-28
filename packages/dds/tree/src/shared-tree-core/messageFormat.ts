@@ -5,7 +5,6 @@
 
 import { SessionId } from "@fluidframework/id-compressor";
 import { TSchema, Type } from "@sinclair/typebox";
-
 import { EncodedRevisionTag, RevisionTagSchema, SessionIdSchema } from "../core/index.js";
 import { JsonCompatibleReadOnly } from "../util/index.js";
 

@@ -6,7 +6,6 @@
 /* eslint-disable import/no-deprecated */
 
 import { Client, RedBlackTree } from "@fluidframework/merge-tree";
-
 import {
 	IIntervalHelpers,
 	ISerializableInterval,
@@ -15,7 +14,6 @@ import {
 	sequenceIntervalHelpers,
 } from "../intervals/index.js";
 import { SharedString } from "../sharedString.js";
-
 import { IntervalIndex } from "./intervalIndex.js";
 
 /**

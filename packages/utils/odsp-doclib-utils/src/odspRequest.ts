@@ -4,7 +4,6 @@
  */
 
 import fetch from "isomorphic-fetch";
-
 import { IOdspAuthRequestInfo, authRequestWithRetry } from "./odspAuth.js";
 
 /**

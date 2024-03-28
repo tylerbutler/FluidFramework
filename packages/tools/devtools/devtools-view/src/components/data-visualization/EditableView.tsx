@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import React from "react";
 
 import {
 	Button,
@@ -15,7 +16,6 @@ import {
 	shorthands,
 	tokens,
 } from "@fluentui/react-components";
-import { type Serializable } from "@fluidframework/datastore-definitions";
 import {
 	DataEdit,
 	type EditData,
@@ -23,10 +23,9 @@ import {
 	type FluidObjectValueNode,
 	type HasContainerKey,
 } from "@fluidframework/devtools-core";
-import React from "react";
 
+import { type Serializable } from "@fluidframework/datastore-definitions";
 import { useMessageRelay } from "../../MessageRelayContext.js";
-
 import { type HasLabel } from "./CommonInterfaces.js";
 import { TreeHeader } from "./TreeHeader.js";
 

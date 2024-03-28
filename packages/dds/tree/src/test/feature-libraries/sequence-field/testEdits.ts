@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import { ChangeAtomId, ChangesetLocalId, RevisionTag } from "../../../core/index.js";
 import { SequenceField as SF } from "../../../feature-libraries/index.js";
 // eslint-disable-next-line import/no-internal-modules

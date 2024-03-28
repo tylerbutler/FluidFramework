@@ -10,7 +10,6 @@ import {
 	IFluidDataStoreRuntime,
 } from "@fluidframework/datastore-definitions";
 import { ISharedObject } from "@fluidframework/shared-object-base";
-
 import { Ink } from "./ink.js";
 import { pkgVersion } from "./packageVersion.js";
 

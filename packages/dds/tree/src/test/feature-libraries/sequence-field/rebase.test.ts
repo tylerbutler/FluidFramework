@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { ChangeAtomId, RevisionTag, tagChange } from "../../../core/index.js";
 import { SequenceField as SF } from "../../../feature-libraries/index.js";
 // eslint-disable-next-line import/no-internal-modules
@@ -12,7 +11,6 @@ import { rebaseRevisionMetadataFromInfo } from "../../../feature-libraries/modul
 import { brand } from "../../../util/index.js";
 import { TestChange } from "../../testChange.js";
 import { mintRevisionTag } from "../../utils.js";
-
 import { ChangeMaker as Change, MarkMaker as Mark, TestChangeset, cases } from "./testEdits.js";
 import {
 	RebaseConfig,

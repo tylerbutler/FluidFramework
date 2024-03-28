@@ -4,7 +4,6 @@
  */
 
 import { ISegment } from "@fluidframework/sequence";
-
 import { areStringsEquivalent } from "./string.js";
 
 import { emptyObject } from "./index.js";

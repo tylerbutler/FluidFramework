@@ -4,9 +4,7 @@
  */
 
 import { strict as assert } from "assert";
-
 import { ChangeRebaser, TaggedChange } from "../../core/index.js";
-
 import { generateFuzzyCombinedChange } from "./fuzz.js";
 
 const testSeed = 432167897;

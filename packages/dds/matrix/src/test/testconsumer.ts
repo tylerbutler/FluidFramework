@@ -5,7 +5,6 @@
 
 import { DenseVector, RowMajorMatrix } from "@tiny-calc/micro";
 import { IMatrixConsumer, IMatrixProducer, IMatrixReader } from "@tiny-calc/nano";
-
 import { MatrixItem } from "../index.js";
 
 /**

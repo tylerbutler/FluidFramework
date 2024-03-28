@@ -10,7 +10,6 @@ import { Editor } from "../editor/index.js";
 import { htmlFormatter } from "../html/formatters.js";
 import { ICommand, TagName } from "../util/index.js";
 import { IFormatterState, RootFormatter } from "../view/formatter.js";
-
 // eslint-disable-next-line import/no-unassigned-import
 import "./debug.css";
 import { debug } from "./debug.js";

@@ -10,7 +10,6 @@
  */
 
 const { isGUID } = require("@fluid-experimental/property-common").GuidUtils;
-
 const { PropertyFactory } = require("../..");
 const { ContainerProperty } = require("../..");
 const { NamedNodeProperty } = require("../../properties/namedNodeProperty");

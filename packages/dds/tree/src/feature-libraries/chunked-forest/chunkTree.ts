@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import {
 	CursorLocationType,
 	FieldKey,
@@ -23,7 +22,6 @@ import {
 import { fail, getOrCreate } from "../../util/index.js";
 import { FullSchemaPolicy } from "../modular-schema/index.js";
 import { Multiplicity } from "../multiplicity.js";
-
 import { BasicChunk } from "./basicChunk.js";
 import { TreeChunk, tryGetChunk } from "./chunk.js";
 import { SequenceChunk } from "./sequenceChunk.js";

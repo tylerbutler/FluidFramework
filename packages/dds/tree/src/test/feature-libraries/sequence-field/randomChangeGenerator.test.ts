@@ -4,11 +4,9 @@
  */
 
 import { strict as assert } from "assert";
-
 import { FieldKey } from "../../../core/index.js";
 import { NodeChangeset } from "../../../feature-libraries/index.js";
 import { brand } from "../../../util/index.js";
-
 import { generateRandomChange } from "./randomChangeGenerator.js";
 import { MarkMaker as Mark } from "./testEdits.js";
 

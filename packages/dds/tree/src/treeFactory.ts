@@ -10,7 +10,6 @@ import {
 	IFluidDataStoreRuntime,
 } from "@fluidframework/datastore-definitions";
 import { ISharedObjectKind } from "@fluidframework/shared-object-base";
-
 import { pkgVersion } from "./packageVersion.js";
 import { SharedTree as SharedTreeImpl, SharedTreeOptions } from "./shared-tree/index.js";
 import { ITree } from "./simple-tree/index.js";

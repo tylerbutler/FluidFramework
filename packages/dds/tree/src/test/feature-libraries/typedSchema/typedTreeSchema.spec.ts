@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { jsonArray, jsonObject, jsonSchema, leaf } from "../../../domains/index.js";
 import { FieldKinds, SchemaBuilderBase } from "../../../feature-libraries/index.js";
 import {

@@ -11,7 +11,6 @@ import {
 	ITelemetryContext,
 } from "@fluidframework/runtime-definitions";
 import { createSingleBlobSummary } from "@fluidframework/shared-object-base";
-
 import { DetachedFieldIndex } from "../core/index.js";
 import {
 	Summarizable,

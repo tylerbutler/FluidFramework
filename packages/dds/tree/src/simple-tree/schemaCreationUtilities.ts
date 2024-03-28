@@ -4,10 +4,8 @@
  */
 
 import { UsageError } from "@fluidframework/telemetry-utils";
-
 import { EmptyObject } from "../feature-libraries/index.js";
 import { fail } from "../util/index.js";
-
 import { SchemaFactory, type ScopedSchemaName } from "./schemaFactory.js";
 import {
 	InsertableObjectFromSchemaRecord,

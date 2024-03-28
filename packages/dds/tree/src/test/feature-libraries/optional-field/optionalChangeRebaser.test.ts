@@ -4,9 +4,7 @@
  */
 
 import { strict as assert } from "assert";
-
 import { describeStress } from "@fluid-private/stochastic-test-utils";
-
 import {
 	ChangesetLocalId,
 	DeltaFieldChanges,
@@ -51,7 +49,6 @@ import {
 	defaultRevisionMetadataFromChanges,
 	isDeltaVisible,
 } from "../../utils.js";
-
 import { Change, assertTaggedEqual, verifyContextChain } from "./optionalFieldUtils.js";
 
 type RevisionTagMinter = () => RevisionTag;

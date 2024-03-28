@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "node:assert";
-
 import { rootFieldKey } from "../../core/index.js";
 import { TreeStatus } from "../../feature-libraries/index.js";
 import {
@@ -15,7 +14,6 @@ import {
 	TreeNode,
 } from "../../simple-tree/index.js";
 import { getView } from "../utils.js";
-
 import { hydrate } from "./utils.js";
 
 const schema = new SchemaFactory("com.example");

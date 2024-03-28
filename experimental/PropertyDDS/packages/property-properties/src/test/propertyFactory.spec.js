@@ -7,7 +7,6 @@
 
 const { MSG } = require("@fluid-experimental/property-common").constants;
 const { generateGUID } = require("@fluid-experimental/property-common").GuidUtils;
-
 const { PropertyFactory } = require("..");
 const { StringProperty } = require("../properties/stringProperty");
 

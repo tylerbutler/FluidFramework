@@ -26,7 +26,6 @@ import type {
 	ITokenClaims,
 	IVersion,
 } from "@fluidframework/protocol-definitions";
-
 import type { IAnyDriverError } from "./driverError.js";
 import type { IResolvedUrl } from "./urlResolver.js";
 

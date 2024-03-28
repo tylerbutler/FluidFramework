@@ -8,7 +8,6 @@ import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import { makeStyles } from "@material-ui/styles";
 import * as React from "react";
-
 import { DeleteModal, type IDeleteOptions } from "./DeleteModal.js";
 import type { IDeleteModalTextParameters } from "./DeleteModalTextParameters.js";
 import { ModalConsumer } from "./ModalManager.js";

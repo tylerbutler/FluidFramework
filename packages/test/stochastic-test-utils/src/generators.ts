@@ -4,7 +4,6 @@
  */
 
 import { unreachableCase } from "@fluidframework/core-utils";
-
 import {
 	AcceptanceCondition,
 	AsyncGenerator,

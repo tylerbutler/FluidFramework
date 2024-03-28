@@ -8,7 +8,6 @@
  */
 
 import { expect } from "chai";
-
 import { FlaggedError } from "../..";
 
 describe("property-common.FlaggedError", function () {

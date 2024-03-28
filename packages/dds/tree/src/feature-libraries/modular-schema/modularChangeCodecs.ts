@@ -5,7 +5,6 @@
 
 import { assert } from "@fluidframework/core-utils";
 import { TAnySchema } from "@sinclair/typebox";
-
 import {
 	ICodecOptions,
 	IJsonCodec,
@@ -31,7 +30,6 @@ import {
 	defaultChunkPolicy,
 } from "../chunked-forest/index.js";
 import { TreeCompressionStrategy } from "../treeCompressionUtils.js";
-
 import { FieldKindWithEditor } from "./fieldKindWithEditor.js";
 import { genericFieldKind } from "./genericFieldKind.js";
 import {

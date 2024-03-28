@@ -8,7 +8,6 @@ import {
 	FlexMapNodeSchema,
 	FlexObjectNodeSchema,
 } from "../feature-libraries/index.js";
-
 import { WithType, type } from "./schemaTypes.js";
 import { IterableTreeArrayContent } from "./treeArrayNode.js";
 

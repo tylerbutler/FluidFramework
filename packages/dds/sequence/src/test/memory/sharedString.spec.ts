@@ -6,7 +6,6 @@
 import { IMemoryTestObject, benchmarkMemory } from "@fluid-tools/benchmark";
 import { Marker, ReferenceType, reservedMarkerIdKey } from "@fluidframework/merge-tree";
 import { MockFluidDataStoreRuntime } from "@fluidframework/test-runtime-utils";
-
 import { SharedStringFactory } from "../../sequenceFactory.js";
 import { SharedString } from "../../sharedString.js";
 

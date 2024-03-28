@@ -9,7 +9,6 @@
 
 import { expect } from "chai";
 import semver from "semver";
-
 import { SortedCollection } from "../../index";
 
 describe("SortedCollection", function () {

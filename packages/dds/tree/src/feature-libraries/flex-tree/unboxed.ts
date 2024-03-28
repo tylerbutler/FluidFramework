@@ -12,7 +12,6 @@ import {
 	FlexTreeNodeSchema,
 	schemaIsLeaf,
 } from "../typed-schema/index.js";
-
 import { Context } from "./context.js";
 import {
 	FlexTreeNode,

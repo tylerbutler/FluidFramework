@@ -5,7 +5,6 @@
 
 import { TypedEventEmitter } from "@fluid-internal/client-utils";
 import { IEvent } from "@fluidframework/core-interfaces";
-
 import { IAgentScheduler } from "./agent.js";
 
 /**

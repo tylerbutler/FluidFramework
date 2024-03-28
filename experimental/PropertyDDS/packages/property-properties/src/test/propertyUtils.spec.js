@@ -8,7 +8,6 @@
  */
 
 const _ = require("lodash");
-
 const { PropertyFactory } = require("..");
 const { PropertyUtils } = require("..");
 

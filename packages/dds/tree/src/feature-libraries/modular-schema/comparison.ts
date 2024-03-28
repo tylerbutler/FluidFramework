@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import {
 	LeafNodeStoredSchema,
 	MapNodeStoredSchema,
@@ -17,7 +16,6 @@ import {
 	storedEmptyFieldSchema,
 } from "../../core/index.js";
 import { compareSets, fail } from "../../util/index.js";
-
 import { FullSchemaPolicy } from "./fieldKind.js";
 import { withEditor } from "./fieldKindWithEditor.js";
 import { isNeverTree } from "./isNeverTree.js";

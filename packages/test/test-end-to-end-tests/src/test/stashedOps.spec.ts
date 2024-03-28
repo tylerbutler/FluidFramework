@@ -4,7 +4,6 @@
  */
 
 import assert from "assert";
-
 import { bufferToString, stringToBuffer } from "@fluid-internal/client-utils";
 import {
 	describeCompat,
@@ -12,11 +11,6 @@ import {
 	itSkipsFailureOnSpecificDrivers,
 } from "@fluid-private/test-version-utils";
 import type { SharedCell } from "@fluidframework/cell";
-import {
-	IContainer,
-	IHostLoader,
-	LoaderHeader,
-} from "@fluidframework/container-definitions/internal";
 import { ConnectionState, IContainerExperimental } from "@fluidframework/container-loader";
 import {
 	CompressionAlgorithms,
@@ -32,9 +26,7 @@ import {
 } from "@fluidframework/core-interfaces";
 import { Deferred } from "@fluidframework/core-utils";
 import type { SharedCounter } from "@fluidframework/counter";
-import { IDocumentServiceFactory } from "@fluidframework/driver-definitions/internal";
 import type { ISharedMap } from "@fluidframework/map";
-import type { ISharedDirectory, SharedDirectory } from "@fluidframework/map/internal";
 import {
 	ReferenceType,
 	reservedMarkerIdKey,
@@ -53,8 +45,14 @@ import {
 	createDocumentId,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
-
 import { wrapObjectAndOverride } from "../mocking.js";
+import {
+	IContainer,
+	IHostLoader,
+	LoaderHeader,
+} from "@fluidframework/container-definitions/internal";
+import { IDocumentServiceFactory } from "@fluidframework/driver-definitions/internal";
+import type { ISharedDirectory, SharedDirectory } from "@fluidframework/map/internal";
 
 const mapId = "map";
 const stringId = "sharedStringKey";

@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import React from "react";
 
 import {
 	Button,
@@ -13,6 +14,7 @@ import {
 	tokens,
 } from "@fluentui/react-components";
 import { ArrowSync24Regular } from "@fluentui/react-icons";
+
 import { type ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
 import {
 	type ContainerKey,
@@ -27,7 +29,6 @@ import {
 	handleIncomingMessage,
 } from "@fluidframework/devtools-core";
 import { createChildLogger } from "@fluidframework/telemetry-utils";
-import React from "react";
 
 import { useMessageRelay } from "./MessageRelayContext.js";
 import {

@@ -5,7 +5,6 @@
 
 const { ChangeSet } = require("@fluid-experimental/property-changeset");
 const { MSG } = require("@fluid-experimental/property-common").constants;
-
 const { BaseProperty } = require("./baseProperty");
 
 /**

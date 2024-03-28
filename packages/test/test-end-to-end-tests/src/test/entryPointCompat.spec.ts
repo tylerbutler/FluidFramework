@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import {
 	describeCompat,
 	describeInstallVersions,
@@ -17,12 +16,11 @@ import {
 	DataObject,
 	DataObjectFactory,
 } from "@fluidframework/aqueduct";
-import { IContainer } from "@fluidframework/container-definitions/internal";
 import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
 import { FluidObject } from "@fluidframework/core-interfaces";
 import { ITestObjectProvider } from "@fluidframework/test-utils";
-
 import { pkgVersion } from "../packageVersion.js";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 
 describe("entryPoint compat", () => {
 	let provider: ITestObjectProvider;

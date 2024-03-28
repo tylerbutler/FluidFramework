@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import {
 	CursorLocationType,
 	DetachedField,
@@ -21,7 +20,6 @@ import {
 	rootField,
 	setGenericTreeField,
 } from "../core/index.js";
-
 import { CursorAdapter, stackTreeFieldCursor, stackTreeNodeCursor } from "./treeCursorUtils.js";
 
 /**

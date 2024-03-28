@@ -5,7 +5,6 @@
 
 import { Mutable } from "../../util/index.js";
 import { FieldKey } from "../schema-stored/index.js";
-
 import { ITreeCursorSynchronous } from "./cursor.js";
 import { DetachedNodeId, FieldChanges, Mark, Root } from "./delta.js";
 import { rootFieldKey } from "./types.js";

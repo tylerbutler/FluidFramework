@@ -4,9 +4,7 @@
  */
 
 import { strict as assert } from "assert";
-
 import { BenchmarkType, benchmark, isInPerformanceTestingMode } from "@fluid-tools/benchmark";
-
 import { averageTwoValues, sumDirect } from "./benchmarks.js";
 import { Canada, generateCanada } from "./canada.js";
 import { clone } from "./jsObjectUtil.js";

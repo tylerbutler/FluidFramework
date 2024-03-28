@@ -5,7 +5,6 @@
 
 import { assert, unreachableCase } from "@fluidframework/core-utils";
 import { UsageError } from "@fluidframework/telemetry-utils";
-
 import { TreeNodeSchemaIdentifier, TreeValue } from "../core/index.js";
 import {
 	FlexFieldNodeSchema,
@@ -19,7 +18,6 @@ import {
 	typeNameSymbol,
 } from "../feature-libraries/index.js";
 import { RestrictiveReadonlyRecord, getOrCreate, isReadonlyArray } from "../util/index.js";
-
 import {
 	booleanSchema,
 	handleSchema,

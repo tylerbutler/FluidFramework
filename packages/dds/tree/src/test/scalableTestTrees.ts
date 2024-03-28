@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { FieldKey, UpPath, moveToDetachedField, rootFieldKey } from "../core/index.js";
 import { jsonSchema, leaf } from "../domains/index.js";
 import {

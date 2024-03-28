@@ -31,7 +31,6 @@ import {
 import { UsageError } from "@fluidframework/telemetry-utils";
 import { IMatrixConsumer, IMatrixProducer, IMatrixReader, IMatrixWriter } from "@tiny-calc/nano";
 import Deque from "double-ended-queue";
-
 import { Handle, isHandleValid } from "./handletable.js";
 import {
 	ISetOp,

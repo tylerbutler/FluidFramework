@@ -4,13 +4,11 @@
  */
 
 import { strict as assert } from "assert";
-
 import {
 	MockContainerRuntimeFactory,
 	MockFluidDataStoreRuntime,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { DeltaFactory, SharedDelta } from "./delta.js";
 
 const createLocalOT = (id: string) => {

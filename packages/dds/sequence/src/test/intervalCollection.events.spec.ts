@@ -4,7 +4,6 @@
  */
 
 import { strict as assert, fail } from "assert";
-
 import { AttachState } from "@fluidframework/container-definitions";
 import { PropertySet, toRemovalInfo } from "@fluidframework/merge-tree";
 import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
@@ -13,7 +12,6 @@ import {
 	MockFluidDataStoreRuntime,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { IIntervalCollection } from "../intervalCollection.js";
 import { SequenceInterval } from "../intervals/index.js";
 import { SharedStringFactory } from "../sequenceFactory.js";

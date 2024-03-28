@@ -6,7 +6,6 @@
 /* eslint-disable import/no-deprecated */
 
 import { Client } from "@fluidframework/merge-tree";
-
 import { SequencePlace, endpointPosAndSide } from "../intervalCollection.js";
 import { IntervalNode, IntervalTree } from "../intervalTree.js";
 import {
@@ -17,7 +16,6 @@ import {
 	sequenceIntervalHelpers,
 } from "../intervals/index.js";
 import { SharedString } from "../sharedString.js";
-
 import { IntervalIndex } from "./intervalIndex.js";
 
 /**

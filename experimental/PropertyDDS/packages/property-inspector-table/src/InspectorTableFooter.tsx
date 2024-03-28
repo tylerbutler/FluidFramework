@@ -5,12 +5,11 @@
 
 import { makeStyles } from "@material-ui/styles";
 import * as React from "react";
-
-import { IInspectorTableProps } from "./InspectorTableTypes.js";
-import { SvgIcon } from "./SVGIcon.js";
 import { icon24, iconBaseColor, iconHoverColor } from "./constants.js";
 
+import { SvgIcon } from "./SVGIcon.js";
 
+import { IInspectorTableProps } from "./InspectorTableTypes.js";
 
 const useStyles = makeStyles(
 	(theme) => ({

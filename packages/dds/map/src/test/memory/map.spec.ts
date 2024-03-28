@@ -5,7 +5,6 @@
 
 import { IMemoryTestObject, benchmarkMemory } from "@fluid-tools/benchmark";
 import { MockFluidDataStoreRuntime } from "@fluidframework/test-runtime-utils";
-
 import { ISharedMap, SharedMap } from "../../index.js";
 
 function createLocalMap(id: string): ISharedMap {

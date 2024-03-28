@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "node:assert";
-
 import { AzureClient } from "@fluidframework/azure-client";
 import { ConnectionState } from "@fluidframework/container-loader";
 import { IFluidHandle } from "@fluidframework/core-interfaces";

@@ -10,7 +10,6 @@
  */
 
 import { expect } from "chai";
-
 import { GuidUtils } from "../guidUtils";
 
 const {

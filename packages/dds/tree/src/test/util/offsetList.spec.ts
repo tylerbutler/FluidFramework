@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { OffsetListFactory } from "../../util/index.js";
 
 describe("OffsetListFactory", () => {

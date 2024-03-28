@@ -9,7 +9,6 @@ import {
 	IEventTransformer,
 	TransformedEvent,
 } from "@fluidframework/core-interfaces";
-
 import { EventEmitter } from "./eventEmitter.cjs";
 
 /**

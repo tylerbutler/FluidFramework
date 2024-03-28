@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import { FinalCompressedId } from "./identifiers.js";
 import { IdCluster, clustersEqual, lastAllocatedFinal, lastFinalizedFinal } from "./sessions.js";
 

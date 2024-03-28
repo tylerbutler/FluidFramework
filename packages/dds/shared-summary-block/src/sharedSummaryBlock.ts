@@ -18,7 +18,6 @@ import {
 	SharedObject,
 	createSingleBlobSummary,
 } from "@fluidframework/shared-object-base";
-
 import { ISharedSummaryBlock } from "./interfaces.js";
 import { SharedSummaryBlockFactory } from "./sharedSummaryBlockFactory.js";
 

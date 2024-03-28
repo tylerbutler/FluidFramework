@@ -50,7 +50,6 @@ import {
 } from "@fluidframework/shared-object-base";
 import { LoggingError, createChildLogger } from "@fluidframework/telemetry-utils";
 import Deque from "double-ended-queue";
-
 import { IIntervalCollection, SequenceIntervalCollectionValueType } from "./intervalCollection.js";
 import { IMapOperation, IntervalCollectionMap } from "./intervalCollectionMap.js";
 import { IMapMessageLocalMetadata, IValueChanged } from "./intervalCollectionMapInterfaces.js";

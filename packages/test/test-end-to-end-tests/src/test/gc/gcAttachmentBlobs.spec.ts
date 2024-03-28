@@ -4,10 +4,8 @@
  */
 
 import { strict as assert } from "assert";
-
 import { stringToBuffer } from "@fluid-internal/client-utils";
 import { ITestDataObject, describeCompat } from "@fluid-private/test-version-utils";
-import { IContainer } from "@fluidframework/container-definitions/internal";
 import { ContainerRuntime } from "@fluidframework/container-runtime";
 // eslint-disable-next-line import/no-internal-modules
 import { BlobManager } from "@fluidframework/container-runtime/test/blobManager";
@@ -17,17 +15,16 @@ import {
 	ITestObjectProvider,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
-
 import {
 	MockDetachedBlobStorage,
 	driverSupportsBlobs,
 	getUrlFromDetachedBlobStorage,
 } from "../mockDetachedBlobStorage.js";
-
 import {
 	getGCStateFromSummary,
 	waitForContainerWriteModeConnectionWrite,
 } from "./gcTestSummaryUtils.js";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 
 /**
  * Validates that unreferenced blobs are marked as unreferenced and deleted correctly.

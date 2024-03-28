@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { matchProperties } from "../properties.js";
 
 describe("Properties", () => {

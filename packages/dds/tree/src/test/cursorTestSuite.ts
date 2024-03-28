@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import {
 	CursorLocationType,
 	EmptyKey,
@@ -30,7 +29,6 @@ import {
 	prefixPath,
 } from "../feature-libraries/index.js";
 import { brand } from "../util/index.js";
-
 import { expectEqualFieldPaths, expectEqualPaths } from "./utils.js";
 
 const schemaBuilder = new SchemaBuilderBase(FieldKinds.required, {

@@ -20,7 +20,6 @@ import type {
 	ISequencedDocumentMessage,
 } from "@fluidframework/protocol-definitions";
 import type { IInboundSignalMessage } from "@fluidframework/runtime-definitions";
-
 import type { IChannel } from "./channel.js";
 
 /**

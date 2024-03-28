@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import { ISubscribable, createEmitter } from "../../events/index.js";
 import {
 	Brand,
@@ -17,7 +16,6 @@ import {
 	fail,
 } from "../../util/index.js";
 import { FieldKey } from "../schema-stored/index.js";
-
 import * as Delta from "./delta.js";
 import {
 	DetachedPlaceUpPath,

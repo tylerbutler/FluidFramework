@@ -3,10 +3,9 @@
  * Licensed under the MIT License.
  */
 
-const { PathHelper, ChangeSet } = require("@fluid-experimental/property-changeset");
-const { ConsoleUtils, constants } = require("@fluid-experimental/property-common");
 const _ = require("lodash");
-
+const { ConsoleUtils, constants } = require("@fluid-experimental/property-common");
+const { PathHelper, ChangeSet } = require("@fluid-experimental/property-changeset");
 const { BaseProperty } = require("./baseProperty");
 const { LazyLoadedProperties: Property } = require("./lazyLoadedProperties");
 

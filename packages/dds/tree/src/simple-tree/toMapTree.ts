@@ -32,7 +32,6 @@ import {
 	typeNameSymbol,
 } from "../feature-libraries/index.js";
 import { brand, isReadonlyArray } from "../util/index.js";
-
 import { InsertableContent } from "./proxies.js";
 
 /**

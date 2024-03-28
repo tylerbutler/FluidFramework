@@ -4,7 +4,6 @@
  */
 
 import assert from "assert";
-
 import { describeCompat } from "@fluid-private/test-version-utils";
 import { AttachState } from "@fluidframework/container-definitions";
 import {
@@ -12,14 +11,13 @@ import {
 	IContainerRuntimeOptions,
 	ISummaryConfiguration,
 } from "@fluidframework/container-runtime";
-import { IDocumentServiceFactory } from "@fluidframework/driver-definitions/internal";
 import { MockLogger } from "@fluidframework/telemetry-utils";
 import {
 	ITestObjectProvider,
 	createContainerRuntimeFactoryWithDefaultDataStore,
 } from "@fluidframework/test-utils";
-
 import { wrapObjectAndOverride } from "../mocking.js";
+import { IDocumentServiceFactory } from "@fluidframework/driver-definitions/internal";
 
 describeCompat("Cache CreateNewSummary", "NoCompat", (getTestObjectProvider, apis) => {
 	const {

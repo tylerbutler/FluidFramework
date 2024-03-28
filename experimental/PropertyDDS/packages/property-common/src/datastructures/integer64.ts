@@ -8,7 +8,6 @@
  */
 
 import _ from "lodash";
-
 import { ConsoleUtils } from "../consoleUtils";
 import { constants } from "../constants";
 

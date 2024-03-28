@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import { TreeNodeSchemaIdentifier, TreeValue } from "../core/index.js";
 import { leaf } from "../domains/index.js";
 import {
@@ -13,7 +12,6 @@ import {
 	isFlexTreeNode,
 	valueSchemaAllows,
 } from "../feature-libraries/index.js";
-
 import { NodeKind, TreeNodeSchema, TreeNodeSchemaNonClass } from "./schemaTypes.js";
 import { setFlexSchemaFromClassSchema } from "./toFlexSchema.js";
 

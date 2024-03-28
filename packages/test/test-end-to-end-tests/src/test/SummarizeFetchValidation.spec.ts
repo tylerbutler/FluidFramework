@@ -4,9 +4,7 @@
  */
 
 import { strict as assert } from "assert";
-
 import { describeCompat, itExpects } from "@fluid-private/test-version-utils";
-import { IContainer } from "@fluidframework/container-definitions/internal";
 import {
 	ContainerRuntime,
 	IContainerRuntimeOptions,
@@ -14,7 +12,6 @@ import {
 	ISummarizer,
 } from "@fluidframework/container-runtime";
 import { IFluidHandle } from "@fluidframework/core-interfaces";
-import { ISummaryContext } from "@fluidframework/driver-definitions/internal";
 import { readAndParse } from "@fluidframework/driver-utils";
 import type { SharedMatrix } from "@fluidframework/matrix";
 import { ISnapshotTree, ISummaryTree, IVersion } from "@fluidframework/protocol-definitions";
@@ -28,6 +25,8 @@ import {
 	summarizeNow,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
+import { IContainer } from "@fluidframework/container-definitions/internal";
+import { ISummaryContext } from "@fluidframework/driver-definitions/internal";
 
 // Note GC needs to be disabled.
 const runtimeOptions: IContainerRuntimeOptions = {

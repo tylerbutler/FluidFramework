@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { IsoBuffer } from "@fluid-internal/client-utils";
 import { BenchmarkType, benchmark } from "@fluid-tools/benchmark";
 import { IChannelServices } from "@fluidframework/datastore-definitions";
@@ -15,7 +14,6 @@ import {
 	MockFluidDataStoreRuntime,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { AllowedUpdateType } from "../../core/index.js";
 import { typeboxValidator } from "../../external-utilities/index.js";
 import { SharedTreeFactory, TreeContent } from "../../shared-tree/index.js";

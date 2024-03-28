@@ -4,7 +4,6 @@
  */
 
 import { describeFuzz, makeRandom } from "@fluid-private/stochastic-test-utils";
-
 import {
 	IConfigRange,
 	IMergeTreeOperationRunnerConfig,

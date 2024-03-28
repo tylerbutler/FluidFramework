@@ -8,7 +8,6 @@
  */
 
 import { expect } from "chai";
-
 import { PathHelper } from "../pathHelper.js";
 
 describe("PathHelper", function () {

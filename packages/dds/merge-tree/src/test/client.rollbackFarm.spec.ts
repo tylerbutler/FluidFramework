@@ -6,7 +6,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { makeRandom } from "@fluid-private/stochastic-test-utils";
-
 import {
 	TestOperation,
 	annotateRange,

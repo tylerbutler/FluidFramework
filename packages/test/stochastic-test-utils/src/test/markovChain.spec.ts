@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { PerformanceWordMarkovChain, SpaceEfficientWordMarkovChain } from "../markovChain.js";
 import { makeRandom } from "../random.js";
 

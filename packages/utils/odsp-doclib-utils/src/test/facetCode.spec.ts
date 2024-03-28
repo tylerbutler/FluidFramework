@@ -4,7 +4,6 @@
  */
 
 import assert from "assert";
-
 import { parseFacetCodes, tryParseErrorResponse } from "../odspErrorUtils.js";
 
 describe("parseFacetCodes", () => {

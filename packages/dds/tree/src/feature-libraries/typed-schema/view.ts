@@ -14,7 +14,6 @@ import {
 } from "../../core/index.js";
 import { Named, fail } from "../../util/index.js";
 import { FullSchemaPolicy, allowsRepoSuperset, isNeverTree } from "../modular-schema/index.js";
-
 import { FlexFieldSchema, FlexTreeSchema, intoStoredSchema } from "./typedTreeSchema.js";
 
 /**

@@ -5,7 +5,6 @@
 
 import { strict as assert } from "assert";
 import * as path from "path";
-
 import {
 	AcceptanceCondition,
 	AsyncGenerator,
@@ -20,7 +19,6 @@ import {
 	IFluidDataStoreRuntime,
 } from "@fluidframework/datastore-definitions";
 import { PropertySet } from "@fluidframework/merge-tree";
-
 import type { SequenceInterval } from "../../index.js";
 import { type IIntervalCollection, Side } from "../../intervalCollection.js";
 import { SharedStringRevertible, revertSharedStringRevertibles } from "../../revertibles.js";

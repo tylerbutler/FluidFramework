@@ -5,7 +5,6 @@
 
 import { Dom, ICommand, KeyCode, randomId } from "../../util/index.js";
 import { debug } from "../debug.js";
-
 import { View } from "./view.js";
 
 // eslint-disable-next-line import/no-unassigned-import

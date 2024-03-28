@@ -4,7 +4,6 @@
  */
 
 import { strict as assert, fail } from "assert";
-
 import {
 	ChangeAtomId,
 	ChangesetLocalId,
@@ -19,7 +18,6 @@ import { SequenceField as SF } from "../../../feature-libraries/index.js";
 import { brand } from "../../../util/index.js";
 import { TestChange } from "../../testChange.js";
 import { mintRevisionTag } from "../../utils.js";
-
 import { ChangeMaker as Change, MarkMaker as Mark, TestChangeset, cases } from "./testEdits.js";
 import {
 	areComposable,

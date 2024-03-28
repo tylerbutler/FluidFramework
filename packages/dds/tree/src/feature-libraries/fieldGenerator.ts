@@ -4,7 +4,6 @@
  */
 
 import { FieldKey, MapTree, TreeFieldStoredSchema } from "../core/index.js";
-
 import { FlexTreeSchema } from "./typed-schema/index.js";
 
 /**

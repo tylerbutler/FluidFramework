@@ -4,7 +4,6 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
-
 import {
 	Any,
 	FieldKinds,
@@ -26,7 +25,6 @@ import {
 	normalizeField,
 } from "../feature-libraries/index.js";
 import { RestrictiveReadonlyRecord, getOrCreate, isAny, requireFalse } from "../util/index.js";
-
 import { leaf } from "./leafDomain.js";
 
 /**

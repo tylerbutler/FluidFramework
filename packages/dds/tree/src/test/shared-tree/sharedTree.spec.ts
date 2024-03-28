@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { IContainerExperimental } from "@fluidframework/container-loader";
 import { createIdCompressor } from "@fluidframework/id-compressor";
 import { SummaryType } from "@fluidframework/protocol-definitions";
@@ -14,7 +13,6 @@ import {
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
 import { ITestFluidObject, waitForContainerConnection } from "@fluidframework/test-utils";
-
 import {
 	AllowedUpdateType,
 	CommitKind,
@@ -54,6 +52,7 @@ import {
 	ObjectForest,
 	// eslint-disable-next-line import/no-internal-modules
 } from "../../feature-libraries/object-forest/objectForest.js";
+import { EditManager } from "../../shared-tree-core/index.js";
 import {
 	CheckoutFlexTreeView,
 	FlexTreeView,
@@ -66,7 +65,6 @@ import {
 } from "../../shared-tree/index.js";
 // eslint-disable-next-line import/no-internal-modules
 import { requireSchema } from "../../shared-tree/schematizingTreeView.js";
-import { EditManager } from "../../shared-tree-core/index.js";
 import { SchemaFactory, TreeConfiguration } from "../../simple-tree/index.js";
 import { brand, disposeSymbol, fail } from "../../util/index.js";
 import {

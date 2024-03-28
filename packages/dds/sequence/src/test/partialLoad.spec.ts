@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { IChannelServices } from "@fluidframework/datastore-definitions";
 import { ReferenceType } from "@fluidframework/merge-tree";
 import { ISummaryTree } from "@fluidframework/protocol-definitions";
@@ -13,7 +12,6 @@ import {
 	MockFluidDataStoreRuntime,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { SharedString, SharedStringFactory } from "../index.js";
 
 function applyOperations(

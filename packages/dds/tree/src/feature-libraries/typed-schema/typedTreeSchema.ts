@@ -4,7 +4,6 @@
  */
 
 import { assert, Lazy } from "@fluidframework/core-utils";
-
 import {
 	Adapters,
 	EmptyKey,
@@ -31,7 +30,6 @@ import {
 } from "../../util/index.js";
 import { FieldKinds } from "../default-schema/index.js";
 import { FlexFieldKind, FullSchemaPolicy } from "../modular-schema/index.js";
-
 import { LazyItem } from "./flexList.js";
 import { ObjectToMap, objectToMapTyped } from "./typeUtils.js";
 

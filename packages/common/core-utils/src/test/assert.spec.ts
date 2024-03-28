@@ -4,7 +4,6 @@
  */
 
 import { strict } from "node:assert";
-
 import { assert } from "@fluidframework/core-utils";
 
 describe("Assert", () => {

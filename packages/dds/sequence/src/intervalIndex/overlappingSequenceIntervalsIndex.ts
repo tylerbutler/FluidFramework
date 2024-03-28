@@ -12,7 +12,6 @@ import {
 	compareReferencePositions,
 	reservedRangeLabelsKey,
 } from "@fluidframework/merge-tree";
-
 import {
 	IntervalType,
 	SequenceInterval,
@@ -20,7 +19,6 @@ import {
 	sequenceIntervalHelpers,
 } from "../intervals/index.js";
 import { SharedString } from "../sharedString.js";
-
 import { OverlappingIntervalsIndex } from "./overlappingIntervalsIndex.js";
 import { SequenceIntervalIndexes } from "./sequenceIntervalIndexes.js";
 

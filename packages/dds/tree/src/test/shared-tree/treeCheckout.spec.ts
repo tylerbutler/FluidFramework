@@ -4,9 +4,7 @@
  */
 
 import { strict as assert, fail } from "assert";
-
 import { validateAssertionError } from "@fluidframework/test-runtime-utils";
-
 import {
 	AllowedUpdateType,
 	FieldUpPath,

@@ -6,7 +6,6 @@
 import { assert } from "@fluidframework/core-utils";
 import { IFluidDataStoreContext } from "@fluidframework/runtime-definitions";
 import { PropertySet } from "@fluidframework/sequence";
-
 import { TableDocument } from "../document.js";
 import { ITable, TableDocumentItem } from "../table.js";
 

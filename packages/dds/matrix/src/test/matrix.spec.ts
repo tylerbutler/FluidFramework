@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { IGCTestProvider, runGCTests } from "@fluid-private/test-dds-utils";
 import { AttachState } from "@fluidframework/container-definitions";
 import { IFluidHandle } from "@fluidframework/core-interfaces";
@@ -18,10 +17,8 @@ import {
 	MockHandle,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { type ISharedMatrix, MatrixItem, SharedMatrix, SharedMatrixFactory } from "../index.js";
 import type { PermutationVector } from "../permutationvector.js";
-
 import { TestConsumer } from "./testconsumer.js";
 import { check, expectSize, extract, fill, insertFragmented } from "./utils.js";
 

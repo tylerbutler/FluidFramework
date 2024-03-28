@@ -11,9 +11,7 @@ import {
 	MockFluidDataStoreRuntime,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { SharedMatrix, SharedMatrixFactory } from "../index.js";
-
 import { checkCorners, expectSize, setCorners } from "./utils.js";
 
 const enum Const {

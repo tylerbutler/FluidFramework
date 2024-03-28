@@ -4,7 +4,6 @@
  */
 
 import assert from "assert";
-
 import { parseAuthErrorTenant } from "../parseAuthErrorTenant.js";
 
 const invalidWwwAuthenticateHeaderWithoutBearerScheme =

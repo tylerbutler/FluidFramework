@@ -4,7 +4,6 @@
  */
 
 import { IMemoryTestObject, benchmarkMemory } from "@fluid-tools/benchmark";
-
 import { SubSequence } from "../../sharedSequence.js";
 
 describe("SharedSequence memory usage", () => {

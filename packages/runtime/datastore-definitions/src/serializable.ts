@@ -4,7 +4,6 @@
  */
 
 import type { IFluidHandle } from "@fluidframework/core-interfaces";
-
 import type { Jsonable } from "./jsonable.js";
 
 /**

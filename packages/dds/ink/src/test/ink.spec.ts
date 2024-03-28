@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "node:assert";
-
 import { AttachState } from "@fluidframework/container-definitions";
 import {
 	MockContainerRuntimeFactory,
@@ -14,7 +13,6 @@ import {
 	MockSharedObjectServices,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { Ink } from "../ink.js";
 import { InkFactory } from "../inkFactory.js";
 import { IPen } from "../interfaces.js";

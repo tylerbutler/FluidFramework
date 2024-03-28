@@ -6,7 +6,6 @@
 import { ContainerMessageType } from "@fluidframework/container-runtime";
 import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
 import { IQuorumClients, ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-
 import { IFluidLastEditedTracker, ILastEditDetails } from "./interfaces.js";
 
 /**

@@ -4,14 +4,12 @@
  */
 
 import { strict as assert } from "assert";
-
 import { AttachState } from "@fluidframework/container-definitions";
 import {
 	MockContainerRuntimeFactory,
 	MockFluidDataStoreRuntime,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { IIntervalCollection, Side } from "../intervalCollection.js";
 import { IntervalStickiness, SequenceInterval } from "../intervals/index.js";
 import {
@@ -25,7 +23,6 @@ import {
 } from "../revertibles.js";
 import { SharedStringFactory } from "../sequenceFactory.js";
 import { SharedString } from "../sharedString.js";
-
 import { assertSequenceIntervals } from "./intervalTestUtils.js";
 
 describe("Sequence.Revertibles with Local Edits", () => {

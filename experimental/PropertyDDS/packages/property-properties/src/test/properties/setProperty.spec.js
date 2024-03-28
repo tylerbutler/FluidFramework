@@ -9,7 +9,6 @@
 const { ChangeSet } = require("@fluid-experimental/property-changeset");
 const { generateGUID } = require("@fluid-experimental/property-common").GuidUtils;
 const _ = require("lodash");
-
 const { PropertyFactory } = require("../..");
 const { BaseProperty } = require("../..");
 

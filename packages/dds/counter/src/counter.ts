@@ -18,7 +18,6 @@ import {
 	SharedObject,
 	createSingleBlobSummary,
 } from "@fluidframework/shared-object-base";
-
 import { CounterFactory } from "./counterFactory.js";
 import { type ISharedCounter, type ISharedCounterEvents } from "./interfaces.js";
 

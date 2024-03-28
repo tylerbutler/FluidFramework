@@ -8,7 +8,6 @@
 
 import { IFluidHandle, IFluidHandleContext } from "@fluidframework/core-interfaces";
 import { generateHandleContextPath, isSerializedHandle } from "@fluidframework/runtime-utils";
-
 import { RemoteFluidObjectHandle } from "./remoteObjectHandle.js";
 
 /**

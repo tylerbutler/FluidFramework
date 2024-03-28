@@ -4,16 +4,14 @@
  */
 
 import { strict as assert } from "assert";
-
 import { describeCompat } from "@fluid-private/test-version-utils";
-import { IContainer } from "@fluidframework/container-definitions/internal";
 import { IContainerRuntimeOptions, ISummarizer } from "@fluidframework/container-runtime";
+import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
 import {
 	IGCMetadata,
 	IGarbageCollector,
 	// eslint-disable-next-line import/no-internal-modules
 } from "@fluidframework/container-runtime/test/gc";
-import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
 import { ISummaryTree, SummaryType } from "@fluidframework/protocol-definitions";
 import { channelsTreeName, gcTreeKey } from "@fluidframework/runtime-definitions";
 import {
@@ -25,6 +23,7 @@ import {
 	summarizeNow,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 
 // IContainerRuntime type that exposes garbage collector which is a private property.
 type IContainerRuntimeWithPrivates = IContainerRuntime & {

@@ -13,7 +13,6 @@ import {
 } from "../../core/index.js";
 import { fail } from "../../util/index.js";
 import { prefixFieldPath } from "../treeCursorUtils.js";
-
 import { ChunkedCursor, TreeChunk, cursorChunk, dummyRoot } from "./chunk.js";
 
 /**

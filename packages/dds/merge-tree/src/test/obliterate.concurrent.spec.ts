@@ -4,11 +4,8 @@
  */
 
 import { strict as assert } from "assert";
-
 import { LoggingError } from "@fluidframework/telemetry-utils";
-
 import { MergeTree } from "../mergeTree.js";
-
 import { ReconnectTestHelper } from "./reconnectHelper.js";
 import { useStrictPartialLengthChecks } from "./testUtils.js";
 

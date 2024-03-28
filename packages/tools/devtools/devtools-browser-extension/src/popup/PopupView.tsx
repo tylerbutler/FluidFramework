@@ -11,7 +11,6 @@ import {
 	handleIncomingMessage,
 } from "@fluidframework/devtools-core";
 import React from "react";
-
 import { type BackgroundConnection } from "../BackgroundConnection.js";
 
 // The recipient of the sent message is running on the same machine, just in a different process.

@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import {
 	RevisionMetadataSource,
 	RevisionTag,
@@ -16,7 +15,6 @@ import {
 // eslint-disable-next-line import/no-internal-modules
 import { rebaseRevisionMetadataFromInfo } from "../feature-libraries/modular-schema/index.js";
 import { fail } from "../util/index.js";
-
 import {
 	BoundFieldChangeRebaser,
 	ChildStateGenerator,

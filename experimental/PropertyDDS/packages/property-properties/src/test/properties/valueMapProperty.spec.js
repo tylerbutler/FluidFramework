@@ -10,7 +10,6 @@
  * In this file, we will test the map property object described in /src/properties/mapProperty.js
  */
 const { ChangeSet } = require("@fluid-experimental/property-changeset");
-
 const { PropertyFactory } = require("../..");
 const { BaseProperty } = require("../..");
 

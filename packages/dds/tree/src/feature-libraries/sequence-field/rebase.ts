@@ -4,7 +4,6 @@
  */
 
 import { assert, unreachableCase } from "@fluidframework/core-utils";
-
 import {
 	ChangeAtomId,
 	ChangesetLocalId,
@@ -20,7 +19,6 @@ import {
 	RebaseRevisionMetadata,
 	getIntention,
 } from "../modular-schema/index.js";
-
 import { CellOrderingMethod, sequenceConfig } from "./config.js";
 import { DetachIdOverrideType } from "./format.js";
 import { EmptyInputCellMark } from "./helperTypes.js";

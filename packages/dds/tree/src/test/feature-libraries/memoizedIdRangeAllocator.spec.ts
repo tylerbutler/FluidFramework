@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import { ChangesetLocalId, RevisionTag } from "../../core/index.js";
 import { MemoizedIdRangeAllocator } from "../../feature-libraries/index.js";
 import { brand } from "../../util/index.js";

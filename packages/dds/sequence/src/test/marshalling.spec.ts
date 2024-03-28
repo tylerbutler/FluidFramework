@@ -4,9 +4,7 @@
  */
 
 import { strict as assert } from "assert";
-
 import { Marker, ReferenceType, TextSegment } from "@fluidframework/merge-tree";
-
 import { SubSequence } from "../sharedSequence.js";
 
 const segmentTypes = [

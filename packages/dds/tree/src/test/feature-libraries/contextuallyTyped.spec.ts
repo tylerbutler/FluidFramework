@@ -4,10 +4,9 @@
  */
 
 import { strict as assert } from "assert";
-
 import { MockHandle } from "@fluidframework/test-runtime-utils";
-
 import { MapTree } from "../../core/index.js";
+
 import { SchemaBuilder, leaf } from "../../domains/index.js";
 import {
 	ContextuallyTypedNodeDataObject,

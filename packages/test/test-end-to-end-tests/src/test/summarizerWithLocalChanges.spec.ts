@@ -4,9 +4,7 @@
  */
 
 import { strict as assert } from "assert";
-
 import { ITestDataObject, describeCompat, itExpects } from "@fluid-private/test-version-utils";
-import { IContainer } from "@fluidframework/container-definitions/internal";
 import {
 	ContainerRuntime,
 	DefaultSummaryConfiguration,
@@ -37,6 +35,7 @@ import {
 	timeoutAwait,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 
 const configProvider = createTestConfigProvider();
 

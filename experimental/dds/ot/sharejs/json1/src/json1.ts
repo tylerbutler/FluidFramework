@@ -19,7 +19,6 @@ import {
 	removeOp,
 	replaceOp,
 } from "ot-json1";
-
 import { Json1Factory } from "./factory.js";
 
 /**

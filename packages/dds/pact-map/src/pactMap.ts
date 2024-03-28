@@ -19,7 +19,6 @@ import {
 	SharedObject,
 	createSingleBlobSummary,
 } from "@fluidframework/shared-object-base";
-
 import { type IAcceptedPact, type IPactMap, type IPactMapEvents } from "./interfaces.js";
 import { PactMapFactory } from "./pactMapFactory.js";
 

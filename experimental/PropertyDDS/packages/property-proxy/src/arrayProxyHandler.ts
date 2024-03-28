@@ -10,7 +10,6 @@ import {
 	PropertyFactory,
 	ReferenceArrayProperty,
 } from "@fluid-experimental/property-properties";
-
 import { ComponentArray } from "./componentArray.js";
 import { PropertyProxyErrors } from "./errors.js";
 import { PropertyProxy, proxySymbol } from "./propertyProxy.js";

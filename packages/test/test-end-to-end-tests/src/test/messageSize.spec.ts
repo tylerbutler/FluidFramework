@@ -6,9 +6,7 @@
 import { strict as assert } from "assert";
 // eslint-disable-next-line import/no-nodejs-modules
 import * as crypto from "crypto";
-
 import { describeCompat, itExpects } from "@fluid-private/test-version-utils";
-import { IContainer } from "@fluidframework/container-definitions/internal";
 import { CompressionAlgorithms, ContainerMessageType } from "@fluidframework/container-runtime";
 import {
 	ConfigTypes,
@@ -32,6 +30,7 @@ import {
 	ITestObjectProvider,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 
 describeCompat("Message size", "NoCompat", (getTestObjectProvider, apis) => {
 	const { SharedMap } = apis.dds;

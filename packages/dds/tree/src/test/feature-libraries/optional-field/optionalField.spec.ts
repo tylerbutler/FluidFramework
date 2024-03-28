@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import {
 	DeltaFieldChanges,
 	DeltaFieldMap,
@@ -38,7 +37,6 @@ import {
 	mintRevisionTag,
 } from "../../utils.js";
 import { changesetForChild, fooKey } from "../fieldKindTestUtils.js";
-
 import { testRebaserAxioms } from "./optionalChangeRebaser.test.js";
 import { testCodecs } from "./optionalFieldChangeCodecs.test.js";
 import { testSnapshots } from "./optionalFieldSnapshots.test.js";

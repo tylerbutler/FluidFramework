@@ -4,7 +4,6 @@
  */
 
 import { PathVisitor, UpPath } from "../../core/index.js";
-
 import { FlexTreeNode } from "./flexTreeTypes.js";
 
 /**

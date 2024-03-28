@@ -4,7 +4,6 @@
  */
 
 import { assert, unreachableCase } from "@fluidframework/core-utils";
-
 import {
 	ChangeAtomId,
 	ChangesetLocalId,
@@ -21,7 +20,6 @@ import {
 	getIntention,
 	setInCrossFieldMap,
 } from "../modular-schema/index.js";
-
 import { DetachIdOverrideType } from "./format.js";
 import {
 	CellRename,

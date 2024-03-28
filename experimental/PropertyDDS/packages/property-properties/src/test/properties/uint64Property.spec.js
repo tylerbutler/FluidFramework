@@ -10,7 +10,6 @@
 
 const { MSG } = require("@fluid-experimental/property-common").constants;
 const { Uint64 } = require("@fluid-experimental/property-common");
-
 const { PropertyFactory } = require("../..");
 
 describe("Test Uint64Property", function () {

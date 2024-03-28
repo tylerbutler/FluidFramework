@@ -4,10 +4,8 @@
  */
 
 import { strict as assert } from "assert";
-
 import { BenchmarkType, benchmark } from "@fluid-tools/benchmark";
 import { AttributionKey } from "@fluidframework/runtime-definitions";
-
 import {
 	IAttributionCollection,
 	IAttributionCollectionSpec,

@@ -19,7 +19,6 @@ import {
 	SharedString,
 	createEndpointIndex,
 } from "@fluidframework/sequence";
-
 import { CellRange } from "./cellrange.js";
 import { TableDocumentType } from "./componentTypes.js";
 import { ConfigKey } from "./configKey.js";

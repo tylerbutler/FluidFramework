@@ -5,7 +5,6 @@
 
 import { RevisionTag } from "../rebase/index.js";
 import { FieldKey } from "../schema-stored/index.js";
-
 import { ITreeCursorSynchronous } from "./cursor.js";
 
 /**

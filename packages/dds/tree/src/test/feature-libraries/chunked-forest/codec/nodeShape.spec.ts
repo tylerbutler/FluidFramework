@@ -4,7 +4,6 @@
  */
 
 import { strict as assert, fail } from "assert";
-
 import { JsonableTree } from "../../../../core/index.js";
 import {
 	Counter,
@@ -25,7 +24,6 @@ import { NodeShape } from "../../../../feature-libraries/chunked-forest/codec/no
 // eslint-disable-next-line import/no-internal-modules
 import { fieldKinds } from "../../../../feature-libraries/default-schema/index.js";
 import { brand } from "../../../../util/index.js";
-
 import { checkNodeEncode } from "./checkEncode.js";
 
 describe("nodeShape", () => {

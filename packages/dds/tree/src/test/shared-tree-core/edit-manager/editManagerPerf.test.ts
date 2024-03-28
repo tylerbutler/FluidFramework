@@ -4,9 +4,7 @@
  */
 
 import { strict as assert } from "assert";
-
 import { SessionId } from "@fluidframework/id-compressor";
-
 import { TaggedChange } from "../../../core/index.js";
 import { brand } from "../../../util/index.js";
 import {
@@ -16,7 +14,6 @@ import {
 	UnrebasableTestChangeRebaser,
 } from "../../testChange.js";
 import { mintRevisionTag } from "../../utils.js";
-
 import { runUnitTestScenario } from "./editManagerScenario.js";
 import {
 	rebaseAdvancingPeerEditsOverTrunkEdits,

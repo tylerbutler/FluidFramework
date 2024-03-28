@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "assert";
-
 import {
 	AsyncGenerator,
 	BaseFuzzTestState,
@@ -15,7 +14,6 @@ import {
 	done,
 } from "@fluid-private/stochastic-test-utils";
 import { Client, DDSFuzzTestState } from "@fluid-private/test-dds-utils";
-
 import {
 	AllowedUpdateType,
 	FieldKey,
@@ -43,7 +41,6 @@ import { SharedTree } from "../../../shared-tree/sharedTree.js";
 // eslint-disable-next-line import/no-internal-modules
 import { getOrCreate, makeArray } from "../../../util/utils.js";
 import { schematizeFlexTree } from "../../utils.js";
-
 import { FuzzNode, FuzzNodeSchema, fuzzSchema, initialFuzzSchema } from "./fuzzUtils.js";
 import {
 	FieldEditTypes,

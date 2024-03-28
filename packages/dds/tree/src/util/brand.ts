@@ -4,7 +4,6 @@
  */
 
 import { UsageError } from "@fluidframework/telemetry-utils";
-
 import type { Covariant, isAny } from "./typeCheck.js";
 import type { Assume } from "./typeUtils.js";
 

@@ -8,7 +8,6 @@ import Proxyquire from "proxyquire";
 import { createSandbox } from "sinon";
 
 import { type Globals } from "../Globals.js";
-
 import { stubGlobals } from "./Utilities.js";
 
 const proxyquire = Proxyquire.noCallThru();

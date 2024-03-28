@@ -4,9 +4,7 @@
  */
 
 import assert from "node:assert";
-
 import { ITelemetryBaseEvent } from "@fluidframework/core-interfaces";
-
 import {
 	type ITelemetryErrorEventExt,
 	type ITelemetryGenericEventExt,

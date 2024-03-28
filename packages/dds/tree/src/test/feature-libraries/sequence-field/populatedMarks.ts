@@ -4,7 +4,6 @@
  */
 
 import { IIdCompressor } from "@fluidframework/id-compressor";
-
 import { ChangeAtomId } from "../../../core/index.js";
 import { SequenceField as SF } from "../../../feature-libraries/index.js";
 // eslint-disable-next-line import/no-internal-modules

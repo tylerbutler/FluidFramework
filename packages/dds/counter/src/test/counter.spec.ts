@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "node:assert";
-
 import { AttachState } from "@fluidframework/container-definitions";
 import { type IChannelFactory } from "@fluidframework/datastore-definitions";
 import {
@@ -15,7 +14,6 @@ import {
 	MockSharedObjectServices,
 	MockStorage,
 } from "@fluidframework/test-runtime-utils";
-
 import { CounterFactory } from "../counterFactory.js";
 import { type ISharedCounter, SharedCounter } from "../index.js";
 

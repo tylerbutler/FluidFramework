@@ -29,7 +29,6 @@ import {
 	LazyItem,
 	LeafNodeSchema,
 } from "../typed-schema/index.js";
-
 import { FlexTreeContext } from "./context.js";
 import { FlexTreeNodeEvents } from "./treeEvents.js";
 

@@ -7,7 +7,6 @@ import { strict as assert } from "node:assert";
 
 import { unreachableCase } from "@fluidframework/core-utils";
 import { MockFluidDataStoreRuntime } from "@fluidframework/test-runtime-utils";
-
 import {
 	NodeFromSchema,
 	SchemaFactory,

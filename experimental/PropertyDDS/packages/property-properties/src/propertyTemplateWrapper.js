@@ -9,7 +9,6 @@
  */
 const { MSG } = require("@fluid-experimental/property-common").constants;
 const _ = require("lodash");
-
 const { ContainerProperty } = require("./properties/containerProperty");
 
 const reservedTypesWithoutTemplates = {
