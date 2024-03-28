@@ -4,7 +4,11 @@
  */
 
 import { strict as assert } from "assert";
+
+import { makeRandom } from "@fluid-private/stochastic-test-utils";
 import { LocalServerTestDriver } from "@fluid-private/test-drivers";
+import { IContainer } from "@fluidframework/container-definitions/internal";
+import { Loader } from "@fluidframework/container-loader/internal";
 import { ISummarizer } from "@fluidframework/container-runtime";
 import { ConfigTypes, IConfigProviderBase } from "@fluidframework/core-interfaces";
 import {
@@ -13,6 +17,7 @@ import {
 	IFluidDataStoreRuntime,
 } from "@fluidframework/datastore-definitions";
 import { SessionId, createIdCompressor } from "@fluidframework/id-compressor";
+import { createAlwaysFinalizedIdCompressor } from "@fluidframework/id-compressor/test";
 import {
 	MockContainerRuntimeFactoryForReconnection,
 	MockFluidDataStoreRuntime,
@@ -31,8 +36,7 @@ import {
 	summarizeNow,
 } from "@fluidframework/test-utils";
 
-import { makeRandom } from "@fluid-private/stochastic-test-utils";
-import { createAlwaysFinalizedIdCompressor } from "@fluidframework/id-compressor/test";
+
 import { ICodecFamily, IJsonCodec, withSchemaValidation } from "../codec/index.js";
 import {
 	AllowedUpdateType,
@@ -126,8 +130,7 @@ import { SchematizingSimpleTreeView, requireSchema } from "../shared-tree/schema
 import { SharedTreeOptions } from "../shared-tree/sharedTree.js";
 import { ImplicitFieldSchema, TreeConfiguration, toFlexConfig } from "../simple-tree/index.js";
 import { JsonCompatible, Mutable, brand, nestedMapFromFlatList } from "../util/index.js";
-import { IContainer } from "@fluidframework/container-definitions/internal";
-import { Loader } from "@fluidframework/container-loader/internal";
+
 
 // Testing utilities
 

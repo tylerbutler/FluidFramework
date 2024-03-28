@@ -3,7 +3,16 @@
  * Licensed under the MIT License.
  */
 
+import {
+	IGetPendingLocalStateProps,
+	IRuntime,
+} from "@fluidframework/container-definitions/internal";
 import { assert } from "@fluidframework/core-utils";
+import {
+	IDocumentStorageService,
+	IResolvedUrl,
+	ISnapshot,
+} from "@fluidframework/driver-definitions/internal";
 import { isInstanceOfISnapshot } from "@fluidframework/driver-utils";
 import {
 	ISequencedDocumentMessage,
@@ -17,16 +26,8 @@ import {
 	UsageError,
 	createChildMonitoringContext,
 } from "@fluidframework/telemetry-utils";
+
 import { ISerializableBlobContents, getBlobContentsFromTree } from "./containerStorageAdapter.js";
-import {
-	IGetPendingLocalStateProps,
-	IRuntime,
-} from "@fluidframework/container-definitions/internal";
-import {
-	IDocumentStorageService,
-	IResolvedUrl,
-	ISnapshot,
-} from "@fluidframework/driver-definitions/internal";
 
 export interface SnapshotWithBlobs {
 	/**

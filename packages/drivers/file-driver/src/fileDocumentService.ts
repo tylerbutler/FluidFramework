@@ -5,6 +5,7 @@
 
 import { TypedEventEmitter } from "@fluid-internal/client-utils";
 import { IClient } from "@fluidframework/protocol-definitions";
+
 import { FileDeltaStorageService } from "./fileDeltaStorageService.js";
 
 /**

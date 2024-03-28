@@ -7,18 +7,19 @@
 
 /* eslint-disable unicorn/no-null */
 
-import { expect } from "chai";
 
 import { SharedCell } from "@fluidframework/cell";
 import { type IFluidHandle } from "@fluidframework/core-interfaces";
 import { SharedCounter } from "@fluidframework/counter";
 import { createIdCompressor } from "@fluidframework/id-compressor";
 import { SharedMap } from "@fluidframework/map";
+import { SharedDirectory } from "@fluidframework/map/internal";
 import { SharedMatrix } from "@fluidframework/matrix";
 import { SharedString } from "@fluidframework/sequence";
 import { type ISharedObject } from "@fluidframework/shared-object-base";
 import { MockFluidDataStoreRuntime } from "@fluidframework/test-runtime-utils";
 import { SchemaFactory, SharedTree, TreeConfiguration } from "@fluidframework/tree";
+import { expect } from "chai";
 
 import { EditType, type FluidObjectId } from "../CommonInterfaces.js";
 import {
@@ -37,7 +38,6 @@ import {
 	visualizeSharedTree,
 	visualizeUnknownSharedObject,
 } from "../data-visualization/index.js";
-import { SharedDirectory } from "@fluidframework/map/internal";
 
 /**
  * Mock {@link VisualizeChildData} for use in tests

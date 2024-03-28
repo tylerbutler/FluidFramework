@@ -4,12 +4,14 @@
  */
 
 import { strict as assert } from "assert";
+
 import {
 	IRuntimeAttributor,
 	createRuntimeAttributor,
 	enableOnNewFileKey,
 } from "@fluid-experimental/attributor";
 import { describeCompat, itSkipsFailureOnSpecificDrivers } from "@fluid-private/test-version-utils";
+import { IContainer, IFluidCodeDetails } from "@fluidframework/container-definitions/internal";
 import { ConfigTypes, IConfigProviderBase } from "@fluidframework/core-interfaces";
 import { createInsertOnlyAttributionPolicy } from "@fluidframework/merge-tree";
 import { AttributionInfo } from "@fluidframework/runtime-definitions";
@@ -22,7 +24,6 @@ import {
 	ITestObjectProvider,
 	getContainerEntryPointBackCompat,
 } from "@fluidframework/test-utils";
-import { IContainer, IFluidCodeDetails } from "@fluidframework/container-definitions/internal";
 
 const stringId = "sharedStringKey";
 

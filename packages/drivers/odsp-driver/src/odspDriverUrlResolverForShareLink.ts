@@ -6,12 +6,18 @@
 import { IRequest, ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
 import { PromiseCache } from "@fluidframework/core-utils";
 import {
+	IContainerPackageInfo,
+	IResolvedUrl,
+	IUrlResolver,
+} from "@fluidframework/driver-definitions/internal";
+import {
 	IOdspResolvedUrl,
 	IdentityType,
 	OdspResourceTokenFetchOptions,
 	TokenFetcher,
 } from "@fluidframework/odsp-driver-definitions";
 import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
+
 import { OdspFluidDataStoreLocator, SharingLinkHeader } from "./contractsPublic.js";
 import { createOdspUrl } from "./createOdspUrl.js";
 import { getFileLink } from "./getFileLink.js";
@@ -22,11 +28,6 @@ import {
 	storeLocatorInOdspUrl,
 } from "./odspFluidFileLink.js";
 import { createOdspLogger, getOdspResolvedUrl } from "./odspUtils.js";
-import {
-	IContainerPackageInfo,
-	IResolvedUrl,
-	IUrlResolver,
-} from "@fluidframework/driver-definitions/internal";
 
 /**
  * Properties passed to the code responsible for fetching share link for a file.

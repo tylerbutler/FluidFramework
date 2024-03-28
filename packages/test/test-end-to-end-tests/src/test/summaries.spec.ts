@@ -4,6 +4,7 @@
  */
 
 import { strict as assert } from "assert";
+
 import { bufferToString } from "@fluid-internal/client-utils";
 import {
 	ITestDataObject,
@@ -11,6 +12,7 @@ import {
 	describeCompat,
 	itExpects,
 } from "@fluid-private/test-version-utils";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 import {
 	ContainerRuntime,
 	DefaultSummaryConfiguration,
@@ -20,6 +22,7 @@ import {
 	SummaryCollection,
 } from "@fluidframework/container-runtime";
 import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
+import { ISummaryContext } from "@fluidframework/driver-definitions/internal";
 import { ISummaryBlob, ISummaryTree, SummaryType } from "@fluidframework/protocol-definitions";
 import {
 	FlushMode,
@@ -41,8 +44,6 @@ import {
 	timeoutPromise,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
-import { IContainer } from "@fluidframework/container-definitions/internal";
-import { ISummaryContext } from "@fluidframework/driver-definitions/internal";
 
 const flushPromises = async () => new Promise((resolve) => process.nextTick(resolve));
 const testContainerConfig: ITestContainerConfig = {

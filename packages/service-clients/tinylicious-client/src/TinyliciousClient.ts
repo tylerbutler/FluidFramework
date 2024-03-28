@@ -4,8 +4,18 @@
  */
 
 import { AttachState } from "@fluidframework/container-definitions";
+import {
+	type IContainer,
+	type IFluidModuleWithDetails,
+	type IHostLoader,
+} from "@fluidframework/container-definitions/internal";
+import { Loader } from "@fluidframework/container-loader/internal";
 import { type ConfigTypes, type FluidObject } from "@fluidframework/core-interfaces";
 import { assert } from "@fluidframework/core-utils";
+import {
+	type IDocumentServiceFactory,
+	type IUrlResolver,
+} from "@fluidframework/driver-definitions/internal";
 import {
 	type ContainerSchema,
 	type IFluidContainer,
@@ -22,18 +32,9 @@ import {
 	InsecureTinyliciousUrlResolver,
 	createTinyliciousCreateNewRequest,
 } from "@fluidframework/tinylicious-driver";
+
 import { createTinyliciousAudienceMember } from "./TinyliciousAudience.js";
 import { type TinyliciousClientProps, type TinyliciousContainerServices } from "./interfaces.js";
-import {
-	type IContainer,
-	type IFluidModuleWithDetails,
-	type IHostLoader,
-} from "@fluidframework/container-definitions/internal";
-import { Loader } from "@fluidframework/container-loader/internal";
-import {
-	type IDocumentServiceFactory,
-	type IUrlResolver,
-} from "@fluidframework/driver-definitions/internal";
 
 /**
  * Provides the ability to have a Fluid object backed by a Tinylicious service.

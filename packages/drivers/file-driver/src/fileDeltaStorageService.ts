@@ -4,10 +4,11 @@
  */
 
 import fs from "fs";
+
 import { assert } from "@fluidframework/core-utils";
+import { IDocumentDeltaStorageService, IStream } from "@fluidframework/driver-definitions/internal";
 import { emptyMessageStream } from "@fluidframework/driver-utils";
 import * as api from "@fluidframework/protocol-definitions";
-import { IDocumentDeltaStorageService, IStream } from "@fluidframework/driver-definitions/internal";
 
 /**
  * Provides access to the underlying delta storage on the local file storage for file driver.

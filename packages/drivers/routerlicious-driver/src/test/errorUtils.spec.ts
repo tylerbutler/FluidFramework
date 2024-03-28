@@ -4,14 +4,16 @@
  */
 
 import assert from "assert";
+
 import { FluidErrorTypes } from "@fluidframework/core-interfaces";
+import { IThrottlingWarning } from "@fluidframework/driver-definitions/internal";
+
 import {
 	RouterliciousErrorTypes,
 	createR11sNetworkError,
 	errorObjectFromSocketError,
 	throwR11sNetworkError,
 } from "../errorUtils.js";
-import { IThrottlingWarning } from "@fluidframework/driver-definitions/internal";
 
 describe("ErrorUtils", () => {
 	/**

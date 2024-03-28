@@ -4,13 +4,16 @@
  */
 
 import { strict as assert } from "node:assert";
+
 import { delay } from "@fluidframework/core-utils";
+import { ISnapshot } from "@fluidframework/driver-definitions/internal";
 import {
 	ICacheEntry,
 	IOdspResolvedUrl,
 	maximumCacheDurationMs,
 } from "@fluidframework/odsp-driver-definitions";
 import { createChildLogger } from "@fluidframework/telemetry-utils";
+
 import {
 	HostStoragePolicyInternal,
 	IOdspSnapshot,
@@ -27,8 +30,8 @@ import {
 import { OdspDriverUrlResolver } from "../odspDriverUrlResolver.js";
 import { getHashedDocumentId } from "../odspPublicUtils.js";
 import { INewFileInfo } from "../odspUtils.js";
+
 import { createResponse, mockFetchSingle, notFound } from "./mockFetch.js";
-import { ISnapshot } from "@fluidframework/driver-definitions/internal";
 
 const createUtLocalCache = (): LocalPersistentCache => new LocalPersistentCache();
 

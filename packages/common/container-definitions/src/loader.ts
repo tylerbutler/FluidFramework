@@ -9,6 +9,7 @@ import type {
 	IEventProvider,
 	IRequest,
 } from "@fluidframework/core-interfaces";
+import type { IResolvedUrl } from "@fluidframework/driver-definitions/internal";
 import type {
 	IClient,
 	IClientDetails,
@@ -18,6 +19,7 @@ import type {
 	ISequencedProposal,
 	ISnapshotTree,
 } from "@fluidframework/protocol-definitions";
+
 import type { IAudience } from "./audience.js";
 import type { IDeltaManager, ReadOnlyInfo } from "./deltas.js";
 import type { ContainerWarning, ICriticalContainerError } from "./error.js";
@@ -28,7 +30,6 @@ import type {
 	IProvideFluidCodeDetailsComparer,
 } from "./fluidPackage.js";
 import type { AttachState } from "./runtime.js";
-import type { IResolvedUrl } from "@fluidframework/driver-definitions/internal";
 
 /**
  * Encapsulates a module entry point with corresponding code details.

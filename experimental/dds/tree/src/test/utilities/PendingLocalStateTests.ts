@@ -3,8 +3,10 @@
  * Licensed under the MIT License.
  */
 
+import { IContainer } from '@fluidframework/container-definitions/internal';
 import { TestObjectProvider } from '@fluidframework/test-utils';
 import { expect } from 'chai';
+
 import { Change, StablePlace } from '../../ChangeTypes.js';
 import { fail } from '../../Common.js';
 import type { EditLog } from '../../EditLog.js';
@@ -12,6 +14,7 @@ import { EditId, NodeId, TraitLabel } from '../../Identifiers.js';
 import { SharedTree } from '../../SharedTree.js';
 import { TreeView } from '../../TreeView.js';
 import { ChangeInternal, Edit, WriteFormat } from '../../persisted-types/index.js';
+
 import { SimpleTestTree } from './TestNode.js';
 import {
 	LocalServerSharedTreeTestingComponents,
@@ -22,7 +25,6 @@ import {
 	stabilizeEdit,
 	withContainerOffline,
 } from './TestUtilities.js';
-import { IContainer } from '@fluidframework/container-definitions/internal';
 
 /**
  * Runs a test suite for SharedTree's ability to apply pending local state stashed by the host.

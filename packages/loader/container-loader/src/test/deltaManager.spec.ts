@@ -4,8 +4,10 @@
  */
 
 import { strict as assert } from "assert";
+
 import { EventEmitter } from "@fluid-internal/client-utils";
 import { MockDocumentDeltaConnection, MockDocumentService } from "@fluid-private/test-loader-utils";
+import { IDocumentDeltaStorageService } from "@fluidframework/driver-definitions/internal";
 import {
 	IClient,
 	IDocumentMessage,
@@ -18,11 +20,11 @@ import {
 	createChildLogger,
 } from "@fluidframework/telemetry-utils";
 import { SinonFakeTimers, useFakeTimers } from "sinon";
+
 import { ConnectionManager } from "../connectionManager.js";
 import { IConnectionManagerFactoryArgs } from "../contracts.js";
 import { DeltaManager } from "../deltaManager.js";
 import { NoopHeuristic } from "../noopHeuristic.js";
-import { IDocumentDeltaStorageService } from "@fluidframework/driver-definitions/internal";
 
 describe("Loader", () => {
 	describe("Container Loader", () => {

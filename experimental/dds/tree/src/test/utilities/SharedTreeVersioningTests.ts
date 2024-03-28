@@ -4,9 +4,12 @@
  */
 
 import { strict as assert } from 'assert';
+
+import { LoaderHeader } from '@fluidframework/container-definitions/internal';
 import { ITelemetryBaseEvent } from '@fluidframework/core-interfaces';
 import { MockFluidDataStoreRuntime, validateAssertionError } from '@fluidframework/test-runtime-utils';
 import { expect } from 'chai';
+
 import { BuildNode, Change, StablePlace, StableRange } from '../../ChangeTypes.js';
 import { Mutable } from '../../Common.js';
 import { EditLog } from '../../EditLog.js';
@@ -18,6 +21,7 @@ import { TreeNodeHandle } from '../../TreeNodeHandle.js';
 import { nilUuid } from '../../UuidUtilities.js';
 import { SharedTreeOpType, SharedTreeUpdateOp, TreeNodeSequence, WriteFormat } from '../../persisted-types/index.js';
 import { applyTestEdits } from '../Summary.tests.js';
+
 import { buildLeaf } from './TestNode.js';
 import {
 	SharedTreeTestingComponents,
@@ -29,7 +33,6 @@ import {
 	testTrait,
 	waitForSummary,
 } from './TestUtilities.js';
-import { LoaderHeader } from '@fluidframework/container-definitions/internal';
 
 function spyOnVersionChanges(tree: SharedTree): WriteFormat[] {
 	const versions: WriteFormat[] = [];

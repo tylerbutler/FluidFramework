@@ -6,6 +6,11 @@
 import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
 import { PromiseCache } from "@fluidframework/core-utils";
 import {
+	IDocumentService,
+	IDocumentServiceFactory,
+	IResolvedUrl,
+} from "@fluidframework/driver-definitions/internal";
+import {
 	getDocAttributesFromProtocolSummary,
 	isCombinedAppAndProtocolSummary,
 } from "@fluidframework/driver-utils";
@@ -26,6 +31,7 @@ import {
 import { ISummaryTree } from "@fluidframework/protocol-definitions";
 import { PerformanceEvent, createChildLogger } from "@fluidframework/telemetry-utils";
 import { v4 as uuid } from "uuid";
+
 import { ICacheAndTracker, createOdspCacheAndTracker } from "./epochTracker.js";
 import {
 	INonPersistentCache,
@@ -43,11 +49,6 @@ import {
 	isNewFileInfo,
 	toInstrumentedOdspTokenFetcher,
 } from "./odspUtils.js";
-import {
-	IDocumentService,
-	IDocumentServiceFactory,
-	IResolvedUrl,
-} from "@fluidframework/driver-definitions/internal";
 
 /**
  * Factory for creating the sharepoint document service. Use this if you want to

@@ -4,16 +4,18 @@
  */
 
 import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
-import { ISummaryTree } from "@fluidframework/protocol-definitions";
-import { DocumentServiceFactoryProxy } from "../../documentServiceFactoryProxy.js";
-import { ICompressionStorageConfig } from "./compressionTypes.js";
-import { DocumentServiceCompressionAdapter } from "./documentServiceCompressionAdapter.js";
-import { DocumentStorageServiceCompressionAdapter as DocumentStorageServiceSummaryBlobCompressionAdapter } from "./summaryblob/index.js";
 import {
 	IDocumentService,
 	IDocumentServiceFactory,
 	IResolvedUrl,
 } from "@fluidframework/driver-definitions/internal";
+import { ISummaryTree } from "@fluidframework/protocol-definitions";
+
+import { DocumentServiceFactoryProxy } from "../../documentServiceFactoryProxy.js";
+
+import { ICompressionStorageConfig } from "./compressionTypes.js";
+import { DocumentServiceCompressionAdapter } from "./documentServiceCompressionAdapter.js";
+import { DocumentStorageServiceCompressionAdapter as DocumentStorageServiceSummaryBlobCompressionAdapter } from "./summaryblob/index.js";
 
 export class DocumentServiceFactoryCompressionAdapter extends DocumentServiceFactoryProxy {
 	constructor(

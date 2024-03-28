@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import { ICodeDetailsLoader } from "@fluidframework/container-definitions/internal";
 import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
 import {
 	LocalDocumentServiceFactory,
@@ -15,9 +16,9 @@ import {
 	LocalDeltaConnectionServer,
 } from "@fluidframework/server-local-server";
 import { v4 as uuid } from "uuid";
+
 import { IDetachedModel, IModelLoader } from "./interfaces.js";
 import { ModelLoader } from "./modelLoader.js";
-import { ICodeDetailsLoader } from "@fluidframework/container-definitions/internal";
 
 const urlResolver = new LocalResolver();
 

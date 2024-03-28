@@ -4,12 +4,14 @@
  */
 
 import { strict as assert } from "assert";
+
 import {
 	ITestDataObject,
 	TestDataObjectType,
 	describeCompat,
 	itExpects,
 } from "@fluid-private/test-version-utils";
+import { IContainer, LoaderHeader } from "@fluidframework/container-definitions/internal";
 import {
 	ContainerMessageType,
 	ContainerRuntime,
@@ -40,13 +42,13 @@ import {
 	summarizeNow,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
+
 import {
 	getGCDeletedStateFromSummary,
 	getGCStateFromSummary,
 	getGCTombstoneStateFromSummary,
 	manufactureHandle,
 } from "./gcTestSummaryUtils.js";
-import { IContainer, LoaderHeader } from "@fluidframework/container-definitions/internal";
 
 /**
  * Validates that the given data store state is correct in the summary based on expectDelete and expectGCStateHandle.

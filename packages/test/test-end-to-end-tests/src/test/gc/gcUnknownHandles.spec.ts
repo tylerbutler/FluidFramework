@@ -4,7 +4,9 @@
  */
 
 import { strict as assert } from "assert";
+
 import { ITestDataObject, describeCompat } from "@fluid-private/test-version-utils";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 import { ContainerRuntime } from "@fluidframework/container-runtime";
 import {
 	IFluidHandle,
@@ -21,9 +23,9 @@ import {
 	getContainerEntryPointBackCompat,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
+
 import { defaultGCConfig } from "./gcTestConfigs.js";
 import { getGCStateFromSummary } from "./gcTestSummaryUtils.js";
-import { IContainer } from "@fluidframework/container-definitions/internal";
 
 /**
  * An IFluidHandle implementation that has a random path / url. This is used to test that adding this handle to

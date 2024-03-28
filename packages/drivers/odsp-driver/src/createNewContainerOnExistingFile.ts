@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import { ISnapshot } from "@fluidframework/driver-definitions/internal";
 import { UsageError } from "@fluidframework/driver-utils";
 import {
 	IFileEntry,
@@ -11,6 +12,7 @@ import {
 } from "@fluidframework/odsp-driver-definitions";
 import { ISummaryTree } from "@fluidframework/protocol-definitions";
 import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
+
 import { IWriteSummaryResponse } from "./contracts.js";
 import { ClpCompliantAppHeader } from "./contractsPublic.js";
 import {
@@ -23,7 +25,6 @@ import { EpochTracker } from "./epochTracker.js";
 import { OdspDriverUrlResolver } from "./odspDriverUrlResolver.js";
 import { getApiRoot } from "./odspUrlHelper.js";
 import { IExistingFileInfo, createCacheSnapshotKey, getOrigin } from "./odspUtils.js";
-import { ISnapshot } from "@fluidframework/driver-definitions/internal";
 
 /**
  * Creates a new Fluid container on an existing file.

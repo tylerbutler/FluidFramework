@@ -9,18 +9,19 @@ import {
 	type ConnectionState,
 	type ICriticalContainerError,
 } from "@fluidframework/container-definitions";
+import { type IContainer } from "@fluidframework/container-definitions/internal";
 import {
 	type IEvent,
 	type IEventProvider,
 	type IFluidLoadable,
 } from "@fluidframework/core-interfaces";
+
 import type {
 	ContainerAttachProps,
 	ContainerSchema,
 	IRootDataObject,
 	LoadableObjectClass,
 } from "./types.js";
-import { type IContainer } from "@fluidframework/container-definitions/internal";
 
 /**
  * Extract the type of 'initialObjects' from the given {@link ContainerSchema} type.

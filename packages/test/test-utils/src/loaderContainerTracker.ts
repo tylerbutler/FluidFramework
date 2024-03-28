@@ -4,6 +4,7 @@
  */
 
 import { IDeltaQueue } from "@fluidframework/container-definitions";
+import { IContainer, IHostLoader } from "@fluidframework/container-definitions/internal";
 import {
 	ConnectionState,
 	IContainerCreateProps,
@@ -16,11 +17,11 @@ import {
 	ISequencedDocumentMessage,
 	MessageType,
 } from "@fluidframework/protocol-definitions";
+
 import { waitForContainerConnection } from "./containerUtils.js";
 import { debug } from "./debug.js";
 import { IOpProcessingController } from "./testObjectProvider.js";
 import { timeoutAwait, timeoutPromise } from "./timeoutUtils.js";
-import { IContainer, IHostLoader } from "@fluidframework/container-definitions/internal";
 
 const debugOp = debug.extend("ops");
 const debugWait = debug.extend("wait");

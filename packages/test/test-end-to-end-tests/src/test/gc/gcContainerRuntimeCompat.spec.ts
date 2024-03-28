@@ -4,6 +4,7 @@
  */
 
 import { strict as assert } from "assert";
+
 import {
 	describeCompat,
 	type getContainerRuntimeApi,
@@ -11,6 +12,7 @@ import {
 	type getLoaderApi,
 } from "@fluid-private/test-version-utils";
 import type { ContainerRuntimeFactoryWithDefaultDataStore } from "@fluidframework/aqueduct";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 import {
 	IContainerRuntimeOptions,
 	type ISummaryRuntimeOptions,
@@ -24,8 +26,8 @@ import {
 	summarizeNow,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
+
 import { getGCFeatureFromSummary, getGCStateFromSummary } from "./gcTestSummaryUtils.js";
-import { IContainer } from "@fluidframework/container-definitions/internal";
 
 interface LayerApis {
 	containerRuntime: ReturnType<typeof getContainerRuntimeApi>;

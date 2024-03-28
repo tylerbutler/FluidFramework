@@ -5,6 +5,8 @@
 
 import { EventEmitter, TypedEventEmitter, stringToBuffer } from "@fluid-internal/client-utils";
 import { AttachState, IAudience } from "@fluidframework/container-definitions";
+import { ILoader } from "@fluidframework/container-definitions/internal";
+import type { IContainerRuntimeEvents } from "@fluidframework/container-runtime-definitions";
 import {
 	FluidObject,
 	IFluidHandle,
@@ -14,10 +16,6 @@ import {
 	type ITelemetryBaseLogger,
 } from "@fluidframework/core-interfaces";
 import { assert } from "@fluidframework/core-utils";
-import { IIdCompressor, IIdCompressorCore, IdCreationRange } from "@fluidframework/id-compressor";
-import { createChildLogger } from "@fluidframework/telemetry-utils";
-
-import type { IContainerRuntimeEvents } from "@fluidframework/container-runtime-definitions";
 import {
 	IChannel,
 	IChannelServices,
@@ -26,6 +24,7 @@ import {
 	IDeltaHandler,
 	IFluidDataStoreRuntime,
 } from "@fluidframework/datastore-definitions";
+import { IIdCompressor, IIdCompressorCore, IdCreationRange } from "@fluidframework/id-compressor";
 import {
 	IQuorumClients,
 	ISequencedClient,
@@ -43,10 +42,12 @@ import {
 	VisibilityState,
 } from "@fluidframework/runtime-definitions";
 import { getNormalizedObjectStoragePathParts, mergeStats } from "@fluidframework/runtime-utils";
+import { createChildLogger } from "@fluidframework/telemetry-utils";
 import { v4 as uuid } from "uuid";
+
 import { MockDeltaManager } from "./mockDeltas.js";
 import { MockHandle } from "./mockHandle.js";
-import { ILoader } from "@fluidframework/container-definitions/internal";
+
 
 /**
  * Mock implementation of IDeltaConnection for testing

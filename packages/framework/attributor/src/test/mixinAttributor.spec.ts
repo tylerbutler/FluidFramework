@@ -6,8 +6,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { strict as assert } from "node:assert";
+
 import { AttachState, type ICriticalContainerError } from "@fluidframework/container-definitions";
+import { type IContainerContext } from "@fluidframework/container-definitions/internal";
 import { type ConfigTypes, type FluidObject } from "@fluidframework/core-interfaces";
+import { type IDocumentStorageService } from "@fluidframework/driver-definitions/internal";
 import {
 	type ISequencedDocumentMessage,
 	type ISnapshotTree,
@@ -15,6 +18,7 @@ import {
 } from "@fluidframework/protocol-definitions";
 import { MockLogger, sessionStorageConfigProvider } from "@fluidframework/telemetry-utils";
 import { MockDeltaManager, MockQuorumClients } from "@fluidframework/test-runtime-utils";
+
 import { Attributor } from "../attributor.js";
 import { AttributorSerializer, chain, deltaEncoder } from "../encoders.js";
 import { makeLZ4Encoder } from "../lz4Encoder.js";
@@ -24,9 +28,8 @@ import {
 	enableOnNewFileKey,
 	mixinAttributor,
 } from "../mixinAttributor.js";
+
 import { makeMockAudience } from "./utils.js";
-import { type IContainerContext } from "@fluidframework/container-definitions/internal";
-import { type IDocumentStorageService } from "@fluidframework/driver-definitions/internal";
 
 type Mutable<T> = {
 	-readonly [P in keyof T]: T[P];

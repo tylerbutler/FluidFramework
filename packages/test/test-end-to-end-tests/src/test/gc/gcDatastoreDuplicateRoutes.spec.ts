@@ -4,11 +4,13 @@
  */
 
 import { strict as assert } from "assert";
+
 import {
 	ITestDataObject,
 	TestDataObjectType,
 	describeCompat,
 } from "@fluid-private/test-version-utils";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 import { ISummarizer } from "@fluidframework/container-runtime";
 // eslint-disable-next-line import/no-internal-modules
 import { IGarbageCollectionState } from "@fluidframework/container-runtime/test/gc";
@@ -20,8 +22,8 @@ import {
 	summarizeNow,
 	waitForContainerConnection,
 } from "@fluidframework/test-utils";
+
 import { defaultGCConfig } from "./gcTestConfigs.js";
-import { IContainer } from "@fluidframework/container-definitions/internal";
 
 /**
  * Validates this scenario: When two DDSes in the same datastore has one change, gets summarized, and then gc is called

@@ -9,27 +9,6 @@ import {
 	IFluidCodeResolver,
 	IResolvedFluidCodeDetails,
 } from "@fluidframework/container-definitions";
-import { FluidObject } from "@fluidframework/core-interfaces";
-import { assert, Deferred } from "@fluidframework/core-utils";
-import { InsecureUrlResolver } from "@fluidframework/driver-utils";
-import { LocalDocumentServiceFactory, LocalResolver } from "@fluidframework/local-driver";
-import { prefetchLatestSnapshot } from "@fluidframework/odsp-driver";
-import { HostStoragePolicy, IPersistedCache } from "@fluidframework/odsp-driver-definitions";
-import { IUser } from "@fluidframework/protocol-definitions";
-import { RequestParser } from "@fluidframework/runtime-utils";
-import { createChildLogger } from "@fluidframework/telemetry-utils";
-import sillyname from "sillyname";
-import { v4 as uuid } from "uuid";
-import { Port } from "webpack-dev-server";
-import { deltaConnectionServer, getDocumentServiceFactory } from "./getDocumentServiceFactory.js";
-import { getUrlResolver } from "./getUrlResolver.js";
-import { OdspPersistentCache } from "./odspPersistantCache.js";
-import { OdspUrlResolver } from "./odspUrlResolver.js";
-import {
-	WebCodeLoader,
-	extractPackageIdentifierDetails,
-	resolveFluidPackageEnvironment,
-} from "./webCodeLoader/index.js";
 import {
 	IContainer,
 	IFluidCodeDetails,
@@ -40,7 +19,29 @@ import {
 	isFluidBrowserPackage,
 } from "@fluidframework/container-definitions/internal";
 import { Loader } from "@fluidframework/container-loader/internal";
+import { FluidObject } from "@fluidframework/core-interfaces";
+import { assert, Deferred } from "@fluidframework/core-utils";
 import { IDocumentServiceFactory, IResolvedUrl } from "@fluidframework/driver-definitions/internal";
+import { InsecureUrlResolver } from "@fluidframework/driver-utils";
+import { LocalDocumentServiceFactory, LocalResolver } from "@fluidframework/local-driver";
+import { prefetchLatestSnapshot } from "@fluidframework/odsp-driver";
+import { HostStoragePolicy, IPersistedCache } from "@fluidframework/odsp-driver-definitions";
+import { IUser } from "@fluidframework/protocol-definitions";
+import { RequestParser } from "@fluidframework/runtime-utils";
+import { createChildLogger } from "@fluidframework/telemetry-utils";
+import sillyname from "sillyname";
+import { v4 as uuid } from "uuid";
+import { Port } from "webpack-dev-server";
+
+import { deltaConnectionServer, getDocumentServiceFactory } from "./getDocumentServiceFactory.js";
+import { getUrlResolver } from "./getUrlResolver.js";
+import { OdspPersistentCache } from "./odspPersistantCache.js";
+import { OdspUrlResolver } from "./odspUrlResolver.js";
+import {
+	WebCodeLoader,
+	extractPackageIdentifierDetails,
+	resolveFluidPackageEnvironment,
+} from "./webCodeLoader/index.js";
 
 export interface IDevServerUser extends IUser {
 	name: string;

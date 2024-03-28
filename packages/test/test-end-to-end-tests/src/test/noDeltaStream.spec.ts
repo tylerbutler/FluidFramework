@@ -6,10 +6,15 @@
 import { strict as assert } from "assert";
 
 import { generatePairwiseOptions } from "@fluid-private/test-pairwise-generator";
-import { IContainerLoadMode } from "@fluidframework/container-definitions";
-
 import { describeCompat } from "@fluid-private/test-version-utils";
+import { IContainerLoadMode } from "@fluidframework/container-definitions";
+import { LoaderHeader } from "@fluidframework/container-definitions/internal";
 import { DefaultSummaryConfiguration, SummaryCollection } from "@fluidframework/container-runtime";
+import {
+	IDocumentService,
+	IDocumentServiceFactory,
+	IResolvedUrl,
+} from "@fluidframework/driver-definitions/internal";
 import { createChildLogger } from "@fluidframework/telemetry-utils";
 import {
 	ITestContainerConfig,
@@ -19,13 +24,9 @@ import {
 	getContainerEntryPointBackCompat,
 	timeoutPromise,
 } from "@fluidframework/test-utils";
+
 import { wrapObjectAndOverride } from "../mocking.js";
-import { LoaderHeader } from "@fluidframework/container-definitions/internal";
-import {
-	IDocumentService,
-	IDocumentServiceFactory,
-	IResolvedUrl,
-} from "@fluidframework/driver-definitions/internal";
+
 
 const loadOptions: IContainerLoadMode[] = generatePairwiseOptions<IContainerLoadMode>({
 	deltaConnection: [undefined, "none", "delayed"],

@@ -5,6 +5,7 @@
 
 import { bufferToString } from "@fluid-internal/client-utils";
 import { type IAudience, type IDeltaManager } from "@fluidframework/container-definitions";
+import { type IContainerContext } from "@fluidframework/container-definitions/internal";
 import { ContainerRuntime } from "@fluidframework/container-runtime";
 import type { IContainerRuntimeOptions } from "@fluidframework/container-runtime";
 import { type IContainerRuntime } from "@fluidframework/container-runtime-definitions";
@@ -29,10 +30,10 @@ import {
 	createChildLogger,
 	loggerToMonitoringContext,
 } from "@fluidframework/telemetry-utils";
+
 import { Attributor, type IAttributor, OpStreamAttributor } from "./attributor.js";
 import { AttributorSerializer, type Encoder, chain, deltaEncoder } from "./encoders.js";
 import { makeLZ4Encoder } from "./lz4Encoder.js";
-import { type IContainerContext } from "@fluidframework/container-definitions/internal";
 
 // Summary tree keys
 const attributorTreeName = ".attributor";

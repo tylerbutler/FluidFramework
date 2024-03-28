@@ -5,11 +5,17 @@
 
 import { AttachState } from "@fluidframework/container-definitions";
 import {
+	IContainer,
+	IFluidModuleWithDetails,
+} from "@fluidframework/container-definitions/internal";
+import { Loader } from "@fluidframework/container-loader/internal";
+import {
 	type FluidObject,
 	type IConfigProviderBase,
 	type IRequest,
 } from "@fluidframework/core-interfaces";
 import { assert } from "@fluidframework/core-utils";
+import { IDocumentServiceFactory } from "@fluidframework/driver-definitions/internal";
 import {
 	ContainerAttachProps,
 	type ContainerSchema,
@@ -33,6 +39,7 @@ import type {
 import { IClient } from "@fluidframework/protocol-definitions";
 import { wrapConfigProviderWithDefaults } from "@fluidframework/telemetry-utils";
 import { v4 as uuid } from "uuid";
+
 import {
 	OdspClientProps,
 	OdspConnectionConfig,
@@ -41,12 +48,6 @@ import {
 } from "./interfaces.js";
 import { createOdspAudienceMember } from "./odspAudience.js";
 import { type IOdspTokenProvider } from "./token.js";
-import {
-	IContainer,
-	IFluidModuleWithDetails,
-} from "@fluidframework/container-definitions/internal";
-import { Loader } from "@fluidframework/container-loader/internal";
-import { IDocumentServiceFactory } from "@fluidframework/driver-definitions/internal";
 
 async function getStorageToken(
 	options: OdspResourceTokenFetchOptions,

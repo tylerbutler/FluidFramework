@@ -4,7 +4,9 @@
  */
 
 import { strict as assert } from "assert";
+
 import { ICriticalContainerError } from "@fluidframework/container-definitions";
+import { ContainerErrorTypes } from "@fluidframework/container-definitions/internal";
 import { IErrorBase, ITelemetryBaseEvent } from "@fluidframework/core-interfaces";
 import { Timer } from "@fluidframework/core-utils";
 import { ISnapshotTree, SummaryType } from "@fluidframework/protocol-definitions";
@@ -26,6 +28,7 @@ import {
 	tagCodeArtifacts,
 } from "@fluidframework/telemetry-utils";
 import { SinonFakeTimers, spy, useFakeTimers } from "sinon";
+
 import {
 	GCNodeType,
 	GCSummaryStateTracker,
@@ -60,8 +63,8 @@ import {
 	dataStoreAttributesBlobName,
 	metadataBlobName,
 } from "../../summary/index.js";
+
 import { createTestConfigProvider } from "./gcUnitTestHelpers.js";
-import { ContainerErrorTypes } from "@fluidframework/container-definitions/internal";
 
 type WithPrivates<T, TPrivates> = Omit<T, keyof TPrivates> & TPrivates;
 

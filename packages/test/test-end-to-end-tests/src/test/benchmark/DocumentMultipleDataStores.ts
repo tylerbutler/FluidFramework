@@ -4,6 +4,7 @@
  */
 
 import { strict as assert } from "assert";
+
 import {
 	assertDocumentTypeInfo,
 	isDocumentMultipleDataStoresInfo,
@@ -13,6 +14,7 @@ import {
 	DataObject,
 	DataObjectFactory,
 } from "@fluidframework/aqueduct";
+import { IContainer, LoaderHeader } from "@fluidframework/container-definitions/internal";
 import {
 	ContainerRuntime,
 	IContainerRuntimeOptions,
@@ -28,12 +30,12 @@ import { type ISharedMap, SharedMap } from "@fluidframework/map";
 import { SharedString } from "@fluidframework/sequence";
 import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
 import { createSummarizerFromFactory, summarizeNow } from "@fluidframework/test-utils";
+
 import {
 	IDocumentLoaderAndSummarizer,
 	IDocumentProps,
 	ISummarizeResult,
 } from "./DocumentCreator.js";
-import { IContainer, LoaderHeader } from "@fluidframework/container-definitions/internal";
 
 const configProvider = (settings: Record<string, ConfigTypes>): IConfigProviderBase => ({
 	getRawConfig: (name: string): ConfigTypes => settings[name],

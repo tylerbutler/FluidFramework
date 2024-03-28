@@ -4,6 +4,7 @@
  */
 
 import { assert } from "@fluidframework/core-utils";
+import { ISnapshot } from "@fluidframework/driver-definitions/internal";
 import { NonRetryableError } from "@fluidframework/driver-utils";
 import {
 	IFileEntry,
@@ -14,6 +15,7 @@ import {
 } from "@fluidframework/odsp-driver-definitions";
 import { ISummaryTree } from "@fluidframework/protocol-definitions";
 import { ITelemetryLoggerExt, PerformanceEvent } from "@fluidframework/telemetry-utils";
+
 import { ICreateFileResponse } from "./contracts.js";
 import { ClpCompliantAppHeader } from "./contractsPublic.js";
 import {
@@ -35,7 +37,6 @@ import {
 } from "./odspUtils.js";
 import { pkgVersion as driverVersion } from "./packageVersion.js";
 import { runWithRetry } from "./retryUtils.js";
-import { ISnapshot } from "@fluidframework/driver-definitions/internal";
 
 const isInvalidFileName = (fileName: string): boolean => {
 	const invalidCharsRegex = /["*/:<>?\\|]+/g;

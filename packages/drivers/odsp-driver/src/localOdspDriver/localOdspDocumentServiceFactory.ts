@@ -4,14 +4,16 @@
  */
 
 import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
+import { IDocumentService, IResolvedUrl } from "@fluidframework/driver-definitions/internal";
 import { UsageError } from "@fluidframework/driver-utils";
 import { ISummaryTree } from "@fluidframework/protocol-definitions";
 import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
+
 import { ICacheAndTracker } from "../epochTracker.js";
 import { OdspDocumentServiceFactoryCore } from "../odspDocumentServiceFactoryCore.js";
 import { createOdspLogger, getOdspResolvedUrl } from "../odspUtils.js";
+
 import { LocalOdspDocumentService } from "./localOdspDocumentService.js";
-import { IDocumentService, IResolvedUrl } from "@fluidframework/driver-definitions/internal";
 
 /**
  * Factory for creating sharepoint document service with a provided snapshot.
