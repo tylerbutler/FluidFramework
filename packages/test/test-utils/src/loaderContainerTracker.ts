@@ -11,6 +11,7 @@ import {
 	IContainerLoadProps,
 } from "@fluidframework/container-loader";
 import { assert } from "@fluidframework/core-utils";
+import * as api from "@fluidframework/driver-definitions";
 import { canBeCoalescedByService } from "@fluidframework/driver-utils";
 import {
 	IDocumentMessage,
