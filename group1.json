@@ -58,6 +58,21 @@
 	],
 	"@fluidframework/container-definitions": [
 		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "IResolvedFluidCodeDetails"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "IContainerLoadMode"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "IFluidCodeResolver"
+		},
+		{
 			"kind": "enum",
 			"level": "public",
 			"name": "AttachState"
@@ -284,6 +299,16 @@
 		}
 	],
 	"@fluidframework/container-loader": [
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "IContainerCreateProps"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "IContainerLoadProps"
+		},
 		{
 			"kind": "enum",
 			"level": "public",
@@ -652,6 +677,11 @@
 		}
 	],
 	"@fluidframework/tree": [
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "encodeTreeSchema"
+		},
 		{
 			"kind": "typealias",
 			"level": "public",
