@@ -6,6 +6,21 @@
 			"name": "AllowTombstoneRequestHeaderKey"
 		},
 		{
+			"kind": "variable",
+			"level": "internal",
+			"name": "RuntimeHeaders"
+		},
+		{
+			"kind": "variable",
+			"level": "internal",
+			"name": "IChunkedOp"
+		},
+		{
+			"kind": "variable",
+			"level": "internal",
+			"name": "unpackRuntimeMessage"
+		},
+		{
 			"kind": "enum",
 			"level": "alpha",
 			"name": "CompressionAlgorithms"
@@ -441,6 +456,16 @@
 		},
 		{
 			"kind": "typealias",
+			"level": "internal",
+			"name": "IUsageError"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "IGenericError"
+		},
+		{
+			"kind": "typealias",
 			"level": "public",
 			"name": "FluidObject"
 		},
@@ -463,6 +488,11 @@
 			"kind": "interface",
 			"level": "public",
 			"name": "IDisposable"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "ILoggingError"
 		},
 		{
 			"kind": "interface",
@@ -613,6 +643,51 @@
 		},
 		{
 			"kind": "function",
+			"level": "internal",
+			"name": "delay"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "PromiseTimer"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "isPromiseLike"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "Heap"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "IComparer"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "Timer"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "IPromiseTimer"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "IPromiseTimerResult"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "unreachableCase"
+		},
+		{
+			"kind": "function",
 			"level": "alpha",
 			"name": "compareArrays"
 		},
@@ -620,6 +695,16 @@
 			"kind": "class",
 			"level": "alpha",
 			"name": "Deferred"
+		},
+		{
+			"kind": "class",
+			"level": "internal",
+			"name": "Lazy"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "ISignalEnvelope"
 		},
 		{
 			"kind": "class",
@@ -670,6 +755,11 @@
 		}
 	],
 	"@fluidframework/datastore-definitions": [
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "Serializable"
+		},
 		{
 			"kind": "interface",
 			"level": "public",
@@ -1102,6 +1192,56 @@
 	],
 	"@fluidframework/runtime-definitions": [
 		{
+			"kind": "const",
+			"level": "internal",
+			"name": "gcTombstoneBlobKey"
+		},
+		{
+			"kind": "const",
+			"level": "internal",
+			"name": "totalBlobSizePropertyName"
+		},
+		{
+			"kind": "const",
+			"level": "internal",
+			"name": "blobCountPropertyName"
+		},
+		{
+			"kind": "const",
+			"level": "internal",
+			"name": "gcDataBlobKey"
+		},
+		{
+			"kind": "const",
+			"level": "internal",
+			"name": "gcBlobPrefix"
+		},
+		{
+			"kind": "const",
+			"level": "internal",
+			"name": "gcDeletedBlobKey"
+		},
+		{
+			"kind": "const",
+			"level": "internal",
+			"name": "gcTreeKey"
+		},
+		{
+			"kind": "const",
+			"level": "internal",
+			"name": "channelsTreeName"
+		},
+		{
+			"kind": "const",
+			"level": "internal",
+			"name": "channelsTreeName"
+		},
+		{
+			"kind": "const",
+			"level": "internal",
+			"name": "FlushModeExperimental"
+		},
+		{
 			"kind": "typealias",
 			"level": "alpha",
 			"name": "AliasResult"
@@ -1192,17 +1332,7 @@
 			"name": "IFluidDataStoreFactory"
 		},
 		{
-			"kind": "variable",
-			"level": "alpha",
-			"name": "IFluidDataStoreFactory"
-		},
-		{
 			"kind": "interface",
-			"level": "alpha",
-			"name": "IFluidDataStoreRegistry"
-		},
-		{
-			"kind": "variable",
 			"level": "alpha",
 			"name": "IFluidDataStoreRegistry"
 		},
@@ -1515,6 +1645,11 @@
 		}
 	],
 	"@fluidframework/shared-object-base": [
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "createSingleBlobSummary"
+		},
 		{
 			"kind": "interface",
 			"level": "public",
