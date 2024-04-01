@@ -435,6 +435,11 @@
 	],
 	"@fluidframework/core-interfaces": [
 		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "ISignalEnvelope"
+		},
+		{
 			"kind": "typealias",
 			"level": "public",
 			"name": "ConfigTypes"
@@ -702,11 +707,6 @@
 			"name": "Lazy"
 		},
 		{
-			"kind": "interface",
-			"level": "internal",
-			"name": "ISignalEnvelope"
-		},
-		{
 			"kind": "class",
 			"level": "alpha",
 			"name": "LazyPromise"
@@ -759,6 +759,11 @@
 			"kind": "interface",
 			"level": "internal",
 			"name": "Serializable"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "Jsonable"
 		},
 		{
 			"kind": "interface",
@@ -864,6 +869,71 @@
 		}
 	],
 	"@fluidframework/merge-tree": [
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "compareReferencePositions"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "PropertyAction"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "reservedRangeLabelsKey"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "IRBAugmentation"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "IRBMatcher"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "RBNode"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "RBNodeActions"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "RedBlackTree"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "createGroupOp"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "createInsertOp"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "createObliterateRangeOp"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "createRemoveRangeOp"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "matchProperties"
+		},
 		{
 			"kind": "function",
 			"level": "alpha",
@@ -1651,9 +1721,24 @@
 			"name": "createSingleBlobSummary"
 		},
 		{
+			"kind": "function",
+			"level": "internal",
+			"name": "serializeHandles"
+		},
+		{
 			"kind": "interface",
 			"level": "public",
 			"name": "IFluidSerializer"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "ValueType"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "bindHandles"
 		},
 		{
 			"kind": "interface",
