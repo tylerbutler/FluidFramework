@@ -2,6 +2,21 @@
 	"@fluidframework/container-runtime": [
 		{
 			"kind": "variable",
+			"level": "internal",
+			"name": "detectOutboundReferences"
+		},
+		{
+			"kind": "variable",
+			"level": "internal",
+			"name": "FluidDataStoreRegistry"
+		},
+		{
+			"kind": "variable",
+			"level": "internal",
+			"name": "UnknownContainerRuntimeMessage"
+		},
+		{
+			"kind": "variable",
 			"level": "alpha",
 			"name": "AllowTombstoneRequestHeaderKey"
 		},
@@ -437,6 +452,11 @@
 		{
 			"kind": "interface",
 			"level": "internal",
+			"name": "IFluidRunnable"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
 			"name": "ISignalEnvelope"
 		},
 		{
@@ -729,6 +749,11 @@
 	],
 	"@fluidframework/datastore": [
 		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "mixinRequestHandler"
+		},
+		{
 			"kind": "enum",
 			"level": "alpha",
 			"name": "DataStoreMessageType"
@@ -869,6 +894,116 @@
 		}
 	],
 	"@fluidframework/merge-tree": [
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "createInsertOnlyAttributionPolicy"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "refGetTileLabels"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "reservedMarkerSimpleTypeKey"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "toRemovalInfo"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "reservedMarkerIdKey"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "createInsertSegmentOp"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "SortedSet"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "refHasTileLabel"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "SortedSegmentSet"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "createAnnotateRangeOp"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "isMergeTreeDeltaRevertible"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "createDetachedLocalReferencePosition"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "UnassignedSequenceNumber"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "minReferencePosition"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "maxReferencePosition"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "DetachedReferencePosition"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "UnassignedSequenceNumber"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "UniversalSequenceNumber"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "addProperties"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "createMap"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "getSlideToSegoff"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "refTypeIncludesFlag"
+		},
 		{
 			"kind": "function",
 			"level": "internal",
@@ -1105,6 +1240,11 @@
 			"name": "ISegment"
 		},
 		{
+			"kind": "function",
+			"level": "internal",
+			"name": "reservedTileLabelsKey"
+		},
+		{
 			"kind": "interface",
 			"level": "alpha",
 			"name": "ISegmentAction"
@@ -1153,11 +1293,6 @@
 			"kind": "typealias",
 			"level": "alpha",
 			"name": "MergeTreeDeltaRevertible"
-		},
-		{
-			"kind": "typealias",
-			"level": "alpha",
-			"name": "MergeTreeDeltaType"
 		},
 		{
 			"kind": "variable",
@@ -1261,6 +1396,11 @@
 		}
 	],
 	"@fluidframework/runtime-definitions": [
+		{
+			"kind": "const",
+			"level": "internal",
+			"name": "AttributionInfo"
+		},
 		{
 			"kind": "const",
 			"level": "internal",
@@ -1524,6 +1664,101 @@
 	],
 	"@fluidframework/sequence": [
 		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "IJSONRunSegment"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "createEndpointIndex"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "SharedIntervalCollection"
+		},
+		{
+			"kind": "interface",
+			"level": "internal",
+			"name": "SubSequence"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "LocalReferencePosition"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "TrackingGroup"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "reservedMarkerIdKey"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "MapLike"
+		},
+		{
+			"kind": "typealias",
+			"level": "alpha",
+			"name": "PropertySet"
+		},
+		{
+			"kind": "interface",
+			"level": "alpha",
+			"name": "ReferencePosition"
+		},
+		{
+			"kind": "class",
+			"level": "alpha",
+			"name": "BaseSegment"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "ISegment"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "reservedRangeLabelsKey"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "Marker"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "MergeTreeDeltaType"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "TextSegment"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "getTextAndMarkers"
+		},
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "reservedTileLabelsKey"
+		},
+		{
+			"kind": "function",
+			"level": "alpha",
+			"name": "ReferenceType"
+		},
+		{
 			"kind": "function",
 			"level": "alpha",
 			"name": "appendAddIntervalToRevertibles"
@@ -1715,6 +1950,11 @@
 		}
 	],
 	"@fluidframework/shared-object-base": [
+		{
+			"kind": "function",
+			"level": "internal",
+			"name": "FluidSerializer"
+		},
 		{
 			"kind": "function",
 			"level": "internal",
