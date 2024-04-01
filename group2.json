@@ -3,6 +3,30 @@
 		{
 			"kind": "variable",
 			"level": "internal",
+			"name": "RecentlyAddedContainerRuntimeMessageDetails"
+		},
+		{
+			"kind": "variable",
+			"level": "internal",
+			"name": "AllowInactiveRequestHeaderKey"
+		},
+		{
+			"kind": "variable",
+			"level": "internal",
+			"name": "ChannelCollection"
+		},		{
+			"kind": "variable",
+			"level": "internal",
+			"name": "ChannelCollectionFactory"
+		},
+		{
+			"kind": "variable",
+			"level": "internal",
+			"name": "neverCancelledSummaryToken"
+		},
+		{
+			"kind": "variable",
+			"level": "internal",
 			"name": "detectOutboundReferences"
 		},
 		{
