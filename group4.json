@@ -1,0 +1,14 @@
+{
+	"@fluidframework/task-manager": [
+		{ "level": "internal", "kind": "interface", "name": "ITaskManager" },
+		{ "level": "internal", "kind": "interface", "name": "ITaskManagerEvents" },
+		{ "level": "internal", "kind": "type", "name": "TaskEventListener" },
+		{ "level": "internal", "kind": "class", "name": "TaskManager" }
+	],
+	"@fluidframework/driver-base": [
+		{ "level": "internal", "kind": "class", "name": "DocumentDeltaConnection" },
+		{ "level": "internal", "kind": "function", "name": "getW3CData" },
+		{ "level": "internal", "kind": "function", "name": "promiseRaceWithWinner" },
+		{ "level": "internal", "kind": "function", "name": "validateMessages" }
+	]
+}

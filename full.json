@@ -1426,7 +1426,12 @@
 		{ "level": "internal", "kind": "interface", "name": "VisualTreeNode" },
 		{ "level": "internal", "kind": "interface", "name": "VisualValueNode" }
 	],
-	"@fluidframework/driver-base": [],
+	"@fluidframework/driver-base": [
+		{ "level": "internal", "kind": "class", "name": "DocumentDeltaConnection" },
+		{ "level": "internal", "kind": "function", "name": "getW3CData" },
+		{ "level": "internal", "kind": "function", "name": "promiseRaceWithWinner" },
+		{ "level": "internal", "kind": "function", "name": "validateMessages" }
+	],
 	"@fluidframework/driver-definitions": [
 		{
 			"kind": "typealias",
@@ -3010,7 +3015,12 @@
 			"name": "IProvideFluidDependencySynthesizer"
 		}
 	],
-	"@fluidframework/task-manager": [],
+	"@fluidframework/task-manager": [
+		{ "level": "internal", "kind": "interface", "name": "ITaskManager" },
+		{ "level": "internal", "kind": "interface", "name": "ITaskManagerEvents" },
+		{ "level": "internal", "kind": "type", "name": "TaskEventListener" },
+		{ "level": "internal", "kind": "class", "name": "TaskManager" }
+	],
 	"@fluidframework/telemetry-utils": [
 		{ "level": "internal", "kind": "const", "name": "connectedEventName" },
 		{ "level": "alpha", "kind": "function", "name": "createChildLogger" },
@@ -3106,7 +3116,11 @@
 	"@fluidframework/test-utils": [
 		{ "level": "internal", "kind": "type", "name": "ChannelFactoryRegistry" },
 		{ "level": "alpha", "kind": "function", "name": "createAndAttachContainer" },
-		{ "level": "internal", "kind": "const", "name": "createContainerRuntimeFactoryWithDefaultDataStore" },
+		{
+			"level": "internal",
+			"kind": "const",
+			"name": "createContainerRuntimeFactoryWithDefaultDataStore"
+		},
 		{ "level": "internal", "kind": "const", "name": "createDocumentId" },
 		{ "level": "internal", "kind": "function", "name": "createLoader" },
 		{ "level": "internal", "kind": "function", "name": "createSummarizer" },
