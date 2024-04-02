@@ -1,4 +1,34 @@
 {
+	"@fluidframework/app-insights-logger": [
+		{ "level": "beta", "kind": "interface", "name": "CategoryFilter" },
+		{ "level": "beta", "kind": "function", "name": "createLogger" },
+		{ "level": "beta", "kind": "interface", "name": "FluidAppInsightsLoggerConfig" },
+		{ "level": "beta", "kind": "interface", "name": "NamespaceFilter" },
+		{ "level": "beta", "kind": "type", "name": "TelemetryFilter" }
+	],
+	"@fluidframework/cell": [
+		{ "level": "internal", "kind": "class", "name": "CellFactory" },
+		{ "level": "internal", "kind": "interface", "name": "ICellAttributionOptions" },
+		{ "level": "internal", "kind": "interface", "name": "ICellOptions" },
+		{ "level": "internal", "kind": "interface", "name": "ISharedCell" },
+		{ "level": "internal", "kind": "interface", "name": "ISharedCellEvents" },
+		{ "level": "internal", "kind": "class", "name": "SharedCell" }
+	],
+	"@fluidframework/fluid-runner": [
+		{ "level": "internal", "kind": "function", "name": "createContainerAndExecute" },
+		{ "level": "internal", "kind": "function", "name": "createLogger" },
+		{ "level": "internal", "kind": "function", "name": "exportFile" },
+		{ "level": "internal", "kind": "function", "name": "fluidRunner" },
+		{ "level": "internal", "kind": "function", "name": "getSnapshotFileContent" },
+		{ "level": "internal", "kind": "function", "name": "getTelemetryFileValidationError" },
+		{ "level": "internal", "kind": "interface", "name": "ICodeLoaderBundle" },
+		{ "level": "alpha", "kind": "type", "name": "IExportFileResponse" },
+		{ "level": "alpha", "kind": "interface", "name": "IFluidFileConverter" },
+		{ "level": "internal", "kind": "interface", "name": "ITelemetryOptions" },
+		{ "level": "alpha", "kind": "enum", "name": "OutputFormat" },
+		{ "level": "internal", "kind": "function", "name": "parseBundleAndExportFile" },
+		{ "level": "internal", "kind": "function", "name": "validateAndParseTelemetryOptions" }
+	],
 	"@fluidframework/task-manager": [
 		{ "level": "internal", "kind": "interface", "name": "ITaskManager" },
 		{ "level": "internal", "kind": "interface", "name": "ITaskManagerEvents" },
@@ -10,5 +40,76 @@
 		{ "level": "internal", "kind": "function", "name": "getW3CData" },
 		{ "level": "internal", "kind": "function", "name": "promiseRaceWithWinner" },
 		{ "level": "internal", "kind": "function", "name": "validateMessages" }
+	],
+	"@fluidframework/file-driver": [
+		{ "level": "internal", "kind": "class", "name": "FileDeltaStorageService" },
+		{ "level": "internal", "kind": "class", "name": "FileDocumentServiceFactory" },
+		{ "level": "internal", "kind": "const", "name": "FileSnapshotWriterClassFactory" },
+		{ "level": "internal", "kind": "const", "name": "FileStorageDocumentName" },
+		{ "level": "internal", "kind": "class", "name": "FluidFetchReader" },
+		{ "level": "internal", "kind": "const", "name": "FluidFetchReaderFileSnapshotWriter" },
+		{ "level": "internal", "kind": "interface", "name": "ISnapshotWriterStorage" },
+		{ "level": "internal", "kind": "type", "name": "ReaderConstructor" },
+		{ "level": "internal", "kind": "class", "name": "Replayer" },
+		{ "level": "internal", "kind": "class", "name": "ReplayFileDeltaConnection" }
+	],
+	"@fluidframework/odsp-urlresolver": [
+		{ "level": "internal", "kind": "class", "name": "FluidAppOdspUrlResolver" },
+		{ "level": "internal", "kind": "const", "name": "isOdspUrl" },
+		{ "level": "internal", "kind": "class", "name": "OdspUrlResolver" }
+	],
+	"@fluidframework/replay-driver": [
+		{ "level": "internal", "kind": "class", "name": "FileSnapshotReader" },
+		{ "level": "internal", "kind": "interface", "name": "IFileSnapshot" },
+		{ "level": "internal", "kind": "abstract", "name": "class" },
+		{ "level": "internal", "kind": "abstract", "name": "class" },
+		{ "level": "internal", "kind": "class", "name": "ReplayDocumentService" },
+		{ "level": "internal", "kind": "class", "name": "ReplayDocumentServiceFactory" },
+		{ "level": "internal", "kind": "class", "name": "SnapshotStorage" },
+		{ "level": "internal", "kind": "class", "name": "StaticStorageDocumentServiceFactory" }
+	],
+	"@fluidframework/routerlicious-urlresolver": [
+		{ "level": "internal", "kind": "interface", "name": "IAlfredUser" },
+		{ "level": "internal", "kind": "interface", "name": "IConfig" },
+		{ "level": "internal", "kind": "class", "name": "RouterliciousUrlResolver" }
+	],
+	"@fluidframework/tinylicious-client": [
+		{ "level": "internal", "kind": "type", "name": "ITinyliciousAudience" },
+		{ "level": "internal", "kind": "", "name": "" },
+		{ "level": "internal", "kind": "interface", "name": "TinyliciousClientProps" },
+		{ "level": "internal", "kind": "interface", "name": "TinyliciousConnectionConfig" },
+		{ "level": "internal", "kind": "interface", "name": "TinyliciousContainerServices" },
+		{ "level": "internal", "kind": "interface", "name": "TinyliciousMember" },
+		{ "level": "internal", "kind": "interface", "name": "TinyliciousUser" }
+	],
+	"@fluidframework/tinylicious-driver": [
+		{ "level": "internal", "kind": "const", "name": "createTinyliciousCreateNewRequest" },
+		{ "level": "internal", "kind": "const", "name": "defaultTinyliciousEndpoint" },
+		{ "level": "internal", "kind": "const", "name": "defaultTinyliciousPort" },
+		{ "level": "internal", "kind": "class", "name": "InsecureTinyliciousTokenProvider" },
+		{ "level": "internal", "kind": "class", "name": "InsecureTinyliciousUrlResolver" }
+	],
+	"@fluidframework/tool-utils": [
+		{ "level": "internal", "kind": "const", "name": "gcBlobPrefix" },
+		{ "level": "internal", "kind": "const", "name": "getMicrosoftConfiguration" },
+		{ "level": "internal", "kind": "function", "name": "getNormalizedSnapshot" },
+		{ "level": "internal", "kind": "interface", "name": "IAsyncCache" },
+		{ "level": "internal", "kind": "interface", "name": "IOdspTokenManagerCacheKey" },
+		{ "level": "internal", "kind": "interface", "name": "IResources" },
+		{ "level": "internal", "kind": "interface", "name": "ISnapshotNormalizerConfig" },
+		{ "level": "internal", "kind": "function", "name": "loadRC" },
+		{ "level": "internal", "kind": "function", "name": "lockRC" },
+		{ "level": "internal", "kind": "type", "name": "OdspTokenConfig" },
+		{ "level": "internal", "kind": "class", "name": "OdspTokenManager" },
+		{ "level": "internal", "kind": "const", "name": "odspTokensCache" },
+		{ "level": "internal", "kind": "function", "name": "saveRC" }
+	],
+	"@fluidframework/undo-redo": [
+		{ "level": "internal", "kind": "interface", "name": "IRevertible" },
+		{ "level": "internal", "kind": "class", "name": "SharedMapRevertible" },
+		{ "level": "internal", "kind": "class", "name": "SharedMapUndoRedoHandler" },
+		{ "level": "internal", "kind": "class", "name": "SharedSegmentSequenceRevertible" },
+		{ "level": "internal", "kind": "class", "name": "SharedSegmentSequenceUndoRedoHandler" },
+		{ "level": "internal", "kind": "class", "name": "UndoRedoStackManager" }
 	]
 }
