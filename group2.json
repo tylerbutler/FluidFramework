@@ -14,7 +14,8 @@
 			"kind": "variable",
 			"level": "internal",
 			"name": "ChannelCollection"
-		},		{
+		},
+		{
 			"kind": "variable",
 			"level": "internal",
 			"name": "ChannelCollectionFactory"
@@ -41,7 +42,7 @@
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "AllowTombstoneRequestHeaderKey"
 		},
 		{
@@ -61,414 +62,414 @@
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "CompressionAlgorithms"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ContainerMessageType"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ContainerRuntime"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "currentDocumentVersionSchema"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DefaultSummaryConfiguration"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "disabledCompressionConfig"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DocumentSchemaValueType"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DocumentsSchemaController"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "EnqueueSummarizeResult"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "GCFeatureMatrix"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "GCNodeType"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "GCNodeType"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "GCVersion"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IAckedSummary"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IAckSummaryResult"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IBaseSummarizeResult"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IBlobManagerLoadInfo"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IBroadcastSummaryResult"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ICancellableSummarizerController"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ICancellationToken"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IClientSummaryWatcher"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ICompressionRuntimeOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IConnectableRuntime"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainerRuntimeMetadata"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainerRuntimeOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ICreateContainerMetadata"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IdCompressorMode"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentSchema"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentSchemaChangeMessage"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentSchemaCurrent"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentSchemaFeatures"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IEnqueueSummarizeOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IGCMetadata"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IGCRuntimeOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IGCStats"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IGeneratedSummaryStats"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IGenerateSummaryTreeResult"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMarkPhaseStats"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "INackSummaryResult"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "InactiveResponseHeaderKey"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IOnDemandSummarizeOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IRefreshSummaryAckOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IRetriableFailureResult"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISerializedElection"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISubmitSummaryOpResult"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISubmitSummaryOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizeEventProps"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizeOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizer"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizeResults"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizerEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizerInternalsProvider"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizerRuntime"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummary"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryAckMessage"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryBaseConfiguration"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryCancellationToken"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryCollectionOpEvents"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryConfiguration"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryConfigurationDisableHeuristics"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryConfigurationDisableSummarizer"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryConfigurationHeuristics"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryMetadataMessage"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryNackMessage"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryOpMessage"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryRuntimeOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISweepPhaseStats"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IUploadSummaryResult"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "OpActionEventListener"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "OpActionEventName"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SubmitSummaryFailureData"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SubmitSummaryResult"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "Summarizer"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SummarizeResultPart"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SummarizerStopReason"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SummaryCollection"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SummaryStage"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "TombstoneResponseHeaderKey"
 		}
 	],
 	"@fluidframework/container-runtime-definitions": [
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainerRuntime"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainerRuntimeBaseWithCombinedEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainerRuntimeEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainerRuntimeWithResolveHandle_Deprecated"
 		}
 	],
@@ -495,12 +496,12 @@
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FluidErrorTypes"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FluidErrorTypes"
 		},
 		{
@@ -650,7 +651,7 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IThrottlingWarning"
 		},
 		{
@@ -687,7 +688,7 @@
 	"@fluidframework/core-utils": [
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "assert"
 		},
 		{
@@ -737,12 +738,12 @@
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "compareArrays"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "Deferred"
 		},
 		{
@@ -752,22 +753,22 @@
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "LazyPromise"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "PromiseCache"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "PromiseCacheExpiry"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "PromiseCacheOptions"
 		}
 	],
@@ -779,27 +780,27 @@
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DataStoreMessageType"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FluidDataStoreRuntime"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FluidObjectHandle"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISharedObjectRegistry"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "mixinSummaryHandler"
 		}
 	],
@@ -861,59 +862,59 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "Internal_InterfaceOfJsonableTypesWith"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "Jsonable"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "JsonableTypeWith"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "Serializable"
 		}
 	],
 	"@fluidframework/matrix": [
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IRevertible"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISharedMatrix"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISharedMatrixEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IUndoConsumer"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MatrixItem"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedMatrix"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedMatrixFactory"
 		}
 	],
@@ -1095,172 +1096,172 @@
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "appendToMergeTreeDeltaRevertibles"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "AttributionPolicy"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "BaseSegment"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "Client"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "CollaborationWindow"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "discardMergeTreeDeltaRevertible"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IAttributionCollection"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IAttributionCollectionSerializer"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IAttributionCollectionSpec"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IClientEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IJSONMarkerSegment"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IJSONSegment"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IJSONTextSegment"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMarkerDef"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeNodeCommon"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeAnnotateMsg"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeAttributionOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeDelta"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeDeltaCallbackArgs"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeDeltaOp"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeDeltaOpArgs"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeGroupMsg"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeInsertMsg"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeMaintenanceCallbackArgs"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeObliterateMsg"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeOp"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeRemoveMsg"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeSegmentDelta"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMergeTreeTextHelper"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IMoveInfo"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IRelativePosition"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IRemovalInfo"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISegment"
 		},
 		{
@@ -1270,152 +1271,152 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISegmentAction"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ITrackingGroup"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "LocalReferenceCollection"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "LocalReferencePosition"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MapLike"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "Marker"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MergeNode"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MergeTreeDeltaOperationType"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MergeTreeDeltaOperationTypes"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MergeTreeDeltaRevertible"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MergeTreeDeltaType"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MergeTreeMaintenanceType"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MergeTreeMaintenanceType"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MergeTreeRevertibleDriver"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "PropertiesManager"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "PropertiesRollback"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "PropertySet"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ReferencePosition"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ReferenceType"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "revertMergeTreeDeltaRevertibles"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SegmentGroup"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SegmentGroupCollection"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SequenceOffsets"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SerializedAttributionCollection"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SlidingPreference"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SlidingPreference"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "TextSegment"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "Trackable"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "TrackingGroup"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "TrackingGroupCollection"
 		}
 	],
@@ -1477,67 +1478,67 @@
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "AliasResult"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "AttributionKey"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "CreateChildSummarizerNodeFn"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "CreateChildSummarizerNodeParam"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "CreateSummarizerNodeSource"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DetachedAttributionKey"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FluidDataStoreRegistryEntry"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FlushMode"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IAttachMessage"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainerRuntimeBase"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainerRuntimeBaseEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDataStore"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IEnvelope"
 		},
 		{
@@ -1547,32 +1548,32 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidDataStoreChannel"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidDataStoreContext"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidDataStoreContextDetached"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidDataStoreFactory"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidDataStoreRegistry"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidParentContext"
 		},
 		{
@@ -1582,7 +1583,7 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IGarbageCollectionDetailsBase"
 		},
 		{
@@ -1592,47 +1593,47 @@
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "InboundAttachMessage"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IProvideFluidDataStoreFactory"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IProvideFluidDataStoreRegistry"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizeInternalResult"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizeResult"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizerNode"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizerNodeConfig"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizerNodeConfigWithGC"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummarizerNodeWithGC"
 		},
 		{
@@ -1652,37 +1653,37 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "LocalAttributionKey"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "NamedFluidDataStoreRegistryEntries"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "NamedFluidDataStoreRegistryEntry"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "OpAttributionKey"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SummarizeInternalFn"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "VisibilityState"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "VisibilityState"
 		}
 	],
@@ -1709,12 +1710,12 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "LocalReferencePosition"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "TrackingGroup"
 		},
 		{
@@ -1724,27 +1725,27 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MapLike"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "PropertySet"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ReferencePosition"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "BaseSegment"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISegment"
 		},
 		{
@@ -1754,17 +1755,17 @@
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "Marker"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MergeTreeDeltaType"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "TextSegment"
 		},
 		{
@@ -1779,197 +1780,197 @@
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ReferenceType"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "appendAddIntervalToRevertibles"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "appendChangeIntervalToRevertibles"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "appendDeleteIntervalToRevertibles"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "appendIntervalPropertyChangedToRevertibles"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "appendSharedStringDeltaToRevertibles"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "createOverlappingIntervalsIndex"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DeserializeCallback"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "discardSharedStringRevertibles"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IInterval"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IIntervalCollection"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IIntervalCollectionEvent"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "InteriorSequencePlace"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IntervalIndex"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IntervalOpType"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IntervalOpType"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IntervalRevertible"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IntervalStickiness"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IntervalStickiness"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IntervalType"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IOverlappingIntervalsIndex"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISequenceDeltaRange"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISerializableInterval"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISerializedInterval"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISharedIntervalCollection"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISharedSegmentSequenceEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISharedString"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "revertSharedStringRevertibles"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SequenceDeltaEvent"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SequenceEvent"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SequenceInterval"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SequenceMaintenanceEvent"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SequencePlace"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedSegmentSequence"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedString"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedStringFactory"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedStringRevertible"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedStringSegment"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "Side"
 		}
 	],
@@ -2021,22 +2022,22 @@
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "makeHandlesSerializable"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "parseHandles"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedObject"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedObjectCore"
 		}
 	]

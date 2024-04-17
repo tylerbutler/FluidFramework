@@ -89,17 +89,17 @@
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ContainerErrorTypes"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ContainerErrorTypes"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ContainerWarning"
 		},
 		{
@@ -109,17 +109,17 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IAudienceOwner"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IBatchMessage"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ICodeDetailsLoader"
 		},
 		{
@@ -129,17 +129,17 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainer"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainerContext"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainerEvents"
 		},
 		{
@@ -174,122 +174,122 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidBrowserPackage"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidBrowserPackageEnvironment"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidCodeDetails"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidCodeDetailsComparer"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidCodeDetailsComparer"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidCodeDetailsConfig"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidModule"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidModuleWithDetails"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidPackage"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidPackageEnvironment"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IGetPendingLocalStateProps"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IHostLoader"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ILoader"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ILoaderOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IProvideFluidCodeDetailsComparer"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IProvideLoader"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IProvideRuntimeFactory"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IRuntime"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IRuntimeFactory"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IRuntimeFactory"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "isFluidBrowserPackage"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "isFluidPackage"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISnapshotTreeWithBlobContents"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "LoaderHeader"
 		},
 		{
@@ -316,64 +316,64 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ICodeDetailsLoader"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDetachedBlobStorage"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidModuleWithDetails"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ILoaderOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ILoaderProps"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ILoaderServices"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IProtocolHandler"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "Loader"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ProtocolHandlerBuilder"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "resolveWithLocationRedirectionHandling"
 		},
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "waitContainerToCatchUp"
 		}
 	],
 	"@fluidframework/driver-definitions": [
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DriverError"
 		},
 		{
@@ -388,22 +388,22 @@
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DriverHeader"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DriverPreCheckInfo"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FetchSource"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FiveDaysMs"
 		},
 		{
@@ -413,62 +413,62 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IAuthorizationError"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IContainerPackageInfo"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentDeltaConnection"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentDeltaConnectionEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentDeltaStorageService"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentService"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentServiceEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentServiceFactory"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentServicePolicies"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentStorageService"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDocumentStorageServicePolicies"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDriverBasicError"
 		},
 		{
@@ -478,57 +478,57 @@
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IGenericNetworkError"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ILocationRedirectionError"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IResolvedUrl"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISnapshot"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISnapshotFetchOptions"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IStream"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IStreamResult"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISummaryContext"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IThrottlingWarning"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IUrlResolver"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "LoaderCachingPolicy"
 		}
 	],
@@ -607,32 +607,32 @@
 	"@fluidframework/map": [
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DirectoryFactory"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDirectory"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDirectoryEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDirectoryValueChanged"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISharedDirectory"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISharedDirectoryEvents"
 		},
 		{
@@ -652,17 +652,17 @@
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "MapFactory"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedDirectory"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedDirectory"
 		},
 		{
@@ -1116,12 +1116,12 @@
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ContainerErrorTypes"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ContainerErrorTypes"
 		},
 		{

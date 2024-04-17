@@ -22,10 +22,10 @@
 		{ "level": "internal", "kind": "function", "name": "getSnapshotFileContent" },
 		{ "level": "internal", "kind": "function", "name": "getTelemetryFileValidationError" },
 		{ "level": "internal", "kind": "interface", "name": "ICodeLoaderBundle" },
-		{ "level": "alpha", "kind": "type", "name": "IExportFileResponse" },
-		{ "level": "alpha", "kind": "interface", "name": "IFluidFileConverter" },
+		{ "level": "legacy", "kind": "type", "name": "IExportFileResponse" },
+		{ "level": "legacy", "kind": "interface", "name": "IFluidFileConverter" },
 		{ "level": "internal", "kind": "interface", "name": "ITelemetryOptions" },
-		{ "level": "alpha", "kind": "enum", "name": "OutputFormat" },
+		{ "level": "legacy", "kind": "enum", "name": "OutputFormat" },
 		{ "level": "internal", "kind": "function", "name": "parseBundleAndExportFile" },
 		{ "level": "internal", "kind": "function", "name": "validateAndParseTelemetryOptions" }
 	],

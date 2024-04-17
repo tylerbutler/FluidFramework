@@ -2,104 +2,104 @@
 	"@fluidframework/ordered-collection": [
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ConsensusCallback"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ConsensusOrderedCollection"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ConsensusQueue"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ConsensusResult"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IConsensusOrderedCollection"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IConsensusOrderedCollectionEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IOrderedCollection"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISnapshotable"
 		}
 	],
 	"@fluidframework/register-collection": [
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ConsensusRegisterCollection"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ConsensusRegisterCollectionFactory"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IConsensusRegisterCollection"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IConsensusRegisterCollectionEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IConsensusRegisterCollectionFactory"
 		},
 		{
 			"kind": "enum",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ReadPolicy"
 		}
 	],
 	"@fluidframework/counter": [
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISharedCounter"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ISharedCounterEvents"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "SharedCounter"
 		}
 	],
 	"@fluidframework/shared-summary-block": [
-		{ "level": "alpha", "kind": "interface", "name": "ISharedSummaryBlock" },
-		{ "level": "alpha", "kind": "class", "name": "SharedSummaryBlock" },
+		{ "level": "legacy", "kind": "interface", "name": "ISharedSummaryBlock" },
+		{ "level": "legacy", "kind": "class", "name": "SharedSummaryBlock" },
 		{ "level": "internal", "kind": "class", "name": "SharedSummaryBlockFactory" }
 	],
 	"@fluidframework/debugger": [
 		{ "level": "internal", "kind": "class", "name": "DebuggerUI" },
 		{ "level": "internal", "kind": "type", "name": "debuggerUIFactory" },
 		{ "level": "internal", "kind": "class", "name": "DebugReplayController" },
-		{ "level": "alpha", "kind": "namespace", "name": "FluidDebugger" },
+		{ "level": "legacy", "kind": "namespace", "name": "FluidDebugger" },
 		{ "level": "internal", "kind": "function", "name": "createFromService" },
 		{ "level": "internal", "kind": "interface", "name": "IDebuggerController" },
 		{ "level": "internal", "kind": "interface", "name": "IDebuggerUI" }
@@ -107,276 +107,276 @@
 	"@fluidframework/driver-web-cache": [
 		{
 			"kind": "function",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "deleteFluidCacheIndexDbInstance"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FluidCache"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FluidCacheConfig"
 		}
 	],
 	"@fluidframework/local-driver": [
 		{ "level": "internal", "kind": "function", "name": "createLocalDocumentService" },
-		{ "level": "alpha", "kind": "function", "name": "createLocalResolverCreateNewRequest" },
+		{ "level": "legacy", "kind": "function", "name": "createLocalResolverCreateNewRequest" },
 		{ "level": "internal", "kind": "class", "name": "LocalDeltaStorageService" },
 		{ "level": "internal", "kind": "class", "name": "LocalDocumentDeltaConnection" },
 		{ "level": "internal", "kind": "class", "name": "LocalDocumentService" },
-		{ "level": "alpha", "kind": "class", "name": "LocalDocumentServiceFactory" },
+		{ "level": "legacy", "kind": "class", "name": "LocalDocumentServiceFactory" },
 		{ "level": "internal", "kind": "class", "name": "LocalDocumentStorageService" },
-		{ "level": "alpha", "kind": "class", "name": "LocalResolver" },
+		{ "level": "legacy", "kind": "class", "name": "LocalResolver" },
 		{ "level": "internal", "kind": "class", "name": "LocalSessionStorageDbFactory" }
 	],
 	"@fluidframework/odsp-driver": [
-		{ "level": "alpha", "kind": "function", "name": "checkUrl" },
+		{ "level": "legacy", "kind": "function", "name": "checkUrl" },
 		{ "level": "internal", "kind": "enum", "name": "ClpCompliantAppHeader" },
-		{ "level": "alpha", "kind": "function", "name": "createLocalOdspDocumentServiceFactory" },
-		{ "level": "alpha", "kind": "function", "name": "createOdspCreateContainerRequest" },
-		{ "level": "alpha", "kind": "function", "name": "createOdspUrl" },
-		{ "level": "alpha", "kind": "function", "name": "encodeOdspFluidDataStoreLocator" },
-		{ "level": "alpha", "kind": "class", "name": "EpochTracker" },
-		{ "level": "alpha", "kind": "type", "name": "FetchType" },
-		{ "level": "alpha", "kind": "type", "name": "FetchTypeInternal" },
+		{ "level": "legacy", "kind": "function", "name": "createLocalOdspDocumentServiceFactory" },
+		{ "level": "legacy", "kind": "function", "name": "createOdspCreateContainerRequest" },
+		{ "level": "legacy", "kind": "function", "name": "createOdspUrl" },
+		{ "level": "legacy", "kind": "function", "name": "encodeOdspFluidDataStoreLocator" },
+		{ "level": "legacy", "kind": "class", "name": "EpochTracker" },
+		{ "level": "legacy", "kind": "type", "name": "FetchType" },
+		{ "level": "legacy", "kind": "type", "name": "FetchTypeInternal" },
 		{ "level": "internal", "kind": "function", "name": "getApiRoot" },
-		{ "level": "alpha", "kind": "function", "name": "getHashedDocumentId" },
-		{ "level": "alpha", "kind": "function", "name": "getLocatorFromOdspUrl" },
+		{ "level": "legacy", "kind": "function", "name": "getHashedDocumentId" },
+		{ "level": "legacy", "kind": "function", "name": "getLocatorFromOdspUrl" },
 		{ "level": "internal", "kind": "function", "name": "getOdspUrlParts" },
-		{ "level": "alpha", "kind": "interface", "name": "ICacheAndTracker" },
+		{ "level": "legacy", "kind": "interface", "name": "ICacheAndTracker" },
 		{ "level": "internal", "kind": "interface", "name": "IClpCompliantAppHeader" },
-		{ "level": "alpha", "kind": "interface", "name": "INonPersistentCache" },
-		{ "level": "alpha", "kind": "interface", "name": "IOdspCache" },
-		{ "level": "alpha", "kind": "interface", "name": "IOdspResponse" },
-		{ "level": "alpha", "kind": "interface", "name": "IPersistedFileCache" },
-		{ "level": "alpha", "kind": "interface", "name": "IPrefetchSnapshotContents" },
+		{ "level": "legacy", "kind": "interface", "name": "INonPersistentCache" },
+		{ "level": "legacy", "kind": "interface", "name": "IOdspCache" },
+		{ "level": "legacy", "kind": "interface", "name": "IOdspResponse" },
+		{ "level": "legacy", "kind": "interface", "name": "IPersistedFileCache" },
+		{ "level": "legacy", "kind": "interface", "name": "IPrefetchSnapshotContents" },
 		{ "level": "internal", "kind": "interface", "name": "ISharingLinkHeader" },
-		{ "level": "alpha", "kind": "interface", "name": "ISnapshotContents" },
+		{ "level": "legacy", "kind": "interface", "name": "ISnapshotContents" },
 		{ "level": "internal", "kind": "interface", "name": "ISnapshotContentsWithProps" },
 		{ "level": "internal", "kind": "function", "name": "isOdcOrigin" },
 		{ "level": "internal", "kind": "function", "name": "isOdcUrl" },
 		{ "level": "internal", "kind": "function", "name": "isOdspResolvedUrl" },
 		{ "level": "internal", "kind": "function", "name": "isSpoUrl" },
-		{ "level": "alpha", "kind": "const", "name": "locatorQueryParamName" },
-		{ "level": "alpha", "kind": "const", "name": "OdcApiSiteOrigin" },
-		{ "level": "alpha", "kind": "const", "name": "OdcFileSiteOrigin" },
-		{ "level": "alpha", "kind": "class", "name": "OdspDocumentServiceFactory" },
-		{ "level": "alpha", "kind": "class", "name": "OdspDocumentServiceFactoryCore" },
+		{ "level": "legacy", "kind": "const", "name": "locatorQueryParamName" },
+		{ "level": "legacy", "kind": "const", "name": "OdcApiSiteOrigin" },
+		{ "level": "legacy", "kind": "const", "name": "OdcFileSiteOrigin" },
+		{ "level": "legacy", "kind": "class", "name": "OdspDocumentServiceFactory" },
+		{ "level": "legacy", "kind": "class", "name": "OdspDocumentServiceFactoryCore" },
 		{ "level": "internal", "kind": "class", "name": "OdspDocumentServiceFactoryWithCodeSplit" },
-		{ "level": "alpha", "kind": "class", "name": "OdspDriverUrlResolver" },
-		{ "level": "alpha", "kind": "class", "name": "OdspDriverUrlResolverForShareLink" },
-		{ "level": "alpha", "kind": "interface", "name": "OdspFluidDataStoreLocator" },
+		{ "level": "legacy", "kind": "class", "name": "OdspDriverUrlResolver" },
+		{ "level": "legacy", "kind": "class", "name": "OdspDriverUrlResolverForShareLink" },
+		{ "level": "legacy", "kind": "interface", "name": "OdspFluidDataStoreLocator" },
 		{ "level": "internal", "kind": "function", "name": "parseCompactSnapshotResponse" },
-		{ "level": "alpha", "kind": "function", "name": "prefetchLatestSnapshot" },
-		{ "level": "alpha", "kind": "interface", "name": "ShareLinkFetcherProps" },
+		{ "level": "legacy", "kind": "function", "name": "prefetchLatestSnapshot" },
+		{ "level": "legacy", "kind": "interface", "name": "ShareLinkFetcherProps" },
 		{ "level": "internal", "kind": "enum", "name": "SharingLinkHeader" },
-		{ "level": "alpha", "kind": "enum", "name": "SnapshotFormatSupportType" },
-		{ "level": "alpha", "kind": "function", "name": "storeLocatorInOdspUrl" }
+		{ "level": "legacy", "kind": "enum", "name": "SnapshotFormatSupportType" },
+		{ "level": "legacy", "kind": "function", "name": "storeLocatorInOdspUrl" }
 	],
 	"@fluidframework/odsp-driver-definitions": [
-		{ "level": "alpha", "kind": "type", "name": "CacheContentType" },
+		{ "level": "legacy", "kind": "type", "name": "CacheContentType" },
 		{ "level": "internal", "kind": "function", "name": "getKeyForCacheEntry" },
-		{ "level": "alpha", "kind": "interface", "name": "HostStoragePolicy" },
-		{ "level": "alpha", "kind": "interface", "name": "ICacheEntry" },
-		{ "level": "alpha", "kind": "interface", "name": "ICollabSessionOptions" },
-		{ "level": "alpha", "kind": "type", "name": "IdentityType" },
-		{ "level": "alpha", "kind": "interface", "name": "IEntry" },
-		{ "level": "alpha", "kind": "interface", "name": "IFileEntry" },
+		{ "level": "legacy", "kind": "interface", "name": "HostStoragePolicy" },
+		{ "level": "legacy", "kind": "interface", "name": "ICacheEntry" },
+		{ "level": "legacy", "kind": "interface", "name": "ICollabSessionOptions" },
+		{ "level": "legacy", "kind": "type", "name": "IdentityType" },
+		{ "level": "legacy", "kind": "interface", "name": "IEntry" },
+		{ "level": "legacy", "kind": "interface", "name": "IFileEntry" },
 		{ "level": "internal", "kind": "type", "name": "InstrumentedStorageTokenFetcher" },
-		{ "level": "alpha", "kind": "interface", "name": "IOdspError" },
-		{ "level": "alpha", "kind": "interface", "name": "IOdspErrorAugmentations" },
-		{ "level": "alpha", "kind": "interface", "name": "IOdspResolvedUrl" },
-		{ "level": "alpha", "kind": "interface", "name": "IOdspUrlParts" },
-		{ "level": "alpha", "kind": "interface", "name": "IOpsCachingPolicy" },
-		{ "level": "alpha", "kind": "interface", "name": "IPersistedCache" },
-		{ "level": "alpha", "kind": "interface", "name": "IProvideSessionAwareDriverFactory" },
-		{ "level": "alpha", "kind": "interface", "name": "IRelaySessionAwareDriverFactory" },
-		{ "level": "alpha", "kind": "interface", "name": "ISharingLink" },
-		{ "level": "alpha", "kind": "interface", "name": "ISharingLinkKind" },
-		{ "level": "alpha", "kind": "interface", "name": "ISnapshotOptions" },
-		{ "level": "alpha", "kind": "interface", "name": "ISocketStorageDiscovery" },
+		{ "level": "legacy", "kind": "interface", "name": "IOdspError" },
+		{ "level": "legacy", "kind": "interface", "name": "IOdspErrorAugmentations" },
+		{ "level": "legacy", "kind": "interface", "name": "IOdspResolvedUrl" },
+		{ "level": "legacy", "kind": "interface", "name": "IOdspUrlParts" },
+		{ "level": "legacy", "kind": "interface", "name": "IOpsCachingPolicy" },
+		{ "level": "legacy", "kind": "interface", "name": "IPersistedCache" },
+		{ "level": "legacy", "kind": "interface", "name": "IProvideSessionAwareDriverFactory" },
+		{ "level": "legacy", "kind": "interface", "name": "IRelaySessionAwareDriverFactory" },
+		{ "level": "legacy", "kind": "interface", "name": "ISharingLink" },
+		{ "level": "legacy", "kind": "interface", "name": "ISharingLinkKind" },
+		{ "level": "legacy", "kind": "interface", "name": "ISnapshotOptions" },
+		{ "level": "legacy", "kind": "interface", "name": "ISocketStorageDiscovery" },
 		{ "level": "internal", "kind": "const", "name": "isTokenFromCache" },
 		{ "level": "internal", "kind": "const", "name": "maximumCacheDurationMs" },
-		{ "level": "alpha", "kind": "type", "name": "OdspError" },
-		{ "level": "alpha", "kind": "const", "name": "OdspErrorTypes" },
-		{ "level": "alpha", "kind": "type", "name": "OdspErrorTypes" },
-		{ "level": "alpha", "kind": "interface", "name": "OdspResourceTokenFetchOptions" },
-		{ "level": "alpha", "kind": "interface", "name": "ShareLinkInfoType" },
-		{ "level": "alpha", "kind": "enum", "name": "SharingLinkRole" },
-		{ "level": "alpha", "kind": "enum", "name": "SharingLinkScope" },
+		{ "level": "legacy", "kind": "type", "name": "OdspError" },
+		{ "level": "legacy", "kind": "const", "name": "OdspErrorTypes" },
+		{ "level": "legacy", "kind": "type", "name": "OdspErrorTypes" },
+		{ "level": "legacy", "kind": "interface", "name": "OdspResourceTokenFetchOptions" },
+		{ "level": "legacy", "kind": "interface", "name": "ShareLinkInfoType" },
+		{ "level": "legacy", "kind": "enum", "name": "SharingLinkRole" },
+		{ "level": "legacy", "kind": "enum", "name": "SharingLinkScope" },
 		{ "level": "internal", "kind": "const", "name": "snapshotKey" },
-		{ "level": "alpha", "kind": "type", "name": "TokenFetcher" },
-		{ "level": "alpha", "kind": "interface", "name": "TokenFetchOptions" },
+		{ "level": "legacy", "kind": "type", "name": "TokenFetcher" },
+		{ "level": "legacy", "kind": "interface", "name": "TokenFetchOptions" },
 		{ "level": "internal", "kind": "const", "name": "tokenFromResponse" },
 		{ "level": "beta", "kind": "interface", "name": "TokenResponse" }
 	],
 	"@fluidframework/agent-scheduler": [
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "AgentSchedulerFactory"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IAgentScheduler"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IAgentScheduler"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IAgentSchedulerEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IProvideAgentScheduler"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ITaskSubscriptionEvents"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "TaskSubscription"
 		}
 	],
 	"@fluidframework/aqueduct": [
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "BaseContainerRuntimeFactory"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "BaseContainerRuntimeFactoryProps"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ContainerRuntimeFactoryWithDefaultDataStore"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "ContainerRuntimeFactoryWithDefaultDataStoreProps"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DataObject"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DataObjectFactory"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DataObjectTypes"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IDataObjectProps"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "PureDataObject"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "PureDataObjectFactory"
 		}
 	],
 	"@fluid-experimental/oldest-client-observer": [
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IOldestClientObservable"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IOldestClientObservableEvents"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IOldestClientObserver"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IOldestClientObserverEvents"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "OldestClientObserver"
 		}
 	],
 	"@fluidframework/request-handler": [
 		{ "level": "internal", "kind": "function", "name": "buildRuntimeRequestHandler" },
-		{ "level": "alpha", "kind": "type", "name": "RuntimeRequestHandler" }
+		{ "level": "legacy", "kind": "type", "name": "RuntimeRequestHandler" }
 	],
 	"@fluidframework/synthesize": [
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "AsyncFluidObjectProvider"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "AsyncOptionalFluidObjectProvider"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "AsyncRequiredFluidObjectProvider"
 		},
 		{
 			"kind": "class",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "DependencyContainer"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FluidObjectProvider"
 		},
 		{
 			"kind": "typealias",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "FluidObjectSymbolProvider"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidDependencySynthesizer"
 		},
 		{
 			"kind": "variable",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IFluidDependencySynthesizer"
 		},
 		{
 			"kind": "interface",
-			"level": "alpha",
+			"level": "legacy",
 			"name": "IProvideFluidDependencySynthesizer"
 		}
 	],
@@ -420,7 +420,7 @@
 		{ "level": "internal", "kind": "class", "name": "ParallelRequests" },
 		{ "level": "internal", "kind": "class", "name": "PrefetchDocumentStorageService" },
 		{ "level": "internal", "kind": "class", "name": "Queue" },
-		{ "level": "alpha", "kind": "class", "name": "RateLimiter" },
+		{ "level": "legacy", "kind": "class", "name": "RateLimiter" },
 		{ "level": "internal", "kind": "function", "name": "readAndParse" },
 		{ "level": "internal", "kind": "function", "name": "requestOps" },
 		{ "level": "internal", "kind": "class", "name": "RetryableError" },
@@ -439,7 +439,7 @@
 		{ "level": "internal", "kind": "function", "name": "convertSnapshotTreeToSummaryTree" },
 		{ "level": "internal", "kind": "function", "name": "convertSummaryTreeToITree" },
 		{ "level": "internal", "kind": "function", "name": "convertToSummaryTree" },
-		{ "level": "alpha", "kind": "function", "name": "convertToSummaryTreeWithStats" },
+		{ "level": "legacy", "kind": "function", "name": "convertToSummaryTreeWithStats" },
 		{ "level": "internal", "kind": "const", "name": "create404Response" },
 		{ "level": "internal", "kind": "function", "name": "createDataStoreFactory" },
 		{ "level": "internal", "kind": "function", "name": "createResponseError" },
@@ -457,43 +457,47 @@
 		{ "level": "internal", "kind": "class", "name": "ObjectStoragePartition" },
 		{ "level": "internal", "kind": "function", "name": "processAttachMessageGCData" },
 		{ "level": "internal", "kind": "type", "name": "ReadAndParseBlob" },
-		{ "level": "alpha", "kind": "class", "name": "RequestParser" },
+		{ "level": "legacy", "kind": "class", "name": "RequestParser" },
 		{ "level": "internal", "kind": "function", "name": "responseToException" },
-		{ "level": "alpha", "kind": "abstract", "name": "class" },
+		{ "level": "legacy", "kind": "abstract", "name": "class" },
 		{ "level": "internal", "kind": "function", "name": "seqFromTree" },
-		{ "level": "alpha", "kind": "class", "name": "SummaryTreeBuilder" },
+		{ "level": "legacy", "kind": "class", "name": "SummaryTreeBuilder" },
 		{ "level": "internal", "kind": "class", "name": "TelemetryContext" },
 		{ "level": "internal", "kind": "function", "name": "unpackChildNodesUsedRoutes" },
-		{ "level": "alpha", "kind": "function", "name": "RuntimeFactoryHelper" },
+		{ "level": "legacy", "kind": "function", "name": "RuntimeFactoryHelper" },
 		{ "level": "internal", "kind": "function", "name": "utf8ByteLength" }
 	],
 	"@fluidframework/test-runtime-utils": [
 		{ "level": "internal", "kind": "interface", "name": "IInsecureUser" },
-		{ "level": "alpha", "kind": "interface", "name": "IInternalMockRuntimeMessage" },
-		{ "level": "alpha", "kind": "interface", "name": "IMockContainerRuntimeOptions" },
-		{ "level": "alpha", "kind": "interface", "name": "IMockContainerRuntimePendingMessage" },
+		{ "level": "legacy", "kind": "interface", "name": "IInternalMockRuntimeMessage" },
+		{ "level": "legacy", "kind": "interface", "name": "IMockContainerRuntimeOptions" },
+		{ "level": "legacy", "kind": "interface", "name": "IMockContainerRuntimePendingMessage" },
 		{ "level": "internal", "kind": "class", "name": "InsecureTokenProvider" },
-		{ "level": "alpha", "kind": "class", "name": "MockContainerRuntime" },
-		{ "level": "alpha", "kind": "class", "name": "MockContainerRuntimeFactory" },
-		{ "level": "alpha", "kind": "class", "name": "MockContainerRuntimeFactoryForReconnection" },
-		{ "level": "alpha", "kind": "class", "name": "MockContainerRuntimeForReconnection" },
-		{ "level": "alpha", "kind": "class", "name": "MockDeltaConnection" },
-		{ "level": "alpha", "kind": "class", "name": "MockDeltaManager" },
-		{ "level": "alpha", "kind": "class", "name": "MockDeltaQueue" },
+		{ "level": "legacy", "kind": "class", "name": "MockContainerRuntime" },
+		{ "level": "legacy", "kind": "class", "name": "MockContainerRuntimeFactory" },
+		{ "level": "legacy", "kind": "class", "name": "MockContainerRuntimeFactoryForReconnection" },
+		{ "level": "legacy", "kind": "class", "name": "MockContainerRuntimeForReconnection" },
+		{ "level": "legacy", "kind": "class", "name": "MockDeltaConnection" },
+		{ "level": "legacy", "kind": "class", "name": "MockDeltaManager" },
+		{ "level": "legacy", "kind": "class", "name": "MockDeltaQueue" },
 		{ "level": "internal", "kind": "class", "name": "MockEmptyDeltaConnection" },
-		{ "level": "alpha", "kind": "class", "name": "MockFluidDataStoreContext" },
-		{ "level": "alpha", "kind": "class", "name": "MockFluidDataStoreRuntime" },
-		{ "level": "alpha", "kind": "class", "name": "MockHandle" },
-		{ "level": "alpha", "kind": "class", "name": "MockObjectStorageService" },
-		{ "level": "alpha", "kind": "class", "name": "MockQuorumClients" },
-		{ "level": "alpha", "kind": "class", "name": "MockSharedObjectServices" },
-		{ "level": "alpha", "kind": "class", "name": "MockStorage" },
+		{ "level": "legacy", "kind": "class", "name": "MockFluidDataStoreContext" },
+		{ "level": "legacy", "kind": "class", "name": "MockFluidDataStoreRuntime" },
+		{ "level": "legacy", "kind": "class", "name": "MockHandle" },
+		{ "level": "legacy", "kind": "class", "name": "MockObjectStorageService" },
+		{ "level": "legacy", "kind": "class", "name": "MockQuorumClients" },
+		{ "level": "legacy", "kind": "class", "name": "MockSharedObjectServices" },
+		{ "level": "legacy", "kind": "class", "name": "MockStorage" },
 		{ "level": "internal", "kind": "function", "name": "validateAssertionError" }
 	],
 	"@fluidframework/test-utils": [
 		{ "level": "internal", "kind": "type", "name": "ChannelFactoryRegistry" },
-		{ "level": "alpha", "kind": "function", "name": "createAndAttachContainer" },
-		{ "level": "internal", "kind": "const", "name": "createContainerRuntimeFactoryWithDefaultDataStore" },
+		{ "level": "legacy", "kind": "function", "name": "createAndAttachContainer" },
+		{
+			"level": "internal",
+			"kind": "const",
+			"name": "createContainerRuntimeFactoryWithDefaultDataStore"
+		},
 		{ "level": "internal", "kind": "const", "name": "createDocumentId" },
 		{ "level": "internal", "kind": "function", "name": "createLoader" },
 		{ "level": "internal", "kind": "function", "name": "createSummarizer" },
@@ -509,13 +513,13 @@
 		{ "level": "internal", "kind": "function", "name": "getDataStoreEntryPointBackCompat" },
 		{ "level": "internal", "kind": "function", "name": "getUnexpectedLogErrorException" },
 		{ "level": "internal", "kind": "interface", "name": "IDocumentIdStrategy" },
-		{ "level": "alpha", "kind": "interface", "name": "IOpProcessingController" },
-		{ "level": "alpha", "kind": "interface", "name": "IProvideTestFluidObject" },
+		{ "level": "legacy", "kind": "interface", "name": "IOpProcessingController" },
+		{ "level": "legacy", "kind": "interface", "name": "IProvideTestFluidObject" },
 		{ "level": "internal", "kind": "interface", "name": "ITestConfigProvider" },
 		{ "level": "internal", "kind": "interface", "name": "ITestContainerConfig" },
-		{ "level": "alpha", "kind": "interface", "name": "ITestFluidObject" },
+		{ "level": "legacy", "kind": "interface", "name": "ITestFluidObject" },
 		{ "level": "internal", "kind": "interface", "name": "ITestObjectProvider" },
-		{ "level": "alpha", "kind": "class", "name": "LoaderContainerTracker" },
+		{ "level": "legacy", "kind": "class", "name": "LoaderContainerTracker" },
 		{ "level": "internal", "kind": "class", "name": "LocalCodeLoader" },
 		{ "level": "internal", "kind": "const", "name": "retryWithEventualValue" },
 		{ "level": "internal", "kind": "function", "name": "summarizeNow" },
@@ -623,14 +627,14 @@
 	],
 	"@fluidframework/telemetry-utils": [
 		{ "level": "internal", "kind": "const", "name": "connectedEventName" },
-		{ "level": "alpha", "kind": "function", "name": "createChildLogger" },
+		{ "level": "legacy", "kind": "function", "name": "createChildLogger" },
 		{ "level": "internal", "kind": "function", "name": "createChildMonitoringContext" },
 		{ "level": "internal", "kind": "function", "name": "createMultiSinkLogger" },
 		{ "level": "internal", "kind": "function", "name": "createSampledLogger" },
 		{ "level": "internal", "kind": "class", "name": "DataCorruptionError" },
 		{ "level": "internal", "kind": "class", "name": "DataProcessingError" },
 		{ "level": "internal", "kind": "const", "name": "disconnectedEventName" },
-		{ "level": "alpha", "kind": "class", "name": "EventEmitterWithErrorHandling" },
+		{ "level": "legacy", "kind": "class", "name": "EventEmitterWithErrorHandling" },
 		{ "level": "internal", "kind": "const", "name": "eventNamespaceSeparator" },
 		{ "level": "internal", "kind": "function", "name": "extractLogSafeErrorProperties" },
 		{ "level": "internal", "kind": "const", "name": "extractSafePropertiesFromMessage" },
@@ -656,8 +660,8 @@
 		{ "level": "internal", "kind": "interface", "name": "ITelemetryEventExt" },
 		{ "level": "public", "kind": "interface", "name": "ITelemetryGenericEventExt" },
 		{ "level": "public", "kind": "interface", "name": "ITelemetryLoggerExt" },
-		{ "level": "alpha", "kind": "interface", "name": "ITelemetryLoggerPropertyBag" },
-		{ "level": "alpha", "kind": "interface", "name": "ITelemetryLoggerPropertyBags" },
+		{ "level": "legacy", "kind": "interface", "name": "ITelemetryLoggerPropertyBag" },
+		{ "level": "legacy", "kind": "interface", "name": "ITelemetryLoggerPropertyBags" },
 		{ "level": "public", "kind": "interface", "name": "ITelemetryPerformanceEventExt" },
 		{ "level": "public", "kind": "interface", "name": "ITelemetryPropertiesExt" },
 		{ "level": "internal", "kind": "function", "name": "loggerToMonitoringContext" },
@@ -681,7 +685,7 @@
 		{ "level": "internal", "kind": "enum", "name": "TelemetryDataTag" },
 		{ "level": "public", "kind": "type", "name": "TelemetryEventCategory" },
 		{ "level": "public", "kind": "type", "name": "TelemetryEventPropertyTypeExt" },
-		{ "level": "alpha", "kind": "type", "name": "TelemetryEventPropertyTypes" },
+		{ "level": "legacy", "kind": "type", "name": "TelemetryEventPropertyTypes" },
 		{ "level": "internal", "kind": "class", "name": "ThresholdCounter" },
 		{ "level": "internal", "kind": "class", "name": "UsageError" },
 		{ "level": "internal", "kind": "function", "name": "validatePrecondition" },
