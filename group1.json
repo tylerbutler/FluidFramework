@@ -59,6 +59,11 @@
 	"@fluidframework/container-definitions": [
 		{
 			"kind": "interface",
+			"level": "legacy",
+			"name": "IThrottlingWarning"
+		},
+		{
+			"kind": "interface",
 			"level": "internal",
 			"name": "IResolvedFluidCodeDetails"
 		},
@@ -81,16 +86,6 @@
 			"kind": "namespace",
 			"level": "public",
 			"name": "ConnectionState"
-		},
-		{
-			"kind": "typealias",
-			"level": "public",
-			"name": "ConnectionState"
-		},
-		{
-			"kind": "typealias",
-			"level": "legacy",
-			"name": "ContainerErrorTypes"
 		},
 		{
 			"kind": "variable",
@@ -193,11 +188,6 @@
 			"name": "IFluidCodeDetailsComparer"
 		},
 		{
-			"kind": "variable",
-			"level": "legacy",
-			"name": "IFluidCodeDetailsComparer"
-		},
-		{
 			"kind": "interface",
 			"level": "legacy",
 			"name": "IFluidCodeDetailsConfig"
@@ -264,11 +254,6 @@
 		},
 		{
 			"kind": "interface",
-			"level": "legacy",
-			"name": "IRuntimeFactory"
-		},
-		{
-			"kind": "variable",
 			"level": "legacy",
 			"name": "IRuntimeFactory"
 		},
@@ -378,11 +363,6 @@
 		},
 		{
 			"kind": "typealias",
-			"level": "public",
-			"name": "DriverErrorTypes"
-		},
-		{
-			"kind": "variable",
 			"level": "public",
 			"name": "DriverErrorTypes"
 		},
@@ -515,11 +495,6 @@
 			"kind": "interface",
 			"level": "legacy",
 			"name": "ISummaryContext"
-		},
-		{
-			"kind": "interface",
-			"level": "legacy",
-			"name": "IThrottlingWarning"
 		},
 		{
 			"kind": "interface",
@@ -661,17 +636,7 @@
 			"name": "SharedDirectory"
 		},
 		{
-			"kind": "variable",
-			"level": "legacy",
-			"name": "SharedDirectory"
-		},
-		{
 			"kind": "typealias",
-			"level": "public",
-			"name": "SharedMap"
-		},
-		{
-			"kind": "variable",
 			"level": "public",
 			"name": "SharedMap"
 		}
@@ -923,11 +888,6 @@
 			"name": "TreeArrayNode"
 		},
 		{
-			"kind": "variable",
-			"level": "public",
-			"name": "TreeArrayNode"
-		},
-		{
 			"kind": "interface",
 			"level": "public",
 			"name": "TreeArrayNodeBase"
@@ -1100,11 +1060,6 @@
 			"name": "ConnectionState"
 		},
 		{
-			"kind": "namespace",
-			"level": "public",
-			"name": "ConnectionStateType"
-		},
-		{
 			"kind": "typealias",
 			"level": "public",
 			"name": "ConnectionStateType"
@@ -1116,11 +1071,6 @@
 		},
 		{
 			"kind": "typealias",
-			"level": "legacy",
-			"name": "ContainerErrorTypes"
-		},
-		{
-			"kind": "variable",
 			"level": "legacy",
 			"name": "ContainerErrorTypes"
 		},
@@ -1141,11 +1091,6 @@
 		},
 		{
 			"kind": "typealias",
-			"level": "public",
-			"name": "DriverErrorTypes"
-		},
-		{
-			"kind": "variable",
 			"level": "public",
 			"name": "DriverErrorTypes"
 		},
@@ -1371,12 +1316,7 @@
 		},
 		{
 			"kind": "typealias",
-			"level": "public",
-			"name": "SharedMap"
-		},
-		{
-			"kind": "variable",
-			"level": "public",
+			"level": "legacy",
 			"name": "SharedMap"
 		},
 		{
@@ -1396,11 +1336,6 @@
 		},
 		{
 			"kind": "interface",
-			"level": "public",
-			"name": "TreeArrayNode"
-		},
-		{
-			"kind": "variable",
 			"level": "public",
 			"name": "TreeArrayNode"
 		},
