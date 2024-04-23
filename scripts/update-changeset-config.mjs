@@ -44,6 +44,59 @@ const fixed = [
 	// Driver-Definitions
 	["@fluidframework/driver-definitions", "@fluidframework/odsp-driver-definitions"],
 
+	// Experimental-DataObjects
+	["@fluid-experimental/data-object-base", "@fluid-experimental/data-objects"],
+
+	// Framework
+	[
+		"@fluidframework/agent-scheduler",
+		"@fluidframework/aqueduct",
+		"@fluidframework/fluid-static",
+		"@fluidframework/request-handler",
+	],
+
+	// Loader
+	["@fluidframework/container-loader", "@fluid-private/test-loader-utils"],
+
+	// PropertyDDS
+	[
+		"@fluid-experimental/property-binder",
+		"@fluid-experimental/property-changeset",
+		"@fluid-experimental/property-common",
+		"@fluid-experimental/property-dds",
+		"@fluid-experimental/property-inspector-table",
+		"@fluid-experimental/property-properties",
+		"@fluid-experimental/property-proxy",
+		"@fluid-experimental/property-query",
+		"@fluid-experimental/property-shared-tree-interop",
+		"@fluid-internal/platform-dependent",
+	],
+
+	// Routerlicious-Driver
+	[
+		"@fluidframework/routerlicious-driver",
+		"@fluidframework/routerlicious-urlresolver",
+		"@fluidframework/tinylicious-driver",
+	],
+
+	// Runtime
+	[
+		"@fluidframework/container-runtime",
+		"@fluidframework/container-runtime-definitions",
+		"@fluidframework/runtime-definitions",
+		"@fluidframework/runtime-utils",
+		"@fluidframework/shared-object-base",
+		"@fluidframework/shared-summary-block",
+	],
+
+	// Sequence
+	["@fluidframework/merge-tree", "@fluidframework/sequence"],
+
+	// Telemetry
+	["@fluidframework/app-insights-logger", "@fluidframework/fluid-telemetry"],
+];
+
+const linked = [
 	// Examples
 	[
 		"@fluid-example/app-insights-logger",
@@ -98,57 +151,6 @@ const fixed = [
 		"@fluid-internal/tablebench",
 	],
 
-	// Experimental-DataObjects
-	["@fluid-experimental/data-object-base", "@fluid-experimental/data-objects"],
-
-	// Framework
-	[
-		"@fluidframework/agent-scheduler",
-		"@fluidframework/aqueduct",
-		"@fluidframework/fluid-static",
-		"@fluidframework/request-handler",
-	],
-
-	// Loader
-	["@fluidframework/container-loader", "@fluid-private/test-loader-utils"],
-
-	// PropertyDDS
-	[
-		"@fluid-experimental/property-binder",
-		"@fluid-experimental/property-changeset",
-		"@fluid-experimental/property-common",
-		"@fluid-experimental/property-dds",
-		"@fluid-experimental/property-inspector-table",
-		"@fluid-experimental/property-properties",
-		"@fluid-experimental/property-proxy",
-		"@fluid-experimental/property-query",
-		"@fluid-experimental/property-shared-tree-interop",
-		"@fluid-internal/platform-dependent",
-	],
-
-	// Routerlicious-Driver
-	[
-		"@fluidframework/routerlicious-driver",
-		"@fluidframework/routerlicious-urlresolver",
-		"@fluidframework/tinylicious-driver",
-	],
-
-	// Runtime
-	[
-		"@fluidframework/container-runtime",
-		"@fluidframework/container-runtime-definitions",
-		"@fluidframework/runtime-definitions",
-		"@fluidframework/runtime-utils",
-		"@fluidframework/shared-object-base",
-		"@fluidframework/shared-summary-block",
-	],
-
-	// Sequence
-	["@fluidframework/merge-tree", "@fluidframework/sequence"],
-
-	// Telemetry
-	["@fluidframework/app-insights-logger", "@fluidframework/fluid-telemetry"],
-
 	//Tests
 	[
 		"@fluid-experimental/azure-scenario-runner",
@@ -172,6 +174,8 @@ const fixed = [
 ];
 
 config.fixed = fixed;
+config.linked = linked;
+config.updateInternalDependencies = "minor";
 fs.writeFileSync(filePath, JSON.stringify(config, null, "\t"));
 
 /*
