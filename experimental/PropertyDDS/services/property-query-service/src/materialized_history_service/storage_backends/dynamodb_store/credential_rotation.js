@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const _ = require("lodash");
 const DynamoDBClient = require("./dynamodb_client");
 const settings = require("../../../server/utils/server_settings");

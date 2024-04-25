@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const yargs = require("yargs");
 const RequestUtils = require("hfdm-utils").Utils.RequestUtils;
 const { promisify } = require("util");

@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const AWS = require("aws-sdk");
 const HttpStatus = require("http-status-codes");
 const { ModuleLogger } = require("@fluid-experimental/property-query");

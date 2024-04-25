@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const path = require("path");
 const async = require("async");
 const credsRotation = require("./credential_rotation");

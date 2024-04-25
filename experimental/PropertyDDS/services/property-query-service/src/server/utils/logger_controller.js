@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const HttpStatus = require("http-status-codes");
 const sanitize = require("sanitize");
 const { ModuleLogger } = require("@fluid-experimental/property-query");

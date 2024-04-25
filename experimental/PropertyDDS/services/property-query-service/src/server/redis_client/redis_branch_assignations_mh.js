@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 let HfdmRedisClient = require("./hfdm_redis_client");
 const deploy = require("./deploy");
 const { ModuleLogger } = require("@fluid-experimental/property-query");

@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import { type DocumentationNode, type SingleLineDocumentationNode } from "./DocumentationNode";
 import { LineBreakNode } from "./LineBreakNode";
 import { PlainTextNode } from "./PlainTextNode";

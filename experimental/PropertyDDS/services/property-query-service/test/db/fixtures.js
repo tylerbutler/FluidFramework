@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /* globals targets */
 const RequestUtils = require("../../src/server/utils/request_utils");
 const { promisify } = require("util");

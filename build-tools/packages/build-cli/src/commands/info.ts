@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import { MonoRepoKind, isMonoRepoKind } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import sortPackageJson from "sort-package-json";

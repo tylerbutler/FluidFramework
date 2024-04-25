@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import { type SectionNode } from "../../documentation-domain";
 import { type ApiFunctionLike } from "../../utilities";
 import { type ApiItemTransformationConfiguration } from "../configuration";

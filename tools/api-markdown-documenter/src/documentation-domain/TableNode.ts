@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import { DocumentationParentNodeBase, type MultiLineDocumentationNode } from "./DocumentationNode";
 import { DocumentationNodeType } from "./DocumentationNodeType";
 import { type TableBodyRowNode, type TableHeaderRowNode } from "./TableRowNode";

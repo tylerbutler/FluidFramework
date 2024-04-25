@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const _ = require("lodash");
 const Chronometer = require("@fluid-experimental/property-common").Chronometer;
 const { ModuleLogger } = require("@fluid-experimental/property-query");

@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const yargs = require("yargs");
 const Fixtures = require("../../test/db/fixtures");
 

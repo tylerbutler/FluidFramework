@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const path = require("path");
 const RetryTask = require("./retry_task");
 const DynamoDBException = require("./dynamodb_exception");

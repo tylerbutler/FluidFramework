@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /**
  * Initializes the BigStore based on configuration. Prioritizes ResilientS3Store over
  * S3Store over FileStore.

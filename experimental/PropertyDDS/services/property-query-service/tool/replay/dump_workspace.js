@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /* globals targets */
 const yargs = require("yargs");
 const { HFDM } = require("@hfdm/sdk");

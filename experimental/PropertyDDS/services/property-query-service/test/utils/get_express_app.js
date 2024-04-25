@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const qs = require("qs");
 
 // A limitation of Express 4 makes it that app.set has no effect

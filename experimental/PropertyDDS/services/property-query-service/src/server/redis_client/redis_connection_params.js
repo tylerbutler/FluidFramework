@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const _ = require("lodash");
 const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 6379;

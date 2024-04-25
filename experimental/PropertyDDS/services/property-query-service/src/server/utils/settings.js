@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /**
  * @fileoverview Load the specified defaults json. The settings object will ( in order)
  * 1 - Load the passed in config file.

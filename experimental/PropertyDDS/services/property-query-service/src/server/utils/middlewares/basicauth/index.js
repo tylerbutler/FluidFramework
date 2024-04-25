@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const basicAuthMiddleware = require("basicauth-middleware");
 const authenticateFactory = require("./authenticate");
 const getCredentialFactory = require("./get_credentials");

@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const crypto = require("crypto");
 const HTTPError = require("@fluid-experimental/property-common").HTTPError;
 const HTTPStatus = require("http-status");
