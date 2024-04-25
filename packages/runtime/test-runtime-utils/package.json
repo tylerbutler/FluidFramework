@@ -17,7 +17,7 @@
 			"types": "./dist/index.d.ts",
 			"default": "./dist/index.js"
 		},
-		"./alpha": {
+		"./legacy": {
 			"types": "./dist/test-runtime-utils-alpha.d.ts",
 			"default": "./dist/index.js"
 		},

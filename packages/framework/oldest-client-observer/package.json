@@ -33,7 +33,7 @@
 				"default": "./dist/index.js"
 			}
 		},
-		"./alpha": {
+		"./legacy": {
 			"import": {
 				"types": "./lib/oldest-client-observer-alpha.d.ts",
 				"default": "./lib/index.js"
@@ -58,8 +58,8 @@
 	"types": "dist/index.d.ts",
 	"scripts": {
 		"api": "fluid-build . --task api",
-		"api-extractor:commonjs": "api-extractor run --config ./api-extractor-cjs.json",
-		"api-extractor:esnext": "api-extractor run --local",
+		"api-extractor:commonjs": "flub generate entrypoints --outFileAlpha legacy --outDir ./dist",
+		"api-extractor:esnext": "flub generate entrypoints --outFileAlpha legacy --outDir ./lib --node10TypeCompat",
 		"build": "fluid-build . --task build",
 		"build:commonjs": "fluid-build . --task commonjs",
 		"build:compile": "fluid-build . --task compile",

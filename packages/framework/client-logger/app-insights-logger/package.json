@@ -22,7 +22,7 @@
 				"default": "./dist/index.js"
 			}
 		},
-		"./alpha": {
+		"./legacy": {
 			"import": {
 				"types": "./lib/app-insights-logger-alpha.d.mts",
 				"default": "./lib/index.mjs"

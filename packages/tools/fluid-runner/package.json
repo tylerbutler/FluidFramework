@@ -16,7 +16,7 @@
 			"types": "./dist/index.d.ts",
 			"default": "./dist/index.js"
 		},
-		"./alpha": {
+		"./legacy": {
 			"types": "./dist/fluid-runner-alpha.d.ts",
 			"default": "./dist/index.js"
 		},

@@ -22,7 +22,7 @@
 				"default": "./dist/index.js"
 			}
 		},
-		"./alpha": {
+		"./legacy": {
 			"import": {
 				"types": "./lib/routerlicious-driver-alpha.d.mts",
 				"default": "./lib/index.mjs"
