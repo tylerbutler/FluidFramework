@@ -21,7 +21,7 @@
 	},
 	"files": ["/bin", "/lib", "/oclif.manifest.json"],
 	"scripts": {
-		"build": "concurrently npm:build:compile npm:lint && concurrently npm:build:docs npm:build:diagrams",
+		"build": "concurrently npm:build:compile npm:lint && npm run build:docs",
 		"build:compile": "npm run tsc && npm run build:test && npm run build:copy && npm run build:readme",
 		"build:copy": "copyfiles -u 1 \"src/**/*.fsl\" lib",
 		"build:diagrams": "jssm-viz -i \"./src/machines/*.fsl\"",
