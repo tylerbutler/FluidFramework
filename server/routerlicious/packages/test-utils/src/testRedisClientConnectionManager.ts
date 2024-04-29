@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import RedisMock from "ioredis-mock";
 import * as Redis from "ioredis";
 
@@ -25,5 +26,13 @@ export class TestRedisClientConnectionManager implements IRedisClientConnectionM
 			? new RedisMock(this.options)
 			: new RedisMock();
 		return mockRedisClient;
+	}
+
+	public addErrorHandler(
+		lumberProperties?: Map<string, any> | Record<string, any> | undefined,
+		errorMessage: string = "Error with Redis",
+		additionalLoggingFunctionality?: (error: Error) => boolean,
+	): void {
+		// Do nothing
 	}
 }

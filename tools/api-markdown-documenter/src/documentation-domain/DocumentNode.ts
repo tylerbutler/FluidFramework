@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import type { Parent as UnistParent } from "unist";
 
 import { type ApiItem } from "../index.js";
@@ -35,6 +36,11 @@ export interface DocumentNodeProperties {
 
 	/**
 	 * Optional document front-matter, to be appended above all other content.
+	 *
+	 * @deprecated This feature was never properly defined or designed.
+	 * Passing raw text through to the output doesn't fit with the design of the rest of the system.
+	 * Consumers who wish to append contents at the top (or anywhere else) may do so by introducing custom rendering
+	 * logic in their system, rather than using the convenience end-to-end rendering APIs as is.
 	 */
 	readonly frontMatter?: string;
 }

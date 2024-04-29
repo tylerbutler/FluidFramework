@@ -23,6 +23,7 @@ export {
 	IGarbageCollectorCreateParams,
 	IGCMetadata,
 	IGCMetadata_Deprecated,
+	IGCNodeUpdatedProps,
 	IGCResult,
 	IGCRuntimeOptions,
 	IMarkPhaseStats,
@@ -45,8 +46,9 @@ export {
 export {
 	cloneGCData,
 	concatGarbageCollectionStates,
-	trimLeadingAndTrailingSlashes,
+	getGCVersionInEffect,
 	unpackChildNodesGCDetails,
+	urlToGCNodePath,
 } from "./gcHelpers.js";
 export { runGarbageCollection } from "./gcReferenceGraphAlgorithm.js";
 export {

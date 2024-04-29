@@ -3,27 +3,31 @@
  * Licensed under the MIT License.
  */
 
-import { IContainerContext, IRuntime } from "@fluidframework/container-definitions";
+import { IContainerContext, IRuntime } from "@fluidframework/container-definitions/internal";
 import {
 	ContainerRuntime,
 	DefaultSummaryConfiguration,
 	IContainerRuntimeOptions,
-} from "@fluidframework/container-runtime";
-import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
+} from "@fluidframework/container-runtime/internal";
+import { IContainerRuntime } from "@fluidframework/container-runtime-definitions/internal";
 import {
 	FluidObject,
 	IFluidHandleContext,
 	IRequest,
 	IResponse,
 } from "@fluidframework/core-interfaces";
-import { assert } from "@fluidframework/core-utils";
-// eslint-disable-next-line import/no-deprecated
-import { RuntimeRequestHandler, buildRuntimeRequestHandler } from "@fluidframework/request-handler";
+import { assert } from "@fluidframework/core-utils/internal";
+import {
+	// eslint-disable-next-line import/no-deprecated
+	RuntimeRequestHandler,
+	// eslint-disable-next-line import/no-deprecated
+	buildRuntimeRequestHandler,
+} from "@fluidframework/request-handler/internal";
 import {
 	IFluidDataStoreFactory,
 	NamedFluidDataStoreRegistryEntries,
-} from "@fluidframework/runtime-definitions";
-import { RequestParser, RuntimeFactoryHelper } from "@fluidframework/runtime-utils";
+} from "@fluidframework/runtime-definitions/internal";
+import { RequestParser, RuntimeFactoryHelper } from "@fluidframework/runtime-utils/internal";
 
 interface backCompat_IFluidRouter {
 	IFluidRouter?: backCompat_IFluidRouter;
@@ -78,6 +82,7 @@ export const createTestContainerRuntimeFactory = (
 					},
 				},
 			},
+			// eslint-disable-next-line import/no-deprecated
 			public requestHandlers: RuntimeRequestHandler[] = [],
 		) {
 			super();
@@ -89,7 +94,7 @@ export const createTestContainerRuntimeFactory = (
 			const rootContext =
 				"createDetachedRootDataStore" in runtime
 					? (runtime as any).createDetachedRootDataStore([this.type], "default")
-					: runtime.createDetachedDataStore([this.type], "default");
+					: runtime.createDetachedDataStore([this.type]);
 
 			const rootRuntime = await this.dataStoreFactory.instantiateDataStore(
 				rootContext,
@@ -130,6 +135,7 @@ export const createTestContainerRuntimeFactory = (
 						["default", Promise.resolve(this.dataStoreFactory)],
 						[this.type, Promise.resolve(this.dataStoreFactory)],
 					],
+					// eslint-disable-next-line import/no-deprecated
 					buildRuntimeRequestHandler(
 						backCompat_DefaultRouteRequestHandler("default"),
 						...this.requestHandlers,
@@ -163,6 +169,7 @@ export const createTestContainerRuntimeFactory = (
 					["default", Promise.resolve(this.dataStoreFactory)],
 					[this.type, Promise.resolve(this.dataStoreFactory)],
 				],
+				// eslint-disable-next-line import/no-deprecated
 				requestHandler: buildRuntimeRequestHandler(
 					getDefaultObject,
 					...this.requestHandlers,

@@ -76,12 +76,12 @@ export {
 	SequenceEvent,
 	SequenceMaintenanceEvent,
 } from "./sequenceDeltaEvent.js";
-export { SharedStringFactory } from "./sequenceFactory.js";
+export { SharedString } from "./sequenceFactory.js";
 export {
 	getTextAndMarkers,
 	ISharedString,
-	SharedString,
 	SharedStringSegment,
+	SharedStringClass,
 } from "./sharedString.js";
 export {
 	ISharedIntervalCollection,
@@ -105,4 +105,4 @@ export {
 	reservedRangeLabelsKey,
 	TrackingGroup,
 	LocalReferencePosition,
-} from "@fluidframework/merge-tree";
+} from "@fluidframework/merge-tree/internal";

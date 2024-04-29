@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { Package } from "@fluidframework/build-tools";
 import { strict as assert } from "node:assert";
+import { Package } from "@fluidframework/build-tools";
 import { PackageCommand } from "../BasePackageCommand";
 import { PackageWithKind } from "../filter";
 
@@ -45,8 +45,9 @@ export default class FilterCommand extends PackageCommand<typeof FilterCommand> 
 		// do nothing
 	}
 
-	protected async processPackages(packages: PackageWithKind[]): Promise<void> {
+	protected async processPackages(packages: PackageWithKind[]): Promise<string[]> {
 		// do nothing
+		return [];
 	}
 
 	public async run(): Promise<FilterCommandResult> {

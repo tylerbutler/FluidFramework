@@ -9,14 +9,14 @@ import {
 	IChannelServices,
 	IFluidDataStoreRuntime,
 } from "@fluidframework/datastore-definitions";
-import { Marker, TextSegment } from "@fluidframework/merge-tree";
-import { pkgVersion } from "./packageVersion.js";
-import { SharedString, SharedStringSegment } from "./sharedString.js";
+import { Marker, TextSegment } from "@fluidframework/merge-tree/internal";
+import type { ISharedObjectKind } from "@fluidframework/shared-object-base";
+import { createSharedObjectKind } from "@fluidframework/shared-object-base/internal";
 
-/**
- * @alpha
- */
-export class SharedStringFactory implements IChannelFactory {
+import { pkgVersion } from "./packageVersion.js";
+import { SharedStringClass, SharedStringSegment, type ISharedString } from "./sharedString.js";
+
+export class SharedStringFactory implements IChannelFactory<ISharedString> {
 	// TODO rename back to https://graph.microsoft.com/types/mergeTree/string once paparazzi is able to dynamically
 	// load code (UPDATE: paparazzi is gone... anything to do here?)
 	public static Type = "https://graph.microsoft.com/types/mergeTree";
@@ -57,8 +57,8 @@ export class SharedStringFactory implements IChannelFactory {
 		id: string,
 		services: IChannelServices,
 		attributes: IChannelAttributes,
-	): Promise<SharedString> {
-		const sharedString = new SharedString(runtime, id, attributes);
+	): Promise<SharedStringClass> {
+		const sharedString = new SharedStringClass(runtime, id, attributes);
 		await sharedString.load(services);
 		return sharedString;
 	}
@@ -66,9 +66,22 @@ export class SharedStringFactory implements IChannelFactory {
 	/**
 	 * {@inheritDoc @fluidframework/datastore-definitions#IChannelFactory.create}
 	 */
-	public create(document: IFluidDataStoreRuntime, id: string): SharedString {
-		const sharedString = new SharedString(document, id, this.attributes);
+	public create(document: IFluidDataStoreRuntime, id: string): SharedStringClass {
+		const sharedString = new SharedStringClass(document, id, this.attributes);
 		sharedString.initializeLocal();
 		return sharedString;
 	}
 }
+
+/**
+ * Entrypoint for {@link ISharedString} creation.
+ * @alpha
+ */
+export const SharedString: ISharedObjectKind<ISharedString> =
+	createSharedObjectKind(SharedStringFactory);
+
+/**
+ * Alias for {@link ISharedString} for compatibility.
+ * @alpha
+ */
+export type SharedString = ISharedString;

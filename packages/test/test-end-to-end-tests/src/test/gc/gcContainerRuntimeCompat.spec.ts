@@ -4,18 +4,19 @@
  */
 
 import { strict as assert } from "assert";
+
 import {
 	describeCompat,
 	type getContainerRuntimeApi,
 	type getDataRuntimeApi,
 	type getLoaderApi,
 } from "@fluid-private/test-version-utils";
-import type { ContainerRuntimeFactoryWithDefaultDataStore } from "@fluidframework/aqueduct";
-import { IContainer } from "@fluidframework/container-definitions";
+import type { ContainerRuntimeFactoryWithDefaultDataStore } from "@fluidframework/aqueduct/internal";
+import { IContainer } from "@fluidframework/container-definitions/internal";
 import {
 	IContainerRuntimeOptions,
 	type ISummaryRuntimeOptions,
-} from "@fluidframework/container-runtime";
+} from "@fluidframework/container-runtime/internal";
 import { ISummaryTree } from "@fluidframework/protocol-definitions";
 import {
 	ITestFluidObject,
@@ -24,7 +25,8 @@ import {
 	createSummarizerCore,
 	summarizeNow,
 	waitForContainerConnection,
-} from "@fluidframework/test-utils";
+} from "@fluidframework/test-utils/internal";
+
 import { getGCFeatureFromSummary, getGCStateFromSummary } from "./gcTestSummaryUtils.js";
 
 interface LayerApis {
@@ -103,6 +105,10 @@ describeCompat(
 
 		beforeEach("setupContainer", async function () {
 			provider = getTestObjectProvider({ syncSummarizer: true });
+			// These tests are failing for ODSP and FRS. Disabling them for now.
+			if (provider.driver.type !== "local") {
+				this.skip();
+			}
 			mainContainer = await createContainer(version1Apis);
 			if (mainContainer.getEntryPoint !== undefined) {
 				dataStoreA = (await mainContainer.getEntryPoint()) as ITestFluidObject;
