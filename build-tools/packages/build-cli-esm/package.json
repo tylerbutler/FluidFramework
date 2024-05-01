@@ -44,7 +44,7 @@
 		"postpack": "npm run clean:manifest",
 		"test": "npm run test:mocha",
 		"test:coverage": "c8 npm run test",
-		"test:mocha": "mocha --forbid-only \"test/**/*.test.ts\"",
+		"test:mocha": "OCLIF_TEST_ROOT=$(shx pwd) mocha --forbid-only \"test/**/*.test.ts\"",
 		"tsc": "tsc"
 	},
 	"dependencies": {
@@ -59,7 +59,7 @@
 	"devDependencies": {
 		"@fluid-private/readme-command": "workspace:~",
 		"@oclif/prettier-config": "^0.2.1",
-		"@oclif/test": "~2.3.33",
+		"@oclif/test": "3.2.12-dev.0",
 		"@types/chai": "^4.3.5",
 		"@types/mocha": "^10.0.6",
 		"@types/node": "^18.18.6",
@@ -70,6 +70,7 @@
 		"eslint-config-prettier": "~9.1.0",
 		"mocha": "^10.2.0",
 		"oclif": "^4.7.6",
+		"shx": "^0.3.4",
 		"ts-node": "^10.9.2",
 		"typescript": "~5.1.6"
 	},

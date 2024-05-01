@@ -73,7 +73,7 @@
 		"@oclif/plugin-help": "^6.0.20",
 		"@oclif/plugin-not-found": "^3.1.1",
 		"@oclif/plugin-plugins": "^5.0.5",
-		"@oclif/test": "~2.3.33",
+		"@oclif/test": "3.2.12-dev.0",
 		"@octokit/core": "^4.2.4",
 		"@rushstack/node-core-library": "^3.59.5",
 		"async": "^3.2.4",
