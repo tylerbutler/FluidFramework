@@ -109,7 +109,7 @@ module.exports = {
 			script: false,
 		},
 		"format": {
-			dependsOn: ["prettier:fix", "format:prettier", "format:biome"],
+			dependsOn: ["prettier:fix", "format:prettier", "format:biome", "organize-imports"],
 			script: false,
 		},
 		"check:biome": [],
@@ -120,6 +120,7 @@ module.exports = {
 		"good-fences": [],
 		"format:biome": [],
 		"format:prettier": [],
+		"organize-imports": [],
 		"prettier": [],
 		"prettier:fix": [],
 		"webpack": ["^tsc", "^build:esnext"],
