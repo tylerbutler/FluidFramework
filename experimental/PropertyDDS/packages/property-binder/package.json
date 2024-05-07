@@ -49,6 +49,7 @@
 		"format:prettier": "prettier --write . --cache --ignore-path ../../../../.prettierignore",
 		"lint": "fluid-build . --task lint",
 		"lint:fix": "fluid-build . --task eslint:fix --task format",
+		"organize-imports": "biome check . --organize-imports-enabled=true --apply",
 		"precit": "bash -c \"npm run test -- --reporters dots; echo '----------Linting----------'; npm run lint; echo '----------Docs----------'; npm run doc\"",
 		"prepublishOnly": "npm run test:dist",
 		"test": "npm run test:jest",

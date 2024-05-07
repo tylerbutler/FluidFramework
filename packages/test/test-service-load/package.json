@@ -33,6 +33,7 @@
 		"full": "node ./dist/nodeStressTest.js --profile full",
 		"lint": "fluid-build . --task lint",
 		"lint:fix": "fluid-build . --task eslint:fix --task format",
+		"organize-imports": "biome check . --organize-imports-enabled=true --apply",
 		"start": "node ./dist/nodeStressTest.js",
 		"start:frs": "node ./dist/nodeStressTest.js --driver routerlicious --driverEndpoint frs --profile ci_frs",
 		"start:frs:canary": "node ./dist/nodeStressTest.js --driver routerlicious --driverEndpoint frsCanary --profile ci_frs",

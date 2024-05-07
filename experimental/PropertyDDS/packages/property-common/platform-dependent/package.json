@@ -13,6 +13,9 @@
 	"author": "Microsoft and contributors",
 	"main": "server.js",
 	"browser": "browser.js",
+	"scripts": {
+		"organize-imports": "biome check . --organize-imports-enabled=true --apply"
+	},
 	"typeValidation": {
 		"disabled": true,
 		"broken": {}

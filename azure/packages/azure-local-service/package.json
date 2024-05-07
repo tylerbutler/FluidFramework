@@ -24,6 +24,7 @@
 		"format:prettier": "prettier --write . --cache --ignore-path ../../../.prettierignore",
 		"lint": "fluid-build . --task lint",
 		"lint:fix": "fluid-build . --task eslint:fix --task format",
+		"organize-imports": "biome check . --organize-imports-enabled=true --apply",
 		"start": "pm2 start -n azure-local-service lib/index.js",
 		"start:debug": "node --inspect=0.0.0.0:9229 lib/index.js",
 		"stop": "pm2 stop azure-local-service",

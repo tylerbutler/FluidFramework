@@ -33,7 +33,8 @@
 		"format": "fluid-build --task format .",
 		"format:prettier": "prettier --write . --cache --ignore-path ../../../../.prettierignore",
 		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format"
+		"lint:fix": "fluid-build . --task eslint:fix --task format",
+		"organize-imports": "biome check . --organize-imports-enabled=true --apply"
 	},
 	"dependencies": {
 		"@fluid-experimental/tree": "workspace:~",

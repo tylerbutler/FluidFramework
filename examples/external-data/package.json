@@ -26,6 +26,7 @@
 		"lint": "fluid-build . --task lint",
 		"lint:fences": "npm run good-fences",
 		"lint:fix": "fluid-build . --task eslint:fix --task format",
+		"organize-imports": "biome check . --organize-imports-enabled=true --apply",
 		"prepack": "npm run webpack",
 		"rebuild": "npm run clean && npm run build",
 		"start": "start-server-and-test start:tinylicious 7070 start:app",

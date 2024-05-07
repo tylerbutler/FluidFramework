@@ -24,6 +24,7 @@
 		"format:prettier": "prettier --write . --cache --ignore-path ../../../../.prettierignore",
 		"lint": "fluid-build . --task lint",
 		"lint:fix": "fluid-build . --task eslint:fix --task format",
+		"organize-imports": "biome check . --organize-imports-enabled=true --apply",
 		"prepack": "npm run webpack",
 		"start": "npm run start:tinylicious",
 		"start:azure": "webpack serve --env FLUID_CLIENT=azure",
