@@ -3,6 +3,7 @@
 	"version": "5.4.0",
 	"description": "Shareable ESLint config for the Fluid Framework",
 	"homepage": "https://fluidframework.com",
+	"private": true,
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/microsoft/FluidFramework.git",
@@ -28,7 +29,7 @@
 		"test": "echo TODO: add tests"
 	},
 	"dependencies": {
-		"@fluid-internal/eslint-plugin-fluid": "^0.1.1",
+		"@fluid-internal/eslint-plugin-fluid": "workspace:~",
 		"@microsoft/tsdoc": "^0.14.2",
 		"@rushstack/eslint-patch": "~1.4.0",
 		"@rushstack/eslint-plugin": "~0.13.0",
