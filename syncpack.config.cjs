@@ -116,9 +116,11 @@ module.exports = {
 		{
 			label: "Must use tilde dependency ranges",
 			dependencies: [
-				"eslint-plugin-*",
-				"eslint-config-prettier",
+				// eslint and common plugin patterns
 				"eslint",
+				"*eslint-*",
+				"*/eslint-*",
+				"*eslint/*",
 				"less",
 				"prettier",
 				"typescript",
@@ -174,7 +176,6 @@ module.exports = {
 			dependencies: [
 				"@fluidframework/build-common",
 				"@fluidframework/common-utils",
-				"@fluidframework/eslint-config-fluid",
 				"@fluidframework/build-tools",
 				"@fluid-tools/build-cli",
 			],

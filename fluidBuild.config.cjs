@@ -169,7 +169,7 @@ module.exports = {
 		},
 
 		// Independent packages
-		"build": "common/build",
+		"build": "common/build/build-common",
 		"common-utils": "common/lib/common-utils",
 		"protocol-def": "common/lib/protocol-definitions",
 

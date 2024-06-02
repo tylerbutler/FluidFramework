@@ -16,5 +16,8 @@
 	"typeValidation": {
 		"disabled": true,
 		"broken": {}
+	},
+	"devDependencies": {
+		"@fluidframework/eslint-config-fluid": "workspace:~"
 	}
 }

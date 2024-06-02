@@ -129,7 +129,8 @@
 	"devDependencies": {
 		"@fluid-private/readme-command": "workspace:~",
 		"@fluidframework/build-common": "^2.0.3",
-		"@fluidframework/eslint-config-fluid": "^5.3.0",
+		"@fluidframework/eslint-config-fluid": "workspace:~",
+		"@fluid-internal/eslint-plugin-fluid": "workspace:~",
 		"@oclif/test": "^3.2.12",
 		"@types/async": "^3.2.20",
 		"@types/chai": "^4.3.5",
