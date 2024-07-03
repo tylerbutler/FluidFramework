@@ -44,3 +44,4 @@ export {
 	ReportKind,
 	toReportKind,
 } from "./release";
+export { type Changeset, type Commit, addChangesetsToChangelog, newChangeset } from "./changesets";

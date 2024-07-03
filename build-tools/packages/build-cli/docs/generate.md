@@ -5,6 +5,7 @@ Generate commands are used to create/update code, docs, readmes, etc.
 
 * [`flub generate buildVersion`](#flub-generate-buildversion)
 * [`flub generate bundleStats`](#flub-generate-bundlestats)
+* [`flub generate changelog PACKAGE_OR_RELEASE_GROUP`](#flub-generate-changelog-package_or_release_group)
 * [`flub generate packageJson`](#flub-generate-packagejson)
 * [`flub generate readme`](#flub-generate-readme)
 
@@ -54,6 +55,26 @@ FLAGS
 DESCRIPTION
   Find all bundle analysis artifacts and copy them into a central location to upload as build artifacts for later
   consumption
+```
+
+## `flub generate changelog PACKAGE_OR_RELEASE_GROUP`
+
+Generate a changelog based on changeset files.
+
+```
+USAGE
+  $ flub generate changelog PACKAGE_OR_RELEASE_GROUP [-v] [-t major|minor|patch]
+
+ARGUMENTS
+  PACKAGE_OR_RELEASE_GROUP  The name of a package or a release group.
+
+FLAGS
+  -t, --releaseType=<option>  The type of release that the changelog is being generated for.
+                              <options: major|minor|patch>
+  -v, --verbose               Verbose logging.
+
+DESCRIPTION
+  Generate a changelog based on changeset files.
 ```
 
 ## `flub generate packageJson`
