@@ -4,8 +4,10 @@
  */
 
 import * as fs from "fs";
-import { ITelemetryBaseEvent } from "@fluidframework/common-definitions";
-import { IFileLogger } from "./fileLogger";
+
+import { ITelemetryBaseEvent } from "@fluidframework/core-interfaces";
+
+import { IFileLogger } from "./fileLogger.js";
 
 /**
  * @internal

@@ -3,11 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { openDB, DBSchema, DeleteDBCallbacks, IDBPDatabase, deleteDB } from "idb";
-import { ICacheEntry } from "@fluidframework/odsp-driver-definitions";
-import { ITelemetryBaseLogger } from "@fluidframework/common-definitions";
-import { ChildLogger } from "@fluidframework/telemetry-utils";
-import { FluidCacheErrorEvent } from "./fluidCacheTelemetry";
+import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
+import { ICacheEntry } from "@fluidframework/odsp-driver-definitions/internal";
+import { createChildLogger } from "@fluidframework/telemetry-utils/internal";
+import { DBSchema, DeleteDBCallbacks, IDBPDatabase, deleteDB, openDB } from "idb";
+
+import { FluidCacheErrorEvent } from "./fluidCacheTelemetry.js";
 
 // The name of the database that we use for caching Fluid info.
 export const FluidDriverCacheDBName = "fluidDriverCache";
@@ -46,7 +47,7 @@ export function getFluidCacheIndexedDbInstance(
 					// Catch any error done when attempting to delete the older version.
 					// If the object does not exist db will throw.
 					// We can now assume that the old version is no longer there regardless.
-					ChildLogger.create(logger).sendErrorEvent(
+					createChildLogger({ logger }).sendErrorEvent(
 						{
 							eventName: FluidCacheErrorEvent.FluidCacheDeleteOldDbError,
 						},
@@ -71,8 +72,13 @@ export function getFluidCacheIndexedDbInstance(
 	});
 }
 
-// Deletes the indexed DB instance.
-// Warning this can throw an error in Firefox incognito, where accessing storage is prohibited.
+/**
+ * Deletes the indexed DB instance.
+ *
+ * @remarks Warning this can throw an error in Firefox incognito, where accessing storage is prohibited.
+ * @legacy
+ * @alpha
+ */
 export function deleteFluidCacheIndexDbInstance(
 	deleteDBCallbacks?: DeleteDBCallbacks,
 ): Promise<void> {

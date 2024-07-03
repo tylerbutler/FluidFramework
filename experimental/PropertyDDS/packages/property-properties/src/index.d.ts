@@ -858,10 +858,7 @@ declare module "@fluid-experimental/property-properties" {
 			 *  and shifts remaining values to the left.
 			 * E.g. [1, 2, 3, 4, 5]  .removeRange(1, 3) => [1, 5]
 			 */
-			removeRange(
-				in_offset: number,
-				in_deleteCount: number,
-			): Array<any> | Array<BaseProperty>;
+			removeRange(in_offset: number, in_deleteCount: number): Array<any> | Array<BaseProperty>;
 			/**
 			 * Sets the array properties elements to the content of the given array
 			 * All changed elements must already exist. This will overwrite existing elements.
@@ -1308,6 +1305,10 @@ declare module "@fluid-experimental/property-properties" {
 			 * is not known locally. The case of arrays is a a repetitive application of the scalar type.
 			 */
 			register(in_input: PropertyTemplate | object | string | any[]): void;
+			/**
+			 * Returns the array of the names of the registered types.
+			 */
+			listRegisteredTypes(): string[];
 			/**
 			 * Recursively parses the object of the specified type and returns the created
 			 * array of PropertySets Templates. It does the same thing as the registerFrom()
@@ -2273,6 +2274,8 @@ declare module "@fluid-experimental/property-properties" {
 			 * Extracts typeids directly referred to in a template
 			 */
 			public extractDependencies(): Array<any>;
+
+			public static extractDependencies(template: PropertyTemplateType): Array<any>;
 
 			constants: any[];
 

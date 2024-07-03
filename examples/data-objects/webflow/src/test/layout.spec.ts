@@ -3,18 +3,24 @@
  * Licensed under the MIT License.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-require("jsdom-global")("", { url: "http://localhost" });
-window.performance.mark ??= () => undefined as PerformanceMark;
-window.performance.measure ??= () => undefined as PerformanceMeasure;
+// eslint-disable-next-line import/no-unassigned-import
+import "jsdom-global/register.js";
+
+// 'jsdom-global' does not polyfill mark() and measure().  We stub them ourselves.
+window.performance.mark ??= () => undefined as unknown as PerformanceMark;
+window.performance.measure ??= () => undefined as unknown as PerformanceMeasure;
 
 import { strict as assert } from "assert";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import { ITestObjectProvider } from "@fluidframework/test-utils";
-import { describeLoaderCompat } from "@fluid-internal/test-version-utils";
-import { htmlFormatter } from "..";
-import { FlowDocument } from "../document";
-import { Layout } from "../view/layout";
+
+import { describeCompat } from "@fluid-private/test-version-utils";
+import {
+	ITestObjectProvider,
+	getContainerEntryPointBackCompat,
+} from "@fluidframework/test-utils/internal";
+
+import { FlowDocument } from "../document/index.js";
+import { htmlFormatter } from "../index.js";
+import { Layout } from "../view/layout.js";
 
 interface ISnapshotNode {
 	node: Node;
@@ -37,16 +43,19 @@ function expectTree(actual: Node, expected: ISnapshotNode) {
 	assert.strictEqual(i, children.length);
 }
 
-describeLoaderCompat("Layout", (getTestObjectProvider) => {
+describeCompat("Layout", "LoaderCompat", (getTestObjectProvider) => {
 	let doc: FlowDocument;
 	let root: HTMLElement;
 	let layout: Layout;
 
 	let provider: ITestObjectProvider;
-	before(async () => {
+	before(async function () {
+		// Initialization of 'compat LTS ^1.3.x - old loader' compat variant can take a couple seconds.
+		this.timeout(10000);
+
 		provider = getTestObjectProvider({ resetAfterEach: false });
 		const container = await provider.createContainer(FlowDocument.getFactory());
-		doc = await requestFluidObject<FlowDocument>(container, "default");
+		doc = await getContainerEntryPointBackCompat<FlowDocument>(container);
 	});
 
 	beforeEach(() => {
@@ -56,8 +65,11 @@ describeLoaderCompat("Layout", (getTestObjectProvider) => {
 
 	afterEach(() => {
 		layout.remove();
-		layout = undefined;
-		root = undefined;
+
+		// Out of paranoia, force setting to 'undefined' to ensure that 'layout' and 'root'
+		// are re-created between tests.
+		layout = undefined as any;
+		root = undefined as any;
 	});
 
 	const getHTML = () => root.innerHTML;

@@ -2,18 +2,29 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { strict as assert } from "assert";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { Client } from "../client";
-import { toRemovalInfo } from "../mergeTreeNodes";
-import { MergeTreeDeltaType, ReferenceType } from "../ops";
-import { TextSegment } from "../textSegment";
-import { DetachedReferencePosition } from "../referencePositions";
-import { LocalReferencePosition } from "../localReference";
-import { createClientsAtInitialState } from "./testClientLogger";
-import { TestClient } from "./";
+
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+
+import { Client } from "../client.js";
+import {
+	LocalReferencePosition,
+	SlidingPreference,
+	setValidateRefCount,
+} from "../localReference.js";
+import { getSlideToSegoff } from "../mergeTree.js";
+import { toRemovalInfo } from "../mergeTreeNodes.js";
+import { TrackingGroup, UnorderedTrackingGroup } from "../mergeTreeTracking.js";
+import { MergeTreeDeltaType, ReferenceType } from "../ops.js";
+import { DetachedReferencePosition } from "../referencePositions.js";
+import { TextSegment } from "../textSegment.js";
+
+import { TestClient } from "./testClient.js";
+import { createClientsAtInitialState } from "./testClientLogger.js";
+import { validateRefCount } from "./testUtils.js";
 
 function getSlideOnRemoveReferencePosition(
 	client: Client,
@@ -24,11 +35,19 @@ function getSlideOnRemoveReferencePosition(
 		referenceSequenceNumber: op.referenceSequenceNumber,
 		clientId: op.clientId,
 	});
-	segoff = client.getSlideToSegment(segoff);
+	segoff = getSlideToSegoff(segoff);
 	return segoff;
 }
 
 describe("MergeTree.Client", () => {
+	beforeEach(() => {
+		setValidateRefCount(validateRefCount);
+	});
+
+	afterEach(() => {
+		setValidateRefCount(undefined);
+	});
+
 	it("Remove segment of non-sliding local reference", () => {
 		const client1 = new TestClient();
 		const client2 = new TestClient();
@@ -167,7 +186,10 @@ describe("MergeTree.Client", () => {
 		client1.applyMsg(remove);
 		client2.applyMsg(remove);
 
-		assert.equal(client1.localReferencePositionToPosition(c1LocalRef), client2.getLength() - 1);
+		assert.equal(
+			client1.localReferencePositionToPosition(c1LocalRef),
+			client2.getLength() - 1,
+		);
 	});
 
 	it("Remove segments from end with sliding local reference", () => {
@@ -313,7 +335,7 @@ describe("MergeTree.Client", () => {
 			client1.localReferencePositionToPosition(c1LocalRef),
 			DetachedReferencePosition,
 		);
-		assert.notEqual(c1LocalRef.getSegment(), undefined);
+		assert.equal(c1LocalRef.getSegment(), undefined);
 	});
 
 	it("References can have offsets on removed segment", () => {
@@ -488,7 +510,7 @@ describe("MergeTree.Client", () => {
 		{
 			const segInfo = clients.A.getContainingSegment(9);
 			const segment = segInfo.segment;
-			assert(TextSegment.is(segment!));
+			assert(segment !== undefined && TextSegment.is(segment));
 			assert.strictEqual(segment.text[segInfo.offset!], "9");
 			const localRef = clients.A.createLocalReferencePosition(
 				segment,
@@ -505,7 +527,7 @@ describe("MergeTree.Client", () => {
 		{
 			const segInfo = clients.A.getContainingSegment(6);
 			const segment = segInfo.segment;
-			assert(TextSegment.is(segment!));
+			assert(segment !== undefined && TextSegment.is(segment));
 			assert.strictEqual(segment.text[segInfo.offset!], "B");
 			clients.A.createLocalReferencePosition(
 				segment,
@@ -576,6 +598,155 @@ describe("MergeTree.Client", () => {
 			client.removeRangeLocal(0, 2);
 			client.removeRangeRemote(0, 2, ++seq, seq - 1, "2");
 			assert(localRefA.getSegment() === originalSegment, "ref was removed");
+		});
+	});
+
+	it("slides to correct position with backward sliding preference", () => {
+		const client1 = new TestClient();
+		const client2 = new TestClient();
+
+		client1.startOrUpdateCollaboration("1");
+		client2.startOrUpdateCollaboration("2");
+
+		let seq = 0;
+		const insert1 = client1.makeOpMessage(client1.insertTextLocal(0, "abcXdef"), ++seq);
+		client1.applyMsg(insert1);
+		client2.applyMsg(insert1);
+
+		const segInfo = client1.getContainingSegment(3);
+
+		const localRef = client1.createLocalReferencePosition(
+			segInfo.segment!,
+			segInfo.offset,
+			ReferenceType.SlideOnRemove,
+			undefined,
+			SlidingPreference.BACKWARD,
+		);
+
+		assert.equal(client1.localReferencePositionToPosition(localRef), 3);
+
+		const insert2 = client1.makeOpMessage(client1.insertTextLocal(4, "ghi"), ++seq);
+		client1.applyMsg(insert2);
+		client2.applyMsg(insert2);
+
+		assert.equal(client1.localReferencePositionToPosition(localRef), 3);
+
+		const remove1 = client1.makeOpMessage(client1.removeRangeLocal(1, 4), ++seq);
+		client1.applyMsg(remove1);
+		client2.applyMsg(remove1);
+
+		assert.equal(client1.getText(), "aghidef");
+		assert.equal(client1.localReferencePositionToPosition(localRef), 0);
+		assert.equal(client2.getText(), "aghidef");
+		assert.equal(client2.localReferencePositionToPosition(localRef), 0);
+	});
+
+	const tgCases = [
+		{
+			name: "when the ref is not in a tracking group",
+			addRef: () => {},
+		},
+		{
+			name: "when the ref is in a TrackingGroup",
+			addRef: (ref: LocalReferencePosition) => {
+				const tg = new TrackingGroup();
+				tg.link(ref);
+			},
+		},
+		{
+			name: "when the ref is in an UnorderedTrackingGroup",
+			addRef: (ref: LocalReferencePosition) => {
+				const tg = new UnorderedTrackingGroup();
+				tg.link(ref);
+			},
+		},
+	];
+
+	describe("doesn't crash for remove ref then link to undefined", () => {
+		tgCases.forEach(({ name, addRef }) => {
+			it(name, () => {
+				const client1 = new TestClient();
+				const client2 = new TestClient();
+
+				client1.startOrUpdateCollaboration("1");
+				client2.startOrUpdateCollaboration("2");
+
+				let seq = 0;
+				const insert1 = client1.makeOpMessage(client1.insertTextLocal(0, "abcdef"), ++seq);
+				client1.applyMsg(insert1);
+				client2.applyMsg(insert1);
+
+				const segInfo = client1.getContainingSegment(3);
+
+				assert(segInfo.segment);
+
+				const localRef = client1.createLocalReferencePosition(
+					segInfo.segment,
+					segInfo.offset,
+					ReferenceType.SlideOnRemove,
+					undefined,
+				);
+				addRef(localRef);
+
+				assert.equal(localRef.getSegment(), segInfo.segment);
+
+				assert(segInfo.segment.localRefs);
+				assert(!segInfo.segment.localRefs.empty);
+
+				segInfo.segment.localRefs.removeLocalRef(localRef);
+				assert(segInfo.segment.localRefs.empty);
+				(localRef as any).link(undefined, 0, undefined);
+				assert(segInfo.segment.localRefs.empty);
+
+				assert.equal(segInfo.segment.localRefs.empty, true);
+				assert.equal(segInfo.segment.localRefs.has(localRef), false);
+				assert.equal(localRef.getSegment(), undefined);
+				assert.equal(localRef.getOffset(), 0);
+			});
+		});
+	});
+
+	describe("doesn't crash for link to undefined then remove ref", () => {
+		tgCases.forEach(({ name, addRef }) => {
+			it(name, () => {
+				const client1 = new TestClient();
+				const client2 = new TestClient();
+
+				client1.startOrUpdateCollaboration("1");
+				client2.startOrUpdateCollaboration("2");
+
+				let seq = 0;
+				const insert1 = client1.makeOpMessage(client1.insertTextLocal(0, "abcdef"), ++seq);
+				client1.applyMsg(insert1);
+				client2.applyMsg(insert1);
+
+				const segInfo = client1.getContainingSegment(3);
+
+				assert(segInfo.segment);
+
+				const localRef = client1.createLocalReferencePosition(
+					segInfo.segment,
+					segInfo.offset,
+					ReferenceType.SlideOnRemove,
+					undefined,
+				);
+				addRef(localRef);
+
+				assert.equal(localRef.getSegment(), segInfo.segment);
+
+				assert(segInfo.segment.localRefs);
+				assert(!segInfo.segment.localRefs.empty);
+
+				(localRef as any).link(undefined, 0, undefined);
+				assert(segInfo.segment.localRefs.empty);
+				segInfo.segment.localRefs.removeLocalRef(localRef);
+				assert(segInfo.segment.localRefs.empty);
+
+				assert.equal(segInfo.segment.localRefs.empty, true);
+				assert.equal(segInfo.segment.localRefs.has(localRef), false);
+				assert.equal(localRef.getSegment(), undefined);
+				assert.equal(localRef.getOffset(), 0);
+			});
 		});
 	});
 });

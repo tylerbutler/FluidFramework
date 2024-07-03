@@ -4,56 +4,69 @@
  */
 
 import { strict as assert } from "assert";
-import { IFluidHandle } from "@fluidframework/core-interfaces";
-import { ISummaryBlob } from "@fluidframework/protocol-definitions";
-import { IGCTestProvider, runGCTests } from "@fluid-internal/test-dds-utils";
+
+import { AttachState } from "@fluidframework/container-definitions";
+import type { IFluidHandleInternal } from "@fluidframework/core-interfaces/internal";
+import { ISummaryBlob } from "@fluidframework/driver-definitions";
 import {
-	MockFluidDataStoreRuntime,
 	MockContainerRuntimeFactory,
+	MockFluidDataStoreRuntime,
 	MockSharedObjectServices,
 	MockStorage,
-} from "@fluidframework/test-runtime-utils";
-import { ISerializableValue, IValueChanged } from "../../interfaces";
-import {
-	IMapSetOperation,
-	IMapDeleteOperation,
-	IMapClearOperation,
-	IMapKeyEditLocalOpMetadata,
-	IMapClearLocalOpMetadata,
-	MapLocalOpMetadata,
-} from "../../internalInterfaces";
-import { MapFactory, SharedMap } from "../../map";
-import { IMapOperation } from "../../mapKernel";
+} from "@fluidframework/test-runtime-utils/internal";
 
-function createConnectedMap(id: string, runtimeFactory: MockContainerRuntimeFactory): SharedMap {
+import { ISerializableValue, IValueChanged } from "../../interfaces.js";
+import {
+	IMapClearLocalOpMetadata,
+	IMapClearOperation,
+	IMapDeleteOperation,
+	IMapKeyEditLocalOpMetadata,
+	IMapSetOperation,
+	MapLocalOpMetadata,
+} from "../../internalInterfaces.js";
+import { AttributableMapClass, MapFactory } from "../../map.js";
+import { IMapOperation } from "../../mapKernel.js";
+
+function createConnectedMap(id: string, runtimeFactory: MockContainerRuntimeFactory): TestMap {
 	const dataStoreRuntime = new MockFluidDataStoreRuntime();
+
 	const containerRuntime = runtimeFactory.createContainerRuntime(dataStoreRuntime);
 	const services = {
-		deltaConnection: containerRuntime.createDeltaConnection(),
+		deltaConnection: dataStoreRuntime.createDeltaConnection(),
 		objectStorage: new MockStorage(),
 	};
-	const map = new SharedMap(id, dataStoreRuntime, MapFactory.Attributes);
+
+	const map = new TestMap(id, dataStoreRuntime, MapFactory.Attributes);
 	map.connect(services);
 	return map;
 }
 
-function createLocalMap(id: string): SharedMap {
-	const map = new SharedMap(id, new MockFluidDataStoreRuntime(), MapFactory.Attributes);
+function createDetachedMap(id: string): TestMap {
+	const dataStoreRuntime = new MockFluidDataStoreRuntime();
+	const map: TestMap = new TestMap(id, dataStoreRuntime, MapFactory.Attributes);
 	return map;
 }
 
-class TestSharedMap extends SharedMap {
-	public testApplyStashedOp(content: IMapOperation): MapLocalOpMetadata {
-		return this.applyStashedOp(content) as MapLocalOpMetadata;
+class TestMap extends AttributableMapClass {
+	private lastMetadata?: MapLocalOpMetadata;
+	public testApplyStashedOp(content: IMapOperation): MapLocalOpMetadata | undefined {
+		this.lastMetadata = undefined;
+		this.applyStashedOp(content);
+		return this.lastMetadata;
+	}
+
+	public submitLocalMessage(op: IMapOperation, localOpMetadata: unknown): void {
+		this.lastMetadata = localOpMetadata as MapLocalOpMetadata;
+		super.submitLocalMessage(op, localOpMetadata);
 	}
 }
 
 describe("Map", () => {
 	describe("Local state", () => {
-		let map: SharedMap;
+		let map: TestMap;
 
 		beforeEach(async () => {
-			map = createLocalMap("testMap");
+			map = createDetachedMap("testMap");
 		});
 
 		describe("API", () => {
@@ -89,21 +102,13 @@ describe("Map", () => {
 						true,
 						"local should be true for local action for valueChanged event",
 					);
-					assert.equal(
-						target,
-						dummyMap,
-						"target should be the map for valueChanged event",
-					);
+					assert.equal(target, dummyMap, "target should be the map for valueChanged event");
 				});
 				dummyMap.on("clear", (local, target) => {
 					assert.equal(clearExpected, true, "clear event not expected");
 					clearExpected = false;
 
-					assert.equal(
-						local,
-						true,
-						"local should be true for local action  for clear event",
-					);
+					assert.equal(local, true, "local should be true for local action  for clear event");
 					assert.equal(target, dummyMap, "target should be the map for clear event");
 				});
 				dummyMap.on("error", (error) => {
@@ -152,7 +157,7 @@ describe("Map", () => {
 				map.set("first", "second");
 				map.set("third", "fourth");
 				map.set("fifth", "sixth");
-				const subMap = createLocalMap("subMap");
+				const subMap = createDetachedMap("subMap");
 				map.set("object", subMap.handle);
 
 				const summaryContent = (map.getAttachSummary().summary.tree.header as ISummaryBlob)
@@ -160,7 +165,7 @@ describe("Map", () => {
 				const subMapHandleUrl = subMap.handle.absolutePath;
 				assert.equal(
 					summaryContent,
-					`{"blobs":[],"content":{"first":{"type":"Plain","value":"second"},"third":{"type":"Plain","value":"fourth"},"fifth":{"type":"Plain","value":"sixth"},"object":{"type":"Plain","value":{"type":"__fluid_handle__","url":"${subMapHandleUrl}"}}}}`,
+					`{"blobs":[],"content":{"first":{"type":"Plain","value":"second","attribution":{"type":"detached","id":0}},"third":{"type":"Plain","value":"fourth","attribution":{"type":"detached","id":0}},"fifth":{"type":"Plain","value":"sixth","attribution":{"type":"detached","id":0}},"object":{"type":"Plain","value":{"type":"__fluid_handle__","url":"${subMapHandleUrl}"},"attribution":{"type":"detached","id":0}}}}`,
 				);
 			});
 
@@ -169,7 +174,7 @@ describe("Map", () => {
 				map.set("third", "fourth");
 				map.set("fifth", undefined);
 				assert.ok(map.has("fifth"));
-				const subMap = createLocalMap("subMap");
+				const subMap = createDetachedMap("subMap");
 				map.set("object", subMap.handle);
 
 				const summaryContent = (map.getAttachSummary().summary.tree.header as ISummaryBlob)
@@ -177,13 +182,13 @@ describe("Map", () => {
 				const subMapHandleUrl = subMap.handle.absolutePath;
 				assert.equal(
 					summaryContent,
-					`{"blobs":[],"content":{"first":{"type":"Plain","value":"second"},"third":{"type":"Plain","value":"fourth"},"fifth":{"type":"Plain"},"object":{"type":"Plain","value":{"type":"__fluid_handle__","url":"${subMapHandleUrl}"}}}}`,
+					`{"blobs":[],"content":{"first":{"type":"Plain","value":"second","attribution":{"type":"detached","id":0}},"third":{"type":"Plain","value":"fourth","attribution":{"type":"detached","id":0}},"fifth":{"type":"Plain","attribution":{"type":"detached","id":0}},"object":{"type":"Plain","value":{"type":"__fluid_handle__","url":"${subMapHandleUrl}"},"attribution":{"type":"detached","id":0}}}}`,
 				);
 			});
 
 			it("Should serialize an object with nested handles", async () => {
-				const subMap = createLocalMap("subMap");
-				const subMap2 = createLocalMap("subMap2");
+				const subMap = createDetachedMap("subMap");
+				const subMap2 = createDetachedMap("subMap2");
 				const containingObject = {
 					subMapHandle: subMap.handle,
 					nestedObj: {
@@ -198,7 +203,7 @@ describe("Map", () => {
 					.content;
 				assert.equal(
 					summaryContent,
-					`{"blobs":[],"content":{"object":{"type":"Plain","value":{"subMapHandle":{"type":"__fluid_handle__","url":"${subMapHandleUrl}"},"nestedObj":{"subMap2Handle":{"type":"__fluid_handle__","url":"${subMap2HandleUrl}"}}}}}}`,
+					`{"blobs":[],"content":{"object":{"type":"Plain","value":{"subMapHandle":{"type":"__fluid_handle__","url":"${subMapHandleUrl}"},"nestedObj":{"subMap2Handle":{"type":"__fluid_handle__","url":"${subMap2HandleUrl}"}}},"attribution":{"type":"detached","id":0}}}}`,
 				);
 			});
 
@@ -239,6 +244,10 @@ describe("Map", () => {
 						key: {
 							type: "Plain",
 							value: "value",
+							attribution: {
+								type: "detached",
+								id: 0,
+							},
 						},
 					},
 				});
@@ -262,9 +271,9 @@ describe("Map", () => {
 			it("new serialization format for big maps", async () => {
 				map.set("key", "value");
 
-				// 40K char string
+				// 160K char string
 				let longString = "01234567890";
-				for (let i = 0; i < 12; i++) {
+				for (let i = 0; i < 14; i++) {
 					longString = longString + longString;
 				}
 				map.set("longValue", longString);
@@ -282,10 +291,18 @@ describe("Map", () => {
 						key: {
 							type: "Plain",
 							value: "value",
+							attribution: {
+								type: "detached",
+								id: 0,
+							},
 						},
 						zzz: {
 							type: "Plain",
 							value: "the end",
+							attribution: {
+								type: "detached",
+								id: 0,
+							},
 						},
 					},
 				});
@@ -293,6 +310,10 @@ describe("Map", () => {
 					longValue: {
 						type: "Plain",
 						value: longString,
+						attribution: {
+							type: "detached",
+							id: 0,
+						},
 					},
 				});
 
@@ -342,8 +363,10 @@ describe("Map", () => {
 			 * when it gets a remote op with the same key, it ignores it as it has a pending set with the same key.
 			 */
 			it("should correctly process a set operation sent in local state", async () => {
-				const dataStoreRuntime1 = new MockFluidDataStoreRuntime();
-				const map1 = new SharedMap("testMap1", dataStoreRuntime1, MapFactory.Attributes);
+				const dataStoreRuntime1 = new MockFluidDataStoreRuntime({
+					attachState: AttachState.Detached,
+				});
+				const map1 = new TestMap("testMap1", dataStoreRuntime1, MapFactory.Attributes);
 
 				// Set a key in local state.
 				const key = "testKey";
@@ -353,22 +376,20 @@ describe("Map", () => {
 				// Load a new SharedMap in connected state from the snapshot of the first one.
 				const containerRuntimeFactory = new MockContainerRuntimeFactory();
 				const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
-				const containerRuntime2 =
-					containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
+				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
 				const services2 = MockSharedObjectServices.createFromSummary(
 					map1.getAttachSummary().summary,
 				);
-				services2.deltaConnection = containerRuntime2.createDeltaConnection();
+				services2.deltaConnection = dataStoreRuntime2.createDeltaConnection();
 
-				const map2 = new SharedMap("testMap2", dataStoreRuntime2, MapFactory.Attributes);
+				const map2 = new TestMap("testMap2", dataStoreRuntime2, MapFactory.Attributes);
 				await map2.load(services2);
 
 				// Now connect the first SharedMap
-				dataStoreRuntime1.local = false;
-				const containerRuntime1 =
-					containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
+				dataStoreRuntime1.setAttachState(AttachState.Attached);
+				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
 				const services1 = {
-					deltaConnection: containerRuntime1.createDeltaConnection(),
+					deltaConnection: dataStoreRuntime1.createDeltaConnection(),
 					objectStorage: new MockStorage(undefined),
 				};
 				map1.connect(services1);
@@ -393,13 +414,15 @@ describe("Map", () => {
 				const serializable: ISerializableValue = { type: "Plain", value: "value" };
 				const dataStoreRuntime1 = new MockFluidDataStoreRuntime();
 				const op: IMapSetOperation = { type: "set", key: "key", value: serializable };
-				const map1 = new TestSharedMap(
-					"testMap1",
-					dataStoreRuntime1,
-					MapFactory.Attributes,
-				);
+				const map1 = new TestMap("testMap1", dataStoreRuntime1, MapFactory.Attributes);
+				const containerRuntimeFactory = new MockContainerRuntimeFactory();
+				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
+				map1.connect({
+					deltaConnection: dataStoreRuntime1.createDeltaConnection(),
+					objectStorage: new MockStorage(undefined),
+				});
 				let metadata = map1.testApplyStashedOp(op);
-				assert.equal(metadata.type, "add");
+				assert.equal(metadata?.type, "add");
 				assert.equal(metadata.pendingMessageId, 0);
 				const editmetadata = map1.testApplyStashedOp(op) as IMapKeyEditLocalOpMetadata;
 				assert.equal(editmetadata.type, "edit");
@@ -408,7 +431,7 @@ describe("Map", () => {
 				const serializable2: ISerializableValue = { type: "Plain", value: "value2" };
 				const op2: IMapSetOperation = { type: "set", key: "key2", value: serializable2 };
 				metadata = map1.testApplyStashedOp(op2);
-				assert.equal(metadata.type, "add");
+				assert.equal(metadata?.type, "add");
 				assert.equal(metadata.pendingMessageId, 2);
 				const op3: IMapDeleteOperation = { type: "delete", key: "key2" };
 				metadata = map1.testApplyStashedOp(op3) as IMapKeyEditLocalOpMetadata;
@@ -423,12 +446,54 @@ describe("Map", () => {
 				assert.equal(metadata.previousMap?.has("key2"), false);
 			});
 		});
+
+		describe("Attributor", () => {
+			it("should retrive proper attribution in detached state", async () => {
+				map = createDetachedMap("testMap");
+
+				map.set("key1", 1);
+				map.set("key2", 2);
+
+				assert.deepEqual(
+					map.getAttribution("key1"),
+					{ type: "detached", id: 0 },
+					"the first entry should have detached attribution",
+				);
+				assert.deepEqual(
+					map.getAttribution("key2"),
+					{ type: "detached", id: 0 },
+					"the second entry should have detached attribution",
+				);
+
+				// load a new map from the snapshot
+				const services = MockSharedObjectServices.createFromSummary(
+					map.getAttachSummary().summary,
+				);
+				const map2 = new TestMap(
+					"map2",
+					new MockFluidDataStoreRuntime(),
+					MapFactory.Attributes,
+				);
+				await map2.load(services);
+
+				assert.deepEqual(
+					map2.getAttribution("key1"),
+					{ type: "detached", id: 0 },
+					"the first entry of the loaded map should have detached attribution",
+				);
+				assert.deepEqual(
+					map2.getAttribution("key2"),
+					{ type: "detached", id: 0 },
+					"the second entry of the loaded map should have detached attribution",
+				);
+			});
+		});
 	});
 
 	describe("Connected state", () => {
 		let containerRuntimeFactory: MockContainerRuntimeFactory;
-		let map1: SharedMap;
-		let map2: SharedMap;
+		let map1: TestMap;
+		let map2: TestMap;
 
 		beforeEach(async () => {
 			containerRuntimeFactory = new MockContainerRuntimeFactory();
@@ -450,11 +515,7 @@ describe("Map", () => {
 					assert.equal(map1.get("test"), value, "could not retrieve key");
 
 					// Verify the remote SharedMap
-					assert.equal(
-						map2.get("test"),
-						value,
-						"could not retrieve key from the remote map",
-					);
+					assert.equal(map2.get("test"), value, "could not retrieve key from the remote map");
 				});
 			});
 
@@ -476,11 +537,7 @@ describe("Map", () => {
 					assert.equal(map1.has("inSet"), true, "could not find the key");
 
 					// Verify the remote SharedMap
-					assert.equal(
-						map2.has("inSet"),
-						true,
-						"could not find the key in the remote map",
-					);
+					assert.equal(map2.has("inSet"), true, "could not find the key in the remote map");
 				});
 			});
 
@@ -496,26 +553,18 @@ describe("Map", () => {
 					assert.equal(map1.get("test"), value, "could not get the set key");
 
 					// Verify the remote SharedMap
-					assert.equal(
-						map2.has("test"),
-						true,
-						"could not find the set key in remote map",
-					);
-					assert.equal(
-						map2.get("test"),
-						value,
-						"could not get the set key from remote map",
-					);
+					assert.equal(map2.has("test"), true, "could not find the set key in remote map");
+					assert.equal(map2.get("test"), value, "could not get the set key from remote map");
 				});
 
 				it("Should be able to set a shared object handle as a key", () => {
-					const subMap = createLocalMap("subMap");
+					const subMap = createDetachedMap("subMap");
 					map1.set("test", subMap.handle);
 
 					containerRuntimeFactory.processAllMessages();
 
 					// Verify the local SharedMap
-					const localSubMap = map1.get<IFluidHandle>("test");
+					const localSubMap = map1.get<IFluidHandleInternal>("test");
 					assert(localSubMap);
 					assert.equal(
 						localSubMap.absolutePath,
@@ -524,7 +573,7 @@ describe("Map", () => {
 					);
 
 					// Verify the remote SharedMap
-					const remoteSubMap = map2.get<IFluidHandle>("test");
+					const remoteSubMap = map2.get<IFluidHandleInternal>("test");
 					assert(remoteSubMap);
 					assert.equal(
 						remoteSubMap.absolutePath,
@@ -534,8 +583,8 @@ describe("Map", () => {
 				});
 
 				it("Should be able to set and retrieve a plain object with nested handles", async () => {
-					const subMap = createLocalMap("subMap");
-					const subMap2 = createLocalMap("subMap2");
+					const subMap = createDetachedMap("subMap");
+					const subMap2 = createDetachedMap("subMap2");
 					const containingObject = {
 						subMapHandle: subMap.handle,
 						nestedObj: {
@@ -608,11 +657,7 @@ describe("Map", () => {
 					assert.equal(map1.get("test"), value1, "could not get the set key");
 
 					// Verify the SharedMap with 2 pending messages
-					assert.equal(
-						map2.has("test"),
-						true,
-						"could not find the set key in pending map",
-					);
+					assert.equal(map2.has("test"), true, "could not find the set key in pending map");
 					assert.equal(
 						map2.get("test"),
 						pending2,
@@ -626,11 +671,7 @@ describe("Map", () => {
 					assert.equal(map1.get("test"), pending1, "could not get the set key");
 
 					// Verify the SharedMap with 1 pending message
-					assert.equal(
-						map2.has("test"),
-						true,
-						"could not find the set key in pending map",
-					);
+					assert.equal(map2.has("test"), true, "could not find the set key in pending map");
 					assert.equal(
 						map2.get("test"),
 						pending2,
@@ -754,15 +795,8 @@ describe("Map", () => {
 
 					// Verify the remote SharedMap
 					for (const [key, value] of map2.entries()) {
-						assert.ok(
-							set.has(key),
-							"the key in remote map should be present in the set",
-						);
-						assert.equal(
-							key,
-							value,
-							"the value should match the set value in the remote map",
-						);
+						assert.ok(set.has(key), "the key in remote map should be present in the set");
+						assert.equal(key, value, "the value should match the set value in the remote map");
 						assert.equal(map2.get(key), value, "could not get key in the remote map");
 						set.delete(key);
 					}
@@ -771,85 +805,163 @@ describe("Map", () => {
 				});
 			});
 		});
-	});
 
-	describe("Garbage Collection", () => {
-		class GCSharedMapProvider implements IGCTestProvider {
-			private subMapCount = 0;
-			private _expectedRoutes: string[] = [];
-			private readonly map1: SharedMap;
-			private readonly map2: SharedMap;
-			private readonly containerRuntimeFactory: MockContainerRuntimeFactory;
+		describe("Attributor", () => {
+			beforeEach(() => {
+				containerRuntimeFactory = new MockContainerRuntimeFactory();
+				// Connect the first map with attribution enabled.
+				map1 = createConnectedMap("map1", containerRuntimeFactory);
+				// Create the second map with attribution enabled.
+				map2 = createConnectedMap("map2", containerRuntimeFactory);
+			});
 
-			public constructor() {
-				this.containerRuntimeFactory = new MockContainerRuntimeFactory();
-				this.map1 = createConnectedMap("map1", this.containerRuntimeFactory);
-				this.map2 = createConnectedMap("map2", this.containerRuntimeFactory);
-			}
+			it("Can retrieve proper attribution information with set/delete key operations", () => {
+				map1.set("key1", 1);
+				map1.set("key2", 2);
+				map2.set("key1", 3);
 
-			/**
-			 * {@inheritDoc @fluid-internal/test-dds-utils#IGCTestProvider.sharedObject}
-			 */
-			public get sharedObject(): SharedMap {
-				// Return the remote SharedMap because we want to verify its summary data.
-				return this.map2;
-			}
+				containerRuntimeFactory.processSomeMessages(1);
 
-			/**
-			 * {@inheritDoc @fluid-internal/test-dds-utils#IGCTestProvider.expectedOutboundRoutes}
-			 */
-			public get expectedOutboundRoutes(): string[] {
-				return this._expectedRoutes;
-			}
-
-			/**
-			 * {@inheritDoc @fluid-internal/test-dds-utils#IGCTestProvider.addOutboundRoutes}
-			 */
-			public async addOutboundRoutes(): Promise<void> {
-				const newSubMapId = `subMap-${++this.subMapCount}`;
-				const subMap = createLocalMap(newSubMapId);
-				this.map1.set(newSubMapId, subMap.handle);
-				this._expectedRoutes.push(subMap.handle.absolutePath);
-				this.containerRuntimeFactory.processAllMessages();
-			}
-
-			/**
-			 * {@inheritDoc @fluid-internal/test-dds-utils#IGCTestProvider.deleteOutboundRoutes}
-			 */
-			public async deleteOutboundRoutes(): Promise<void> {
-				// Delete the last handle that was added.
-				const subMapId = `subMap-${this.subMapCount}`;
-				const deletedHandle = this.map1.get<IFluidHandle>(subMapId);
-				assert(deletedHandle, "Route must be added before deleting");
-
-				this.map1.delete(subMapId);
-				// Remove deleted handle's route from expected routes.
-				this._expectedRoutes = this._expectedRoutes.filter(
-					(route) => route !== deletedHandle.absolutePath,
+				assert.deepEqual(
+					map1.getAttribution("key1"),
+					{ type: "op", seq: 1 },
+					"the first entry of map1 should have correct op-based attribution",
 				);
-				this.containerRuntimeFactory.processAllMessages();
-			}
+				assert.deepEqual(
+					map1.getAttribution("key2"),
+					{ type: "local" },
+					"the second entry of map1 should have valid local attribution",
+				);
+				assert.deepEqual(
+					map2.getAttribution("key1"),
+					{ type: "local" },
+					"the first entry of map2 should have valid local attribution",
+				);
+				assert.equal(
+					map2.getAttribution("key2"),
+					undefined,
+					"the second entry of map2 should not have valid attribution",
+				);
 
-			/**
-			 * {@inheritDoc @fluid-internal/test-dds-utils#IGCTestProvider.addNestedHandles}
-			 */
-			public async addNestedHandles(): Promise<void> {
-				const subMapId1 = `subMap-${++this.subMapCount}`;
-				const subMapId2 = `subMap-${++this.subMapCount}`;
-				const subMap = createLocalMap(subMapId1);
-				const subMap2 = createLocalMap(subMapId2);
-				const containingObject = {
-					subMapHandle: subMap.handle,
-					nestedObj: {
-						subMap2Handle: subMap2.handle,
-					},
-				};
-				this.map1.set(subMapId2, containingObject);
-				this._expectedRoutes.push(subMap.handle.absolutePath, subMap2.handle.absolutePath);
-				this.containerRuntimeFactory.processAllMessages();
-			}
-		}
+				containerRuntimeFactory.processSomeMessages(2);
 
-		runGCTests(GCSharedMapProvider);
+				assert.deepEqual(
+					map1.getAttribution("key1"),
+					{ type: "op", seq: 3 },
+					"the first entry of map1 should have correct op-based attribution",
+				);
+				assert.deepEqual(
+					map1.getAttribution("key2"),
+					{ type: "op", seq: 2 },
+					"the second entry of map1 should have correct op-based attribution",
+				);
+				assert.deepEqual(
+					map2.getAttribution("key1"),
+					{ type: "op", seq: 3 },
+					"the first entry of map2 should have correct op-based attribution",
+				);
+				assert.deepEqual(
+					map2.getAttribution("key2"),
+					{ type: "op", seq: 2 },
+					"the second entry of map2 should have correct op-based attribution",
+				);
+
+				// Delete an entry and check the attribution
+				map1.delete("key2");
+				containerRuntimeFactory.processSomeMessages(1);
+
+				assert.deepEqual(
+					map1.getAttribution("key1"),
+					{ type: "op", seq: 3 },
+					"the first entry of map1 should have correct op-based attribution",
+				);
+				assert.equal(
+					map1.getAttribution("key2"),
+					undefined,
+					"the attribution of second entry of map1 should be removed",
+				);
+				assert.deepEqual(
+					map2.getAttribution("key1"),
+					{ type: "op", seq: 3 },
+					"the first entry of map2 should have correct op-based attribution",
+				);
+				assert.equal(
+					map2.getAttribution("key2"),
+					undefined,
+					"the attribution of second entry of map2 should be removed",
+				);
+			});
+
+			it("Can remove attribution table after the clearance", () => {
+				map1.set("key1", 1);
+				map1.set("key2", 2);
+				map2.set("key1", 3);
+				map1.delete("key2");
+				map2.clear();
+
+				containerRuntimeFactory.processAllMessages();
+
+				assert.equal(
+					map1.getAllAttribution()?.size,
+					0,
+					"The attribution table of map1 should be cleared",
+				);
+				assert.equal(
+					map2.getAllAttribution()?.size,
+					0,
+					"The attribution table of map2 should be cleared",
+				);
+			});
+
+			it("Can retrieve proper attribution information after summarization/loading", async () => {
+				map1.set("key1", 1);
+				map2.set("key2", 2);
+				map2.set("key1", 3);
+
+				containerRuntimeFactory.processAllMessages();
+
+				const service = MockSharedObjectServices.createFromSummary(
+					map1.getAttachSummary().summary,
+				);
+				const map3 = new TestMap(
+					"map3",
+					new MockFluidDataStoreRuntime(),
+					MapFactory.Attributes,
+				);
+				await map3.load(service);
+
+				assert.deepEqual(
+					map3.getAttribution("key1"),
+					{ type: "op", seq: 3 },
+					"The loaded map should have valid op-based attribution for the first entry",
+				);
+
+				assert.deepEqual(
+					map3.getAttribution("key2"),
+					{ type: "op", seq: 2 },
+					"The loaded map should have valid op-based attribution for the second entry",
+				);
+			});
+
+			it("can update attribution properly while applying stashed ops", async () => {
+				const serializable: ISerializableValue = { type: "Plain", value: "value" };
+				const op: IMapSetOperation = { type: "set", key: "key", value: serializable };
+				map1.testApplyStashedOp(op);
+				assert.deepEqual(map1.getAttribution("key"), { type: "local" });
+
+				const serializable2: ISerializableValue = { type: "Plain", value: "value2" };
+				const op2: IMapSetOperation = { type: "set", key: "key2", value: serializable2 };
+				map1.testApplyStashedOp(op2);
+				assert.deepEqual(map1.getAttribution("key2"), { type: "local" });
+
+				const op3: IMapDeleteOperation = { type: "delete", key: "key2" };
+				map1.testApplyStashedOp(op3);
+				assert.equal(map1.getAttribution("key2"), undefined);
+
+				const op4: IMapClearOperation = { type: "clear" };
+				map1.testApplyStashedOp(op4);
+				assert.equal(map1.getAllAttribution()?.size, 0);
+			});
+		});
 	});
 });

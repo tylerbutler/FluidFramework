@@ -4,16 +4,21 @@
  */
 
 import { strict as assert } from "assert";
-import { PropertySet } from "@fluidframework/merge-tree";
-import { IFluidDataStoreContext } from "@fluidframework/runtime-definitions";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import { ITestObjectProvider } from "@fluidframework/test-utils";
-import { describeLoaderCompat } from "@fluid-internal/test-version-utils";
-import { ITable } from "../table";
-import { TableDocument } from "../document";
-import { createTableWithInterception } from "../interception";
 
-describeLoaderCompat("Table Document with Interception", (getTestObjectProvider) => {
+import { describeCompat } from "@fluid-private/test-version-utils";
+import { IFluidDataStoreContext } from "@fluidframework/runtime-definitions/internal";
+import { PropertySet } from "@fluidframework/sequence/internal";
+import {
+	ITestObjectProvider,
+	getContainerEntryPointBackCompat,
+} from "@fluidframework/test-utils/internal";
+
+import { TableDocument } from "../document.js";
+// eslint-disable-next-line import/no-internal-modules
+import { createTableWithInterception } from "../interception/index.js";
+import { ITable } from "../table.js";
+
+describeCompat("Table Document with Interception", "LoaderCompat", (getTestObjectProvider) => {
 	describe("Simple User Attribution", () => {
 		const userAttributes = { userId: "Fake User" };
 		let tableDocument: TableDocument;
@@ -63,7 +68,7 @@ describeLoaderCompat("Table Document with Interception", (getTestObjectProvider)
 		beforeEach(async () => {
 			provider = getTestObjectProvider();
 			const container = await provider.createContainer(TableDocument.getFactory());
-			tableDocument = await requestFluidObject<TableDocument>(container, "default");
+			tableDocument = await getContainerEntryPointBackCompat<TableDocument>(container);
 
 			// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 			componentContext = {
@@ -203,11 +208,7 @@ describeLoaderCompat("Table Document with Interception", (getTestObjectProvider)
 			function recursiveInterceptionCb(properties?: PropertySet) {
 				const ss = useWrapper ? tableDocumentWithInterception : tableDocument;
 				// Annotate the first row and column.
-				ss.setCellValue(
-					cellInRecursiveCb.row,
-					cellInRecursiveCb.col,
-					cellInRecursiveCb.value,
-				);
+				ss.setCellValue(cellInRecursiveCb.row, cellInRecursiveCb.col, cellInRecursiveCb.value);
 				return { ...properties, ...userAttributes };
 			}
 
@@ -229,6 +230,7 @@ describeLoaderCompat("Table Document with Interception", (getTestObjectProvider)
 				tableDocumentWithInterception.setCellValue(cell.row, cell.col, cell.value);
 			} catch (error: any) {
 				assert.strictEqual(
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 					error.message,
 					"Interception wrapper method called recursively from the interception callback",
 					"We should have caught an assert in setCellValue because it detects an infinite recursion",

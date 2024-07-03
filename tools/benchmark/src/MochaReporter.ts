@@ -3,11 +3,16 @@
  * Licensed under the MIT License.
  */
 
-import { Runner, Suite, Test } from "mocha";
 import chalk from "chalk";
+import { Runner, Suite, Test } from "mocha";
+
 import { isChildProcess, ReporterOptions } from "./Configuration";
 import { BenchmarkReporter } from "./Reporter";
-import { getName, getSuiteName } from "./ReporterUtilities";
+import { getName } from "./ReporterUtilities";
+// TODO: this file should be moved in with the mocha specific stuff, but is left where it is for now to avoid breaking users of this reporter.
+// Since it's not moved yet, it needs this lint suppression to do this import:
+// eslint-disable-next-line import/no-internal-modules
+import { getSuiteName } from "./mocha/mochaReporterUtilities";
 import { BenchmarkData, BenchmarkResult } from "./runBenchmark";
 
 /**
@@ -21,7 +26,7 @@ import { BenchmarkData, BenchmarkResult } from "./runBenchmark";
  *
  * See https://mochajs.org/api/tutorial-custom-reporter.html for more information about custom mocha reporters.
  */
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class, unicorn/prefer-module
 module.exports = class {
 	public constructor(runner: Runner, options?: { reporterOptions?: ReporterOptions }) {
 		const benchmarkReporter = new BenchmarkReporter(options?.reporterOptions?.reportDir);
@@ -39,9 +44,7 @@ module.exports = class {
 				});
 			})
 			.on(Runner.constants.EVENT_TEST_FAIL, (test, err) => {
-				console.error(
-					chalk.red(`Test ${test.fullTitle()} failed with error: '${err.message}'`),
-				);
+				console.error(chalk.red(`Test ${test.fullTitle()} failed with error: `, err));
 			})
 			.on(Runner.constants.EVENT_TEST_END, (test: Test) => {
 				// Type signature for `Test.state` indicates it will never be 'pending',

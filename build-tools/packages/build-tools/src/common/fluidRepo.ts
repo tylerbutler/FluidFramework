@@ -2,48 +2,50 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import * as path from "path";
 
-import { ReleaseVersion, VersionBumpType } from "@fluid-tools/version-tools";
+import {
+	DEFAULT_INTERDEPENDENCY_RANGE,
+	InterdependencyRange,
+	VersionBumpType,
+} from "@fluid-tools/version-tools";
 
-import { getFluidBuildConfig } from "./fluidUtils";
-import { Logger, defaultLogger } from "./logging";
-import { MonoRepo, MonoRepoKind, isMonoRepoKind } from "./monoRepo";
-import { Package, Packages, ScriptDependencies } from "./npmPackage";
+import registerDebug from "debug";
+import { TaskDefinitionsOnDisk } from "./fluidTaskDefinitions";
+import { loadFluidBuildConfig } from "./fluidUtils";
+import { MonoRepo } from "./monoRepo";
+import { Package, Packages } from "./npmPackage";
 import { ExecAsyncResult } from "./utils";
+const traceInit = registerDebug("fluid-build:init");
 
 /**
  * Fluid build configuration that is expected in the repo-root package.json.
  */
 export interface IFluidBuildConfig {
 	/**
-	 * A mapping of package or release group names to metadata about the package or release group. This can only be
-	 * configured in the rrepo-wide Fluid build config (the repo-root package.json).
+	 * Build tasks and dependencies definitions
 	 */
-	repoPackages: {
+	tasks?: TaskDefinitionsOnDisk;
+
+	/**
+	 * A mapping of package or release group names to metadata about the package or release group. This can only be
+	 * configured in the repo-wide Fluid build config (the repo-root package.json).
+	 */
+	repoPackages?: {
 		[name: string]: IFluidRepoPackageEntry;
 	};
 
 	/**
-	 * dependencies defined here will be incorporated into fluid-build's build graph. This can be used to manually
-	 * fluid-build about dependencies it doesn't automatically detect.
-	 */
-	buildDependencies?: {
-		merge?: {
-			[key: string]: ScriptDependencies;
-		};
-	};
-
-	/**
-	 * @deprecated
-	 */
-	generatorName?: string;
-
-	/**
-	 * Policy configuration for the `check:policy` command. This can only be configured in the rrepo-wide Fluid build
+	 * Policy configuration for the `check:policy` command. This can only be configured in the repo-wide Fluid build
 	 * config (the repo-root package.json).
 	 */
 	policy?: PolicyConfig;
+
+	/**
+	 * Configuration for assert tagging.
+	 */
+	assertTagging?: AssertTaggingConfig;
 
 	/**
 	 * A mapping of branch names to previous version baseline styles. The type test generator takes this information
@@ -134,14 +136,128 @@ export type PreviousVersionStyle =
 export interface PolicyConfig {
 	additionalLockfilePaths?: string[];
 	pnpmSinglePackageWorkspace?: string[];
+	fluidBuildTasks: {
+		tsc: {
+			ignoreTasks: string[];
+			ignoreDependencies: string[];
+			ignoreDevDependencies: string[];
+		};
+	};
 	dependencies?: {
-		requireTilde?: string[];
+		commandPackages: [string, string][];
 	};
 	/**
 	 * An array of strings/regular expressions. Paths that match any of these expressions will be completely excluded from
 	 * policy-check.
 	 */
 	exclusions?: string[];
+
+	/**
+	 * An object with handler name as keys that maps to an array of strings/regular expressions to
+	 * exclude that rule from being checked.
+	 */
+	handlerExclusions?: { [rule: string]: string[] };
+
+	packageNames?: PackageNamePolicyConfig;
+
+	/**
+	 * (optional) requirements to enforce against each public package.
+	 */
+	publicPackageRequirements?: PackageRequirements;
+}
+
+export interface AssertTaggingConfig {
+	assertionFunctions: { [functionName: string]: number };
+
+	/**
+	 * An array of paths under which assert tagging applies to. If this setting is provided, only packages whose paths
+	 * match the regular expressions in this setting will be assert-tagged.
+	 */
+	enabledPaths?: RegExp[];
+}
+
+/**
+ * Configuration for package naming and publication policies.
+ */
+export interface PackageNamePolicyConfig {
+	/**
+	 * A list of package scopes that are permitted in the repo.
+	 */
+	allowedScopes?: string[];
+	/**
+	 * A list of packages that have no scope.
+	 */
+	unscopedPackages?: string[];
+	/**
+	 * Packages that must be published.
+	 */
+	mustPublish: {
+		/**
+		 * A list of package names or scopes that must publish to npm, and thus should never be marked private.
+		 */
+		npm?: string[];
+
+		/**
+		 * A list of package names or scopes that must publish to an internal feed, and thus should always be marked
+		 * private.
+		 */
+		internalFeed?: string[];
+	};
+
+	/**
+	 * Packages that may or may not be published.
+	 */
+	mayPublish: {
+		/**
+		 * A list of package names or scopes that may publish to npm, and thus might or might not be marked private.
+		 */
+		npm?: string[];
+
+		/**
+		 * A list of package names or scopes that must publish to an internal feed, and thus might or might not be marked
+		 * private.
+		 */
+		internalFeed?: string[];
+	};
+}
+
+/**
+ * Expresses requirements for a given package, applied to its package.json.
+ */
+export interface PackageRequirements {
+	/**
+	 * (optional) list of script requirements for the package.
+	 */
+	requiredScripts?: ScriptRequirement[];
+
+	/**
+	 * (optional) list of required dev dependencies for the package.
+	 * @remarks Note: there is no enforcement of version requirements, only that a dependency on the specified name must exist.
+	 */
+	requiredDevDependencies?: string[];
+}
+
+/**
+ * Requirements for a given script.
+ */
+export interface ScriptRequirement {
+	/**
+	 * Name of the script to check.
+	 */
+	name: string;
+
+	/**
+	 * Body of the script being checked.
+	 * A contents match will be enforced iff {@link ScriptRequirement.bodyMustMatch}.
+	 * This value will be used as the default contents inserted by the policy resolver (regardless of {@link ScriptRequirement.bodyMustMatch}).
+	 */
+	body: string;
+
+	/**
+	 * Whether or not the script body is required to match {@link ScriptRequirement.body} when running the policy checker.
+	 * @defaultValue `false`
+	 */
+	bodyMustMatch?: boolean;
 }
 
 /**
@@ -182,50 +298,38 @@ export interface IFluidRepoPackage {
 	 * An array of paths under `directory` that should be ignored.
 	 */
 	ignoredDirs?: string[];
+
+	/**
+	 * The interdependencyRange controls the type of semver range to use between packages in the same release group. This
+	 * setting controls the default range that will be used when updating the version of a release group. The default can
+	 * be overridden using the `--interdependencyRange` flag in the `flub bump` command.
+	 */
+	defaultInterdependencyRange: InterdependencyRange;
 }
 
-export type IFluidRepoPackageEntry = string | IFluidRepoPackage | (string | IFluidRepoPackage)[];
+export type IFluidRepoPackageEntry =
+	| string
+	| IFluidRepoPackage
+	| (string | IFluidRepoPackage)[];
 
 export class FluidRepo {
-	/**
-	 * @deprecated Use .releaseGroups instead.
-	 */
-	public readonly monoRepos = new Map<MonoRepoKind, MonoRepo>();
+	private readonly _releaseGroups = new Map<string, MonoRepo>();
 
 	public get releaseGroups() {
-		return this.monoRepos;
+		return this._releaseGroups;
 	}
 
 	public readonly packages: Packages;
 
-	/**
-	 * @deprecated Use releaseGroups.get() instead.
-	 */
-	public get clientMonoRepo(): MonoRepo {
-		return this.releaseGroups.get(MonoRepoKind.Client)!;
+	public static create(resolvedRoot: string) {
+		const packageManifest = loadFluidBuildConfig(resolvedRoot);
+		return new FluidRepo(resolvedRoot, packageManifest);
 	}
 
-	/**
-	 * @deprecated Use releaseGroups.get() instead.
-	 */
-	public get serverMonoRepo(): MonoRepo | undefined {
-		return this.releaseGroups.get(MonoRepoKind.Server);
-	}
-
-	/**
-	 * @deprecated Use releaseGroups.get() instead.
-	 */
-	public get azureMonoRepo(): MonoRepo | undefined {
-		return this.releaseGroups.get(MonoRepoKind.Azure);
-	}
-
-	constructor(
+	protected constructor(
 		public readonly resolvedRoot: string,
-		services: boolean,
-		private readonly logger: Logger = defaultLogger,
+		packageManifest: IFluidBuildConfig,
 	) {
-		const packageManifest = getFluidBuildConfig(resolvedRoot);
-
 		// Expand to full IFluidRepoPackage and full path
 		const normalizeEntry = (
 			item: IFluidRepoPackageEntry,
@@ -234,12 +338,20 @@ export class FluidRepo {
 				return item.map((entry) => normalizeEntry(entry) as IFluidRepoPackage);
 			}
 			if (typeof item === "string") {
-				return { directory: path.join(resolvedRoot, item), ignoredDirs: undefined };
+				traceInit(
+					`No defaultInterdependencyRange setting found for '${item}'. Defaulting to "${DEFAULT_INTERDEPENDENCY_RANGE}".`,
+				);
+				return {
+					directory: path.join(resolvedRoot, item),
+					ignoredDirs: undefined,
+					defaultInterdependencyRange: DEFAULT_INTERDEPENDENCY_RANGE,
+				};
 			}
 			const directory = path.join(resolvedRoot, item.directory);
 			return {
 				directory,
 				ignoredDirs: item.ignoredDirs?.map((dir) => path.join(directory, dir)),
+				defaultInterdependencyRange: item.defaultInterdependencyRange,
 			};
 		};
 		const loadOneEntry = (item: IFluidRepoPackage, group: string) => {
@@ -249,24 +361,19 @@ export class FluidRepo {
 		const loadedPackages: Package[] = [];
 		for (const group in packageManifest.repoPackages) {
 			const item = normalizeEntry(packageManifest.repoPackages[group]);
-			if (isMonoRepoKind(group)) {
-				const { directory, ignoredDirs } = item as IFluidRepoPackage;
-				const monorepo = new MonoRepo(group, directory, ignoredDirs, logger);
-				this.releaseGroups.set(group, monorepo);
-				loadedPackages.push(...monorepo.packages);
-			} else if (group !== "services" || services) {
-				if (Array.isArray(item)) {
-					for (const i of item) {
-						loadedPackages.push(...loadOneEntry(i, group));
-					}
-				} else {
-					loadedPackages.push(...loadOneEntry(item, group));
+			if (Array.isArray(item)) {
+				for (const i of item) {
+					loadedPackages.push(...loadOneEntry(i, group));
 				}
+				continue;
 			}
-		}
-
-		if (!this.releaseGroups.has(MonoRepoKind.Client)) {
-			throw new Error("client entry does not exist in package.json");
+			const monoRepo = MonoRepo.load(group, item);
+			if (monoRepo) {
+				this.releaseGroups.set(group, monoRepo);
+				loadedPackages.push(...monoRepo.packages);
+			} else {
+				loadedPackages.push(...loadOneEntry(item, group));
+			}
 		}
 		this.packages = new Packages(loadedPackages);
 	}
@@ -279,46 +386,35 @@ export class FluidRepo {
 		this.packages.packages.forEach((pkg) => pkg.reload());
 	}
 
-	public static async ensureInstalled(packages: Package[], check: boolean = true) {
+	public static async ensureInstalled(packages: Package[]) {
 		const installedMonoRepo = new Set<MonoRepo>();
 		const installPromises: Promise<ExecAsyncResult>[] = [];
 		for (const pkg of packages) {
-			if (!check || !(await pkg.checkInstall(false))) {
-				if (pkg.monoRepo) {
-					if (!installedMonoRepo.has(pkg.monoRepo)) {
-						installedMonoRepo.add(pkg.monoRepo);
-						installPromises.push(pkg.monoRepo.install());
-					}
-				} else {
-					installPromises.push(pkg.install());
+			if (pkg.monoRepo) {
+				if (!installedMonoRepo.has(pkg.monoRepo)) {
+					installedMonoRepo.add(pkg.monoRepo);
+					installPromises.push(pkg.monoRepo.install());
 				}
+			} else {
+				installPromises.push(pkg.install());
 			}
 		}
 		const rets = await Promise.all(installPromises);
 		return !rets.some((ret) => ret.error);
 	}
 
-	public async install(nohoist: boolean = false) {
-		if (nohoist) {
-			return this.packages.noHoistInstall(this.resolvedRoot);
-		}
+	public async install() {
 		return FluidRepo.ensureInstalled(this.packages.packages);
 	}
-}
-
-/**
- * Represents a release version and its release date, if applicable.
- *
- * @internal
- */
-export interface VersionDetails {
-	/**
-	 * The version of the release.
-	 */
-	version: ReleaseVersion;
 
 	/**
-	 * The date the version was released, if applicable.
+	 * Transforms an absolute path to a path relative to the repo root.
+	 *
+	 * @param p - The path to make relative to the repo root.
+	 * @returns the relative path.
 	 */
-	date?: Date;
+	public relativeToRepo(p: string): string {
+		// Replace \ in result with / in case OS is Windows.
+		return path.relative(this.resolvedRoot, p).replace(/\\/g, "/");
+	}
 }

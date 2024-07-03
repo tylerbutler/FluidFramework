@@ -3,8 +3,9 @@
  * Licensed under the MIT License.
  */
 
-import { DocSegmentKind } from "../document";
-import { TagName } from "./tagName";
+import { DocSegmentKind } from "../document/index.js";
+
+import { TagName } from "./tagName.js";
 
 const segmentKindToIdPrefix = {
 	[DocSegmentKind.beginTags]: "b:",

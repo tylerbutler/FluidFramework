@@ -3,9 +3,24 @@
  * Licensed under the MIT License.
  */
 
-import { assert, copyPropertyIfDefined, fail, Result } from './Common';
-import { NodeId, DetachedSequenceId, TraitLabel, isDetachedSequenceId } from './Identifiers';
-import { rangeFromStableRange } from './TreeViewUtilities';
+import { assert } from '@fluidframework/core-utils/internal';
+
+import { Result, assertWithMessage, copyPropertyIfDefined, fail } from './Common.js';
+import {
+	BadPlaceValidationResult,
+	BadRangeValidationResult,
+	PlaceValidationResult,
+	RangeValidationResultKind,
+	detachRange,
+	insertIntoTrait,
+	validateStablePlace,
+	validateStableRange,
+} from './EditUtilities.js';
+import { DetachedSequenceId, NodeId, TraitLabel, isDetachedSequenceId } from './Identifiers.js';
+import { ReconciliationChange, ReconciliationPath } from './ReconciliationPath.js';
+import { RevisionView, TransactionView } from './RevisionView.js';
+import { TreeViewNode } from './TreeView.js';
+import { rangeFromStableRange } from './TreeViewUtilities.js';
 import {
 	BuildInternal,
 	BuildNodeInternal,
@@ -19,30 +34,17 @@ import {
 	SetValueInternal,
 	StablePlaceInternal,
 	StableRangeInternal,
-} from './persisted-types';
-import {
-	detachRange,
-	insertIntoTrait,
-	validateStablePlace,
-	validateStableRange,
-	BadPlaceValidationResult,
-	BadRangeValidationResult,
-	PlaceValidationResult,
-	RangeValidationResultKind,
-} from './EditUtilities';
-import { RevisionView, TransactionView } from './RevisionView';
-import { ReconciliationChange, ReconciliationPath } from './ReconciliationPath';
-import { TreeViewNode } from './TreeView';
+} from './persisted-types/index.js';
 
 /**
  * Result of applying a transaction.
- * @public
+ * @internal
  */
 export type EditingResult = FailedEditingResult | ValidEditingResult;
 
 /**
  * Basic result of applying a transaction.
- * @public
+ * @alpha
  */
 export interface EditingResultBase {
 	/**
@@ -65,7 +67,7 @@ export interface EditingResultBase {
 
 /**
  * Result of applying an invalid or malformed transaction.
- * @public
+ * @internal
  */
 export interface FailedEditingResult extends EditingResultBase {
 	/**
@@ -90,7 +92,7 @@ export interface FailedEditingResult extends EditingResultBase {
 
 /**
  * Result of applying a valid transaction.
- * @public
+ * @alpha
  */
 export interface ValidEditingResult extends EditingResultBase {
 	/**
@@ -105,18 +107,19 @@ export interface ValidEditingResult extends EditingResultBase {
 
 /**
  * The result of applying a change within a transaction.
- * @public
+ * @internal
  */
 export type ChangeResult = Result<TransactionView, TransactionFailure>;
 
 /**
  * The ongoing state of a transaction.
- * @public
+ * @internal
  */
 export type TransactionState = SucceedingTransactionState | FailingTransactionState;
 
 /**
  * The state of a transaction that has not encountered an error.
+ * @alpha
  */
 export interface SucceedingTransactionState {
 	/**
@@ -139,6 +142,7 @@ export interface SucceedingTransactionState {
 
 /**
  * The state of a transaction that has encountered an error.
+ * @internal
  */
 export interface FailingTransactionState extends TransactionFailure {
 	/**
@@ -157,6 +161,7 @@ export interface FailingTransactionState extends TransactionFailure {
 
 /**
  * The failure state of a transaction.
+ * @internal
  */
 export interface TransactionFailure {
 	/**
@@ -181,6 +186,7 @@ export interface TransactionFailure {
  *
  * No data outside the Transaction is modified by Transaction:
  * the results from `close` must be used to actually submit an `Edit`.
+ * @internal
  */
 export class GenericTransaction {
 	private readonly policy: GenericTransactionPolicy;
@@ -245,7 +251,7 @@ export class GenericTransaction {
 
 	/** @returns the final `EditStatus` and `TreeView` after all changes are applied. */
 	public close(): EditingResult {
-		assert(this.open, 'transaction has already been closed');
+		assert(this.open, 0x638 /* transaction has already been closed */);
 		this.open = false;
 		if (this.state.status === EditStatus.Applied) {
 			const validation = this.policy.validateOnClose(this.state);
@@ -343,7 +349,7 @@ export class GenericTransaction {
 	 * @returns this
 	 */
 	public applyChange(change: ChangeInternal, path: ReconciliationPath = []): this {
-		assert(this.open, 'Editor must be open to apply changes.');
+		assert(this.open, 0x639 /* Editor must be open to apply changes. */);
 		if (this.state.status !== EditStatus.Applied) {
 			fail('Cannot apply change to an edit unless all previous changes have applied');
 		}
@@ -360,11 +366,11 @@ export class GenericTransaction {
 					view: changeResult.result,
 					changes: this.changes.concat(change),
 					steps: this.steps.concat({ resolvedChange, after: changeResult.result }),
-			  }
+				}
 			: {
 					...this.state,
 					...changeResult.error,
-			  };
+				};
 		return this;
 	}
 }
@@ -379,6 +385,7 @@ export class GenericTransaction {
  * - The kind of situations that might lead to a transaction failure
  *
  * Instances of this type are passed to the {@link GenericTransaction} constructor.
+ * @internal
  */
 export interface GenericTransactionPolicy {
 	/**
@@ -424,12 +431,13 @@ export interface GenericTransactionPolicy {
  *
  * No data outside the Transaction is modified by Transaction:
  * the results from `close` must be used to actually submit an `Edit`.
- * @public
+ * @alpha
  */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace TransactionInternal {
 	/**
 	 * Makes a new {@link GenericTransaction} that follows the {@link TransactionInternal.Policy} policy.
+	 * @internal
 	 */
 	export function factory(view: RevisionView): GenericTransaction {
 		return new GenericTransaction(view, new Policy());
@@ -439,6 +447,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * The policy followed by a {@link TransactionInternal}.
+	 * @internal
 	 */
 	export class Policy implements GenericTransactionPolicy {
 		/**
@@ -472,7 +481,7 @@ export namespace TransactionInternal {
 							kind: FailureKind.UnusedDetachedSequence,
 							sequenceId: this.detached.keys().next().value,
 						},
-				  })
+					})
 				: Result.ok(state.view);
 		}
 
@@ -590,9 +599,7 @@ export namespace TransactionInternal {
 			if (validatedDestination.result !== PlaceValidationResult.Valid) {
 				return Result.error({
 					status:
-						validatedDestination.result === PlaceValidationResult.Malformed
-							? EditStatus.Malformed
-							: EditStatus.Invalid,
+						validatedDestination.result === PlaceValidationResult.Malformed ? EditStatus.Malformed : EditStatus.Invalid,
 					failure: {
 						kind: FailureKind.BadPlace,
 						change,
@@ -651,8 +658,8 @@ export namespace TransactionInternal {
 
 		private applyConstraint(state: ValidState, change: ConstraintInternal): ChangeResult {
 			// TODO: Implement identityHash and contentHash
-			assert(change.identityHash === undefined, 'identityHash constraint is not implemented');
-			assert(change.contentHash === undefined, 'contentHash constraint is not implemented');
+			assert(change.identityHash === undefined, 0x63a /* identityHash constraint is not implemented */);
+			assert(change.contentHash === undefined, 0x63b /* contentHash constraint is not implemented */);
 
 			const validatedChange = validateStableRange(state.view, change.toConstrain);
 			if (validatedChange.result !== RangeValidationResultKind.Valid) {
@@ -671,7 +678,7 @@ export namespace TransactionInternal {
 										rangeFailure: validatedChange.result,
 									},
 								},
-						  })
+							})
 					: Result.error({
 							status: EditStatus.Malformed,
 							failure: {
@@ -682,7 +689,7 @@ export namespace TransactionInternal {
 									rangeFailure: validatedChange.result,
 								},
 							},
-					  });
+						});
 			}
 
 			const { start, end } = rangeFromStableRange(state.view, validatedChange);
@@ -773,7 +780,7 @@ export namespace TransactionInternal {
 			}
 			while (unprocessed.length > 0) {
 				const node = unprocessed.pop();
-				assert(node !== undefined && !isDetachedSequenceId(node));
+				assertWithMessage(node !== undefined && !isDetachedSequenceId(node));
 				const traits = new Map<TraitLabel, readonly NodeId[]>();
 				// eslint-disable-next-line no-restricted-syntax
 				for (const key in node.traits) {
@@ -828,6 +835,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * The kinds of failures that a transaction might encounter.
+	 * @alpha
 	 */
 	export enum FailureKind {
 		/**
@@ -870,6 +878,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * A failure encountered by a transaction.
+	 * @alpha
 	 */
 	export type Failure =
 		| UnusedDetachedSequenceFailure
@@ -884,6 +893,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * Error returned when a transaction is closed while there is an unused detached sequence.
+	 * @alpha
 	 */
 	export interface UnusedDetachedSequenceFailure {
 		/**
@@ -898,6 +908,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * Error thrown when a transaction encounters a build operation using an already in use DetachedSequenceID.
+	 * @alpha
 	 */
 	export interface DetachedSequenceIdAlreadyInUseFailure {
 		/**
@@ -916,6 +927,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * Error thrown when a transaction tries to operate on an unknown DetachedSequenceID
+	 * @alpha
 	 */
 	export interface DetachedSequenceNotFoundFailure {
 		/**
@@ -934,6 +946,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * Error thrown when a build uses a duplicated NodeId
+	 * @alpha
 	 */
 	export interface DuplicateIdInBuildFailure {
 		/**
@@ -952,6 +965,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * Error thrown when a build node ID is already used in the current state
+	 * @alpha
 	 */
 	export interface IdAlreadyInUseFailure {
 		/**
@@ -970,6 +984,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * Error thrown when a change is attempted on an unknown NodeId
+	 * @alpha
 	 */
 	export interface UnknownIdFailure {
 		/**
@@ -988,6 +1003,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * Error thrown when an insert change uses an invalid Place
+	 * @alpha
 	 */
 	export interface BadPlaceFailure {
 		/**
@@ -1010,6 +1026,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * Error thrown when a detach operation is given an invalid or malformed Range
+	 * @alpha
 	 */
 	export interface BadRangeFailure {
 		/**
@@ -1032,6 +1049,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * Error thrown when a constraint fails to apply
+	 * @alpha
 	 */
 	export interface ConstraintViolationFailure {
 		/**
@@ -1050,6 +1068,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * The details of what kind of constraint was violated and caused a ConstraintViolationFailure error to occur
+	 * @alpha
 	 */
 	export type ConstraintViolationResult =
 		| {
@@ -1071,6 +1090,7 @@ export namespace TransactionInternal {
 
 	/**
 	 * Enum of possible kinds of constraint violations that can be encountered
+	 * @alpha
 	 */
 	export enum ConstraintViolationKind {
 		/**

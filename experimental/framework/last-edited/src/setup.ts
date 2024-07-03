@@ -3,10 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { ISequencedDocumentMessage, IQuorumClients } from "@fluidframework/protocol-definitions";
-import { ContainerMessageType } from "@fluidframework/container-runtime";
-import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
-import { ILastEditDetails, IFluidLastEditedTracker } from "./interfaces";
+import { ContainerMessageType } from "@fluidframework/container-runtime/internal";
+import { IContainerRuntime } from "@fluidframework/container-runtime-definitions/internal";
+import { IQuorumClients } from "@fluidframework/driver-definitions";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+
+import { IFluidLastEditedTracker, ILastEditDetails } from "./interfaces.js";
 
 /**
  * Default implementation of {@link setupLastEditedTrackerForContainer}'s `shouldDiscardMessageFn` parameter,
@@ -28,7 +30,9 @@ function getLastEditDetailsFromMessage(
 	message: ISequencedDocumentMessage,
 	quorum: IQuorumClients,
 ): ILastEditDetails | undefined {
-	const sequencedClient = quorum.getMember(message.clientId);
+	// TODO: Verify whether this should be able to handle server-generated ops (with null clientId)
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+	const sequencedClient = quorum.getMember(message.clientId as string);
 	const user = sequencedClient?.client.user;
 	if (user !== undefined) {
 		const lastEditDetails: ILastEditDetails = {
@@ -54,6 +58,7 @@ function getLastEditDetailsFromMessage(
  * @param lastEditedTracker - The last edited tracker.
  * @param runtime - The container runtime whose messages are to be tracked.
  * @param shouldDiscardMessageFn - Function that tells if a message should not be considered in computing last edited.
+ * @internal
  */
 export function setupLastEditedTrackerForContainer(
 	lastEditedTracker: IFluidLastEditedTracker,

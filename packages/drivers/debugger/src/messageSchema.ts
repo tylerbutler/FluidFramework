@@ -150,10 +150,9 @@ export const chunkedOpContentsSchema = {
 	properties: {
 		chunkId: { type: "number" },
 		contents: { type: "string" },
-		originalType: { type: "string" },
 		totalChunks: { type: "number" },
 	},
-	required: ["chunkId", "contents", "originalType", "totalChunks"],
+	required: ["chunkId", "contents", "totalChunks"],
 	additionalProperties: false,
 };
 
@@ -274,14 +273,7 @@ export const opContentsMapSchema = {
 				},
 				type: {
 					type: "string",
-					enum: [
-						"act",
-						"set",
-						"delete",
-						"clear",
-						"createSubDirectory",
-						"deleteSubDirectory",
-					],
+					enum: ["act", "set", "delete", "clear", "createSubDirectory", "deleteSubDirectory"],
 				},
 			},
 			required: ["type"],
@@ -362,17 +354,6 @@ const mergeTreeDeltaOpSchema = {
 		{
 			properties: {
 				type: { enum: [2] },
-				combiningOp: {
-					type: "object",
-					properties: {
-						defaultValue: {},
-						maxValue: {},
-						minValue: {},
-						name: { type: "string" },
-					},
-					required: ["name"],
-					additionalProperties: false,
-				},
 				pos1: { type: "number" },
 				pos2: { type: "number" },
 				props: { type: "object" },

@@ -4,9 +4,11 @@
  */
 
 import { strict as assert } from "assert";
-import { DriverHeader, IFluidResolvedUrl } from "@fluidframework/driver-definitions";
+
 import { IRequest } from "@fluidframework/core-interfaces";
-import { LocalResolver } from "../localResolver";
+import { DriverHeader } from "@fluidframework/driver-definitions/internal";
+
+import { LocalResolver } from "../localResolver.js";
 
 describe("Local Driver Resolver", () => {
 	const documentId = "localResolverTest";
@@ -30,8 +32,8 @@ describe("Local Driver Resolver", () => {
 		});
 
 		it("should successfully resolve a createNewRequest", async () => {
-			const resolvedUrl = (await resolver.resolve(request)) as IFluidResolvedUrl;
-			const expectedUrl = `fluid-test://localhost:3000/tenantId/${documentId}`;
+			const resolvedUrl = await resolver.resolve(request);
+			const expectedUrl = `https://localhost:3000/tenantId/${documentId}`;
 			assert.equal(resolvedUrl.url, expectedUrl, "The resolved url should match");
 		});
 
@@ -51,8 +53,8 @@ describe("Local Driver Resolver", () => {
 
 		it("should successfully resolve request for a container url", async () => {
 			const url = `http://localhost/${documentId}`;
-			const resolvedUrl = (await resolver.resolve({ url })) as IFluidResolvedUrl;
-			const expectedUrl = `fluid-test://localhost:3000/tenantId/${documentId}`;
+			const resolvedUrl = await resolver.resolve({ url });
+			const expectedUrl = `https://localhost:3000/tenantId/${documentId}`;
 			assert.equal(resolvedUrl.url, expectedUrl, "The resolved container url should match");
 		});
 	});

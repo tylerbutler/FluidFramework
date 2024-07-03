@@ -3,9 +3,13 @@
  * Licensed under the MIT License.
  */
 
+import { strict as assert } from 'assert';
+
+import { validateAssertionError } from '@fluidframework/test-runtime-utils/internal';
 import { expect } from 'chai';
-import { fail } from '../Common';
-import { RevisionValueCache } from '../RevisionValueCache';
+
+import { fail } from '../Common.js';
+import { RevisionValueCache } from '../RevisionValueCache.js';
 
 type DummyValue = number;
 const dummyValue = -1;
@@ -16,14 +20,18 @@ describe('RevisionValueCache', () => {
 	}
 
 	it('cannot be created with a negative retention window', () => {
-		expect(() => new RevisionValueCache<DummyValue>(1, -1)).to.throw(
-			'retentionWindowStart must be initialized >= 0'
+		assert.throws(
+			() => new RevisionValueCache<DummyValue>(1, -1),
+			(e: Error) => validateAssertionError(e, 'retentionWindowStart must be initialized >= 0')
 		);
 	});
 
 	it('cannot move the retention window backwards', () => {
 		const cache = new RevisionValueCache<DummyValue>(1, 0);
-		expect(() => cache.updateRetentionWindow(-1)).to.throw('retention window boundary must not move backwards');
+		assert.throws(
+			() => cache.updateRetentionWindow(-1),
+			(e: Error) => validateAssertionError(e, 'retention window boundary must not move backwards')
+		);
 	});
 
 	it('can find closest entry to a queried revision', () => {
@@ -36,11 +44,10 @@ describe('RevisionValueCache', () => {
 
 	it('evicts entries when full', () => {
 		const size = 3;
-		const cache = new RevisionValueCache<DummyValue>(
-			size,
-			size * 3 /* ensure all entries are outside of window */,
-			[0, dummyValue]
-		);
+		const cache = new RevisionValueCache<DummyValue>(size, size * 3 /* ensure all entries are outside of window */, [
+			0,
+			dummyValue,
+		]);
 
 		// Fill the cache
 		// Start at 1 because the initial revision is never evicted
@@ -97,11 +104,11 @@ describe('RevisionValueCache', () => {
 		expect(closestEntry(cache, 5)).to.equal(5);
 		cache.cacheValue(2, dummyValue); // Evict 1
 		cache.updateRetentionWindow(10); // Should not add 5, so 2 will still be in cache
-		expect(() => closestEntry(cache, 1)).to.throw; // 0 will no longer be retained so 1 should be inaccessible
+		assert.throws(() => closestEntry(cache, 1)); // 0 will no longer be retained so 1 should be inaccessible
 		expect(closestEntry(cache, 2)).to.equal(2);
 		expect(closestEntry(cache, 5)).to.equal(5);
 		cache.cacheValue(3, dummyValue); // Evict 2
-		expect(() => closestEntry(cache, 2)).to.throw;
+		assert.throws(() => closestEntry(cache, 2));
 		expect(closestEntry(cache, 5)).to.equal(5);
 	});
 

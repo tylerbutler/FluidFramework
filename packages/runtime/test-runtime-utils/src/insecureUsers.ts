@@ -3,11 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { IUser } from "@fluidframework/protocol-definitions";
+import { IUser } from "@fluidframework/driver-definitions";
 
 /**
  * Insecure user definition.
  * @remarks It extends the base IUser interface with a `name` property.
+ * @internal
  */
 export interface IInsecureUser extends IUser {
 	/**

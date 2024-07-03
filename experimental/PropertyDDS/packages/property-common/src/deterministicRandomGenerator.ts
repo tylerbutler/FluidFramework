@@ -10,6 +10,7 @@
 /* eslint-disable no-bitwise */
 
 import _ from "lodash";
+
 import { GuidUtils } from "./guidUtils";
 import { calculateHash } from "./hashCalculator";
 
@@ -19,6 +20,7 @@ import { calculateHash } from "./hashCalculator";
  * @remarks Warning: This is a very straight forward implementation based on the hashCombine4xUint32 function.
  * It probably doesn't produce very high quality random numbers (do not use this for cryptography!) and it is not very
  * efficient.
+ * @internal
  */
 export class DeterministicRandomGenerator {
 	_guid1: Uint32Array;
@@ -79,10 +81,10 @@ export class DeterministicRandomGenerator {
 		} else {
 			return in_max < 16777619
 				? // The random generator doesn't seem to be very good.
-				  // It is quite biased (e.g. it generates too many even numbers)
-				  // this is a hack to solve at least this problem, but we probably should
-				  // instead use a different approach altogether
-				  (this._guid1[0] % 16777619) % in_max
+					// It is quite biased (e.g. it generates too many even numbers)
+					// this is a hack to solve at least this problem, but we probably should
+					// instead use a different approach altogether
+					(this._guid1[0] % 16777619) % in_max
 				: this._guid1[0] % in_max;
 		}
 	}

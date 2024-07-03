@@ -5,53 +5,50 @@
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { assert } from "@fluidframework/common-utils";
-import { UnassignedSequenceNumber, UniversalSequenceNumber } from "./constants";
-import { ICombiningOp, IMergeTreeAnnotateMsg } from "./ops";
-import { combine, createMap, MapLike, PropertySet } from "./properties";
+import { assert } from "@fluidframework/core-utils/internal";
 
+import { UnassignedSequenceNumber, UniversalSequenceNumber } from "./constants.js";
+import { IMergeTreeAnnotateMsg } from "./ops.js";
+// eslint-disable-next-line import/no-deprecated
+import { MapLike, PropertySet, createMap } from "./properties.js";
+
+/**
+ * @legacy
+ * @alpha
+ */
 export enum PropertiesRollback {
 	/** Not in a rollback */
 	None,
 
 	/** Rollback */
 	Rollback,
-
-	/** Rollback of a rewrite */
-	Rewrite,
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export class PropertiesManager {
 	private pendingKeyUpdateCount: MapLike<number> | undefined;
-	private pendingRewriteCount: number;
-
-	constructor() {
-		this.pendingRewriteCount = 0;
-	}
 
 	public ackPendingProperties(annotateOp: IMergeTreeAnnotateMsg) {
-		const rewrite = !!annotateOp.combiningOp && annotateOp.combiningOp.name === "rewrite";
-		this.decrementPendingCounts(rewrite, annotateOp.props);
+		this.decrementPendingCounts(annotateOp.props);
 	}
 
-	private decrementPendingCounts(rewrite: boolean, props: PropertySet) {
-		if (rewrite) {
-			this.pendingRewriteCount--;
-		}
-		for (const key of Object.keys(props)) {
-			if (this.pendingKeyUpdateCount?.[key] !== undefined) {
-				if (rewrite && props[key] === null) {
-					// We don't track the pending count for this redundant case
-					continue;
-				}
-				assert(
-					this.pendingKeyUpdateCount[key] > 0,
-					0x05c /* "Trying to update more annotate props than do exist!" */,
-				);
-				this.pendingKeyUpdateCount[key]--;
-				if (this.pendingKeyUpdateCount?.[key] === 0) {
-					// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-					delete this.pendingKeyUpdateCount[key];
+	private decrementPendingCounts(props: PropertySet) {
+		for (const [key, value] of Object.entries(props)) {
+			if (value !== undefined) {
+				if (this.pendingKeyUpdateCount?.[key] !== undefined) {
+					assert(
+						// TODO Non null asserting, why is this not null?
+						this.pendingKeyUpdateCount[key]! > 0,
+						0x05c /* "Trying to update more annotate props than do exist!" */,
+					);
+					this.pendingKeyUpdateCount[key]--;
+					if (this.pendingKeyUpdateCount?.[key] === 0) {
+						// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+						delete this.pendingKeyUpdateCount[key];
+					}
 				}
 			}
 		}
@@ -60,45 +57,23 @@ export class PropertiesManager {
 	public addProperties(
 		oldProps: PropertySet,
 		newProps: PropertySet,
-		op?: ICombiningOp,
 		seq?: number,
 		collaborating: boolean = false,
 		rollback: PropertiesRollback = PropertiesRollback.None,
-	): PropertySet | undefined {
-		if (!this.pendingKeyUpdateCount) {
-			this.pendingKeyUpdateCount = createMap<number>();
-		}
-
-		// There are outstanding local rewrites, so block all non-local changes
-		if (
-			this.pendingRewriteCount > 0 &&
-			seq !== UnassignedSequenceNumber &&
-			seq !== UniversalSequenceNumber &&
-			collaborating
-		) {
-			return undefined;
-		}
+	): PropertySet {
+		// eslint-disable-next-line import/no-deprecated
+		this.pendingKeyUpdateCount ??= createMap<number>();
 
 		// Clean up counts for rolled back edits before modifying oldProps
-		if (collaborating) {
-			if (rollback === PropertiesRollback.Rollback) {
-				this.decrementPendingCounts(false, newProps);
-			} else if (rollback === PropertiesRollback.Rewrite) {
-				// oldProps is the correct props for tracking counts on rewrite because the ones in newProps include
-				// those that were implicitly cleared by the rewrite for which we don't track pending counts.
-				this.decrementPendingCounts(true, oldProps);
-			}
+		if (collaborating && rollback === PropertiesRollback.Rollback) {
+			this.decrementPendingCounts(newProps);
 		}
-
-		const rewrite = op && op.name === "rewrite";
-		const combiningOp = !rewrite ? (op ? op : undefined) : undefined;
 
 		const shouldModifyKey = (key: string): boolean => {
 			if (
 				seq === UnassignedSequenceNumber ||
 				seq === UniversalSequenceNumber ||
-				this.pendingKeyUpdateCount?.[key] === undefined ||
-				combiningOp
+				this.pendingKeyUpdateCount?.[key] === undefined
 			) {
 				return true;
 			}
@@ -106,30 +81,14 @@ export class PropertiesManager {
 		};
 
 		const deltas: PropertySet = {};
-		if (rewrite) {
-			if (collaborating && seq === UnassignedSequenceNumber) {
-				this.pendingRewriteCount++;
-			}
-			// We are re-writing so delete all the properties
-			// not in the new props
-			for (const key of Object.keys(oldProps)) {
-				if (!newProps[key] && shouldModifyKey(key)) {
-					deltas[key] = oldProps[key];
 
-					// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-					delete oldProps[key];
-				}
+		for (const [key, newValue] of Object.entries(newProps)) {
+			if (newValue === undefined) {
+				continue;
 			}
-		}
 
-		for (const key of Object.keys(newProps)) {
 			if (collaborating) {
 				if (seq === UnassignedSequenceNumber) {
-					if (rewrite && newProps[key] === null) {
-						// This case has already been handled above and
-						// we don't want to track the pending count for it in case of rollback
-						continue;
-					}
 					if (this.pendingKeyUpdateCount?.[key] === undefined) {
 						this.pendingKeyUpdateCount[key] = 0;
 					}
@@ -142,9 +101,6 @@ export class PropertiesManager {
 			const previousValue: any = oldProps[key];
 			// The delta should be null if undefined, as that's how we encode delete
 			deltas[key] = previousValue === undefined ? null : previousValue;
-			const newValue = combiningOp
-				? combine(combiningOp, previousValue, undefined, seq)
-				: newProps[key];
 			if (newValue === null) {
 				// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 				delete oldProps[key];
@@ -162,27 +118,34 @@ export class PropertiesManager {
 		newManager: PropertiesManager,
 	): PropertySet | undefined {
 		if (oldProps) {
-			if (!newProps) {
-				// eslint-disable-next-line no-param-reassign
-				newProps = createMap<any>();
-			}
+			// eslint-disable-next-line no-param-reassign, import/no-deprecated
+			newProps ??= createMap<any>();
 			if (!newManager) {
 				throw new Error("Must provide new PropertyManager");
 			}
 			for (const key of Object.keys(oldProps)) {
 				newProps[key] = oldProps[key];
 			}
-			newManager.pendingRewriteCount = this.pendingRewriteCount;
+			// eslint-disable-next-line import/no-deprecated
 			newManager.pendingKeyUpdateCount = createMap<number>();
 			for (const key of Object.keys(this.pendingKeyUpdateCount!)) {
-				newManager.pendingKeyUpdateCount[key] = this.pendingKeyUpdateCount![key];
+				// TODO Non null asserting, why is this not null?
+				newManager.pendingKeyUpdateCount[key] = this.pendingKeyUpdateCount![key]!;
 			}
 		}
 		return newProps;
 	}
 
-	public hasPendingProperties() {
-		return this.pendingRewriteCount > 0 || Object.keys(this.pendingKeyUpdateCount!).length > 0;
+	/**
+	 * @returns whether all valid (i.e. defined) entries of the property bag are pending
+	 */
+	public hasPendingProperties(props: PropertySet) {
+		for (const [key, value] of Object.entries(props)) {
+			if (value !== undefined && this.pendingKeyUpdateCount?.[key] === undefined) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public hasPendingProperty(key: string): boolean {

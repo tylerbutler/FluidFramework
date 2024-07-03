@@ -3,14 +3,18 @@
  * Licensed under the MIT License.
  */
 
-import { Uint8ArrayToString, unreachableCase } from "@fluidframework/common-utils";
-import { AttachmentTreeEntry, BlobTreeEntry, TreeTreeEntry } from "@fluidframework/protocol-base";
-import { ISummaryTree, ITree, ITreeEntry, SummaryType } from "@fluidframework/protocol-definitions";
-import { isCombinedAppAndProtocolSummary } from "./summaryForCreateNew";
+import { Uint8ArrayToString } from "@fluid-internal/client-utils";
+import { unreachableCase } from "@fluidframework/core-utils/internal";
+import { ISummaryTree, SummaryType } from "@fluidframework/driver-definitions";
+import { ITree, ITreeEntry } from "@fluidframework/driver-definitions/internal";
+
+import { AttachmentTreeEntry, BlobTreeEntry, TreeTreeEntry } from "./blob.js";
+import { isCombinedAppAndProtocolSummary } from "./summaryForCreateNew.js";
 
 /**
  * Converts ISummaryTree to ITree format.
  * @param summaryTree - summary tree in ISummaryTree format
+ * @internal
  */
 export function convertSummaryTreeToSnapshotITree(summaryTree: ISummaryTree): ITree {
 	const entries: ITreeEntry[] = [];
@@ -19,7 +23,7 @@ export function convertSummaryTreeToSnapshotITree(summaryTree: ISummaryTree): IT
 		? [
 				...Object.entries(summaryTree.tree[".protocol"].tree),
 				...Object.entries(summaryTree.tree[".app"].tree),
-		  ]
+			]
 		: Object.entries(summaryTree.tree);
 
 	for (const [key, value] of allSummaryEntries) {
@@ -59,5 +63,6 @@ export function convertSummaryTreeToSnapshotITree(summaryTree: ISummaryTree): IT
 	return {
 		entries,
 		unreferenced: summaryTree.unreferenced,
+		groupId: summaryTree.groupId,
 	};
 }

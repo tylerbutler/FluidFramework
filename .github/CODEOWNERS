@@ -1,107 +1,59 @@
+# -------------------------------------------------------------------------
+#
+# Please read and understand all of this documentation before modifying this file.
+#
+# Ownership via this file will block PR until an owner approves.
+# Taking ownership requires a commitment to review all PRs for the selected files.
+#
 # Lines starting with '#' are comments.
+#
 # Each line is a file pattern followed by one or more owners.
 # More details on the format: https://help.github.com/articles/about-codeowners/
-
+#
+# When updating this file, you should also consider updating the GitHub label config in actions-labeler.yml so that
+# any area changes are labeled correctly.
+#
 # ORDER MATTERS! The last matching pattern has the most precedence.
+# Be careful not to break existing ownership patterns.
+#
+# Do not assign ownership to indviduals. Use a Team: https://github.com/orgs/microsoft/teams/fluid-cr/teams .
+# Using individuals can break processing of this file if they are not contributors, or lose contributors status
+# which can and does happen. Use "function/area-based" teams rather than "organization-based" teams and add
+# individuals to each one; we use fluid-cr and its child teams (by convention named fluid-cr-<some-specifier>)
+# for this. One reason is that teams in Github cannot have multiple parents, i.e. they cannot be members of more
+# than one other team, so trying to reuse org-based teams to have the same people be reviewers of different areas
+# doesn't work.
+#
+# Team maintainers can control how PRs are assigned to their team members.
+# This can be modified under the settings for the team which is only visiable to maintainer.
+#
+# If you create a new team its parent should be set to fluid-cr, as teams are microsoft wide,
+# and we use the parent team to organize them.
+#
+# ------------------------------------------------------------------------
 
-# Files in the root
-/*.*                                                                      @microsoft/fluid-cr-core
+# ID compressor source
+/packages/runtime/id-compressor/src            @microsoft/fluid-cr-id-compressor
 
-/.devcontainer/                                                           @microsoft/fluid-cr-infra
-/.github/                                                                 @microsoft/fluid-cr-infra
-/.github/ISSUE_TEMPLATE/                                                  @microsoft/fluid-cr-docs
-/.md-magic-templates/                                                     @microsoft/fluid-cr-docs
-/.vscode/                                                                 @microsoft/fluid-cr-infra
+# merge tree and merge tree related dds source
+/packages/dds/merge-tree/src                   @microsoft/fluid-cr-merge-tree
+/packages/dds/matrix/src                       @microsoft/fluid-cr-merge-tree
+/packages/dds/sequence/src                     @microsoft/fluid-cr-merge-tree
+/experimental/dds/sequence-deprecated/src      @microsoft/fluid-cr-merge-tree
 
-/azure/                                                                   @microsoft/fluid-cr-framework
+# shared tree and tree related dds source
+/packages/dds/tree/src                         @microsoft/fluid-cr-tree
+/experimental/dds/tree/src                     @microsoft/fluid-cr-tree
 
-/build-tools/                                                             @microsoft/fluid-cr-infra
+# Fluid Devtools source
+/packages/tools/devtools/**/src                @microsoft/fluid-cr-devtools
 
-/common/build/                                                            @microsoft/fluid-cr-infra
-/common/lib/                                                              @microsoft/fluid-cr-core
-/docs/                                                                    @microsoft/fluid-cr-docs
+# Non-internal API changes
+/**/api-report/*.public.api.md                 @microsoft/fluid-cr-api
+/**/api-report/*.beta.api.md                   @microsoft/fluid-cr-api
+/**/api-report/*.alpha.api.md                  @microsoft/fluid-cr-api
 
-/examples/                                                                @microsoft/fluid-cr-framework
-/experimental/                                                            @microsoft/fluid-cr-framework
-/experimental/PropertyDDS/                                                @evaliyev @karlbom @nedalhy @ruiterr
-/experimental/dds/tree/                                                   @microsoft/fluid-cr-tree
-/experimental/dds/tree-graphql/                                           @microsoft/fluid-cr-tree
-/packages/dds/                                                            @microsoft/fluid-cr-dds
-/packages/dds/tree                                                        @microsoft/fluid-cr-tree
-/packages/drivers/                                                        @microsoft/fluid-cr-drivers
-/packages/drivers/odsp*/                                                  @microsoft/fluid-cr-drivers @microsoft/fluid-cr-odsp
-/packages/framework/                                                      @microsoft/fluid-cr-framework
-/packages/loader/                                                         @microsoft/fluid-cr-loader
-/packages/runtime/                                                        @microsoft/fluid-cr-runtime
-/packages/test/                                                           @microsoft/fluid-cr-test
-/packages/tools/                                                          @microsoft/fluid-cr-tools
-/packages/utils/                                                          @microsoft/fluid-cr-infra
-/packages/utils/odsp-doclib-utils/                                        @microsoft/fluid-cr-odsp
-/packages/utils/telemetry-utils/                                          @microsoft/fluid-cr-telemetry
-/server/                                                                  @microsoft/fluid-cr-server
-/tools/                                                                   @microsoft/fluid-cr-infra
-/tools/pipelines/build-azure.yml                                          @microsoft/fluid-cr-framework
-
-# PUBLIC API REPORTS
-# All packages are assumed to have public APIs unless defined otherwise in the sections below.
-api-report/                                                               @microsoft/fluid-cr-api
-# These packages represent the primary public API of the framework.
-api-report/azure-client.api.md                                            @microsoft/fluid-cr-api
-api-report/azure-service-utils.api.md                                     @microsoft/fluid-cr-api
-api-report/test-client-utils.api.md                                       @microsoft/fluid-cr-api
-api-report/fluid-framework.api.md                                         @microsoft/fluid-cr-api
-api-report/tinylicious-client.api.md                                      @microsoft/fluid-cr-api
-
-# INTERNAL API REPORTS
-# The packages listed here are not considered part of the public API.
-api-report/aqueduct.api.md                                                @microsoft/fluid-cr-framework
-api-report/cell.api.md                                                    @microsoft/fluid-cr-dds
-api-report/container-loader.api.md                                        @microsoft/fluid-cr-loader
-api-report/container-runtime-definitions.api.md                           @microsoft/fluid-cr-runtime
-api-report/container-runtime.api.md                                       @microsoft/fluid-cr-runtime
-api-report/container-utils.api.md                                         @microsoft/fluid-cr-runtime
-api-report/counter.api.md                                                 @microsoft/fluid-cr-dds
-api-report/data-object-base.api.md                                        @microsoft/fluid-cr-framework
-api-report/datastore-definitions.api.md                                   @microsoft/fluid-cr-runtime
-api-report/datastore.api.md                                               @microsoft/fluid-cr-runtime
-api-report/dds-interceptions.api.md                                       @microsoft/fluid-cr-dds
-api-report/debugger.api.md                                                @microsoft/fluid-cr-tools
-api-report/driver-base.api.md                                             @microsoft/fluid-cr-drivers
-api-report/driver-utils.api.md                                            @microsoft/fluid-cr-drivers
-api-report/driver-web-cache.api.md                                        @microsoft/fluid-cr-drivers
-api-report/experimental-tree.api.md                                       @microsoft/fluid-cr-tree
-api-report/file-driver.api.md                                             @microsoft/fluid-cr-drivers
-api-report/fluid-static.api.md                                            @microsoft/fluid-cr-framework
-api-report/garbage-collector.api.md                                       @microsoft/fluid-cr-runtime
-api-report/ink.api.md                                                     @microsoft/fluid-cr-dds
-api-report/location-redirection-utils.api.md                              @microsoft/fluid-cr-loader
-api-report/map.api.md                                                     @microsoft/fluid-cr-dds
-api-report/matrix.api.md                                                  @microsoft/fluid-cr-dds
-api-report/merge-tree.api.md                                              @microsoft/fluid-cr-dds
-api-report/odsp-driver-definitions.api.md                                 @microsoft/fluid-cr-odsp
-api-report/odsp-driver.api.md                                             @microsoft/fluid-cr-odsp
-api-report/ordered-collection.api.md                                      @microsoft/fluid-cr-dds
-api-report/pact-map.api.md                                                @microsoft/fluid-cr-dds
-api-report/register-collection.api.md                                     @microsoft/fluid-cr-dds
-api-report/replay-driver.api.md                                           @microsoft/fluid-cr-drivers
-api-report/request-handler.api.md                                         @microsoft/fluid-cr-runtime
-api-report/routerlicious-driver.api.md                                    @microsoft/fluid-cr-server
-api-report/runtime-definitions.api.md                                     @microsoft/fluid-cr-runtime
-api-report/runtime-utils.api.md                                           @microsoft/fluid-cr-runtime
-api-report/sequence.api.md                                                @microsoft/fluid-cr-dds
-api-report/shared-object-base.api.md                                      @microsoft/fluid-cr-framework
-api-report/shared-summary-block.api.md                                    @microsoft/fluid-cr-runtime
-api-report/synthesize.api.md                                              @microsoft/fluid-cr-runtime
-api-report/task-manager.api.md                                            @microsoft/fluid-cr-dds
-api-report/telemetry-utils.api.md                                         @microsoft/fluid-cr-telemetry
-api-report/test-driver-definitions.api.md                                 @microsoft/fluid-cr-drivers
-api-report/test-runtime-utils.api.md                                      @microsoft/fluid-cr-runtime
-api-report/test-utils.api.md                                              @microsoft/fluid-cr-test
-api-report/tool-utils.api.md                                              @microsoft/fluid-cr-tools
-api-report/tree.api.md                                                    @microsoft/fluid-cr-tree
-api-report/undo-redo.api.md                                               @microsoft/fluid-cr-framework
-api-report/view-adapters.api.md                                           @microsoft/fluid-cr-framework
-api-report/view-interfaces.api.md                                         @microsoft/fluid-cr-framework
-
-# No owners for package.json files to avoid review spam when mono-repo dependencies are updated
-package.json @msfluid-bot
+# Package version files are not generally interesting to review by teams signing up for source tree ownership.
+# If a release team wanted to sign up to block on changes relevant for package release,
+# that would be the appropriate owner here. For now, explicitly give these files no owner.
+/**/packageVersion.ts

@@ -3,12 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { parse } from "url";
-import { assert } from "@fluidframework/common-utils";
 import { IRequest } from "@fluidframework/core-interfaces";
-import { IFluidResolvedUrl, IResolvedUrl, IUrlResolver } from "@fluidframework/driver-definitions";
-import { IUser } from "@fluidframework/protocol-definitions";
-import { Provider } from "nconf";
+import { assert } from "@fluidframework/core-utils/internal";
+import { IUser } from "@fluidframework/driver-definitions";
+import { IResolvedUrl, IUrlResolver } from "@fluidframework/driver-definitions/internal";
+
+import { Provider } from "./nconf.cjs";
 
 const r11sServers = [
 	"www.wu2-ppe.prague.office-int.com",
@@ -16,6 +16,9 @@ const r11sServers = [
 	"www.eu.prague.office-int.com",
 ];
 
+/**
+ * @internal
+ */
 export class RouterliciousUrlResolver implements IUrlResolver {
 	constructor(
 		private readonly config:
@@ -74,11 +77,9 @@ export class RouterliciousUrlResolver implements IUrlResolver {
 		const serverSuffix = isLocalHost ? `${server}:3003` : server.substring(4);
 
 		let fluidUrl =
-			"fluid://" +
+			"https://" +
 			`${
-				this.config
-					? parse(this.config.provider.get("worker:serverUrl")).host
-					: serverSuffix
+				this.config ? new URL(this.config.provider.get("worker:serverUrl")).host : serverSuffix
 			}/` +
 			`${encodeURIComponent(tenantId)}/` +
 			`${encodeURIComponent(documentId)}`;
@@ -124,7 +125,7 @@ export class RouterliciousUrlResolver implements IUrlResolver {
 		ordererUrl += ``;
 		deltaStorageUrl += ``;
 
-		const resolved: IFluidResolvedUrl = {
+		const resolved: IResolvedUrl = {
 			endpoints: {
 				storageUrl,
 				deltaStorageUrl,
@@ -138,10 +139,11 @@ export class RouterliciousUrlResolver implements IUrlResolver {
 		return resolved;
 	}
 
-	public async getAbsoluteUrl(resolvedUrl: IResolvedUrl, relativeUrl: string): Promise<string> {
-		const fluidResolvedUrl = resolvedUrl as IFluidResolvedUrl;
-
-		const parsedUrl = parse(fluidResolvedUrl.url);
+	public async getAbsoluteUrl(
+		resolvedUrl: IResolvedUrl,
+		relativeUrl: string,
+	): Promise<string> {
+		const parsedUrl = new URL(resolvedUrl.url);
 		assert(!!parsedUrl.pathname, 0x0b9 /* "PathName should exist" */);
 		const [, tenantId, documentId] = parsedUrl.pathname.split("/");
 		assert(!!tenantId, 0x0ba /* "Tenant id should exist" */);
@@ -158,11 +160,17 @@ export class RouterliciousUrlResolver implements IUrlResolver {
 	}
 }
 
+/**
+ * @internal
+ */
 export interface IAlfredUser extends IUser {
 	displayName: string;
 	name: string;
 }
 
+/**
+ * @internal
+ */
 export interface IConfig {
 	serverUrl: string;
 	blobStorageUrl: string;

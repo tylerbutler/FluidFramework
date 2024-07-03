@@ -4,80 +4,65 @@
  */
 
 import http from "http";
-import { TestDriverTypes } from "@fluidframework/test-driver-definitions";
-import { unreachableCase } from "@fluidframework/common-utils";
-import { LocalServerTestDriver } from "./localServerTestDriver";
-import { TinyliciousTestDriver } from "./tinyliciousTestDriver";
-import { RouterliciousTestDriver } from "./routerliciousTestDriver";
-import { OdspTestDriver } from "./odspTestDriver";
-import { LocalDriverApiType, LocalDriverApi } from "./localDriverApi";
-import { OdspDriverApiType, OdspDriverApi } from "./odspDriverApi";
-import { RouterliciousDriverApiType, RouterliciousDriverApi } from "./routerliciousDriverApi";
 
+import { TestDriverTypes } from "@fluid-internal/test-driver-definitions";
+import { unreachableCase } from "@fluidframework/core-utils/internal";
+import Agent from "agentkeepalive";
+
+import { LocalDriverApi, LocalDriverApiType } from "./localDriverApi.js";
+import { LocalServerTestDriver } from "./localServerTestDriver.js";
+import { OdspDriverApi, OdspDriverApiType } from "./odspDriverApi.js";
+import { OdspTestDriver } from "./odspTestDriver.js";
+import {
+	RouterliciousDriverApi,
+	RouterliciousDriverApiType,
+} from "./routerliciousDriverApi.js";
+import { RouterliciousTestDriver } from "./routerliciousTestDriver.js";
+import { TinyliciousTestDriver } from "./tinyliciousTestDriver.js";
+
+/**
+ * @internal
+ */
 export interface DriverApiType {
 	LocalDriverApi: LocalDriverApiType;
 	OdspDriverApi: OdspDriverApiType;
 	RouterliciousDriverApi: RouterliciousDriverApiType;
 }
-
+/**
+ * @internal
+ */
 export const DriverApi: DriverApiType = {
 	LocalDriverApi,
 	OdspDriverApi,
 	RouterliciousDriverApi,
 };
 
-let httpRequestPatched = false;
-function patchHttpRequestToForceKeepAlive() {
-	// Each TCP connection port has a delay to disallow it to be reused after close,
-	// and unit test make a lot of connection, which might cause port exhaustion.
-	// Patch http.request to force keep-alive.
+// IMPORTANT: the Agent from agentkeepalive sets keep-alive to true by default and manages timeouts for active and
+// inactive connections on the client side (default to 8s and 4s respectively). This should be coordinated with the
+// corresponding timeout on the server's end. If the timeout on the client is higher than on the server, an inactive
+// connection might be closed by the server but kept around on the client, and when something attempts to reuse it,
+// our drivers will end up throwing an error like ECONNRESET or "socket hang up", indicating that "the other side of
+// the connection closed it abruptly", which in this case isn't really abruptly, it's just that the client doesn't
+// immediately react to the server closing the socket.
+http.globalAgent = new Agent();
 
-	if (httpRequestPatched) {
-		return;
-	}
+/**
+ * @internal
+ */
+export type CreateFromEnvConfigParam<T extends (config: any, ...args: any) => any> =
+	T extends (config: infer P, ...args: any) => any ? P : never;
 
-	httpRequestPatched = true;
-
-	const httpAgent = new http.Agent({ keepAlive: true, scheduling: "fifo" });
-	const oldRequest = http.request;
-	http.request = ((url, options, callback) => {
-		// There are two variant of the API
-		// - http.request(options[, callback])
-		// - http.request(url[, options][, callback])
-		// See https://nodejs.org/dist/latest-v18.x/docs/api/http.html#httprequestoptions-callback
-
-		// decide which param is the actual options object and add agent to it.
-		let opts;
-		if (options !== undefined) {
-			opts = typeof options !== "function" ? options : url;
-		} else if (callback !== undefined) {
-			// eslint-disable-next-line no-param-reassign
-			options = {};
-			opts = options;
-		} else {
-			opts = url;
-		}
-		if (opts.agent === undefined) {
-			opts.agent = httpAgent;
-			opts.headers.Connection = ["keep-alive"];
-		}
-		// pass thru the param to the original function
-		return oldRequest(url, options, callback);
-	}) as any;
-}
-
-export type CreateFromEnvConfigParam<T extends (config: any, ...args: any) => any> = T extends (
-	config: infer P,
-	...args: any
-) => any
-	? P
-	: never;
-
+/**
+ * @internal
+ */
 export interface FluidTestDriverConfig {
 	odsp?: CreateFromEnvConfigParam<typeof OdspTestDriver.createFromEnv>;
 	r11s?: CreateFromEnvConfigParam<typeof RouterliciousTestDriver.createFromEnv>;
 }
 
+/**
+ * @internal
+ */
 export async function createFluidTestDriver(
 	fluidTestDriverType: TestDriverTypes = "local",
 	config?: FluidTestDriverConfig,
@@ -91,16 +76,13 @@ export async function createFluidTestDriver(
 
 		case "t9s":
 		case "tinylicious":
-			patchHttpRequestToForceKeepAlive();
 			return new TinyliciousTestDriver(api.RouterliciousDriverApi);
 
 		case "r11s":
 		case "routerlicious":
-			patchHttpRequestToForceKeepAlive();
 			return RouterliciousTestDriver.createFromEnv(config?.r11s, api.RouterliciousDriverApi);
 
 		case "odsp":
-			patchHttpRequestToForceKeepAlive();
 			return OdspTestDriver.createFromEnv(config?.odsp, api.OdspDriverApi);
 
 		default:

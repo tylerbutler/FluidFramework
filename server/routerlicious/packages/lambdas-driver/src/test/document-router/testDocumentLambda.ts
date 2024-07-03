@@ -21,12 +21,18 @@ export class TestLambda implements IPartitionLambda {
 	private failHandler = false;
 	private throwHandler = false;
 
-	constructor(config: IPartitionLambdaConfig, private readonly context: IContext) {
+	constructor(
+		config: IPartitionLambdaConfig,
+		private readonly context: IContext,
+	) {
 		this.documentId = config.documentId;
 		assert(this.documentId);
 	}
 
-	public handler(message: IQueuedMessage) {
+	/**
+	 * {@inheritDoc IPartitionLambda.handler}
+	 */
+	public handler(message: IQueuedMessage): undefined {
 		this.handleCalls++;
 		const sequencedMessage = message.value as ISequencedOperationMessage;
 		assert.equal(this.documentId, sequencedMessage.documentId);
@@ -69,7 +75,7 @@ export class TestLambdaFactory extends EventEmitter implements IPartitionLambdaF
 		context: IContext,
 	): Promise<IPartitionLambda> {
 		if (this.failCreatelambda) {
-			return Promise.reject(new Error("Test failure"));
+			throw new Error("Test failure");
 		} else {
 			const lambda = new TestLambda(config, context);
 			this.lambdas.push(lambda);

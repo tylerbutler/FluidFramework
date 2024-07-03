@@ -3,18 +3,25 @@
  * Licensed under the MIT License.
  */
 
-import { fail, strict as assert } from "assert";
+import { strict as assert, fail } from "assert";
+
+import { type IJsonCodec, makeCodecFamily } from "../codec/index.js";
 import {
-	ChangeEncoder,
-	ChangeFamily,
-	ChangeRebaser,
-	TaggedChange,
 	AnchorSet,
-	Delta,
-	ChangeFamilyEditor,
-} from "../core";
-import { JsonCompatible, JsonCompatibleReadOnly, RecursiveReadonly } from "../util";
-import { deepFreeze } from "./utils";
+	type ChangeEncodingContext,
+	type ChangeFamily,
+	type ChangeFamilyCodec,
+	type ChangeFamilyEditor,
+	type ChangeRebaser,
+	type DeltaFieldMap,
+	type DeltaRoot,
+	type FieldKey,
+	type RevisionTag,
+	type TaggedChange,
+	emptyDelta,
+} from "../core/index.js";
+import { type JsonCompatibleReadOnly, type RecursiveReadonly, brand } from "../util/index.js";
+import { deepFreeze } from "@fluidframework/test-runtime-utils/internal";
 
 export interface NonEmptyTestChange {
 	/**
@@ -48,10 +55,13 @@ function isNonEmptyChange(
 	return "inputContext" in change;
 }
 
-function mint(inputContext: readonly number[], intention: number | number[]): NonEmptyTestChange {
+function mint(
+	inputContext: readonly number[],
+	intention: number | number[],
+): NonEmptyTestChange {
 	const intentions = Array.isArray(intention) ? intention : [intention];
 	return {
-		inputContext: [...inputContext],
+		inputContext: composeIntentions([], inputContext),
 		intentions,
 		outputContext: composeIntentions(inputContext, intentions),
 	};
@@ -75,11 +85,19 @@ function composeIntentions(base: readonly number[], extras: readonly number[]): 
 	return composed;
 }
 
-function compose(changes: TaggedChange<TestChange>[], verify: boolean = true): TestChange {
+function compose(
+	change1: TestChange | undefined,
+	change2: TestChange | undefined,
+	verify: boolean = true,
+): TestChange {
+	return composeList(getArrayWithoutUndefined([change1, change2]), verify);
+}
+
+function composeList(changes: TestChange[], verify: boolean = true): TestChange {
 	let inputContext: number[] | undefined;
 	let outputContext: number[] | undefined;
 	let intentions: number[] = [];
-	for (const { change } of changes) {
+	for (const change of changes) {
 		if (isNonEmptyChange(change)) {
 			inputContext ??= change.inputContext;
 			if (verify && outputContext !== undefined) {
@@ -90,7 +108,7 @@ function compose(changes: TaggedChange<TestChange>[], verify: boolean = true): T
 			intentions = composeIntentions(intentions, change.intentions);
 		}
 	}
-	if (inputContext !== undefined) {
+	if (intentions.length !== 0 && inputContext !== undefined) {
 		return {
 			inputContext,
 			intentions,
@@ -98,6 +116,16 @@ function compose(changes: TaggedChange<TestChange>[], verify: boolean = true): T
 		};
 	}
 	return emptyChange;
+}
+
+function getArrayWithoutUndefined<T>(array: (T | undefined)[]): T[] {
+	const result: T[] = [];
+	for (const item of array) {
+		if (item !== undefined) {
+			result.push(item);
+		}
+	}
+	return result;
 }
 
 function invert(change: TestChange): TestChange {
@@ -138,26 +166,6 @@ function rebase(
 	return TestChange.emptyChange;
 }
 
-function rebaseAnchors(anchors: AnchorSet, over: TestChange): void {
-	if (isNonEmptyChange(over) && anchors instanceof TestAnchorSet) {
-		let lastChange: RecursiveReadonly<NonEmptyTestChange> | undefined;
-		const { rebases } = anchors;
-		for (let iChange = rebases.length - 1; iChange >= 0; --iChange) {
-			const change = rebases[iChange];
-			if (isNonEmptyChange(change)) {
-				lastChange = change;
-				break;
-			}
-		}
-		if (lastChange !== undefined) {
-			// The new change should apply to the context brought about by the previous change
-			assert.deepEqual(over.inputContext, lastChange.outputContext);
-		}
-		anchors.intentions = composeIntentions(anchors.intentions, over.intentions);
-		rebases.push(over);
-	}
-}
-
 function checkChangeList(
 	changes: readonly RecursiveReadonly<TestChange>[],
 	intentions: number[],
@@ -178,14 +186,18 @@ function checkChangeList(
 	assert.deepEqual(intentionsSeen, intentions);
 }
 
-function toDelta(change: TestChange): Delta.Modify {
+function toDelta({ change }: TaggedChange<TestChange>): DeltaFieldMap {
 	if (change.intentions.length > 0) {
-		return {
-			type: Delta.MarkType.Modify,
-			setValue: change.intentions.map(String).join("|"),
-		};
+		return new Map([
+			[
+				// We represent the intentions as a list if node offsets in some imaginary field "testIntentions".
+				// This is purely for the sake of testing.
+				brand("testIntentions"),
+				{ local: change.intentions.map((i) => ({ count: i })) },
+			],
+		]);
 	}
-	return { type: Delta.MarkType.Modify };
+	return new Map();
 }
 
 export interface AnchorRebaseData {
@@ -193,67 +205,113 @@ export interface AnchorRebaseData {
 	intentions: number[];
 }
 
-const emptyChange: TestChange = { intentions: [] };
+const emptyChange: TestChange = {
+	intentions: [],
+};
 
-export class TestChangeEncoder extends ChangeEncoder<TestChange> {
-	public encodeForJson(formatVersion: number, change: TestChange): JsonCompatible {
-		return change as unknown as JsonCompatible;
-	}
-	public decodeJson(formatVersion: number, change: JsonCompatibleReadOnly): TestChange {
-		return change as unknown as TestChange;
-	}
-}
-
-const encoder = new TestChangeEncoder();
+const codec: IJsonCodec<
+	TestChange,
+	JsonCompatibleReadOnly,
+	JsonCompatibleReadOnly,
+	ChangeEncodingContext
+> &
+	ChangeFamilyCodec<TestChange> = {
+	encode: (x) => x as unknown as JsonCompatibleReadOnly,
+	decode: (x) => x as unknown as TestChange,
+};
 
 export const TestChange = {
 	emptyChange,
 	mint,
 	compose,
+	composeList,
 	invert,
 	rebase,
-	rebaseAnchors,
 	checkChangeList,
 	toDelta,
-	encoder,
+	isEmpty,
+	codec,
+	codecs: makeCodecFamily([
+		[1, codec],
+		[2, codec],
+		[3, codec],
+	]),
 };
 deepFreeze(TestChange);
 
 export class TestChangeRebaser implements ChangeRebaser<TestChange> {
 	public compose(changes: TaggedChange<TestChange>[]): TestChange {
-		return compose(changes);
+		return composeList(changes.map((c) => c.change));
 	}
 
 	public invert(change: TaggedChange<TestChange>): TestChange {
 		return invert(change.change);
 	}
 
-	public rebase(change: TestChange, over: TaggedChange<TestChange>): TestChange {
-		return rebase(change, over.change) ?? { intentions: [] };
+	public rebase(change: TaggedChange<TestChange>, over: TaggedChange<TestChange>): TestChange {
+		return (
+			rebase(change.change, over.change) ?? {
+				intentions: [],
+			}
+		);
 	}
 
-	public rebaseAnchors(anchors: AnchorSet, over: TestChange): void {
-		rebaseAnchors(anchors, over);
+	public changeRevision(
+		change: TestChange,
+		newRevision: RevisionTag | undefined,
+		rollbackOf?: RevisionTag,
+	): TestChange {
+		return change;
 	}
 }
 
 export class UnrebasableTestChangeRebaser extends TestChangeRebaser {
-	public rebase(change: TestChange, over: TaggedChange<TestChange>): TestChange {
+	public override rebase(
+		change: TaggedChange<TestChange>,
+		over: TaggedChange<TestChange>,
+	): TestChange {
 		assert.fail("Unexpected call to rebase");
+	}
+}
+
+export class NoOpChangeRebaser extends TestChangeRebaser {
+	public rebasedCount = 0;
+	public invertedCount = 0;
+	public composedCount = 0;
+
+	public override rebase(
+		change: TaggedChange<TestChange>,
+		over: TaggedChange<TestChange>,
+	): TestChange {
+		this.rebasedCount += 1;
+		return change.change;
+	}
+
+	public override invert(change: TaggedChange<TestChange>): TestChange {
+		this.invertedCount += 1;
+		return change.change;
+	}
+
+	public override compose(changes: TaggedChange<TestChange>[]): TestChange {
+		this.composedCount += changes.length;
+		return changes.length === 0 ? emptyChange : changes[0].change;
 	}
 }
 
 export class ConstrainedTestChangeRebaser extends TestChangeRebaser {
 	public constructor(
 		private readonly constraint: (
-			change: TestChange,
+			change: TaggedChange<TestChange>,
 			over: TaggedChange<TestChange>,
 		) => boolean,
 	) {
 		super();
 	}
 
-	public rebase(change: TestChange, over: TaggedChange<TestChange>): TestChange {
+	public override rebase(
+		change: TaggedChange<TestChange>,
+		over: TaggedChange<TestChange>,
+	): TestChange {
 		assert(this.constraint(change, over));
 		return super.rebase(change, over);
 	}
@@ -265,3 +323,37 @@ export class TestAnchorSet extends AnchorSet implements AnchorRebaseData {
 }
 
 export type TestChangeFamily = ChangeFamily<ChangeFamilyEditor, TestChange>;
+
+const rootKey: FieldKey = brand("root");
+
+/**
+ * This is a hack to encode arbitrary information (the intentions) into a Delta
+ * The resulting Delta does not represent a concrete change to a document tree.
+ * It is instead used as composite value in deep comparisons that verify that `EditManager` calls
+ * `ChangeFamily.intoDelta` with the expected change.
+ */
+export function asDelta(intentions: number[]): DeltaRoot {
+	return intentions.length === 0
+		? emptyDelta
+		: {
+				fields: new Map([[rootKey, { local: intentions.map((i) => ({ count: i })) }]]),
+			};
+}
+
+export function testChangeFamilyFactory(
+	rebaser?: ChangeRebaser<TestChange>,
+): ChangeFamily<ChangeFamilyEditor, TestChange> {
+	const family = {
+		rebaser: rebaser ?? new TestChangeRebaser(),
+		codecs: TestChange.codecs,
+		buildEditor: () => ({
+			enterTransaction: () => assert.fail("Unexpected edit"),
+			exitTransaction: () => assert.fail("Unexpected edit"),
+		}),
+	};
+	return family;
+}
+
+export function isEmpty(change: TestChange): boolean {
+	return change.intentions.length === 0;
+}

@@ -4,16 +4,21 @@
  */
 
 import { strict as assert } from "assert";
+
 import {
 	IChannelAttributes,
-	IChannelStorageService,
 	IFluidDataStoreRuntime,
-} from "@fluidframework/datastore-definitions";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { IGarbageCollectionData, ISummaryTreeWithStats } from "@fluidframework/runtime-definitions";
-import { validateAssertionError } from "@fluidframework/test-runtime-utils";
-import { IFluidSerializer } from "../serializer";
-import { SharedObject, SharedObjectCore } from "../sharedObject";
+	IChannelStorageService,
+} from "@fluidframework/datastore-definitions/internal";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+import {
+	IGarbageCollectionData,
+	ISummaryTreeWithStats,
+} from "@fluidframework/runtime-definitions/internal";
+import { validateAssertionError } from "@fluidframework/test-runtime-utils/internal";
+
+import { IFluidSerializer } from "../serializer.js";
+import { SharedObject, SharedObjectCore } from "../sharedObject.js";
 
 class MySharedObject extends SharedObject {
 	constructor(id: string) {
@@ -55,6 +60,8 @@ class MySharedObjectCore extends SharedObjectCore {
 		);
 	}
 
+	protected readonly serializer = {} as any as IFluidSerializer;
+
 	protected summarizeCore(serializer: IFluidSerializer): ISummaryTreeWithStats {
 		throw new Error("Method not implemented.");
 	}
@@ -92,7 +99,9 @@ describe("SharedObject", () => {
 	it("rejects slashes in id", () => {
 		const invalidId = "beforeSlash/afterSlash";
 		const codeBlock = () => new MySharedObject(invalidId);
-		assert.throws(codeBlock, (e) => validateAssertionError(e, "Id cannot contain slashes"));
+		assert.throws(codeBlock, (e: Error) =>
+			validateAssertionError(e, "Id cannot contain slashes"),
+		);
 	});
 });
 
@@ -100,6 +109,8 @@ describe("SharedObjectCore", () => {
 	it("rejects slashes in id", () => {
 		const invalidId = "beforeSlash/afterSlash";
 		const codeBlock = () => new MySharedObjectCore(invalidId);
-		assert.throws(codeBlock, (e) => validateAssertionError(e, "Id cannot contain slashes"));
+		assert.throws(codeBlock, (e: Error) =>
+			validateAssertionError(e, "Id cannot contain slashes"),
+		);
 	});
 });

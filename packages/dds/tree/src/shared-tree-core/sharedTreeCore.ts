@@ -3,85 +3,62 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/common-utils";
-import {
+import { assert } from "@fluidframework/core-utils/internal";
+import type {
 	IChannelAttributes,
-	IChannelStorageService,
 	IFluidDataStoreRuntime,
-} from "@fluidframework/datastore-definitions";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import {
-	ITelemetryContext,
-	ISummaryTreeWithStats,
+	IChannelStorageService,
+} from "@fluidframework/datastore-definitions/internal";
+import type { IIdCompressor } from "@fluidframework/id-compressor";
+import type { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+import type {
+	IExperimentalIncrementalSummaryContext,
 	IGarbageCollectionData,
-} from "@fluidframework/runtime-definitions";
-import { SummaryTreeBuilder } from "@fluidframework/runtime-utils";
+	ISummaryTreeWithStats,
+	ITelemetryContext,
+} from "@fluidframework/runtime-definitions/internal";
+import { SummaryTreeBuilder } from "@fluidframework/runtime-utils/internal";
 import {
-	IFluidSerializer,
-	ISharedObjectEvents,
+	type IFluidSerializer,
 	SharedObject,
-} from "@fluidframework/shared-object-base";
-import { v4 as uuid } from "uuid";
+} from "@fluidframework/shared-object-base/internal";
+
+import type { ICodecOptions, IJsonCodec } from "../codec/index.js";
 import {
-	ChangeFamily,
-	Commit,
-	EditManager,
-	SeqNumber,
-	AnchorSet,
-	Delta,
-	RevisionTag,
-	mintRevisionTag,
-	minimumPossibleSequenceNumber,
-	Rebaser,
-	findAncestor,
-	GraphCommit,
-	RepairDataStore,
-	ChangeFamilyEditor,
-} from "../core";
-import { brand, JsonCompatibleReadOnly, TransactionResult } from "../util";
-import { createEmitter, TransformEvents } from "../events";
-import { TransactionStack } from "./transactionStack";
-import { SharedTreeBranch } from "./branch";
-import { EditManagerSummarizer } from "./editManagerSummarizer";
+	type ChangeFamily,
+	type ChangeFamilyEditor,
+	type GraphCommit,
+	type RevisionTag,
+	RevisionTagCodec,
+	type SchemaAndPolicy,
+	type SchemaPolicy,
+	type TreeStoredSchemaRepository,
+} from "../core/index.js";
+import { type JsonCompatibleReadOnly, brand } from "../util/index.js";
 
-/**
- * The events emitted by a {@link SharedTreeCore}
- *
- * TODO: Add/remove events
- */
-export interface ISharedTreeCoreEvents {
-	updated: () => void;
-}
+import { type SharedTreeBranch, getChangeReplaceType } from "./branch.js";
+import { EditManager, minimumPossibleSequenceNumber } from "./editManager.js";
+import { makeEditManagerCodec } from "./editManagerCodecs.js";
+import type { SeqNumber } from "./editManagerFormat.js";
+import { EditManagerSummarizer } from "./editManagerSummarizer.js";
+import { type MessageEncodingContext, makeMessageCodec } from "./messageCodecs.js";
+import type { DecodedMessage } from "./messageTypes.js";
+import { type ChangeEnricherReadonlyCheckout, NoOpChangeEnricher } from "./changeEnricher.js";
+import type { ResubmitMachine } from "./resubmitMachine.js";
+import { DefaultResubmitMachine } from "./defaultResubmitMachine.js";
+import { BranchCommitEnricher } from "./branchCommitEnricher.js";
+import { createChildLogger } from "@fluidframework/telemetry-utils/internal";
 
-// TODO: How should the format version be determined?
-const formatVersion = 0;
 // TODO: Organize this to be adjacent to persisted types.
 const summarizablesTreeKey = "indexes";
 
-/**
- * Events which result from the state of the tree changing.
- * These are for internal use by the tree.
- */
-export interface ChangeEvents<TChangeset> {
-	/**
-	 * @param change - change that was just sequenced.
-	 * @param derivedFromLocal - iff provided, change was a local change (from this session)
-	 * which is now sequenced (and thus no longer local).
-	 */
-	newSequencedChange: (change: TChangeset, derivedFromLocal?: TChangeset) => void;
+export interface ExplicitCoreCodecVersions {
+	editManager: number;
+	message: number;
+}
 
-	/**
-	 * @param change - change that was just applied locally.
-	 */
-	newLocalChange: (change: TChangeset) => void;
-
-	/**
-	 * @param changeDelta - composed changeset from previous local state
-	 * (state after all sequenced then local changes are accounted for) to current local state.
-	 * May involve effects of a new sequenced change (including rebasing of local changes onto it),
-	 * or a new local change. Called after either sequencedChange or newLocalChange.
-	 */
-	newLocalState: (changeDelta: Delta.Root) => void;
+export interface ClonableSchemaAndPolicy extends SchemaAndPolicy {
+	schema: TreeStoredSchemaRepository;
 }
 
 /**
@@ -90,63 +67,175 @@ export interface ChangeEvents<TChangeset> {
  * TODO: actually implement
  * TODO: is history policy a detail of what indexes are used, or is there something else to it?
  */
-export class SharedTreeCore<TEditor extends ChangeFamilyEditor, TChange> extends SharedObject<
-	TransformEvents<ISharedTreeCoreEvents, ISharedObjectEvents>
-> {
-	private readonly editManager: EditManager<TChange, ChangeFamily<TEditor, TChange>>;
+export class SharedTreeCore<TEditor extends ChangeFamilyEditor, TChange> extends SharedObject {
+	private readonly editManager: EditManager<TEditor, TChange, ChangeFamily<TEditor, TChange>>;
 	private readonly summarizables: readonly Summarizable[];
-
 	/**
 	 * The sequence number that this instance is at.
-	 * This is number is artificial in that it is made up by this instance as opposed to being provided by the runtime.
+	 * This number is artificial in that it is made up by this instance as opposed to being provided by the runtime.
 	 * Is `undefined` after (and only after) this instance is attached.
 	 */
 	private detachedRevision: SeqNumber | undefined = minimumPossibleSequenceNumber;
 
 	/**
-	 * Provides internal events that result from changes to the tree
-	 */
-	protected readonly changeEvents = createEmitter<ChangeEvents<TChange>>();
-
-	/**
 	 * Used to edit the state of the tree. Edits will be immediately applied locally to the tree.
 	 * If there is no transaction currently ongoing, then the edits will be submitted to Fluid immediately as well.
 	 */
-	public readonly editor: TEditor;
-	private readonly transactions = new TransactionStack();
+	public get editor(): TEditor {
+		return this.getLocalBranch().editor;
+	}
+
+	/**
+	 * Used to encode/decode messages sent to/received from the Fluid runtime.
+	 *
+	 * @remarks Since there is currently only one format, this can just be cached on the class.
+	 * With more write formats active, it may make sense to keep around the "usual" format codec
+	 * (the one for the current persisted configuration) and resolve codecs for different versions
+	 * as necessary (e.g. an upgrade op came in, or the configuration changed within the collab window
+	 * and an op needs to be interpreted which isn't written with the current configuration).
+	 */
+	private readonly messageCodec: IJsonCodec<
+		DecodedMessage<TChange>,
+		unknown,
+		unknown,
+		MessageEncodingContext
+	>;
+
+	private readonly idCompressor: IIdCompressor;
+
+	private readonly resubmitMachine: ResubmitMachine<TChange>;
+	protected readonly commitEnricher: BranchCommitEnricher<TChange>;
+
+	protected readonly mintRevisionTag: () => RevisionTag;
+
+	private readonly schemaAndPolicy: ClonableSchemaAndPolicy;
 
 	/**
 	 * @param summarizables - Summarizers for all indexes used by this tree
 	 * @param changeFamily - The change family
 	 * @param editManager - The edit manager
-	 * @param anchors - The anchor set
 	 * @param id - The id of the shared object
 	 * @param runtime - The IFluidDataStoreRuntime which contains the shared object
 	 * @param attributes - Attributes of the shared object
-	 * @param telemetryContextPrefix - the context for any telemetry logs/errors emitted
+	 * @param telemetryContextPrefix - The property prefix for telemetry pertaining to this object. See {@link ITelemetryContext}
 	 */
 	public constructor(
 		summarizables: readonly Summarizable[],
-		private readonly changeFamily: ChangeFamily<TEditor, TChange>,
-		private readonly anchors: AnchorSet,
-
+		changeFamily: ChangeFamily<TEditor, TChange>,
+		options: ICodecOptions,
+		formatOptions: ExplicitCoreCodecVersions,
 		// Base class arguments
 		id: string,
 		runtime: IFluidDataStoreRuntime,
 		attributes: IChannelAttributes,
 		telemetryContextPrefix: string,
+		schema: TreeStoredSchemaRepository,
+		schemaPolicy: SchemaPolicy,
+		resubmitMachine?: ResubmitMachine<TChange>,
+		enricher?: ChangeEnricherReadonlyCheckout<TChange>,
 	) {
 		super(id, runtime, attributes, telemetryContextPrefix);
 
+		this.schemaAndPolicy = {
+			schema,
+			policy: schemaPolicy,
+		};
+
+		const rebaseLogger = createChildLogger({
+			logger: this.logger,
+			namespace: "Rebase",
+		});
+
+		assert(
+			runtime.idCompressor !== undefined,
+			0x886 /* IdCompressor must be enabled to use SharedTree */,
+		);
+		this.idCompressor = runtime.idCompressor;
+		this.mintRevisionTag = () => this.idCompressor.generateCompressedId();
 		/**
 		 * A random ID that uniquely identifies this client in the collab session.
 		 * This is sent alongside every op to identify which client the op originated from.
 		 * This is used rather than the Fluid client ID because the Fluid client ID is not stable across reconnections.
 		 */
-		const localSessionId = uuid();
-		this.editManager = new EditManager(changeFamily, localSessionId, anchors);
+		const localSessionId = runtime.idCompressor.localSessionId;
+		this.editManager = new EditManager(
+			changeFamily,
+			localSessionId,
+			this.mintRevisionTag,
+			rebaseLogger,
+		);
+		this.editManager.localBranch.on("transactionStarted", () => {
+			this.commitEnricher.startNewTransaction();
+		});
+		this.editManager.localBranch.on("transactionAborted", () => {
+			this.commitEnricher.abortCurrentTransaction();
+		});
+		this.editManager.localBranch.on("transactionCommitted", () => {
+			this.commitEnricher.commitCurrentTransaction();
+		});
+		this.editManager.localBranch.on("beforeChange", (change) => {
+			// Ensure that any previously prepared commits that have not been sent are purged.
+			this.commitEnricher.purgePreparedCommits();
+			if (this.detachedRevision !== undefined) {
+				// Edits submitted before the first attach do not need enrichment because they will not be applied by peers.
+			} else if (change.type === "append") {
+				if (this.getLocalBranch().isTransacting()) {
+					for (const newCommit of change.newCommits) {
+						this.commitEnricher.ingestTransactionCommit(newCommit);
+					}
+				} else {
+					for (const newCommit of change.newCommits) {
+						this.commitEnricher.prepareCommit(newCommit, false);
+					}
+				}
+			} else if (
+				change.type === "replace" &&
+				getChangeReplaceType(change) === "transactionCommit" &&
+				!this.getLocalBranch().isTransacting()
+			) {
+				assert(
+					change.newCommits.length === 1,
+					0x983 /* Unexpected number of commits when committing transaction */,
+				);
+				this.commitEnricher.prepareCommit(change.newCommits[0], true);
+			}
+		});
+		this.editManager.localBranch.on("afterChange", (change) => {
+			if (this.getLocalBranch().isTransacting()) {
+				// We do not submit ops for changes that are part of a transaction.
+				return;
+			}
+			if (
+				change.type === "append" ||
+				(change.type === "replace" && getChangeReplaceType(change) === "transactionCommit")
+			) {
+				if (this.detachedRevision !== undefined) {
+					for (const newCommit of change.newCommits) {
+						this.submitCommit(newCommit, this.schemaAndPolicy);
+					}
+				} else {
+					for (const newCommit of change.newCommits) {
+						const prepared = this.commitEnricher.getPreparedCommit(newCommit);
+						this.submitCommit(prepared, this.schemaAndPolicy);
+					}
+				}
+			}
+		});
+
+		const revisionTagCodec = new RevisionTagCodec(runtime.idCompressor);
+		const editManagerCodec = makeEditManagerCodec(
+			this.editManager.changeFamily.codecs,
+			revisionTagCodec,
+			options,
+			formatOptions.editManager,
+		);
 		this.summarizables = [
-			new EditManagerSummarizer(runtime, this.editManager),
+			new EditManagerSummarizer(
+				this.editManager,
+				editManagerCodec,
+				this.idCompressor,
+				this.schemaAndPolicy,
+			),
 			...summarizables,
 		];
 		assert(
@@ -154,7 +243,21 @@ export class SharedTreeCore<TEditor extends ChangeFamilyEditor, TChange> extends
 			0x350 /* Index summary element keys must be unique */,
 		);
 
-		this.editor = this.changeFamily.buildEditor((change) => this.applyChange(change), anchors);
+		this.messageCodec = makeMessageCodec(
+			changeFamily.codecs,
+			new RevisionTagCodec(runtime.idCompressor),
+			options,
+			formatOptions.message,
+		);
+
+		const changeEnricher = enricher ?? new NoOpChangeEnricher();
+		this.resubmitMachine =
+			resubmitMachine ??
+			new DefaultResubmitMachine(
+				changeFamily.rebaser.invert.bind(changeFamily.rebaser),
+				changeEnricher,
+			);
+		this.commitEnricher = new BranchCommitEnricher(changeFamily.rebaser, changeEnricher);
 	}
 
 	// TODO: SharedObject's merging of the two summary methods into summarizeCore is not what we want here:
@@ -162,6 +265,7 @@ export class SharedTreeCore<TEditor extends ChangeFamilyEditor, TChange> extends
 	protected summarizeCore(
 		serializer: IFluidSerializer,
 		telemetryContext?: ITelemetryContext,
+		incrementalSummaryContext?: IExperimentalIncrementalSummaryContext,
 	): ISummaryTreeWithStats {
 		const builder = new SummaryTreeBuilder();
 		const summarizableBuilder = new SummaryTreeBuilder();
@@ -174,6 +278,7 @@ export class SharedTreeCore<TEditor extends ChangeFamilyEditor, TChange> extends
 					undefined,
 					undefined,
 					telemetryContext,
+					incrementalSummaryContext,
 				),
 			);
 		}
@@ -193,132 +298,87 @@ export class SharedTreeCore<TEditor extends ChangeFamilyEditor, TChange> extends
 		await Promise.all(loadSummaries);
 	}
 
-	private submitCommit(commit: Commit<TChange>): void {
+	/**
+	 * Submits an op to the Fluid runtime containing the given commit
+	 * @param commit - the commit to submit
+	 * @returns the submitted commit. This is undefined if the underlying `SharedObject` is not attached,
+	 * and may differ from `commit` due to enrichments like detached tree refreshers.
+	 */
+	private submitCommit(
+		commit: GraphCommit<TChange>,
+		schemaAndPolicy: ClonableSchemaAndPolicy,
+		isResubmit = false,
+	): void {
+		assert(
+			// Edits should not be submitted until all transactions finish
+			!this.getLocalBranch().isTransacting() || isResubmit,
+			0x68b /* Unexpected edit submitted during transaction */,
+		);
+		assert(
+			this.isAttached() === (this.detachedRevision === undefined),
+			0x95a /* Detached revision should only be set when not attached */,
+		);
+
 		// Edits submitted before the first attach are treated as sequenced because they will be included
 		// in the attach summary that is uploaded to the service.
 		// Until this attach workflow happens, this instance essentially behaves as a centralized data structure.
 		if (this.detachedRevision !== undefined) {
 			const newRevision: SeqNumber = brand((this.detachedRevision as number) + 1);
 			this.detachedRevision = newRevision;
-			this.editManager.addSequencedChange(commit, newRevision, this.detachedRevision);
+			this.editManager.addSequencedChange(
+				{ ...commit, sessionId: this.editManager.localSessionId },
+				newRevision,
+				this.detachedRevision,
+			);
+			this.editManager.advanceMinimumSequenceNumber(newRevision);
+			return undefined;
 		}
-		const message: Message = {
-			revision: commit.revision,
-			originatorId: this.editManager.localSessionId,
-			changeset: this.changeFamily.encoder.encodeForJson(formatVersion, commit.change),
-		};
-		this.submitLocalMessage(message);
-	}
-
-	/**
-	 * Update the state of the tree (including all indexes) according to the given change.
-	 * If there is not currently a transaction open, the change will be submitted to Fluid.
-	 * @param change - The change to apply.
-	 * @param revision - The revision to associate with the change.
-	 * Defaults to a new, randomly generated, revision if not provided.
-	 */
-	protected applyChange(change: TChange, revision?: RevisionTag): void {
-		const commit = {
-			change,
-			revision: revision ?? mintRevisionTag(),
-			sessionId: this.editManager.localSessionId,
-		};
-		const delta = this.editManager.addLocalChange(commit.revision, change, false);
-		this.transactions.repairStore?.capture(
-			this.changeFamily.intoDelta(change),
-			commit.revision,
+		const message = this.messageCodec.encode(
+			{
+				commit,
+				sessionId: this.editManager.localSessionId,
+			},
+			{
+				idCompressor: this.idCompressor,
+				schema: schemaAndPolicy,
+			},
 		);
-		if (this.transactions.size === 0) {
-			this.submitCommit(commit);
-		}
-
-		this.changeEvents.emit("newLocalChange", change);
-		this.changeEvents.emit("newLocalState", delta);
+		this.submitLocalMessage(message, {
+			// Clone the schema to ensure that during resubmit the schema has not been mutated by later changes
+			schema: schemaAndPolicy.schema.clone(),
+			policy: schemaAndPolicy.policy,
+		});
+		this.resubmitMachine.onCommitSubmitted(commit);
 	}
 
 	protected processCore(
 		message: ISequencedDocumentMessage,
 		local: boolean,
 		localOpMetadata: unknown,
-	) {
-		const { revision, originatorId: stableClientId, changeset } = message.contents as Message;
-		const changes = this.changeFamily.encoder.decodeJson(formatVersion, changeset);
-		const commit: Commit<TChange> = {
-			revision,
-			sessionId: stableClientId,
-			change: changes,
-		};
+	): void {
+		// Empty context object is passed in, as our decode function is schema-agnostic.
+		const { commit, sessionId } = this.messageCodec.decode(message.contents, {
+			idCompressor: this.idCompressor,
+		});
 
-		const delta = this.editManager.addSequencedChange(
-			commit,
+		this.editManager.addSequencedChange(
+			{ ...commit, sessionId },
 			brand(message.sequenceNumber),
 			brand(message.referenceSequenceNumber),
 		);
-		const sequencedChange = this.editManager.getLastSequencedChange();
-		this.changeEvents.emit("newSequencedChange", sequencedChange);
-		this.changeEvents.emit("newLocalState", delta);
+		this.resubmitMachine.onSequencedCommitApplied(local);
+
 		this.editManager.advanceMinimumSequenceNumber(brand(message.minimumSequenceNumber));
 	}
 
-	public startTransaction(repairStore?: RepairDataStore): void {
-		this.transactions.push(this.editManager.getLocalBranchHead().revision, repairStore);
-		this.editor.enterTransaction();
-	}
-
-	public commitTransaction(): TransactionResult.Commit {
-		const { startRevision } = this.transactions.pop();
-		this.editor.exitTransaction();
-		const squashCommit = this.editManager.squashLocalChanges(startRevision);
-		this.submitCommit(squashCommit);
-		return TransactionResult.Commit;
-	}
-
-	public abortTransaction(): TransactionResult.Abort {
-		const { startRevision, repairStore } = this.transactions.pop();
-		this.editor.exitTransaction();
-		const delta = this.editManager.rollbackLocalChanges(startRevision, repairStore);
-		this.changeEvents.emit("newLocalState", delta);
-		return TransactionResult.Abort;
-	}
-
-	public isTransacting(): boolean {
-		return this.transactions.size !== 0;
-	}
-
 	/**
-	 * Spawns a `SharedTreeBranch` that is based on the current state of the tree.
-	 * This can be used to support asynchronous checkouts of the tree.
+	 * @returns the head commit of the root local branch
 	 */
-	protected createBranch(anchors: AnchorSet): SharedTreeBranch<TEditor, TChange> {
-		const branch = new SharedTreeBranch(
-			() => this.editManager.getLocalBranchHead(),
-			(forked) => {
-				const changeToForked = forked.pull();
-				const changes: GraphCommit<TChange>[] = [];
-				const localBranchHead = this.editManager.getLocalBranchHead();
-				const ancestor = findAncestor(
-					[forked.getHead(), changes],
-					(c) => c === localBranchHead,
-				);
-				assert(
-					ancestor === localBranchHead,
-					0x598 /* Expected merging checkout branches to be related */,
-				);
-				for (const { change, revision } of changes) {
-					this.applyChange(change, revision);
-					this.changeFamily.rebaser.rebaseAnchors(this.anchors, change);
-				}
-				return changeToForked;
-			},
-			this.editManager.localSessionId,
-			new Rebaser(this.changeFamily.rebaser),
-			this.changeFamily,
-			anchors,
-		);
-		return branch;
+	protected getLocalBranch(): SharedTreeBranch<TEditor, TChange> {
+		return this.editManager.localBranch;
 	}
 
-	protected onDisconnect() {}
+	protected onDisconnect(): void {}
 
 	protected override didAttach(): void {
 		if (this.detachedRevision !== undefined) {
@@ -326,12 +386,52 @@ export class SharedTreeCore<TEditor extends ChangeFamilyEditor, TChange> extends
 		}
 	}
 
-	protected applyStashedOp(content: any): unknown {
-		throw new Error("Method not implemented.");
+	protected override reSubmitCore(
+		content: JsonCompatibleReadOnly,
+		localOpMetadata: unknown,
+	): void {
+		// Empty context object is passed in, as our decode function is schema-agnostic.
+		const {
+			commit: { revision },
+		} = this.messageCodec.decode(this.serializer.decode(content), {
+			idCompressor: this.idCompressor,
+		});
+		const [commit] = this.editManager.findLocalCommit(revision);
+		// If a resubmit phase is not already in progress, then this must be the first commit of a new resubmit phase.
+		if (this.resubmitMachine.isInResubmitPhase === false) {
+			const toResubmit = this.editManager.getLocalCommits();
+			assert(
+				commit === toResubmit[0],
+				0x95d /* Resubmit phase should start with the oldest local commit */,
+			);
+			this.resubmitMachine.prepareForResubmit(toResubmit);
+		}
+		assert(
+			isClonableSchemaPolicy(localOpMetadata),
+			0x95e /* Local metadata must contain schema and policy. */,
+		);
+		assert(
+			this.resubmitMachine.isInResubmitPhase !== false,
+			0x984 /* Invalid resubmit outside of resubmit phase */,
+		);
+		const enrichedCommit = this.resubmitMachine.peekNextCommit();
+		this.submitCommit(enrichedCommit, localOpMetadata, true);
+	}
+
+	protected applyStashedOp(content: JsonCompatibleReadOnly): void {
+		assert(
+			!this.getLocalBranch().isTransacting(),
+			0x674 /* Unexpected transaction is open while applying stashed ops */,
+		);
+		// Empty context object is passed in, as our decode function is schema-agnostic.
+		const {
+			commit: { revision, change },
+		} = this.messageCodec.decode(content, { idCompressor: this.idCompressor });
+		this.editManager.localBranch.apply(change, revision);
 	}
 
 	public override getGCData(fullGC?: boolean): IGarbageCollectionData {
-		const gcNodes: IGarbageCollectionData["gcNodes"] = {};
+		const gcNodes: IGarbageCollectionData["gcNodes"] = super.getGCData(fullGC).gcNodes;
 		for (const s of this.summarizables) {
 			for (const [id, routes] of Object.entries(s.getGCData(fullGC).gcNodes)) {
 				gcNodes[id] ??= [];
@@ -347,22 +447,11 @@ export class SharedTreeCore<TEditor extends ChangeFamilyEditor, TChange> extends
 	}
 }
 
-/**
- * The format of messages that SharedTree sends and receives.
- */
-interface Message {
-	/**
-	 * The revision tag for the change in this message
-	 */
-	readonly revision: RevisionTag;
-	/**
-	 * The stable ID that identifies the originator of the message.
-	 */
-	readonly originatorId: string;
-	/**
-	 * The changeset to be applied.
-	 */
-	readonly changeset: JsonCompatibleReadOnly;
+function isClonableSchemaPolicy(
+	maybeSchemaPolicy: unknown,
+): maybeSchemaPolicy is ClonableSchemaAndPolicy {
+	const schemaAndPolicy = maybeSchemaPolicy as ClonableSchemaAndPolicy;
+	return schemaAndPolicy.schema !== undefined && schemaAndPolicy.policy !== undefined;
 }
 
 /**
@@ -376,18 +465,19 @@ export interface Summarizable {
 
 	/**
 	 * {@inheritDoc @fluidframework/datastore-definitions#(IChannel:interface).getAttachSummary}
-	 * @param stringify - Serializes the contents of the component (including {@link IFluidHandle}s) for storage.
+	 * @param stringify - Serializes the contents of the component (including {@link (IFluidHandle:interface)}s) for storage.
 	 */
 	getAttachSummary(
 		stringify: SummaryElementStringifier,
 		fullTree?: boolean,
 		trackState?: boolean,
 		telemetryContext?: ITelemetryContext,
+		incrementalSummaryContext?: IExperimentalIncrementalSummaryContext,
 	): ISummaryTreeWithStats;
 
 	/**
 	 * {@inheritDoc @fluidframework/datastore-definitions#(IChannel:interface).summarize}
-	 * @param stringify - Serializes the contents of the component (including {@link IFluidHandle}s) for storage.
+	 * @param stringify - Serializes the contents of the component (including {@link (IFluidHandle:interface)}s) for storage.
 	 */
 	summarize(
 		stringify: SummaryElementStringifier,

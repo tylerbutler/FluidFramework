@@ -3,13 +3,14 @@
  * Licensed under the MIT License.
  */
 
-import { IFluidHandleContext } from "@fluidframework/core-interfaces";
+import { IFluidHandleContext } from "@fluidframework/core-interfaces/internal";
 
 /**
  * Generates the absolute path for a Fluid object given its path and its parent routeContext.
  * @param path - The path to the Fluid object relative to the route context.
  * @param routeContext - The route context that contains the Fluid object.
  * @returns The absolute path to the Fluid object from the root of the Container.
+ * @internal
  */
 export function generateHandleContextPath(
 	path: string,
@@ -33,6 +34,6 @@ export function generateHandleContextPath(
 			? `/${normalizedPath}`
 			: `${
 					routeContext.absolutePath === "/" ? "" : routeContext.absolutePath
-			  }/${normalizedPath}`;
+				}/${normalizedPath}`;
 	}
 }

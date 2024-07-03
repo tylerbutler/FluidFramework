@@ -4,24 +4,37 @@
  */
 
 import { strict as assert } from "assert";
-import { validateAssertionError } from "@fluidframework/test-runtime-utils";
-import { createEmitter, EventEmitter, ISubscribable } from "../../events";
+import { EventEmitter, type Listenable, createEmitter } from "../../events/index.js";
 
 interface TestEvents {
 	open: () => void;
 	close: (error: boolean) => void;
+	compute: (input: string) => string;
 }
 
 describe("EventEmitter", () => {
 	it("emits events", () => {
 		const emitter = createEmitter<TestEvents>();
-		let opened = false;
-		emitter.on("open", () => {
-			assert(!opened, "Event should only be fired once");
-			opened = true;
-		});
+		const log: string[] = [];
+		emitter.on("open", () => log.push("opened"));
 		emitter.emit("open");
-		assert(opened);
+		assert.deepEqual(log, ["opened"]);
+	});
+
+	it("emits events and collects their results", () => {
+		const emitter = createEmitter<TestEvents>();
+		const listener1 = (arg: string) => arg.toUpperCase();
+		const listener2 = (arg: string) => arg.toLowerCase();
+		emitter.on("compute", listener1);
+		emitter.on("compute", listener2);
+		const results = emitter.emitAndCollect("compute", "hello");
+		assert.deepEqual(results, ["HELLO", "hello"]);
+	});
+
+	it("emits events and collects an empty result array when no listeners registered", () => {
+		const emitter = createEmitter<TestEvents>();
+		const results = emitter.emitAndCollect("compute", "hello");
+		assert.deepEqual(results, []);
 	});
 
 	it("passes arguments to events", () => {
@@ -83,44 +96,98 @@ describe("EventEmitter", () => {
 		assert(!closed);
 	});
 
-	it("ignores duplicate events", () => {
+	it("correctly handles multiple registrations for the same event", () => {
 		const emitter = createEmitter<TestEvents>();
-		let count = 0;
+		let count: number;
 		const listener = () => (count += 1);
-		emitter.on("open", listener);
-		emitter.on("open", listener);
+		const off1 = emitter.on("open", listener);
+		const off2 = emitter.on("open", () => listener());
+
+		count = 0;
 		emitter.emit("open");
-		// Count should be 1, not 2, even though `listener` was registered twice
+		assert.strictEqual(count, 2); // Listener should be fired twice
+
+		count = 0;
+		off1();
+		emitter.emit("open");
 		assert.strictEqual(count, 1);
+
+		count = 0;
+		off2();
+		emitter.emit("open");
+		assert.strictEqual(count, 0);
 	});
 
-	it("fails on duplicate deregistrations", () => {
+	// Note: This behavior is not contractually required (see docs for `Listenable.on()`),
+	// but is tested here to check for changes or regressions.
+	it("correctly handles multiple registrations of the same listener", () => {
+		const emitter = createEmitter<TestEvents>();
+		let count: number;
+		const listener = () => (count += 1);
+		const off1 = emitter.on("open", listener);
+		const off2 = emitter.on("open", listener);
+
+		count = 0;
+		emitter.emit("open");
+		assert.strictEqual(count, 2); // Listener should be fired twice
+
+		count = 0;
+		off1();
+		emitter.emit("open");
+		assert.strictEqual(count, 1);
+
+		count = 0;
+		off2();
+		emitter.emit("open");
+		assert.strictEqual(count, 0);
+	});
+
+	it("allows repeat deregistrations", () => {
 		const emitter = createEmitter<TestEvents>();
 		const deregister = emitter.on("open", () => {});
 		const deregisterB = emitter.on("open", () => {});
 		deregister();
-		assert.throws(
-			() => deregister(),
-			(e) =>
-				validateAssertionError(
-					e,
-					"Listener does not exist. Event deregistration functions may only be invoked once.",
-				),
-		);
+		deregister();
 		deregisterB();
-		assert.throws(
-			() => deregister(),
-			(e) =>
-				validateAssertionError(
-					e,
-					"Event has no listeners. Event deregistration functions may only be invoked once.",
-				),
-		);
+		deregisterB();
+	});
+
+	it("skips events adding during event", () => {
+		const emitter = createEmitter<TestEvents>();
+		const log: string[] = [];
+		const unsubscribe = emitter.on("open", () => {
+			log.push("A");
+			emitter.on("open", () => {
+				log.push("B");
+			});
+		});
+		emitter.emit("open");
+		unsubscribe();
+		assert.deepEqual(log, ["A"]);
+		emitter.emit("open");
+		assert.deepEqual(log, ["A", "B"]);
+	});
+
+	it("reentrant events", () => {
+		const emitter = createEmitter<TestEvents>();
+		const log: string[] = [];
+		const unsubscribe = emitter.on("open", () => {
+			log.push("A1");
+			emitter.on("open", () => {
+				log.push("B");
+			});
+			unsubscribe();
+			emitter.emit("open");
+			log.push("A2");
+		});
+		emitter.emit("open");
+		assert.deepEqual(log, ["A1", "B", "A2"]);
 	});
 });
 
 interface MyEvents {
 	loaded: () => void;
+	computed: () => number;
 }
 
 // The below classes correspond to the examples given in the doc comment of `EventEmitter` to ensure that they compile
@@ -128,14 +195,16 @@ interface MyEvents {
 class MyInheritanceClass extends EventEmitter<MyEvents> {
 	private load() {
 		this.emit("loaded");
+		const results: number[] = this.emitAndCollect("computed");
 	}
 }
 
-class MyCompositionClass implements ISubscribable<MyEvents> {
+class MyCompositionClass implements Listenable<MyEvents> {
 	private readonly events = createEmitter<MyEvents>();
 
 	private load() {
 		this.events.emit("loaded");
+		const results: number[] = this.events.emitAndCollect("computed");
 	}
 
 	public on<K extends keyof MyEvents>(eventName: K, listener: MyEvents[K]): () => void {

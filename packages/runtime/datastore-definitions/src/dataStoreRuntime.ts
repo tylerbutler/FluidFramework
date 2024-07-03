@@ -3,35 +3,29 @@
  * Licensed under the MIT License.
  */
 
-import {
+import type { AttachState, IAudience } from "@fluidframework/container-definitions";
+import type {
+	IFluidHandle,
+	FluidObject,
 	IDisposable,
 	IEvent,
 	IEventProvider,
-	ITelemetryLogger,
-} from "@fluidframework/common-definitions";
-import {
-	IFluidHandleContext,
-	IFluidRouter,
-	IFluidHandle,
-	FluidObject,
+	ITelemetryBaseLogger,
+	ErasedType,
 } from "@fluidframework/core-interfaces";
-import {
-	IAudience,
-	IDeltaManager,
-	AttachState,
-	ILoaderOptions,
-} from "@fluidframework/container-definitions";
-import {
-	IDocumentMessage,
-	IQuorumClients,
-	ISequencedDocumentMessage,
-} from "@fluidframework/protocol-definitions";
-import {
-	IInboundSignalMessage,
-	IProvideFluidDataStoreRegistry,
-} from "@fluidframework/runtime-definitions";
-import { IChannel } from ".";
+import type { IFluidHandleContext } from "@fluidframework/core-interfaces/internal";
+import type { IQuorumClients } from "@fluidframework/driver-definitions";
+import type { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+import type { IIdCompressor } from "@fluidframework/id-compressor";
+import type { IInboundSignalMessage } from "@fluidframework/runtime-definitions/internal";
 
+import type { IChannel } from "./channel.js";
+
+/**
+ * Events emitted by {@link IFluidDataStoreRuntime}.
+ * @legacy
+ * @alpha
+ */
 export interface IFluidDataStoreRuntimeEvents extends IEvent {
 	(event: "disconnected" | "dispose" | "attaching" | "attached", listener: () => void);
 	(event: "op", listener: (message: ISequencedDocumentMessage) => void);
@@ -40,13 +34,22 @@ export interface IFluidDataStoreRuntimeEvents extends IEvent {
 }
 
 /**
+ * Manages the transmission of ops between the runtime and storage.
+ * @legacy
+ * @alpha
+ */
+export type IDeltaManagerErased =
+	ErasedType<"@fluidframework/container-definitions.IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>">;
+
+/**
  * Represents the runtime for the data store. Contains helper functions/state of the data store.
+ * @sealed
+ * @legacy
+ * @alpha
  */
 export interface IFluidDataStoreRuntime
-	extends IFluidRouter,
-		IEventProvider<IFluidDataStoreRuntimeEvents>,
-		IDisposable,
-		Partial<IProvideFluidDataStoreRegistry> {
+	extends IEventProvider<IFluidDataStoreRuntimeEvents>,
+		IDisposable {
 	readonly id: string;
 
 	readonly IFluidHandleContext: IFluidHandleContext;
@@ -55,20 +58,23 @@ export interface IFluidDataStoreRuntime
 	readonly channelsRoutingContext: IFluidHandleContext;
 	readonly objectsRoutingContext: IFluidHandleContext;
 
-	readonly options: ILoaderOptions;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	readonly options: Record<string | number, any>;
 
-	readonly deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
+	readonly deltaManager: IDeltaManagerErased;
 
 	readonly clientId: string | undefined;
 
 	readonly connected: boolean;
 
-	readonly logger: ITelemetryLogger;
+	readonly logger: ITelemetryBaseLogger;
 
 	/**
 	 * Indicates the attachment state of the data store to a host service.
 	 */
 	readonly attachState: AttachState;
+
+	readonly idCompressor?: IIdCompressor;
 
 	/**
 	 * Returns the channel with the given id
@@ -76,21 +82,26 @@ export interface IFluidDataStoreRuntime
 	getChannel(id: string): Promise<IChannel>;
 
 	/**
-	 * Invokes the given callback and expects that no ops are submitted
-	 * until execution finishes. If an op is submitted, an error will be raised.
-	 *
-	 * Can be disabled by feature gate `Fluid.ContainerRuntime.DisableOpReentryCheck`
-	 *
-	 * @param callback - the callback to be invoked
-	 */
-	ensureNoDataModelChanges<T>(callback: () => T): T;
-
-	/**
 	 * Creates a new channel of the given type.
 	 * @param id - ID of the channel to be created.  A unique ID will be generated if left undefined.
 	 * @param type - Type of the channel.
 	 */
 	createChannel(id: string | undefined, type: string): IChannel;
+
+	/**
+	 * This api allows adding channel to data store after it was created.
+	 * This allows callers to cusmomize channel instance. For example, channel implementation
+	 * could have various modes of operations. As long as such configuration is provided at creation
+	 * and stored in summaries (such that all users of such channel instance behave the same), this
+	 * could be useful technique to have customized solutions without introducing a number of data structures
+	 * that all have same implementation.
+	 * This is also useful for scenarios like SharedTree DDS, where schema is provided at creation and stored in a summary.
+	 * The channel type should be present in the registry, otherwise the runtime would reject
+	 * the channel. The runtime used to create the channel object should be same to which
+	 * it is added.
+	 * @param channel - channel which needs to be added to the runtime.
+	 */
+	addChannel(channel: IChannel): void;
 
 	/**
 	 * Bind the channel with the data store runtime. If the runtime
@@ -103,14 +114,18 @@ export interface IFluidDataStoreRuntime
 	 * Api to upload a blob of data.
 	 * @param blob - blob to be uploaded.
 	 */
-	uploadBlob(blob: ArrayBufferLike): Promise<IFluidHandle<ArrayBufferLike>>;
+	uploadBlob(
+		blob: ArrayBufferLike,
+		signal?: AbortSignal,
+	): Promise<IFluidHandle<ArrayBufferLike>>;
 
 	/**
 	 * Submits the signal to be sent to other clients.
 	 * @param type - Type of the signal.
-	 * @param content - Content of the signal.
+	 * @param content - Content of the signal. Should be a JSON serializable object or primitive.
+	 * @param targetClientId - When specified, the signal is only sent to the provided client id.
 	 */
-	submitSignal(type: string, content: any): void;
+	submitSignal: (type: string, content: unknown, targetClientId?: string) => void;
 
 	/**
 	 * Returns the current quorum.
@@ -129,12 +144,7 @@ export interface IFluidDataStoreRuntime
 
 	/**
 	 * Exposes a handle to the root object / entryPoint of the data store. Use this as the primary way of interacting
-	 * with it. If this property is undefined (meaning that exposing the entryPoint hasn't been implemented in a
-	 * particular scenario) fall back to the current approach of requesting the root object through the request pattern.
-	 *
-	 * @remarks The plan is that eventually the data store will stop providing IFluidRouter functionality, this property
-	 * will become non-optional and return an IFluidHandle (no undefined) and will become the only way to access
-	 * the data store's entryPoint.
+	 * with it.
 	 */
-	readonly entryPoint?: IFluidHandle<FluidObject>;
+	readonly entryPoint: IFluidHandle<FluidObject>;
 }

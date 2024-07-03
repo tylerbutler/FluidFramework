@@ -3,10 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import { IRedisParameters } from "@fluidframework/server-services-utils";
-import { Lumberjack } from "@fluidframework/server-services-telemetry";
-import { Redis } from "ioredis";
-import * as winston from "winston";
+import {
+	IRedisParameters,
+	IRedisClientConnectionManager,
+} from "@fluidframework/server-services-utils";
 import { ICache } from "./definitions";
 
 /**
@@ -16,7 +16,10 @@ export class RedisCache implements ICache {
 	private readonly expireAfterSeconds: number = 60 * 60 * 24;
 	private readonly prefix: string = "git";
 
-	constructor(private readonly client: Redis, parameters?: IRedisParameters) {
+	constructor(
+		private readonly redisClientConnectionManager: IRedisClientConnectionManager,
+		parameters?: IRedisParameters,
+	) {
 		if (parameters?.expireAfterSeconds) {
 			this.expireAfterSeconds = parameters.expireAfterSeconds;
 		}
@@ -25,14 +28,13 @@ export class RedisCache implements ICache {
 			this.prefix = parameters.prefix;
 		}
 
-		client.on("error", (error) => {
-			winston.error("Redis Cache Error:", error);
-			Lumberjack.error("Redis Cache Error", undefined, error);
-		});
+		redisClientConnectionManager.addErrorHandler(undefined, "Redis Cache Error");
 	}
 
 	public async get<T>(key: string): Promise<T> {
-		const stringValue = await this.client.get(this.getKey(key));
+		const stringValue = await this.redisClientConnectionManager
+			.getRedisClient()
+			.get(this.getKey(key));
 		return JSON.parse(stringValue) as T;
 	}
 
@@ -41,19 +43,18 @@ export class RedisCache implements ICache {
 		value: T,
 		expireAfterSeconds: number = this.expireAfterSeconds,
 	): Promise<void> {
-		const result = await this.client.set(
-			this.getKey(key),
-			JSON.stringify(value),
-			"EX",
-			expireAfterSeconds,
-		);
+		const result = await this.redisClientConnectionManager
+			.getRedisClient()
+			.set(this.getKey(key), JSON.stringify(value), "EX", expireAfterSeconds);
 		if (result !== "OK") {
-			return Promise.reject(result);
+			throw new Error(result);
 		}
 	}
 
 	public async delete(key: string): Promise<boolean> {
-		const result = await this.client.del(this.getKey(key));
+		const result = await this.redisClientConnectionManager
+			.getRedisClient()
+			.del(this.getKey(key));
 		// The DEL API in Redis returns the number of keys that were removed.
 		// We always call Redis DEL with one key only, so we expect a result equal to 1
 		// to indicate that the key was removed. 0 would indicate that the key does not exist.

@@ -3,11 +3,15 @@
  * Licensed under the MIT License.
  */
 
-import { ISharedObject, ISharedObjectEvents } from "@fluidframework/shared-object-base";
-import { IEventThisPlaceHolder } from "@fluidframework/common-definitions";
-
+import { IEventThisPlaceHolder } from "@fluidframework/core-interfaces";
+import { AttributionKey } from "@fluidframework/runtime-definitions/internal";
+import {
+	ISharedObject,
+	ISharedObjectEvents,
+} from "@fluidframework/shared-object-base/internal";
 /**
  * Type of "valueChanged" event parameter.
+ * @internal
  */
 export interface IValueChanged {
 	/**
@@ -25,6 +29,7 @@ export interface IValueChanged {
 
 /**
  * Events emitted in response to changes to the {@link ISharedMap | map} data.
+ * @internal
  */
 export interface ISharedMapEvents extends ISharedObjectEvents {
 	/**
@@ -63,6 +68,7 @@ export interface ISharedMapEvents extends ISharedObjectEvents {
  * {@link @fluidframework/datastore#FluidObjectHandle}.
  *
  * For more information, including example usages, see {@link https://fluidframework.com/docs/data-structures/map/}.
+ * @internal
  */
 // TODO: Use `unknown` instead (breaking change).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -83,6 +89,19 @@ export interface ISharedMap extends ISharedObject<ISharedMapEvents>, Map<string,
 	 * @returns The {@link ISharedMap} itself
 	 */
 	set<T = unknown>(key: string, value: T): this;
+
+	/**
+	 * Get the attribution of one entry through its key
+	 * @param key - Key to track
+	 * @returns The attribution of related entry
+	 */
+	getAttribution(key: string): AttributionKey | undefined;
+
+	/**
+	 * Get all attribution of the map
+	 * @returns All attribution in the map
+	 */
+	getAllAttribution(): Map<string, AttributionKey> | undefined;
 }
 
 /**
@@ -107,6 +126,7 @@ export interface ISharedMap extends ISharedObject<ISharedMapEvents>, Map<string,
  * channel ID.
  *
  * @deprecated This type is legacy and deprecated.
+ * @internal
  */
 export interface ISerializableValue {
 	/**
@@ -119,10 +139,16 @@ export interface ISerializableValue {
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	value: any;
+
+	/**
+	 * The attribution key attached with the entry
+	 */
+	attribution?: AttributionKey | number;
 }
 
 /**
  * Serialized {@link ISerializableValue} counterpart.
+ * @internal
  */
 export interface ISerializedValue {
 	/**
@@ -136,4 +162,9 @@ export interface ISerializedValue {
 	 * @remarks Will be undefined if the original value was undefined.
 	 */
 	value: string | undefined;
+
+	/**
+	 * The attribution key or seq number attached with the entry
+	 */
+	attribution?: string;
 }

@@ -3,21 +3,30 @@
  * Licensed under the MIT License.
  */
 
-import { ISequencedDocumentMessage, MessageType } from "@fluidframework/protocol-definitions";
-import {
+import type {
 	IChannelAttributes,
 	IFluidDataStoreRuntime,
 	IChannelStorageService,
-	IChannelServices,
-	IChannelFactory,
-} from "@fluidframework/datastore-definitions";
-import { ISummaryTreeWithStats, ITelemetryContext } from "@fluidframework/runtime-definitions";
-import { readAndParse } from "@fluidframework/driver-utils";
-import { IFluidSerializer, SharedObject } from "@fluidframework/shared-object-base";
-import { SummaryTreeBuilder } from "@fluidframework/runtime-utils";
-import { ISharedMap, ISharedMapEvents } from "./interfaces";
-import { IMapDataObjectSerializable, IMapOperation, MapKernel } from "./mapKernel";
-import { pkgVersion } from "./packageVersion";
+} from "@fluidframework/datastore-definitions/internal";
+import {
+	MessageType,
+	type ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import { readAndParse } from "@fluidframework/driver-utils/internal";
+import type {
+	ISummaryTreeWithStats,
+	ITelemetryContext,
+} from "@fluidframework/runtime-definitions/internal";
+import { SummaryTreeBuilder } from "@fluidframework/runtime-utils/internal";
+import type { IFluidSerializer } from "@fluidframework/shared-object-base/internal";
+import { SharedObject } from "@fluidframework/shared-object-base/internal";
+
+import type { ISharedMap, ISharedMapEvents } from "./interfaces.js";
+import {
+	type IMapDataObjectSerializable,
+	type IMapOperation,
+	MapKernel,
+} from "./mapKernel.js";
 
 interface IMapSerializationFormat {
 	blobs?: string[];
@@ -27,94 +36,9 @@ interface IMapSerializationFormat {
 const snapshotFileName = "header";
 
 /**
- * {@link @fluidframework/datastore-definitions#IChannelFactory} for {@link SharedMap}.
- *
- * @sealed
- */
-export class MapFactory implements IChannelFactory {
-	/**
-	 * {@inheritDoc @fluidframework/datastore-definitions#IChannelFactory."type"}
-	 */
-	public static readonly Type = "https://graph.microsoft.com/types/map";
-
-	/**
-	 * {@inheritDoc @fluidframework/datastore-definitions#IChannelFactory.attributes}
-	 */
-	public static readonly Attributes: IChannelAttributes = {
-		type: MapFactory.Type,
-		snapshotFormatVersion: "0.2",
-		packageVersion: pkgVersion,
-	};
-
-	/**
-	 * {@inheritDoc @fluidframework/datastore-definitions#IChannelFactory."type"}
-	 */
-	public get type(): string {
-		return MapFactory.Type;
-	}
-
-	/**
-	 * {@inheritDoc @fluidframework/datastore-definitions#IChannelFactory.attributes}
-	 */
-	public get attributes(): IChannelAttributes {
-		return MapFactory.Attributes;
-	}
-
-	/**
-	 * {@inheritDoc @fluidframework/datastore-definitions#IChannelFactory.load}
-	 */
-	public async load(
-		runtime: IFluidDataStoreRuntime,
-		id: string,
-		services: IChannelServices,
-		attributes: IChannelAttributes,
-	): Promise<ISharedMap> {
-		const map = new SharedMap(id, runtime, attributes);
-		await map.load(services);
-
-		return map;
-	}
-
-	/**
-	 * {@inheritDoc @fluidframework/datastore-definitions#IChannelFactory.create}
-	 */
-	public create(runtime: IFluidDataStoreRuntime, id: string): ISharedMap {
-		const map = new SharedMap(id, runtime, MapFactory.Attributes);
-		map.initializeLocal();
-
-		return map;
-	}
-}
-
-/**
  * {@inheritDoc ISharedMap}
  */
 export class SharedMap extends SharedObject<ISharedMapEvents> implements ISharedMap {
-	/**
-	 * Create a new shared map.
-	 * @param runtime - The data store runtime that the new shared map belongs to.
-	 * @param id - Optional name of the shared map.
-	 * @returns Newly created shared map.
-	 *
-	 * @example
-	 * To create a `SharedMap`, call the static create method:
-	 *
-	 * ```typescript
-	 * const myMap = SharedMap.create(this.runtime, id);
-	 * ```
-	 */
-	public static create(runtime: IFluidDataStoreRuntime, id?: string): SharedMap {
-		return runtime.createChannel(id, MapFactory.Type) as SharedMap;
-	}
-
-	/**
-	 * Get a factory for SharedMap to register with the data store.
-	 * @returns A factory that creates SharedMaps and loads them from storage.
-	 */
-	public static getFactory(): IChannelFactory {
-		return new MapFactory();
-	}
-
 	/**
 	 * String representation for the class.
 	 */
@@ -247,7 +171,6 @@ export class SharedMap extends SharedObject<ISharedMapEvents> implements IShared
 
 	/**
 	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.summarizeCore}
-	 * @internal
 	 */
 	protected summarizeCore(
 		serializer: IFluidSerializer,
@@ -308,10 +231,7 @@ export class SharedMap extends SharedObject<ISharedMapEvents> implements IShared
 				}
 				headerBlob[key] = {
 					type: value.type,
-					value:
-						value.value === undefined
-							? undefined
-							: (JSON.parse(value.value) as unknown),
+					value: value.value === undefined ? undefined : (JSON.parse(value.value) as unknown),
 				};
 			}
 		}
@@ -327,7 +247,6 @@ export class SharedMap extends SharedObject<ISharedMapEvents> implements IShared
 
 	/**
 	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.loadCore}
-	 * @internal
 	 */
 	protected async loadCore(storage: IChannelStorageService): Promise<void> {
 		const json = await readAndParse<object>(storage, snapshotFileName);
@@ -347,13 +266,11 @@ export class SharedMap extends SharedObject<ISharedMapEvents> implements IShared
 
 	/**
 	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.onDisconnect}
-	 * @internal
 	 */
 	protected onDisconnect(): void {}
 
 	/**
 	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.reSubmitCore}
-	 * @internal
 	 */
 	protected reSubmitCore(content: unknown, localOpMetadata: unknown): void {
 		this.kernel.trySubmitMessage(content as IMapOperation, localOpMetadata);
@@ -361,33 +278,27 @@ export class SharedMap extends SharedObject<ISharedMapEvents> implements IShared
 
 	/**
 	 * {@inheritDoc @fluidframework/shared-object-base#SharedObjectCore.applyStashedOp}
-	 * @internal
 	 */
-	protected applyStashedOp(content: unknown): unknown {
-		return this.kernel.tryApplyStashedOp(content as IMapOperation);
+	protected applyStashedOp(content: unknown): void {
+		this.kernel.tryApplyStashedOp(content as IMapOperation);
 	}
 
 	/**
 	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.processCore}
-	 * @internal
 	 */
 	protected processCore(
 		message: ISequencedDocumentMessage,
 		local: boolean,
 		localOpMetadata: unknown,
 	): void {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
 		if (message.type === MessageType.Operation) {
-			this.kernel.tryProcessMessage(
-				message.contents as IMapOperation,
-				local,
-				localOpMetadata,
-			);
+			this.kernel.tryProcessMessage(message.contents as IMapOperation, local, localOpMetadata);
 		}
 	}
 
 	/**
 	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.rollback}
-	 * @internal
 	 */
 	protected rollback(content: unknown, localOpMetadata: unknown): void {
 		this.kernel.rollback(content, localOpMetadata);

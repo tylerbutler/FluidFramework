@@ -2,11 +2,15 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import * as semver from "semver";
 
 import { ReleaseVersion, VersionBumpType, VersionBumpTypeExtended } from "./bumpTypes";
 import {
+	DEFAULT_PRERELEASE_IDENTIFIER,
+	RC_PRERELEASE_IDENTIFER,
 	bumpInternalVersion,
+	detectInternalVersionConstraintType,
 	fromInternalScheme,
 	getVersionRange,
 	isInternalVersionScheme,
@@ -49,8 +53,8 @@ export function bumpRange(
 				bumpType === "current"
 					? originalNoPrerelease
 					: scheme === "virtualPatch"
-					? bumpVersionScheme(originalNoPrerelease, bumpType, "virtualPatch")
-					: semver.inc(originalNoPrerelease, bumpType);
+						? bumpVersionScheme(originalNoPrerelease, bumpType, "virtualPatch")
+						: semver.inc(originalNoPrerelease, bumpType);
 			if (newVersion === null) {
 				throw new Error(`Failed to increment ${original}.`);
 			}
@@ -58,7 +62,10 @@ export function bumpRange(
 		}
 
 		case "internal": {
-			const constraintType = detectConstraintType(range);
+			const constraintType = detectInternalVersionConstraintType(range);
+			if (constraintType === "exact") {
+				throw new Error(`Can't bump exact specification from ${range}`);
+			}
 			const original = semver.minVersion(range);
 			if (original === null) {
 				throw new Error(`Couldn't determine minVersion from ${range}.`);
@@ -71,30 +78,6 @@ export function bumpRange(
 			throw new Error(`${scheme} wasn't handled. Was a new version scheme added?`);
 		}
 	}
-}
-
-/**
- * Detects the type of upgrade constraint that a version range represents. Only works for Fluid internal version scheme
- * versions.
- *
- * @param range - The range to check.
- * @returns The constraint type.
- *
- * @remarks
- *
- * Throws an Error if the range is not valid.
- */
-export function detectConstraintType(range: string): "minor" | "patch" {
-	const minVer = semver.minVersion(range);
-	if (minVer === null) {
-		throw new Error(`Couldn't determine minVersion from ${range}.`);
-	}
-
-	const patch = bumpInternalVersion(minVer, "patch");
-	const minor = bumpInternalVersion(minVer, "minor");
-
-	const maxSatisfying = semver.maxSatisfying([patch, minor], range);
-	return maxSatisfying === patch ? "patch" : "minor";
 }
 
 /**
@@ -119,19 +102,44 @@ export function detectBumpType(
 	if (v2Parsed === null || v2 === null) {
 		throw new Error(`Invalid version: ${v2}`);
 	}
+	const v2Scheme = detectVersionScheme(v2Parsed);
 
 	const v1IsInternal = isInternalVersionScheme(v1, true, true);
 	const v2IsInternal = isInternalVersionScheme(v2, true, true);
+	let v1PrereleaseId: string = "";
+	let v2PrereleaseId: string = "";
 
 	if (v1IsInternal) {
-		const [, internalVer] = fromInternalScheme(v1, true);
+		const [, internalVer, prereleaseId] = fromInternalScheme(v1, true);
 		v1Parsed = internalVer;
+		v1PrereleaseId = prereleaseId;
 	}
 
 	// Only convert if the versions are the same scheme.
 	if (v2IsInternal && v1IsInternal) {
-		const [, internalVer] = fromInternalScheme(v2, true);
+		const [, internalVer, prereleaseId] = fromInternalScheme(v2, true);
 		v2Parsed = internalVer;
+		v2PrereleaseId = prereleaseId;
+	}
+
+	if (
+		// This is a special case for RC and internal builds. RC builds are always a
+		// major bump compared to an internal build.
+		(v1PrereleaseId === DEFAULT_PRERELEASE_IDENTIFIER &&
+			v2PrereleaseId === RC_PRERELEASE_IDENTIFER) ||
+		// This is a special case for RC and public semver builds. Semver releases with major >= 2
+		// are always major releases compared to RC builds.
+		(v1PrereleaseId === RC_PRERELEASE_IDENTIFER &&
+			v2Scheme === "semver" &&
+			v2Parsed.major >= 2)
+	) {
+		return "major";
+	}
+
+	if (v1PrereleaseId !== v2PrereleaseId) {
+		throw new Error(
+			`v1 prerelease ID: '${v1PrereleaseId}' cannot be compared to v2 prerelease ID: '${v2PrereleaseId}'`,
+		);
 	}
 
 	if (semver.compareBuild(v1Parsed, v2Parsed) >= 0) {

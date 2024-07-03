@@ -7,24 +7,24 @@ import { forEachProperty } from "@fluid-experimental/property-binder";
 import { TypeIdHelper } from "@fluid-experimental/property-changeset";
 import {
 	BaseProperty,
-	ContainerProperty,
-	MapProperty,
+	type ContainerProperty,
+	type MapProperty,
 	PropertyFactory,
-	ReferenceArrayProperty,
-	ReferenceMapProperty,
-	ReferenceProperty,
+	type ReferenceArrayProperty,
+	type ReferenceMapProperty,
+	type ReferenceProperty,
 } from "@fluid-experimental/property-properties";
-import { BaseProxifiedProperty, PropertyProxy } from "@fluid-experimental/property-proxy";
+import { type BaseProxifiedProperty, PropertyProxy } from "@fluid-experimental/property-proxy";
+import { createStyles, withStyles } from "@material-ui/core";
 import Tooltip from "@material-ui/core/Tooltip";
 import memoize from "memoize-one";
 import React from "react";
 import Skeleton from "react-loading-skeleton";
-import { createStyles, withStyles } from "@material-ui/core";
-import { EditableValueCell } from "./EditableValueCell";
-import { TypeColumn } from "./TypeColumn";
-import { InspectorMessages, minRowWidth, rowWidthInterval } from "./constants";
-import { HashCalculator } from "./HashCalculator";
-import {
+
+import { EditReferencePath } from "./EditReferencePath.js";
+import { EditableValueCell } from "./EditableValueCell.js";
+import { HashCalculator } from "./HashCalculator.js";
+import type {
 	ColumnRendererType,
 	IExpandedMap,
 	IInspectorRow,
@@ -33,13 +33,14 @@ import {
 	IToTableRowsOptions,
 	IToTableRowsProps,
 	SearchResult,
-} from "./InspectorTableTypes";
-import { NameCell } from "./NameCell";
-import { Utils } from "./typeUtils";
-import { ThemedSkeleton } from "./ThemedSkeleton";
-import { NewDataForm } from "./NewDataForm";
-import { EditReferencePath } from "./EditReferencePath";
-import { getDefaultInspectorTableIcons } from "./icons";
+} from "./InspectorTableTypes.js";
+import { NameCell } from "./NameCell.js";
+import { NewDataForm } from "./NewDataForm.js";
+import { ThemedSkeleton } from "./ThemedSkeleton.js";
+import { TypeColumn } from "./TypeColumn.js";
+import { InspectorMessages, minRowWidth, rowWidthInterval } from "./constants.js";
+import { getDefaultInspectorTableIcons } from "./icons.js";
+import { Utils } from "./typeUtils.js";
 
 const {
 	isEnumProperty,
@@ -53,8 +54,14 @@ const {
 	isReferenceMapProperty,
 } = Utils;
 
+/**
+ * @internal
+ */
 export const idSeparator = "/";
 
+/**
+ * @internal
+ */
 export const isPrimitive = memoize((typeid: string): boolean => {
 	return TypeIdHelper.isPrimitiveType(typeid);
 });
@@ -65,12 +72,18 @@ const getTypeid = memoize((property: BaseProperty): string => {
 		: property.getTypeid();
 });
 
+/**
+ * @internal
+ */
 export const getCollectionTypeid = memoize((property: BaseProperty): string => {
 	return isEnumArrayProperty(property)
 		? (property as any).getFullTypeid(true)
 		: property.getTypeid();
 });
 
+/**
+ * @internal
+ */
 export const getReferenceValue = (rowData: IInspectorRow) => {
 	const parentProp = rowData.parent! as ContainerProperty;
 	let path = "";
@@ -118,6 +131,9 @@ function editReferenceView({
 	);
 }
 
+/**
+ * @internal
+ */
 export const EditReferenceView = withStyles(styles)(editReferenceView);
 
 const getShortId = (parentPath: string, childId: string | undefined = undefined): string => {
@@ -195,6 +211,9 @@ const compareNameDesc = (a: string, b: string) => {
 	return compareName(a, b) * -1;
 };
 
+/**
+ * @internal
+ */
 export const dummyChild = {
 	children: undefined,
 	context: "d",
@@ -216,6 +235,9 @@ const OPTION_DEFAULTS = {
 	parentIsConstant: false,
 };
 
+/**
+ * @internal
+ */
 export const toTableRows = (
 	{ data, id = "" }: IInspectorRow,
 	props: IToTableRowsProps,
@@ -307,6 +329,7 @@ const createInvalidReference = (
 };
 /**
  * Construct a table row for an entry in a property that is not a collection.
+ * @internal
  */
 
 export const singlePropertyTableRow = (
@@ -334,7 +357,10 @@ export const singlePropertyTableRow = (
 			pathPrefix,
 		);
 	}
-	const unresolvedProperty = parentData.getProperty([propertyId, BaseProperty.PATH_TOKENS.REF]);
+	const unresolvedProperty = parentData.getProperty([
+		propertyId,
+		BaseProperty.PATH_TOKENS.REF,
+	]);
 	if (property === undefined || !followReferences || !property.getContext) {
 		// This could happen if the property is ReferenceProperty that points to an invalid reference.
 		property = unresolvedProperty;
@@ -412,6 +438,7 @@ export const singlePropertyTableRow = (
 };
 /**
  * Construct a table row for an entry in a collection property.
+ * @internal
  */
 
 export const collectionChildTableRow = (
@@ -519,7 +546,12 @@ export const collectionChildTableRow = (
 		currentTypeid,
 		currentContext,
 	);
-	const name = props.nameGetter!(propertyId, collectionProperty, currentTypeid, currentContext);
+	const name = props.nameGetter!(
+		propertyId,
+		collectionProperty,
+		currentTypeid,
+		currentContext,
+	);
 
 	const isPropExpandable = isExpandable(
 		determinedData,
@@ -568,10 +600,16 @@ export const collectionChildTableRow = (
 	return newRow;
 };
 
+/**
+ * @internal
+ */
 export interface ISanitizer {
 	searchFor: RegExp;
 	replaceWith: string;
 }
+/**
+ * @internal
+ */
 export const sanitizePath = (inPath: string, sanitizer: ISanitizer[]) => {
 	let outPath = inPath;
 	sanitizer.forEach((replaceCase) => {
@@ -580,6 +618,9 @@ export const sanitizePath = (inPath: string, sanitizer: ISanitizer[]) => {
 	return outPath;
 };
 
+/**
+ * @internal
+ */
 export const expandAll = (proxyNode: BaseProxifiedProperty) => {
 	const expanded: IExpandedMap = {};
 	const root = proxyNode.getProperty().getRoot();
@@ -595,6 +636,9 @@ export const expandAll = (proxyNode: BaseProxifiedProperty) => {
 	return expanded;
 };
 
+/**
+ * @internal
+ */
 export const fillExpanded = (
 	expanded: IExpandedMap,
 	innerRows: IInspectorRow[],
@@ -639,6 +683,7 @@ const invalidReference = (parentProxy: BaseProxifiedProperty, id: string | numbe
  * @param parent - The parent of the property in question.
  * @param id - The id of the child property that we want to extract the value from.
  * @return The property value.
+ * @internal
  */
 
 export const getPropertyValue = (
@@ -722,6 +767,9 @@ export const getPropertyValue = (
 	return determinedValue;
 };
 
+/**
+ * @internal
+ */
 export const handleReferencePropertyEdit = async (rowData: IInspectorRow, newPath: string) => {
 	const parentProp = rowData!.parent!;
 	if (Utils.isReferenceArrayProperty(parentProp) || Utils.isReferenceMapProperty(parentProp)) {
@@ -753,6 +801,9 @@ export const handleReferencePropertyEdit = async (rowData: IInspectorRow, newPat
 	parentProp!.getRoot().getWorkspace()!.commit();
 };
 
+/**
+ * @internal
+ */
 export const generateForm = (rowData: IInspectorRow, handleCreateData: any) => {
 	if (rowData.parent!.getContext() === "array" && rowData.parent!.isPrimitiveType()) {
 		handleCreateData(rowData, "", rowData.parent!.getTypeid(), "single");
@@ -762,6 +813,9 @@ export const generateForm = (rowData: IInspectorRow, handleCreateData: any) => {
 };
 
 // @TODO: Revisit method arguments
+/**
+ * @internal
+ */
 export function nameCellRenderer({
 	rowData,
 	cellData,
@@ -796,6 +850,9 @@ export function nameCellRenderer({
 }
 
 // @TODO: Revisit method arguments
+/**
+ * @internal
+ */
 export function typeCellRenderer({
 	rowData,
 	tableProps,
@@ -854,14 +911,18 @@ const determineCellClassName = (
 		currentResult !== -1 && currentResult !== undefined && foundMatches!.length! > 0
 			? foundMatches![currentResult]
 			: { indexOfColumn: -1, rowId: "" };
-	return highlightedResult.rowId === rowData.id && highlightedResult.indexOfColumn === columnIndex
+	return highlightedResult.rowId === rowData.id &&
+		highlightedResult.indexOfColumn === columnIndex
 		? classes.currentMatch
 		: matchesMap![rowData.id] && matchesMap![rowData.id][columnIndex]
-		? classes.match
-		: "";
+			? classes.match
+			: "";
 };
 
 // @TODO: Revisit method arguments
+/**
+ * @internal
+ */
 export function valueCellRenderer({
 	rowData,
 	cellData,
@@ -901,6 +962,9 @@ export function valueCellRenderer({
 	}
 }
 
+/**
+ * @internal
+ */
 export const addDataForm = ({
 	handleCancelCreate,
 	handleCreateData,
@@ -918,6 +982,9 @@ export const addDataForm = ({
 	</div>
 );
 
+/**
+ * @internal
+ */
 export const getDefaultPropertyTableProps = () => ({
 	editReferenceHandler: handleReferencePropertyEdit,
 	followReferences: true,

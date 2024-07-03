@@ -4,19 +4,17 @@
  */
 
 import { strict as assert } from "assert";
-import { ISnapshotTree } from "@fluidframework/protocol-definitions";
+
 import {
-	getSnapshotDataFromOldSnapshotFormat,
-	shouldAllowGcTombstoneEnforcement,
-	GCFeatureMatrix,
+	dataStoreNodePathOnly,
 	shouldAllowGcSweep,
-	IGarbageCollectionSnapshotData,
-	IGarbageCollectionSummaryDetailsLegacy,
-} from "../../gc";
-import { IContainerRuntimeMetadata, ReadFluidDataStoreAttributes } from "../../summary";
+	urlToGCNodePath,
+	// eslint-disable-next-line import/no-internal-modules
+} from "../../gc/gcHelpers.js";
+import { GCFeatureMatrix } from "../../gc/index.js";
 
 describe("Garbage Collection Helpers Tests", () => {
-	describe("shouldAllowGcTombstoneEnforcement", () => {
+	describe("[TEMP] shouldAllowGcTombstoneEnforcement - Show behavior change as it's replaced by shouldAllowGcSweep", () => {
 		const testCases: {
 			persisted: number | undefined;
 			current: number | undefined;
@@ -55,7 +53,7 @@ describe("Garbage Collection Helpers Tests", () => {
 		];
 		testCases.forEach(({ persisted, current, expectedShouldAllowValue }) => {
 			it(`persisted=${persisted}, current=${current}`, () => {
-				const shouldAllow = shouldAllowGcTombstoneEnforcement(persisted, current);
+				const shouldAllow = shouldAllowGcSweep({ tombstoneGeneration: persisted }, current);
 				assert.equal(shouldAllow, expectedShouldAllowValue);
 			});
 		});
@@ -70,12 +68,12 @@ describe("Garbage Collection Helpers Tests", () => {
 			{
 				persisted: {},
 				current: undefined,
-				expectedShouldAllowValue: false,
+				expectedShouldAllowValue: true,
 			},
 			{
-				persisted: { sweepGeneration: 1 },
+				persisted: { gcGeneration: 1 },
 				current: undefined,
-				expectedShouldAllowValue: false,
+				expectedShouldAllowValue: true,
 			},
 			{
 				persisted: {},
@@ -89,26 +87,31 @@ describe("Garbage Collection Helpers Tests", () => {
 			},
 			{
 				persisted: { tombstoneGeneration: 1 },
-				current: 0,
-				expectedShouldAllowValue: false,
-			},
-			{
-				persisted: { sweepGeneration: 0 },
-				current: 0,
-				expectedShouldAllowValue: true,
-			},
-			{
-				persisted: { sweepGeneration: 1 },
 				current: 1,
 				expectedShouldAllowValue: true,
 			},
 			{
-				persisted: { sweepGeneration: 1 },
+				persisted: { tombstoneGeneration: 1 },
+				current: 0,
+				expectedShouldAllowValue: false,
+			},
+			{
+				persisted: { gcGeneration: 0 },
+				current: 0,
+				expectedShouldAllowValue: true,
+			},
+			{
+				persisted: { gcGeneration: 1 },
+				current: 1,
+				expectedShouldAllowValue: true,
+			},
+			{
+				persisted: { gcGeneration: 1 },
 				current: 2,
 				expectedShouldAllowValue: false,
 			},
 			{
-				persisted: { sweepGeneration: 2 },
+				persisted: { gcGeneration: 2 },
 				current: 1,
 				expectedShouldAllowValue: false,
 			},
@@ -121,68 +124,79 @@ describe("Garbage Collection Helpers Tests", () => {
 		});
 	});
 
-	describe("getSnapshotDataFromOldSnapshotFormat", () => {
-		it("can convert GC data from old snapshot format to new format", async () => {
-			const dsNodeId = "/ds";
-			const ddsNodeId = "/ds/dds";
-			const unreferencedTimestampMs = 500;
-			const gcDetailsLegacy: IGarbageCollectionSummaryDetailsLegacy = {
-				gcData: { gcNodes: { "/": [ddsNodeId] } },
-				unrefTimestamp: unreferencedTimestampMs,
-			};
-			const gcBlobId = "dsGCBlob";
-			const attributes: ReadFluidDataStoreAttributes = {
-				isRootDataStore: true,
-				pkg: "legacyDataStore",
-			};
-			const attributesBlobId = "dsAttributesBlob";
-			const oldSnapshot: ISnapshotTree = {
-				blobs: {},
-				trees: {
-					".channels": {
-						trees: {
-							[`${dsNodeId.slice(1)}`]: {
-								blobs: {
-									"gc": gcBlobId,
-									".component": attributesBlobId,
-								},
-								trees: {},
-							},
-						},
-						blobs: {},
-					},
-				},
-			};
-			const blobsMap = new Map();
-			blobsMap.set(gcBlobId, gcDetailsLegacy);
-			blobsMap.set(attributesBlobId, attributes);
-			const metadata: Partial<IContainerRuntimeMetadata> = {};
-			const snapshotData = await getSnapshotDataFromOldSnapshotFormat(
-				oldSnapshot,
-				metadata as IContainerRuntimeMetadata,
-				async <T>(id: string) => blobsMap.get(id) as T,
-			);
+	describe("dataStoreNodePathOnly", () => {
+		const testCases: {
+			path: string;
+			expected: string;
+		}[] = [
+			{
+				path: "/",
+				expected: "/",
+			},
+			{
+				path: "/a",
+				expected: "/a",
+			},
+			{
+				path: "/a/b",
+				expected: "/a",
+			},
+			{
+				path: "/a/b/c",
+				expected: "/a",
+			},
+		];
+		testCases.forEach(({ path, expected }) => {
+			it(`path=${path}`, () => {
+				const result = dataStoreNodePathOnly(path);
+				assert.equal(result, expected);
+			});
+		});
+	});
 
-			const expectedSnapshotData: IGarbageCollectionSnapshotData = {
-				gcState: {
-					gcNodes: {
-						"/": {
-							outboundRoutes: [dsNodeId],
-						},
-						[`${dsNodeId}`]: {
-							outboundRoutes: [ddsNodeId],
-							unreferencedTimestampMs,
-						},
-					},
-				},
-				tombstones: undefined,
-				deletedNodes: undefined,
-			};
-			assert.deepStrictEqual(
-				snapshotData,
-				expectedSnapshotData,
-				"Old snapshot was not correctly converted",
-			);
+	describe("urlToGCNodePath", () => {
+		const testCases: {
+			url: string;
+			expected: string;
+		}[] = [
+			{
+				url: "/a",
+				expected: "/a",
+			},
+			{
+				url: "/a/",
+				expected: "/a",
+			},
+			{
+				url: "/a/b",
+				expected: "/a/b",
+			},
+			{
+				url: "/a/b/",
+				expected: "/a/b",
+			},
+			{
+				url: "/a?x=1",
+				expected: "/a",
+			},
+			{
+				url: "/a/?x=1",
+				expected: "/a",
+			},
+			{
+				url: "/a/b?x=1",
+				expected: "/a/b",
+			},
+			{
+				url: "/a/b/?x=1",
+				expected: "/a/b",
+			},
+		];
+		testCases.forEach(({ url, expected }) => {
+			it(`url=${url}`, () => {
+				const result = urlToGCNodePath(url);
+				assert.equal(result, expected);
+			});
 		});
 	});
 });

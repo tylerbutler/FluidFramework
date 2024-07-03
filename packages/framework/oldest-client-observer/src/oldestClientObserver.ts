@@ -3,14 +3,16 @@
  * Licensed under the MIT License.
  */
 
-import { assert, TypedEventEmitter } from "@fluidframework/common-utils";
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
 import { AttachState } from "@fluidframework/container-definitions";
-import { IQuorumClients } from "@fluidframework/protocol-definitions";
+import { assert } from "@fluidframework/core-utils/internal";
+import { IQuorumClients } from "@fluidframework/driver-definitions";
+
 import {
 	IOldestClientObservable,
-	IOldestClientObserverEvents,
 	IOldestClientObserver,
-} from "./interfaces";
+	IOldestClientObserverEvents,
+} from "./interfaces.js";
 
 /**
  * The `OldestClientObserver` is a utility inspect if the local client is the oldest amongst connected clients (in
@@ -66,6 +68,8 @@ import {
  *     console.log("I'm not the oldest anymore");
  * });
  * ```
+ * @legacy
+ * @alpha
  */
 export class OldestClientObserver
 	extends TypedEventEmitter<IOldestClientObserverEvents>

@@ -3,15 +3,16 @@
  * Licensed under the MIT License.
  */
 
-import { WithStyles } from "@material-ui/core";
+import type { WithStyles } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
-import { withStyles } from "@material-ui/core/styles";
 import Tooltip from "@material-ui/core/Tooltip";
+import { withStyles } from "@material-ui/core/styles";
 import * as React from "react";
-import { FloatingLabelTextField } from "./FloatingLabelTextField";
-import { InspectorModal } from "./InspectorModal";
-import { ErrorPopup } from "./ErrorPopup";
-import { SvgIcon } from "./SVGIcon";
+
+import { ErrorPopup } from "./ErrorPopup.js";
+import { FloatingLabelTextField } from "./FloatingLabelTextField.js";
+import { InspectorModal } from "./InspectorModal.js";
+import { SvgIcon } from "./SVGIcon.js";
 
 const styles = () => ({
 	contentContainer: {
@@ -78,15 +79,25 @@ export interface IShareModalState {
 	};
 }
 
+export type SharingPermission = "read" | "write" | "delete";
+
 export interface IShareOptions {
 	/**
 	 * The handler that is invoked if the user decides to share.
 	 */
-	shareHandler: (userIds: string[], groupIds: string[]) => Promise<any>;
+	shareHandler: (
+		userIds: string[],
+		groupIds: string[],
+		permissions: { actions: SharingPermission[] },
+	) => Promise<any>;
 	/**
 	 * The handler that is invoked if the user decides to unshare.
 	 */
-	unshareHandler: (userIds: string[], groupIds: string[]) => Promise<any>;
+	unshareHandler: (
+		userIds: string[],
+		groupIds: string[],
+		permissions: { actions: SharingPermission[] },
+	) => Promise<any>;
 	/**
 	 * A list of user ids with their permissions on this item.
 	 */

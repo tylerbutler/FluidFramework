@@ -3,31 +3,34 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "assert";
+import { strict as assert } from "node:assert";
+
+import { AttachState } from "@fluidframework/container-definitions";
 import {
-	MockFluidDataStoreRuntime,
 	MockContainerRuntimeFactory,
 	MockContainerRuntimeFactoryForReconnection,
 	MockContainerRuntimeForReconnection,
+	MockFluidDataStoreRuntime,
 	MockSharedObjectServices,
 	MockStorage,
-} from "@fluidframework/test-runtime-utils";
-import { Ink } from "../ink";
-import { InkFactory } from "../inkFactory";
-import { IPen } from "../interfaces";
+} from "@fluidframework/test-runtime-utils/internal";
+
+import { Ink } from "../ink.js";
+import { InkFactory } from "../inkFactory.js";
+import { IPen } from "../interfaces.js";
 
 describe("Ink", () => {
 	let ink: Ink;
 	let dataStoreRuntime: MockFluidDataStoreRuntime;
 	let pen: IPen;
 
-	beforeEach(async () => {
+	beforeEach("createInk", async () => {
 		dataStoreRuntime = new MockFluidDataStoreRuntime();
 		ink = new Ink(dataStoreRuntime, "ink", InkFactory.Attributes);
 	});
 
 	describe("Ink in local state", () => {
-		beforeEach(() => {
+		beforeEach("setupInkInLocalState", () => {
 			dataStoreRuntime.local = true;
 			pen = {
 				color: { r: 0, g: 161 / 255, b: 241 / 255, a: 0 },
@@ -122,22 +125,20 @@ describe("Ink", () => {
 			// Load a new Ink in connected state from the snapshot of the first one.
 			const containerRuntimeFactory = new MockContainerRuntimeFactory();
 			const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
-			const containerRuntime2 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
 			const services2 = MockSharedObjectServices.createFromSummary(
 				ink.getAttachSummary().summary,
 			);
-			services2.deltaConnection = containerRuntime2.createDeltaConnection();
+			services2.deltaConnection = dataStoreRuntime2.createDeltaConnection();
 
 			const ink2 = new Ink(dataStoreRuntime2, "ink2", InkFactory.Attributes);
 			await ink2.load(services2);
 
 			// Now connect the first Ink
-			dataStoreRuntime.local = false;
-			const containerRuntime1 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime);
+			dataStoreRuntime.setAttachState(AttachState.Attached);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime);
 			const services1 = {
-				deltaConnection: containerRuntime1.createDeltaConnection(),
+				deltaConnection: dataStoreRuntime.createDeltaConnection(),
 				objectStorage: new MockStorage(undefined),
 			};
 			ink.connect(services1);
@@ -177,25 +178,23 @@ describe("Ink", () => {
 		let ink2: Ink;
 		let containerRuntimeFactory: MockContainerRuntimeFactory;
 
-		beforeEach(() => {
+		beforeEach("createConnectedInks", () => {
 			containerRuntimeFactory = new MockContainerRuntimeFactory();
 
 			// Connect the first Ink.
-			dataStoreRuntime.local = false;
-			const containerRuntime1 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime);
+			dataStoreRuntime.setAttachState(AttachState.Attached);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime);
 			const services1 = {
-				deltaConnection: containerRuntime1.createDeltaConnection(),
+				deltaConnection: dataStoreRuntime.createDeltaConnection(),
 				objectStorage: new MockStorage(),
 			};
 			ink.connect(services1);
 
 			// Create and connect a second Ink.
 			const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
-			const containerRuntime2 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
 			const services2 = {
-				deltaConnection: containerRuntime2.createDeltaConnection(),
+				deltaConnection: dataStoreRuntime2.createDeltaConnection(),
 				objectStorage: new MockStorage(),
 			};
 
@@ -218,7 +217,7 @@ describe("Ink", () => {
 
 			// Verify that the remote ink has the correct stroke.
 			const stroke2 = ink2.getStroke(strokeId);
-			assert.ok(stroke2, "Could not retrieve the stroke in rmeote client");
+			assert.ok(stroke2, "Could not retrieve the stroke in remote client");
 			assert.equal(stroke2.id, strokeId, "The stroke's id is incorrect in remote client");
 			assert.deepEqual(stroke2.pen, pen, "The stroke's pen is incorrect in remote client");
 		});
@@ -343,14 +342,14 @@ describe("Ink", () => {
 		let containerRuntime2: MockContainerRuntimeForReconnection;
 		let ink2: Ink;
 
-		beforeEach(() => {
+		beforeEach("createConnectedInks", () => {
 			containerRuntimeFactory = new MockContainerRuntimeFactoryForReconnection();
 
 			// Connect the first Ink.
-			dataStoreRuntime.local = false;
+			dataStoreRuntime.setAttachState(AttachState.Attached);
 			containerRuntime1 = containerRuntimeFactory.createContainerRuntime(dataStoreRuntime);
 			const services1 = {
-				deltaConnection: containerRuntime1.createDeltaConnection(),
+				deltaConnection: dataStoreRuntime.createDeltaConnection(),
 				objectStorage: new MockStorage(),
 			};
 			ink.connect(services1);
@@ -359,7 +358,7 @@ describe("Ink", () => {
 			const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
 			containerRuntime2 = containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
 			const services2 = {
-				deltaConnection: containerRuntime2.createDeltaConnection(),
+				deltaConnection: dataStoreRuntime2.createDeltaConnection(),
 				objectStorage: new MockStorage(),
 			};
 

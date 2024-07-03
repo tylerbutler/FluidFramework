@@ -3,34 +3,29 @@
  * Licensed under the MIT License.
  */
 
+import { IChannelFactory } from "@fluidframework/datastore-definitions/internal";
 import {
-	IFluidDataStoreRuntime,
-	IChannelServices,
-	IChannelAttributes,
-	IChannelFactory,
-} from "@fluidframework/datastore-definitions";
-import { ISharedObject, ISharedObjectEvents } from "@fluidframework/shared-object-base";
+	ISharedObject,
+	ISharedObjectEvents,
+} from "@fluidframework/shared-object-base/internal";
 
 /**
  * Consensus Register Collection channel factory interface
  *
  * Extends the base IChannelFactory to return a more definite type of IConsensusRegisterCollection
- * Use for the runtime to create and load distributed data structure by type name of each channel
+ * Use for the runtime to create and load distributed data structure by type name of each channel.
+ * @legacy
+ * @alpha
+ * @deprecated Use `IChannelFactory<IConsensusRegisterCollection>`.
  */
-export interface IConsensusRegisterCollectionFactory extends IChannelFactory {
-	/**
-	 * {@inheritDoc @fluidframework/datastore-definitions#IChannelFactory.load}
-	 */
-	load(
-		document: IFluidDataStoreRuntime,
-		id: string,
-		services: IChannelServices,
-		attributes: IChannelAttributes,
-	): Promise<IConsensusRegisterCollection>;
+export type IConsensusRegisterCollectionFactory =
+	IChannelFactory<IConsensusRegisterCollection>;
 
-	create(document: IFluidDataStoreRuntime, id: string): IConsensusRegisterCollection;
-}
-
+/**
+ * Events emitted by {@link IConsensusRegisterCollection}.
+ * @legacy
+ * @alpha
+ */
 export interface IConsensusRegisterCollectionEvents extends ISharedObjectEvents {
 	(
 		event: "atomicChanged" | "versionChanged",
@@ -39,9 +34,7 @@ export interface IConsensusRegisterCollectionEvents extends ISharedObjectEvents 
 }
 
 /**
- * Consensus Register Collection.
- *
- * A consensus register collection is a distributed data structure, which holds a set of registers with update
+ * A distributed data structure that holds a set of registers with update
  * versions. On concurrent updates, a register internally stores all possible versions of a value by using reference
  * sequence number of the incoming update.
  *
@@ -56,7 +49,8 @@ export interface IConsensusRegisterCollectionEvents extends ISharedObjectEvents 
  * the value. So we can safely return the first value.
  *
  * LWW: The last write to a key always wins.
- *
+ * @legacy
+ * @alpha
  */
 export interface IConsensusRegisterCollection<T = any>
 	extends ISharedObject<IConsensusRegisterCollectionEvents> {
@@ -86,6 +80,8 @@ export interface IConsensusRegisterCollection<T = any>
 
 /**
  * Read policies used when reading the map value.
+ * @legacy
+ * @alpha
  */
 export enum ReadPolicy {
 	// On a concurrent update, returns the first agreed upon value amongst all clients.

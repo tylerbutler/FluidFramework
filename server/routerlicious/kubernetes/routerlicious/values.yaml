@@ -1,6 +1,3 @@
-## Fluid image version
-image: prague.azurecr.io/prague-server:latest
-
 ## Specify a imagePullPolicy
 ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
 imagePullPolicy: IfNotPresent
@@ -15,12 +12,12 @@ alfred:
   cert: cert
   tenants: []
   key: jwt_key
-  maxNumberOfClientsPerDocument: 1000000
   numberOfMessagesPerTrace: 100
   sessionStickinessDurationMs: 3600000
-  enableConnectionCountLogging: false
+  ignoreEphemeralFlag: true
   throttling:
     restCallsPerTenant:
+      generalRestCall:
         maxPerMs: 1000000
         maxBurst: 1000000
         minCooldownIntervalInMs: 1000000
@@ -28,64 +25,51 @@ alfred:
         maxInMemoryCacheSize: 1000
         maxInMemoryCacheAgeInMs: 60000
         enableEnhancedTelemetry: false
+      createDoc: disabled
+      getDeltas: disabled
+      getSession: disabled
     restCallsPerCluster:
-        createDoc:
-            maxPerMs: 1000000
-            maxBurst: 1000000
-            minCooldownIntervalInMs: 1000000
-            minThrottleIntervalInMs: 1000000
-            maxInMemoryCacheSize: 1000
-            maxInMemoryCacheAgeInMs: 60000
-            enableEnhancedTelemetry: false
-        getDeltas:
-            maxPerMs: 1000000
-            maxBurst: 1000000
-            minCooldownIntervalInMs: 1000000
-            minThrottleIntervalInMs: 1000000
-            maxInMemoryCacheSize: 1000
-            maxInMemoryCacheAgeInMs: 60000
-            enableEnhancedTelemetry: false
-    socketConnectionsPerTenant:
-        maxPerMs: 1000000
-        maxBurst: 1000000
-        minCooldownIntervalInMs: 1000000
-        minThrottleIntervalInMs: 1000000
-        maxInMemoryCacheSize: 1000
-        maxInMemoryCacheAgeInMs: 60000
-        enableEnhancedTelemetry: false
-    socketConnectionsPerCluster:
-        maxPerMs: 1000000
-        maxBurst: 1000000
-        minCooldownIntervalInMs: 1000000
-        minThrottleIntervalInMs: 1000000
-        maxInMemoryCacheSize: 1000
-        maxInMemoryCacheAgeInMs: 60000
-        enableEnhancedTelemetry: false
-    submitOps:
-        maxPerMs: 1000000
-        maxBurst: 1000000
-        minCooldownIntervalInMs: 1000000
-        minThrottleIntervalInMs: 1000000
-        maxInMemoryCacheSize: 1000
-        maxInMemoryCacheAgeInMs: 60000
-        enableEnhancedTelemetry: false
-    submitSignal:
-        maxPerMs: 1000000
-        maxBurst: 1000000
-        minCooldownIntervalInMs: 1000000
-        minThrottleIntervalInMs: 1000000
-        maxInMemoryCacheSize: 1000
-        maxInMemoryCacheAgeInMs: 60000
-        enableEnhancedTelemetry: false
+      createDoc:
+        maxPerInterval: 1000000
+        intervalInMs: 1000000
+      getDeltas: disabled
+      getSession: disabled
+    submitOps: disabled
+    submitSignal: disabled
+  enforceServerGeneratedDocumentId: false
+  getDeltasRequestMaxOpsRange: 2000
+
+nexus:
+  name: nexus
+  replicas: 4
+  externalUrl: nexus_external_url
+  host: nexus_host
+  cert: cert
+  tenants: []
+  key: jwt_key
+  maxNumberOfClientsPerDocument: 1000000
+  numberOfMessagesPerTrace: 100
+  throttling:
+    socketConnectionsPerTenant: disabled
+    socketConnectionsPerCluster: disabled
+    submitOps: disabled
+    submitSignal: disabled
   socketIoAdapter:
     enableCustomSocketIoAdapter: true
     shouldDisableDefaultNamespace: false
-  enforceServerGeneratedDocumentId: false
   socketIo:
     perMessageDeflate: true
+    gracefulShutdownEnabled: false
+    pingPongLatencyTrackingEnabled: false
+
 storage:
   enableWholeSummaryUpload: false
   storageUrl: storage_url
+
+checkpoints:
+  localCheckpointEnabled: false
+  checkpointsTTLInSeconds: -1
+  kafkaCheckpointOnReprocessingOp: false
 
 session:
   enforceDiscoveryFlow: false
@@ -93,24 +77,39 @@ session:
 deli:
   name: deli
   replicas: 8
-
-scriptorium:
-  name: scriptorium
-  replicas: 8
-
-scribe:
-  name: scribe
-  replicas: 8
-  getDeltasViaAlfred: true
   checkpointHeuristics:
     enable: false
     idleTime: 10000
     maxTime: 60000
     maxMessages: 500
+  restartOnCheckpointFailure: true
+  enableEphemeralContainerSummaryCleanup: true
+  enableLeaveOpNoClientServerMetadata: false
+  noOpConsolidationTimeout: 250
 
-foreman:
-  name: foreman
+scriptorium:
+  name: scriptorium
   replicas: 8
+  restartOnCheckpointFailure: true
+  logSavedOpsTimeIntervalMs: 60000
+  opsCountTelemetryEnabled: false
+
+scribe:
+  name: scribe
+  replicas: 8
+  getDeltasViaAlfred: true
+  maxLogtailLength: 2000
+  verifyLastOpPersistence: false
+  disableTransientTenantFiltering: true
+  checkpointHeuristics:
+    enable: false
+    idleTime: 10000
+    maxTime: 60000
+    maxMessages: 500
+  restartOnCheckpointFailure: true
+  scrubUserDataInGlobalCheckpoints: false
+  scrubUserDataInLocalCheckpoints: false
+  scrubUserDataInSummaries: false
 
 riddler:
   name: riddler
@@ -127,27 +126,29 @@ zookeeper:
 
 system:
   httpServer:
-    connectionTimeout: 0
+    connectionTimeoutMs: 0
 
 usage:
   clientConnectivityCountingEnabled: false
   signalUsageCountingEnabled: false
+  httpUsageCountingEnabled: false
+
+shared:
+  transientTenants: []
+  runnerServerCloseTimeoutMs: 30000
 
 mongodb:
   operationsDbEndpoint: mongodb_url
   globalDbEndpoint: mongoglobaldb_url
   globalDbEnabled: false
-  expireAfterSeconds: -1
+  expireAfterSeconds: 9000 # Note: CosmosDB supports -1 to disable TTL but MongoDB does not
   createCosmosDBIndexes: false
-  bufferMaxEntries: 50
+  directConnection: true
   softDeletionRetentionPeriodMs: 2592000000
   offlineWindowMs: 86400000
   softDeletionEnabled: false
   permanentDeletionEnabled: false
   deletionIntervalMs: 3600000
-
-rabbitmq:
-  connectionString: ""
 
 redis:
   url: redis_url
@@ -175,6 +176,7 @@ kafka:
     deltas: deltas
   url: kafka_url:port
   libname: rdkafka
+  customRestartOnKafkaErrorCodes: [-195, -192, -187, -185, -181, 14]
 
 ingress:
   class: nginx-prod
@@ -182,3 +184,18 @@ ingress:
 error:
   track: true
   endpoint: "error_tracking_endpoint"
+
+lumberjack:
+  options:
+    enableGlobalTelemetryContext: true
+    enableSanitization: false
+
+config:
+  configDumpEnabled: false
+  secretNamesToRedactInConfigDump:
+    - mongo.globalDbEndpoint
+    - mongo.operationsDbEndpoint
+    - redis.pass
+    - redisForTenantCache.pass
+    - redis2.pass
+    - redisForThrottling.pass

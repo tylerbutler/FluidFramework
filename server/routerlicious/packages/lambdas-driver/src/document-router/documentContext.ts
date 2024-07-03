@@ -12,7 +12,11 @@ import {
 	IContextErrorData,
 	IRoutingKey,
 } from "@fluidframework/server-services-core";
+import { Lumberjack } from "@fluidframework/server-services-telemetry";
 
+/**
+ * @internal
+ */
 export class DocumentContext extends EventEmitter implements IContext {
 	// We track two offsets - head and tail. Head represents the largest offset related to this document we
 	// have seen. Tail represents the last checkpointed offset. When head and tail match we have fully checkpointed
@@ -71,7 +75,7 @@ export class DocumentContext extends EventEmitter implements IContext {
 		this.headInternal = head;
 	}
 
-	public checkpoint(message: IQueuedMessage) {
+	public checkpoint(message: IQueuedMessage, restartOnCheckpointFailure?: boolean) {
 		if (this.closed) {
 			return;
 		}
@@ -87,11 +91,12 @@ export class DocumentContext extends EventEmitter implements IContext {
 
 		// Update the tail and broadcast the checkpoint
 		this.tailInternal = message;
-		this.emit("checkpoint", this);
+		this.emit("checkpoint", restartOnCheckpointFailure);
 	}
 
 	public error(error: any, errorData: IContextErrorData) {
 		this.contextError = error;
+		Lumberjack.verbose("Emitting error from documentContext");
 		this.emit("error", error, errorData);
 	}
 

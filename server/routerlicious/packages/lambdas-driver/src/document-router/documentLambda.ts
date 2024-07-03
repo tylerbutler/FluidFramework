@@ -7,7 +7,7 @@ import {
 	extractBoxcar,
 	IContext,
 	IQueuedMessage,
-	IPartitionConfig,
+	IPartitionLambdaConfig,
 	IPartitionLambda,
 	IPartitionLambdaFactory,
 	LambdaCloseType,
@@ -34,13 +34,15 @@ export class DocumentLambda implements IPartitionLambda {
 	private activityCheckTimer: NodeJS.Timeout | undefined;
 
 	constructor(
-		private readonly factory: IPartitionLambdaFactory,
-		private readonly config: IPartitionConfig,
+		private readonly factory: IPartitionLambdaFactory<IPartitionLambdaConfig>,
 		private readonly context: IContext,
 		private readonly documentLambdaServerConfiguration: IDocumentLambdaServerConfiguration,
 	) {
 		this.contextManager = new DocumentContextManager(context);
 		this.contextManager.on("error", (error, errorData: IContextErrorData) => {
+			Lumberjack.verbose(
+				"Listening for errors in documentLambda, contextManager error event",
+			);
 			context.error(error, errorData);
 		});
 		this.activityCheckTimer = setInterval(
@@ -49,7 +51,10 @@ export class DocumentLambda implements IPartitionLambda {
 		);
 	}
 
-	public handler(message: IQueuedMessage) {
+	/**
+	 * {@inheritDoc IPartitionLambda.handler}
+	 */
+	public handler(message: IQueuedMessage): undefined {
 		if (!this.contextManager.setHead(message)) {
 			this.context.log?.warn(
 				"Unexpected head offset. " +
@@ -102,7 +107,6 @@ export class DocumentLambda implements IPartitionLambda {
 
 			document = new DocumentPartition(
 				this.factory,
-				this.config,
 				boxcar.tenantId,
 				boxcar.documentId,
 				documentContext,

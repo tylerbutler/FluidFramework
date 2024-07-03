@@ -2,10 +2,11 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import { parentPort } from "worker_threads";
 
 import { lint } from "./eslintWorker";
-import { compile } from "./tscWorker";
+import { compile, fluidCompile } from "./tscWorker";
 
 export interface WorkerMessage {
 	workerName: string;
@@ -20,8 +21,9 @@ export interface WorkerExecResult {
 }
 
 const workers: { [key: string]: (message: WorkerMessage) => Promise<WorkerExecResult> } = {
-	tsc: compile,
-	eslint: lint,
+	"tsc": compile,
+	"fluid-tsc": fluidCompile,
+	"eslint": lint,
 };
 
 let collectMemoryUsage = false;
@@ -52,18 +54,20 @@ async function messageHandler(msg: WorkerMessage): Promise<WorkerExecResult> {
 
 if (parentPort) {
 	parentPort.on("message", (message: WorkerMessage) => {
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		messageHandler(message).then(parentPort!.postMessage.bind(parentPort));
 	});
 } else if (process.send) {
 	collectMemoryUsage = process.argv.includes("--memoryUsage");
 	process.on("message", (message: WorkerMessage) => {
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		messageHandler(message).then(process.send!.bind(process));
 	});
 	process.on("uncaughtException", (error) => {
 		console.error(`ERROR: Uncaught exception. ${error.message}\n${error.stack}`);
 		process.exit(-1);
 	});
-	process.on("unhandledRejection", (reason, promise) => {
+	process.on("unhandledRejection", (reason) => {
 		console.error(`ERROR: Unhandled promise rejection. ${reason}`);
 		process.exit(-1);
 	});

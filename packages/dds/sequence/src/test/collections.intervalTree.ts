@@ -4,10 +4,15 @@
  */
 
 import { strict as assert } from "assert";
-import { IInterval, IntervalTree } from "../intervalTree";
+
+import { IntervalTree } from "../intervalTree.js";
+import { IInterval } from "../intervals/index.js";
 
 class TestInterval implements IInterval {
-	constructor(public start: number, public end: number) {}
+	constructor(
+		public start: number,
+		public end: number,
+	) {}
 
 	public clone() {
 		return new TestInterval(this.start, this.end);

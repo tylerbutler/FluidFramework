@@ -9,16 +9,17 @@ import { Router } from "express";
 import nconf from "nconf";
 import {
 	checkSoftDeleted,
+	getFilesystemManagerFactory,
 	getRepoManagerFromWriteAPI,
 	getRepoManagerParamsFromRequest,
-	IFileSystemManagerFactory,
+	IFileSystemManagerFactories,
 	IRepositoryManagerFactory,
 	logAndThrowApiError,
 } from "../../utils";
 
 export function create(
 	store: nconf.Provider,
-	fileSystemManagerFactory: IFileSystemManagerFactory,
+	fileSystemManagerFactories: IFileSystemManagerFactories,
 	repoManagerFactory: IRepositoryManagerFactory,
 ): Router {
 	const router: Router = Router();
@@ -35,9 +36,14 @@ export function create(
 			repoPerDocEnabled,
 		)
 			.then(async (repoManager) => {
-				const fsManager = fileSystemManagerFactory.create(
-					repoManagerParams.fileSystemManagerParams,
+				const fileSystemManagerFactory = getFilesystemManagerFactory(
+					fileSystemManagerFactories,
+					repoManagerParams.isEphemeralContainer,
 				);
+				const fsManager = fileSystemManagerFactory.create({
+					...repoManagerParams.fileSystemManagerParams,
+					rootDir: repoManager.path,
+				});
 				await checkSoftDeleted(
 					fsManager,
 					repoManager.path,
@@ -56,9 +62,14 @@ export function create(
 		const resultP = repoManagerFactory
 			.open(repoManagerParams)
 			.then(async (repoManager) => {
-				const fsManager = fileSystemManagerFactory.create(
-					repoManagerParams.fileSystemManagerParams,
+				const fileSystemManagerFactory = getFilesystemManagerFactory(
+					fileSystemManagerFactories,
+					repoManagerParams.isEphemeralContainer,
 				);
+				const fsManager = fileSystemManagerFactory.create({
+					...repoManagerParams.fileSystemManagerParams,
+					rootDir: repoManager.path,
+				});
 				await checkSoftDeleted(
 					fsManager,
 					repoManager.path,

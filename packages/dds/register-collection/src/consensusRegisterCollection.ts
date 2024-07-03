@@ -3,25 +3,29 @@
  * Licensed under the MIT License.
  */
 
-import { assert, bufferToString, unreachableCase } from "@fluidframework/common-utils";
-import { ISequencedDocumentMessage, MessageType } from "@fluidframework/protocol-definitions";
+import { bufferToString } from "@fluid-internal/client-utils";
+import { assert, unreachableCase } from "@fluidframework/core-utils/internal";
 import {
 	IChannelAttributes,
 	IFluidDataStoreRuntime,
 	IChannelStorageService,
-} from "@fluidframework/datastore-definitions";
-import { ISummaryTreeWithStats } from "@fluidframework/runtime-definitions";
+} from "@fluidframework/datastore-definitions/internal";
 import {
-	createSingleBlobSummary,
+	MessageType,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import { ISummaryTreeWithStats } from "@fluidframework/runtime-definitions/internal";
+import {
 	IFluidSerializer,
 	SharedObject,
-} from "@fluidframework/shared-object-base";
-import { ConsensusRegisterCollectionFactory } from "./consensusRegisterCollectionFactory";
+	createSingleBlobSummary,
+} from "@fluidframework/shared-object-base/internal";
+
 import {
 	IConsensusRegisterCollection,
-	ReadPolicy,
 	IConsensusRegisterCollectionEvents,
-} from "./interfaces";
+	ReadPolicy,
+} from "./interfaces.js";
 
 interface ILocalData<T> {
 	// Atomic version
@@ -52,8 +56,10 @@ const newLocalRegister = <T>(sequenceNumber: number, value: T): ILocalRegister<T
 
 /**
  * An operation for consensus register collection
+ *
+ * The value stored in this op is serialized as a string and must be deserialized
  */
-interface IRegisterOperation {
+interface IRegisterOperationSerialized {
 	key: string;
 	type: "write";
 	serializedValue: string;
@@ -66,23 +72,34 @@ interface IRegisterOperation {
 }
 
 /**
- * IRegisterOperation format in versions \< 0.17
+ * IRegisterOperation format in versions \< 0.17 and \>=2.0.0-rc.2.0.0
+ *
+ * The value stored in this op is _not_ serialized and is stored literally as `T`
  */
-interface IRegisterOperationOld<T> {
+interface IRegisterOperationPlain<T> {
 	key: string;
 	type: "write";
+
 	value: {
 		type: "Plain";
 		value: T;
 	};
-	refSeq: number;
+
+	// back-compat: for clients prior to 2.0.0-rc.2.0.0, we must also pass in
+	// the serialized value for them to parse handles correctly. we do not have
+	// to pay the cost of deserializing this value in newer clients
+	serializedValue: string;
+
+	// back-compat: files at rest written with runtime <= 0.13 do not have refSeq
+	refSeq: number | undefined;
 }
 
 /** Incoming ops could match any of these types */
-type IIncomingRegisterOperation<T> = IRegisterOperation | IRegisterOperationOld<T>;
+type IIncomingRegisterOperation<T> = IRegisterOperationSerialized | IRegisterOperationPlain<T>;
 
 /** Distinguish between incoming op formats so we know which type it is */
-const incomingOpMatchesCurrentFormat = (op): op is IRegisterOperation => "serializedValue" in op;
+const incomingOpMatchesPlainFormat = <T>(op): op is IRegisterOperationPlain<T> =>
+	"value" in op;
 
 /** The type of the resolve function to call after the local operation is ack'd */
 type PendingResolve = (winner: boolean) => void;
@@ -90,35 +107,14 @@ type PendingResolve = (winner: boolean) => void;
 const snapshotFileName = "header";
 
 /**
- * Implementation of a consensus register collection
+ * {@inheritDoc IConsensusRegisterCollection}
+ * @legacy
+ * @alpha
  */
 export class ConsensusRegisterCollection<T>
 	extends SharedObject<IConsensusRegisterCollectionEvents>
 	implements IConsensusRegisterCollection<T>
 {
-	/**
-	 * Create a new consensus register collection
-	 *
-	 * @param runtime - data store runtime the new consensus register collection belongs to
-	 * @param id - optional name of the consensus register collection
-	 * @returns newly create consensus register collection (but not attached yet)
-	 */
-	public static create<T>(runtime: IFluidDataStoreRuntime, id?: string) {
-		return runtime.createChannel(
-			id,
-			ConsensusRegisterCollectionFactory.Type,
-		) as ConsensusRegisterCollection<T>;
-	}
-
-	/**
-	 * Get a factory for ConsensusRegisterCollection to register with the data store.
-	 *
-	 * @returns a factory that creates and load ConsensusRegisterCollection
-	 */
-	public static getFactory() {
-		return new ConsensusRegisterCollectionFactory();
-	}
-
 	private readonly data = new Map<string, ILocalData<T>>();
 
 	/**
@@ -140,19 +136,20 @@ export class ConsensusRegisterCollection<T>
 	 * @returns Promise<true> if write was non-concurrent
 	 */
 	public async write(key: string, value: T): Promise<boolean> {
-		const serializedValue = this.stringify(value, this.serializer);
-
 		if (!this.isAttached()) {
-			// JSON-roundtrip value for local writes to match the behavior of going through the wire
-			this.processInboundWrite(key, this.parse(serializedValue, this.serializer), 0, 0, true);
+			this.processInboundWrite(key, value, 0, 0, true);
 			return true;
 		}
 
-		const message: IRegisterOperation = {
+		const message: IRegisterOperationPlain<T> = {
 			key,
 			type: "write",
-			serializedValue,
-			refSeq: this.runtime.deltaManager.lastSequenceNumber,
+			serializedValue: this.stringify(value, this.serializer),
+			value: {
+				type: "Plain",
+				value,
+			},
+			refSeq: this.deltaManager.lastSequenceNumber,
 		};
 
 		return this.newAckBasedPromise<boolean>((resolve) => {
@@ -227,7 +224,7 @@ export class ConsensusRegisterCollection<T>
 		localOpMetadata: unknown,
 	) {
 		if (message.type === MessageType.Operation) {
-			const op: IIncomingRegisterOperation<T> = message.contents;
+			const op = message.contents as IIncomingRegisterOperation<T>;
 			switch (op.type) {
 				case "write": {
 					// backward compatibility: File at rest written with runtime <= 0.13 do not have refSeq
@@ -243,9 +240,9 @@ export class ConsensusRegisterCollection<T>
 						0x06e /* "Message's reference sequence number < op's reference sequence number!" */,
 					);
 
-					const value = incomingOpMatchesCurrentFormat(op)
-						? (this.parse(op.serializedValue, this.serializer) as T)
-						: op.value.value;
+					const value = incomingOpMatchesPlainFormat<T>(op)
+						? op.value.value
+						: (this.parse(op.serializedValue, this.serializer) as T);
 					const winner = this.processInboundWrite(
 						op.key,
 						value,
@@ -320,7 +317,8 @@ export class ConsensusRegisterCollection<T>
 			);
 		} else if (data.versions.length > 0) {
 			assert(
-				sequenceNumber > data.versions[data.versions.length - 1].sequenceNumber,
+				// seqNum should always be increasing, except for the case of grouped batches (seqNum will be the same)
+				sequenceNumber >= data.versions[data.versions.length - 1].sequenceNumber,
 				0x071 /* "Versions should naturally be ordered by sequenceNumber" */,
 			);
 		}
@@ -345,8 +343,7 @@ export class ConsensusRegisterCollection<T>
 		return serializer.parse(content);
 	}
 
-	protected applyStashedOp() {
+	protected applyStashedOp(): void {
 		// empty implementation
-		return () => {};
 	}
 }

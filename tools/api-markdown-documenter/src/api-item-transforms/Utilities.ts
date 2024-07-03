@@ -2,54 +2,64 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { ApiItem, IResolveDeclarationReferenceResult } from "@microsoft/api-extractor-model";
-import { DocDeclarationReference } from "@microsoft/tsdoc";
 
-import { Link } from "../Link";
-import { DocumentNode, SectionNode } from "../documentation-domain";
-import { getFilePathForApiItem, getLinkForApiItem } from "./ApiItemUtilities";
-import { DocNodeTransformOptions } from "./DocNodeTransforms";
-import { ApiItemTransformationConfiguration } from "./configuration";
-import { wrapInSection } from "./helpers";
+import {
+	ApiItemKind,
+	type ApiItem,
+	type IResolveDeclarationReferenceResult,
+	type ApiPackage,
+} from "@microsoft/api-extractor-model";
+import { type DocDeclarationReference } from "@microsoft/tsdoc";
+
+import { DocumentNode, type SectionNode } from "../documentation-domain/index.js";
+import { type Link } from "../Link.js";
+import {
+	getDocumentPathForApiItem,
+	getLinkForApiItem,
+	shouldItemBeIncluded,
+} from "./ApiItemTransformUtilities.js";
+import { type TsdocNodeTransformOptions } from "./TsdocNodeTransforms.js";
+import { type ApiItemTransformationConfiguration } from "./configuration/index.js";
+import { wrapInSection } from "./helpers/index.js";
 
 /**
- * Helper function for creating a {@link DocumentNode} for an API item and its generated documentation contents.
+ * Creates a {@link DocumentNode} representing the provided API item.
+ *
+ * @param documentItem - The API item to be documented.
+ * @param sections - An array of sections to be included in the document.
+ * @param config - The transformation configuration for the API item.
+ *
+ * @returns A {@link DocumentNode} representing the constructed document.
  */
 export function createDocument(
 	documentItem: ApiItem,
 	sections: SectionNode[],
 	config: Required<ApiItemTransformationConfiguration>,
 ): DocumentNode {
-	let contents: SectionNode[] = sections;
-
-	// If a top-level heading was requested, we will wrap our document sections in a root section
-	// with the appropriate heading to ensure hierarchy is adjusted appropriately.
-	if (config.includeTopLevelDocumentHeading) {
-		contents = [wrapInSection(sections, { title: config.getHeadingTextForItem(documentItem) })];
-	}
-
-	const frontMatter =
-		config.generateFrontMatter === undefined
-			? undefined
-			: config.generateFrontMatter(documentItem);
+	// Wrap sections in a root section if top-level heading is requested.
+	const contents = config.includeTopLevelDocumentHeading
+		? [wrapInSection(sections, { title: config.getHeadingTextForItem(documentItem) })]
+		: sections;
 
 	return new DocumentNode({
+		apiItem: documentItem,
 		children: contents,
-		filePath: getFilePathForApiItem(documentItem, config),
-		frontMatter,
+		documentPath: getDocumentPathForApiItem(documentItem, config),
 	});
 }
 
 /**
- * Create {@link DocNodeTransformOptions} for the provided context API item and the system config.
+ * Create {@link TsdocNodeTransformOptions} for the provided context API item and the system config.
  *
- * @param contextApiItem - See {@link DocNodeTransformOptions.contextApiItem}.
+ * @param contextApiItem - See {@link TsdocNodeTransformOptions.contextApiItem}.
  * @param config - See {@link ApiItemTransformationConfiguration}.
+ *
+ * @returns An option for {@link @microsoft/tsdoc#DocNode} transformations
  */
-export function getDocNodeTransformationOptions(
+export function getTsdocNodeTransformationOptions(
 	contextApiItem: ApiItem,
 	config: Required<ApiItemTransformationConfiguration>,
-): DocNodeTransformOptions {
+): TsdocNodeTransformOptions {
 	return {
 		contextApiItem,
 		resolveApiReference: (codeDestination): Link | undefined =>
@@ -61,7 +71,7 @@ export function getDocNodeTransformationOptions(
 /**
  * Resolves a symbolic link and creates a URL to the target.
  *
- * @param contextApiItem - See {@link DocNodeTransformOptions.contextApiItem}.
+ * @param contextApiItem - See {@link TsdocNodeTransformOptions.contextApiItem}.
  * @param codeDestination - The link reference target.
  * @param config - See {@link ApiItemTransformationConfiguration}.
  */
@@ -77,12 +87,35 @@ function resolveSymbolicLink(
 
 	if (resolvedReference.resolvedApiItem === undefined) {
 		logger.warning(
-			`Unable to resolve reference "${codeDestination.emitAsTsdoc()}" from "${contextApiItem.getScopedNameWithinPackage()}":`,
+			`Unable to resolve reference "${codeDestination.emitAsTsdoc()}" from "${getScopedMemberNameForDiagnostics(
+				contextApiItem,
+			)}":`,
 			resolvedReference.errorMessage,
 		);
 
 		return undefined;
 	}
+	const resolvedApiItem = resolvedReference.resolvedApiItem;
+
+	// Return undefined if the resolved API item should be excluded based on release tags
+	if (!shouldItemBeIncluded(resolvedApiItem, config)) {
+		logger.verbose("Excluding link to item based on release tags");
+		return undefined;
+	}
 
 	return getLinkForApiItem(resolvedReference.resolvedApiItem, config);
+}
+
+/**
+ * Creates a scoped member specifier for the provided API item, including the name of the package the item belongs to
+ * if applicable.
+ *
+ * Intended for use in diagnostic messaging.
+ */
+export function getScopedMemberNameForDiagnostics(apiItem: ApiItem): string {
+	return apiItem.kind === ApiItemKind.Package
+		? (apiItem as ApiPackage).displayName
+		: `${
+				apiItem.getAssociatedPackage()?.displayName ?? "<NO-PACKAGE>"
+		  }#${apiItem.getScopedNameWithinPackage()}`;
 }

@@ -3,10 +3,16 @@
  * Licensed under the MIT License.
  */
 
-import { benchmark, BenchmarkType } from "@fluid-tools/benchmark";
-import { MergeTreeDeltaType } from "../ops";
-import { markRangeRemoved } from "./testUtils";
-import { loadSnapshot, TestString } from "./snapshot.utils";
+import { BenchmarkType, benchmark } from "@fluid-tools/benchmark";
+
+import { MergeTreeDeltaType } from "../ops.js";
+import {
+	MergeTreeDeltaRevertible,
+	appendToMergeTreeDeltaRevertibles,
+} from "../revertibles.js";
+
+import { TestString, loadSnapshot } from "./snapshot.utils.js";
+import { markRangeRemoved } from "./testUtils.js";
 
 describe("MergeTree remove", () => {
 	let summary;
@@ -60,6 +66,43 @@ describe("MergeTree remove", () => {
 			});
 		},
 	});
+
+	for (const length of [10, 100, 1000]) {
+		benchmark({
+			type: BenchmarkType.Measurement,
+			title: "remove large range of large tree with undo-redo",
+			category: "remove",
+			before: () => {
+				const str = new TestString("id", {});
+				for (let i = 0; i < length / 2; i++) {
+					str.append("a", true);
+					str.appendMarker(true);
+				}
+
+				str.applyPendingOps();
+				summary = str.getSummary();
+			},
+			benchmarkFnAsync: async () => {
+				const str = await loadSnapshot(summary);
+
+				const revertibles: MergeTreeDeltaRevertible[] = [];
+				str.on("delta", (_op, delta) => {
+					appendToMergeTreeDeltaRevertibles(delta, revertibles);
+				});
+
+				const op = str.removeRangeLocal(0, length - 1);
+				str.applyMsg(
+					str.makeOpMessage(
+						op,
+						/* seq */ length + 1,
+						/* refSeq */ length,
+						str.longClientId,
+						/* minSeq */ length,
+					),
+				);
+			},
+		});
+	}
 
 	benchmark({
 		type: BenchmarkType.Measurement,

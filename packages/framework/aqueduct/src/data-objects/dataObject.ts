@@ -3,11 +3,16 @@
  * Licensed under the MIT License.
  */
 
-import { IRequest, IResponse } from "@fluidframework/core-interfaces";
-import { ISharedDirectory, MapFactory, SharedDirectory } from "@fluidframework/map";
-import { RequestParser, create404Response } from "@fluidframework/runtime-utils";
-import { PureDataObject } from "./pureDataObject";
-import { DataObjectTypes } from "./types";
+// eslint-disable-next-line import/no-deprecated
+import {
+	type ISharedDirectory,
+	MapFactory,
+	SharedDirectory,
+} from "@fluidframework/map/internal";
+import type { SharedObjectKind } from "@fluidframework/shared-object-base";
+
+import { PureDataObject } from "./pureDataObject.js";
+import type { DataObjectTypes } from "./types.js";
 
 /**
  * DataObject is a base data store that is primed with a root directory. It
@@ -18,29 +23,14 @@ import { DataObjectTypes } from "./types";
  * will automatically be registered.
  *
  * @typeParam I - The optional input types used to strongly type the data object
+ * @legacy
+ * @alpha
  */
 export abstract class DataObject<
 	I extends DataObjectTypes = DataObjectTypes,
 > extends PureDataObject<I> {
 	private internalRoot: ISharedDirectory | undefined;
 	private readonly rootDirectoryId = "root";
-
-	/**
-	 * {@inheritDoc PureDataObject.request}
-	 */
-	public async request(request: IRequest): Promise<IResponse> {
-		const requestParser = RequestParser.create(request);
-		const itemId = requestParser.pathParts[0];
-		if (itemId === "bigBlobs") {
-			const value = this.root.get<string>(requestParser.pathParts.join("/"));
-			if (value === undefined) {
-				return create404Response(requestParser);
-			}
-			return { mimeType: "fluid/object", status: 200, value };
-		} else {
-			return super.request(requestParser);
-		}
-	}
 
 	/**
 	 * The root directory will either be ready or will return an error. If an error is thrown
@@ -59,11 +49,7 @@ export abstract class DataObject<
 	 * Caller is responsible for ensuring this is only invoked once.
 	 */
 	public async initializeInternal(existing: boolean): Promise<void> {
-		if (!existing) {
-			// Create a root directory and register it before calling initializingFirstTime
-			this.internalRoot = SharedDirectory.create(this.runtime, this.rootDirectoryId);
-			this.internalRoot.bindToContext();
-		} else {
+		if (existing) {
 			// data store has a root directory so we just need to set it before calling initializingFromExisting
 			this.internalRoot = (await this.runtime.getChannel(
 				this.rootDirectoryId,
@@ -80,6 +66,11 @@ export abstract class DataObject<
 						"Legacy document, SharedMap is masquerading as SharedDirectory in DataObject",
 				});
 			}
+		} else {
+			// Create a root directory and register it before calling initializingFirstTime
+			// eslint-disable-next-line import/no-deprecated
+			this.internalRoot = SharedDirectory.create(this.runtime, this.rootDirectoryId);
+			this.internalRoot.bindToContext();
 		}
 
 		await super.initializeInternal(existing);
@@ -92,4 +83,14 @@ export abstract class DataObject<
 	protected getUninitializedErrorString(item: string): string {
 		return `${item} must be initialized before being accessed.`;
 	}
+}
+
+/**
+ * Utility for creating SharedObjectKind instances for data objects.
+ * @internal
+ */
+export function createDataObjectKind<T extends new (...any) => DataObject>(
+	factory: T,
+): T & SharedObjectKind<InstanceType<T>> {
+	return factory as T & SharedObjectKind<InstanceType<T>>;
 }

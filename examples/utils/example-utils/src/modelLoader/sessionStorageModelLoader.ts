@@ -3,20 +3,22 @@
  * Licensed under the MIT License.
  */
 
-import { ICodeDetailsLoader } from "@fluidframework/container-definitions";
+import { ICodeDetailsLoader } from "@fluidframework/container-definitions/internal";
+import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
 import {
-	LocalResolver,
 	LocalDocumentServiceFactory,
+	LocalResolver,
 	LocalSessionStorageDbFactory,
 	createLocalResolverCreateNewRequest,
-} from "@fluidframework/local-driver";
+} from "@fluidframework/local-driver/internal";
 import {
 	ILocalDeltaConnectionServer,
 	LocalDeltaConnectionServer,
 } from "@fluidframework/server-local-server";
 import { v4 as uuid } from "uuid";
-import { IModelLoader } from "./interfaces";
-import { ModelLoader } from "./modelLoader";
+
+import { IDetachedModel, IModelLoader } from "./interfaces.js";
+import { ModelLoader } from "./modelLoader.js";
 
 const urlResolver = new LocalResolver();
 
@@ -31,31 +33,48 @@ const getDocumentServiceFactory = (documentId: string) => {
 	return new LocalDocumentServiceFactory(deltaConnection);
 };
 
+/**
+ * @internal
+ */
 export class SessionStorageModelLoader<ModelType> implements IModelLoader<ModelType> {
-	public constructor(private readonly codeLoader: ICodeDetailsLoader) {}
+	public constructor(
+		private readonly codeLoader: ICodeDetailsLoader,
+		private readonly logger?: ITelemetryBaseLogger,
+	) {}
 
 	public async supportsVersion(version: string): Promise<boolean> {
 		return true;
 	}
 
-	public async createDetached(version: string) {
+	public async createDetached(version: string): Promise<IDetachedModel<ModelType>> {
 		const documentId = uuid();
 		const modelLoader = new ModelLoader<ModelType>({
 			urlResolver,
 			documentServiceFactory: getDocumentServiceFactory(documentId),
 			codeLoader: this.codeLoader,
+			logger: this.logger,
 			generateCreateNewRequest: () => createLocalResolverCreateNewRequest(documentId),
 		});
 		return modelLoader.createDetached(version);
 	}
-	public async loadExisting(id: string) {
+	public async loadExisting(id: string): Promise<ModelType> {
 		const documentId = id;
 		const modelLoader = new ModelLoader<ModelType>({
 			urlResolver,
 			documentServiceFactory: getDocumentServiceFactory(documentId),
 			codeLoader: this.codeLoader,
+			logger: this.logger,
 			generateCreateNewRequest: () => createLocalResolverCreateNewRequest(documentId),
 		});
 		return modelLoader.loadExisting(`${window.location.origin}/${id}`);
+	}
+	public async loadExistingPaused(id: string, sequenceNumber: number): Promise<ModelType> {
+		const modelLoader = new ModelLoader<ModelType>({
+			urlResolver,
+			documentServiceFactory: getDocumentServiceFactory(id),
+			codeLoader: this.codeLoader,
+			generateCreateNewRequest: () => createLocalResolverCreateNewRequest(id),
+		});
+		return modelLoader.loadExistingPaused(`${window.location.origin}/${id}`, sequenceNumber);
 	}
 }

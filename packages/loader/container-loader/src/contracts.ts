@@ -3,29 +3,44 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryProperties } from "@fluidframework/common-definitions";
+import { ICriticalContainerError } from "@fluidframework/container-definitions";
 import {
 	IDeltaQueue,
 	ReadOnlyInfo,
-	IConnectionDetailsInternal,
-	ICriticalContainerError,
 	IFluidCodeDetails,
 	isFluidPackage,
-} from "@fluidframework/container-definitions";
+	IConnectionDetails,
+} from "@fluidframework/container-definitions/internal";
+import { IErrorBase, ITelemetryBaseProperties } from "@fluidframework/core-interfaces";
+import { ConnectionMode, IClientDetails } from "@fluidframework/driver-definitions";
 import {
-	ConnectionMode,
-	IDocumentMessage,
-	ISequencedDocumentMessage,
+	IContainerPackageInfo,
 	IClientConfiguration,
-	IClientDetails,
+	IDocumentMessage,
+	ISignalClient,
+	ISequencedDocumentMessage,
 	ISignalMessage,
-} from "@fluidframework/protocol-definitions";
-import { IContainerPackageInfo } from "@fluidframework/driver-definitions";
+} from "@fluidframework/driver-definitions/internal";
 
 export enum ReconnectMode {
 	Never = "Never",
 	Disabled = "Disabled",
 	Enabled = "Enabled",
+}
+
+export interface IConnectionStateChangeReason<T extends IErrorBase = IErrorBase> {
+	text: string;
+	error?: T;
+}
+
+/**
+ * Internal version of IConnectionDetails with props are only exposed internally
+ */
+export interface IConnectionDetailsInternal extends IConnectionDetails {
+	mode: ConnectionMode;
+	version: string;
+	initialClients: ISignalClient[];
+	reason: IConnectionStateChangeReason;
 }
 
 /**
@@ -37,19 +52,29 @@ export interface IConnectionManager {
 
 	readonly clientId: string | undefined;
 
-	/** The queue of outbound delta messages */
+	/**
+	 * The queue of outbound delta messages
+	 */
 	readonly outbound: IDeltaQueue<IDocumentMessage[]>;
 
-	/** Details of client */
+	/**
+	 * Details of client
+	 */
 	readonly clientDetails: IClientDetails;
 
-	/** Protocol version being used to communicate with the service */
+	/**
+	 * Protocol version being used to communicate with the service
+	 */
 	readonly version: string;
 
-	/** Max message size allowed to the delta manager */
+	/**
+	 * Max message size allowed to the delta manager
+	 */
 	readonly maxMessageSize: number;
 
-	/** Service configuration provided by the service. */
+	/**
+	 * Service configuration provided by the service.
+	 */
 	readonly serviceConfiguration: IClientConfiguration | undefined;
 
 	readonly readOnlyInfo: ReadOnlyInfo;
@@ -57,12 +82,12 @@ export interface IConnectionManager {
 	// Various connectivity properties for telemetry describing type of current connection
 	// Things like connection mode, service info, etc.
 	// Called when connection state changes (connect / disconnect)
-	readonly connectionProps: ITelemetryProperties;
+	readonly connectionProps: ITelemetryBaseProperties;
 
 	// Verbose information about connection logged to telemetry in case of issues with
 	// maintaining healthy connection, including op gaps, not receiving join op in time, etc.
 	// Contains details information, like sequence numbers at connection time, initial ops info, etc.
-	readonly connectionVerboseProps: ITelemetryProperties;
+	readonly connectionVerboseProps: ITelemetryBaseProperties;
 
 	/**
 	 * Prepares message to be sent. Fills in clientSequenceNumber.
@@ -84,7 +109,7 @@ export interface IConnectionManager {
 	 * Submits signal to relay service.
 	 * Called only when active connection is present.
 	 */
-	submitSignal(content: any): void;
+	submitSignal: (content: string, targetClientId?: string) => void;
 
 	/**
 	 * Submits messages to relay service.
@@ -95,7 +120,7 @@ export interface IConnectionManager {
 	/**
 	 * Initiates connection to relay service (noop if already connected).
 	 */
-	connect(connectionMode?: ConnectionMode): void;
+	connect(reason: IConnectionStateChangeReason, connectionMode?: ConnectionMode): void;
 
 	/**
 	 * Disposed connection manager
@@ -117,10 +142,10 @@ export interface IConnectionManagerFactoryArgs {
 	readonly incomingOpHandler: (messages: ISequencedDocumentMessage[], reason: string) => void;
 
 	/**
-	 * Called by connection manager for each incoming signals.
-	 * Maybe called before connectHandler is called (initial signals on socket connection)
+	 * Called by connection manager for each incoming signal.
+	 * May be called before connectHandler is called (due to initial signals on socket connection)
 	 */
-	readonly signalHandler: (message: ISignalMessage) => void;
+	readonly signalHandler: (signals: ISignalMessage[]) => void;
 
 	/**
 	 * Called when connection manager experiences delay in connecting to relay service.
@@ -134,12 +159,12 @@ export interface IConnectionManagerFactoryArgs {
 	 * Called by connection manager whenever critical error happens and container should be closed.
 	 * Expects dispose() call in response to this call.
 	 */
-	readonly closeHandler: (error?: any) => void;
+	readonly closeHandler: (error?: IErrorBase) => void;
 
 	/**
 	 * Called whenever connection to relay service is lost.
 	 */
-	readonly disconnectHandler: (reason: string) => void;
+	readonly disconnectHandler: (reason: IConnectionStateChangeReason) => void;
 
 	/**
 	 * Called whenever new connection to rely service is established
@@ -148,8 +173,6 @@ export interface IConnectionManagerFactoryArgs {
 
 	/**
 	 * Called whenever ping/pong messages are roundtripped on connection.
-	 *
-	 * @deprecated No replacement API intended.
 	 */
 	readonly pongHandler: (latency: number) => void;
 
@@ -165,19 +188,34 @@ export interface IConnectionManagerFactoryArgs {
 	 *
 	 * @param readonly - Whether or not the container is now read-only.
 	 * `undefined` indicates that user permissions are not yet known.
+	 * @param readonlyConnectionReason - reason/error if any for the change
 	 */
-	readonly readonlyChangeHandler: (readonly?: boolean) => void;
+	readonly readonlyChangeHandler: (
+		readonly?: boolean,
+		readonlyConnectionReason?: IConnectionStateChangeReason,
+	) => void;
+
+	/**
+	 * Called whenever we try to start establishing a new connection.
+	 */
+	readonly establishConnectionHandler: (reason: IConnectionStateChangeReason) => void;
+
+	/**
+	 * Called whenever we cancel the connection in progress.
+	 */
+	readonly cancelConnectionHandler: (reason: IConnectionStateChangeReason) => void;
 }
 
 /**
- *
+ * Gets the name of the Fluid package.
  * @param codeDetails- - Data structure used to describe the code to load on the Fluid document
- * @returns The name of the Fluid package
  */
 export const getPackageName = (
 	codeDetails: IFluidCodeDetails | undefined,
 ): IContainerPackageInfo => {
-	let containerPackageName;
+	// TODO: use a real type
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let containerPackageName: any;
 	if (codeDetails && "name" in codeDetails) {
 		containerPackageName = codeDetails;
 	} else if (isFluidPackage(codeDetails?.package)) {
@@ -185,5 +223,6 @@ export const getPackageName = (
 	} else {
 		containerPackageName = codeDetails?.package;
 	}
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	return { name: containerPackageName };
 };

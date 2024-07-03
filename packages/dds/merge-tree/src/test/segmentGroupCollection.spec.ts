@@ -4,8 +4,9 @@
  */
 
 import { strict as assert } from "assert";
-import { ISegment } from "../mergeTreeNodes";
-import { TextSegment } from "../textSegment";
+
+import { ISegment } from "../mergeTreeNodes.js";
+import { TextSegment } from "../textSegment.js";
 
 describe("segmentGroupCollection", () => {
 	let segment: ISegment;
@@ -44,23 +45,6 @@ describe("segmentGroupCollection", () => {
 		assert.equal(dequeuedSegmentGroup?.segments.length, 1);
 		assert.equal(dequeuedSegmentGroup.segments[0], segment);
 		assert.equal(dequeuedSegmentGroup, segmentGroup);
-	});
-
-	it(".clear", () => {
-		const segmentGroup = { segments: [], localSeq: 1, refSeq: 0 };
-		segment.segmentGroups.enqueue(segmentGroup);
-		const segmentGroupCount = 6;
-		while (segment.segmentGroups.size < segmentGroupCount) {
-			segment.segmentGroups.enqueue({ segments: [], localSeq: 1, refSeq: 0 });
-		}
-
-		segment.segmentGroups.clear();
-
-		assert(segment.segmentGroups.empty);
-		assert.equal(segment.segmentGroups.size, 0);
-
-		assert.equal(segmentGroup.segments.length, 1);
-		assert.equal(segmentGroup.segments[0], segment);
 	});
 
 	it(".copyTo", () => {

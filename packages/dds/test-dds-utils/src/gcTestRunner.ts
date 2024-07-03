@@ -3,11 +3,14 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "assert";
-import { ISharedObject } from "@fluidframework/shared-object-base";
+import { strict as assert } from "node:assert";
+
+import type { ISharedObject } from "@fluidframework/shared-object-base/internal";
 
 /**
  * Defines a set of functions to be passed to the GC test runner.
+ *
+ * @internal
  */
 export interface IGCTestProvider {
 	/**
@@ -36,6 +39,12 @@ export interface IGCTestProvider {
 	addNestedHandles(): Promise<void>;
 }
 
+/**
+ * Runs a series of GC tests for DDSes to verify that they have correctly implemented GC.
+ * The DDSes should store handles and generate the expected GC Data.
+ *
+ * @internal
+ */
 export const runGCTests = (ctor: new () => IGCTestProvider): void => {
 	let provider: IGCTestProvider;
 

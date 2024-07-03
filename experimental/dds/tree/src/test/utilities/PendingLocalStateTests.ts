@@ -3,26 +3,28 @@
  * Licensed under the MIT License.
  */
 
+import { IContainer } from '@fluidframework/container-definitions/internal';
+import { TestObjectProvider } from '@fluidframework/test-utils/internal';
 import { expect } from 'chai';
-import { IContainer } from '@fluidframework/container-definitions';
-import { TestObjectProvider } from '@fluidframework/test-utils';
-import { fail } from '../../Common';
-import { ChangeInternal, Edit, WriteFormat } from '../../persisted-types';
-import type { EditLog } from '../../EditLog';
-import { SharedTree } from '../../SharedTree';
-import { Change, StablePlace } from '../../ChangeTypes';
-import { TreeView } from '../../TreeView';
-import { EditId, NodeId, TraitLabel } from '../../Identifiers';
+
+import { Change, StablePlace } from '../../ChangeTypes.js';
+import { fail } from '../../Common.js';
+import type { EditLog } from '../../EditLog.js';
+import { EditId, NodeId, TraitLabel } from '../../Identifiers.js';
+import { SharedTree } from '../../SharedTree.js';
+import { TreeView } from '../../TreeView.js';
+import { ChangeInternal, Edit, WriteFormat } from '../../persisted-types/index.js';
+
+import { SimpleTestTree } from './TestNode.js';
 import {
-	applyNoop,
-	getEditLogInternal,
 	LocalServerSharedTreeTestingComponents,
 	LocalServerSharedTreeTestingOptions,
+	applyNoop,
+	getEditLogInternal,
 	setUpTestTree,
 	stabilizeEdit,
 	withContainerOffline,
-} from './TestUtilities';
-import { SimpleTestTree } from './TestNode';
+} from './TestUtilities.js';
 
 /**
  * Runs a test suite for SharedTree's ability to apply pending local state stashed by the host.
@@ -40,19 +42,22 @@ export function runPendingLocalStateTests(
 
 		it('applies and submits ops from 0.0.2 in 0.0.2', async () =>
 			applyStashedOp(WriteFormat.v0_0_2, WriteFormat.v0_0_2));
-		it('applies and submits ops from 0.0.2 in 0.1.1', async () =>
+		// TODO:#5357: Re-enable stashed ops tests
+		it.skip('applies and submits ops from 0.0.2 in 0.1.1', async () =>
 			applyStashedOp(WriteFormat.v0_0_2, WriteFormat.v0_1_1));
-		it('applies and submits ops from 0.1.1 in 0.0.2 (via upgrade)', async () => {
+		// TODO:#5357: Re-enable stashed ops tests
+		it.skip('applies and submits ops from 0.1.1 in 0.0.2 (via upgrade)', async () => {
 			const testObjectProvider = await applyStashedOp(WriteFormat.v0_1_1, WriteFormat.v0_0_2);
 
 			// https://dev.azure.com/fluidframework/internal/_workitems/edit/3347
-			const events = testObjectProvider.logger.reportAndClearTrackedEvents();
+			const events = testObjectProvider.tracker.reportAndClearTrackedEvents();
 			expect(events.unexpectedErrors.length).to.equal(1);
 			expect(events.unexpectedErrors[0].eventName).to.equal(
 				'fluid:telemetry:ContainerRuntime:Outbox:ReferenceSequenceNumberMismatch'
 			);
 		});
-		it('applies and submits ops from 0.1.1 in 0.1.1', async () =>
+		// TODO:#5357: Re-enable stashed ops tests
+		it.skip('applies and submits ops from 0.1.1 in 0.1.1', async () =>
 			applyStashedOp(WriteFormat.v0_1_1, WriteFormat.v0_1_1));
 
 		async function applyStashedOp(treeVersion: WriteFormat, opVersion: WriteFormat): Promise<TestObjectProvider> {
@@ -110,10 +115,11 @@ export function runPendingLocalStateTests(
 			await testObjectProvider.ensureSynchronized(); // Synchronize twice in case stashed ops caused an upgrade round-trip
 
 			function tryGetInsertedLeafId(view: TreeView): NodeId | undefined {
-				const rootNode = view.getViewNode(
-					view.getTrait({ parent: view.root, label: SimpleTestTree.traitLabel })[0]
-				);
-				const leftTrait = view.getTrait({ parent: rootNode.identifier, label: SimpleTestTree.leftTraitLabel });
+				const rootNode = view.getViewNode(view.getTrait({ parent: view.root, label: SimpleTestTree.traitLabel })[0]);
+				const leftTrait = view.getTrait({
+					parent: rootNode.identifier,
+					label: SimpleTestTree.leftTraitLabel,
+				});
 				if (leftTrait.length !== 2) {
 					return undefined;
 				}
@@ -121,7 +127,10 @@ export function runPendingLocalStateTests(
 				if (insertedParent === undefined) {
 					return undefined;
 				}
-				return view.getTrait({ parent: insertedParent.identifier, label: insertedLeafLabel })[0];
+				return view.getTrait({
+					parent: insertedParent.identifier,
+					label: insertedLeafLabel,
+				})[0];
 			}
 
 			expect(tryGetInsertedLeafId(observerAfterStash)).to.equal(
@@ -168,6 +177,10 @@ export function runPendingLocalStateTests(
 				id: documentId,
 				testObjectProvider,
 				writeFormat: WriteFormat.v0_0_2,
+				// To be removed ADO:5463
+				featureGates: {
+					'Fluid.Container.ForceWriteConnection': true,
+				},
 			}));
 
 			expect(countSmallTrees(tree0)).to.equal(0);

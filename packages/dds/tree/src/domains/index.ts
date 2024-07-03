@@ -3,15 +3,14 @@
  * Licensed under the MIT License.
  */
 
+export { SchemaBuilder } from "./schemaBuilder.js";
 export {
 	cursorToJsonObject,
 	jsonArray,
-	jsonBoolean,
-	jsonNull,
-	jsonNumber,
 	jsonObject,
 	jsonRoot,
-	jsonSchemaData,
-	jsonString,
+	jsonSchema,
 	singleJsonCursor,
-} from "./json";
+} from "./json/index.js";
+
+export { leaf } from "./leafDomain.js";

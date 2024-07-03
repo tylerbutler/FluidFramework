@@ -3,4 +3,7 @@
  * Licensed under the MIT License.
  */
 
-export { injectSeparator } from "./ArrayUtilities";
+// All of the utilities here are meant to be used outside of this directory.
+// eslint-disable-next-line no-restricted-syntax
+export * from "./ApiItemUtilities.js";
+export { injectSeparator } from "./ArrayUtilities.js";

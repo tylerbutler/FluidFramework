@@ -3,13 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { IFluidResolvedUrl } from "@fluidframework/driver-definitions";
-import URLParse from "url-parse";
+import { IResolvedUrl } from "@fluidframework/driver-definitions/internal";
 import { ISession } from "@fluidframework/server-services-client";
-
-export const parseFluidUrl = (fluidUrl: string): URLParse => {
-	return new URLParse(fluidUrl, true);
-};
 
 /**
  * Assume documentId is at end of url path.
@@ -21,19 +16,19 @@ export const replaceDocumentIdInPath = (urlPath: string, documentId: string): st
 	urlPath.split("/").slice(0, -1).concat([documentId]).join("/");
 
 export const getDiscoveredFluidResolvedUrl = (
-	resolvedUrl: IFluidResolvedUrl,
+	resolvedUrl: IResolvedUrl,
 	session: ISession,
-): IFluidResolvedUrl => {
-	const discoveredOrdererUrl = new URLParse(session.ordererUrl);
-	const deltaStorageUrl = new URLParse(resolvedUrl.endpoints.deltaStorageUrl);
-	deltaStorageUrl.set("host", discoveredOrdererUrl.host);
+): IResolvedUrl => {
+	const discoveredOrdererUrl = new URL(session.ordererUrl);
+	const deltaStorageUrl = new URL(resolvedUrl.endpoints.deltaStorageUrl);
+	deltaStorageUrl.host = discoveredOrdererUrl.host;
 
-	const discoveredStorageUrl = new URLParse(session.historianUrl);
-	const storageUrl = new URLParse(resolvedUrl.endpoints.storageUrl);
-	storageUrl.set("host", discoveredStorageUrl.host);
+	const discoveredStorageUrl = new URL(session.historianUrl);
+	const storageUrl = new URL(resolvedUrl.endpoints.storageUrl);
+	storageUrl.host = discoveredStorageUrl.host;
 
-	const parsedUrl = parseFluidUrl(resolvedUrl.url);
-	const discoveredResolvedUrl: IFluidResolvedUrl = {
+	const parsedUrl = new URL(resolvedUrl.url);
+	const discoveredResolvedUrl: IResolvedUrl = {
 		endpoints: {
 			deltaStorageUrl: deltaStorageUrl.toString(),
 			ordererUrl: session.ordererUrl,
@@ -43,7 +38,7 @@ export const getDiscoveredFluidResolvedUrl = (
 		id: resolvedUrl.id,
 		tokens: resolvedUrl.tokens,
 		type: resolvedUrl.type,
-		url: new URLParse(`fluid://${discoveredOrdererUrl.host}${parsedUrl.pathname}`).toString(),
+		url: new URL(`https://${discoveredOrdererUrl.host}${parsedUrl.pathname}`).toString(),
 	};
 	return discoveredResolvedUrl;
 };

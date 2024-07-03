@@ -3,26 +3,26 @@
  * Licensed under the MIT License.
  */
 
-import { IDisposable, ITelemetryBaseLogger } from "@fluidframework/common-definitions";
-import { assert, Deferred, TypedEventEmitter } from "@fluidframework/common-utils";
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import { IDisposable, ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
+import { assert, Deferred } from "@fluidframework/core-utils/internal";
+import { IClient, ISummaryTree } from "@fluidframework/driver-definitions";
 import {
-	DriverErrorType,
 	IDocumentDeltaConnection,
 	IDocumentDeltaConnectionEvents,
 	IDocumentDeltaStorageService,
 	IDocumentService,
+	IDocumentServiceEvents,
 	IDocumentServiceFactory,
 	IDocumentStorageService,
 	IResolvedUrl,
-} from "@fluidframework/driver-definitions";
-import {
-	IClient,
-	ISummaryTree,
+	ISnapshotFetchOptions,
+	DriverErrorTypes,
 	IDocumentMessage,
 	INack,
 	NackErrorType,
-} from "@fluidframework/protocol-definitions";
-import { LoggingError } from "@fluidframework/telemetry-utils";
+} from "@fluidframework/driver-definitions/internal";
+import { LoggingError, UsageError, wrapError } from "@fluidframework/telemetry-utils/internal";
 
 export class FaultInjectionDocumentServiceFactory implements IDocumentServiceFactory {
 	private readonly _documentServices = new Map<IResolvedUrl, FaultInjectionDocumentService>();
@@ -44,8 +44,8 @@ export class FaultInjectionDocumentServiceFactory implements IDocumentServiceFac
 			clientIsSummarizer,
 		);
 		const ds = new FaultInjectionDocumentService(internal);
-		assert(!this._documentServices.has(resolvedUrl), "one ds per resolved url instance");
-		this._documentServices.set(resolvedUrl, ds);
+		assert(!this._documentServices.has(ds.resolvedUrl), "one ds per resolved url instance");
+		this._documentServices.set(ds.resolvedUrl, ds);
 		return ds;
 	}
 	async createContainer(
@@ -63,7 +63,10 @@ export class FaultInjectionDocumentServiceFactory implements IDocumentServiceFac
 	}
 }
 
-export class FaultInjectionDocumentService implements IDocumentService {
+export class FaultInjectionDocumentService
+	extends TypedEventEmitter<IDocumentServiceEvents>
+	implements IDocumentService
+{
 	private _currentDeltaStream?: FaultInjectionDocumentDeltaConnection;
 	private _currentDeltaStorage?: FaultInjectionDocumentDeltaStorageService;
 	private _currentStorage?: FaultInjectionDocumentStorageService;
@@ -94,6 +97,7 @@ export class FaultInjectionDocumentService implements IDocumentService {
 	}
 
 	constructor(private readonly internal: IDocumentService) {
+		super();
 		this.onlineP.resolve();
 	}
 
@@ -114,6 +118,9 @@ export class FaultInjectionDocumentService implements IDocumentService {
 	}
 
 	public dispose(error?: any) {
+		this.onlineP.reject(
+			wrapError(error, (message) => new FaultInjectionError(`disposed: ${message}`, false)),
+		);
 		this.internal.dispose(error);
 	}
 
@@ -122,11 +129,12 @@ export class FaultInjectionDocumentService implements IDocumentService {
 			this._currentDeltaStream?.disposed !== false,
 			"Document service factory should only have one open connection",
 		);
-		const internal = await this.internal.connectToDeltaStream(client);
-
 		// this method is not expected to resolve until connected
 		await this.onlineP.promise;
-		this._currentDeltaStream = new FaultInjectionDocumentDeltaConnection(internal, this.online);
+		this._currentDeltaStream = new FaultInjectionDocumentDeltaConnection(
+			await this.internal.connectToDeltaStream(client),
+			this.online,
+		);
 		return this._currentDeltaStream;
 	}
 
@@ -150,8 +158,10 @@ export class FaultInjectionDocumentDeltaConnection
 	extends TypedEventEmitter<IDocumentDeltaConnectionEvents>
 	implements IDocumentDeltaConnection, IDisposable
 {
-	private _disposed: boolean = false;
-	constructor(private readonly internal: IDocumentDeltaConnection, private online: boolean) {
+	constructor(
+		private readonly internal: IDocumentDeltaConnection,
+		private online: boolean,
+	) {
 		super();
 		this.on("newListener", (event) => this.forwardEvent(event));
 	}
@@ -173,7 +183,7 @@ export class FaultInjectionDocumentDeltaConnection
 	}
 
 	public get disposed() {
-		return this._disposed;
+		return this.internal.disposed;
 	}
 
 	public get clientId() {
@@ -237,13 +247,15 @@ export class FaultInjectionDocumentDeltaConnection
 	 * Disconnects the given delta connection
 	 */
 	public dispose(): void {
-		this._disposed = true;
 		this.events.forEach((listener, event) => this.internal.off(event, listener));
 		this.internal.dispose();
 	}
 
 	public injectNack(docId: string, canRetry: boolean | undefined) {
-		assert(!this.disposed, "cannot inject nack into closed delta connection");
+		// Cannot inject nack into closed delta connection. So don't do anything.
+		if (this.disposed) {
+			return;
+		}
 		const nack: Partial<INack> = {
 			content: {
 				code: canRetry === true ? 500 : 403,
@@ -255,7 +267,10 @@ export class FaultInjectionDocumentDeltaConnection
 	}
 
 	public injectError(canRetry: boolean | undefined) {
-		assert(!this.disposed, "cannot inject error into closed delta connection");
+		// Cannot inject error into closed delta connection. So don't do anything.
+		if (this.disposed) {
+			return;
+		}
 		// https://nodejs.org/api/events.html#events_error_events
 		assert(
 			this.listenerCount("error") > 0,
@@ -265,7 +280,10 @@ export class FaultInjectionDocumentDeltaConnection
 	}
 
 	public injectDisconnect() {
-		assert(!this.disposed, "cannot inject disconnect into closed delta connection");
+		// Cannot inject disconnect into closed delta connection. So don't do anything.
+		if (this.disposed) {
+			return;
+		}
 		this.emit("disconnect", "FaultInjectionDisconnect");
 	}
 
@@ -281,8 +299,13 @@ export class FaultInjectionDocumentDeltaConnection
 	}
 }
 
-export class FaultInjectionDocumentDeltaStorageService implements IDocumentDeltaStorageService {
-	constructor(private readonly internal: IDocumentDeltaStorageService, private online: boolean) {}
+export class FaultInjectionDocumentDeltaStorageService
+	implements IDocumentDeltaStorageService
+{
+	constructor(
+		private readonly internal: IDocumentDeltaStorageService,
+		private online: boolean,
+	) {}
 	public goOffline() {
 		this.online = false;
 	}
@@ -299,7 +322,10 @@ export class FaultInjectionDocumentDeltaStorageService implements IDocumentDelta
 }
 
 export class FaultInjectionDocumentStorageService implements IDocumentStorageService {
-	constructor(private readonly internal: IDocumentStorageService, private online: boolean) {}
+	constructor(
+		private readonly internal: IDocumentStorageService,
+		private online: boolean,
+	) {}
 
 	public goOffline() {
 		this.online = false;
@@ -314,9 +340,6 @@ export class FaultInjectionDocumentStorageService implements IDocumentStorageSer
 		}
 	}
 
-	public get repositoryUrl(): string {
-		return this.internal.repositoryUrl;
-	}
 	public get policies() {
 		return this.internal.policies;
 	}
@@ -324,6 +347,14 @@ export class FaultInjectionDocumentStorageService implements IDocumentStorageSer
 	public async getSnapshotTree(version, scenarioName?: string) {
 		this.throwIfOffline();
 		return this.internal.getSnapshotTree(version, scenarioName);
+	}
+
+	public async getSnapshot(snapshotFetchOptions?: ISnapshotFetchOptions) {
+		this.throwIfOffline();
+		if (this.internal.getSnapshot !== undefined) {
+			return this.internal.getSnapshot(snapshotFetchOptions);
+		}
+		throw new UsageError("GetSnapshotApi not present");
 	}
 
 	public async getVersions(versionId, count, scenarioName, fetchSource) {
@@ -357,7 +388,11 @@ export class FaultInjectionDocumentStorageService implements IDocumentStorageSer
 }
 
 function throwOfflineError(): never {
-	throw new FaultInjectionError("simulated offline error", false, DriverErrorType.offlineError);
+	throw new FaultInjectionError(
+		"simulated offline error",
+		false,
+		DriverErrorTypes.offlineError,
+	);
 }
 
 export class FaultInjectionError extends LoggingError {

@@ -2,19 +2,27 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import * as fs from "node:fs";
 
+import * as fs from "node:fs";
+import path from "node:path";
+
+import {
+	ITelemetryLoggerExt,
+	PerformanceEvent,
+} from "@fluidframework/telemetry-utils/internal";
 import * as yaml from "js-yaml";
 import { v4 as uuid } from "uuid";
 
-import { PerformanceEvent, TelemetryLogger } from "@fluidframework/telemetry-utils";
+import { AzureClientRunner, AzureClientRunnerConfig } from "./AzureClientRunner.js";
+import { DocCreatorRunner, DocCreatorRunnerConfig } from "./DocCreatorRunner.js";
+import { DocLoaderRunner, DocLoaderRunnerConfig } from "./DocLoaderRunner.js";
+import { MapTrafficRunner, MapTrafficRunnerConfig } from "./MapTrafficRunner.js";
+import { NestedMapRunner, NestedMapRunnerConfig } from "./NestedMapRunner.js";
+import { IRunner } from "./interface.js";
+import { getLogger } from "./logger.js";
+import { getScenarioRunnerTelemetryEventMap } from "./utils.js";
 
-import { AzureClientRunner, AzureClientRunnerConfig } from "./AzureClientRunner";
-import { DocCreatorRunner, DocCreatorRunnerConfig } from "./DocCreatorRunner";
-import { DocLoaderRunner, DocLoaderRunnerConfig } from "./DocLoaderRunner";
-import { MapTrafficRunner, MapTrafficRunnerConfig } from "./MapTrafficRunner";
-import { IRunner } from "./interface";
-import { getLogger } from "./logger";
+const eventMap = getScenarioRunnerTelemetryEventMap();
 
 export interface IStageParams {
 	[key: string]: unknown;
@@ -64,19 +72,16 @@ export interface IStageStatus {
 	details: unknown;
 }
 
-interface IConnectionConfig {
-	type: string;
-	endpoint: string;
-}
-
 export class TestOrchestrator {
 	private readonly runId = uuid();
 	private runStatus: RunStatus = "notStarted";
 	private readonly doc: RunConfig;
 	private readonly env = new Map<string, unknown>();
 	private readonly stageStatus = new Map<number, IStageStatus>();
+	private readonly useSingleProcess: boolean;
 	constructor(private readonly c: TestOrchestratorConfig) {
 		this.doc = TestOrchestrator.getConfig(this.c.version);
+		this.useSingleProcess = this.doc.env.parallelProcesses === false;
 	}
 
 	public static getConfigs(): VersionedRunConfig[] {
@@ -89,14 +94,15 @@ export class TestOrchestrator {
 
 	public async run(): Promise<boolean> {
 		this.runStatus = "running";
-		const connConfig: IConnectionConfig = this.doc.env.connectionConfig as IConnectionConfig;
-		const logger = await getLogger({
-			runId: this.runId,
-			scenarioName: this.doc?.title,
-			namespace: "scenario:runner",
-			endpoint: connConfig.endpoint ?? process.env.azure__fluid__relay__service__endpoint,
-			region: connConfig.endpoint ?? process.env.azure__fluid__relay__service__region,
-		});
+		const logger = await getLogger(
+			{
+				runId: this.runId,
+				scenarioName: this.doc?.title,
+				namespace: "scenario:runner",
+			},
+			["scenario:runner"],
+			eventMap,
+		);
 
 		const success = await PerformanceEvent.timedExecAsync(
 			logger,
@@ -110,9 +116,13 @@ export class TestOrchestrator {
 		return success;
 	}
 
-	private async execRun(logger: TelemetryLogger): Promise<boolean> {
+	private async execRun(logger: ITelemetryLoggerExt): Promise<boolean> {
 		if (!this.doc) {
 			throw new Error("Invalid config.");
+		}
+
+		if (this.useSingleProcess) {
+			this.env.set(`\${logger}`, logger);
 		}
 
 		for (const key of Object.keys(this.doc.env)) {
@@ -129,7 +139,7 @@ export class TestOrchestrator {
 						logger,
 						{ eventName: "RunStage", stageName: stage.name },
 						async () => {
-							const r = await this.runStage(runner, stage);
+							const r = await this.runStage(runner, stage, logger);
 							if (r !== undefined && stage.out !== undefined) {
 								this.env.set(stage.out, r);
 							}
@@ -179,7 +189,7 @@ export class TestOrchestrator {
 	private fillEnvForStage(params: IStageParams): void {
 		for (const key of Object.keys(params)) {
 			const val = params[key];
-			if (typeof val === "string" && val[0] === "$") {
+			if (typeof val === "string" && val.startsWith("$")) {
 				params[key] = this.env.get(val);
 			}
 		}
@@ -196,6 +206,9 @@ export class TestOrchestrator {
 			case "doc-loader": {
 				return new DocLoaderRunner(stage.params as unknown as DocLoaderRunnerConfig);
 			}
+			case "nested-maps": {
+				return new NestedMapRunner(stage.params as unknown as NestedMapRunnerConfig);
+			}
 			case "shared-map-traffic": {
 				return new MapTrafficRunner(stage.params as unknown as MapTrafficRunnerConfig);
 			}
@@ -205,7 +218,11 @@ export class TestOrchestrator {
 		}
 	}
 
-	private async runStage(runner: IRunner, stage: IStage): Promise<unknown> {
+	private async runStage(
+		runner: IRunner,
+		stage: IStage,
+		logger: ITelemetryLoggerExt,
+	): Promise<unknown> {
 		// Initial status
 		const initStatus = runner.getStatus();
 		this.stageStatus.set(stage.id, {
@@ -229,10 +246,19 @@ export class TestOrchestrator {
 			console.log(this.getStatus());
 		});
 
-		// exec
+		if (this.useSingleProcess) {
+			// exec
+			return runner.runSync({
+				runId: this.runId,
+				scenarioName: this.doc?.title ?? "",
+				logger,
+			});
+		}
+		// exec with possible child processes
 		return runner.run({
 			runId: this.runId,
 			scenarioName: this.doc?.title ?? "",
+			logger,
 		});
 	}
 
@@ -242,7 +268,7 @@ export class TestOrchestrator {
 				return "./testConfig_v1.yml";
 			}
 			default: {
-				return "";
+				return path.join(process.cwd(), version);
 			}
 		}
 	}

@@ -3,22 +3,25 @@
  * Licensed under the MIT License.
  */
 
-import * as fs from "fs";
-import { PerformanceEvent } from "@fluidframework/telemetry-utils";
-import { isCodeLoaderBundle, isFluidFileConverter } from "./codeLoaderBundle";
-import { createContainerAndExecute, IExportFileResponse } from "./exportFile";
-import { getArgsValidationError } from "./getArgsValidationError";
+import * as fs from "node:fs";
+import * as path from "node:path";
+
+import { PerformanceEvent } from "@fluidframework/telemetry-utils/internal";
+
+import { isCodeLoaderBundle, isFluidFileConverter } from "./codeLoaderBundle.js";
+import { IExportFileResponse, createContainerAndExecute } from "./exportFile.js";
 /* eslint-disable import/no-internal-modules */
-import { ITelemetryOptions } from "./logger/fileLogger";
-import { createLogger, getTelemetryFileValidationError } from "./logger/loggerUtils";
+import { ITelemetryOptions } from "./logger/fileLogger.js";
+import { createLogger, getTelemetryFileValidationError } from "./logger/loggerUtils.js";
 /* eslint-enable import/no-internal-modules */
-import { getSnapshotFileContent } from "./utils";
+import { getArgsValidationError, getSnapshotFileContent } from "./utils.js";
 
 const clientArgsValidationError = "Client_ArgsValidationError";
 
 /**
  * Parse a provided JS bundle, execute code on Container based on ODSP snapshot, and write result to file
  * @param codeLoader - path to provided JS bundle that implements ICodeLoaderBundle (see codeLoaderBundle.ts)
+ * @internal
  */
 export async function parseBundleAndExportFile(
 	codeLoader: string,
@@ -27,6 +30,8 @@ export async function parseBundleAndExportFile(
 	telemetryFile: string,
 	options?: string,
 	telemetryOptions?: ITelemetryOptions,
+	timeout?: number,
+	disableNetworkFetch?: boolean,
 ): Promise<IExportFileResponse> {
 	const telemetryArgError = getTelemetryFileValidationError(telemetryFile);
 	if (telemetryArgError) {
@@ -40,8 +45,12 @@ export async function parseBundleAndExportFile(
 			logger,
 			{ eventName: "ParseBundleAndExportFile" },
 			async () => {
-				// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-				const codeLoaderBundle = require(codeLoader);
+				// codeLoader is expected to be a file path. On Windows this also requires
+				// explicit file: protocol for absolute paths. Otherwise, path starting with
+				// a driver letter like 'c:" will have drive interpreted as URL protocol.
+				// file:// URLs are always absolute so prepend file:// exactly when absolute.
+				const codeLoaderSpec = `${path.isAbsolute(codeLoader) ? "file://" : ""}${codeLoader}`;
+				const codeLoaderBundle = await import(codeLoaderSpec);
 				if (!isCodeLoaderBundle(codeLoaderBundle)) {
 					const eventName = clientArgsValidationError;
 					const errorMessage = "Code loader bundle is not of type ICodeLoaderBundle";
@@ -58,7 +67,7 @@ export async function parseBundleAndExportFile(
 					return { success: false, eventName, errorMessage };
 				}
 
-				const argsValidationError = getArgsValidationError(inputFile, outputFile);
+				const argsValidationError = getArgsValidationError(inputFile, outputFile, timeout);
 				if (argsValidationError) {
 					const eventName = clientArgsValidationError;
 					logger.sendErrorEvent({ eventName, message: argsValidationError });
@@ -72,6 +81,8 @@ export async function parseBundleAndExportFile(
 						fluidExport,
 						logger,
 						options,
+						timeout,
+						disableNetworkFetch,
 					),
 				);
 

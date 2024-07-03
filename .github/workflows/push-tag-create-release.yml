@@ -1,0 +1,137 @@
+name: "push-tag-create-release"
+
+# When a release tag is pushed to the repo, this workflow is triggered. It first installs the Fluid build-tools, then
+# uses the flub release fromTag command to load some release metadata into an environment variable. Once loaded, it
+# checks out the tagged commit and runs flub release report to generate release reports. It also uses auto-changelog to
+# create a changelog for patch releases (only patches). All the artifacts are uploaded for debugging purposes.
+
+# Once the artifacts are created, the workflow creates a GitHub release and attaches the release reports to it. The
+# release is a draft so that the release engineer can verify the contents before publishing.
+
+on:
+  push:
+    tags:
+      - "*_v*"
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Create GitHub release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # ratchet:actions/checkout@v3
+        with:
+          fetch-depth: "0" # all history
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598 # ratchet:pnpm/action-setup@v2
+      - uses: actions/setup-node@1a4442cacd436585916779262731d5b162bc6ec7 # ratchet:actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install Fluid build tools
+        continue-on-error: true
+        run: |
+          cd build-tools
+          pnpm install --frozen-lockfile
+          pnpm run build:compile
+          # We want flub available to call, so we run npm link in the build-cli package, which creates shims that are avilable on the PATH
+          # Use npm link instead of pnpm link because it handles bins better
+          cd packages/build-cli
+          npm link
+
+      - name: Check build-tools installation
+        run: |
+          # Info for debugging
+          which flub
+          flub --help
+          flub commands
+
+      - name: Get release metadata JSON
+        run: |
+          flub release fromTag ${{ github.ref }} --json | jq -c > release-metadata.json
+      - name: Upload release metadata JSON
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # ratchet:actions/upload-artifact@v3
+        with:
+          name: release-metadata
+          path: release-metadata.json
+          retention-days: 3
+      - name: Load release metadata into env variable
+        run: |
+          echo "RELEASE_JSON=$(cat release-metadata.json)" >> $GITHUB_ENV
+      - name: Set releaseType output variable
+        run: |
+          echo "releaseType=${{ fromJson(env.RELEASE_JSON).packageOrReleaseGroup }}" >> "$GITHUB_OUTPUT"
+
+      # Generate release reports
+      - name: Check out tag
+        run: |
+          git checkout ${{ github.ref }}
+      - name: Create release reports (manifests)
+        run: |
+          mkdir reports
+          flub release report -g ${{ fromJson(env.RELEASE_JSON).packageOrReleaseGroup }} -o reports
+      - name: Upload release reports
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # ratchet:actions/upload-artifact@v3
+        with:
+          name: release-reports
+          path: reports
+          retention-days: 7
+
+      # Generate changelog
+      - name: Generate changelog
+        # This changelog is only for client patch releases and build-tools releases
+        if: (fromJson(env.RELEASE_JSON).releaseType == 'patch' && fromJson(env.RELEASE_JSON).packageOrReleaseGroup == 'client') || fromJson(env.RELEASE_JSON).packageOrReleaseGroup == 'build-tools'
+        run: |
+          # We only need the root dependencies
+          pnpm install -w --frozen-lockfile
+
+          # starting and ending versions are the same because we want to generate a changelog for a single release
+          pnpm exec auto-changelog \
+          --starting-version ${{ fromJson(env.RELEASE_JSON).tag }} \
+          --ending-version ${{ fromJson(env.RELEASE_JSON).tag }} \
+          --tag-prefix ${{ fromJson(env.RELEASE_JSON).packageOrReleaseGroup }}_v \
+          --output auto-changelog.md \
+          --template .github/workflows/data/patch-changelog.hbs
+      - name: Generate changelog
+        # This changelog is a basically empty one used for everything except client patches and build-tools.
+        if: ${{ !(fromJson(env.RELEASE_JSON).releaseType == 'patch' && fromJson(env.RELEASE_JSON).packageOrReleaseGroup == 'client') && fromJson(env.RELEASE_JSON).packageOrReleaseGroup != 'build-tools' }}
+        run: |
+          echo "This is a **${{ fromJson(env.RELEASE_JSON).releaseType }}** release." > auto-changelog.md
+
+      # Only creates GH releases for client, server, and build-tools releases.
+      - name: Create GH release
+        if: fromJson(env.RELEASE_JSON).packageOrReleaseGroup == 'client' || fromJson(env.RELEASE_JSON).packageOrReleaseGroup == 'build-tools' || fromJson(env.RELEASE_JSON).packageOrReleaseGroup == 'server'
+        uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5 # ratchet:ncipollo/release-action@v1
+        with:
+          # Allow updates to existing releases.
+          allowUpdates: true
+
+          # Will skip if a published (non-draft) release already exists.
+          skipIfReleaseExists: true
+
+          # If the release is NOT a patch, leave it as a draft. Only patch releases are auto-published because their
+          # auto-generated release notes are sufficient for those releases. Minor and major releases currently require
+          # some curation of the release notes.
+          draft: ${{ fromJson(env.RELEASE_JSON).releaseType != 'patch' }}
+
+          # Don't change the draft state when updating an existing release. This setting is not really necessary for us
+          # in most cases because we don't pre-create releases, so this workflow always creates a new GH release. It's
+          # included mostly for safety reasons, to ensure that existing drafts aren't published accidentally.
+          omitDraftDuringUpdate: true
+
+          name: ${{ fromJson(env.RELEASE_JSON).title }}
+          omitNameDuringUpdate: false # always overwrite the name
+
+          # Created in the "Generate changelog" step
+          bodyFile: auto-changelog.md
+          omitBodyDuringUpdate: true # Don't overwrite the body
+
+          # Created in the "Create release reports (manifests)" step
+          artifacts: "reports/*.*"
+          artifactErrorsFailBuild: true
+          tag: ${{ fromJson(env.RELEASE_JSON).tag }}

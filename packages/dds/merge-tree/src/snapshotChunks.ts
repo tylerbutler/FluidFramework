@@ -6,12 +6,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { IFluidHandle } from "@fluidframework/core-interfaces";
-import { IFluidSerializer } from "@fluidframework/shared-object-base";
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { PropertySet } from "./properties";
-import { SnapshotLegacy } from "./snapshotlegacy";
-import { IJSONSegment } from "./ops";
-import { SerializedAttributionCollection } from "./attributionCollection";
+import { IFluidSerializer } from "@fluidframework/shared-object-base/internal";
+import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils/internal";
+
+import { SerializedAttributionCollection } from "./attributionCollection.js";
+import { IJSONSegment } from "./ops.js";
+import { PropertySet } from "./properties.js";
+import { SnapshotLegacy } from "./snapshotlegacy.js";
 
 export interface VersionedMergeTreeChunk {
 	version: undefined | "1";
@@ -65,13 +66,11 @@ export interface IJSONSegmentWithMergeInfo {
 	json: IJSONSegment;
 	client?: string;
 	seq?: number;
-	/**
-	 * @deprecated Use {@link IJSONSegmentWithMergeInfo.removedClientIds} instead.
-	 * This only exists for backwards compatability.
-	 */
-	removedClient?: string;
 	removedClientIds?: string[];
 	removedSeq?: number;
+	movedClientIds?: string[];
+	movedSeq?: number;
+	movedSeqs?: number[];
 }
 
 /**
@@ -86,7 +85,7 @@ export function hasMergeInfo(
 export function serializeAsMinSupportedVersion(
 	path: string,
 	chunk: VersionedMergeTreeChunk,
-	logger: ITelemetryLogger,
+	logger: ITelemetryLoggerExt,
 	options: PropertySet | undefined,
 	serializer: IFluidSerializer,
 	bind: IFluidHandle,
@@ -139,7 +138,7 @@ export function serializeAsMinSupportedVersion(
 export function serializeAsMaxSupportedVersion(
 	path: string,
 	chunk: VersionedMergeTreeChunk,
-	logger: ITelemetryLogger,
+	logger: ITelemetryLoggerExt,
 	options: PropertySet | undefined,
 	serializer: IFluidSerializer,
 	bind: IFluidHandle,
@@ -151,7 +150,7 @@ export function serializeAsMaxSupportedVersion(
 export function toLatestVersion(
 	path: string,
 	chunk: VersionedMergeTreeChunk,
-	logger: ITelemetryLogger,
+	logger: ITelemetryLoggerExt,
 	options: PropertySet | undefined,
 ): MergeTreeChunkV1 {
 	switch (chunk.version) {

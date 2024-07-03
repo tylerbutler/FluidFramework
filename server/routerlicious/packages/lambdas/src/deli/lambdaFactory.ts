@@ -6,10 +6,11 @@
 import { EventEmitter } from "events";
 import { inspect } from "util";
 import { toUtf8 } from "@fluidframework/common-utils";
-import { ICreateCommitParams, ICreateTreeEntry } from "@fluidframework/gitresources";
 import {
+	ICheckpointService,
 	IClientManager,
 	IContext,
+	IClusterDrainingChecker,
 	IDeliState,
 	IDocument,
 	IDocumentRepository,
@@ -22,9 +23,8 @@ import {
 	ITenantManager,
 	LambdaCloseType,
 	MongoManager,
+	requestWithRetry,
 } from "@fluidframework/server-services-core";
-import { generateServiceProtocolEntries } from "@fluidframework/protocol-base";
-import { FileMode } from "@fluidframework/protocol-definitions";
 import { defaultHash, IGitManager } from "@fluidframework/server-services-client";
 import {
 	Lumber,
@@ -36,37 +36,38 @@ import { NoOpLambda, createSessionMetric, isDocumentValid, isDocumentSessionVali
 import { DeliLambda } from "./lambda";
 import { createDeliCheckpointManagerFromCollection } from "./checkpointManager";
 
-// Epoch should never tick in our current setting. This flag is just for being extra cautious.
-// TODO: Remove when everything is up to date.
-const FlipTerm = false;
-
-const getDefaultCheckpooint = (epoch: number): IDeliState => {
+const getDefaultCheckpoint = (): IDeliState => {
 	return {
 		clients: undefined,
 		durableSequenceNumber: 0,
-		epoch,
 		expHash1: defaultHash,
 		logOffset: -1,
 		sequenceNumber: 0,
 		signalClientConnectionNumber: 0,
-		term: 1,
 		lastSentMSN: 0,
 		nackMessages: undefined,
-		successfullyStartedLambdas: [],
 		checkpointTimestamp: Date.now(),
 	};
 };
 
-export class DeliLambdaFactory extends EventEmitter implements IPartitionLambdaFactory {
+/**
+ * @internal
+ */
+export class DeliLambdaFactory
+	extends EventEmitter
+	implements IPartitionLambdaFactory<IPartitionLambdaConfig>
+{
 	constructor(
 		private readonly operationsDbMongoManager: MongoManager,
 		private readonly documentRepository: IDocumentRepository,
+		private readonly checkpointService: ICheckpointService,
 		private readonly tenantManager: ITenantManager,
 		private readonly clientManager: IClientManager | undefined,
 		private readonly forwardProducer: IProducer,
 		private readonly signalProducer: IProducer | undefined,
 		private readonly reverseProducer: IProducer,
 		private readonly serviceConfiguration: IServiceConfiguration,
+		private readonly clusterDrainingChecker?: IClusterDrainingChecker | undefined,
 	) {
 		super();
 	}
@@ -74,20 +75,10 @@ export class DeliLambdaFactory extends EventEmitter implements IPartitionLambdaF
 	public async create(
 		config: IPartitionLambdaConfig,
 		context: IContext,
+		updateActivityTime?: (activityTime?: number) => void,
 	): Promise<IPartitionLambda> {
-		const { documentId, tenantId, leaderEpoch } = config;
-		const sessionMetric = createSessionMetric(
-			tenantId,
-			documentId,
-			LumberEventName.SessionResult,
-			this.serviceConfiguration,
-		);
-		const sessionStartMetric = createSessionMetric(
-			tenantId,
-			documentId,
-			LumberEventName.StartSessionResult,
-			this.serviceConfiguration,
-		);
+		const { documentId, tenantId } = config;
+		let sessionMetric: Lumber<LumberEventName.SessionResult> | undefined;
 
 		const messageMetaData = {
 			documentId,
@@ -127,16 +118,24 @@ export class DeliLambdaFactory extends EventEmitter implements IPartitionLambdaF
 				}
 			}
 
+			sessionMetric = createSessionMetric(
+				tenantId,
+				documentId,
+				LumberEventName.SessionResult,
+				this.serviceConfiguration,
+				document?.isEphemeralContainer,
+			);
+
 			gitManager = await this.tenantManager.getTenantGitManager(tenantId, documentId);
 		} catch (error) {
 			const errMsg = "Deli lambda creation failed";
 			context.log?.error(`${errMsg}. Exception: ${inspect(error)}`, { messageMetaData });
 			Lumberjack.error(errMsg, getLumberBaseProperties(documentId, tenantId), error);
-			this.logSessionFailureMetrics(sessionMetric, sessionStartMetric, errMsg);
+			this.logSessionFailureMetrics(sessionMetric, errMsg);
 			throw error;
 		}
 
-		let lastCheckpoint: IDeliState;
+		let lastCheckpoint;
 
 		// Restore deli state if not present in the cache. Mongodb casts undefined as null so we are checking
 		// both to be safe. Empty sring denotes a cache that was cleared due to a service summary or the document
@@ -145,7 +144,7 @@ export class DeliLambdaFactory extends EventEmitter implements IPartitionLambdaF
 			const message = "New document. Setting empty deli checkpoint";
 			context.log?.info(message, { messageMetaData });
 			Lumberjack.info(message, getLumberBaseProperties(documentId, tenantId));
-			lastCheckpoint = getDefaultCheckpooint(leaderEpoch);
+			lastCheckpoint = getDefaultCheckpoint();
 		} else {
 			if (document.deli === "") {
 				const docExistsMessge = "Existing document. Fetching checkpoint from summary";
@@ -162,9 +161,9 @@ export class DeliLambdaFactory extends EventEmitter implements IPartitionLambdaF
 					const errMsg = "Could not load state from summary";
 					context.log?.error(errMsg, { messageMetaData });
 					Lumberjack.error(errMsg, getLumberBaseProperties(documentId, tenantId));
-					this.logSessionFailureMetrics(sessionMetric, sessionStartMetric, errMsg);
+					this.logSessionFailureMetrics(sessionMetric, errMsg);
 
-					lastCheckpoint = getDefaultCheckpooint(leaderEpoch);
+					lastCheckpoint = getDefaultCheckpoint();
 				} else {
 					lastCheckpoint = lastCheckpointFromSummary;
 					// Since the document was originated elsewhere or cache was cleared, logOffset info is irrelavant.
@@ -172,7 +171,6 @@ export class DeliLambdaFactory extends EventEmitter implements IPartitionLambdaF
 					// is okay. Conceptually this is similar to default checkpoint where logOffset is -1. In this case,
 					// the sequence number is 'n' rather than '0'.
 					lastCheckpoint.logOffset = -1;
-					lastCheckpoint.epoch = leaderEpoch;
 					const message = `Deli checkpoint from summary: ${JSON.stringify(
 						lastCheckpoint,
 					)}`;
@@ -180,7 +178,12 @@ export class DeliLambdaFactory extends EventEmitter implements IPartitionLambdaF
 					Lumberjack.info(message, getLumberBaseProperties(documentId, tenantId));
 				}
 			} else {
-				lastCheckpoint = JSON.parse(document.deli);
+				lastCheckpoint = await this.checkpointService.restoreFromCheckpoint(
+					documentId,
+					tenantId,
+					"deli",
+					document,
+				);
 			}
 		}
 
@@ -192,36 +195,17 @@ export class DeliLambdaFactory extends EventEmitter implements IPartitionLambdaF
 			lastCheckpoint.checkpointTimestamp = Date.now();
 		}
 
-		// For cases such as detached container where the document was generated outside the scope of deli
-		// and checkpoint was written manually.
-		if (lastCheckpoint.epoch === undefined) {
-			lastCheckpoint.epoch = leaderEpoch;
-			lastCheckpoint.term = 1;
-		}
-
-		const newCheckpoint = FlipTerm
-			? await this.resetCheckpointOnEpochTick(
-					tenantId,
-					documentId,
-					gitManager,
-					context.log,
-					lastCheckpoint,
-					leaderEpoch,
-			  )
-			: lastCheckpoint;
-
 		const checkpointManager = createDeliCheckpointManagerFromCollection(
 			tenantId,
 			documentId,
-			this.documentRepository,
+			this.checkpointService,
 		);
 
-		// Should the lambda reaize that term has flipped to send a no-op message at the beginning?
 		const deliLambda = new DeliLambda(
 			context,
 			tenantId,
 			documentId,
-			newCheckpoint,
+			lastCheckpoint,
 			checkpointManager,
 			this.clientManager,
 			// The producer as well it shouldn't take. Maybe it just gives an output stream?
@@ -230,32 +214,132 @@ export class DeliLambdaFactory extends EventEmitter implements IPartitionLambdaF
 			this.reverseProducer,
 			this.serviceConfiguration,
 			sessionMetric,
-			sessionStartMetric,
+			this.checkpointService,
 		);
 
 		deliLambda.on("close", (closeType) => {
-			const handler = async () => {
+			const baseLumberjackProperties = getLumberBaseProperties(documentId, tenantId);
+			const handler = async (): Promise<void> => {
 				if (
 					closeType === LambdaCloseType.ActivityTimeout ||
 					closeType === LambdaCloseType.Error
 				) {
+					if (document?.isEphemeralContainer) {
+						if (this.serviceConfiguration.deli.enableEphemeralContainerSummaryCleanup) {
+							// Call to historian to delete summaries
+							await requestWithRetry(
+								async () => gitManager.deleteSummary(false),
+								"deliLambda_onClose" /* callName */,
+								baseLumberjackProperties /* telemetryProperties */,
+								(error) => true /* shouldRetry */,
+								3 /* maxRetries */,
+							);
+						}
+
+						// Delete the document metadata, soft or hard depending on the configuration
+						const deletionFilter = {
+							documentId,
+							tenantId,
+						};
+						if (
+							this.serviceConfiguration.deli.ephemeralContainerSoftDeleteTimeInMs >= 0
+						) {
+							const scheduledDeletionTimeStr = new Date(
+								Date.now() +
+									this.serviceConfiguration.deli
+										.ephemeralContainerSoftDeleteTimeInMs,
+							).toJSON();
+							await this.documentRepository.updateOne(
+								deletionFilter,
+								{ scheduledDeletionTime: scheduledDeletionTimeStr },
+								null,
+							);
+							Lumberjack.info(
+								`Successfully scheduled to clean up ephemeral container`,
+								{
+									...baseLumberjackProperties,
+									scheduledDeletionTime: scheduledDeletionTimeStr,
+								},
+							);
+						} else {
+							await this.documentRepository.deleteOne(deletionFilter);
+
+							Lumberjack.info(
+								`Successfully cleaned up ephemeral container`,
+								baseLumberjackProperties,
+							);
+						}
+						return;
+					}
 					const filter = { documentId, tenantId, session: { $exists: true } };
+					const keepSessionActive = this.checkpointService.getGlobalCheckpointFailed();
 					const data = {
 						"session.isSessionAlive": false,
-						"session.isSessionActive": false,
+						"session.isSessionActive": keepSessionActive,
 						"lastAccessTime": Date.now(),
 					};
+
+					// Set skip session stickiness to be true if cluster is in draining
+					if (this.clusterDrainingChecker) {
+						try {
+							const isClusterDraining =
+								await this.clusterDrainingChecker.isClusterDraining();
+							if (isClusterDraining) {
+								Lumberjack.info(
+									"Cluster is in draining, set skip session stickiness to be true",
+								);
+								// Skip session stickiness if cluster is in draining
+								data["session.ignoreSessionStickiness"] = true;
+							}
+						} catch (error) {
+							Lumberjack.error(
+								"Failed to get cluster draining status",
+								baseLumberjackProperties,
+								error,
+							);
+						}
+					}
+
 					await this.documentRepository.updateOne(filter, data, undefined);
-					const message = `Marked session alive and active as false for closeType:
+					const message = `Marked session alive as false and active as ${keepSessionActive} for closeType:
                         ${JSON.stringify(closeType)}`;
+
 					context.log?.info(message, { messageMetaData });
-					Lumberjack.info(message, getLumberBaseProperties(documentId, tenantId));
+					Lumberjack.info(message, baseLumberjackProperties);
 				}
 			};
-			handler().catch((e) => {
-				const message = `Failed to handle session alive and active with exception ${e}`;
+			handler().catch((error) => {
+				const message = `Failed to handle session alive and active with exception ${error}`;
 				context.log?.error(message, { messageMetaData });
-				Lumberjack.error(message, getLumberBaseProperties(documentId, tenantId), e);
+				Lumberjack.error(message, baseLumberjackProperties, error);
+			});
+		});
+
+		deliLambda.on("noClient", () => {
+			const baseLumberjackProperties = getLumberBaseProperties(documentId, tenantId);
+			const handler = async (): Promise<void> => {
+				// Set activity timer to reduce session grace period for ephemeral containers if cluster is in draining
+				if (document?.isEphemeralContainer && this.clusterDrainingChecker) {
+					const isClusterDraining = await this.clusterDrainingChecker.isClusterDraining();
+					if (isClusterDraining) {
+						Lumberjack.info(
+							"Cluster is under draining and NoClient event is received",
+							baseLumberjackProperties,
+						);
+						if (updateActivityTime) {
+							// Set session activity time to be 2 minutes later.
+							// It means this labmda will be closed in about 2 minutes
+							updateActivityTime(Date.now() + 2 * 60 * 1000);
+						}
+					}
+				}
+			};
+			handler().catch((error) => {
+				Lumberjack.error(
+					"Failed to handle NoClient event.",
+					baseLumberjackProperties,
+					error,
+				);
 			});
 		});
 
@@ -283,11 +367,9 @@ export class DeliLambdaFactory extends EventEmitter implements IPartitionLambdaF
 
 	private logSessionFailureMetrics(
 		sessionMetric: Lumber<LumberEventName.SessionResult> | undefined,
-		sessionStartMetric: Lumber<LumberEventName.StartSessionResult> | undefined,
 		errMsg: string,
-	) {
+	): void {
 		sessionMetric?.error(errMsg);
-		sessionStartMetric?.error(errMsg);
 	}
 
 	public async dispose(): Promise<void> {
@@ -321,128 +403,21 @@ export class DeliLambdaFactory extends EventEmitter implements IPartitionLambdaF
 					toUtf8(content.content, content.encoding),
 				) as IDeliState;
 				return summaryCheckpoint;
-			} catch (exception) {
+			} catch (error) {
 				const messageMetaData = {
 					documentId,
 					tenantId,
 				};
 				const errorMessage = `Error fetching deli state from summary`;
 				logger?.error(errorMessage, { messageMetaData });
-				logger?.error(JSON.stringify(exception), { messageMetaData });
+				logger?.error(JSON.stringify(error), { messageMetaData });
 				Lumberjack.error(
 					errorMessage,
 					getLumberBaseProperties(documentId, tenantId),
-					exception,
+					error,
 				);
 				return undefined;
 			}
 		}
-	}
-
-	// Check the current epoch with last epoch. If not matched, we need to flip the term.
-	// However, we need to store the current term and epoch reliably before we kick off the lambda.
-	// Hence we need to create another summary. Logically its an update but in a git sense,
-	// its a new commit in the chain.
-
-	// Another aspect is the starting summary. What happens when epoch ticks and we never had a prior summary?
-	// For now we are just skipping the step if no prior summary was present.
-	// TODO: May be alfred/deli should create a summary at inception?
-	private async resetCheckpointOnEpochTick(
-		tenantId: string,
-		documentId: string,
-		gitManager: IGitManager,
-		logger: ILogger | undefined,
-		checkpoint: IDeliState,
-		leaderEpoch: number,
-	): Promise<IDeliState> {
-		let newCheckpoint = checkpoint;
-		if (leaderEpoch !== newCheckpoint.epoch) {
-			const lastSummaryState = await this.loadStateFromSummary(
-				tenantId,
-				documentId,
-				gitManager,
-				logger,
-			);
-			if (lastSummaryState === undefined) {
-				newCheckpoint.epoch = leaderEpoch;
-			} else {
-				// Log offset should never move backwards.
-				const logOffset = newCheckpoint.logOffset;
-				newCheckpoint = lastSummaryState;
-				newCheckpoint.epoch = leaderEpoch;
-				++newCheckpoint.term;
-				newCheckpoint.durableSequenceNumber = lastSummaryState.sequenceNumber;
-				newCheckpoint.logOffset = logOffset;
-				// Now create the summary.
-				await this.createSummaryWithLatestTerm(gitManager, newCheckpoint, documentId);
-				const message = "Created a summary on epoch tick";
-				logger?.info(message, {
-					messageMetaData: {
-						documentId,
-						tenantId,
-					},
-				});
-				Lumberjack.info(message, getLumberBaseProperties(documentId, tenantId));
-			}
-		}
-		return newCheckpoint;
-	}
-
-	private async createSummaryWithLatestTerm(
-		gitManager: IGitManager,
-		checkpoint: IDeliState,
-		documentId: string,
-	) {
-		const existingRef = await gitManager.getRef(encodeURIComponent(documentId));
-		const [lastCommit, scribeContent] = await Promise.all([
-			gitManager.getCommit(existingRef.object.sha),
-			gitManager.getContent(existingRef.object.sha, ".serviceProtocol/scribe"),
-		]);
-
-		const scribe = toUtf8(scribeContent.content, scribeContent.encoding);
-		const serviceProtocolEntries = generateServiceProtocolEntries(
-			JSON.stringify(checkpoint),
-			scribe,
-		);
-
-		const [serviceProtocolTree, lastSummaryTree] = await Promise.all([
-			gitManager.createTree({ entries: serviceProtocolEntries }),
-			gitManager.getTree(lastCommit.tree.sha, false),
-		]);
-
-		const newTreeEntries = lastSummaryTree.tree
-			.filter((value) => value.path !== ".serviceProtocol")
-			.map((value) => {
-				const createTreeEntry: ICreateTreeEntry = {
-					mode: value.mode,
-					path: value.path,
-					sha: value.sha,
-					type: value.type,
-				};
-				return createTreeEntry;
-			});
-
-		newTreeEntries.push({
-			mode: FileMode.Directory,
-			path: ".serviceProtocol",
-			sha: serviceProtocolTree.sha,
-			type: "tree",
-		});
-
-		const gitTree = await gitManager.createGitTree({ tree: newTreeEntries });
-		const commitParams: ICreateCommitParams = {
-			author: {
-				date: new Date().toISOString(),
-				email: "praguertdev@microsoft.com",
-				name: "Routerlicious Service",
-			},
-			message: `Term Change Summary @T${checkpoint.term}S${checkpoint.sequenceNumber}`,
-			parents: [lastCommit.sha],
-			tree: gitTree.sha,
-		};
-
-		// Finally commit the summary and update the ref.
-		const commit = await gitManager.createCommit(commitParams);
-		await gitManager.upsertRef(documentId, commit.sha);
 	}
 }

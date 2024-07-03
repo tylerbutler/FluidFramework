@@ -3,58 +3,39 @@
  * Licensed under the MIT License.
  */
 
-import { defaultFluidObjectRequestHandler } from "@fluidframework/aqueduct";
+import { IFluidHandle, IRequest, IResponse } from "@fluidframework/core-interfaces";
+import { assert } from "@fluidframework/core-utils/internal";
 import {
-	IRequest,
-	IResponse,
-	IFluidHandle,
-	IFluidRouter,
-	FluidObject,
-	IProvideFluidRouter,
-} from "@fluidframework/core-interfaces";
-import {
-	FluidObjectHandle,
 	FluidDataStoreRuntime,
+	FluidObjectHandle,
 	mixinRequestHandler,
-} from "@fluidframework/datastore";
-import { SharedMap, ISharedMap } from "@fluidframework/map";
+} from "@fluidframework/datastore/internal";
 import {
+	IChannelFactory,
+	IFluidDataStoreRuntime,
+} from "@fluidframework/datastore-definitions/internal";
+import { ISharedMap, SharedMap } from "@fluidframework/map/internal";
+import {
+	IFluidDataStoreChannel,
 	IFluidDataStoreContext,
 	IFluidDataStoreFactory,
-	IFluidDataStoreChannel,
-} from "@fluidframework/runtime-definitions";
-import { IFluidDataStoreRuntime, IChannelFactory } from "@fluidframework/datastore-definitions";
-import { assert } from "@fluidframework/common-utils";
-import { ITestFluidObject } from "./interfaces";
+} from "@fluidframework/runtime-definitions/internal";
+import { create404Response } from "@fluidframework/runtime-utils/internal";
+
+import { ITestFluidObject } from "./interfaces.js";
 
 /**
  * A test Fluid object that will create a shared object for each key-value pair in the factoryEntries passed to load.
  * The shared objects can be retrieved by passing the key of the entry to getSharedObject.
  * It exposes the IFluidDataStoreContext and IFluidDataStoreRuntime.
+ * @internal
  */
-export class TestFluidObject implements ITestFluidObject, IFluidRouter {
-	public static async load(
-		runtime: IFluidDataStoreRuntime,
-		channel: IFluidDataStoreChannel,
-		context: IFluidDataStoreContext,
-		factoryEntries: Map<string, IChannelFactory>,
-		existing: boolean,
-	) {
-		const fluidObject = new TestFluidObject(runtime, channel, context, factoryEntries);
-		await fluidObject.initialize(existing);
-
-		return fluidObject;
-	}
-
+export class TestFluidObject implements ITestFluidObject {
 	public get ITestFluidObject() {
 		return this;
 	}
 
 	public get IFluidLoadable() {
-		return this;
-	}
-
-	public get IFluidRouter() {
 		return this;
 	}
 
@@ -64,6 +45,7 @@ export class TestFluidObject implements ITestFluidObject, IFluidRouter {
 
 	public root!: ISharedMap;
 	private readonly innerHandle: IFluidHandle<this>;
+	private initializeP: Promise<void> | undefined;
 
 	/**
 	 * Creates a new TestFluidObject.
@@ -93,7 +75,7 @@ export class TestFluidObject implements ITestFluidObject, IFluidRouter {
 		for (const key of this.factoryEntriesMap.keys()) {
 			if (key === id) {
 				const handle = this.root.get<IFluidHandle>(id);
-				return handle?.get() as unknown as T;
+				return handle?.get() as Promise<T>;
 			}
 		}
 
@@ -101,25 +83,38 @@ export class TestFluidObject implements ITestFluidObject, IFluidRouter {
 	}
 
 	public async request(request: IRequest): Promise<IResponse> {
-		return defaultFluidObjectRequestHandler(this, request);
+		return request.url === "" || request.url === "/" || request.url.startsWith("/?")
+			? { mimeType: "fluid/object", status: 200, value: this }
+			: create404Response(request);
 	}
 
-	private async initialize(existing: boolean) {
-		if (!existing) {
-			this.root = SharedMap.create(this.runtime, "root");
+	public async initialize(existing: boolean) {
+		const doInitialization = async () => {
+			if (!existing) {
+				this.root = SharedMap.create(this.runtime, "root");
 
-			this.factoryEntriesMap.forEach((sharedObjectFactory: IChannelFactory, key: string) => {
-				const sharedObject = this.runtime.createChannel(key, sharedObjectFactory.type);
-				this.root.set(key, sharedObject.handle);
-			});
+				this.factoryEntriesMap.forEach((sharedObjectFactory: IChannelFactory, key: string) => {
+					const sharedObject = this.runtime.createChannel(key, sharedObjectFactory.type);
+					this.root.set(key, sharedObject.handle);
+				});
 
-			this.root.bindToContext();
+				this.root.bindToContext();
+			}
+
+			this.root = (await this.runtime.getChannel("root")) as ISharedMap;
+		};
+
+		if (this.initializeP === undefined) {
+			this.initializeP = doInitialization();
 		}
 
-		this.root = (await this.runtime.getChannel("root")) as ISharedMap;
+		return this.initializeP;
 	}
 }
 
+/**
+ * @internal
+ */
 export type ChannelFactoryRegistry = Iterable<[string | undefined, IChannelFactory]>;
 
 /**
@@ -128,6 +123,7 @@ export type ChannelFactoryRegistry = Iterable<[string | undefined, IChannelFacto
  * Fluid object so that it can create a shared object for each.
  *
  * @example
+ *
  * The following will create a Fluid object that creates and loads a SharedString and SharedDirectory.
  * It will add SparseMatrix to the data store's factory so that it can be created later.
  *
@@ -145,6 +141,12 @@ export type ChannelFactoryRegistry = Iterable<[string | undefined, IChannelFacto
  * sharedString = testFluidObject.getSharedObject<SharedString>("sharedString");
  * sharedDir = testFluidObject.getSharedObject<SharedDirectory>("sharedDirectory");
  * ```
+ *
+ * @privateRemarks Beware that using this class generally forfeits some compatibility coverage
+ * `describeCompat` aims to provide:
+ * `SharedMap`s always reference the current version of SharedMap.
+ * AB#4670 tracks improving this situation.
+ * @internal
  */
 export class TestFluidObjectFactory implements IFluidDataStoreFactory {
 	public get IFluidDataStoreFactory() {
@@ -173,47 +175,47 @@ export class TestFluidObjectFactory implements IFluidDataStoreFactory {
 		dataTypes.set(sharedMapFactory.type, sharedMapFactory);
 
 		// Add the object factories to the list to be sent to data store runtime.
-		for (const entry of this.factoryEntries) {
-			const factory = entry[1];
+		for (const [, factory] of this.factoryEntries) {
 			dataTypes.set(factory.type, factory);
 		}
 
 		// Create a map from the factory entries with entries that don't have the id as undefined. This will be
 		// passed to the Fluid object.
 		const factoryEntriesMapForObject = new Map<string, IChannelFactory>();
-		for (const entry of this.factoryEntries) {
-			const id = entry[0];
+		for (const [id, factory] of this.factoryEntries) {
 			if (id !== undefined) {
-				factoryEntriesMapForObject.set(id, entry[1]);
+				factoryEntriesMapForObject.set(id, factory);
 			}
 		}
 
 		const runtimeClass = mixinRequestHandler(
 			async (request: IRequest, rt: FluidDataStoreRuntime) => {
-				const maybeRouter: FluidObject<IProvideFluidRouter> | undefined =
-					await rt.entryPoint?.get();
+				// The provideEntryPoint callback below always returns FluidDataStoreRuntime, so this cast is safe
+				const dataObject = (await rt.entryPoint.get()) as FluidDataStoreRuntime;
 				assert(
-					maybeRouter?.IFluidRouter !== undefined,
+					dataObject.request !== undefined,
 					"entryPoint should have been initialized by now",
 				);
-				return maybeRouter.IFluidRouter.request(request);
+				return dataObject.request(request);
 			},
 		);
 
-		return new runtimeClass(
+		const runtime = new runtimeClass(context, dataTypes, existing, async () => {
+			await instance.initialize(true);
+			return instance;
+		});
+
+		const instance: TestFluidObject = new TestFluidObject(
+			runtime, // runtime
+			runtime, // channel
 			context,
-			dataTypes,
-			existing,
-			async (dataStoreRuntime: IFluidDataStoreRuntime) =>
-				TestFluidObject.load(
-					dataStoreRuntime,
-					// This works because 'runtime' is an instance of runtimeClass (which is a FluidDataStoreRuntime and
-					// thus implements IFluidDataStoreChannel) which passes itself as the parameter to this function.
-					dataStoreRuntime as FluidDataStoreRuntime,
-					context,
-					factoryEntriesMapForObject,
-					existing,
-				),
+			factoryEntriesMapForObject,
 		);
+
+		if (!existing) {
+			await instance.initialize(false);
+		}
+
+		return runtime;
 	}
 }

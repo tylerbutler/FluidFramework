@@ -4,85 +4,110 @@
  */
 
 export {
-	Anchor,
-	AnchorLocator,
+	type Anchor,
+	type AnchorLocator,
 	AnchorSet,
-	AnchorKeyBrand,
-	AnchorSlot,
-	BrandedKey,
-	BrandedKeyContent,
-	BrandedMapSubset,
-	AnchorNode,
+	type AnchorSlot,
+	type AnchorNode,
 	anchorSlot,
-	AnchorEvents,
-	AnchorSetRootEvents,
-} from "./anchorSet";
+	type AnchorEvents,
+	type AnchorSetRootEvents,
+} from "./anchorSet.js";
 export {
-	ITreeCursor,
+	type ITreeCursor,
 	CursorLocationType,
 	castCursorToSynchronous,
 	mapCursorField,
 	mapCursorFields,
 	forEachNode,
+	forEachNodeInSubtree,
 	forEachField,
-	ITreeCursorSynchronous,
-	PathRootPrefix,
+	iterateCursorField,
+	type ITreeCursorSynchronous,
+	type PathRootPrefix,
 	inCursorField,
 	inCursorNode,
-} from "./cursor";
-export {
-	GlobalFieldKeySymbol,
-	keyFromSymbol,
-	symbolFromKey,
-	symbolIsFieldKey,
-} from "./globalFieldKeySymbol";
-export { getMapTreeField, MapTree } from "./mapTree";
+	CursorMarker,
+	isCursor,
+} from "./cursor.js";
+export type {
+	ProtoNodes,
+	Root as DeltaRoot,
+	ProtoNode as DeltaProtoNode,
+	Mark as DeltaMark,
+	DetachedNodeId as DeltaDetachedNodeId,
+	FieldMap as DeltaFieldMap,
+	DetachedNodeChanges as DeltaDetachedNodeChanges,
+	DetachedNodeBuild as DeltaDetachedNodeBuild,
+	DetachedNodeDestruction as DeltaDetachedNodeDestruction,
+	DetachedNodeRename as DeltaDetachedNodeRename,
+	FieldChanges as DeltaFieldChanges,
+} from "./delta.js";
+export type { MapTree } from "./mapTree.js";
 export {
 	clonePath,
+	topDownPath,
 	getDepth,
-	UpPath,
-	FieldUpPath,
+	type UpPath,
+	type FieldUpPath,
+	type Range,
+	type RangeUpPath,
+	type PlaceUpPath,
+	type PlaceIndex,
+	type NodeIndex,
+	type DetachedPlaceUpPath,
+	type DetachedRangeUpPath,
 	compareUpPaths,
 	compareFieldUpPaths,
-	UpPathDefault,
-} from "./pathTree";
+	getDetachedFieldContainingPath,
+	type UpPathDefault,
+} from "./pathTree.js";
 export {
-	FieldMapObject,
-	FieldScope,
-	GenericFieldsNode,
+	type FieldMapObject,
+	type GenericFieldsNode,
 	genericTreeDeleteIfEmpty,
 	genericTreeKeys,
-	GenericTreeNode,
+	type GenericTreeNode,
 	getGenericTreeField,
-	isGlobalFieldKey,
-	JsonableTree,
-	scopeFromKey,
+	type JsonableTree,
 	setGenericTreeField,
-} from "./treeTextFormat";
+} from "./treeTextFormat.js";
+export { EncodedJsonableTree } from "./persistedTreeTextFormat.js";
 export {
 	EmptyKey,
-	FieldKey,
-	TreeType,
-	ChildLocation,
-	DetachedField,
-	ChildCollection,
-	RootField,
-	Value,
-	TreeValue,
+	type TreeType,
+	type ChildLocation,
+	type DetachedField,
+	type ChildCollection,
+	type RootField,
+	type Value,
+	type TreeValue,
 	detachedFieldAsKey,
 	keyAsDetachedField,
 	rootFieldKey,
-	NodeData,
-	rootFieldKeySymbol,
+	type NodeData,
 	rootField,
-	isLocalKey,
-} from "./types";
-export { DeltaVisitor, visitDelta } from "./visitDelta";
+	aboveRootPlaceholder,
+} from "./types.js";
+export { type DeltaVisitor, visitDelta } from "./visitDelta.js";
+export {
+	type AnnouncedVisitor,
+	announceDelta,
+	applyDelta,
+	combineVisitors,
+	makeDetachedFieldIndex,
+} from "./visitorUtils.js";
+export type { PathVisitor } from "./visitPath.js";
 
-// Split this up into separate import and export for compatibility with API-Extractor.
-import * as Delta from "./delta";
-export { Delta };
+export { SparseNode, getDescendant } from "./sparseTree.js";
 
-export { SparseNode, getDescendant } from "./sparseTree";
+export {
+	deltaForRootInitialization,
+	emptyFieldChanges,
+	isEmptyFieldChanges,
+	makeDetachedNodeId,
+	offsetDetachId,
+	emptyDelta,
+} from "./deltaUtil.js";
 
-export { isSkipMark, emptyDelta } from "./deltaUtil";
+export { DetachedFieldIndex, type ForestRootId } from "./detachedFieldIndex.js";

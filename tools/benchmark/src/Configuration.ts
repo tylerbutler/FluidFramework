@@ -5,6 +5,9 @@
 
 import { assert } from "chai";
 
+import { Phase } from "./runBenchmark";
+import { Timer } from "./timer";
+
 /**
  * Kinds of benchmarks.
  *
@@ -92,12 +95,23 @@ for (const type of Object.values(TestType)) {
  * Arguments to `benchmark`
  * @public
  */
-export type BenchmarkArguments = Titled & (BenchmarkSyncArguments | BenchmarkAsyncArguments);
+export type BenchmarkArguments = Titled &
+	(BenchmarkSyncArguments | BenchmarkAsyncArguments | CustomBenchmarkArguments);
 
-export type BenchmarkRunningOptions = (BenchmarkSyncArguments | BenchmarkAsyncArguments) &
-	BenchmarkTimingOptions &
-	OnBatch &
-	HookArguments;
+/**
+ * @public
+ */
+export type CustomBenchmarkArguments = MochaExclusiveOptions &
+	CustomBenchmark &
+	BenchmarkDescription;
+
+/**
+ * @public
+ */
+export type BenchmarkRunningOptions =
+	| BenchmarkSyncArguments
+	| BenchmarkAsyncArguments
+	| CustomBenchmarkArguments;
 
 export type BenchmarkRunningOptionsSync = BenchmarkSyncArguments & BenchmarkTimingOptions & OnBatch;
 
@@ -154,6 +168,22 @@ export interface BenchmarkAsyncFunction extends BenchmarkOptions {
 }
 
 /**
+ * @public
+ */
+export interface BenchmarkTimer<T> {
+	readonly iterationsPerBatch: number;
+	readonly timer: Timer<T>;
+	recordBatch(duration: number): boolean;
+}
+
+/**
+ * @public
+ */
+export interface CustomBenchmark extends BenchmarkTimingOptions {
+	benchmarkFnCustom<T>(state: BenchmarkTimer<T>): Promise<void>;
+}
+
+/**
  * Set of options that can be provided to a benchmark. These options generally align with the BenchmarkJS options type;
  * you can see more documentation {@link https://benchmarkjs.com/docs#options | here}.
  * @public
@@ -174,6 +204,8 @@ export interface BenchmarkTimingOptions {
 	 * The minimum time in seconds to run an individual batch.
 	 */
 	minBatchDurationSeconds?: number;
+
+	startPhase?: Phase;
 }
 
 /**
@@ -202,7 +234,14 @@ export interface BenchmarkOptions
 	extends MochaExclusiveOptions,
 		HookArguments,
 		BenchmarkTimingOptions,
-		OnBatch {
+		OnBatch,
+		BenchmarkDescription {}
+
+/**
+ * Set of options to describe a benchmark.
+ * @public
+ */
+export interface BenchmarkDescription {
 	/**
 	 * The kind of benchmark.
 	 */
@@ -291,6 +330,7 @@ export type HookFunction = () => void | Promise<unknown>;
  * Note that this approach is slightly misleading in the data it measures: if this library chooses a cycle size of 10k,
  * the time reported per iteration is really an average of the time taken to insert 10k elements at the start, and not
  * the average time to insert an element to the start of the empty list as the test body might suggest at a glance.
+ *
  * @example
  *
  * ```typescript
@@ -350,7 +390,7 @@ export interface HookArguments {
  * @public
  */
 export function validateBenchmarkArguments(
-	args: BenchmarkRunningOptions,
+	args: BenchmarkSyncArguments | BenchmarkAsyncArguments,
 ):
 	| { isAsync: true; benchmarkFn: () => Promise<unknown> }
 	| { isAsync: false; benchmarkFn: () => void } {
@@ -366,6 +406,48 @@ export function validateBenchmarkArguments(
 	}
 
 	return { isAsync: true, benchmarkFn: intersection.benchmarkFnAsync };
+}
+
+/**
+ * Validates arguments to `benchmark`.
+ * @public
+ */
+export function benchmarkArgumentsIsCustom(
+	args: BenchmarkRunningOptions,
+): args is CustomBenchmarkArguments {
+	const intersection = args as Partial<BenchmarkSyncArguments> &
+		Partial<BenchmarkAsyncArguments> &
+		Partial<CustomBenchmarkArguments>;
+
+	const isSync = intersection.benchmarkFn !== undefined;
+	const isAsync = intersection.benchmarkFnAsync !== undefined;
+	const isCustom = intersection.benchmarkFnCustom !== undefined;
+	assert(
+		// eslint-disable-next-line unicorn/prefer-native-coercion-functions
+		[isSync, isAsync, isCustom].filter((x) => x).length === 1,
+		"Exactly one of `benchmarkFn`, `benchmarkFnAsync` or `benchmarkFnCustom` should be defined.",
+	);
+	return isCustom;
+}
+
+/**
+ * Tags and formats the provided Title from the supplied {@link BenchmarkDescription} to create a
+ * tagged and formatted Title for the Reporter.
+ *
+ * @param args - See {@link BenchmarkDescription} and {@link Titled}
+ * @returns A formatted tagged title from the supplied `BenchmarkDescription`.
+ *
+ * @public
+ */
+export function qualifiedTitle(args: BenchmarkDescription & Titled): string {
+	const benchmarkTypeTag = BenchmarkType[args.type ?? BenchmarkType.Measurement];
+	const testTypeTag = TestType[TestType.ExecutionTime];
+	let qualifiedTitle = `${performanceTestSuiteTag} @${benchmarkTypeTag} @${testTypeTag} ${args.title}`;
+
+	if (args.category !== "" && args.category !== undefined) {
+		qualifiedTitle = `${qualifiedTitle} ${userCategoriesSplitter} @${args.category}`;
+	}
+	return qualifiedTitle;
 }
 
 /**
@@ -386,7 +468,7 @@ export const isInPerformanceTestingMode = process.argv.includes("--perfMode");
  * Ex: cpu temperature will still be an issue, and thus running with fixed CPU clock speeds is still recommend
  * for more precise data.
  */
-export const isParentProcess = process.argv.includes("--parentProcess");
+export const isParentProcess: boolean = process.argv.includes("--parentProcess");
 
 /**
  * --childProcess should only be used to indicate that a test run with parentProcess is running,

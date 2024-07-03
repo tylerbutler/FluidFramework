@@ -1,14 +1,21 @@
-# @fluidframework/mocha-test-setup
+# @fluid-internal/mocha-test-setup
+
+<!-- AUTO-GENERATED-CONTENT:START (README_PACKAGE_SCOPE_NOTICE:packageJsonPath=./package.json) -->
+
+**IMPORTANT: This package is intended strictly as an implementation detail of the Fluid Framework and is not intended for public consumption.**
+**We make no stability guarantees regarding its APIs.**
+
+<!-- AUTO-GENERATED-CONTENT:END -->
 
 This package has a few main purposes:
 
--   Expose/generate a default `.mocharc.js` configuration for running [mocha](https://mochajs.org) tests, which other
+-   Expose/generate a default `.mocharc.cjs` configuration for running [mocha](https://mochajs.org) tests, which other
     packages can extend.
 -   Map paths for required packages/modules to account for [Lerna](https://lerna.js.org/)'s dependency hoisting.
 -   Add mocha `beforeAll`, `beforeEach` and `afterEach` [root hook plugins](https://mochajs.org/#root-hook-plugins) to add
     some special behavior when we run tests.
 
-## Base `mocharc.js` configuration
+## Base `mocharc.cjs` configuration
 
 To leverage the base mocha configuration exposed by this package, first add it as a `devDependency` to your `package.json`
 (the rest of the file has been omitted):
@@ -16,17 +23,17 @@ To leverage the base mocha configuration exposed by this package, first add it a
 ```json
 {
 	"devDependencies": {
-		"@fluidframework/mocha-test-setup": "version-that-matches-the-rest-of-the-release-group"
+		"@fluid-internal/mocha-test-setup": "version-that-matches-the-rest-of-the-release-group"
 	}
 }
 ```
 
-Then put this in a `.mocharc.js` file at the root of your package:
+Then put this in a `.mocharc.cjs` file at the root of your package:
 
 ```javascript
 "use strict";
 
-const getFluidTestMochaConfig = require("@fluidframework/mocha-test-setup/mocharc-common");
+const getFluidTestMochaConfig = require("@fluid-internal/mocha-test-setup/mocharc-common");
 
 const packageDir = __dirname;
 const config = getFluidTestMochaConfig(packageDir);
@@ -70,26 +77,14 @@ If it exists, the default configuration will also include this:
 }
 ```
 
-### FLUID_TEST_REPORT
+### FLUID_LOGGER_PROPS
 
-If set to "1" (`FLUID_TEST_REPORT=1`), XUnit will be configured as the reporter for the test run, and the default
-configuration will also include this:
+In case there is a need to override telemetry metrics, one can make use of an environment variable `FLUID_LOGGER_PROPS`,
+that to override them during execution time:
 
-```json
-{
-	"reporter": "xunit",
-	"reporter-options": [
-		"output=${packageDir}/nyc/junit-report.xml",
-		"suiteName=${packageJson.name}"
-	]
-}
 ```
-
-Where `${packageDir}` is the location of the package being tested, and `${packageJson.name}` is the `name` field in its
-`package.json` file.
-
-If a value for `testReportPrefix` is passed to `getFluidTestMochaConfig()`, `${testReportPrefix}-` will be prepended to
-the output file name, and ` - ${testReportPrefix}` will be appended to the suiteName.
+FLUID_LOGGER_PROPS='{ "hostName": "Benchmark" }'
+```
 
 ## Mapping of package paths to account for Lerna hoisting
 
@@ -113,7 +108,7 @@ required packages that you can pass to `getFluidTestMochaConfig()`.
 For example, the path to a reporter file:
 
 ```console
-mocha --require @fluidframework/mocha-test-setup --reporter @fluid-tools/benchmark/dist/MochaMemoryTestReporter.js
+mocha --require @fluid-internal/mocha-test-setup --reporter @fluid-tools/benchmark/dist/MochaMemoryTestReporter.js
 ```
 
 Depending on where that file is coming from, you'll need to be careful with how that path is specified.

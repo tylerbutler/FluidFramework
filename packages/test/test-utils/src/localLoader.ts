@@ -6,15 +6,18 @@
 import {
 	ICodeDetailsLoader,
 	IContainer,
+	IFluidCodeDetails,
 	IHostLoader,
 	ILoaderOptions,
-	IFluidCodeDetails,
-} from "@fluidframework/container-definitions";
-import { Loader } from "@fluidframework/container-loader";
-import { IRequest } from "@fluidframework/core-interfaces";
-import { IDocumentServiceFactory, IUrlResolver } from "@fluidframework/driver-definitions";
-import { ITelemetryBaseLogger } from "@fluidframework/common-definitions";
-import { fluidEntryPoint, LocalCodeLoader } from "./localCodeLoader";
+} from "@fluidframework/container-definitions/internal";
+import { Loader } from "@fluidframework/container-loader/internal";
+import { IRequest, ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
+import {
+	IDocumentServiceFactory,
+	IUrlResolver,
+} from "@fluidframework/driver-definitions/internal";
+
+import { LocalCodeLoader, fluidEntryPoint } from "./localCodeLoader.js";
 
 /**
  * Creates a loader with the given package entries and driver.
@@ -22,6 +25,7 @@ import { fluidEntryPoint, LocalCodeLoader } from "./localCodeLoader";
  * @param documentServiceFactory - the driver factory to use
  * @param urlResolver - the url resolver to use
  * @param options - loader options
+ * @internal
  */
 export function createLoader(
 	packageEntries: Iterable<[IFluidCodeDetails, fluidEntryPoint]>,
@@ -46,6 +50,8 @@ export function createLoader(
  * @param source - The code details used to create the Container.
  * @param loader - The loader to use to initialize the container.
  * @param attachRequest - The request to create new from.
+ * @legacy
+ * @alpha
  */
 
 export async function createAndAttachContainer(

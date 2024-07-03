@@ -1,26 +1,26 @@
 `flub autocomplete`
 ===================
 
-display autocomplete installation instructions
+Display autocomplete installation instructions.
 
 * [`flub autocomplete [SHELL]`](#flub-autocomplete-shell)
 
 ## `flub autocomplete [SHELL]`
 
-display autocomplete installation instructions
+Display autocomplete installation instructions.
 
 ```
 USAGE
   $ flub autocomplete [SHELL] [-r]
 
 ARGUMENTS
-  SHELL  shell type
+  SHELL  (zsh|bash|powershell) Shell type
 
 FLAGS
   -r, --refresh-cache  Refresh cache (ignores displaying instructions)
 
 DESCRIPTION
-  display autocomplete installation instructions
+  Display autocomplete installation instructions.
 
 EXAMPLES
   $ flub autocomplete
@@ -29,7 +29,9 @@ EXAMPLES
 
   $ flub autocomplete zsh
 
+  $ flub autocomplete powershell
+
   $ flub autocomplete --refresh-cache
 ```
 
-_See code: [@oclif/plugin-autocomplete](https://github.com/oclif/plugin-autocomplete/blob/v2.1.3/src/commands/autocomplete/index.ts)_
+_See code: [@oclif/plugin-autocomplete](https://github.com/oclif/plugin-autocomplete/blob/v3.0.16/src/commands/autocomplete/index.ts)_

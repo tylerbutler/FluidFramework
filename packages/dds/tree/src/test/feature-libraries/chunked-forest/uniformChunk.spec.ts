@@ -4,27 +4,33 @@
  */
 
 import { strict as assert } from "assert";
-import { benchmark, BenchmarkType } from "@fluid-tools/benchmark";
+
+import { BenchmarkType, benchmark } from "@fluid-tools/benchmark";
+
 import {
-	uniformChunk,
+	EmptyKey,
+	type ITreeCursorSynchronous,
+	type TreeNodeSchemaIdentifier,
+} from "../../../core/index.js";
+import { cursorToJsonObject, singleJsonCursor } from "../../../domains/index.js";
+import {
+	type ChunkShape,
 	TreeShape,
-	ChunkShape,
+	uniformChunk,
 	// eslint-disable-next-line import/no-internal-modules
-} from "../../../feature-libraries/chunked-forest/uniformChunk";
-import { testSpecializedFieldCursor } from "../../cursorTestSuite";
-import { cursorToJsonObject, singleJsonCursor } from "../../../domains";
-import { brand } from "../../../util";
-import { EmptyKey, ITreeCursorSynchronous, TreeSchemaIdentifier } from "../../../core";
-// eslint-disable-next-line import/no-internal-modules
-import { sum } from "../../domains/json/benchmarks";
+} from "../../../feature-libraries/chunked-forest/uniformChunk.js";
 import {
+	type TreeChunk,
+	cursorForJsonableTreeNode,
+	cursorForMapTreeNode,
 	jsonableTreeFromCursor,
 	mapTreeFromCursor,
-	singleMapTreeCursor,
-	singleTextCursor,
-	TreeChunk,
-} from "../../../feature-libraries";
-import { emptyShape, polygonTree, testData, xField, yField } from "./uniformChunkTestData";
+} from "../../../feature-libraries/index.js";
+import { mapSchema, testSpecializedFieldCursor } from "../../cursorTestSuite.js";
+// eslint-disable-next-line import/no-internal-modules
+import { sum } from "../../domains/json/benchmarks.js";
+
+import { emptyShape, polygonTree, testData, xField, yField } from "./uniformChunkTestData.js";
 
 // Validate a few aspects of shapes that are easier to verify here than via checking the cursor.
 function validateShape(shape: ChunkShape): void {
@@ -65,7 +71,7 @@ describe("uniformChunk", () => {
 		cursorName: "uniformChunk",
 		builders: {
 			withKeys: (keys) => {
-				const schema: TreeSchemaIdentifier = brand("fakeSchema");
+				const schema: TreeNodeSchemaIdentifier = mapSchema.name;
 				const withKeysShape = new TreeShape(
 					schema,
 					false,
@@ -92,7 +98,7 @@ describe("uniformChunk", () => {
 			factory: (data: TreeChunk) => {
 				const cursor = data.cursor();
 				cursor.enterNode(0);
-				return singleTextCursor(jsonableTreeFromCursor(cursor));
+				return cursorForJsonableTreeNode(jsonableTreeFromCursor(cursor));
 			},
 		},
 		{
@@ -100,7 +106,7 @@ describe("uniformChunk", () => {
 			factory: (data: TreeChunk) => {
 				const cursor = data.cursor();
 				cursor.enterNode(0);
-				return singleMapTreeCursor(mapTreeFromCursor(cursor));
+				return cursorForMapTreeNode(mapTreeFromCursor(cursor));
 			},
 		},
 		{

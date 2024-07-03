@@ -3,18 +3,21 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { IDocumentDeltaStorageService, IStream } from "@fluidframework/driver-definitions";
-import { Queue, emptyMessageStream } from "@fluidframework/driver-utils";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { validateMessages } from "../odspUtils";
+import { validateMessages } from "@fluidframework/driver-base/internal";
+import {
+	IDocumentDeltaStorageService,
+	IStream,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import { Queue, emptyMessageStream } from "@fluidframework/driver-utils/internal";
+import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils/internal";
 
 /**
  * Implementation of IDocumentDeltaStorageService that will return snapshot ops when fetching messages
  */
 export class LocalOdspDeltaStorageService implements IDocumentDeltaStorageService {
 	constructor(
-		private readonly logger: ITelemetryLogger,
+		private readonly logger: ITelemetryLoggerExt,
 		private snapshotOps: ISequencedDocumentMessage[],
 	) {}
 

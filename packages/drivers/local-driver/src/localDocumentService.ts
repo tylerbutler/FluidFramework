@@ -3,28 +3,35 @@
  * Licensed under the MIT License.
  */
 
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
+import { IClient } from "@fluidframework/driver-definitions";
 import {
 	IDocumentDeltaConnection,
 	IDocumentDeltaStorageService,
 	IDocumentService,
+	IDocumentServiceEvents,
 	IDocumentServicePolicies,
 	IDocumentStorageService,
 	IResolvedUrl,
-} from "@fluidframework/driver-definitions";
-import { IClient } from "@fluidframework/protocol-definitions";
+} from "@fluidframework/driver-definitions/internal";
 import { ITokenProvider } from "@fluidframework/routerlicious-driver";
+import { ILocalDeltaConnectionServer } from "@fluidframework/server-local-server";
 import { GitManager } from "@fluidframework/server-services-client";
 import { TestHistorian } from "@fluidframework/server-test-utils";
-import { ILocalDeltaConnectionServer } from "@fluidframework/server-local-server";
-import {
-	LocalDeltaStorageService,
-	LocalDocumentDeltaConnection,
-	LocalDocumentStorageService,
-} from ".";
+
+import { LocalDeltaStorageService } from "./localDeltaStorageService.js";
+import { LocalDocumentDeltaConnection } from "./localDocumentDeltaConnection.js";
+import { LocalDocumentStorageService } from "./localDocumentStorageService.js";
+
 /**
  * Basic implementation of a document service for local use.
+ * @internal
  */
-export class LocalDocumentService implements IDocumentService {
+export class LocalDocumentService
+	extends TypedEventEmitter<IDocumentServiceEvents>
+	implements IDocumentService
+{
 	/**
 	 * @param localDeltaConnectionServer - delta connection server for ops
 	 * @param tokenProvider - token provider
@@ -38,9 +45,12 @@ export class LocalDocumentService implements IDocumentService {
 		private readonly tenantId: string,
 		private readonly documentId: string,
 		private readonly documentDeltaConnectionsMap: Map<string, LocalDocumentDeltaConnection>,
-		public readonly policies: IDocumentServicePolicies = {},
+		public readonly policies: IDocumentServicePolicies = { supportGetSnapshotApi: true },
 		private readonly innerDocumentService?: IDocumentService,
-	) {}
+		private readonly logger?: ITelemetryBaseLogger,
+	) {
+		super();
+	}
 
 	public dispose() {}
 
@@ -54,7 +64,6 @@ export class LocalDocumentService implements IDocumentService {
 				new TestHistorian(this.localDeltaConnectionServer.testDbFactory.testDatabase),
 			),
 			{
-				minBlobSize: 2048, // Test blob aggregation
 				maximumCacheDurationMs: 432_000_000, // 5 days in ms. Not actually enforced but shouldn't matter for any local driver scenario
 			},
 			this.localDeltaConnectionServer,
@@ -97,6 +106,8 @@ export class LocalDocumentService implements IDocumentService {
 			ordererToken.jwt,
 			client,
 			this.localDeltaConnectionServer.webSocketServer,
+			undefined,
+			this.logger,
 		);
 		const clientId = documentDeltaConnection.clientId;
 
@@ -118,6 +129,7 @@ export class LocalDocumentService implements IDocumentService {
  * @param tokenProvider - token provider with a single token
  * @param tenantId - ID of tenant
  * @param documentId - ID of document
+ * @internal
  */
 export function createLocalDocumentService(
 	resolvedUrl: IResolvedUrl,
@@ -128,6 +140,7 @@ export function createLocalDocumentService(
 	documentDeltaConnectionsMap: Map<string, LocalDocumentDeltaConnection>,
 	policies?: IDocumentServicePolicies,
 	innerDocumentService?: IDocumentService,
+	logger?: ITelemetryBaseLogger,
 ): IDocumentService {
 	return new LocalDocumentService(
 		resolvedUrl,
@@ -138,5 +151,6 @@ export function createLocalDocumentService(
 		documentDeltaConnectionsMap,
 		policies,
 		innerDocumentService,
+		logger,
 	);
 }

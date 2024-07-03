@@ -3,12 +3,14 @@
  * Licensed under the MIT License.
  */
 
-import { ModelContainerRuntimeFactory } from "@fluid-example/example-utils";
-import { IContainer } from "@fluidframework/container-definitions";
-import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
+import {
+	ModelContainerRuntimeFactory,
+	getDataStoreEntryPoint,
+} from "@fluid-example/example-utils";
+import type { IContainer } from "@fluidframework/container-definitions/internal";
+import type { IContainerRuntime } from "@fluidframework/container-runtime-definitions/internal";
 
-import { PropertyTreeInstantiationFactory, IPropertyTree } from "./dataObject";
+import { type IPropertyTree, PropertyTreeInstantiationFactory } from "./dataObject.js";
 
 /**
  * The data model for our application.
@@ -48,10 +50,8 @@ export class PropertyTreeContainerRuntimeFactory extends ModelContainerRuntimeFa
 	 * {@inheritDoc ModelContainerRuntimeFactory.createModel}
 	 */
 	protected async createModel(runtime: IContainerRuntime, container: IContainer) {
-		const propertyTree = await requestFluidObject<IPropertyTree>(
-			await runtime.getRootDataStore(propertyTreeId),
-			"",
+		return new PropertyTreeAppModel(
+			await getDataStoreEntryPoint<IPropertyTree>(runtime, propertyTreeId),
 		);
-		return new PropertyTreeAppModel(propertyTree);
 	}
 }

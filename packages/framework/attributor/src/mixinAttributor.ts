@@ -2,50 +2,65 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
+import { bufferToString } from "@fluid-internal/client-utils";
 import {
-	IDocumentMessage,
-	ISequencedDocumentMessage,
-	ISnapshotTree,
-} from "@fluidframework/protocol-definitions";
-import { IAudience, IContainerContext, IDeltaManager } from "@fluidframework/container-definitions";
-import { ContainerRuntime } from "@fluidframework/container-runtime";
-import type { IContainerRuntimeOptions } from "@fluidframework/container-runtime";
+	type IDeltaManager,
+	type IContainerContext,
+} from "@fluidframework/container-definitions/internal";
+import { ContainerRuntime } from "@fluidframework/container-runtime/internal";
+import type { IContainerRuntimeOptions } from "@fluidframework/container-runtime/internal";
+import { type IContainerRuntime } from "@fluidframework/container-runtime-definitions/internal";
 import {
-	AttributionInfo,
-	AttributionKey,
-	ISummaryTreeWithStats,
-	ITelemetryContext,
-	NamedFluidDataStoreRegistryEntries,
-} from "@fluidframework/runtime-definitions";
-import { addSummarizeResultToSummary, SummaryTreeBuilder } from "@fluidframework/runtime-utils";
-import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
-import { IRequest, IResponse, FluidObject } from "@fluidframework/core-interfaces";
-import { assert, bufferToString, unreachableCase } from "@fluidframework/common-utils";
-import { UsageError } from "@fluidframework/container-utils";
-import { loggerToMonitoringContext } from "@fluidframework/telemetry-utils";
-import { Attributor, IAttributor, OpStreamAttributor } from "./attributor";
-import { AttributorSerializer, chain, deltaEncoder, Encoder } from "./encoders";
-import { makeLZ4Encoder } from "./lz4Encoder";
+	type FluidObject,
+	type IRequest,
+	type IResponse,
+} from "@fluidframework/core-interfaces";
+import { assert, unreachableCase } from "@fluidframework/core-utils/internal";
+import { type IQuorumClients } from "@fluidframework/driver-definitions";
+import {
+	type IDocumentMessage,
+	type ISnapshotTree,
+	type ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import {
+	type ISummaryTreeWithStats,
+	type ITelemetryContext,
+	type AttributionInfo,
+	type AttributionKey,
+	type NamedFluidDataStoreRegistryEntries,
+} from "@fluidframework/runtime-definitions/internal";
+import {
+	SummaryTreeBuilder,
+	addSummarizeResultToSummary,
+} from "@fluidframework/runtime-utils/internal";
+import {
+	PerformanceEvent,
+	UsageError,
+	createChildLogger,
+	loggerToMonitoringContext,
+} from "@fluidframework/telemetry-utils/internal";
+
+import { Attributor, type IAttributor, OpStreamAttributor } from "./attributor.js";
+import { AttributorSerializer, type Encoder, chain, deltaEncoder } from "./encoders.js";
+import { makeLZ4Encoder } from "./lz4Encoder.js";
 
 // Summary tree keys
 const attributorTreeName = ".attributor";
 const opBlobName = "op";
 
 /**
- * @alpha
- * Feature Gate Key -
- * Whether or not a container runtime instantiated using `mixinAttributor`'s load should generate an attributor on
- * new files. See package README for more notes on integration.
+ * @internal
  */
 export const enableOnNewFileKey = "Fluid.Attribution.EnableOnNewFile";
 
 /**
- * @alpha
+ * @internal
  */
 export const IRuntimeAttributor: keyof IProvideRuntimeAttributor = "IRuntimeAttributor";
 
 /**
- * @alpha
+ * @internal
  */
 export interface IProvideRuntimeAttributor {
 	readonly IRuntimeAttributor: IRuntimeAttributor;
@@ -54,9 +69,10 @@ export interface IProvideRuntimeAttributor {
 /**
  * Provides access to attribution information stored on the container runtime.
  *
- * Attributors are only populated after the container runtime they are injected into has initialized.
+ * @remarks Attributors are only populated after the container runtime into which they are being injected has initialized.
+ *
  * @sealed
- * @alpha
+ * @internal
  */
 export interface IRuntimeAttributor extends IProvideRuntimeAttributor {
 	/**
@@ -65,21 +81,24 @@ export interface IRuntimeAttributor extends IProvideRuntimeAttributor {
 	get(key: AttributionKey): AttributionInfo;
 
 	/**
-	 * @returns - Whether any AttributionInfo exists for the provided key.
+	 * @returns Whether any AttributionInfo exists for the provided key.
 	 */
 	has(key: AttributionKey): boolean;
 
 	/**
-	 * @returns - Whether the runtime is currently tracking attribution information for the loaded container.
+	 * @returns Whether the runtime is currently tracking attribution information for the loaded container.
+	 * If enabled, the runtime attributor can be asked for the attribution info for different keys.
 	 * See {@link mixinAttributor} for more details on when this happens.
 	 */
 	readonly isEnabled: boolean;
 }
 
 /**
- * @returns an IRuntimeAttributor for usage with `mixinAttributor`. The attributor will only be populated with data
- * once it's passed via scope to a container runtime load flow. See {@link mixinAttributor}.
- * @alpha
+ * Creates an `IRuntimeAttributor` for usage with {@link mixinAttributor}.
+ *
+ * @remarks The attributor will only be populated with data once it's passed via scope to a container runtime load flow.
+ *
+ * @internal
  */
 export function createRuntimeAttributor(): IRuntimeAttributor {
 	return new RuntimeAttributor();
@@ -94,21 +113,36 @@ export function createRuntimeAttributor(): IRuntimeAttributor {
  * IRuntimeAttributor is passed via scope to load a document that never previously had attribution information,
  * that attributor's `has` method will always return `false`.
  * @param Base - base class, inherits from FluidAttributorRuntime
- * @alpha
+ * @internal
  */
-export const mixinAttributor = (Base: typeof ContainerRuntime = ContainerRuntime) =>
+export const mixinAttributor = (
+	Base: typeof ContainerRuntime = ContainerRuntime,
+): typeof ContainerRuntime =>
 	class ContainerRuntimeWithAttributor extends Base {
-		public static async load(
-			context: IContainerContext,
-			registryEntries: NamedFluidDataStoreRegistryEntries,
-			requestHandler?:
-				| ((request: IRequest, runtime: IContainerRuntime) => Promise<IResponse>)
-				| undefined,
-			runtimeOptions: IContainerRuntimeOptions | undefined = {},
-			containerScope: FluidObject | undefined = context.scope,
-			existing?: boolean | undefined,
-			ctor: typeof ContainerRuntime = ContainerRuntimeWithAttributor as unknown as typeof ContainerRuntime,
-		): Promise<ContainerRuntime> {
+		public static async loadRuntime(params: {
+			context: IContainerContext;
+			registryEntries: NamedFluidDataStoreRegistryEntries;
+			existing: boolean;
+			runtimeOptions?: IContainerRuntimeOptions;
+			containerScope?: FluidObject;
+			containerRuntimeCtor?: typeof ContainerRuntime;
+			/**
+			 * @deprecated Will be removed once Loader LTS version is "2.0.0-internal.7.0.0". Migrate all usage of IFluidRouter to the "entryPoint" pattern. Refer to Removing-IFluidRouter.md
+			 */
+			requestHandler?: (request: IRequest, runtime: IContainerRuntime) => Promise<IResponse>;
+			provideEntryPoint: (containerRuntime: IContainerRuntime) => Promise<FluidObject>;
+		}): Promise<ContainerRuntime> {
+			const {
+				context,
+				registryEntries,
+				existing,
+				requestHandler,
+				provideEntryPoint,
+				runtimeOptions,
+				containerScope,
+				containerRuntimeCtor = ContainerRuntimeWithAttributor as unknown as typeof ContainerRuntime,
+			} = params;
+
 			const runtimeAttributor = (
 				containerScope as FluidObject<IProvideRuntimeAttributor> | undefined
 			)?.IRuntimeAttributor;
@@ -124,40 +158,68 @@ export const mixinAttributor = (Base: typeof ContainerRuntime = ContainerRuntime
 			const baseSnapshot: ISnapshotTree | undefined =
 				pendingRuntimeState?.baseSnapshot ?? context.baseSnapshot;
 
-			const { audience, deltaManager } = context;
+			const { quorum, deltaManager, taggedLogger } = context;
 			assert(
-				audience !== undefined,
-				0x508 /* Audience must exist when instantiating attribution-providing runtime */,
+				quorum !== undefined,
+				0x968 /* quorum must exist when instantiating attribution-providing runtime */,
 			);
 
-			const mc = loggerToMonitoringContext(context.taggedLogger);
+			const mc = loggerToMonitoringContext(taggedLogger);
+
 			const shouldTrackAttribution = mc.config.getBoolean(enableOnNewFileKey) ?? false;
 			if (shouldTrackAttribution) {
-				(context.options.attribution ??= {}).track = true;
+				const { options } = context;
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+				(options.attribution ??= {}).track = true;
 			}
 
-			const runtime = (await Base.load(
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+			const runtime = (await Base.loadRuntime({
 				context,
 				registryEntries,
 				requestHandler,
+				provideEntryPoint,
+				// ! This prop is needed for back-compat. Can be removed in 2.0.0-internal.8.0.0
+				initializeEntryPoint: provideEntryPoint,
 				runtimeOptions,
 				containerScope,
 				existing,
-				ctor,
-			)) as ContainerRuntimeWithAttributor;
+				containerRuntimeCtor,
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			} as any)) as ContainerRuntimeWithAttributor;
 			runtime.runtimeAttributor = runtimeAttributor as RuntimeAttributor;
+
+			const logger = createChildLogger({
+				logger: runtime.baseLogger,
+				namespace: "Attributor",
+			});
 
 			// Note: this fetches attribution blobs relatively eagerly in the load flow; we may want to optimize
 			// this to avoid blocking on such information until application actually requests some op-based attribution
 			// info or we need to summarize. All that really needs to happen immediately is to start recording
 			// op seq# -> attributionInfo for new ops.
-			await runtime.runtimeAttributor.initialize(
-				deltaManager,
-				audience,
-				baseSnapshot,
-				async (id) => runtime.storage.readBlob(id),
-				shouldTrackAttribution,
+			await PerformanceEvent.timedExecAsync(
+				logger,
+				{
+					eventName: "initialize",
+				},
+				async (event) => {
+					await runtime.runtimeAttributor?.initialize(
+						deltaManager,
+						quorum,
+						baseSnapshot,
+						async (id) => runtime.storage.readBlob(id),
+						shouldTrackAttribution,
+					);
+					event.end({
+						attributionEnabledInConfig: shouldTrackAttribution,
+						attributionEnabledInDoc: runtime.runtimeAttributor
+							? runtime.runtimeAttributor.isEnabled
+							: false,
+					});
+				},
 			);
+
 			return runtime;
 		}
 
@@ -168,7 +230,7 @@ export const mixinAttributor = (Base: typeof ContainerRuntime = ContainerRuntime
 			fullTree: boolean,
 			trackState: boolean,
 			telemetryContext?: ITelemetryContext,
-		) {
+		): void {
 			super.addContainerStateToSummary(summaryTree, fullTree, trackState, telemetryContext);
 			const attributorSummary = this.runtimeAttributor?.summarize();
 			if (attributorSummary) {
@@ -226,7 +288,7 @@ class RuntimeAttributor implements IRuntimeAttributor {
 
 	public async initialize(
 		deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>,
-		audience: IAudience,
+		quorum: IQuorumClients,
 		baseSnapshot: ISnapshotTree | undefined,
 		readBlob: (id: string) => Promise<ArrayBufferLike>,
 		shouldAddAttributorOnNewFile: boolean,
@@ -246,13 +308,15 @@ class RuntimeAttributor implements IRuntimeAttributor {
 		this.isEnabled = true;
 		this.encoder = chain(
 			new AttributorSerializer(
-				(entries) => new OpStreamAttributor(deltaManager, audience, entries),
+				(entries) => new OpStreamAttributor(deltaManager, quorum, entries),
 				deltaEncoder,
 			),
 			makeLZ4Encoder(),
 		);
 
-		if (attributorTree !== undefined) {
+		if (attributorTree === undefined) {
+			this.opAttributor = new OpStreamAttributor(deltaManager, quorum);
+		} else {
 			const id = attributorTree.blobs[opBlobName];
 			assert(
 				id !== undefined,
@@ -261,8 +325,6 @@ class RuntimeAttributor implements IRuntimeAttributor {
 			const blobContents = await readBlob(id);
 			const attributorSnapshot = bufferToString(blobContents, "utf8");
 			this.opAttributor = this.encoder.decode(attributorSnapshot);
-		} else {
-			this.opAttributor = new OpStreamAttributor(deltaManager, audience);
 		}
 	}
 

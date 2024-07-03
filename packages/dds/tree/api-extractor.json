@@ -1,18 +1,13 @@
 {
 	"$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
-	"extends": "@fluidframework/build-common/api-extractor-common-strict.json",
-	/**
-	 * Configures how the .d.ts rollup file will be generated.
-	 */
-	"dtsRollup": {
-		"enabled": true,
-		"alphaTrimmedFilePath": "<projectFolder>/dist/<unscopedPackageName>.d.ts"
-	},
-	"messages": {
-		"extractorMessageReporting": {
-			"ae-missing-release-tag": {
-				"logLevel": "error",
-				"addToApiReportFile": false
+	"extends": "../../../common/build/build-common/api-extractor-base.esm.no-legacy.json",
+	"compiler": {
+		// api-extractor has trouble with Node16 moduleResolution, but Bundler looks okay.
+		"overrideTsconfig": {
+			"$schema": "http://json.schemastore.org/tsconfig",
+			"extends": "./tsconfig.json",
+			"compilerOptions": {
+				"moduleResolution": "Bundler"
 			}
 		}
 	}

@@ -3,108 +3,193 @@
  * Licensed under the MIT License.
  */
 
-import { unreachableCase } from "@fluidframework/common-utils";
-import { brandOpaque, Mutable, OffsetListFactory } from "../../util";
-import { Delta } from "../../core";
-import { populateChildModifications } from "../deltaUtils";
-import { singleTextCursor } from "../treeTextCursor";
-import { MarkList } from "./format";
-import { isSkipMark } from "./utils";
+import { assert, unreachableCase } from "@fluidframework/core-utils/internal";
 
-export type ToDelta<TNodeChange> = (child: TNodeChange) => Delta.Modify;
+import {
+	type DeltaDetachedNodeChanges,
+	type DeltaDetachedNodeRename,
+	type DeltaFieldChanges,
+	type DeltaMark,
+	areEqualChangeAtomIds,
+} from "../../core/index.js";
+import type { Mutable } from "../../util/index.js";
+import { nodeIdFromChangeAtom } from "../deltaUtils.js";
 
-export function sequenceFieldToDelta<TNodeChange>(
-	marks: MarkList<TNodeChange>,
-	deltaFromChild: ToDelta<TNodeChange>,
-): Delta.MarkList {
-	const out = new OffsetListFactory<Delta.Mark>();
-	for (const mark of marks) {
-		if (isSkipMark(mark)) {
-			out.pushOffset(mark);
+import { isMoveIn, isMoveOut } from "./moveEffectTable.js";
+import { type MarkList, NoopMarkType } from "./types.js";
+import {
+	areInputCellsEmpty,
+	areOutputCellsEmpty,
+	getDetachedNodeId,
+	getEndpoint,
+	getInputCellId,
+	isAttachAndDetachEffect,
+} from "./utils.js";
+import type { ToDelta } from "../modular-schema/index.js";
+
+export function sequenceFieldToDelta(
+	change: MarkList,
+	deltaFromChild: ToDelta,
+): DeltaFieldChanges {
+	const local: DeltaMark[] = [];
+	const global: DeltaDetachedNodeChanges[] = [];
+	const rename: DeltaDetachedNodeRename[] = [];
+
+	for (const mark of change) {
+		const deltaMark: Mutable<DeltaMark> = { count: mark.count };
+		const inputCellId = getInputCellId(mark);
+		const changes = mark.changes;
+		if (changes !== undefined) {
+			const nestedDelta = deltaFromChild(changes);
+			if (nestedDelta.size > 0) {
+				if (inputCellId === undefined) {
+					deltaMark.fields = nestedDelta;
+				} else {
+					global.push({
+						id: nodeIdFromChangeAtom(inputCellId),
+						fields: nestedDelta,
+					});
+				}
+			}
+		}
+		if (!areInputCellsEmpty(mark) && !areOutputCellsEmpty(mark)) {
+			// Since each cell is associated with exactly one node,
+			// the cell starting end ending populated means the cell content has not changed.
+			local.push(deltaMark);
+		} else if (isAttachAndDetachEffect(mark)) {
+			assert(
+				inputCellId !== undefined,
+				0x81e /* AttachAndDetach mark should have defined input cell ID */,
+			);
+			// The cell starting and ending empty means the cell content has not changed,
+			// unless transient content was inserted/attached.
+			if (isMoveIn(mark.attach) && isMoveOut(mark.detach)) {
+				assert(
+					mark.changes === undefined,
+					0x81f /* AttachAndDetach moves should not have changes */,
+				);
+				continue;
+			}
+
+			const outputId = getDetachedNodeId(mark.detach);
+			assert(
+				outputId !== undefined,
+				0x820 /* AttachAndDetach mark should have defined output cell ID */,
+			);
+			const oldId = nodeIdFromChangeAtom(
+				isMoveIn(mark.attach) ? getEndpoint(mark.attach) : inputCellId,
+			);
+			if (!areEqualChangeAtomIds(inputCellId, outputId)) {
+				rename.push({
+					count: mark.count,
+					oldId,
+					newId: nodeIdFromChangeAtom(outputId),
+				});
+			}
+			if (deltaMark.fields) {
+				global.push({
+					id: oldId,
+					fields: deltaMark.fields,
+				});
+			}
 		} else {
-			// Inline into `switch(mark.type)` once we upgrade to TS 4.7
 			const type = mark.type;
+			// Inline into `switch(mark.type)` once we upgrade to TS 4.7
 			switch (type) {
-				case "Insert": {
-					const cursors = mark.content.map(singleTextCursor);
-					const insertMark: Mutable<Delta.Insert> = {
-						type: Delta.MarkType.Insert,
-						content: cursors,
-					};
-					populateChildModificationsIfAny(mark.changes, insertMark, deltaFromChild);
-					out.pushContent(insertMark);
-					break;
-				}
-				case "MoveIn":
-				case "ReturnTo": {
-					const moveMark: Delta.MoveIn = {
-						type: Delta.MarkType.MoveIn,
+				case "MoveIn": {
+					local.push({
+						attach: nodeIdFromChangeAtom(getEndpoint(mark)),
 						count: mark.count,
-						moveId: brandOpaque<Delta.MoveId>(mark.id),
-					};
-					out.pushContent(moveMark);
+					});
 					break;
 				}
-				case "Modify": {
-					const modify = deltaFromChild(mark.changes);
-					if (
-						Object.prototype.hasOwnProperty.call(modify, "setValue") ||
-						modify.fields !== undefined
-					) {
-						out.pushContent(modify);
+				case "Remove": {
+					const newDetachId = getDetachedNodeId(mark);
+					if (inputCellId === undefined) {
+						deltaMark.detach = nodeIdFromChangeAtom(newDetachId);
+						local.push(deltaMark);
 					} else {
-						out.pushOffset(1);
+						const oldId = nodeIdFromChangeAtom(inputCellId);
+						// Removal of already removed content is only a no-op if the detach IDs are different.
+						if (!areEqualChangeAtomIds(inputCellId, newDetachId)) {
+							rename.push({
+								count: mark.count,
+								oldId,
+								newId: nodeIdFromChangeAtom(newDetachId),
+							});
+						}
+						// In all cases, the nested changes apply
+						if (deltaMark.fields) {
+							global.push({
+								id: oldId,
+								fields: deltaMark.fields,
+							});
+						}
 					}
 					break;
 				}
-				case "Delete": {
-					const deleteMark: Mutable<Delta.Delete> = {
-						type: Delta.MarkType.Delete,
-						count: mark.count,
-					};
-					populateChildModificationsIfAny(mark.changes, deleteMark, deltaFromChild);
-					out.pushContent(deleteMark);
-					break;
-				}
-				case "MoveOut":
-				case "ReturnFrom": {
-					const moveMark: Mutable<Delta.MoveOut> = {
-						type: Delta.MarkType.MoveOut,
-						moveId: brandOpaque<Delta.MoveId>(mark.id),
-						count: mark.count,
-					};
-					populateChildModificationsIfAny(mark.changes, moveMark, deltaFromChild);
-					out.pushContent(moveMark);
-					break;
-				}
-				case "Revive": {
-					if (mark.conflictsWith === undefined) {
-						const insertMark: Mutable<Delta.Insert> = {
-							type: Delta.MarkType.Insert,
-							content: mark.content,
-						};
-						populateChildModificationsIfAny(mark.changes, insertMark, deltaFromChild);
-						out.pushContent(insertMark);
-					} else if (mark.lastDetachedBy === undefined) {
-						out.pushOffset(mark.count);
+				case "MoveOut": {
+					// The move destination will look for the detach ID of the source, so we can ignore `finalEndpoint`.
+					const detachId = nodeIdFromChangeAtom(getDetachedNodeId(mark));
+					if (inputCellId === undefined) {
+						deltaMark.detach = detachId;
+						local.push(deltaMark);
+					} else {
+						// Move sources implicitly restore their content
+						rename.push({
+							count: mark.count,
+							oldId: nodeIdFromChangeAtom(inputCellId),
+							newId: detachId,
+						});
 					}
 					break;
 				}
+				case "Insert": {
+					assert(
+						inputCellId !== undefined,
+						0x821 /* Active Insert marks must have a CellId */,
+					);
+					const buildId = nodeIdFromChangeAtom(inputCellId);
+					deltaMark.attach = buildId;
+					if (deltaMark.fields) {
+						// Nested changes are represented on the node in its starting location
+						global.push({ id: buildId, fields: deltaMark.fields });
+						delete deltaMark.fields;
+					}
+					local.push(deltaMark);
+					break;
+				}
+				case NoopMarkType:
+					if (inputCellId === undefined) {
+						local.push(deltaMark);
+					}
+					break;
 				default:
 					unreachableCase(type);
 			}
 		}
 	}
-	return out.list;
-}
-
-function populateChildModificationsIfAny<TNodeChange>(
-	changes: TNodeChange | undefined,
-	deltaMark: Mutable<Delta.HasModifications>,
-	deltaFromChild: ToDelta<TNodeChange>,
-): void {
-	if (changes !== undefined) {
-		const modify = deltaFromChild(changes);
-		populateChildModifications(modify, deltaMark);
+	// Remove trailing no-op marks
+	while (local.length > 0) {
+		const lastMark = local[local.length - 1];
+		if (
+			lastMark.attach !== undefined ||
+			lastMark.detach !== undefined ||
+			lastMark.fields !== undefined
+		) {
+			break;
+		}
+		local.pop();
 	}
+	const delta: Mutable<DeltaFieldChanges> = {};
+	if (local.length > 0) {
+		delta.local = local;
+	}
+	if (global.length > 0) {
+		delta.global = global;
+	}
+	if (rename.length > 0) {
+		delta.rename = rename;
+	}
+	return delta;
 }

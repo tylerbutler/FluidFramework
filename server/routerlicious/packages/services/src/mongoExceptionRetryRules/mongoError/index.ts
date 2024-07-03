@@ -3,6 +3,8 @@
  * Licensed under the MIT License.
  */
 
+import { Lumberjack } from "@fluidframework/server-services-telemetry";
+import { ConnectionNotAvailableMode } from "../../mongodb";
 import { BaseMongoExceptionRetryRule, IMongoExceptionRetryRule } from "../IMongoExceptionRetryRule";
 class InternalErrorRule extends BaseMongoExceptionRetryRule {
 	private static readonly codeName = "InternalError";
@@ -33,7 +35,23 @@ class InternalBulkWriteErrorRule extends BaseMongoExceptionRetryRule {
 		return (
 			error.code === 1 &&
 			error.name &&
-			(error.name as string) === InternalBulkWriteErrorRule.errorName
+			(error.name as string).includes(InternalBulkWriteErrorRule.errorName)
+		);
+	}
+}
+
+class DuplicateKeyErrorRule extends BaseMongoExceptionRetryRule {
+	private static readonly errorMsg = "E11000 duplicate key";
+	protected defaultRetryDecision: boolean = false;
+
+	constructor(retryRuleOverride: Map<string, boolean>) {
+		super("DuplicateKeyErrorRule", retryRuleOverride);
+	}
+
+	public match(error: any): boolean {
+		return (
+			error.code === 11000 ||
+			error.message?.toString()?.indexOf(DuplicateKeyErrorRule.errorMsg) >= 0
 		);
 	}
 }
@@ -44,7 +62,10 @@ class NoConnectionAvailableRule extends BaseMongoExceptionRetryRule {
 		"no connection available for operation and number of stored operation";
 	protected defaultRetryDecision: boolean = false;
 
-	constructor(retryRuleOverride: Map<string, boolean>) {
+	constructor(
+		retryRuleOverride: Map<string, boolean>,
+		private readonly connectionNotAvailableMode: ConnectionNotAvailableMode,
+	) {
 		super("NoConnectionAvailableRule", retryRuleOverride);
 	}
 
@@ -57,6 +78,17 @@ class NoConnectionAvailableRule extends BaseMongoExceptionRetryRule {
 			error.message &&
 			(error.message as string).startsWith(NoConnectionAvailableRule.messagePrefix)
 		);
+	}
+
+	public shouldRetry(): boolean {
+		if (this.connectionNotAvailableMode === "stop") {
+			// This logic is to automate the process of handling a pod with death note on it, so
+			// kubernetes would automatically handle the restart process.
+			Lumberjack.warning(`${this.ruleName} will terminate the process`);
+			process.kill(process.pid, "SIGTERM");
+		}
+
+		return super.shouldRetry();
 	}
 }
 
@@ -206,8 +238,21 @@ class RequestTimedOutBulkWriteErrorRule extends BaseMongoExceptionRetryRule {
 		return (
 			error.code === 50 &&
 			error.name &&
-			(error.name as string) === RequestTimedOutBulkWriteErrorRule.errorName
+			(error.name as string).includes(RequestTimedOutBulkWriteErrorRule.errorName)
 		);
+	}
+}
+
+class ConnectionPoolClearedErrorRule extends BaseMongoExceptionRetryRule {
+	private static readonly errorName = "MongoPoolClearedError";
+	protected defaultRetryDecision: boolean = true;
+
+	constructor(retryRuleOverride: Map<string, boolean>) {
+		super("ConnectionPoolClearedErrorRule", retryRuleOverride);
+	}
+
+	public match(error: any): boolean {
+		return error.name && (error.name as string) === ConnectionPoolClearedErrorRule.errorName;
 	}
 }
 
@@ -223,11 +268,10 @@ class ServiceUnavailableRule extends BaseMongoExceptionRetryRule {
 
 	public match(error: any): boolean {
 		return (
-			error.code === 1 &&
-			(error.errorDetails &&
-			(error.errorDetails as string).includes(ServiceUnavailableRule.errorDetails)) ||
-			(error.errmsg &&
-			(error.errmsg as string).includes(ServiceUnavailableRule.errorDetails))
+			(error.code === 1 &&
+				error.errorDetails &&
+				(error.errorDetails as string).includes(ServiceUnavailableRule.errorDetails)) ||
+			(error.errmsg && (error.errmsg as string).includes(ServiceUnavailableRule.errorDetails))
 		);
 	}
 }
@@ -278,8 +322,61 @@ class ConnectionClosedMongoErrorRule extends BaseMongoExceptionRetryRule {
 
 	public match(error: any): boolean {
 		return (
+			error.message && /^connection .+ closed$/.test(error.message as string) === true // matches any message of format "connection <some-info> closed"
+		);
+	}
+}
+
+class ConnectionTimedOutBulkWriteErrorRule extends BaseMongoExceptionRetryRule {
+	private static readonly errorName = "MongoBulkWriteError";
+	protected defaultRetryDecision: boolean = true;
+
+	constructor(retryRuleOverride: Map<string, boolean>) {
+		super("ConnectionTimedOutBulkWriteErrorRule", retryRuleOverride);
+	}
+
+	public match(error: any): boolean {
+		return (
+			error.name &&
+			(error.name as string) === ConnectionTimedOutBulkWriteErrorRule.errorName &&
 			error.message &&
-			/^connection .+ closed$/.test(error.message as string) === true // matches any message of format "connection <some-info> closed"
+			/^connection .*timed out$/.test(error.message as string) === true
+		);
+	}
+}
+
+class NetworkTimedOutErrorRule extends BaseMongoExceptionRetryRule {
+	private static readonly errorName = "MongoNetworkTimeoutError";
+	protected defaultRetryDecision: boolean = true;
+
+	constructor(retryRuleOverride: Map<string, boolean>) {
+		super("NetworkTimedOutErrorRule", retryRuleOverride);
+	}
+
+	public match(error: any): boolean {
+		return (
+			error.name &&
+			(error.name as string) === NetworkTimedOutErrorRule.errorName &&
+			error.message &&
+			/^connection .*timed out$/.test(error.message as string) === true
+		);
+	}
+}
+
+class MongoServerSelectionErrorRule extends BaseMongoExceptionRetryRule {
+	private static readonly errorName = "MongoServerSelectionError";
+	protected defaultRetryDecision: boolean = true;
+
+	constructor(retryRuleOverride: Map<string, boolean>) {
+		super("MongoServerSelectionErrorRule", retryRuleOverride);
+	}
+
+	public match(error: any): boolean {
+		return (
+			error.name &&
+			(error.name as string) === MongoServerSelectionErrorRule.errorName &&
+			error.message &&
+			/^connection .*closed$/.test(error.message as string) === true
 		);
 	}
 }
@@ -287,32 +384,38 @@ class ConnectionClosedMongoErrorRule extends BaseMongoExceptionRetryRule {
 // Maintain the list from more strick faster comparison to less strict slower comparison
 export function createMongoErrorRetryRuleset(
 	retryRuleOverride: Map<string, boolean>,
+	connectionNotAvailableMode: ConnectionNotAvailableMode,
 ): IMongoExceptionRetryRule[] {
 	const mongoErrorRetryRuleset: IMongoExceptionRetryRule[] = [
 		// The rules are using exactly equal
 		new InternalErrorRule(retryRuleOverride),
-		new InternalBulkWriteErrorRule(retryRuleOverride),
 		new NoPrimaryInReplicasetRule(retryRuleOverride),
 		new RequestTimedNoRateLimitInfo(retryRuleOverride),
 		new RequestTimedOutWithRateLimitTrue(retryRuleOverride),
 		new RequestTimedOutWithRateLimitFalse(retryRuleOverride),
-		new RequestTimedOutBulkWriteErrorRule(retryRuleOverride),
 		new TopologyDestroyed(retryRuleOverride),
 		new UnauthorizedRule(retryRuleOverride),
+		new ConnectionPoolClearedErrorRule(retryRuleOverride),
 
 		// The rules are using multiple compare
 		new PoolDestroyedRule(retryRuleOverride),
+		new DuplicateKeyErrorRule(retryRuleOverride),
 
 		// The rules are using string startWith
-		new NoConnectionAvailableRule(retryRuleOverride),
+		new NoConnectionAvailableRule(retryRuleOverride, connectionNotAvailableMode),
 		new RequestSizeLargeRule(retryRuleOverride),
 		new RequestTimedOutWithHttpInfo(retryRuleOverride),
 
 		// The rules are using string contains
 		new ServiceUnavailableRule(retryRuleOverride),
+		new RequestTimedOutBulkWriteErrorRule(retryRuleOverride),
+		new InternalBulkWriteErrorRule(retryRuleOverride),
 
 		// The rules are using regex
 		new ConnectionClosedMongoErrorRule(retryRuleOverride),
+		new ConnectionTimedOutBulkWriteErrorRule(retryRuleOverride),
+		new MongoServerSelectionErrorRule(retryRuleOverride),
+		new NetworkTimedOutErrorRule(retryRuleOverride),
 	];
 	return mongoErrorRetryRuleset;
 }

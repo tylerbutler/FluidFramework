@@ -5,38 +5,41 @@
 
 import { strict as assert } from "assert";
 
-import { ContainerRuntime } from "@fluidframework/container-runtime";
-import { IFluidHandle } from "@fluidframework/core-interfaces";
+import { describeCompat } from "@fluid-private/test-version-utils";
+import { IContainer } from "@fluidframework/container-definitions/internal";
+import { ContainerRuntime } from "@fluidframework/container-runtime/internal";
 import {
+	ConfigTypes,
+	IConfigProviderBase,
+	IFluidHandle,
+} from "@fluidframework/core-interfaces";
+import type {
 	IDirectory,
 	IDirectoryValueChanged,
 	ISharedDirectory,
 	ISharedMap,
 	SharedDirectory,
-	SharedMap,
-} from "@fluidframework/map";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import { ConfigTypes, IConfigProviderBase } from "@fluidframework/telemetry-utils";
+} from "@fluidframework/map/internal";
 import {
-	ITestObjectProvider,
-	ITestContainerConfig,
-	DataObjectFactoryType,
-	ITestFluidObject,
 	ChannelFactoryRegistry,
-} from "@fluidframework/test-utils";
-import { describeFullCompat, describeNoCompat } from "@fluid-internal/test-version-utils";
-import { IContainer } from "@fluidframework/container-definitions";
+	DataObjectFactoryType,
+	ITestContainerConfig,
+	ITestFluidObject,
+	ITestObjectProvider,
+	getContainerEntryPointBackCompat,
+} from "@fluidframework/test-utils/internal";
 
-const directoryId = "directoryKey";
-const registry: ChannelFactoryRegistry = [[directoryId, SharedDirectory.getFactory()]];
-const testContainerConfig: ITestContainerConfig = {
-	fluidDataObjectType: DataObjectFactoryType.Test,
-	registry,
-};
+describeCompat("SharedDirectory", "FullCompat", (getTestObjectProvider, apis) => {
+	const { SharedMap, SharedDirectory } = apis.dds;
+	const directoryId = "directoryKey";
+	const registry: ChannelFactoryRegistry = [[directoryId, SharedDirectory.getFactory()]];
+	const testContainerConfig: ITestContainerConfig = {
+		fluidDataObjectType: DataObjectFactoryType.Test,
+		registry,
+	};
 
-describeFullCompat("SharedDirectory", (getTestObjectProvider) => {
 	let provider: ITestObjectProvider;
-	beforeEach(() => {
+	beforeEach("getTestObjectProvider", () => {
 		provider = getTestObjectProvider();
 	});
 	let dataObject1: ITestFluidObject;
@@ -44,20 +47,20 @@ describeFullCompat("SharedDirectory", (getTestObjectProvider) => {
 	let sharedDirectory2: ISharedDirectory;
 	let sharedDirectory3: ISharedDirectory;
 
-	beforeEach(async () => {
+	beforeEach("createContainers", async () => {
 		// Create a Container for the first client.
 		const container1 = await provider.makeTestContainer(testContainerConfig);
-		dataObject1 = await requestFluidObject<ITestFluidObject>(container1, "default");
+		dataObject1 = await getContainerEntryPointBackCompat<ITestFluidObject>(container1);
 		sharedDirectory1 = await dataObject1.getSharedObject<SharedDirectory>(directoryId);
 
 		// Load the Container that was created by the first client.
 		const container2 = await provider.loadTestContainer(testContainerConfig);
-		const dataObject2 = await requestFluidObject<ITestFluidObject>(container2, "default");
+		const dataObject2 = await getContainerEntryPointBackCompat<ITestFluidObject>(container2);
 		sharedDirectory2 = await dataObject2.getSharedObject<SharedDirectory>(directoryId);
 
 		// Load the Container that was created by the first client.
 		const container3 = await provider.loadTestContainer(testContainerConfig);
-		const dataObject3 = await requestFluidObject<ITestFluidObject>(container3, "default");
+		const dataObject3 = await getContainerEntryPointBackCompat<ITestFluidObject>(container3);
 		sharedDirectory3 = await dataObject3.getSharedObject<SharedDirectory>(directoryId);
 
 		await provider.ensureSynchronized();
@@ -106,14 +109,17 @@ describeFullCompat("SharedDirectory", (getTestObjectProvider) => {
 			// Directory was created in beforeEach
 			assert.ok(
 				sharedDirectory1,
+				// eslint-disable-next-line @typescript-eslint/no-base-to-string
 				`Couldn't find the directory in root1, instead got ${sharedDirectory1}`,
 			);
 			assert.ok(
 				sharedDirectory2,
+				// eslint-disable-next-line @typescript-eslint/no-base-to-string
 				`Couldn't find the directory in root2, instead got ${sharedDirectory2}`,
 			);
 			assert.ok(
 				sharedDirectory3,
+				// eslint-disable-next-line @typescript-eslint/no-base-to-string
 				`Couldn't find the directory in root3, instead got ${sharedDirectory3}`,
 			);
 		});
@@ -171,31 +177,19 @@ describeFullCompat("SharedDirectory", (getTestObjectProvider) => {
 			let user3ValueChangedCount: number = 0;
 			sharedDirectory1.on("valueChanged", (changed, local) => {
 				if (!local) {
-					assert.equal(
-						changed.key,
-						"testKey1",
-						"Incorrect value for testKey1 in container 1",
-					);
+					assert.equal(changed.key, "testKey1", "Incorrect value for testKey1 in container 1");
 					user1ValueChangedCount = user1ValueChangedCount + 1;
 				}
 			});
 			sharedDirectory2.on("valueChanged", (changed, local) => {
 				if (!local) {
-					assert.equal(
-						changed.key,
-						"testKey1",
-						"Incorrect value for testKey1 in container 2",
-					);
+					assert.equal(changed.key, "testKey1", "Incorrect value for testKey1 in container 2");
 					user2ValueChangedCount = user2ValueChangedCount + 1;
 				}
 			});
 			sharedDirectory3.on("valueChanged", (changed, local) => {
 				if (!local) {
-					assert.equal(
-						changed.key,
-						"testKey1",
-						"Incorrect value for testKey1 in container 3",
-					);
+					assert.equal(changed.key, "testKey1", "Incorrect value for testKey1 in container 3");
 					user3ValueChangedCount = user3ValueChangedCount + 1;
 				}
 			});
@@ -510,7 +504,7 @@ describeFullCompat("SharedDirectory", (getTestObjectProvider) => {
 			let root1SubDir;
 			let root2SubDir;
 			let root3SubDir;
-			beforeEach(async () => {
+			beforeEach("createSubdirectories", async () => {
 				sharedDirectory1.createSubDirectory("testSubDir").set("dummyKey", "dummyValue");
 
 				await provider.ensureSynchronized();
@@ -564,13 +558,7 @@ describeFullCompat("SharedDirectory", (getTestObjectProvider) => {
 				await provider.opProcessingController.processOutgoing();
 
 				root2SubDir.set("testKey2", "value2.2");
-				expectAllBeforeValues(
-					"testKey2",
-					"/testSubDir",
-					"value2.1",
-					"value2.2",
-					"value2.3",
-				);
+				expectAllBeforeValues("testKey2", "/testSubDir", "value2.1", "value2.2", "value2.3");
 
 				await provider.ensureSynchronized();
 
@@ -622,13 +610,7 @@ describeFullCompat("SharedDirectory", (getTestObjectProvider) => {
 				await provider.opProcessingController.processOutgoing();
 
 				root2SubDir.set("testKey2", "value2.2");
-				expectAllBeforeValues(
-					"testKey2",
-					"/testSubDir",
-					"value2.1",
-					"value2.2",
-					"value2.3",
-				);
+				expectAllBeforeValues("testKey2", "/testSubDir", "value2.1", "value2.2", "value2.3");
 
 				await provider.ensureSynchronized();
 
@@ -783,20 +765,12 @@ describeFullCompat("SharedDirectory", (getTestObjectProvider) => {
 
 	describe("Attachment behavior", () => {
 		it("attaches if referring SharedDirectory becomes attached or is already attached", async () => {
-			const detachedDirectory1: ISharedDirectory = SharedDirectory.create(
-				dataObject1.runtime,
-			);
-			const detachedDirectory2: ISharedDirectory = SharedDirectory.create(
-				dataObject1.runtime,
-			);
+			const detachedDirectory1: ISharedDirectory = SharedDirectory.create(dataObject1.runtime);
+			const detachedDirectory2: ISharedDirectory = SharedDirectory.create(dataObject1.runtime);
 
 			// When an unattached directory refers to another unattached directory, both remain unattached
 			detachedDirectory1.set("newSharedDirectory", detachedDirectory2.handle);
-			assert.equal(
-				sharedDirectory1.isAttached(),
-				true,
-				"sharedDirectory1 should be attached",
-			);
+			assert.equal(sharedDirectory1.isAttached(), true, "sharedDirectory1 should be attached");
 			assert.equal(
 				detachedDirectory1.isAttached(),
 				false,
@@ -811,11 +785,7 @@ describeFullCompat("SharedDirectory", (getTestObjectProvider) => {
 			// When referring directory becomes attached, the referred directory becomes attached
 			// and the attachment transitively passes to a second referred directory
 			sharedDirectory1.set("newSharedDirectory", detachedDirectory1.handle);
-			assert.equal(
-				sharedDirectory1.isAttached(),
-				true,
-				"sharedDirectory1 should be attached",
-			);
+			assert.equal(sharedDirectory1.isAttached(), true, "sharedDirectory1 should be attached");
 			assert.equal(
 				detachedDirectory1.isAttached(),
 				true,
@@ -830,379 +800,556 @@ describeFullCompat("SharedDirectory", (getTestObjectProvider) => {
 	});
 });
 
-describeNoCompat("SharedDirectory orderSequentially", (getTestObjectProvider) => {
-	let provider: ITestObjectProvider;
-	beforeEach(() => {
-		provider = getTestObjectProvider();
-	});
-
-	let container: IContainer;
-	let dataObject: ITestFluidObject;
-	let sharedDir: SharedDirectory;
-	let containerRuntime: ContainerRuntime;
-	let clearEventCount: number;
-	let changedEventData: IDirectoryValueChanged[];
-	let subDirCreatedEventData: string[];
-	let subDirDeletedEventData: string[];
-	let undisposedEventData: string[];
-	let disposedEventData: string[];
-
-	const configProvider = (settings: Record<string, ConfigTypes>): IConfigProviderBase => ({
-		getRawConfig: (name: string): ConfigTypes => settings[name],
-	});
-	const errorMessage = "callback failure";
-
-	beforeEach(async () => {
-		const configWithFeatureGates = {
-			...testContainerConfig,
-			loaderProps: {
-				configProvider: configProvider({
-					"Fluid.ContainerRuntime.EnableRollback": true,
-				}),
-			},
+describeCompat(
+	"SharedDirectory orderSequentially",
+	"NoCompat",
+	(getTestObjectProvider, apis) => {
+		const { SharedDirectory } = apis.dds;
+		const directoryId = "directoryKey";
+		const registry: ChannelFactoryRegistry = [[directoryId, SharedDirectory.getFactory()]];
+		const testContainerConfig: ITestContainerConfig = {
+			fluidDataObjectType: DataObjectFactoryType.Test,
+			registry,
 		};
-		container = await provider.makeTestContainer(configWithFeatureGates);
-		dataObject = await requestFluidObject<ITestFluidObject>(container, "default");
-		sharedDir = await dataObject.getSharedObject<SharedDirectory>(directoryId);
-		containerRuntime = dataObject.context.containerRuntime as ContainerRuntime;
-		clearEventCount = 0;
-		changedEventData = [];
-		subDirCreatedEventData = [];
-		subDirDeletedEventData = [];
-		undisposedEventData = [];
-		disposedEventData = [];
-		sharedDir.on("valueChanged", (changed, _local, _target) => {
-			changedEventData.push(changed);
-		});
-		sharedDir.on("clear", (local, target) => {
-			clearEventCount++;
-		});
-		sharedDir.on("subDirectoryCreated", (path, _local, _target) => {
-			subDirCreatedEventData.push(path);
-		});
-		sharedDir.on("subDirectoryDeleted", (path, _local, _target) => {
-			subDirDeletedEventData.push(path);
-		});
-	});
 
-	it("Should rollback set", () => {
-		let error: Error | undefined;
-		try {
-			containerRuntime.orderSequentially(() => {
-				sharedDir.set("key", 0);
-				throw new Error(errorMessage);
+		let provider: ITestObjectProvider;
+		beforeEach("getTestObjectProvider", () => {
+			provider = getTestObjectProvider();
+		});
+
+		let container: IContainer;
+		let dataObject: ITestFluidObject;
+		let sharedDir: ISharedDirectory;
+		let containerRuntime: ContainerRuntime;
+		let clearEventCount: number;
+		let changedEventData: IDirectoryValueChanged[];
+		let subDirCreatedEventData: string[];
+		let subDirDeletedEventData: string[];
+		let undisposedEventData: string[];
+		let disposedEventData: string[];
+
+		const configProvider = (settings: Record<string, ConfigTypes>): IConfigProviderBase => ({
+			getRawConfig: (name: string): ConfigTypes => settings[name],
+		});
+		const errorMessage = "callback failure";
+
+		beforeEach("setup", async () => {
+			const configWithFeatureGates = {
+				...testContainerConfig,
+				loaderProps: {
+					configProvider: configProvider({
+						"Fluid.ContainerRuntime.EnableRollback": true,
+					}),
+				},
+			};
+			container = await provider.makeTestContainer(configWithFeatureGates);
+			dataObject = (await container.getEntryPoint()) as ITestFluidObject;
+			sharedDir = await dataObject.getSharedObject<SharedDirectory>(directoryId);
+			containerRuntime = dataObject.context.containerRuntime as ContainerRuntime;
+			clearEventCount = 0;
+			changedEventData = [];
+			subDirCreatedEventData = [];
+			subDirDeletedEventData = [];
+			undisposedEventData = [];
+			disposedEventData = [];
+			sharedDir.on("valueChanged", (changed, _local, _target) => {
+				changedEventData.push(changed);
 			});
-		} catch (err) {
-			error = err as Error;
+			sharedDir.on("clear", (local, target) => {
+				clearEventCount++;
+			});
+			sharedDir.on("subDirectoryCreated", (path, _local, _target) => {
+				subDirCreatedEventData.push(path);
+			});
+			sharedDir.on("subDirectoryDeleted", (path, _local, _target) => {
+				subDirDeletedEventData.push(path);
+			});
+		});
+
+		it("Should rollback set", () => {
+			let error: Error | undefined;
+			try {
+				containerRuntime.orderSequentially(() => {
+					sharedDir.set("key", 0);
+					throw new Error(errorMessage);
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			assert.notEqual(error, undefined, "No error");
+			assert.equal(error?.message, errorMessage, "Unexpected error message");
+			assert.equal(containerRuntime.disposed, false, "Container disposed");
+			assert.equal(sharedDir.size, 0);
+			assert.equal(sharedDir.has("key"), false);
+			assert.equal(clearEventCount, 0);
+			assert.equal(changedEventData.length, 2);
+			assert.equal(changedEventData[0].key, "key");
+			assert.equal(changedEventData[0].previousValue, undefined);
+			// rollback
+			assert.equal(changedEventData[1].key, "key");
+			assert.equal(changedEventData[1].previousValue, 0);
+		});
+
+		it("Should rollback set to prior value", () => {
+			sharedDir.set("key", "old");
+			let error: Error | undefined;
+			try {
+				containerRuntime.orderSequentially(() => {
+					sharedDir.set("key", "new");
+					sharedDir.set("key", "last");
+					throw new Error("callback failure");
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			assert.notEqual(error, undefined, "No error");
+			assert.equal(error?.message, errorMessage, "Unexpected error message");
+			assert.equal(containerRuntime.disposed, false);
+			assert.equal(sharedDir.size, 1);
+			assert.equal(sharedDir.get("key"), "old", `Unexpected value ${sharedDir.get("key")}`);
+			assert.equal(clearEventCount, 0);
+			assert.equal(changedEventData.length, 5);
+			assert.equal(changedEventData[0].key, "key");
+			assert.equal(changedEventData[0].previousValue, undefined);
+			assert.equal(changedEventData[1].key, "key");
+			assert.equal(changedEventData[1].previousValue, "old");
+			assert.equal(changedEventData[2].key, "key");
+			assert.equal(changedEventData[2].previousValue, "new");
+			// rollback
+			assert.equal(changedEventData[3].key, "key");
+			assert.equal(changedEventData[3].previousValue, "last");
+			assert.equal(changedEventData[4].key, "key");
+			assert.equal(changedEventData[4].previousValue, "new");
+		});
+
+		it("Should rollback delete", () => {
+			sharedDir.set("key", "old");
+			let error: Error | undefined;
+			try {
+				containerRuntime.orderSequentially(() => {
+					sharedDir.delete("key");
+					throw new Error("callback failure");
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			assert.notEqual(error, undefined, "No error");
+			assert.equal(error?.message, errorMessage, "Unexpected error message");
+			assert.equal(containerRuntime.disposed, false);
+			assert.equal(sharedDir.size, 1);
+			assert.equal(sharedDir.get("key"), "old", `Unexpected value ${sharedDir.get("key")}`);
+			assert.equal(clearEventCount, 0);
+			assert.equal(changedEventData.length, 3);
+			assert.equal(changedEventData[0].key, "key");
+			assert.equal(changedEventData[0].previousValue, undefined);
+			assert.equal(changedEventData[1].key, "key");
+			assert.equal(changedEventData[1].previousValue, "old");
+			// rollback
+			assert.equal(changedEventData[2].key, "key");
+			assert.equal(changedEventData[2].previousValue, undefined);
+		});
+
+		it("Should rollback clear", () => {
+			sharedDir.set("key1", "old1");
+			sharedDir.set("key2", "old2");
+			let error: Error | undefined;
+			try {
+				containerRuntime.orderSequentially(() => {
+					sharedDir.clear();
+					throw new Error("callback failure");
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			assert.notEqual(error, undefined, "No error");
+			assert.equal(error?.message, errorMessage, "Unexpected error message");
+			assert.equal(containerRuntime.disposed, false);
+			assert.equal(sharedDir.size, 2);
+			assert.equal(sharedDir.get("key1"), "old1", `Unexpected value ${sharedDir.get("key1")}`);
+			assert.equal(sharedDir.get("key2"), "old2", `Unexpected value ${sharedDir.get("key2")}`);
+			assert.equal(changedEventData.length, 4);
+			assert.equal(changedEventData[0].key, "key1");
+			assert.equal(changedEventData[0].previousValue, undefined);
+			assert.equal(changedEventData[1].key, "key2");
+			assert.equal(changedEventData[1].previousValue, undefined);
+			assert.equal(clearEventCount, 1);
+			// rollback
+			assert.equal(changedEventData[2].key, "key1");
+			assert.equal(changedEventData[2].previousValue, undefined);
+			assert.equal(changedEventData[3].key, "key2");
+			assert.equal(changedEventData[3].previousValue, undefined);
+		});
+
+		it("Should rollback newly created subdirectory", () => {
+			let error: Error | undefined;
+			try {
+				containerRuntime.orderSequentially(() => {
+					sharedDir.createSubDirectory("subDirName");
+					throw new Error("callback failure");
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			assert.notEqual(error, undefined, "No error");
+			assert.equal(error?.message, errorMessage, "Unexpected error message");
+			assert.equal(containerRuntime.disposed, false);
+			assert.equal(sharedDir.countSubDirectory?.(), 0);
+			assert.equal(subDirCreatedEventData.length, 1);
+			assert.equal(subDirCreatedEventData[0], "subDirName");
+			// rollback
+			assert.equal(subDirDeletedEventData.length, 1);
+			assert.equal(subDirDeletedEventData[0], "subDirName");
+		});
+
+		it("Should not rollback creating existing subdirectory", () => {
+			let error: Error | undefined;
+			const subDir = sharedDir.createSubDirectory("subDirName");
+			subDir.on("undisposed", (value: IDirectory) => {
+				undisposedEventData.push(value.absolutePath);
+			});
+			subDir.on("disposed", (value: IDirectory) => {
+				disposedEventData.push(value.absolutePath);
+			});
+			try {
+				containerRuntime.orderSequentially(() => {
+					sharedDir.createSubDirectory("subDirName");
+					throw new Error("callback failure");
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			assert.notEqual(error, undefined, "No error");
+			assert.equal(error?.message, errorMessage, "Unexpected error message");
+			assert.equal(containerRuntime.disposed, false);
+			assert.equal(sharedDir.countSubDirectory?.(), 1);
+			assert.notEqual(sharedDir.getSubDirectory("subDirName"), undefined);
+			assert.equal(subDirCreatedEventData.length, 1);
+			assert.equal(subDirCreatedEventData[0], "subDirName");
+			// rollback
+			assert.equal(subDirDeletedEventData.length, 0);
+			// ensure that dispose/undispose aren't fired
+			assert.equal(undisposedEventData.length, 0);
+			assert.equal(disposedEventData.length, 0);
+		});
+
+		it("Should rollback created subdirectory with content", () => {
+			let error: Error | undefined;
+			try {
+				containerRuntime.orderSequentially(() => {
+					const subdir = sharedDir.createSubDirectory("subDirName");
+					subdir.set("key1", "content1");
+					subdir.createSubDirectory("subSubDirName");
+					throw new Error("callback failure");
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			assert.notEqual(error, undefined, "No error");
+			assert.equal(error?.message, errorMessage, "Unexpected error message");
+			assert.equal(containerRuntime.disposed, false);
+			assert.equal(sharedDir.countSubDirectory?.(), 0);
+			assert.equal(
+				subDirCreatedEventData.length,
+				2,
+				`subDirCreatedEventData.length: ${subDirCreatedEventData.length}`,
+			);
+			assert.equal(subDirCreatedEventData[0], "subDirName");
+			assert.equal(subDirCreatedEventData[1], "subDirName/subSubDirName");
+			assert.equal(changedEventData.length, 2);
+			assert.equal(changedEventData[0].key, "key1");
+			assert.equal(changedEventData[0].previousValue, undefined);
+			// rollback
+			assert.equal(changedEventData[1].key, "key1");
+			assert.equal(changedEventData[1].previousValue, "content1");
+			assert.equal(
+				subDirDeletedEventData.length,
+				2,
+				`subDirDeletedEventData.length: ${subDirDeletedEventData.length}`,
+			);
+			assert.equal(subDirDeletedEventData[0], "subDirName/subSubDirName");
+			assert.equal(subDirDeletedEventData[1], "subDirName");
+		});
+
+		it("Should rollback deleted subdirectory", () => {
+			let error: Error | undefined;
+			const subDir = sharedDir.createSubDirectory("subDirName");
+			subDir.on("undisposed", (value: IDirectory) => {
+				undisposedEventData.push(value.absolutePath);
+			});
+			subDir.on("disposed", (value: IDirectory) => {
+				disposedEventData.push(value.absolutePath);
+			});
+			try {
+				containerRuntime.orderSequentially(() => {
+					sharedDir.deleteSubDirectory("subDirName");
+					throw new Error("callback failure");
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			assert.notEqual(error, undefined, "No error");
+			assert.equal(error?.message, errorMessage, "Unexpected error message");
+			assert.equal(containerRuntime.disposed, false);
+			assert.equal(sharedDir.countSubDirectory?.(), 1);
+			assert.notEqual(sharedDir.getSubDirectory("subDirName"), undefined);
+			assert.equal(subDirCreatedEventData.length, 2);
+			assert.equal(subDirCreatedEventData[0], "subDirName");
+			assert.equal(subDirDeletedEventData.length, 1);
+			assert.equal(subDirDeletedEventData[0], "subDirName");
+			// rollback
+			assert.equal(subDirCreatedEventData[1], "subDirName");
+			assert.equal(undisposedEventData.length, 1);
+			assert.equal(undisposedEventData[0], "/subDirName");
+			assert.equal(disposedEventData.length, 1);
+		});
+
+		it("Should not rollback deleting nonexistent subdirectory", () => {
+			let error: Error | undefined;
+			try {
+				containerRuntime.orderSequentially(() => {
+					sharedDir.deleteSubDirectory("subDirName");
+					throw new Error("callback failure");
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			assert.notEqual(error, undefined, "No error");
+			assert.equal(error?.message, errorMessage, "Unexpected error message");
+			assert.equal(containerRuntime.disposed, false);
+			assert.equal(sharedDir.countSubDirectory?.(), 0);
+			assert.equal(subDirDeletedEventData.length, 0);
+			// rollback
+			assert.equal(subDirCreatedEventData.length, 0);
+		});
+
+		it("Should rollback deleted subdirectory with content", () => {
+			let error: Error | undefined;
+			const subdir = sharedDir.createSubDirectory("subDirName");
+			subdir.on("undisposed", (value: IDirectory) => {
+				undisposedEventData.push(value.absolutePath);
+			});
+			subdir.on("disposed", (value: IDirectory) => {
+				disposedEventData.push(value.absolutePath);
+			});
+			subdir.set("key1", "content1");
+			const subsubdir = subdir.createSubDirectory("subSubDirName");
+			try {
+				containerRuntime.orderSequentially(() => {
+					sharedDir.deleteSubDirectory("subDirName");
+					throw new Error("callback failure");
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			assert.notEqual(error, undefined, "No error");
+			assert.equal(error?.message, errorMessage, "Unexpected error message");
+			assert.equal(containerRuntime.disposed, false);
+			assert.equal(sharedDir.countSubDirectory?.(), 1);
+			const readSubdir = sharedDir.getSubDirectory("subDirName");
+			assert.equal(readSubdir, subdir);
+			assert.equal(subdir.size, 1);
+			assert.equal(subdir.get("key1"), "content1");
+			assert.equal(subdir.countSubDirectory ? subdir.countSubDirectory() : 0, 1);
+			assert.notEqual(subdir.getSubDirectory("subSubDirName"), undefined);
+			assert.equal(subDirCreatedEventData.length, 3);
+			assert.equal(subDirCreatedEventData[0], "subDirName");
+			assert.equal(subDirCreatedEventData[1], "subDirName/subSubDirName");
+			assert.equal(
+				changedEventData.length,
+				1,
+				`changedEventData.length:${changedEventData.length}`,
+			);
+			assert.equal(changedEventData[0].key, "key1");
+			assert.equal(changedEventData[0].previousValue, undefined);
+			assert.equal(subDirDeletedEventData.length, 1);
+			assert.equal(subDirDeletedEventData[0], "subDirName");
+			// rollback
+			assert.equal(subDirCreatedEventData[2], "subDirName");
+			assert.equal(undisposedEventData.length, 1);
+			assert.equal(undisposedEventData[0], "/subDirName");
+			assert.equal(disposedEventData.length, 1);
+
+			// verify we still get events on restored content
+			readSubdir.set("key2", "content2");
+
+			assert.equal(changedEventData.length, 2);
+			assert.equal(changedEventData[1].key, "key2");
+			assert.equal(changedEventData[1].previousValue, undefined);
+		});
+
+		it("Should rollback deleted subdirectories with the original order", () => {
+			let error: Error | undefined;
+
+			sharedDir.createSubDirectory("dir2");
+			sharedDir.createSubDirectory("dir3");
+			sharedDir.createSubDirectory("dir1");
+
+			let dirNames = Array.from(sharedDir.subdirectories()).map(([dirName, _]) => dirName);
+			assert.deepStrictEqual(dirNames, ["dir2", "dir3", "dir1"]);
+
+			try {
+				containerRuntime.orderSequentially(() => {
+					sharedDir.deleteSubDirectory("dir3");
+					throw new Error("callback failure");
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			// rollback
+			dirNames = Array.from(sharedDir.subdirectories()).map(([dirName, _]) => dirName);
+			assert.deepStrictEqual(dirNames, ["dir2", "dir3", "dir1"]);
+		});
+
+		it("Should rollback deleted subdirectory when multiple subdirectories exist", () => {
+			let error: Error | undefined;
+
+			sharedDir.createSubDirectory("dir2");
+			sharedDir.createSubDirectory("dir3");
+			sharedDir.createSubDirectory("dir1");
+
+			try {
+				containerRuntime.orderSequentially(() => {
+					sharedDir.deleteSubDirectory("dir3");
+					throw new Error("callback failure");
+				});
+			} catch (err) {
+				error = err as Error;
+			}
+
+			assert.notEqual(error, undefined, "No error");
+			assert.equal(error?.message, errorMessage, "Unexpected error message");
+			assert.equal(containerRuntime.disposed, false);
+			// rollback
+			assert.equal(sharedDir.countSubDirectory?.(), 3);
+			assert.equal(subDirCreatedEventData.length, 4);
+			assert.deepStrictEqual(subDirCreatedEventData, ["dir2", "dir3", "dir1", "dir3"]);
+			assert.equal(subDirDeletedEventData.length, 1);
+			assert.equal(subDirDeletedEventData[0], "dir3");
+		});
+	},
+);
+
+describeCompat(
+	"SharedDirectory ordering maintenance",
+	"NoCompat",
+	(getTestObjectProvider, apis) => {
+		const { SharedDirectory } = apis.dds;
+		const directoryId = "directoryKey";
+		const registry: ChannelFactoryRegistry = [[directoryId, SharedDirectory.getFactory()]];
+		const testContainerConfig: ITestContainerConfig = {
+			fluidDataObjectType: DataObjectFactoryType.Test,
+			registry,
+		};
+
+		let provider: ITestObjectProvider;
+		beforeEach("getTestObjectProvider", () => {
+			provider = getTestObjectProvider();
+		});
+		let container1: IContainer;
+		let container2: IContainer;
+		let container3: IContainer;
+
+		let sharedDirectory1: ISharedDirectory;
+		let sharedDirectory2: ISharedDirectory;
+		let sharedDirectory3: ISharedDirectory;
+
+		beforeEach("createSharedDirectories", async () => {
+			// Create a Container for the first client.
+			container1 = await provider.makeTestContainer(testContainerConfig);
+			const dataObject1 = (await container1.getEntryPoint()) as ITestFluidObject;
+			sharedDirectory1 = await dataObject1.getSharedObject<SharedDirectory>(directoryId);
+
+			// Load the Container that was created by the first client.
+			container2 = await provider.loadTestContainer(testContainerConfig);
+			const dataObject2 = (await container2.getEntryPoint()) as ITestFluidObject;
+			sharedDirectory2 = await dataObject2.getSharedObject<SharedDirectory>(directoryId);
+
+			// Load the Container that was created by the first client.
+			container3 = await provider.loadTestContainer(testContainerConfig);
+			const dataObject3 = (await container3.getEntryPoint()) as ITestFluidObject;
+			sharedDirectory3 = await dataObject3.getSharedObject<SharedDirectory>(directoryId);
+
+			await provider.ensureSynchronized();
+		});
+
+		function expectSubdirsOrder(
+			directory: ISharedDirectory,
+			subdirsInOrder: string[],
+			path?: string,
+		) {
+			const dir = path ? directory.getWorkingDirectory(path) : directory;
+			assert(dir);
+
+			const subdirs = Array.from(dir.subdirectories()).map(([subdirName, _]) => {
+				return subdirName;
+			});
+			assert.deepEqual(subdirs, subdirsInOrder, "Incorrect order of subdirs in the container");
 		}
 
-		assert.notEqual(error, undefined, "No error");
-		assert.equal(error?.message, errorMessage, "Unexpected error message");
-		assert.equal(containerRuntime.disposed, false, "Container disposed");
-		assert.equal(sharedDir.size, 0);
-		assert.equal(sharedDir.has("key"), false);
-		assert.equal(clearEventCount, 0);
-		assert.equal(changedEventData.length, 2);
-		assert.equal(changedEventData[0].key, "key");
-		assert.equal(changedEventData[0].previousValue, undefined);
-		// rollback
-		assert.equal(changedEventData[1].key, "key");
-		assert.equal(changedEventData[1].previousValue, 0);
-	});
-
-	it("Should rollback set to prior value", () => {
-		sharedDir.set("key", "old");
-		let error: Error | undefined;
-		try {
-			containerRuntime.orderSequentially(() => {
-				sharedDir.set("key", "new");
-				sharedDir.set("key", "last");
-				throw new Error("callback failure");
-			});
-		} catch (err) {
-			error = err as Error;
+		function expectAllSubdirsOrder(dirsInOrder: string[], path?: string) {
+			expectSubdirsOrder(sharedDirectory1, dirsInOrder, path);
+			expectSubdirsOrder(sharedDirectory2, dirsInOrder, path);
+			expectSubdirsOrder(sharedDirectory3, dirsInOrder, path);
 		}
 
-		assert.notEqual(error, undefined, "No error");
-		assert.equal(error?.message, errorMessage, "Unexpected error message");
-		assert.equal(containerRuntime.disposed, false);
-		assert.equal(sharedDir.size, 1);
-		assert.equal(sharedDir.get("key"), "old", `Unexpected value ${sharedDir.get("key")}`);
-		assert.equal(clearEventCount, 0);
-		assert.equal(changedEventData.length, 5);
-		assert.equal(changedEventData[0].key, "key");
-		assert.equal(changedEventData[0].previousValue, undefined);
-		assert.equal(changedEventData[1].key, "key");
-		assert.equal(changedEventData[1].previousValue, "old");
-		assert.equal(changedEventData[2].key, "key");
-		assert.equal(changedEventData[2].previousValue, "new");
-		// rollback
-		assert.equal(changedEventData[3].key, "key");
-		assert.equal(changedEventData[3].previousValue, "last");
-		assert.equal(changedEventData[4].key, "key");
-		assert.equal(changedEventData[4].previousValue, "new");
-	});
+		async function pauseAllContainers() {
+			await container1.deltaManager.inbound.pause();
+			await container2.deltaManager.inbound.pause();
+			await container3.deltaManager.inbound.pause();
 
-	it("Should rollback delete", () => {
-		sharedDir.set("key", "old");
-		let error: Error | undefined;
-		try {
-			containerRuntime.orderSequentially(() => {
-				sharedDir.delete("key");
-				throw new Error("callback failure");
-			});
-		} catch (err) {
-			error = err as Error;
+			await container1.deltaManager.outbound.pause();
+			await container2.deltaManager.outbound.pause();
+			await container3.deltaManager.outbound.pause();
 		}
 
-		assert.notEqual(error, undefined, "No error");
-		assert.equal(error?.message, errorMessage, "Unexpected error message");
-		assert.equal(containerRuntime.disposed, false);
-		assert.equal(sharedDir.size, 1);
-		assert.equal(sharedDir.get("key"), "old", `Unexpected value ${sharedDir.get("key")}`);
-		assert.equal(clearEventCount, 0);
-		assert.equal(changedEventData.length, 3);
-		assert.equal(changedEventData[0].key, "key");
-		assert.equal(changedEventData[0].previousValue, undefined);
-		assert.equal(changedEventData[1].key, "key");
-		assert.equal(changedEventData[1].previousValue, "old");
-		// rollback
-		assert.equal(changedEventData[2].key, "key");
-		assert.equal(changedEventData[2].previousValue, undefined);
-	});
-
-	it("Should rollback clear", () => {
-		sharedDir.set("key1", "old1");
-		sharedDir.set("key2", "old2");
-		let error: Error | undefined;
-		try {
-			containerRuntime.orderSequentially(() => {
-				sharedDir.clear();
-				throw new Error("callback failure");
-			});
-		} catch (err) {
-			error = err as Error;
+		function resumeContainer(c: IContainer) {
+			c.deltaManager.inbound.resume();
+			c.deltaManager.outbound.resume();
 		}
 
-		assert.notEqual(error, undefined, "No error");
-		assert.equal(error?.message, errorMessage, "Unexpected error message");
-		assert.equal(containerRuntime.disposed, false);
-		assert.equal(sharedDir.size, 2);
-		assert.equal(sharedDir.get("key1"), "old1", `Unexpected value ${sharedDir.get("key1")}`);
-		assert.equal(sharedDir.get("key2"), "old2", `Unexpected value ${sharedDir.get("key2")}`);
-		assert.equal(changedEventData.length, 4);
-		assert.equal(changedEventData[0].key, "key1");
-		assert.equal(changedEventData[0].previousValue, undefined);
-		assert.equal(changedEventData[1].key, "key2");
-		assert.equal(changedEventData[1].previousValue, undefined);
-		assert.equal(clearEventCount, 1);
-		// rollback
-		assert.equal(changedEventData[2].key, "key1");
-		assert.equal(changedEventData[2].previousValue, undefined);
-		assert.equal(changedEventData[3].key, "key2");
-		assert.equal(changedEventData[3].previousValue, undefined);
-	});
-
-	it("Should rollback newly created subdirectory", () => {
-		let error: Error | undefined;
-		try {
-			containerRuntime.orderSequentially(() => {
-				sharedDir.createSubDirectory("subDirName");
-				throw new Error("callback failure");
-			});
-		} catch (err) {
-			error = err as Error;
+		/**
+		 * Wait for the message sent by the current container to be sequenced.
+		 */
+		async function waitForContainerSave(c: IContainer) {
+			if (!c.isDirty) {
+				return;
+			}
+			await new Promise<void>((resolve) => c.once("saved", () => resolve()));
 		}
 
-		assert.notEqual(error, undefined, "No error");
-		assert.equal(error?.message, errorMessage, "Unexpected error message");
-		assert.equal(containerRuntime.disposed, false);
-		assert.equal(sharedDir.countSubDirectory(), 0);
-		assert.equal(subDirCreatedEventData.length, 1);
-		assert.equal(subDirCreatedEventData[0], "subDirName");
-		// rollback
-		assert.equal(subDirDeletedEventData.length, 1);
-		assert.equal(subDirDeletedEventData[0], "subDirName");
-	});
+		it("Eventual consistency in ordering with subdirectories creation/deletion", async () => {
+			// Pause to not allow ops to be processed while we maintained them in order.
+			await pauseAllContainers();
 
-	it("Should not rollback creating existing subdirectory", () => {
-		let error: Error | undefined;
-		const subDir = sharedDir.createSubDirectory("subDirName");
-		subDir.on("undisposed", (value: IDirectory) => {
-			undisposedEventData.push(value.absolutePath);
+			resumeContainer(container1);
+			sharedDirectory1.createSubDirectory("dir2");
+			await waitForContainerSave(container1);
+
+			resumeContainer(container2);
+			sharedDirectory2.createSubDirectory("dir1");
+			sharedDirectory2.createSubDirectory("dir2");
+			await waitForContainerSave(container2);
+
+			resumeContainer(container3);
+			sharedDirectory3.createSubDirectory("dir3");
+			sharedDirectory3.createSubDirectory("dir2");
+			await waitForContainerSave(container3);
+
+			await provider.opProcessingController.processIncoming();
+			await provider.ensureSynchronized();
+
+			expectAllSubdirsOrder(["dir2", "dir1", "dir3"]);
 		});
-		subDir.on("disposed", (value: IDirectory) => {
-			disposedEventData.push(value.absolutePath);
-		});
-		try {
-			containerRuntime.orderSequentially(() => {
-				sharedDir.createSubDirectory("subDirName");
-				throw new Error("callback failure");
-			});
-		} catch (err) {
-			error = err as Error;
-		}
-
-		assert.notEqual(error, undefined, "No error");
-		assert.equal(error?.message, errorMessage, "Unexpected error message");
-		assert.equal(containerRuntime.disposed, false);
-		assert.equal(sharedDir.countSubDirectory(), 1);
-		assert.notEqual(sharedDir.getSubDirectory("subDirName"), undefined);
-		assert.equal(subDirCreatedEventData.length, 1);
-		assert.equal(subDirCreatedEventData[0], "subDirName");
-		// rollback
-		assert.equal(subDirDeletedEventData.length, 0);
-		// ensure that dispose/undispose aren't fired
-		assert.equal(undisposedEventData.length, 0);
-		assert.equal(disposedEventData.length, 0);
-	});
-
-	it("Should rollback created subdirectory with content", () => {
-		let error: Error | undefined;
-		try {
-			containerRuntime.orderSequentially(() => {
-				const subdir = sharedDir.createSubDirectory("subDirName");
-				subdir.set("key1", "content1");
-				subdir.createSubDirectory("subSubDirName");
-				throw new Error("callback failure");
-			});
-		} catch (err) {
-			error = err as Error;
-		}
-
-		assert.notEqual(error, undefined, "No error");
-		assert.equal(error?.message, errorMessage, "Unexpected error message");
-		assert.equal(containerRuntime.disposed, false);
-		assert.equal(sharedDir.countSubDirectory(), 0);
-		assert.equal(
-			subDirCreatedEventData.length,
-			2,
-			`subDirCreatedEventData.length: ${subDirCreatedEventData.length}`,
-		);
-		assert.equal(subDirCreatedEventData[0], "subDirName");
-		assert.equal(subDirCreatedEventData[1], "subDirName/subSubDirName");
-		assert.equal(changedEventData.length, 2);
-		assert.equal(changedEventData[0].key, "key1");
-		assert.equal(changedEventData[0].previousValue, undefined);
-		// rollback
-		assert.equal(changedEventData[1].key, "key1");
-		assert.equal(changedEventData[1].previousValue, "content1");
-		assert.equal(
-			subDirDeletedEventData.length,
-			2,
-			`subDirDeletedEventData.length: ${subDirDeletedEventData.length}`,
-		);
-		assert.equal(subDirDeletedEventData[0], "subDirName/subSubDirName");
-		assert.equal(subDirDeletedEventData[1], "subDirName");
-	});
-
-	it("Should rollback deleted subdirectory", () => {
-		let error: Error | undefined;
-		const subDir = sharedDir.createSubDirectory("subDirName");
-		subDir.on("undisposed", (value: IDirectory) => {
-			undisposedEventData.push(value.absolutePath);
-		});
-		subDir.on("disposed", (value: IDirectory) => {
-			disposedEventData.push(value.absolutePath);
-		});
-		try {
-			containerRuntime.orderSequentially(() => {
-				sharedDir.deleteSubDirectory("subDirName");
-				throw new Error("callback failure");
-			});
-		} catch (err) {
-			error = err as Error;
-		}
-
-		assert.notEqual(error, undefined, "No error");
-		assert.equal(error?.message, errorMessage, "Unexpected error message");
-		assert.equal(containerRuntime.disposed, false);
-		assert.equal(sharedDir.countSubDirectory(), 1);
-		assert.notEqual(sharedDir.getSubDirectory("subDirName"), undefined);
-		assert.equal(subDirCreatedEventData.length, 2);
-		assert.equal(subDirCreatedEventData[0], "subDirName");
-		assert.equal(subDirDeletedEventData.length, 1);
-		assert.equal(subDirDeletedEventData[0], "subDirName");
-		// rollback
-		assert.equal(subDirCreatedEventData[1], "subDirName");
-		assert.equal(undisposedEventData.length, 1);
-		assert.equal(undisposedEventData[0], "/subDirName");
-		assert.equal(disposedEventData.length, 1);
-	});
-
-	it("Should not rollback deleting nonexistent subdirectory", () => {
-		let error: Error | undefined;
-		try {
-			containerRuntime.orderSequentially(() => {
-				sharedDir.deleteSubDirectory("subDirName");
-				throw new Error("callback failure");
-			});
-		} catch (err) {
-			error = err as Error;
-		}
-
-		assert.notEqual(error, undefined, "No error");
-		assert.equal(error?.message, errorMessage, "Unexpected error message");
-		assert.equal(containerRuntime.disposed, false);
-		assert.equal(sharedDir.countSubDirectory(), 0);
-		assert.equal(subDirDeletedEventData.length, 0);
-		// rollback
-		assert.equal(subDirCreatedEventData.length, 0);
-	});
-
-	it("Should rollback deleted subdirectory with content", () => {
-		let error: Error | undefined;
-		const subdir = sharedDir.createSubDirectory("subDirName");
-		subdir.on("undisposed", (value: IDirectory) => {
-			undisposedEventData.push(value.absolutePath);
-		});
-		subdir.on("disposed", (value: IDirectory) => {
-			disposedEventData.push(value.absolutePath);
-		});
-		subdir.set("key1", "content1");
-		const subsubdir = subdir.createSubDirectory("subSubDirName");
-		try {
-			containerRuntime.orderSequentially(() => {
-				sharedDir.deleteSubDirectory("subDirName");
-				throw new Error("callback failure");
-			});
-		} catch (err) {
-			error = err as Error;
-		}
-
-		assert.notEqual(error, undefined, "No error");
-		assert.equal(error?.message, errorMessage, "Unexpected error message");
-		assert.equal(containerRuntime.disposed, false);
-		assert.equal(sharedDir.countSubDirectory(), 1);
-		const readSubdir = sharedDir.getSubDirectory("subDirName");
-		assert.equal(readSubdir, subdir);
-		assert.equal(subdir.size, 1);
-		assert.equal(subdir.get("key1"), "content1");
-		assert.equal(subdir.countSubDirectory ? subdir.countSubDirectory() : 0, 1);
-		assert.notEqual(subdir.getSubDirectory("subSubDirName"), undefined);
-		assert.equal(subDirCreatedEventData.length, 3);
-		assert.equal(subDirCreatedEventData[0], "subDirName");
-		assert.equal(subDirCreatedEventData[1], "subDirName/subSubDirName");
-		assert.equal(
-			changedEventData.length,
-			1,
-			`changedEventData.length:${changedEventData.length}`,
-		);
-		assert.equal(changedEventData[0].key, "key1");
-		assert.equal(changedEventData[0].previousValue, undefined);
-		assert.equal(subDirDeletedEventData.length, 1);
-		assert.equal(subDirDeletedEventData[0], "subDirName");
-		// rollback
-		assert.equal(subDirCreatedEventData[2], "subDirName");
-		assert.equal(undisposedEventData.length, 1);
-		assert.equal(undisposedEventData[0], "/subDirName");
-		assert.equal(disposedEventData.length, 1);
-
-		// verify we still get events on restored content
-		readSubdir.set("key2", "content2");
-
-		assert.equal(changedEventData.length, 2);
-		assert.equal(changedEventData[1].key, "key2");
-		assert.equal(changedEventData[1].previousValue, undefined);
-	});
-});
+	},
+);

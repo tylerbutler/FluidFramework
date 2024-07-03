@@ -3,53 +3,68 @@
  * Licensed under the MIT License.
  */
 
-import { default as AbortController } from "abort-controller";
-import { v4 as uuid } from "uuid";
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { assert, fromUtf8ToBase64, performance } from "@fluidframework/common-utils";
-import { DriverErrorType } from "@fluidframework/driver-definitions";
-import { isFluidError, PerformanceEvent, wrapError } from "@fluidframework/telemetry-utils";
-import {
-	IOdspResolvedUrl,
-	ISnapshotOptions,
-	OdspErrorType,
-	InstrumentedStorageTokenFetcher,
-} from "@fluidframework/odsp-driver-definitions";
-import { ISnapshotTree } from "@fluidframework/protocol-definitions";
+import { fromUtf8ToBase64 } from "@fluid-internal/client-utils";
+import { assert } from "@fluidframework/core-utils/internal";
+import { getW3CData } from "@fluidframework/driver-base/internal";
+import { ISnapshot, ISnapshotTree } from "@fluidframework/driver-definitions/internal";
 import {
 	DriverErrorTelemetryProps,
-	isRuntimeMessage,
 	NonRetryableError,
-} from "@fluidframework/driver-utils";
+	isRuntimeMessage,
+} from "@fluidframework/driver-utils/internal";
+import {
+	fetchIncorrectResponse,
+	throwOdspNetworkError,
+} from "@fluidframework/odsp-doclib-utils/internal";
+import {
+	type IOdspError,
+	IOdspResolvedUrl,
+	ISnapshotOptions,
+	InstrumentedStorageTokenFetcher,
+	OdspErrorTypes,
+} from "@fluidframework/odsp-driver-definitions/internal";
+import {
+	ITelemetryLoggerExt,
+	PerformanceEvent,
+	isFluidError,
+	loggerToMonitoringContext,
+	wrapError,
+} from "@fluidframework/telemetry-utils/internal";
+import { v4 as uuid } from "uuid";
+
+import {
+	ISnapshotContentsWithProps,
+	currentReadVersion,
+	parseCompactSnapshotResponse,
+} from "./compactSnapshotParser.js";
 import {
 	IOdspSnapshot,
-	ISnapshotCachedEntry,
+	ISnapshotCachedEntry2,
 	IVersionedValueWithEpoch,
 	persistedCacheValueVersion,
-} from "./contracts";
-import { getQueryString } from "./getQueryString";
-import { getUrlAndHeadersWithAuth } from "./getUrlAndHeadersWithAuth";
+} from "./contracts.js";
+import { EpochTracker } from "./epochTracker.js";
+import { getQueryString } from "./getQueryString.js";
+import { getHeadersWithAuth } from "./getUrlAndHeadersWithAuth.js";
+import { convertOdspSnapshotToSnapshotTreeAndBlobs } from "./odspSnapshotParser.js";
 import {
+	IOdspResponse,
 	fetchAndParseAsJSONHelper,
 	fetchHelper,
 	getWithRetryForTokenRefresh,
 	getWithRetryForTokenRefreshRepeat,
-	IOdspResponse,
+	isSnapshotFetchForLoadingGroup,
 	measure,
 	measureP,
-} from "./odspUtils";
-import { ISnapshotContents } from "./odspPublicUtils";
-import { convertOdspSnapshotToSnapshotTreeAndBlobs } from "./odspSnapshotParser";
-import {
-	currentReadVersion,
-	ISnapshotContentsWithProps,
-	parseCompactSnapshotResponse,
-} from "./compactSnapshotParser";
-import { EpochTracker } from "./epochTracker";
-import { pkgVersion } from "./packageVersion";
+	useLegacyFlowWithoutGroupsForSnapshotFetch,
+	type TokenFetchOptionsEx,
+} from "./odspUtils.js";
+import { pkgVersion } from "./packageVersion.js";
 
 /**
  * Enum to support different types of snapshot formats.
+ * @legacy
+ * @alpha
  */
 export enum SnapshotFormatSupportType {
 	Json = 0,
@@ -60,46 +75,35 @@ export enum SnapshotFormatSupportType {
 /**
  * Fetches a snapshot from the server with a given version id.
  * @param snapshotUrl - snapshot url from where the odsp snapshot will be fetched
- * @param token - token used for authorization in the request
- * @param storageFetchWrapper - Implementation of the get/post methods used to fetch the snapshot
  * @param versionId - id of specific snapshot to be fetched
  * @param fetchFullSnapshot - whether we want to fetch full snapshot(with blobs)
- * @param forceAccessTokenViaAuthorizationHeader - whether to force passing given token via authorization header
+ * @param forceAccessTokenViaAuthorizationHeader - @deprecated Not used, true value always used instead. Whether to force passing given token via authorization header
+ * @param snapshotDownloader - Implementation of the get/post methods used to fetch the snapshot. snapshotDownloader is responsible for generating the appropriate headers (including Authorization header) as well as handling any token refreshes before retrying.
  * @returns A promise of the snapshot and the status code of the response
  */
 export async function fetchSnapshot(
 	snapshotUrl: string,
-	// eslint-disable-next-line @rushstack/no-new-null
-	token: string | null,
 	versionId: string,
 	fetchFullSnapshot: boolean,
 	forceAccessTokenViaAuthorizationHeader: boolean,
-	logger: ITelemetryLogger,
-	snapshotDownloader: (
-		url: string,
-		fetchOptions: { [index: string]: any },
-	) => Promise<IOdspResponse<unknown>>,
-): Promise<ISnapshotContents> {
+	logger: ITelemetryLoggerExt,
+	snapshotDownloader: (url: string) => Promise<IOdspResponse<unknown>>,
+): Promise<ISnapshot> {
 	const path = `/trees/${versionId}`;
 	let queryParams: ISnapshotOptions = {};
 
 	if (fetchFullSnapshot) {
-		queryParams = versionId !== "latest" ? { blobs: 2 } : { deltas: 1, blobs: 2 };
+		queryParams = versionId === "latest" ? { deltas: 1, blobs: 2 } : { blobs: 2 };
 	}
 
 	const queryString = getQueryString(queryParams);
-	const { url, headers } = getUrlAndHeadersWithAuth(
-		`${snapshotUrl}${path}${queryString}`,
-		token,
-		forceAccessTokenViaAuthorizationHeader,
-	);
+	const url = `${snapshotUrl}${path}${queryString}`;
 	const response = (await PerformanceEvent.timedExecAsync(
 		logger,
 		{
 			eventName: "fetchSnapshot",
-			headers: Object.keys(headers).length !== 0 ? true : undefined,
 		},
-		async () => snapshotDownloader(url, { headers }),
+		async () => snapshotDownloader(url),
 	)) as IOdspResponse<IOdspSnapshot>;
 	return convertOdspSnapshotToSnapshotTreeAndBlobs(response.content);
 }
@@ -109,20 +113,25 @@ export async function fetchSnapshotWithRedeem(
 	storageTokenFetcher: InstrumentedStorageTokenFetcher,
 	snapshotOptions: ISnapshotOptions | undefined,
 	forceAccessTokenViaAuthorizationHeader: boolean,
-	logger: ITelemetryLogger,
+	logger: ITelemetryLoggerExt,
 	snapshotDownloader: (
 		finalOdspResolvedUrl: IOdspResolvedUrl,
-		storageToken: string,
+		getAuthHeader: InstrumentedStorageTokenFetcher,
+		tokenFetchOptions: TokenFetchOptionsEx,
+		loadingGroupIds: string[] | undefined,
 		snapshotOptions: ISnapshotOptions | undefined,
 		controller?: AbortController,
 	) => Promise<ISnapshotRequestAndResponseOptions>,
 	putInCache: (valueWithEpoch: IVersionedValueWithEpoch) => Promise<void>,
 	removeEntries: () => Promise<void>,
+	loadingGroupIds: string[] | undefined,
 	enableRedeemFallback?: boolean,
-): Promise<ISnapshotContents> {
+): Promise<ISnapshot> {
 	// back-compat: This block to be removed with #8784 when we only consume/consider odsp resolvers that are >= 0.51
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
 	const sharingLinkToRedeem = (odspResolvedUrl as any).sharingLinkToRedeem;
 	if (sharingLinkToRedeem) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		odspResolvedUrl.shareLinkInfo = { ...odspResolvedUrl.shareLinkInfo, sharingLinkToRedeem };
 	}
 
@@ -133,9 +142,11 @@ export async function fetchSnapshotWithRedeem(
 		logger,
 		snapshotDownloader,
 		putInCache,
+		loadingGroupIds,
 		enableRedeemFallback,
 	)
 		.catch(async (error) => {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 			if (enableRedeemFallback && isRedeemSharingLinkError(odspResolvedUrl, error)) {
 				// Execute the redeem fallback
 
@@ -157,9 +168,10 @@ export async function fetchSnapshotWithRedeem(
 				// If redeem failed, that most likely means user has no permissions to access a file,
 				// and thus it's not worth it logging extra errors - same error will be logged by end-to-end
 				// flow (container open) based on a failure above.
-				logger.sendErrorEvent(
+				logger.sendTelemetryEvent(
 					{
 						eventName: "RedeemFallback",
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 						errorType: error.errorType,
 					},
 					error,
@@ -172,6 +184,7 @@ export async function fetchSnapshotWithRedeem(
 					logger,
 					snapshotDownloader,
 					putInCache,
+					loadingGroupIds,
 				);
 			} else {
 				throw error;
@@ -184,8 +197,10 @@ export async function fetchSnapshotWithRedeem(
 			if (
 				(typeof error === "object" &&
 					error !== null &&
-					error.errorType === DriverErrorType.authorizationError) ||
-				error.errorType === DriverErrorType.fileNotFoundOrAccessDeniedError
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+					error.errorType === OdspErrorTypes.authorizationError) ||
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+				error.errorType === OdspErrorTypes.fileNotFoundOrAccessDeniedError
 			) {
 				await removeEntries();
 			}
@@ -195,71 +210,108 @@ export async function fetchSnapshotWithRedeem(
 
 async function redeemSharingLink(
 	odspResolvedUrl: IOdspResolvedUrl,
-	storageTokenFetcher: InstrumentedStorageTokenFetcher,
-	logger: ITelemetryLogger,
+	getAuthHeader: InstrumentedStorageTokenFetcher,
+	logger: ITelemetryLoggerExt,
 	forceAccessTokenViaAuthorizationHeader: boolean,
-) {
-	return PerformanceEvent.timedExecAsync(
+): Promise<void> {
+	await PerformanceEvent.timedExecAsync(
 		logger,
 		{
 			eventName: "RedeemShareLink",
 		},
-		async () =>
-			getWithRetryForTokenRefresh(async (tokenFetchOptions) => {
-				assert(
-					!!odspResolvedUrl.shareLinkInfo?.sharingLinkToRedeem,
-					0x1ed /* "Share link should be present" */,
-				);
-				const storageToken = await storageTokenFetcher(
-					tokenFetchOptions,
-					"RedeemShareLink",
-				);
-				const encodedShareUrl = getEncodedShareUrl(
-					odspResolvedUrl.shareLinkInfo?.sharingLinkToRedeem,
-				);
-				const redeemUrl = `${odspResolvedUrl.siteUrl}/_api/v2.0/shares/${encodedShareUrl}`;
-				const { url, headers } = getUrlAndHeadersWithAuth(
-					redeemUrl,
-					storageToken,
-					forceAccessTokenViaAuthorizationHeader,
-				);
-				headers.prefer = "redeemSharingLink";
-				return fetchAndParseAsJSONHelper(url, { headers });
-			}),
+		async () => {
+			assert(
+				!!odspResolvedUrl.shareLinkInfo?.sharingLinkToRedeem,
+				0x1ed /* "Share link should be present" */,
+			);
+
+			const encodedShareUrl = getEncodedShareUrl(
+				odspResolvedUrl.shareLinkInfo?.sharingLinkToRedeem,
+			);
+
+			let redeemUrl: string | undefined;
+			async function callSharesAPI(baseUrl: string): Promise<void> {
+				await getWithRetryForTokenRefresh(async (tokenFetchOptions) => {
+					redeemUrl = `${baseUrl}/_api/v2.0/shares/${encodedShareUrl}`;
+					const url = redeemUrl;
+					const method = "GET";
+					const authHeader = await getAuthHeader(
+						{ ...tokenFetchOptions, request: { url, method } },
+						"RedeemShareLink",
+					);
+					const headers = getHeadersWithAuth(authHeader);
+					headers.prefer = "redeemSharingLink";
+					await fetchAndParseAsJSONHelper(url, { headers, method });
+				});
+			}
+
+			const disableUsingTenantDomain = loggerToMonitoringContext(logger).config.getBoolean(
+				"Fluid.Driver.Odsp.DisableUsingTenantDomainForSharesApi",
+			);
+			// There is an issue where if we use the siteUrl in /shares, then the allowed length of url is just a few hundred characters(300-400)
+			// and we fail to do the redeem. But if we use the tenant domain in the url, then the allowed length becomes 2048. So, first
+			// construct the url for /shares using tenant domain but to be on safer side, fallback to using the siteUrl. We get tenant domain
+			// by getting origin of the siteUrl.
+			if (!disableUsingTenantDomain) {
+				try {
+					await callSharesAPI(new URL(odspResolvedUrl.siteUrl).origin);
+					return;
+				} catch (error) {
+					logger.sendTelemetryEvent(
+						{
+							eventName: "ShareLinkRedeemFailedWithTenantDomain",
+							details: JSON.stringify({
+								length: redeemUrl?.length,
+								shareLinkUrlLength: odspResolvedUrl.shareLinkInfo?.sharingLinkToRedeem.length,
+								queryParamsLength: new URL(odspResolvedUrl.shareLinkInfo?.sharingLinkToRedeem)
+									.search.length,
+								useHeaders: true,
+							}),
+						},
+						error,
+					);
+				}
+			}
+			await callSharesAPI(odspResolvedUrl.siteUrl);
+		},
 	);
 }
 
 async function fetchLatestSnapshotCore(
 	odspResolvedUrl: IOdspResolvedUrl,
-	storageTokenFetcher: InstrumentedStorageTokenFetcher,
+	getAuthHeader: InstrumentedStorageTokenFetcher,
 	snapshotOptions: ISnapshotOptions | undefined,
-	logger: ITelemetryLogger,
+	logger: ITelemetryLoggerExt,
 	snapshotDownloader: (
 		finalOdspResolvedUrl: IOdspResolvedUrl,
-		storageToken: string,
+		getAuthHeader: InstrumentedStorageTokenFetcher,
+		tokenFetchOptions: TokenFetchOptionsEx,
+		loadingGroupIds: string[] | undefined,
 		snapshotOptions: ISnapshotOptions | undefined,
 		controller?: AbortController,
 	) => Promise<ISnapshotRequestAndResponseOptions>,
 	putInCache: (valueWithEpoch: IVersionedValueWithEpoch) => Promise<void>,
+	loadingGroupIds: string[] | undefined,
 	enableRedeemFallback?: boolean,
-): Promise<ISnapshotContents> {
+): Promise<ISnapshot> {
 	return getWithRetryForTokenRefresh(async (tokenFetchOptions) => {
-		const storageToken = await storageTokenFetcher(tokenFetchOptions, "TreesLatest", true);
-		assert(storageToken !== null, 0x1e5 /* "Storage token should not be null" */);
+		const fetchSnapshotForLoadingGroup = isSnapshotFetchForLoadingGroup(loadingGroupIds);
+		const eventName = fetchSnapshotForLoadingGroup ? "TreesLatestForGroup" : "TreesLatest";
 
 		const perfEvent = {
-			eventName: "TreesLatest",
+			eventName,
 			attempts: tokenFetchOptions.refresh ? 2 : 1,
 			shareLinkPresent: odspResolvedUrl.shareLinkInfo?.sharingLinkToRedeem !== undefined,
 			isSummarizer: odspResolvedUrl.summarizer,
 			redeemFallbackEnabled: enableRedeemFallback,
 		};
 		if (snapshotOptions !== undefined) {
-			Object.entries(snapshotOptions).forEach(([key, value]) => {
+			for (const [key, value] of Object.entries(snapshotOptions)) {
 				if (value !== undefined) {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					perfEvent[`snapshotOption_${key}`] = value;
 				}
-			});
+			}
 		}
 		// This event measures only successful cases of getLatest call (no tokens, no retries).
 		return PerformanceEvent.timedExecAsync(logger, perfEvent, async (event) => {
@@ -271,7 +323,14 @@ async function fetchLatestSnapshotCore(
 			}
 
 			const [response, fetchTime] = await measureP(async () =>
-				snapshotDownloader(odspResolvedUrl, storageToken, snapshotOptions, controller),
+				snapshotDownloader(
+					odspResolvedUrl,
+					getAuthHeader,
+					tokenFetchOptions,
+					loadingGroupIds,
+					snapshotOptions,
+					controller,
+				),
 			).finally(() => {
 				// Clear the fetchTimeout once the response is fetched.
 				if (fetchTimeout !== undefined) {
@@ -305,13 +364,37 @@ async function fetchLatestSnapshotCore(
 					case "application/json": {
 						let text: string;
 						[text, receiveContentTime] = await measureP(async () =>
-							odspResponse.content.text(),
+							odspResponse.content
+								.text()
+								.then((res) => {
+									if (res.length === 0) {
+										throwOdspNetworkError(
+											"Response from browser is empty",
+											fetchIncorrectResponse,
+											odspResponse.content, // response
+											undefined, // response text
+											propsToLog,
+										);
+									}
+									return res;
+								})
+								.catch((error) =>
+									// Parsing can fail and message could contain full request URI, including
+									// tokens, etc. So do not log error object itself.
+									throwOdspNetworkError(
+										"Error while parsing fetch response",
+										fetchIncorrectResponse,
+										odspResponse.content, // response
+										undefined, // response text
+										propsToLog,
+									),
+								),
 						);
 						propsToLog.bodySize = text.length;
 						let content: IOdspSnapshot;
 						[content, parseTime] = measure(() => JSON.parse(text) as IOdspSnapshot);
 						validateBlobsAndTrees(content);
-						const snapshotContents: ISnapshotContents =
+						const snapshotContents: ISnapshot =
 							convertOdspSnapshotToSnapshotTreeAndBlobs(content);
 						parsedSnapshotContents = {
 							...odspResponse,
@@ -325,7 +408,31 @@ async function fetchLatestSnapshotCore(
 					case "application/ms-fluid": {
 						let content: ArrayBuffer;
 						[content, receiveContentTime] = await measureP(async () =>
-							odspResponse.content.arrayBuffer(),
+							odspResponse.content
+								.arrayBuffer()
+								.then((res) => {
+									if (res.byteLength === 0) {
+										throwOdspNetworkError(
+											"Response from browser is empty",
+											fetchIncorrectResponse,
+											odspResponse.content, // response
+											undefined, // response text
+											propsToLog,
+										);
+									}
+									return res;
+								})
+								.catch((error) =>
+									// Parsing can fail and message could contain full request URI, including
+									// tokens, etc. So do not log error object itself.
+									throwOdspNetworkError(
+										"Error while parsing fetch response",
+										fetchIncorrectResponse,
+										odspResponse.content, // response
+										undefined, // response text
+										propsToLog,
+									),
+								),
 						);
 						propsToLog.bodySize = content.byteLength;
 						let snapshotContents: ISnapshotContentsWithProps;
@@ -338,7 +445,7 @@ async function fetchLatestSnapshotCore(
 						) {
 							throw new NonRetryableError(
 								"Returned odsp snapshot is malformed. No trees or blobs!",
-								DriverErrorType.incorrectServerResponse,
+								OdspErrorTypes.incorrectServerResponse,
 								propsToLog,
 							);
 						}
@@ -356,12 +463,13 @@ async function fetchLatestSnapshotCore(
 						parsedSnapshotContents = { ...odspResponse, content: snapshotContents };
 						break;
 					}
-					default:
+					default: {
 						throw new NonRetryableError(
 							"Unknown snapshot content type",
-							DriverErrorType.incorrectServerResponse,
+							OdspErrorTypes.incorrectServerResponse,
 							propsToLog,
 						);
+					}
 				}
 			} catch (error) {
 				if (isFluidError(error)) {
@@ -373,7 +481,7 @@ async function fetchLatestSnapshotCore(
 					(errorMessage) =>
 						new NonRetryableError(
 							`Error parsing snapshot response: ${errorMessage}`,
-							DriverErrorType.genericError,
+							OdspErrorTypes.genericError,
 							propsToLog,
 						),
 				);
@@ -382,73 +490,12 @@ async function fetchLatestSnapshotCore(
 
 			assert(parsedSnapshotContents !== undefined, 0x312 /* snapshot should be parsed */);
 			const snapshot = parsedSnapshotContents.content;
-			const { trees, numBlobs, encodedBlobsSize } = evalBlobsAndTrees(snapshot);
-
-			// From: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming
-			// fetchStart: immediately before the browser starts to fetch the resource.
-			// requestStart: immediately before the browser starts requesting the resource from the server
-			// responseStart: immediately after the browser receives the first byte of the response from the server.
-			// responseEnd: immediately after the browser receives the last byte of the resource
-			//              or immediately before the transport connection is closed, whichever comes first.
-			// secureConnectionStart: immediately before the browser starts the handshake process to secure the
-			//              current connection. If a secure connection is not used, this property returns zero.
-			// startTime: Time when the resource fetch started. This value is equivalent to fetchStart.
-			// domainLookupStart: immediately before the browser starts the domain name lookup for the resource.
-			// domainLookupEnd: immediately after the browser finishes the domain name lookup for the resource.
-			// redirectStart: start time of the fetch which that initiates the redirect.
-			// redirectEnd: immediately after receiving the last byte of the response of the last redirect.
-			let dnsLookupTime: number | undefined; // domainLookupEnd - domainLookupStart
-			let redirectTime: number | undefined; // redirectEnd - redirectStart
-			let tcpHandshakeTime: number | undefined; // connectEnd  - connectStart
-			let secureConnectionTime: number | undefined; // connectEnd  - secureConnectionStart
-			let responseNetworkTime: number | undefined; // responsEnd - responseStart
-			let fetchStartToResponseEndTime: number | undefined; // responseEnd  - fetchStart
-			let reqStartToResponseEndTime: number | undefined; // responseEnd - requestStart
-			let networkTime: number | undefined; // responseEnd - startTime
-			const spReqDuration = odspResponse.headers.get("sprequestduration");
-
-			// getEntriesByType is only available in browser performance object
-			const resources1 = performance.getEntriesByType?.("resource") ?? [];
-			// Usually the latest fetch call is to the end of resources, so we start from the end.
-			for (let i = resources1.length - 1; i > 0; i--) {
-				const indResTime = resources1[i] as PerformanceResourceTiming;
-				const resource_name = indResTime.name.toString();
-				const resource_initiatortype = indResTime.initiatorType;
-				if (
-					resource_initiatortype.localeCompare("fetch") === 0 &&
-					resource_name.localeCompare(response.requestUrl) === 0
-				) {
-					redirectTime = indResTime.redirectEnd - indResTime.redirectStart;
-					dnsLookupTime = indResTime.domainLookupEnd - indResTime.domainLookupStart;
-					tcpHandshakeTime = indResTime.connectEnd - indResTime.connectStart;
-					secureConnectionTime =
-						indResTime.secureConnectionStart > 0
-							? indResTime.connectEnd - indResTime.secureConnectionStart
-							: undefined;
-					responseNetworkTime =
-						indResTime.responseStart > 0
-							? indResTime.responseEnd - indResTime.responseStart
-							: undefined;
-					fetchStartToResponseEndTime =
-						indResTime.fetchStart > 0
-							? indResTime.responseEnd - indResTime.fetchStart
-							: undefined;
-					reqStartToResponseEndTime =
-						indResTime.requestStart > 0
-							? indResTime.responseEnd - indResTime.requestStart
-							: undefined;
-					networkTime = fetchStartToResponseEndTime;
-					if (spReqDuration !== undefined && networkTime !== undefined) {
-						networkTime = networkTime - parseInt(spReqDuration, 10);
-					}
-					break;
-				}
-			}
 
 			// There are some scenarios in ODSP where we cannot cache, trees/latest will explicitly tell us when we
-			// cannot cache using an HTTP response header.
+			// cannot cache using an HTTP response header. Only cache snapshot if it is not for a loading group.
 			const canCache =
-				odspResponse.headers.get("disablebrowsercachingofusercontent") !== "true";
+				odspResponse.headers.get("disablebrowsercachingofusercontent") !== "true" &&
+				!fetchSnapshotForLoadingGroup;
 			const sequenceNumber: number = snapshot.sequenceNumber ?? 0;
 			const seqNumberFromOps =
 				snapshot.ops && snapshot.ops.length > 0
@@ -467,11 +514,8 @@ async function fetchLatestSnapshotCore(
 				snapshot.sequenceNumber = undefined;
 			} else if (canCache) {
 				const fluidEpoch = odspResponse.headers.get("x-fluid-epoch");
-				assert(
-					fluidEpoch !== undefined,
-					0x1e6 /* "Epoch  should be present in response" */,
-				);
-				const value: ISnapshotCachedEntry = {
+				assert(fluidEpoch !== undefined, 0x1e6 /* "Epoch  should be present in response" */);
+				const value: ISnapshotCachedEntry2 = {
 					...snapshot,
 					cacheEntryTime: Date.now(),
 				};
@@ -485,34 +529,16 @@ async function fetchLatestSnapshotCore(
 			}
 
 			event.end({
-				trees,
-				blobs: snapshot.blobs?.size ?? 0,
-				leafNodes: numBlobs,
-				encodedBlobsSize,
+				// trees, leafTrees, blobNodes, encodedBlobsSize,
+				// blobNodes - blobs tells us (roughly) how many blobs are deduped by service.
+				...getTreeStats(snapshot),
+				blobs: snapshot.blobContents?.size ?? 0,
 				sequenceNumber,
 				ops: snapshot.ops?.length ?? 0,
+				fetchSnapshotForLoadingGroup,
+				useLegacyFlowWithoutGroups:
+					useLegacyFlowWithoutGroupsForSnapshotFetch(loadingGroupIds),
 				userOps: snapshot.ops?.filter((op) => isRuntimeMessage(op)).length ?? 0,
-				headers: Object.keys(response.requestHeaders).length !== 0 ? true : undefined,
-				// Interval between the first fetch until the last byte of the last redirect.
-				redirectTime,
-				// Interval between start and finish of the domain name lookup for the resource.
-				dnsLookupTime,
-				// Interval to receive all (first to last) bytes form the server.
-				responseNetworkTime,
-				// Time to establish the connection to the server to retrieve the resource.
-				tcpHandshakeTime,
-				// Time from the end of the connection until the inital handshake process to secure the connection.
-				secureConnectionTime,
-				// Interval between the initial fetch until the last byte is received.
-				// Likely same as fetchTime + receiveContentTime.
-				fetchStartToResponseEndTime,
-				// reqStartToResponseEndTime = fetchStartToResponseEndTime - <initial TCP handshake>
-				// Interval between starting the request for the resource until receiving the last byte.
-				reqStartToResponseEndTime,
-				// networkTime = fetchStartToResponseEndTime - sprequestduration
-				// Interval between starting the request for the resource until receiving the last byte but
-				// excluding the snaphot request duration indicated on the snapshot response header.
-				networkTime,
 				// Measures time to make fetch call. Should be similar to
 				// fetchStartToResponseEndTime - receiveContentTime, i.e. it looks like it's time till first byte /
 				// end of response headers
@@ -524,6 +550,7 @@ async function fetchLatestSnapshotCore(
 				// This time likely is very closely correlated with networkTime, i.e. time it takes to receive
 				// actual content (starting measuring from first bite / end of response header)
 				receiveContentTime,
+				...getW3CData(response.requestUrl, "fetch"),
 				// Sharing link telemetry regarding sharing link redeem status and performance. Ex: FRL; dur=100,
 				// Azure Fluid Relay service; desc=S, FRP; desc=False. Here, FRL is the duration taken for redeem,
 				// Azure Fluid Relay service is the redeem status (S means success), and FRP is a flag to indicate
@@ -543,9 +570,10 @@ async function fetchLatestSnapshotCore(
 			if (
 				typeof error === "object" &&
 				error !== null &&
-				(error.errorType === DriverErrorType.fetchFailure ||
-					error.errorType === OdspErrorType.fetchTimeout)
+				((error as Partial<IOdspError>).errorType === OdspErrorTypes.fetchFailure ||
+					(error as Partial<IOdspError>).errorType === OdspErrorTypes.fetchTimeout)
 			) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 				error[getWithRetryForTokenRefreshRepeat] = true;
 			}
 			throw error;
@@ -556,57 +584,66 @@ async function fetchLatestSnapshotCore(
 export interface ISnapshotRequestAndResponseOptions {
 	odspResponse: IOdspResponse<Response>;
 	requestUrl: string;
-	requestHeaders: { [index: string]: any };
+	requestHeaders: { [index: string]: string };
 }
 
 function getFormBodyAndHeaders(
 	odspResolvedUrl: IOdspResolvedUrl,
-	storageToken: string,
-	snapshotOptions: ISnapshotOptions | undefined,
+	authHeader: string,
 	headers?: { [index: string]: string },
-) {
+): {
+	body: string;
+	headers: {
+		[index: string]: string;
+	};
+} {
 	const formBoundary = uuid();
 	const formParams: string[] = [];
-	formParams.push(`--${formBoundary}`);
-	formParams.push(`Authorization: Bearer ${storageToken}`);
-	formParams.push(`X-HTTP-Method-Override: GET`);
-	if (snapshotOptions !== undefined) {
-		Object.entries(snapshotOptions).forEach(([key, value]) => {
-			if (value !== undefined) {
-				formParams.push(`${key}: ${value}`);
-			}
-		});
-	}
+	formParams.push(
+		`--${formBoundary}`,
+		`Authorization: ${authHeader}`,
+		`X-HTTP-Method-Override: GET`,
+	);
+
 	if (headers !== undefined) {
-		Object.entries(headers).forEach(([key, value]) => {
+		for (const [key, value] of Object.entries(headers)) {
 			if (value !== undefined) {
 				formParams.push(`${key}: ${value}`);
 			}
-		});
+		}
 	}
 	if (odspResolvedUrl.shareLinkInfo?.sharingLinkToRedeem) {
 		formParams.push(`sl: ${odspResolvedUrl.shareLinkInfo?.sharingLinkToRedeem}`);
 	}
-	formParams.push(`_post: 1`);
-	formParams.push(`\r\n--${formBoundary}--`);
+	formParams.push(`_post: 1`, `\r\n--${formBoundary}--`);
 	const postBody = formParams.join("\r\n");
-	const header: { [index: string]: any } = {
+	const header: { [index: string]: string } = {
 		"Content-Type": `multipart/form-data;boundary=${formBoundary}`,
 	};
 	return { body: postBody, headers: header };
 }
 
-function evalBlobsAndTrees(snapshot: ISnapshotContents) {
-	const trees = countTreesInSnapshotTree(snapshot.snapshotTree);
-	const numBlobs = snapshot.blobs.size;
-	let encodedBlobsSize = 0;
-	for (const [_, blobContent] of snapshot.blobs) {
-		encodedBlobsSize += blobContent.byteLength;
-	}
-	return { trees, numBlobs, encodedBlobsSize };
+interface ITreeStats {
+	trees: number;
+	leafTrees: number;
+	blobNodes: number;
 }
 
-export function validateBlobsAndTrees(snapshot: IOdspSnapshot) {
+export function getTreeStats(snapshot: ISnapshot): ITreeStats & { encodedBlobsSize: number } {
+	const stats: ITreeStats = {
+		trees: 0,
+		leafTrees: 0,
+		blobNodes: 0,
+	};
+	getTreeStatsCore(snapshot.snapshotTree, stats);
+	let encodedBlobsSize = 0;
+	for (const [_, blobContent] of snapshot.blobContents) {
+		encodedBlobsSize += blobContent.byteLength;
+	}
+	return { ...stats, encodedBlobsSize };
+}
+
+export function validateBlobsAndTrees(snapshot: IOdspSnapshot): void {
 	assert(
 		snapshot.trees !== undefined,
 		0x200 /* "Returned odsp snapshot is malformed. No trees!" */,
@@ -617,13 +654,19 @@ export function validateBlobsAndTrees(snapshot: IOdspSnapshot) {
 	);
 }
 
-function countTreesInSnapshotTree(snapshotTree: ISnapshotTree): number {
-	let numTrees = 0;
-	for (const [_, tree] of Object.entries(snapshotTree.trees)) {
-		numTrees += 1;
-		numTrees += countTreesInSnapshotTree(tree);
+function getTreeStatsCore(snapshotTree: ISnapshotTree, stats: ITreeStats): void {
+	stats.blobNodes += Object.entries(snapshotTree.blobs).length;
+	stats.trees++;
+
+	const entries = Object.entries(snapshotTree.trees);
+	if (entries.length === 0) {
+		stats.leafTrees++;
+	} else {
+		for (const [_, tree] of entries) {
+			stats.trees++;
+			getTreeStatsCore(tree, stats);
+		}
 	}
-	return numTrees;
 }
 
 /**
@@ -631,7 +674,10 @@ function countTreesInSnapshotTree(snapshotTree: ISnapshotTree): number {
  * @param odspResolvedUrl - resolved odsp url.
  * @param storageToken - token to do the auth for network request.
  * @param snapshotOptions - Options used to specify how and what to fetch in the snapshot.
- * @param logger - logger
+ * @param loadingGroupIds - loadingGroupIds for which snapshot needs to be downloaded. Note:
+ * 1.) If undefined, then legacy trees latest call will be used where no groupId query param would be specified.
+ * 2.) If [] is passed, then snapshot with all ungrouped data will be fetched.
+ * 3.) If any groupId is specified like ["g1"], then snapshot for g1 group will be fetched.
  * @param snapshotFormatFetchType - Snapshot format to fetch.
  * @param controller - abort controller if caller needs to abort the network call.
  * @param epochTracker - epoch tracker used to add/validate epoch in the network call.
@@ -639,8 +685,9 @@ function countTreesInSnapshotTree(snapshotTree: ISnapshotTree): number {
  */
 export async function downloadSnapshot(
 	odspResolvedUrl: IOdspResolvedUrl,
-	storageToken: string,
-	logger: ITelemetryLogger,
+	getAuthHeader: InstrumentedStorageTokenFetcher,
+	tokenFetchOptions: TokenFetchOptionsEx,
+	loadingGroupIds: string[] | undefined,
 	snapshotOptions: ISnapshotOptions | undefined,
 	snapshotFormatFetchType?: SnapshotFormatSupportType,
 	controller?: AbortController,
@@ -648,38 +695,59 @@ export async function downloadSnapshot(
 	scenarioName?: string,
 ): Promise<ISnapshotRequestAndResponseOptions> {
 	// back-compat: This block to be removed with #8784 when we only consume/consider odsp resolvers that are >= 0.51
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
 	const sharingLinkToRedeem = (odspResolvedUrl as any).sharingLinkToRedeem;
 	if (sharingLinkToRedeem) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		odspResolvedUrl.shareLinkInfo = { ...odspResolvedUrl.shareLinkInfo, sharingLinkToRedeem };
 	}
 
 	const snapshotUrl = odspResolvedUrl.endpoints.snapshotStorageUrl;
-	const url = `${snapshotUrl}/trees/latest?ump=1`;
+
+	const queryParams: Record<string, unknown> = { ump: 1 };
+	if (snapshotOptions !== undefined) {
+		for (const [key, value] of Object.entries(snapshotOptions)) {
+			// Exclude "timeout" from query string
+			if (value !== undefined && key !== "timeout") {
+				queryParams[key] = value;
+			}
+		}
+	}
+
+	if (loadingGroupIds !== undefined) {
+		queryParams.groupId = loadingGroupIds.join(",");
+	}
+
+	const queryString = getQueryString(queryParams);
+	const url = `${snapshotUrl}/trees/latest${queryString}`;
+	const method = "POST";
 	// The location of file can move on Spo in which case server returns 308(Permanent Redirect) error.
 	// Adding below header will make VROOM API return 404 instead of 308 and browser can intercept it.
 	// This error thrown by server will contain the new redirect location. Look at the 404 error parsing
-	// for futher reference here: \packages\utils\odsp-doclib-utils\src\odspErrorUtils.ts
+	// for further reference here: \packages\utils\odsp-doclib-utils\src\odspErrorUtils.ts
 	const header = { prefer: "manualredirect" };
-	const { body, headers } = getFormBodyAndHeaders(
-		odspResolvedUrl,
-		storageToken,
-		snapshotOptions,
-		header,
+	const authHeader = await getAuthHeader(
+		{ ...tokenFetchOptions, request: { url, method } },
+		"downloadSnapshot",
 	);
+	assert(authHeader !== null, 0x1e5 /* "Storage token should not be null" */);
+	const { body, headers } = getFormBodyAndHeaders(odspResolvedUrl, authHeader, header);
 	const fetchOptions = {
 		body,
 		headers,
 		signal: controller?.signal,
-		method: "POST",
+		method,
 	};
 	// Decide what snapshot format to fetch as per the feature gate.
 	switch (snapshotFormatFetchType) {
-		case SnapshotFormatSupportType.Binary:
+		case SnapshotFormatSupportType.Binary: {
 			headers.accept = `application/ms-fluid; v=${currentReadVersion}`;
 			break;
-		default:
+		}
+		default: {
 			// By default ask both versions and let the server decide the format.
 			headers.accept = `application/json, application/ms-fluid; v=${currentReadVersion}`;
+		}
 	}
 
 	const odspResponse = await (epochTracker?.fetch(
@@ -697,13 +765,16 @@ export async function downloadSnapshot(
 	};
 }
 
-function isRedeemSharingLinkError(odspResolvedUrl: IOdspResolvedUrl, error: any) {
+function isRedeemSharingLinkError(
+	odspResolvedUrl: IOdspResolvedUrl,
+	error: Partial<IOdspError>,
+): boolean {
 	if (
 		odspResolvedUrl.shareLinkInfo?.sharingLinkToRedeem !== undefined &&
 		typeof error === "object" &&
 		error !== null &&
-		(error.errorType === DriverErrorType.authorizationError ||
-			error.errorType === DriverErrorType.fileNotFoundOrAccessDeniedError)
+		(error.errorType === OdspErrorTypes.authorizationError ||
+			error.errorType === OdspErrorTypes.fileNotFoundOrAccessDeniedError)
 	) {
 		return true;
 	}

@@ -3,33 +3,37 @@
  * Licensed under the MIT License.
  */
 
-import { v4 as uuid } from "uuid";
+import { Uint8ArrayToString, stringToBuffer } from "@fluid-internal/client-utils";
+import { assert, unreachableCase } from "@fluidframework/core-utils/internal";
 import {
 	ISummaryBlob,
 	ISummaryTree,
+	type SummaryObject,
 	SummaryType,
-	ISnapshotTree,
-} from "@fluidframework/protocol-definitions";
+} from "@fluidframework/driver-definitions";
+import { ISnapshot, ISnapshotTree } from "@fluidframework/driver-definitions/internal";
 import {
 	getDocAttributesFromProtocolSummary,
+	getGitType,
 	isCombinedAppAndProtocolSummary,
-} from "@fluidframework/driver-utils";
-import { stringToBuffer, Uint8ArrayToString, unreachableCase } from "@fluidframework/common-utils";
-import { getGitType } from "@fluidframework/protocol-base";
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { InstrumentedStorageTokenFetcher } from "@fluidframework/odsp-driver-definitions";
-import { PerformanceEvent } from "@fluidframework/telemetry-utils";
+} from "@fluidframework/driver-utils/internal";
+import { InstrumentedStorageTokenFetcher } from "@fluidframework/odsp-driver-definitions/internal";
+import {
+	ITelemetryLoggerExt,
+	PerformanceEvent,
+} from "@fluidframework/telemetry-utils/internal";
+import { v4 as uuid } from "uuid";
+
 import {
 	IOdspSummaryPayload,
 	IOdspSummaryTree,
 	OdspSummaryTreeEntry,
 	OdspSummaryTreeValue,
-} from "./contracts";
-import { getWithRetryForTokenRefresh, maxUmpPostBodySize } from "./odspUtils";
-import { ISnapshotContents } from "./odspPublicUtils";
-import { EpochTracker, FetchType } from "./epochTracker";
-import { getUrlAndHeadersWithAuth } from "./getUrlAndHeadersWithAuth";
-import { runWithRetry } from "./retryUtils";
+} from "./contracts.js";
+import { EpochTracker, FetchType } from "./epochTracker.js";
+import { getHeadersWithAuth } from "./getUrlAndHeadersWithAuth.js";
+import { getWithRetryForTokenRefresh, maxUmpPostBodySize } from "./odspUtils.js";
+import { runWithRetry } from "./retryUtils.js";
 
 /**
  * Converts a summary(ISummaryTree) taken in detached container to snapshot tree and blobs
@@ -37,19 +41,20 @@ import { runWithRetry } from "./retryUtils";
 export function convertCreateNewSummaryTreeToTreeAndBlobs(
 	summary: ISummaryTree,
 	treeId: string,
-): ISnapshotContents {
+): ISnapshot {
 	const protocolSummary = summary.tree[".protocol"] as ISummaryTree;
 	const documentAttributes = getDocAttributesFromProtocolSummary(protocolSummary);
 	const sequenceNumber = documentAttributes.sequenceNumber;
-	const blobs = new Map<string, ArrayBuffer>();
-	const snapshotTree = convertCreateNewSummaryTreeToTreeAndBlobsCore(summary, blobs);
+	const blobContents = new Map<string, ArrayBuffer>();
+	const snapshotTree = convertCreateNewSummaryTreeToTreeAndBlobsCore(summary, blobContents);
 	snapshotTree.id = treeId;
-	const snapshotTreeValue: ISnapshotContents = {
+	const snapshotTreeValue: ISnapshot = {
 		snapshotTree,
-		blobs,
+		blobContents,
 		ops: [],
 		sequenceNumber,
 		latestSequenceNumber: sequenceNumber,
+		snapshotFormatV: 1,
 	};
 
 	return snapshotTreeValue;
@@ -58,11 +63,12 @@ export function convertCreateNewSummaryTreeToTreeAndBlobs(
 function convertCreateNewSummaryTreeToTreeAndBlobsCore(
 	summary: ISummaryTree,
 	blobs: Map<string, ArrayBuffer>,
-) {
+): ISnapshotTree {
 	const treeNode: ISnapshotTree = {
 		blobs: {},
 		trees: {},
 		unreferenced: summary.unreferenced,
+		groupId: summary.groupId,
 	};
 	const keys = Object.keys(summary.tree);
 	for (const key of keys) {
@@ -91,14 +97,19 @@ function convertCreateNewSummaryTreeToTreeAndBlobsCore(
 				throw new Error(`No ${summaryObject.type} should be present for detached summary!`);
 			}
 			default: {
-				unreachableCase(summaryObject, `Unknown tree type ${(summaryObject as any).type}`);
+				unreachableCase(
+					summaryObject,
+					`Unknown tree type ${(summaryObject as SummaryObject).type}`,
+				);
 			}
 		}
 	}
 	return treeNode;
 }
 
-export function convertSummaryIntoContainerSnapshot(createNewSummary: ISummaryTree) {
+export function convertSummaryIntoContainerSnapshot(
+	createNewSummary: ISummaryTree,
+): IOdspSummaryPayload {
 	if (!isCombinedAppAndProtocolSummary(createNewSummary)) {
 		throw new Error("App and protocol summary required for create new path!!");
 	}
@@ -138,6 +149,7 @@ function convertSummaryToSnapshotTreeForCreateNew(summary: ISummaryTree): IOdspS
 
 	const keys = Object.keys(summary.tree);
 	for (const key of keys) {
+		assert(!key.includes("/"), "id should not include slashes");
 		const summaryObject = summary.tree[key];
 
 		let value: OdspSummaryTreeValue;
@@ -145,11 +157,13 @@ function convertSummaryToSnapshotTreeForCreateNew(summary: ISummaryTree): IOdspS
 		// property is not present, the tree entry is considered referenced. If the property is present and is true,
 		// the tree entry is considered unreferenced.
 		let unreferenced: true | undefined;
+		let groupId: string | undefined;
 
 		switch (summaryObject.type) {
 			case SummaryType.Tree: {
 				value = convertSummaryToSnapshotTreeForCreateNew(summaryObject);
 				unreferenced = summaryObject.unreferenced;
+				groupId = summaryObject.groupId;
 				break;
 			}
 			case SummaryType.Blob: {
@@ -175,10 +189,11 @@ function convertSummaryToSnapshotTreeForCreateNew(summary: ISummaryTree): IOdspS
 		}
 
 		const entry: OdspSummaryTreeEntry = {
-			path: encodeURIComponent(key),
+			path: key,
 			type: getGitType(summaryObject),
 			value,
 			unreferenced,
+			groupId,
 		};
 		snapshotTree.entries?.push(entry);
 	}
@@ -188,8 +203,8 @@ function convertSummaryToSnapshotTreeForCreateNew(summary: ISummaryTree): IOdspS
 
 export async function createNewFluidContainerCore<T>(args: {
 	containerSnapshot: IOdspSummaryPayload;
-	getStorageToken: InstrumentedStorageTokenFetcher;
-	logger: ITelemetryLogger;
+	getAuthHeader: InstrumentedStorageTokenFetcher;
+	logger: ITelemetryLoggerExt;
 	initialUrl: string;
 	forceAccessTokenViaAuthorizationHeader: boolean;
 	epochTracker: EpochTracker;
@@ -199,10 +214,9 @@ export async function createNewFluidContainerCore<T>(args: {
 }): Promise<T> {
 	const {
 		containerSnapshot,
-		getStorageToken,
+		getAuthHeader,
 		logger,
 		initialUrl,
-		forceAccessTokenViaAuthorizationHeader,
 		epochTracker,
 		telemetryName,
 		fetchType,
@@ -210,8 +224,6 @@ export async function createNewFluidContainerCore<T>(args: {
 	} = args;
 
 	return getWithRetryForTokenRefresh(async (options) => {
-		const storageToken = await getStorageToken(options, telemetryName);
-
 		return PerformanceEvent.timedExecAsync(
 			logger,
 			{ eventName: telemetryName },
@@ -221,31 +233,42 @@ export async function createNewFluidContainerCore<T>(args: {
 				let headers: { [index: string]: string };
 				let addInBody = false;
 				const formBoundary = uuid();
-				let postBody = `--${formBoundary}\r\n`;
-				postBody += `Authorization: Bearer ${storageToken}\r\n`;
-				postBody += `X-HTTP-Method-Override: POST\r\n`;
-				postBody += `Content-Type: application/json\r\n`;
-				postBody += `_post: 1\r\n`;
-				postBody += `\r\n${snapshotBody}\r\n`;
-				postBody += `\r\n--${formBoundary}--`;
+				const urlObj = new URL(initialUrl);
+				urlObj.searchParams.set("ump", "1");
+				const authInBodyUrl = urlObj.href;
+				const method = "POST";
+				const authHeader = await getAuthHeader(
+					{ ...options, request: { url: authInBodyUrl, method } },
+					telemetryName,
+				);
+				const postBodyWithAuth =
+					`--${formBoundary}\r\n` +
+					`Authorization: ${authHeader}\r\n` +
+					`X-HTTP-Method-Override: POST\r\n` +
+					`Content-Type: application/json\r\n` +
+					`_post: 1\r\n` +
+					`\r\n${snapshotBody}\r\n` +
+					`\r\n--${formBoundary}--`;
 
-				if (postBody.length <= maxUmpPostBodySize) {
-					const urlObj = new URL(initialUrl);
-					urlObj.searchParams.set("ump", "1");
-					url = urlObj.href;
+				let postBody = snapshotBody;
+				if (
+					postBodyWithAuth.length <= maxUmpPostBodySize &&
+					authHeader?.startsWith("Bearer")
+				) {
+					url = authInBodyUrl;
 					headers = {
 						"Content-Type": `multipart/form-data;boundary=${formBoundary}`,
 					};
 					addInBody = true;
+					postBody = postBodyWithAuth;
 				} else {
-					const parts = getUrlAndHeadersWithAuth(
-						initialUrl,
-						storageToken,
-						forceAccessTokenViaAuthorizationHeader,
+					url = initialUrl;
+					const authHeaderNoUmp = await getAuthHeader(
+						{ ...options, request: { url, method } },
+						telemetryName,
 					);
-					url = parts.url;
 					headers = {
-						...parts.headers,
+						...getHeadersWithAuth(authHeaderNoUmp),
 						"Content-Type": "application/json",
 					};
 					postBody = snapshotBody;
@@ -258,7 +281,7 @@ export async function createNewFluidContainerCore<T>(args: {
 							{
 								body: postBody,
 								headers,
-								method: "POST",
+								method,
 							},
 							fetchType,
 							addInBody,
@@ -270,7 +293,6 @@ export async function createNewFluidContainerCore<T>(args: {
 				validateResponseCallback?.(fetchResponse.content);
 
 				event.end({
-					headers: Object.keys(headers).length !== 0 ? true : undefined,
 					attempts: options.refresh ? 2 : 1,
 					...fetchResponse.propsToLog,
 				});

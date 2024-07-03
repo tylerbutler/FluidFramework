@@ -4,33 +4,36 @@
  */
 
 import {
-	IFluidDataStoreRuntime,
-	IChannelFactory,
-	IChannelServices,
 	IChannelAttributes,
-} from "@fluidframework/datastore-definitions";
-import { Client } from "@fluidframework/merge-tree";
-import { DefaultMap } from "../defaultMap";
+	IChannelFactory,
+	IFluidDataStoreRuntime,
+	IChannelServices,
+} from "@fluidframework/datastore-definitions/internal";
+import { Client } from "@fluidframework/merge-tree/internal";
+
 import {
-	IValueFactory,
+	ISerializedIntervalCollectionV2,
+	IntervalCollection,
+	LocalIntervalCollection,
+	makeOpsMap,
+} from "../intervalCollection.js";
+import { IntervalCollectionMap } from "../intervalCollectionMap.js";
+import {
+	IIntervalCollectionFactory,
+	IIntervalCollectionOperation,
+	IIntervalCollectionType,
 	IValueOpEmitter,
-	IValueType,
-	IValueOperation,
-} from "../defaultMapInterfaces";
+} from "../intervalCollectionMapInterfaces.js";
 import {
+	IIntervalHelpers,
 	ISerializableInterval,
 	ISerializedInterval,
-	IntervalCollection,
+	IntervalOpType,
 	SequenceInterval,
-	ISerializedIntervalCollectionV2,
-	IIntervalHelpers,
-	makeOpsMap,
 	createSequenceInterval,
-	compareSequenceIntervalEnds,
-	LocalIntervalCollection,
-} from "../intervalCollection";
-import { pkgVersion } from "../packageVersion";
-import { SharedString } from "../sharedString";
+} from "../intervals/index.js";
+import { pkgVersion } from "../packageVersion.js";
+import { SharedStringClass } from "../sharedString.js";
 
 export interface IntervalCollectionInternals<TInterval extends ISerializableInterval> {
 	client: Client;
@@ -46,17 +49,16 @@ export class V1IntervalCollection<
 }
 
 class V1SequenceIntervalCollectionFactory
-	implements IValueFactory<V1IntervalCollection<SequenceInterval>>
+	implements IIntervalCollectionFactory<SequenceInterval>
 {
 	public load(
 		emitter: IValueOpEmitter,
 		raw: ISerializedInterval[] | ISerializedIntervalCollectionV2 = [],
 	): V1IntervalCollection<SequenceInterval> {
 		const helpers: IIntervalHelpers<SequenceInterval> = {
-			compareEnds: compareSequenceIntervalEnds,
 			create: createSequenceInterval,
 		};
-		return new V1IntervalCollection(helpers, true, emitter, raw);
+		return new V1IntervalCollection(helpers, true, emitter, raw, {});
 	}
 	public store(
 		value: V1IntervalCollection<SequenceInterval>,
@@ -68,7 +70,7 @@ class V1SequenceIntervalCollectionFactory
 }
 
 export class V1SequenceIntervalCollectionValueType
-	implements IValueType<V1IntervalCollection<SequenceInterval>>
+	implements IIntervalCollectionType<SequenceInterval>
 {
 	public static Name = "sharedStringIntervalCollection";
 
@@ -76,25 +78,25 @@ export class V1SequenceIntervalCollectionValueType
 		return V1SequenceIntervalCollectionValueType.Name;
 	}
 
-	public get factory(): IValueFactory<V1IntervalCollection<SequenceInterval>> {
+	public get factory(): IIntervalCollectionFactory<SequenceInterval> {
 		return V1SequenceIntervalCollectionValueType._factory;
 	}
 
-	public get ops(): Map<string, IValueOperation<V1IntervalCollection<SequenceInterval>>> {
+	public get ops(): Map<IntervalOpType, IIntervalCollectionOperation<SequenceInterval>> {
 		return V1SequenceIntervalCollectionValueType._ops;
 	}
 
-	private static readonly _factory: IValueFactory<V1IntervalCollection<SequenceInterval>> =
+	private static readonly _factory: IIntervalCollectionFactory<SequenceInterval> =
 		new V1SequenceIntervalCollectionFactory();
 
 	private static readonly _ops = makeOpsMap<SequenceInterval>();
 }
 
 interface SharedStringInternals {
-	intervalCollections: DefaultMap<V1IntervalCollection<SequenceInterval>>;
+	intervalCollections: IntervalCollectionMap<SequenceInterval>;
 }
 
-export class SharedStringWithV1IntervalCollection extends SharedString {
+export class SharedStringWithV1IntervalCollection extends SharedStringClass {
 	/**
 	 * Create a new shared string.
 	 * @param runtime - data store runtime the new shared string belongs to
@@ -122,18 +124,19 @@ export class SharedStringWithV1IntervalCollection extends SharedString {
 		attributes: IChannelAttributes,
 	) {
 		super(document, id, attributes);
-		(this as unknown as SharedStringInternals).intervalCollections = new DefaultMap(
+		(this as unknown as SharedStringInternals).intervalCollections = new IntervalCollectionMap(
 			this.serializer,
 			this.handle,
 			(op, localOpMetadata) => this.submitLocalMessage(op, localOpMetadata),
 			new V1SequenceIntervalCollectionValueType(),
+			{},
 		);
 	}
 }
 
 export class V1IntervalCollectionSharedStringFactory implements IChannelFactory {
 	// TODO rename back to https://graph.microsoft.com/types/mergeTree/string once paparazzi is able to dynamically
-	// load code
+	// load code (UPDATE: paparazzi is gone... anything to do here?)
 	public static Type = "https://graph.microsoft.com/types/mergeTree";
 
 	public static readonly Attributes: IChannelAttributes = {

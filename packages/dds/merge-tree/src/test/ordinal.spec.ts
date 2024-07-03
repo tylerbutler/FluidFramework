@@ -2,9 +2,18 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import assert from "assert";
-import { computeNumericOrdinal, computeHierarchicalOrdinal } from "../ordinal";
-import { doOverRange } from "./mergeTreeOperationRunner";
+
+import { computeHierarchicalOrdinal } from "../ordinal.js";
+
+import { doOverRange } from "./mergeTreeOperationRunner.js";
+
+function computeNumericOrdinal(index: number) {
+	const prefixLen = Math.floor(index / 0xffff);
+	const prefix = String.fromCharCode(0xffff).repeat(prefixLen);
+	return `${prefix}${String.fromCharCode(index - prefixLen * 0xffff)}`;
+}
 
 describe("MergeTree.ordinals", () => {
 	doOverRange(
@@ -19,16 +28,8 @@ describe("MergeTree.ordinals", () => {
 					(count) => {
 						let previous: string = "";
 						for (let i = 0; i < count; i++) {
-							const current = computeHierarchicalOrdinal(
-								max,
-								count,
-								parentOrdinal,
-								previous,
-							);
-							assert(
-								current > previous,
-								"subsequent ordinal should be greater than previous",
-							);
+							const current = computeHierarchicalOrdinal(max, count, parentOrdinal, previous);
+							assert(current > previous, "subsequent ordinal should be greater than previous");
 							assert(
 								current.length > parentOrdinal.length,
 								"child ordinals should be  more than parent",

@@ -3,34 +3,85 @@
  * Licensed under the MIT License.
  */
 
-import { unreachableCase } from "@fluidframework/common-utils";
-import { Mark, MarkType, Root, Skip } from "./delta";
+import type { Mutable } from "../../util/index.js";
+import type { FieldKey } from "../schema-stored/index.js";
 
-export const emptyDelta: Root<never> = new Map();
+import type { ITreeCursorSynchronous } from "./cursor.js";
+import type { DetachedNodeId, FieldChanges, Mark, Root } from "./delta.js";
+import { rootFieldKey } from "./types.js";
 
-/**
- * Returns the number of nodes in the input tree that the mark affects or skips.
- */
-export function inputLength(mark: Mark<unknown>): number {
-	if (isSkipMark(mark)) {
-		return mark;
-	}
-	// Inline into `switch(mark.type)` once we upgrade to TS 4.7
-	const type = mark.type;
-	switch (type) {
-		case MarkType.Delete:
-		case MarkType.MoveOut:
-			return mark.count;
-		case MarkType.Modify:
-			return 1;
-		case MarkType.Insert:
-		case MarkType.MoveIn:
-			return 0;
-		default:
-			unreachableCase(type);
-	}
+export const emptyDelta: Root<never> = {};
+
+export const emptyFieldChanges: FieldChanges = {};
+
+export function isAttachMark(mark: Mark): boolean {
+	return mark.attach !== undefined && mark.detach === undefined;
 }
 
-export function isSkipMark(mark: Mark<unknown>): mark is Skip {
-	return typeof mark === "number";
+export function isDetachMark(mark: Mark): boolean {
+	return mark.detach !== undefined && mark.attach === undefined;
+}
+
+export function isReplaceMark(mark: Mark): boolean {
+	return mark.detach !== undefined && mark.attach !== undefined;
+}
+
+export function isEmptyFieldChanges(fieldChanges: FieldChanges): boolean {
+	return (
+		fieldChanges.local === undefined &&
+		fieldChanges.global === undefined &&
+		fieldChanges.rename === undefined
+	);
+}
+
+export function deltaForRootInitialization(content: readonly ITreeCursorSynchronous[]): Root {
+	if (content.length === 0) {
+		return emptyDelta;
+	}
+	const buildId = { minor: 0 };
+	const delta: Root = {
+		build: [{ id: buildId, trees: content }],
+		fields: new Map<FieldKey, FieldChanges>([
+			[
+				rootFieldKey,
+				{
+					local: [{ count: content.length, attach: buildId }],
+				},
+			],
+		]),
+	};
+	return delta;
+}
+
+export function makeDetachedNodeId(
+	major: DetachedNodeId["major"],
+	minor: DetachedNodeId["minor"],
+): DetachedNodeId {
+	const out: Mutable<DetachedNodeId> = { minor };
+	if (major !== undefined) {
+		out.major = major;
+	}
+	return out;
+}
+
+export function offsetDetachId(id: DetachedNodeId, offset: number): DetachedNodeId;
+export function offsetDetachId(
+	id: DetachedNodeId | undefined,
+	offset: number,
+): DetachedNodeId | undefined;
+export function offsetDetachId(
+	id: DetachedNodeId | undefined,
+	offset: number,
+): DetachedNodeId | undefined {
+	if (id === undefined) {
+		return undefined;
+	}
+	return {
+		...id,
+		minor: id.minor + offset,
+	};
+}
+
+export function areDetachedNodeIdsEqual(a: DetachedNodeId, b: DetachedNodeId): boolean {
+	return a.major === b.major && a.minor === b.minor;
 }

@@ -3,114 +3,179 @@
  * Licensed under the MIT License.
  */
 
-const {
-	loadModel,
-	DefaultPolicies,
+import {
+	ApiItemKind,
+	ApiItemUtilities,
 	DocumentationNodeType,
-	markdownDocumenterConfigurationWithDefaults,
-	renderDocumentAsMarkdown,
+	getApiItemTransformationConfigurationWithDefaults,
+	loadModel,
+	MarkdownRenderer,
+	ReleaseTag,
 	transformApiModel,
-} = require("@fluid-tools/api-markdown-documenter");
-const { ApiItemKind } = require("@microsoft/api-extractor-model");
-const fs = require("fs-extra");
-const path = require("path");
+} from "@fluid-tools/api-markdown-documenter";
+import { PackageName } from "@rushstack/node-core-library";
+import chalk from "chalk";
+import fs from "fs-extra";
+import path from "path";
 
-const {createHugoFrontMatter} = require("./front-matter");
-const {
-	renderAlertNode,
-	renderBlockQuoteNode,
-	renderTableNode
-} = require("./custom-renderers");
+import { alertNodeType } from "./alert-node.js";
+import { layoutContent } from "./api-documentation-layout.js";
+import { buildNavBar } from "./build-api-nav.js";
+import { renderAlertNode, renderBlockQuoteNode, renderTableNode } from "./custom-renderers.js";
+import { createHugoFrontMatter } from "./front-matter.js";
 
-const apiReportsDirectoryPath = path.resolve(__dirname, "..", "_api-extractor-temp", "_build");
-const apiDocsDirectoryPath = path.resolve(__dirname, "..", "content", "docs", "apis");
+/**
+ * Generates a documentation suite for the API model saved under `inputDir`, saving the output to `outputDir`.
+ * @param {string} inputDir - The directory path containing the API model to be processed.
+ * @param {string} outputDir - The directory path under which the generated documentation suite will be saved.
+ * @param {string} uriRootDir - The base for all links between API members.
+ * @param {string} apiVersionNum - The API model version string used to differentiate different major versions of the
+ * framework for which API documentation is presented on the website.
+ */
+export async function renderApiDocumentation(inputDir, outputDir, uriRootDir, apiVersionNum) {
+	/**
+	 * Logs a progress message, prefaced with the API version number to help differentiate parallel logging output.
+	 */
+	function logProgress(message) {
+		console.log(`(${apiVersionNum}) ${message}`);
+	}
 
-async function renderApiDocumentation() {
+	/**
+	 * Logs the error with the specified message, prefaced with the API version number to help differentiate parallel
+	 * logging output, and re-throws the error.
+	 */
+	function logErrorAndRethrow(message, error) {
+		console.error(chalk.red(`(${apiVersionNum}) ${message}:`));
+		console.error(error);
+		throw error;
+	}
+
 	// Delete existing documentation output
-	console.log("Removing existing generated API docs...");
-	await fs.ensureDir(apiDocsDirectoryPath);
-	await fs.emptyDir(apiDocsDirectoryPath);
+	logProgress("Removing existing generated API docs...");
+	await fs.ensureDir(outputDir);
+	await fs.emptyDir(outputDir);
 
 	// Process API reports
-	console.group();
+	logProgress("Loading API model...");
 
-	const apiModel = await loadModel(apiReportsDirectoryPath);
-	
+	const apiModel = await loadModel(inputDir);
+
 	// Custom renderers that utilize Hugo syntax for certain kinds of documentation elements.
 	const customRenderers = {
-		[DocumentationNodeType.Alert]: renderAlertNode,
 		[DocumentationNodeType.BlockQuote]: renderBlockQuoteNode,
 		[DocumentationNodeType.Table]: renderTableNode,
+		[alertNodeType]: renderAlertNode,
 	};
 
-	console.groupEnd();
-
-	const config = markdownDocumenterConfigurationWithDefaults({
+	const config = getApiItemTransformationConfigurationWithDefaults({
 		apiModel,
+		documentBoundaries: [
+			ApiItemKind.Class,
+			ApiItemKind.Enum,
+			ApiItemKind.Interface,
+			ApiItemKind.Namespace,
+			ApiItemKind.TypeAlias,
+		],
 		newlineKind: "lf",
-		uriRoot: "/docs/apis",
+		uriRoot: uriRootDir,
+		includeBreadcrumb: false, // Hugo will now be used to generate the breadcrumb
 		includeTopLevelDocumentHeading: false, // This will be added automatically by Hugo
+		createDefaultLayout: layoutContent,
+		getAlertsForItem: (apiItem) => {
+			const alerts = [];
+			if (ApiItemUtilities.isDeprecated(apiItem)) {
+				alerts.push("Deprecated");
+			}
 
-		fileNamePolicy: (apiItem) => {
-			return apiItem.kind === ApiItemKind.Model
-				? "index"
-				: DefaultPolicies.defaultFileNamePolicy(apiItem);
+			const releaseTag = ApiItemUtilities.getReleaseTag(apiItem);
+			if (releaseTag === ReleaseTag.Alpha) {
+				// Temporary workaround for the current `@alpha` => "Legacy" state.
+				// This should be replaced with "Alpha" once that has been cleaned up.
+				alerts.push("Legacy");
+			} else if (releaseTag === ReleaseTag.Beta) {
+				alerts.push("Beta");
+			}
+			return alerts;
 		},
-		frontMatterPolicy: (apiItem) => createHugoFrontMatter(apiItem, config, customRenderers),
+		skipPackage: (apiPackage) => {
+			const packageName = apiPackage.displayName;
+			const packageScope = PackageName.getScope(packageName);
+
+			// Skip `@fluid-private` packages
+			// TODO: Also skip `@fluid-internal` packages once we no longer have public, user-facing APIs that reference their contents.
+			return ["@fluid-private"].includes(packageScope);
+		},
+		// Temporary workaround to ensure APIs temporarily tagged as `@alpha` (to mean "legacy") are included in the API docs.
+		// This min level should be set back to Beta once legacy APIs have been cleaned up to not use `@alpha`.
+		minimumReleaseLevel: ReleaseTag.Alpha, // Don't include `@internal` items in docs published to the public website.
 	});
 
-	console.log("Generating API documentation...");
-	console.group();
+	logProgress("Generating API documentation...");
 
 	let documents;
 	try {
 		documents = transformApiModel(config);
-	} catch(error) {
-		console.error("Encountered error while generating API documentation:", error);
-		throw error;
+	} catch (error) {
+		logErrorAndRethrow("Encountered error while processing API model", error);
 	}
 
-	console.groupEnd();
+	logProgress("Generating nav bar contents...");
 
-	console.log("Writing API documents to disk...");
-	console.group();
+	try {
+		await buildNavBar(documents, apiVersionNum);
+	} catch (error) {
+		logErrorAndRethrow("Encountered an error while saving nav bar yaml files", error);
+	}
 
-	await Promise.all(documents.map(async (document) => {
-		let fileContents;
-		try {
-			fileContents = renderDocumentAsMarkdown(document, {
-				headingLevel: 2, // Hugo will inject its document titles as 1st level headings, so start content heading levels at 2.
-				renderers: customRenderers,
-			});
-		} catch (error) {
-			console.error("Encountered error while rendering Markdown:", error);
-			throw error;
-		}
+	logProgress("Writing API documents to disk...");
 
-		let filePath = path.join(apiDocsDirectoryPath, document.filePath);
-
-		try {
-			// Hugo uses a special file-naming syntax to represent documents with "child" documents in the same directory.
-			// Namely, "_index.md". However, the resulting html names these modules "index", rather than
-			// "_index", so we cannot use the "_index" convention when generating the docs and the links between them.
-			// To accommodate this, we will match on "index.md" files and adjust the file name accordingly.
-			if(filePath.endsWith("index.md")) {
-				filePath = filePath.replace("index.md", "_index.md");
+	await Promise.all(
+		documents.map(async (document) => {
+			// We inject custom landing pages for each model (the root of a versioned documentation suite) using Hugo,
+			// so we will skip generating a file for the model here.
+			// TODO: add native support to api-markdown-documenter to allow skipping document generation for different
+			// kinds of items, and utilize that instead.
+			if (document.apiItem?.kind === ApiItemKind.Model) {
+				return;
 			}
 
-			await fs.ensureFile(filePath);
-			await fs.writeFile(filePath, fileContents);
-		} catch (error) {
-			console.error(`Encountered error while writing file output for "${document.apiItem.displayName}":`);
-			console.error(error);
-			throw error;
-		}
-	}));
+			let fileContents;
+			try {
+				const documentFrontMatter =
+					document.apiItem === undefined
+						? undefined
+						: createHugoFrontMatter(
+								document.apiItem,
+								config,
+								customRenderers,
+								apiVersionNum,
+							);
+				const documentBody = MarkdownRenderer.renderDocument(document, {
+					startingHeadingLevel: 2, // Hugo will inject its document titles as 1st level headings, so start content heading levels at 2.
+					customRenderers,
+				});
+				fileContents =
+					documentFrontMatter === undefined
+						? documentBody
+						: `${documentFrontMatter}\n\n${documentBody}`;
+			} catch (error) {
+				logErrorAndRethrow(
+					`Encountered error while rendering Markdown contents for "${document.apiItem.displayName}"`,
+					error,
+				);
+			}
 
-	console.groupEnd();
+			let filePath = path.join(outputDir, `${document.documentPath}.md`);
+
+			try {
+				await fs.ensureFile(filePath);
+				await fs.writeFile(filePath, fileContents);
+			} catch (error) {
+				logErrorAndRethrow(
+					`Encountered error while writing file output for "${document.apiItem.displayName}"`,
+					error,
+				);
+			}
+		}),
+	);
 }
-
-module.exports = {
-	renderApiDocumentation,
-}
-

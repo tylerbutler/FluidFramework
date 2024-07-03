@@ -3,250 +3,133 @@
  * Licensed under the MIT License.
  */
 
-import { GlobalFieldKey, SchemaDataAndPolicy, TreeSchemaIdentifier, ValueSchema } from "../../core";
-import { typeNameSymbol, valueSymbol } from "../contextuallyTyped";
-import {
-	FullSchemaPolicy,
+import type {
+	TreeNodeSchemaIdentifier,
+	TreeValue,
+	ValueSchema,
 	Multiplicity,
-	TypedSchema,
-	FieldViewSchema,
-	ViewSchemaCollection,
-} from "../modular-schema";
-import { defaultSchemaPolicy } from "../defaultSchema";
-import { NamesFromSchema, PrimitiveValueSchema, TypedValue, ValuesOf } from "./schemaAwareUtil";
+} from "../../core/index.js";
+import type { Assume, FlattenKeys, _InlineTrick } from "../../util/index.js";
+import type {
+	ContextuallyTypedNodeData,
+	typeNameSymbol,
+	valueSymbol,
+} from "../contextuallyTyped.js";
+import type {
+	FlexAllowedTypes,
+	FlexFieldNodeSchema,
+	FlexFieldSchema,
+	FlexListToUnion,
+	FlexMapNodeSchema,
+	FlexObjectNodeFields,
+	FlexObjectNodeSchema,
+	FlexTreeNodeSchema,
+	LazyItem,
+	LeafNodeSchema,
+} from "../typed-schema/index.js";
 
 /**
- * Schema aware API for a specific Schema.
- *
- * `Mode` specifies what API to provide.
- * `TMap` provides access to all the schema and is used to look up child schema.
- * `TSchema` specifies which type of node to generate the API for.
- * @alpha
+ * Empty Object for use in type computations that should contribute no fields when `&`ed with another type.
+ * @internal
  */
-export type TypedTree<
-	TMap extends TypedSchemaData,
-	Mode extends ApiMode,
-	TSchema extends TypedSchema.LabeledTreeSchema,
-> = CollectOptions<
-	Mode,
-	TypedFields<TMap, Mode, TSchema["typeInfo"]["local"]>,
-	TSchema["typeInfo"]["value"],
-	TSchema["typeInfo"]["name"]
->;
-
-/**
- * @alpha
- */
-export type ValueFieldTreeFromSchema<TSchema extends ValueSchema> =
-	undefined extends TypedValue<TSchema>
-		? {
-				[valueSymbol]?: TypedValue<TSchema>;
-		  }
-		: {
-				[valueSymbol]: TypedValue<TSchema>;
-		  };
-
-/**
- * Different schema aware APIs that can be generated.
- * @alpha
- */
-export const enum ApiMode {
-	/**
-	 * Allow all forms accepted as ContextuallyTypedNodeData that align with the schema.
-	 * Types are optional.
-	 *
-	 * This also permits some cases which are ambiguous and thus would be rejected by `applyFieldTypesFromContext`.
-	 */
-	Flexible,
-	/**
-	 * Similar to what EditableTree uses.
-	 * No flexibility in representation.
-	 * Nodes are with primitives unwrapped to just the primitive.
-	 * Requires types on all node objects.
-	 *
-	 * TODO: fix ways this differs from editable tree:
-	 * - Does not do primary field inlining.
-	 * - Primitive node handling might not match.
-	 */
-	Normalized,
-	/**
-	 * Always use full node objects for everything.
-	 *
-	 * Fields are still shaped based on their multiplicity.
-	 */
-	Wrapped,
-}
+// Using {} instead of interface {} or Record<string, never> for empty object here produces better IntelliSense in the generated types than `Record<string, never>` recommended by the linter.
+// Making this a type instead of an interface prevents it from showing up in IntelliSense, and also avoids breaking the typing somehow.
+// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/consistent-type-definitions
+export type EmptyObject = {};
 
 /**
  * Collects the various parts of the API together.
- * @alpha
+ * @internal
  */
 export type CollectOptions<
-	Mode extends ApiMode,
 	TTypedFields,
-	TValueSchema extends ValueSchema,
+	TValueSchema extends ValueSchema | undefined,
 	TName,
-> = {
-	[ApiMode.Flexible]: Record<string, never> extends TTypedFields
-		? TypedValue<TValueSchema> | FlexibleObject<TValueSchema, TName>
-		: FlexibleObject<TValueSchema, TName> & TypedSchema.AllowOptionalNotFlattened<TTypedFields>;
-	[ApiMode.Normalized]: [Record<string, never>, TValueSchema] extends [
-		TTypedFields,
-		PrimitiveValueSchema,
-	]
-		? TypedValue<TValueSchema>
-		: TypedSchema.AllowOptionalNotFlattened<
-				{
-					[typeNameSymbol]: TName & TreeSchemaIdentifier;
-				} & ValueFieldTreeFromSchema<TValueSchema> &
-					TTypedFields
-		  >;
-	[ApiMode.Wrapped]: {
-		[typeNameSymbol]: TName;
-		[valueSymbol]: TypedValue<TValueSchema>;
-	} & TTypedFields;
-}[Mode];
+> = TValueSchema extends undefined
+	? FlattenKeys<
+			{ [typeNameSymbol]?: UnbrandedName<TName> } & (TValueSchema extends ValueSchema
+				? { [valueSymbol]: TreeValue<TValueSchema> }
+				: EmptyObject)
+		> &
+			TTypedFields
+	: TValueSchema extends ValueSchema
+		? TreeValue<TValueSchema>
+		: undefined;
 
 /**
- * The name and value part of the `Flexible` API.
- * @alpha
+ * Remove type brand from name.
+ * @internal
  */
-export type FlexibleObject<TValueSchema extends ValueSchema, TName> = [
-	TypedSchema.FlattenKeys<
-		{ [typeNameSymbol]?: TName } & TypedSchema.AllowOptional<
-			ValueFieldTreeFromSchema<TValueSchema>
-		>
-	>,
-][TypedSchema._dummy];
+export type UnbrandedName<TName> = [
+	TName extends TreeNodeSchemaIdentifier<infer S> ? S : string,
+][_InlineTrick];
 
 /**
  * `{ [key: string]: FieldSchemaTypeInfo }` to `{ [key: string]: TypedTree }`
  *
- * TODO:
- * Extend this to support global fields.
- * @alpha
+ * In Editable mode, unwraps the fields.
+ * @internal
  */
 export type TypedFields<
-	TMap extends TypedSchemaData,
-	Mode extends ApiMode,
-	TFields extends { [key: string]: TypedSchema.FieldSchemaTypeInfo },
+	TFields extends undefined | { readonly [key: string]: FlexFieldSchema },
 > = [
-	{
-		[key in keyof TFields]: ApplyMultiplicity<
-			TFields[key]["kind"]["multiplicity"],
-			TypeSetToTypedTrees<TMap, Mode, TFields[key]["types"]>
-		>;
-	},
-][TypedSchema._dummy];
+	TFields extends { [key: string]: FlexFieldSchema }
+		? {
+				-readonly [key in keyof TFields]: InsertableFlexField<TFields[key]>;
+			}
+		: EmptyObject,
+][_InlineTrick];
+
+/**
+ * `TreeFieldSchema` to `TypedField`. May unwrap to child depending on FieldKind.
+ * @internal
+ */
+export type InsertableFlexField<TField extends FlexFieldSchema> = [
+	ApplyMultiplicity<
+		TField["kind"]["multiplicity"],
+		AllowedTypesToFlexInsertableTree<TField["allowedTypes"]>
+	>,
+][_InlineTrick];
 
 /**
  * Adjusts the API for a field based on its Multiplicity.
- * @alpha
+ * @internal
  */
 export type ApplyMultiplicity<TMultiplicity extends Multiplicity, TypedChild> = {
 	[Multiplicity.Forbidden]: undefined;
 	[Multiplicity.Optional]: undefined | TypedChild;
 	[Multiplicity.Sequence]: TypedChild[];
-	[Multiplicity.Value]: TypedChild;
+	[Multiplicity.Single]: TypedChild;
 }[TMultiplicity];
 
 /**
- * Takes in `types?: unknown | TypedSchema.NameSet` and returns a TypedTree union.
- * @alpha
+ * Takes in `AllowedTypes` and returns a TypedTree union.
+ * @internal
  */
-export type TypeSetToTypedTrees<
-	TMap extends TypedSchemaData,
-	Mode extends ApiMode,
-	T extends unknown | TypedSchema.NameSet,
-> = [
-	TypedNode<T extends TypedSchema.NameSet<infer Names> ? Names : TMap["allTypes"], Mode, TMap>,
-][TypedSchema._dummy];
-
-/**
- * Interface which strongly typed schema collections extend.
- * @alpha
- */
-export interface TypedSchemaData extends SchemaDataAndPolicy<FullSchemaPolicy> {
-	// TODO: can we use a more specific type here?
-	treeSchemaObject: Record<string, any>; // LabeledTreeSchema
-	allTypes: readonly string[];
-}
-
-/**
- * Collects schema into a `TypedSchemaData` without losing type information.
- *
- * TODO:
- * 1. Extend this to support global fields.
- * 2. Extend this to better support use in libraries
- * which only have partial knowledge of what schema exist.
- * Currently unbounded polymorphism is not correct in that case.
- *
- *
- * @alpha
- */
-export function typedSchemaData<T extends TypedSchema.LabeledTreeSchema[]>(
-	globalFieldSchema: [GlobalFieldKey, FieldViewSchema][],
-	...t: T
-): SchemaDataAndPolicy<FullSchemaPolicy> &
-	ViewSchemaCollection & {
-		treeSchemaObject: {
-			[schema in T[number] as schema["typeInfo"]["name"]]: schema;
-		};
-
-		allTypes: NamesFromSchema<T>;
-	} {
-	const treeSchemaObject = {};
-	const allTypes = [];
-	for (const schema of t) {
-		Object.defineProperty(treeSchemaObject, schema.name, {
-			enumerable: true,
-			configurable: true,
-			writable: false,
-			value: schema,
-		});
-		allTypes.push(schema.name);
-	}
-	const schemaData = {
-		policy: defaultSchemaPolicy,
-		globalFieldSchema: new Map(globalFieldSchema),
-		treeSchema: new Map<TreeSchemaIdentifier, TypedSchema.LabeledTreeSchema>(
-			t.map((schema) => [schema.name, schema]),
-		),
-		treeSchemaObject: treeSchemaObject as {
-			[schema in T[number] as schema["typeInfo"]["name"]]: schema;
-		},
-		allTypes: allTypes as NamesFromSchema<T>,
-	} as const;
-	return schemaData;
-}
-
-/**
- * Generate a schema aware API for a list of types.
- *
- * @remarks
- * The arguments here are in an order that makes the truncated strings printed for the types more useful.
- * This is important since this generic type is not inlined when recursing.
- * That mens it will show up in IntelliSense and errors.
- * @alpha
- */
-export type TypedNode<
-	TNames extends readonly string[],
-	Mode extends ApiMode,
-	TMap extends TypedSchemaData,
-> = ValuesOf<{
-	[Property in keyof TypedSchema.ListToKeys<TNames, 0>]: TMap["treeSchemaObject"] extends {
-		[key in Property]: any;
-	}
-		? TypedTree<TMap, Mode, TMap["treeSchemaObject"][Property]>
-		: never;
-}>;
+export type AllowedTypesToFlexInsertableTree<T extends FlexAllowedTypes> = [
+	T extends readonly LazyItem<FlexTreeNodeSchema>[]
+		? InsertableFlexNode<Assume<FlexListToUnion<T>, FlexTreeNodeSchema>>
+		: ContextuallyTypedNodeData,
+][_InlineTrick];
 
 /**
  * Generate a schema aware API for a single tree schema.
- * @alpha
+ * @internal
  */
-export type NodeDataFor<
-	TMap extends TypedSchemaData,
-	Mode extends ApiMode,
-	TSchema extends TypedSchema.LabeledTreeSchema,
-> = TypedSchema.FlattenKeys<TypedNode<readonly [TSchema["typeInfo"]["name"]], Mode, TMap>>;
+export type InsertableFlexNode<TSchema extends FlexTreeNodeSchema> = FlattenKeys<
+	CollectOptions<
+		TSchema extends FlexObjectNodeSchema<string, infer TFields extends FlexObjectNodeFields>
+			? TypedFields<TFields>
+			: TSchema extends FlexFieldNodeSchema<string, infer TField extends FlexFieldSchema>
+				? InsertableFlexField<TField>
+				: TSchema extends FlexMapNodeSchema<string, infer TField extends FlexFieldSchema>
+					? {
+							readonly [P in string]: InsertableFlexField<TField>;
+						}
+					: EmptyObject,
+		TSchema extends LeafNodeSchema<string, infer TValueSchema extends ValueSchema>
+			? TValueSchema
+			: undefined,
+		TSchema["name"]
+	>
+>;

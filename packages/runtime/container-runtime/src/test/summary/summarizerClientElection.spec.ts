@@ -4,24 +4,29 @@
  */
 
 import { strict as assert } from "assert";
-import { Deferred, TypedEventEmitter } from "@fluidframework/common-utils";
-import { ISequencedClient, MessageType } from "@fluidframework/protocol-definitions";
-import { MockLogger } from "@fluidframework/telemetry-utils";
+
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import { Deferred } from "@fluidframework/core-utils/internal";
+import { ISequencedClient } from "@fluidframework/driver-definitions";
+import { MessageType } from "@fluidframework/driver-definitions/internal";
+import { MockLogger } from "@fluidframework/telemetry-utils/internal";
+
 import {
-	ISerializedElection,
-	OrderedClientCollection,
-	OrderedClientElection,
-	ISummaryCollectionOpEvents,
-	SummarizerClientElection,
-	summarizerClientType,
 	IConnectedEvents,
 	IConnectedState,
-	SummaryManager,
+	ISerializedElection,
 	ISummarizer,
 	ISummarizerEvents,
+	ISummaryCollectionOpEvents,
+	OrderedClientCollection,
+	OrderedClientElection,
+	SummarizerClientElection,
 	SummarizerStopReason,
-} from "../../summary";
-import { TestQuorumClients } from "./testQuorumClients";
+	SummaryManager,
+	summarizerClientType,
+} from "../../summary/index.js";
+
+import { TestQuorumClients } from "./testQuorumClients.js";
 
 describe("Summarizer Client Election", () => {
 	const maxOps = 1000;
@@ -165,10 +170,10 @@ describe("Summarizer Client Election", () => {
 			addClient(id, seq, int);
 		}
 		election = new SummarizerClientElection(
-			mockLogger,
+			mockLogger.toTelemetryLogger(),
 			summaryCollectionEmitter,
 			new OrderedClientElection(
-				mockLogger,
+				mockLogger.toTelemetryLogger(),
 				new OrderedClientCollection(mockLogger, testDeltaManager, testQuorum),
 				initialState ?? currentSequenceNumber,
 				SummarizerClientElection.isClientEligible,
@@ -228,7 +233,7 @@ describe("Summarizer Client Election", () => {
 	}
 
 	afterEach(() => {
-		mockLogger.events = [];
+		mockLogger.clear();
 		testQuorum.reset();
 		summaryCollectionEmitter.removeAllListeners();
 		summarizer.removeAllListeners();
@@ -349,12 +354,7 @@ describe("Summarizer Client Election", () => {
 			// Add more clients, no effect
 			addClient("s2", 19, false);
 			addClient("b", 41, true);
-			assertState(
-				"a-summarizer",
-				"a",
-				17,
-				"additional younger clients should have no effect",
-			);
+			assertState("a-summarizer", "a", 17, "additional younger clients should have no effect");
 
 			// Remove elected client, should reelect
 			removeClient("a", 400);

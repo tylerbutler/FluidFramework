@@ -2,19 +2,42 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { TypedEventEmitter } from "@fluidframework/common-utils";
-import { IFluidLoadable } from "@fluidframework/core-interfaces";
-import { IEvent, IEventProvider } from "@fluidframework/common-definitions";
+
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
 import {
 	AttachState,
-	IContainer,
-	ICriticalContainerError,
-	ConnectionState,
+	type ConnectionState,
+	type ICriticalContainerError,
 } from "@fluidframework/container-definitions";
-import type { IRootDataObject, LoadableObjectClass, LoadableObjectRecord } from "./types";
+import type { IContainer } from "@fluidframework/container-definitions/internal";
+import type { IEvent, IEventProvider, IFluidLoadable } from "@fluidframework/core-interfaces";
+import type { SharedObjectKind } from "@fluidframework/shared-object-base";
+
+import type { ContainerAttachProps, ContainerSchema, IRootDataObject } from "./types.js";
+
+/**
+ * Extract the type of 'initialObjects' from the given {@link ContainerSchema} type.
+ * @public
+ */
+export type InitialObjects<T extends ContainerSchema> = {
+	// Construct a LoadableObjectRecord type by enumerating the keys of
+	// 'ContainerSchema.initialObjects' and inferring the value type of each key.
+	//
+	// The '? TChannel : never' is required because infer can only be used in
+	// a conditional 'extends' expression.
+	[K in keyof T["initialObjects"]]: T["initialObjects"][K] extends SharedObjectKind<
+		infer TChannel
+	>
+		? TChannel
+		: never;
+};
 
 /**
  * Events emitted from {@link IFluidContainer}.
+ *
+ * @remarks Note: external implementations of this interface are not supported.
+ * @sealed
+ * @public
  */
 export interface IFluidContainerEvents extends IEvent {
 	/**
@@ -76,9 +99,15 @@ export interface IFluidContainerEvents extends IEvent {
  * Provides an entrypoint into the client side of collaborative Fluid data.
  * Provides access to the data as well as status on the collaboration session.
  *
+ * @typeparam TContainerSchema - Used to determine the type of 'initialObjects'.
+ *
  * @remarks Note: external implementations of this interface are not supported.
+ *
+ * @sealed
+ * @public
  */
-export interface IFluidContainer extends IEventProvider<IFluidContainerEvents> {
+export interface IFluidContainer<TContainerSchema extends ContainerSchema = ContainerSchema>
+	extends IEventProvider<IFluidContainerEvents> {
 	/**
 	 * Provides the current connected state of the container
 	 */
@@ -116,7 +145,7 @@ export interface IFluidContainer extends IEventProvider<IFluidContainerEvents> {
 	 *
 	 * @remarks These data objects and DDSes exist for the lifetime of the container.
 	 */
-	readonly initialObjects: LoadableObjectRecord;
+	readonly initialObjects: InitialObjects<TContainerSchema>;
 
 	/**
 	 * The current attachment state of the container.
@@ -135,13 +164,13 @@ export interface IFluidContainer extends IEventProvider<IFluidContainerEvents> {
 	 * @remarks
 	 *
 	 * This should only be called when the container is in the
-	 * {@link @fluidframework/container-definitions#AttachState.Detatched} state.
+	 * {@link @fluidframework/container-definitions#AttachState.Detached} state.
 	 *
 	 * This can be determined by observing {@link IFluidContainer.attachState}.
 	 *
 	 * @returns A promise which resolves when the attach is complete, with the string identifier of the container.
 	 */
-	attach(): Promise<string>;
+	attach(props?: ContainerAttachProps): Promise<string>;
 
 	/**
 	 * Attempts to connect the container to the delta stream and process operations.
@@ -151,7 +180,7 @@ export interface IFluidContainer extends IEventProvider<IFluidContainerEvents> {
 	 * @remarks
 	 *
 	 * This should only be called when the container is in the
-	 * {@link @fluidframework/container-definitions#ConnectionState.Disconnected} state.
+	 * {@link @fluidframework/container-definitions#(ConnectionState:namespace).Disconnected} state.
 	 *
 	 * This can be determined by observing {@link IFluidContainer.connectionState}.
 	 */
@@ -163,7 +192,7 @@ export interface IFluidContainer extends IEventProvider<IFluidContainerEvents> {
 	 * @remarks
 	 *
 	 * This should only be called when the container is in the
-	 * {@link @fluidframework/container-definitions#ConnectionState.Connected} state.
+	 * {@link @fluidframework/container-definitions#(ConnectionState:namespace).Connected} state.
 	 *
 	 * This can be determined by observing {@link IFluidContainer.connectionState}.
 	 */
@@ -172,17 +201,28 @@ export interface IFluidContainer extends IEventProvider<IFluidContainerEvents> {
 	/**
 	 * Create a new data object or Distributed Data Store (DDS) of the specified type.
 	 *
-	 * @remarks
-	 *
-	 * In order to share the data object or DDS with other
-	 * collaborators and retrieve it later, store its handle in a collection like a SharedDirectory from your
-	 * initialObjects.
-	 *
 	 * @param objectClass - The class of the `DataObject` or `SharedObject` to create.
 	 *
 	 * @typeParam T - The class of the `DataObject` or `SharedObject`.
+	 *
+	 * @remarks
+	 *
+	 * In order to share the data object or DDS with other collaborators and retrieve it later,
+	 * store its handle in a collection like a SharedDirectory from your initialObjects.
+	 * It's typically a good idea to set any initial state on the object before doing so,
+	 * as it is both more efficient and helpful to maintain domain model invariants
+	 * (e.g. this approach easily allows state to only be set once).
+	 *
+	 * @example
+	 *
+	 * ```typescript
+	 * const existingDirectory = container.initialObjects.myDirectory;
+	 * const map = await container.create(SharedMap);
+	 * map.set("initialState", "someValue");
+	 * existingDirectory.set("myMap", map.handle);
+	 * ```
 	 */
-	create<T extends IFluidLoadable>(objectClass: LoadableObjectClass<T>): Promise<T>;
+	create<T extends IFluidLoadable>(objectClass: SharedObjectKind<T>): Promise<T>;
 
 	/**
 	 * Dispose of the container instance, permanently disabling it.
@@ -191,23 +231,40 @@ export interface IFluidContainer extends IEventProvider<IFluidContainerEvents> {
 }
 
 /**
+ * Creates an {@link IFluidContainer} from the provided `container` and `rootDataObject`.
+ *
+ * @internal
+ */
+export function createFluidContainer<
+	TContainerSchema extends ContainerSchema = ContainerSchema,
+>(props: {
+	container: IContainer;
+	rootDataObject: IRootDataObject;
+}): IFluidContainer<TContainerSchema> {
+	return new FluidContainer<TContainerSchema>(props.container, props.rootDataObject);
+}
+
+/**
  * Base {@link IFluidContainer} implementation.
  *
+ * @typeparam TContainerSchema - Used to determine the type of 'initialObjects'.
  * @remarks
  *
  * Note: this implementation is not complete. Consumers who rely on {@link IFluidContainer.attach}
  * will need to utilize or provide a service-specific implementation of this type that implements that method.
+ * @deprecated use {@link createFluidContainer} and {@link IFluidContainer} instead
+ * @internal
  */
-export class FluidContainer
+class FluidContainer<TContainerSchema extends ContainerSchema = ContainerSchema>
 	extends TypedEventEmitter<IFluidContainerEvents>
-	implements IFluidContainer
+	implements IFluidContainer<TContainerSchema>
 {
-	private readonly connectedHandler = () => this.emit("connected");
-	private readonly disconnectedHandler = () => this.emit("disconnected");
-	private readonly disposedHandler = (error?: ICriticalContainerError) =>
+	private readonly connectedHandler = (): boolean => this.emit("connected");
+	private readonly disconnectedHandler = (): boolean => this.emit("disconnected");
+	private readonly disposedHandler = (error?: ICriticalContainerError): boolean =>
 		this.emit("disposed", error);
-	private readonly savedHandler = () => this.emit("saved");
-	private readonly dirtyHandler = () => this.emit("dirty");
+	private readonly savedHandler = (): boolean => this.emit("saved");
+	private readonly dirtyHandler = (): boolean => this.emit("dirty");
 
 	public constructor(
 		private readonly container: IContainer,
@@ -238,7 +295,7 @@ export class FluidContainer
 	/**
 	 * {@inheritDoc IFluidContainer.disposed}
 	 */
-	public get disposed() {
+	public get disposed(): boolean {
 		return this.container.closed;
 	}
 
@@ -252,8 +309,8 @@ export class FluidContainer
 	/**
 	 * {@inheritDoc IFluidContainer.initialObjects}
 	 */
-	public get initialObjects() {
-		return this.rootDataObject.initialObjects;
+	public get initialObjects(): InitialObjects<TContainerSchema> {
+		return this.rootDataObject.initialObjects as InitialObjects<TContainerSchema>;
 	}
 
 	/**
@@ -268,7 +325,8 @@ export class FluidContainer
 	 * The reason is because externally we are presenting a separation between the service and the `FluidContainer`,
 	 * but internally this separation is not there.
 	 */
-	public async attach(): Promise<string> {
+	public async attach(props?: ContainerAttachProps): Promise<string> {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison -- AB#7608
 		if (this.container.attachState !== AttachState.Detached) {
 			throw new Error("Cannot attach container. Container is not in detached state.");
 		}
@@ -292,14 +350,14 @@ export class FluidContainer
 	/**
 	 * {@inheritDoc IFluidContainer.create}
 	 */
-	public async create<T extends IFluidLoadable>(objectClass: LoadableObjectClass<T>): Promise<T> {
+	public async create<T extends IFluidLoadable>(objectClass: SharedObjectKind<T>): Promise<T> {
 		return this.rootDataObject.create(objectClass);
 	}
 
 	/**
 	 * {@inheritDoc IFluidContainer.dispose}
 	 */
-	public dispose() {
+	public dispose(): void {
 		this.container.close();
 		this.container.off("connected", this.connectedHandler);
 		this.container.off("closed", this.disposedHandler);
@@ -315,8 +373,6 @@ export class FluidContainer
 	 * Gets the underlying {@link @fluidframework/container-definitions#IContainer}.
 	 *
 	 * @remarks Used to power debug tooling.
-	 *
-	 * @internal
 	 */
 	public readonly INTERNAL_CONTAINER_DO_NOT_USE?: () => IContainer = () => {
 		return this.container;

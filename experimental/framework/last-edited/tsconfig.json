@@ -1,10 +1,10 @@
 {
-	"extends": "@fluidframework/build-common/ts-common-config.json",
+	"extends": "../../../common/build/build-common/tsconfig.node16.json",
 	"exclude": ["dist", "node_modules"],
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
-		"types": ["mocha"],
+		"outDir": "./lib",
+		"exactOptionalPropertyTypes": false,
 	},
 	"include": ["src/**/*"],
 }

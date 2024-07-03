@@ -2,21 +2,31 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import * as child_process from "child_process";
 import * as fs from "fs";
-import * as glob from "glob";
-import isEqual from "lodash.isequal";
+import { pathToFileURL } from "node:url";
 import * as path from "path";
 import * as util from "util";
+import * as glob from "glob";
+import isEqual from "lodash.isequal";
+
+/**
+ *	An array of commands that are known to have subcommands and should be parsed as such
+ */
+const multiCommandExecutables = ["flub", "biome"];
 
 export function getExecutableFromCommand(command: string) {
 	let toReturn: string;
 	const commands = command.split(" ");
-	if (commands[0] === "flub") {
-		// Find the first flag argument, and filter them out. Assumes flags come at the end of the command, and that all
-		// subsequent arguments are flags.
-		const flagsStartIndex = commands.findIndex((c) => c.startsWith("-"));
-		toReturn = commands.slice(0, flagsStartIndex).join(" ");
+	if (multiCommandExecutables.includes(commands[0])) {
+		// For multi-commands (e.g., "flub bump ...") our heuristic is to scan for the first argument that cannot
+		// be the name of a sub-command, such as '.' or an argument that starts with '-'.
+		//
+		// This assumes that subcommand names always precede flags and that non-command arguments
+		// match one of the patterns we look for below.
+		const nonCommandIndex = commands.findIndex((c) => c.startsWith("-") || c === ".");
+		toReturn = nonCommandIndex !== -1 ? commands.slice(0, nonCommandIndex).join(" ") : command;
 	} else {
 		toReturn = commands[0];
 	}
@@ -69,7 +79,7 @@ export async function execAsync(
 	options: child_process.ExecOptions,
 	pipeStdIn?: string,
 ): Promise<ExecAsyncResult> {
-	return new Promise((resolve, reject) => {
+	return new Promise((resolve) => {
 		const p = child_process.exec(command, options, (error, stdout, stderr) => {
 			resolve({ error, stdout, stderr });
 		});
@@ -127,7 +137,13 @@ function printExecError(
 				? `${errorPrefix}: ${ret.stdout}\n${ret.stderr}`
 				: `${errorPrefix}: ${ret.stderr}`,
 		);
-	} else if (warning && ret.stderr) {
+	} else if (
+		warning &&
+		ret.stderr &&
+		// tsc-multi writes to stderr even when there are no errors, so this condition excludes that case as a workaround.
+		// Otherwise fluid-build spams warnings for all tsc-multi tasks.
+		!ret.stderr.includes("Found 0 errors")
+	) {
 		// no error code but still error messages, treat them is non fatal warnings
 		console.warn(`${errorPrefix}: warning during command ${command}`);
 		console.warn(`${errorPrefix}: ${ret.stderr}`);
@@ -149,16 +165,6 @@ export function resolveNodeModule(basePath: string, lookupPath: string) {
 		currentBasePath = nextBasePath;
 	}
 	return undefined;
-}
-
-export async function readJsonAsync(filename: string) {
-	const content = await readFileAsync(filename, "utf-8");
-	return JSON.parse(content);
-}
-
-export function readJsonSync(filename: string) {
-	const content = fs.readFileSync(filename, "utf-8");
-	return JSON.parse(content);
 }
 
 export async function lookUpDirAsync(
@@ -213,4 +219,45 @@ export function isSameFileOrDir(f1: string, f2: string) {
 		return false;
 	}
 	return isEqual(fs.lstatSync(n1), fs.lstatSync(n2));
+}
+
+/**
+ * Execute a command. If there is an error, print error message and exit process
+ *
+ * @param cmd Command line to execute
+ * @param dir dir the directory to execute on
+ * @param error description of command line to print when error happens
+ */
+export async function exec(cmd: string, dir: string, error: string, pipeStdIn?: string) {
+	const result = await execAsync(cmd, { cwd: dir }, pipeStdIn);
+	if (result.error) {
+		throw new Error(
+			`ERROR: Unable to ${error}\nERROR: error during command ${cmd}\nERROR: ${result.error.message}`,
+		);
+	}
+	return result.stdout;
+}
+
+/**
+ * Execute a command. If there is an error, print error message and exit process
+ *
+ * @param cmd Command line to execute
+ * @param dir dir the directory to execute on
+ * @param error description of command line to print when error happens
+ */
+export async function execNoError(cmd: string, dir: string, pipeStdIn?: string) {
+	const result = await execAsync(cmd, { cwd: dir }, pipeStdIn);
+	if (result.error) {
+		return undefined;
+	}
+	return result.stdout;
+}
+
+export async function loadModule(modulePath: string, moduleType?: string) {
+	const ext = path.extname(modulePath);
+	const esm = ext === ".mjs" || (ext === ".js" && moduleType === "module");
+	if (esm) {
+		return await import(pathToFileURL(modulePath).toString());
+	}
+	return require(modulePath);
 }

@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /**
  * @fileoverview Helper functions to work with path strings
  */
@@ -15,6 +16,7 @@ export type PathTree = Map<String, PathTree>;
 
 /**
  * Helper functions for string processing
+ * @internal
  */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace PathHelper {
@@ -23,6 +25,7 @@ export namespace PathHelper {
 	/**
 	 * Token Types
 	 * Type of the token in the path string
+	 * @internal
 	 */
 	export enum TOKEN_TYPES {
 		/** A normal path segment, separated via . */
@@ -44,12 +47,12 @@ export namespace PathHelper {
 	 * @param out_types - The types of the tokens
 	 *
 	 * @returns the tokens from the path string
+	 * @internal
 	 */
 	export const tokenizePathString = function (
 		in_path: string,
 		out_types?: TOKEN_TYPES[],
 	): string[] {
-		// eslint-disable-line complexity
 		const tokens = [];
 		let currentToken = "";
 
@@ -60,7 +63,7 @@ export namespace PathHelper {
 
 		// Handle a / at the beginning of the path by adding a special token for it
 		let path_start = 0;
-		if (in_path[0] === "/") {
+		if (in_path.startsWith("/")) {
 			tokens.push("/");
 			if (out_types) {
 				out_types.push(TOKEN_TYPES.PATH_ROOT_TOKEN);
@@ -104,8 +107,8 @@ export namespace PathHelper {
 				if (token.length === 0) {
 					// There's an error somewhere. Let's abort the fast-track.
 					break;
-				} else if (token[0] === "[") {
-					if (token.length > 2 && token[token.length - 1] === "]") {
+				} else if (token.startsWith("[")) {
+					if (token.length > 2 && token.endsWith("]")) {
 						additionalTypes.push(TOKEN_TYPES.ARRAY_TOKEN);
 						additionalTokens[i] = token.substr(1, token.length - 2);
 					} else {
@@ -313,7 +316,7 @@ export namespace PathHelper {
 		if (inSquareBrackets) {
 			// There was a un-closed bracket at the end
 			throw new Error(MSG.UNCLOSED_BRACKETS + in_path);
-		} else if (in_path[in_path.length - 1] === PROPERTY_PATH_DELIMITER) {
+		} else if (in_path.endsWith(PROPERTY_PATH_DELIMITER)) {
 			// A path ended with a PROPERTY_PATH_DELIMITER
 			throw new Error(MSG.DOT_AT_END + in_path);
 		} else if (tokenStarted) {
@@ -330,6 +333,7 @@ export namespace PathHelper {
 	 * @param in_pathSegment - The path string to put in quotes
 	 *
 	 * @returns quoted path string
+	 * @internal
 	 */
 	export const quotePathSegment = function (in_pathSegment: string): string {
 		// WARNING: I use RegExps here, as the normal replace
@@ -351,16 +355,14 @@ export namespace PathHelper {
 	 * @param in_quotedPathSegment - The quoted/escaped path string to put in quotes
 	 *
 	 * @return unquoted path string
+	 * @internal
 	 */
 	export const unquotePathSegment = function (in_quotedPathSegment: string): string {
 		if (typeof in_quotedPathSegment !== "string") {
 			throw new TypeError(`Expecting a string as a path: ${in_quotedPathSegment}`);
 		}
 
-		if (
-			in_quotedPathSegment[0] === '"' &&
-			in_quotedPathSegment[in_quotedPathSegment.length - 1] === '"'
-		) {
+		if (in_quotedPathSegment.startsWith('"') && in_quotedPathSegment.endsWith('"')) {
 			// We remove double quotes
 			in_quotedPathSegment = in_quotedPathSegment.substr(1, in_quotedPathSegment.length - 2);
 
@@ -380,6 +382,7 @@ export namespace PathHelper {
 	 * @param in_pathSegment - The path string to put in quotes
 	 *
 	 * @returns quoted path string
+	 * @internal
 	 */
 	export const quotePathSegmentIfNeeded = function (in_pathSegment: string): string {
 		return in_pathSegment.indexOf(PROPERTY_PATH_DELIMITER) !== -1 ||
@@ -400,11 +403,12 @@ export namespace PathHelper {
 	 * It has to be either an empty string, or a path starting with a /
 	 *
 	 * @param in_path - The path to check
+	 * @internal
 	 */
 	export const checkValidRepositoryAbsolutePath = function (in_path: string) {
 		if (
 			in_path !== "" && // either an empty reference
-			in_path[0] !== "/"
+			!in_path.startsWith("/")
 		) {
 			// or an absolute path starting with /
 			throw new Error(MSG.INVALID_PATH_IN_REFERENCE);
@@ -418,6 +422,7 @@ export namespace PathHelper {
 	 *
 	 * @param in_absolutePath - The absolute path to make canonical
 	 * @return Absolute path in canonical form
+	 * @internal
 	 */
 	export const convertAbsolutePathToCanonical = function (in_absolutePath: string): string {
 		const tokenTypes = [];
@@ -460,6 +465,7 @@ export namespace PathHelper {
 	 * @param in_parentAbsolutePathCanonical - The absolute path of the parent property in canonical form
 	 * @param in_childId - The name of the child property in its parent
 	 * @returns Absolute path of the child property in canonical form
+	 * @internal
 	 */
 	export const getChildAbsolutePathCanonical = function (
 		in_parentAbsolutePathCanonical: string,
@@ -471,6 +477,9 @@ export namespace PathHelper {
 			: childPath;
 	};
 
+	/**
+	 * @internal
+	 */
 	export enum CoverageExtent {
 		// The base path is not covered by any path from a given list of paths.
 		// This means a property with this path and all its children would not be covered.
@@ -498,6 +507,7 @@ export namespace PathHelper {
 	 * @param in_paths - The array of paths that must cover the property and its children
 	 * @returns The coverage of the property and its children. For a coverage of
 	 * 'FULLY_COVERED', only the first matching path is returned.
+	 * @internal
 	 */
 	export const getPathCoverage = function (
 		in_basePath: string,

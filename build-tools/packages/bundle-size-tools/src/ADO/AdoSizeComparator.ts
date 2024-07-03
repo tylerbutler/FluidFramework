@@ -2,10 +2,11 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
+import { join } from "path";
 import { WebApi } from "azure-devops-node-api";
 import { BuildResult, BuildStatus } from "azure-devops-node-api/interfaces/BuildInterfaces";
 import JSZip from "jszip";
-import { join } from "path";
 
 import { BundleComparison, BundleComparisonResult } from "../BundleBuddyTypes";
 import { compareBundles } from "../compareBundles";
@@ -85,7 +86,9 @@ export class ADOSizeComparator {
 	 * @returns The size comparison result with formatted message and raw data.  In case
 	 * of failure, the message contains the error message and the raw data will be undefined.
 	 */
-	public async createSizeComparisonMessage(tagWaiting: boolean): Promise<BundleComparisonResult> {
+	public async createSizeComparisonMessage(
+		tagWaiting: boolean,
+	): Promise<BundleComparisonResult> {
 		let baselineCommit: string | undefined = getBaselineCommit();
 		console.log(`The baseline commit for this PR is ${baselineCommit}`);
 
@@ -106,8 +109,10 @@ export class ADOSizeComparator {
 
 			if (baselineBuild === undefined) {
 				baselineCommit = fallbackGen?.next().value;
+				// For reasons that I don't understand, the "undefined" string is omitted in the log output, which makes the
+				// output very confusing. The string is capitalized here and elsewhere in this file as a workaround.
 				console.log(
-					`Trying backup baseline commit when baseline build is undefined ${baselineCommit}`,
+					`Trying backup baseline commit when baseline build is UNDEFINED: ${baselineCommit}`,
 				);
 				continue;
 			}
@@ -162,7 +167,9 @@ export class ADOSizeComparator {
 				return undefined;
 			});
 
-			console.log(`Baseline Zip === undefined: ${baselineZip === undefined}`);
+			// For reasons that I don't understand, the "undefined" string is omitted in the log output, which makes the
+			// output very confusing. The string is capitalized here and elsewhere in this file as a workaround.
+			console.log(`Baseline Zip === UNDEFINED: ${baselineZip === undefined}`);
 
 			// Successful baseline build does not have the needed build artifacts
 			if (baselineZip === undefined) {
@@ -184,10 +191,7 @@ export class ADOSizeComparator {
 			return { message, comparison: undefined };
 		}
 
-		const comparison: BundleComparison[] = await this.createComparisonFromZip(
-			baselineCommit,
-			baselineZip,
-		);
+		const comparison: BundleComparison[] = await this.createComparisonFromZip(baselineZip);
 		console.log(JSON.stringify(comparison));
 
 		const message = getCommentForBundleDiff(comparison, baselineCommit);
@@ -212,10 +216,7 @@ export class ADOSizeComparator {
 		}
 	}
 
-	private async createComparisonFromZip(
-		baselineCommit: string,
-		baselineZip: JSZip,
-	): Promise<BundleComparison[]> {
+	private async createComparisonFromZip(baselineZip: JSZip): Promise<BundleComparison[]> {
 		const baselineZipBundlePaths = getBundlePathsFromZipObject(baselineZip);
 
 		const prBundleFileSystemPaths = await getBundlePathsFromFileSystem(this.localReportPath);

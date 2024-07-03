@@ -3,26 +3,27 @@
  * Licensed under the MIT License.
  */
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import { v4 as uuidv4 } from 'uuid';
-import { assert } from '../Common';
-import { walkTree } from '../EditUtilities';
-import { createSessionId, IdCompressor, isFinalId, isLocalId } from '../id-compressor';
+
+import { walkTree } from '../EditUtilities.js';
 import {
 	Definition,
 	DetachedSequenceId,
 	InternedStringId,
-	isDetachedSequenceId,
 	NodeId,
 	OpSpaceNodeId,
 	TraitLabel,
-} from '../Identifiers';
-import { ContextualizedNodeIdNormalizer, scopeIdNormalizer } from '../NodeIdUtilities';
-import { CompressedPlaceholderTree, PlaceholderTree, TraitMap, TreeNode } from '../persisted-types';
-import { RevisionView } from '../RevisionView';
-import { MutableStringInterner } from '../StringInterner';
-import { InterningTreeCompressor } from '../TreeCompressor';
-import { makeNodeIdContext, setUpTestTree } from './utilities/TestUtilities';
+	isDetachedSequenceId,
+} from '../Identifiers.js';
+import { ContextualizedNodeIdNormalizer, scopeIdNormalizer } from '../NodeIdUtilities.js';
+import { RevisionView } from '../RevisionView.js';
+import { MutableStringInterner } from '../StringInterner.js';
+import { InterningTreeCompressor } from '../TreeCompressor.js';
+import { IdCompressor, createSessionId, isFinalId, isLocalId } from '../id-compressor/index.js';
+import { CompressedPlaceholderTree, PlaceholderTree, TraitMap, TreeNode } from '../persisted-types/index.js';
+
+import { makeNodeIdContext, setUpTestTree } from './utilities/TestUtilities.js';
 
 /**
  * Verifies a tree can round-trip through compression/decompression. Optionally also asserts the compressed state
@@ -36,10 +37,7 @@ function testCompression<TPlaceholder extends DetachedSequenceId | never>(
 	idNormalizer: ContextualizedNodeIdNormalizer<OpSpaceNodeId>,
 	compressed?: CompressedPlaceholderTree<OpSpaceNodeId, TPlaceholder>,
 	roundTripAsserter?: (tree: PlaceholderTree<TPlaceholder>, roundTrippedTree: PlaceholderTree<TPlaceholder>) => void,
-	internStrings: (interner: MutableStringInterner, tree: PlaceholderTree<TPlaceholder>) => void = (
-		interner,
-		tree
-	) => {
+	internStrings: (interner: MutableStringInterner, tree: PlaceholderTree<TPlaceholder>) => void = (interner, tree) => {
 		walkTree<Exclude<PlaceholderTree<DetachedSequenceId>, DetachedSequenceId>, DetachedSequenceId>(
 			tree,
 			(node) => {
@@ -246,10 +244,7 @@ describe('TreeCompression', () => {
 			// SimpleTestTree contains extra properties, so deep compare as objects is insufficient. The revision view strategy
 			// only works for valid standalone trees (i.e. ones without placeholders).
 			(tree, treeAfterRoundTrip) => {
-				expect(
-					RevisionView.fromTree(tree).equals(RevisionView.fromTree(treeAfterRoundTrip)),
-					'Unequal revision views'
-				);
+				expect(RevisionView.fromTree(tree).equals(RevisionView.fromTree(treeAfterRoundTrip)), 'Unequal revision views');
 			}
 		);
 	});

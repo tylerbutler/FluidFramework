@@ -3,9 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import { v4, NIL } from 'uuid';
-import { assert } from './Common';
-import { StableId, UuidString } from './Identifiers';
+import { NIL, v4 } from 'uuid';
+
+import { assertWithMessage } from './Common.js';
+import { StableId, UuidString } from './Identifiers.js';
 
 const hexadecimalCharCodes = Array.from('09afAF').map((c) => c.charCodeAt(0)) as [
 	zero: number,
@@ -13,7 +14,7 @@ const hexadecimalCharCodes = Array.from('09afAF').map((c) => c.charCodeAt(0)) as
 	a: number,
 	f: number,
 	A: number,
-	F: number
+	F: number,
 ];
 
 function isHexadecimalCharacter(charCode: number): boolean {
@@ -31,7 +32,7 @@ export const nilUuid = assertIsUuidString(NIL);
  * Asserts that the given string is a UUID
  */
 export function assertIsUuidString(uuidString: string): UuidString {
-	assert(isUuidString(uuidString), `${uuidString} is not an UuidString`);
+	assertWithMessage(isUuidString(uuidString), `${uuidString} is not an UuidString`);
 	return uuidString;
 }
 
@@ -73,7 +74,7 @@ export function generateStableId(): StableId {
  * Asserts that the given string is a stable ID.
  */
 export function assertIsStableId(stableId: string): StableId {
-	assert(isStableId(stableId), `${stableId} is not a StableId.`);
+	assertWithMessage(isStableId(stableId), `${stableId} is not a StableId.`);
 	return stableId;
 }
 

@@ -2,10 +2,8 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { fail } from "assert";
 
 import { BundleMetric, WebpackStatsProcessor } from "../BundleBuddyTypes";
-import { getChunkParsedSize } from "../utilities";
 
 export interface EntryStatsProcessorOptions {
 	// Custom callback to customize what text will be used as the metric name
@@ -13,9 +11,11 @@ export interface EntryStatsProcessorOptions {
 }
 
 /**
- * A simple stats processor that simply returns the size information for the entry chunk
+ * Returns a stats processor that returns total asset size information for each entryPoint in the stats object
  */
-export function getEntryStatsProcessor(options: EntryStatsProcessorOptions): WebpackStatsProcessor {
+export function getEntryStatsProcessor(
+	options: EntryStatsProcessorOptions,
+): WebpackStatsProcessor {
 	return (stats) => {
 		const result = new Map<string, BundleMetric>();
 
@@ -28,11 +28,17 @@ export function getEntryStatsProcessor(options: EntryStatsProcessorOptions): Web
 			const metricName = options.metricNameProvider
 				? options.metricNameProvider(chunkName)
 				: chunkName;
+
+			// Note: we have the getChunkParsedSize function, but the entrypoints objects we're analyzing here already
+			// have a list of the relevant assets and their sizes; no need to take the entrypoints' chunks and pass them to
+			// that function.
+			let totalSize: number = 0;
+			for (const asset of chunkGroupStats.assets ?? []) {
+				totalSize += asset?.size ?? 0;
+			}
+
 			result.set(metricName, {
-				parsedSize: getChunkParsedSize(
-					stats,
-					(chunkGroupStats.chunks ?? fail("missing chunk"))[0],
-				),
+				parsedSize: totalSize,
 			});
 		});
 

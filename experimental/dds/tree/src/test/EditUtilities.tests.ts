@@ -3,28 +3,31 @@
  * Licensed under the MIT License.
  */
 
+import { IFluidHandle, fluidHandleSymbol } from '@fluidframework/core-interfaces';
+import type { IFluidHandleInternal } from '@fluidframework/core-interfaces/internal';
+import { assert } from '@fluidframework/core-utils/internal';
+import { FluidSerializer } from '@fluidframework/shared-object-base/internal';
+import { MockFluidDataStoreRuntime } from '@fluidframework/test-runtime-utils/internal';
 import { expect } from 'chai';
-import { assert } from '@fluidframework/common-utils';
-import { IFluidHandle } from '@fluidframework/core-interfaces';
-import { MockFluidDataStoreRuntime } from '@fluidframework/test-runtime-utils';
-import { FluidSerializer } from '@fluidframework/shared-object-base';
-import { Definition, NodeId } from '../Identifiers';
-import { getChangeNodeFromView } from '../SerializationUtilities';
-import { noop } from '../Common';
+
+import { BuildNode, BuildTreeNode } from '../ChangeTypes.js';
+import { noop } from '../Common.js';
 import {
+	PlaceValidationResult,
+	RangeValidationResultKind,
 	convertTreeNodes,
 	deepCompareNodes,
 	internalizeBuildNode,
-	PlaceValidationResult,
-	RangeValidationResultKind,
 	validateStablePlace,
 	validateStableRange,
 	walkTree,
-} from '../EditUtilities';
-import { BuildNodeInternal, ChangeNode, Payload, Side, TreeNode } from '../persisted-types';
-import { BuildNode, BuildTreeNode } from '../ChangeTypes';
-import { comparePayloads } from '../PayloadUtilities';
-import { refreshTestTree } from './utilities/TestUtilities';
+} from '../EditUtilities.js';
+import { Definition, NodeId } from '../Identifiers.js';
+import { comparePayloads } from '../PayloadUtilities.js';
+import { getChangeNodeFromView } from '../SerializationUtilities.js';
+import { BuildNodeInternal, ChangeNode, Payload, Side, TreeNode } from '../persisted-types/index.js';
+
+import { refreshTestTree } from './utilities/TestUtilities.js';
 
 describe('EditUtilities', () => {
 	const testTree = refreshTestTree(undefined, undefined, /* expensiveValidation: */ true);
@@ -195,7 +198,7 @@ describe('EditUtilities', () => {
 				traits: { [leafTrait]: [testTree.buildLeaf(leafId)] },
 			};
 			const clone = convertTreeNodes<ChangeNode, ChangeNode>(tree, (node) => ({ ...node }));
-			assert(typeof clone !== 'number', '');
+			assert(typeof clone !== 'number', 0x660 /*  */);
 			expect(clone.definition).to.equal(tree.definition);
 			expect(clone.identifier).to.equal(tree.identifier);
 			expect(clone.payload).to.equal(tree.payload);
@@ -227,7 +230,12 @@ describe('EditUtilities', () => {
 				(_) => ({ definition: '_def' as Definition, identifier: id, payload: 'payload2' }),
 				isNumber
 			);
-			expect(converted).to.deep.equal({ definition: '_def', identifier: id, payload: 'payload2', traits: {} });
+			expect(converted).to.deep.equal({
+				definition: '_def',
+				identifier: id,
+				payload: 'payload2',
+				traits: {},
+			});
 		});
 
 		it('creates empty trait objects for the root', () => {
@@ -237,25 +245,31 @@ describe('EditUtilities', () => {
 				(n) => internalizeBuildNode(n, testTree),
 				isNumber
 			);
-			assert(typeof converted !== 'number', 'unexpected detached ID');
+			assert(typeof converted !== 'number', 0x661 /* unexpected detached ID */);
 			expect(converted.traits).to.not.be.undefined;
 		});
 
 		it('creates empty trait objects for children', () => {
-			const node: BuildNode = { ...testTree.buildLeaf(), traits: { main: { ...testTree.buildLeaf() } } };
+			const node: BuildNode = {
+				...testTree.buildLeaf(),
+				traits: { main: { ...testTree.buildLeaf() } },
+			};
 			const converted = convertTreeNodes<BuildTreeNode, TreeNode<BuildNodeInternal, NodeId>, number>(
 				node,
 				(n) => internalizeBuildNode(n, testTree),
 				isNumber
 			);
-			assert(typeof converted !== 'number', 'unexpected detached ID');
+			assert(typeof converted !== 'number', 0x662 /* unexpected detached ID */);
 			expect(converted.traits).to.not.be.undefined;
 		});
 
 		it('can convert a tree with children', () => {
 			const childA = { ...testTree.buildLeaf(testTree.generateNodeId()), payload: 'a' };
 			const childB = { ...testTree.buildLeaf(testTree.generateNodeId()), payload: 'b' };
-			const node = { ...testTree.buildLeaf(testTree.generateNodeId()), traits: { main: [childA, childB] } };
+			const node = {
+				...testTree.buildLeaf(testTree.generateNodeId()),
+				traits: { main: [childA, childB] },
+			};
 			const converted = convertTreeNodes<ChangeNode, ChangeNode>(node, (node) => {
 				if (node.identifier === childB.identifier) {
 					return { definition: node.definition, identifier: node.identifier, payload: 'c' };
@@ -267,8 +281,18 @@ describe('EditUtilities', () => {
 				identifier: node.identifier,
 				traits: {
 					main: [
-						{ definition: childA.definition, identifier: childA.identifier, payload: 'a', traits: {} },
-						{ definition: childB.definition, identifier: childB.identifier, payload: 'c', traits: {} },
+						{
+							definition: childA.definition,
+							identifier: childA.identifier,
+							payload: 'a',
+							traits: {},
+						},
+						{
+							definition: childB.definition,
+							identifier: childB.identifier,
+							payload: 'c',
+							traits: {},
+						},
 					],
 				},
 			});
@@ -276,8 +300,14 @@ describe('EditUtilities', () => {
 
 		it('can convert a tree with a grandchild', () => {
 			const grandchild = { ...testTree.buildLeaf(testTree.generateNodeId()), payload: 'g' };
-			const child = { ...testTree.buildLeaf(testTree.generateNodeId()), traits: { main: [grandchild] } };
-			const parent = { ...testTree.buildLeaf(testTree.generateNodeId()), traits: { main: [child] } };
+			const child = {
+				...testTree.buildLeaf(testTree.generateNodeId()),
+				traits: { main: [grandchild] },
+			};
+			const parent = {
+				...testTree.buildLeaf(testTree.generateNodeId()),
+				traits: { main: [child] },
+			};
 			const converted = convertTreeNodes<ChangeNode, ChangeNode>(parent, (node) => {
 				if (node.identifier === grandchild.identifier) {
 					return { definition: node.definition, identifier: node.identifier, payload: 'h' };
@@ -448,11 +478,13 @@ describe('EditUtilities', () => {
 	}
 
 	describe('comparePayloads', () => {
-		const serializer: FluidSerializer = new FluidSerializer(
-			new MockFluidDataStoreRuntime().IFluidHandleContext,
-			() => {}
-		);
-		const binder: IFluidHandle = { bind: noop } as unknown as IFluidHandle;
+		const serializer: FluidSerializer = new FluidSerializer(new MockFluidDataStoreRuntime().IFluidHandleContext);
+		const binder: IFluidHandle = {
+			bind: noop,
+			get [fluidHandleSymbol]() {
+				return binder;
+			},
+		} as unknown as IFluidHandle;
 
 		enum Equality {
 			Equal,
@@ -469,7 +501,12 @@ describe('EditUtilities', () => {
 		function check(
 			a: Payload,
 			b: Payload,
-			flags: { initial: Equality; serialized: Equality; deserialized: Equality; roundtrip: Equality }
+			flags: {
+				initial: Equality;
+				serialized: Equality;
+				deserialized: Equality;
+				roundtrip: Equality;
+			}
 		): void {
 			// Check reflexive
 			expect(comparePayloads(a, a)).equal(true);
@@ -612,9 +649,14 @@ describe('EditUtilities', () => {
 			// This is used instead of MockHandle so equal handles compare deeply equal.
 			function makeMockHandle(data: string): IFluidHandle {
 				// `/` prefix is needed to prevent serializing from modifying handle.
-				const handleObject = { absolutePath: `/${data}`, IFluidHandle: undefined as unknown };
+				const handleObject = {
+					absolutePath: `/${data}`,
+					IFluidHandle: undefined as unknown,
+					[fluidHandleSymbol]: undefined as any,
+				};
 				handleObject.IFluidHandle = handleObject;
-				return handleObject as IFluidHandle;
+				handleObject[fluidHandleSymbol] = handleObject;
+				return handleObject as unknown as IFluidHandleInternal;
 			}
 			// Theoretically handles serialize as objects with 2 fields and thus serialization is allowed to be non-deterministic
 			// so use allEqualUnstable not allEqual.

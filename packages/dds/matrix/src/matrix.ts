@@ -3,67 +3,203 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/common-utils";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
 import {
-	IFluidDataStoreRuntime,
-	IChannelStorageService,
-	Serializable,
+	IEvent,
+	IEventThisPlaceHolder,
+	type IEventProvider,
+} from "@fluidframework/core-interfaces";
+import { assert, unreachableCase } from "@fluidframework/core-utils/internal";
+import {
 	IChannelAttributes,
-} from "@fluidframework/datastore-definitions";
+	IFluidDataStoreRuntime,
+	type IChannel,
+	IChannelStorageService,
+} from "@fluidframework/datastore-definitions/internal";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+import {
+	// eslint-disable-next-line import/no-deprecated
+	Client,
+	IJSONSegment,
+	IMergeTreeOp,
+	type LocalReferencePosition,
+	MergeTreeDeltaType,
+	ReferenceType,
+	// eslint-disable-next-line import/no-deprecated
+	SegmentGroup,
+} from "@fluidframework/merge-tree/internal";
+import { ISummaryTreeWithStats } from "@fluidframework/runtime-definitions/internal";
+import {
+	ObjectStoragePartition,
+	SummaryTreeBuilder,
+} from "@fluidframework/runtime-utils/internal";
 import {
 	IFluidSerializer,
-	makeHandlesSerializable,
-	parseHandles,
+	ISharedObjectEvents,
 	SharedObject,
-	SummarySerializer,
-} from "@fluidframework/shared-object-base";
-import { ISummaryTreeWithStats } from "@fluidframework/runtime-definitions";
-import { ObjectStoragePartition, SummaryTreeBuilder } from "@fluidframework/runtime-utils";
-import { IMatrixProducer, IMatrixConsumer, IMatrixReader, IMatrixWriter } from "@tiny-calc/nano";
+} from "@fluidframework/shared-object-base/internal";
+import { UsageError } from "@fluidframework/telemetry-utils/internal";
 import {
-	MergeTreeDeltaType,
-	IMergeTreeOp,
-	SegmentGroup,
-	ISegment,
-	Client,
-} from "@fluidframework/merge-tree";
-import { MatrixOp } from "./ops";
-import { PermutationVector, PermutationSegment } from "./permutationvector";
-import { SparseArray2D } from "./sparsearray2d";
-import { SharedMatrixFactory } from "./runtime";
-import { Handle, isHandleValid } from "./handletable";
-import { deserializeBlob } from "./serialization";
-import { ensureRange } from "./range";
-import { IUndoConsumer } from "./types";
-import { MatrixUndoProvider } from "./undoprovider";
+	IMatrixConsumer,
+	IMatrixProducer,
+	IMatrixReader,
+	IMatrixWriter,
+} from "@tiny-calc/nano";
+import Deque from "double-ended-queue";
 
-const enum SnapshotPath {
-	rows = "rows",
-	cols = "cols",
-	cells = "cells",
-}
-
-interface ISetOp<T> {
-	type: MatrixOp.set;
-	row: number;
-	col: number;
-	value: MatrixItem<T>;
-}
+import { Handle, isHandleValid } from "./handletable.js";
+import {
+	ISetOp,
+	MatrixItem,
+	MatrixOp,
+	MatrixSetOrVectorOp,
+	SnapshotPath,
+	VectorOp,
+} from "./ops.js";
+import { PermutationVector, reinsertSegmentIntoVector } from "./permutationvector.js";
+import { ensureRange } from "./range.js";
+import { deserializeBlob } from "./serialization.js";
+import { SparseArray2D } from "./sparsearray2d.js";
+import { IUndoConsumer } from "./types.js";
+import { MatrixUndoProvider } from "./undoprovider.js";
 
 interface ISetOpMetadata {
 	rowHandle: Handle;
 	colHandle: Handle;
 	localSeq: number;
-	rowsRefSeq: number;
-	colsRefSeq: number;
+	rowsRef: LocalReferencePosition;
+	colsRef: LocalReferencePosition;
+	referenceSeqNumber: number;
 }
 
 /**
- * A matrix cell value may be undefined (indicating an empty cell) or any serializable type,
- * excluding null.  (However, nulls may be embedded inside objects and arrays.)
+ * Events emitted by Shared Matrix.
+ * @legacy
+ * @alpha
  */
-export type MatrixItem<T> = Serializable<Exclude<T, null>> | undefined;
+export interface ISharedMatrixEvents<T> extends IEvent {
+	/**
+	 * This event is only emitted when the SetCell Resolution Policy is First Write Win(FWW).
+	 * This is emitted when two clients race and send changes without observing each other changes,
+	 * the changes that gets sequenced last would be rejected, and only client who's changes rejected
+	 * would be notified via this event, with expectation that it will merge its changes back by
+	 * accounting new information (state from winner of the race).
+	 *
+	 * @remarks Listener parameters:
+	 *
+	 * - `row` - Row number at which conflict happened.
+	 *
+	 * - `col` - Col number at which conflict happened.
+	 *
+	 * - `currentValue` - The current value of the cell.
+	 *
+	 * - `conflictingValue` - The value that this client tried to set in the cell and got ignored due to conflict.
+	 *
+	 * - `target` - The {@link ISharedMatrix} itself.
+	 */
+	(
+		event: "conflict",
+		listener: (
+			row: number,
+			col: number,
+			currentValue: MatrixItem<T>,
+			conflictingValue: MatrixItem<T>,
+			target: IEventThisPlaceHolder,
+		) => void,
+	): void;
+}
+
+/**
+ * This represents the item which is used to track the client which modified the cell last.
+ */
+interface CellLastWriteTrackerItem {
+	seqNum: number; // Seq number of op which last modified this cell
+	clientId: string; // clientId of the client which last modified this cell
+}
+
+/**
+ * @legacy
+ * @alpha
+ */
+export interface ISharedMatrix<T = any>
+	extends IEventProvider<ISharedMatrixEvents<T>>,
+		IMatrixProducer<MatrixItem<T>>,
+		IMatrixReader<MatrixItem<T>>,
+		IMatrixWriter<MatrixItem<T>>,
+		IChannel {
+	/**
+	 * Inserts columns into the matrix.
+	 * @param colStart - Index of the first column to insert.
+	 * @param count - Number of columns to insert.
+	 * @remarks
+	 * Inserting 0 columns is a noop.
+	 */
+	insertCols(colStart: number, count: number): void;
+	/**
+	 * Removes columns from the matrix.
+	 * @param colStart - Index of the first column to remove.
+	 * @param count - Number of columns to remove.
+	 * @remarks
+	 * Removing 0 columns is a noop.
+	 */
+	removeCols(colStart: number, count: number): void;
+	/**
+	 * Inserts rows into the matrix.
+	 * @param rowStart - Index of the first row to insert.
+	 * @param count - Number of rows to insert.
+	 * @remarks
+	 * Inserting 0 rows is a noop.
+	 */
+	insertRows(rowStart: number, count: number): void;
+	/**
+	 * Removes rows from the matrix.
+	 * @param rowStart - Index of the first row to remove.
+	 * @param count - Number of rows to remove.
+	 * @remarks
+	 * Removing 0 rows is a noop.
+	 */
+	removeRows(rowStart: number, count: number): void;
+
+	/**
+	 * Sets a range of cells in the matrix.
+	 * Cells are set in consecutive columns between `colStart` and `colStart + colCount - 1`.
+	 * When `values` has larger size than `colCount`, the extra values are inserted in subsequent rows
+	 * a la text-wrapping.
+	 * @param rowStart - Index of the row to start setting cells.
+	 * @param colStart - Index of the column to start setting cells.
+	 * @param colCount - Number of columns to set before wrapping to subsequent rows (if `values` has more items)
+	 * @param values - Values to insert.
+	 * @remarks
+	 * This is not currently more efficient than calling `setCell` for each cell.
+	 */
+	setCells(
+		rowStart: number,
+		colStart: number,
+		colCount: number,
+		values: readonly MatrixItem<T>[],
+	): void;
+
+	/**
+	 * Attach an {@link IUndoConsumer} to the matrix.
+	 * @param consumer - Undo consumer which will receive revertibles from the matrix.
+	 */
+	openUndo(consumer: IUndoConsumer): void;
+
+	/**
+	 * Whether the current conflict resolution policy is first-write win (FWW).
+	 * See {@link ISharedMatrix.switchSetCellPolicy} for more details.
+	 */
+	isSetCellConflictResolutionPolicyFWW(): boolean;
+
+	/**
+	 * Change the conflict resolution policy for setCell operations to first-write win (FWW).
+	 *
+	 * This API only switches from LWW to FWW and not from FWW to LWW.
+	 *
+	 * @privateRemarks
+	 * The next SetOp which is sent will communicate this policy to other clients.
+	 */
+	switchSetCellPolicy(): void;
+}
 
 /**
  * A SharedMatrix holds a rectangular 2D array of values.  Supported operations
@@ -76,26 +212,47 @@ export type MatrixItem<T> = Serializable<Exclude<T, null>> | undefined;
  * matrix data and physically stores data in Z-order to leverage CPU caches and
  * prefetching when reading in either row or column major order.  (See README.md
  * for more details.)
+ * @legacy
+ * @alpha
  */
 export class SharedMatrix<T = any>
-	extends SharedObject
-	implements
-		IMatrixProducer<MatrixItem<T>>,
-		IMatrixReader<MatrixItem<T>>,
-		IMatrixWriter<MatrixItem<T>>
+	extends SharedObject<ISharedMatrixEvents<T> & ISharedObjectEvents>
+	implements ISharedMatrix<T>
 {
 	private readonly consumers = new Set<IMatrixConsumer<MatrixItem<T>>>();
 
-	public static getFactory() {
-		return new SharedMatrixFactory();
-	}
+	/**
+	 * Note: this field only provides a lower-bound on the reference sequence numbers for in-flight ops.
+	 * The exact reason isn't understood, but some e2e tests suggest that the runtime may sometimes process
+	 * incoming leave/join ops before putting an op that this DDS submits over the wire.
+	 *
+	 * E.g. SharedMatrix submits an op while deltaManager has lastSequenceNumber = 10, but before the runtime
+	 * puts this op over the wire, it processes a client join/leave op with sequence number 11, so the referenceSequenceNumber
+	 * on the SharedMatrix op is 11.
+	 */
+	private readonly inFlightRefSeqs = new Deque<number>();
 
 	private readonly rows: PermutationVector; // Map logical row to storage handle (if any)
 	private readonly cols: PermutationVector; // Map logical col to storage handle (if any)
 
 	private cells = new SparseArray2D<MatrixItem<T>>(); // Stores cell values.
-	private pending = new SparseArray2D<number>(); // Tracks pending writes.
+	private readonly pending = new SparseArray2D<number>(); // Tracks pending writes.
+	private cellLastWriteTracker = new SparseArray2D<CellLastWriteTrackerItem>(); // Tracks last writes sequence number and clientId in a cell.
+	// Tracks the seq number of Op at which policy switch happens from Last Write Win to First Write Win.
+	private setCellLwwToFwwPolicySwitchOpSeqNumber: number;
+	private userSwitchedSetCellPolicy = false; // Set to true when the user calls switchPolicy.
 
+	// Used to track if there is any reentrancy in setCell code.
+	private reentrantCount: number = 0;
+
+	/**
+	 * Constructor for the Shared Matrix
+	 * @param runtime - DataStore runtime.
+	 * @param id - id of the dds
+	 * @param attributes - channel attributes
+	 * @param _isSetCellConflictResolutionPolicyFWW - Conflict resolution for Matrix set op is First Writer Win in case of
+	 * race condition. Client can still overwrite values in case of no race.
+	 */
 	constructor(
 		runtime: IFluidDataStoreRuntime,
 		public id: string,
@@ -103,12 +260,15 @@ export class SharedMatrix<T = any>
 	) {
 		super(id, runtime, attributes, "fluid_matrix_");
 
+		this.setCellLwwToFwwPolicySwitchOpSeqNumber = -1;
+		const getMinInFlightRefSeq = () => this.inFlightRefSeqs.get(0);
 		this.rows = new PermutationVector(
 			SnapshotPath.rows,
 			this.logger,
 			runtime,
 			this.onRowDelta,
 			this.onRowHandlesRecycled,
+			getMinInFlightRefSeq,
 		);
 
 		this.cols = new PermutationVector(
@@ -117,6 +277,7 @@ export class SharedMatrix<T = any>
 			runtime,
 			this.onColDelta,
 			this.onColHandlesRecycled,
+			getMinInFlightRefSeq,
 		);
 	}
 
@@ -143,13 +304,6 @@ export class SharedMatrix<T = any>
 		return this.cols.handleCache;
 	}
 
-	/**
-	 * {@inheritDoc @fluidframework/datastore-definitions#IChannelFactory.create}
-	 */
-	public static create<T>(runtime: IFluidDataStoreRuntime, id?: string) {
-		return runtime.createChannel(id, SharedMatrixFactory.Type) as SharedMatrix<T>;
-	}
-
 	// #region IMatrixProducer
 
 	openMatrix(consumer: IMatrixConsumer<MatrixItem<T>>): IMatrixReader<MatrixItem<T>> {
@@ -170,6 +324,10 @@ export class SharedMatrix<T = any>
 	}
 	public get colCount() {
 		return this.cols.getLength();
+	}
+
+	public isSetCellConflictResolutionPolicyFWW() {
+		return this.setCellLwwToFwwPolicySwitchOpSeqNumber > -1 || this.userSwitchedSetCellPolicy;
 	}
 
 	public getCell(row: number, col: number): MatrixItem<T> {
@@ -200,17 +358,11 @@ export class SharedMatrix<T = any>
 	// #endregion IMatrixReader
 
 	public setCell(row: number, col: number, value: MatrixItem<T>) {
-		assert(
-			0 <= row && row < this.rowCount && 0 <= col && col < this.colCount,
-			0x01a /* "Trying to set out-of-bounds cell!" */,
-		);
+		if (row < 0 || row >= this.rowCount || col < 0 || col >= this.colCount) {
+			throw new UsageError("Trying to set out-of-bounds cell.");
+		}
 
 		this.setCellCore(row, col, value);
-
-		// Avoid reentrancy by raising change notifications after the op is queued.
-		for (const consumer of this.consumers.values()) {
-			consumer.cellsChanged(row, col, 1, 1, this);
-		}
 	}
 
 	public setCells(
@@ -244,11 +396,6 @@ export class SharedMatrix<T = any>
 				r++;
 			}
 		}
-
-		// Avoid reentrancy by raising change notifications after the op is queued.
-		for (const consumer of this.consumers.values()) {
-			consumer.cellsChanged(rowStart, colStart, rowCount, colCount, this);
-		}
 	}
 
 	private setCellCore(
@@ -258,20 +405,41 @@ export class SharedMatrix<T = any>
 		rowHandle = this.rows.getAllocatedHandle(row),
 		colHandle = this.cols.getAllocatedHandle(col),
 	) {
-		if (this.undo !== undefined) {
-			let oldValue = this.cells.getCell(rowHandle, colHandle);
-			if (oldValue === null) {
-				oldValue = undefined;
+		this.protectAgainstReentrancy(() => {
+			if (this.undo !== undefined) {
+				let oldValue = this.cells.getCell(rowHandle, colHandle);
+				if (oldValue === null) {
+					oldValue = undefined;
+				}
+
+				this.undo.cellSet(rowHandle, colHandle, oldValue);
 			}
 
-			this.undo.cellSet(rowHandle, colHandle, oldValue);
-		}
+			this.cells.setCell(rowHandle, colHandle, value);
 
-		this.cells.setCell(rowHandle, colHandle, value);
+			if (this.isAttached()) {
+				this.sendSetCellOp(row, col, value, rowHandle, colHandle);
+			}
 
-		if (this.isAttached()) {
-			this.sendSetCellOp(row, col, value, rowHandle, colHandle);
-		}
+			// Avoid reentrancy by raising change notifications after the op is queued.
+			for (const consumer of this.consumers.values()) {
+				consumer.cellsChanged(row, col, 1, 1, this);
+			}
+		});
+	}
+
+	private createOpMetadataLocalRef(vector: PermutationVector, pos: number, localSeq: number) {
+		const segoff = vector.getContainingSegment(pos, undefined, localSeq);
+		assert(
+			segoff.segment !== undefined && segoff.offset !== undefined,
+			0x8b3 /* expected valid position */,
+		);
+		return vector.createLocalReferencePosition(
+			segoff.segment,
+			segoff.offset,
+			ReferenceType.StayOnRemove,
+			undefined,
+		);
 	}
 
 	private sendSetCellOp(
@@ -281,8 +449,6 @@ export class SharedMatrix<T = any>
 		rowHandle: Handle,
 		colHandle: Handle,
 		localSeq = this.nextLocalSeq(),
-		rowsRefSeq = this.rows.getCollabWindow().currentSeq,
-		colsRefSeq = this.cols.getCollabWindow().currentSeq,
 	) {
 		assert(
 			this.isAttached(),
@@ -294,25 +460,55 @@ export class SharedMatrix<T = any>
 			row,
 			col,
 			value,
+			fwwMode:
+				this.userSwitchedSetCellPolicy || this.setCellLwwToFwwPolicySwitchOpSeqNumber > -1,
 		};
 
+		const rowsRef = this.createOpMetadataLocalRef(this.rows, row, localSeq);
+		const colsRef = this.createOpMetadataLocalRef(this.cols, col, localSeq);
 		const metadata: ISetOpMetadata = {
 			rowHandle,
 			colHandle,
 			localSeq,
-			rowsRefSeq,
-			colsRefSeq,
+			rowsRef,
+			colsRef,
+			referenceSeqNumber: this.deltaManager.lastSequenceNumber,
 		};
 
 		this.submitLocalMessage(op, metadata);
 		this.pending.setCell(rowHandle, colHandle, localSeq);
 	}
 
+	/**
+	 * This makes sure that the code inside the callback is not reentrant. We need to do that because we raise notifications
+	 * to the consumers telling about these changes and they can try to change the matrix while listening to those notifications
+	 * which can make the shared matrix to be in bad state. For example, we are raising notification for a setCell changes and
+	 * a consumer tries to delete that row/col on receiving that notification which can lead to this matrix trying to setCell in
+	 * a deleted row/col.
+	 * @param callback - code that needs to protected against reentrancy.
+	 */
+	private protectAgainstReentrancy(callback: () => void) {
+		if (this.reentrantCount !== 0) {
+			// Validate that applications don't submit edits in response to matrix change notifications. This is unsupported.
+			throw new UsageError("Reentrancy detected in SharedMatrix.");
+		}
+		this.reentrantCount++;
+		try {
+			callback();
+		} finally {
+			this.reentrantCount--;
+		}
+		assert(
+			this.reentrantCount === 0,
+			0x85e /* indicates a problem with the reentrancy tracking code. */,
+		);
+	}
+
 	private submitVectorMessage(
 		currentVector: PermutationVector,
 		oppositeVector: PermutationVector,
-		dimension: SnapshotPath.rows | SnapshotPath.cols,
-		message: any,
+		target: SnapshotPath.rows | SnapshotPath.cols,
+		message: IMergeTreeOp,
 	) {
 		// Ideally, we would have a single 'localSeq' counter that is shared between both PermutationVectors
 		// and the SharedMatrix's cell data.  Instead, we externally advance each MergeTree's 'localSeq' counter
@@ -333,10 +529,10 @@ export class SharedMatrix<T = any>
 		// Do not queue a message or track the pending op, as there will never be an ACK, etc.
 		if (this.isAttached()) {
 			// Record whether this `op` targets rows or cols.  (See dispatch in `processCore()`)
-			message.target = dimension;
+			const targetedMessage: VectorOp = { ...message, target };
 
 			this.submitLocalMessage(
-				message,
+				targetedMessage,
 				currentVector.peekPendingSegmentGroups(
 					message.type === MergeTreeDeltaType.GROUP ? message.ops.length : 1,
 				),
@@ -344,49 +540,70 @@ export class SharedMatrix<T = any>
 		}
 	}
 
-	private submitColMessage(message: any) {
+	private submitColMessage(message: IMergeTreeOp) {
 		this.submitVectorMessage(this.cols, this.rows, SnapshotPath.cols, message);
 	}
 
 	public insertCols(colStart: number, count: number) {
-		this.submitColMessage(this.cols.insert(colStart, count));
+		if (count === 0) {
+			return;
+		}
+		if (colStart > this.colCount) {
+			throw new UsageError("insertCols: out of bounds");
+		}
+		this.protectAgainstReentrancy(() => {
+			const message = this.cols.insert(colStart, count);
+			assert(message !== undefined, 0x8b4 /* must be defined */);
+			this.submitColMessage(message);
+		});
 	}
 
 	public removeCols(colStart: number, count: number) {
-		this.submitColMessage(this.cols.remove(colStart, count));
+		if (count === 0) {
+			return;
+		}
+		if (colStart > this.colCount) {
+			throw new UsageError("removeCols: out of bounds");
+		}
+		this.protectAgainstReentrancy(() =>
+			this.submitColMessage(this.cols.remove(colStart, count)),
+		);
 	}
 
-	private submitRowMessage(message: any) {
+	private submitRowMessage(message: IMergeTreeOp) {
 		this.submitVectorMessage(this.rows, this.cols, SnapshotPath.rows, message);
 	}
 
 	public insertRows(rowStart: number, count: number) {
-		this.submitRowMessage(this.rows.insert(rowStart, count));
+		if (count === 0) {
+			return;
+		}
+		if (rowStart > this.rowCount) {
+			throw new UsageError("insertRows: out of bounds");
+		}
+		this.protectAgainstReentrancy(() => {
+			const message = this.rows.insert(rowStart, count);
+			assert(message !== undefined, 0x8b5 /* must be defined */);
+			this.submitRowMessage(message);
+		});
 	}
 
 	public removeRows(rowStart: number, count: number) {
-		this.submitRowMessage(this.rows.remove(rowStart, count));
+		if (count === 0) {
+			return;
+		}
+		if (rowStart > this.rowCount) {
+			throw new UsageError("removeRows: out of bounds");
+		}
+		this.protectAgainstReentrancy(() =>
+			this.submitRowMessage(this.rows.remove(rowStart, count)),
+		);
 	}
 
-	/** @internal */ public _undoRemoveRows(segment: ISegment) {
-		const original = segment as PermutationSegment;
-
-		// (Re)insert the removed number of rows at the original position.
-		const { op, inserted } = this.rows.insertRelative(original, original.cachedLength);
+	public _undoRemoveRows(rowStart: number, spec: IJSONSegment) {
+		const { op, inserted } = reinsertSegmentIntoVector(this.rows, rowStart, spec);
+		assert(op !== undefined, 0x8b6 /* must be defined */);
 		this.submitRowMessage(op);
-
-		// Transfer handles and undo/redo tracking groups from the original segment to the
-		// newly inserted segment.
-		original.transferToReplacement(inserted);
-
-		// Invalidate the handleCache in case it was populated during the 'rowsChanged'
-		// callback, which occurs before the handle span is populated.
-		const rowStart = this.rows.getPosition(inserted);
-		this.rows.handleCache.itemsChanged(
-			rowStart,
-			/* removedCount: */ 0,
-			/* insertedCount: */ inserted.cachedLength,
-		);
 
 		// Generate setCell ops for each populated cell in the reinserted rows.
 		let rowHandle = inserted.start;
@@ -407,25 +624,10 @@ export class SharedMatrix<T = any>
 		}
 	}
 
-	/** @internal */ public _undoRemoveCols(segment: ISegment) {
-		const original = segment as PermutationSegment;
-
-		// (Re)insert the removed number of columns at the original position.
-		const { op, inserted } = this.cols.insertRelative(original, original.cachedLength);
+	/***/ public _undoRemoveCols(colStart: number, spec: IJSONSegment) {
+		const { op, inserted } = reinsertSegmentIntoVector(this.cols, colStart, spec);
+		assert(op !== undefined, 0x8b7 /* must be defined */);
 		this.submitColMessage(op);
-
-		// Transfer handles and undo/redo tracking groups from the original segment to the
-		// newly inserted segment.
-		original.transferToReplacement(inserted);
-
-		// Invalidate the handleCache in case it was populated during the 'colsChanged'
-		// callback, which occurs before the handle span is populated.
-		const colStart = this.cols.getPosition(inserted);
-		this.cols.handleCache.itemsChanged(
-			colStart,
-			/* removedCount: */ 0,
-			/* insertedCount: */ inserted.cachedLength,
-		);
 
 		// Generate setCell ops for each populated cell in the reinserted cols.
 		let colHandle = inserted.start;
@@ -456,9 +658,19 @@ export class SharedMatrix<T = any>
 			SnapshotPath.cols,
 			this.cols.summarize(this.runtime, this.handle, serializer),
 		);
+		const artifactsToSummarize = [
+			this.cells.snapshot(),
+			this.pending.snapshot(),
+			this.setCellLwwToFwwPolicySwitchOpSeqNumber,
+		];
+
+		// Only need to store it in the snapshot if we have switched the policy already.
+		if (this.setCellLwwToFwwPolicySwitchOpSeqNumber > -1) {
+			artifactsToSummarize.push(this.cellLastWriteTracker.snapshot());
+		}
 		builder.addBlob(
 			SnapshotPath.cells,
-			serializer.stringify([this.cells.snapshot(), this.pending.snapshot()], this.handle),
+			serializer.stringify(artifactsToSummarize, this.handle),
 		);
 		return builder.getSummaryTree();
 	}
@@ -467,7 +679,7 @@ export class SharedMatrix<T = any>
 	 * Runs serializer on the GC data for this SharedMatrix.
 	 * All the IFluidHandle's stored in the cells represent routes to other objects.
 	 */
-	protected processGCDataCore(serializer: SummarySerializer) {
+	protected processGCDataCore(serializer: IFluidSerializer) {
 		for (let row = 0; row < this.rowCount; row++) {
 			for (let col = 0; col < this.colCount; col++) {
 				serializer.stringify(this.getCell(row, col), this.handle);
@@ -499,10 +711,8 @@ export class SharedMatrix<T = any>
 			0x01d /* "Trying to submit message to runtime while detached!" */,
 		);
 
-		super.submitLocalMessage(
-			makeHandlesSerializable(message, this.serializer, this.handle),
-			localOpMetadata,
-		);
+		this.inFlightRefSeqs.push(this.deltaManager.lastSequenceNumber);
+		super.submitLocalMessage(message, localOpMetadata);
 
 		// Ensure that row/col 'localSeq' are synchronized (see 'nextLocalSeq()').
 		assert(
@@ -532,73 +742,90 @@ export class SharedMatrix<T = any>
 	}
 
 	private rebasePosition(
+		// eslint-disable-next-line import/no-deprecated
 		client: Client,
-		pos: number,
-		referenceSequenceNumber: number,
+		ref: LocalReferencePosition,
 		localSeq: number,
 	): number | undefined {
-		const { clientId } = client.getCollabWindow();
-		const { segment, offset } = client.getContainingSegment(
-			pos,
-			{ referenceSequenceNumber, clientId: client.getLongClientId(clientId) },
-			localSeq,
-		);
-		if (segment === undefined || offset === undefined) {
+		const segment = ref.getSegment();
+		const offset = ref.getOffset();
+		// If the segment that contains the position is removed, then this setCell op should do nothing.
+		if (segment === undefined || offset === undefined || segment.removedSeq !== undefined) {
 			return;
 		}
+
+		assert(
+			segment.localRemovedSeq === undefined ||
+				(segment.localRemovedSeq !== undefined && segment.localRemovedSeq > localSeq),
+			0x8b8 /* Attempted to set a cell which was removed locally before the original op applied. */,
+		);
 
 		return client.findReconnectionPosition(segment, localSeq) + offset;
 	}
 
-	protected reSubmitCore(content: any, localOpMetadata: unknown) {
-		switch (content.target) {
-			case SnapshotPath.cols:
-				this.submitColMessage(
-					this.cols.regeneratePendingOp(
-						content as IMergeTreeOp,
-						localOpMetadata as SegmentGroup | SegmentGroup[],
-					),
-				);
-				break;
-			case SnapshotPath.rows:
-				this.submitRowMessage(
-					this.rows.regeneratePendingOp(
-						content as IMergeTreeOp,
-						localOpMetadata as SegmentGroup | SegmentGroup[],
-					),
-				);
-				break;
-			default: {
-				assert(
-					content.type === MatrixOp.set,
-					0x020 /* "Unknown SharedMatrix 'op' type." */,
-				);
+	protected reSubmitCore(incoming: unknown, localOpMetadata: unknown) {
+		const originalRefSeq = this.inFlightRefSeqs.shift();
+		assert(
+			originalRefSeq !== undefined,
+			0x8b9 /* Expected a recorded refSeq when resubmitting an op */,
+		);
+		const content = incoming as MatrixSetOrVectorOp<T>;
 
-				const setOp = content as ISetOp<T>;
-				const { rowHandle, colHandle, localSeq, rowsRefSeq, colsRefSeq } =
-					localOpMetadata as ISetOpMetadata;
+		if (content.type === MatrixOp.set && content.target === undefined) {
+			const setOp = content;
+			const { rowHandle, colHandle, localSeq, rowsRef, colsRef, referenceSeqNumber } =
+				localOpMetadata as ISetOpMetadata;
 
-				// If there are more pending local writes to the same row/col handle, it is important
-				// to skip resubmitting this op since it is possible the row/col handle has been recycled
-				// and now refers to a different position than when this op was originally submitted.
-				if (this.isLatestPendingWrite(rowHandle, colHandle, localSeq)) {
-					const row = this.rebasePosition(this.rows, setOp.row, rowsRefSeq, localSeq);
-					const col = this.rebasePosition(this.cols, setOp.col, colsRefSeq, localSeq);
-
-					if (row !== undefined && col !== undefined && row >= 0 && col >= 0) {
-						this.sendSetCellOp(
-							row,
-							col,
-							setOp.value,
-							rowHandle,
-							colHandle,
-							localSeq,
-							rowsRefSeq,
-							colsRefSeq,
-						);
-					}
+			// If after rebasing the op, we get a valid row/col number, that means the row/col
+			// handles have not been recycled and we can safely use them.
+			const row = this.rebasePosition(this.rows, rowsRef, localSeq);
+			const col = this.rebasePosition(this.cols, colsRef, localSeq);
+			this.rows.removeLocalReferencePosition(rowsRef);
+			this.cols.removeLocalReferencePosition(colsRef);
+			if (row !== undefined && col !== undefined && row >= 0 && col >= 0) {
+				const lastCellModificationDetails = this.cellLastWriteTracker.getCell(
+					rowHandle,
+					colHandle,
+				);
+				// If the mode is LWW, then send the op.
+				// Otherwise if the current mode is FWW and if we generated this op, after seeing the
+				// last set op, or it is the first set op for the cell, then regenerate the op,
+				// otherwise raise conflict. We want to check the current mode here and not that
+				// whether op was made in FWW or not.
+				if (
+					this.setCellLwwToFwwPolicySwitchOpSeqNumber === -1 ||
+					lastCellModificationDetails === undefined ||
+					referenceSeqNumber >= lastCellModificationDetails.seqNum
+				) {
+					this.sendSetCellOp(row, col, setOp.value, rowHandle, colHandle, localSeq);
+				} else if (this.pending.getCell(rowHandle, colHandle) !== undefined) {
+					// Clear the pending changes if any as we are not sending the op.
+					this.pending.setCell(rowHandle, colHandle, undefined);
 				}
-				break;
+			}
+		} else {
+			switch (content.target) {
+				case SnapshotPath.cols:
+					this.submitColMessage(
+						this.cols.regeneratePendingOp(
+							content,
+							// eslint-disable-next-line import/no-deprecated
+							localOpMetadata as SegmentGroup | SegmentGroup[],
+						),
+					);
+					break;
+				case SnapshotPath.rows:
+					this.submitRowMessage(
+						this.rows.regeneratePendingOp(
+							content,
+							// eslint-disable-next-line import/no-deprecated
+							localOpMetadata as SegmentGroup | SegmentGroup[],
+						),
+					);
+					break;
+				default: {
+					unreachableCase(content);
+				}
 			}
 		}
 	}
@@ -620,57 +847,120 @@ export class SharedMatrix<T = any>
 				new ObjectStoragePartition(storage, SnapshotPath.cols),
 				this.serializer,
 			);
-			const [cellData, pendingCliSeqData] = await deserializeBlob(
-				storage,
-				SnapshotPath.cells,
-				this.serializer,
-			);
+			const [
+				cellData,
+				_pendingCliSeqData,
+				setCellLwwToFwwPolicySwitchOpSeqNumber,
+				cellLastWriteTracker,
+			] = await deserializeBlob(storage, SnapshotPath.cells, this.serializer);
 
 			this.cells = SparseArray2D.load(cellData);
-			this.pending = SparseArray2D.load(pendingCliSeqData);
+			this.setCellLwwToFwwPolicySwitchOpSeqNumber =
+				setCellLwwToFwwPolicySwitchOpSeqNumber ?? -1;
+			if (cellLastWriteTracker !== undefined) {
+				this.cellLastWriteTracker = SparseArray2D.load(cellLastWriteTracker);
+			}
 		} catch (error) {
 			this.logger.sendErrorEvent({ eventName: "MatrixLoadFailed" }, error);
 		}
 	}
 
+	/**
+	 * Tells whether the setCell op should be applied or not based on First Write Win policy. It assumes
+	 * we are in FWW mode.
+	 */
+	private shouldSetCellBasedOnFWW(
+		rowHandle: Handle,
+		colHandle: Handle,
+		message: ISequencedDocumentMessage,
+	) {
+		assert(
+			this.setCellLwwToFwwPolicySwitchOpSeqNumber > -1,
+			0x85f /* should be in Fww mode when calling this method */,
+		);
+		assert(message.clientId !== null, 0x860 /* clientId should not be null */);
+		const lastCellModificationDetails = this.cellLastWriteTracker.getCell(
+			rowHandle,
+			colHandle,
+		);
+		// If someone tried to Overwrite the cell value or first write on this cell or
+		// same client tried to modify the cell.
+		return (
+			lastCellModificationDetails === undefined ||
+			lastCellModificationDetails.clientId === message.clientId ||
+			message.referenceSequenceNumber >= lastCellModificationDetails.seqNum
+		);
+	}
+
 	protected processCore(
-		rawMessage: ISequencedDocumentMessage,
+		msg: ISequencedDocumentMessage,
 		local: boolean,
 		localOpMetadata: unknown,
 	) {
-		const msg = parseHandles(rawMessage, this.serializer);
+		if (local) {
+			const recordedRefSeq = this.inFlightRefSeqs.shift();
+			assert(recordedRefSeq !== undefined, 0x8ba /* No pending recorded refSeq found */);
+			// TODO: AB#7076: Some equivalent assert should be enabled. This fails some e2e stashed op tests because
+			// the deltaManager may have seen more messages than the runtime has processed while amidst the stashed op
+			// flow, so e.g. when `applyStashedOp` is called and the DDS is put in a state where it expects an ack for
+			// one of its messages, the delta manager has actually already seen subsequent messages from collaborators
+			// which the in-flight message is concurrent to.
+			// See "handles stashed ops created on top of sequenced local ops" for one such test case.
+			// assert(recordedRefSeq <= message.referenceSequenceNumber, "RefSeq mismatch");
+		}
 
-		const contents = msg.contents;
+		const contents = msg.contents as MatrixSetOrVectorOp<T>;
+		const target = contents.target;
 
-		switch (contents.target) {
+		switch (target) {
 			case SnapshotPath.cols:
 				this.cols.applyMsg(msg, local);
 				break;
 			case SnapshotPath.rows:
 				this.rows.applyMsg(msg, local);
 				break;
-			default: {
+			case undefined: {
 				assert(
 					contents.type === MatrixOp.set,
 					0x021 /* "SharedMatrix message contents have unexpected type!" */,
 				);
 
-				const { row, col } = contents;
+				const { row, col, value, fwwMode } = contents;
+				const isPreviousSetCellPolicyModeFWW =
+					this.setCellLwwToFwwPolicySwitchOpSeqNumber > -1;
+				// If this is the first op notifying us of the policy change, then set the policy change seq number.
+				if (this.setCellLwwToFwwPolicySwitchOpSeqNumber === -1 && fwwMode === true) {
+					this.setCellLwwToFwwPolicySwitchOpSeqNumber = msg.sequenceNumber;
+				}
 
+				assert(msg.clientId !== null, 0x861 /* clientId should not be null!! */);
 				if (local) {
 					// We are receiving the ACK for a local pending set operation.
-					const { rowHandle, colHandle, localSeq } = localOpMetadata as ISetOpMetadata;
+					const { rowHandle, colHandle, localSeq, rowsRef, colsRef } =
+						localOpMetadata as ISetOpMetadata;
+					const isLatestPendingOp = this.isLatestPendingWrite(rowHandle, colHandle, localSeq);
+					this.rows.removeLocalReferencePosition(rowsRef);
+					this.cols.removeLocalReferencePosition(colsRef);
+					// If policy is switched and cell should be modified too based on policy, then update the tracker.
+					// If policy is not switched, then also update the tracker in case it is the latest.
+					if (
+						(this.setCellLwwToFwwPolicySwitchOpSeqNumber > -1 &&
+							this.shouldSetCellBasedOnFWW(rowHandle, colHandle, msg)) ||
+						(this.setCellLwwToFwwPolicySwitchOpSeqNumber === -1 && isLatestPendingOp)
+					) {
+						this.cellLastWriteTracker.setCell(rowHandle, colHandle, {
+							seqNum: msg.sequenceNumber,
+							clientId: msg.clientId,
+						});
+					}
 
-					// If this is the most recent write to the cell by the local client, remove our
-					// entry from 'pendingCliSeqs' to resume allowing remote writes.
-					if (this.isLatestPendingWrite(rowHandle, colHandle, localSeq)) {
+					if (isLatestPendingOp) {
 						this.pending.setCell(rowHandle, colHandle, undefined);
 					}
 				} else {
-					const adjustedRow = this.rows.adjustPosition(row, rawMessage);
-
+					const adjustedRow = this.rows.adjustPosition(row, msg);
 					if (adjustedRow !== undefined) {
-						const adjustedCol = this.cols.adjustPosition(col, rawMessage);
+						const adjustedCol = this.cols.adjustPosition(col, msg);
 
 						if (adjustedCol !== undefined) {
 							const rowHandle = this.rows.getAllocatedHandle(adjustedRow);
@@ -680,13 +970,45 @@ export class SharedMatrix<T = any>
 								isHandleValid(rowHandle) && isHandleValid(colHandle),
 								0x022 /* "SharedMatrix row and/or col handles are invalid!" */,
 							);
-
-							// If there is a pending (unACKed) local write to the same cell, skip the current op
-							// since it "happened before" the pending write.
-							if (this.pending.getCell(rowHandle, colHandle) === undefined) {
-								const { value } = contents;
+							if (this.setCellLwwToFwwPolicySwitchOpSeqNumber > -1) {
+								// If someone tried to Overwrite the cell value or first write on this cell or
+								// same client tried to modify the cell or if the previous mode was LWW, then we need to still
+								// overwrite the cell and raise conflict if we have pending changes as our change is going to be lost.
+								if (
+									!isPreviousSetCellPolicyModeFWW ||
+									this.shouldSetCellBasedOnFWW(rowHandle, colHandle, msg)
+								) {
+									const previousValue = this.cells.getCell(rowHandle, colHandle);
+									this.cells.setCell(rowHandle, colHandle, value);
+									this.cellLastWriteTracker.setCell(rowHandle, colHandle, {
+										seqNum: msg.sequenceNumber,
+										clientId: msg.clientId,
+									});
+									for (const consumer of this.consumers.values()) {
+										consumer.cellsChanged(adjustedRow, adjustedCol, 1, 1, this);
+									}
+									// Check is there are any pending changes, which will be rejected. If so raise conflict.
+									if (this.pending.getCell(rowHandle, colHandle) !== undefined) {
+										// Don't reset the pending value yet, as there maybe more fww op from same client, so we want
+										// to raise conflict event for that op also.
+										this.emit(
+											"conflict",
+											row,
+											col,
+											value, // Current value
+											previousValue, // Ignored local value
+											this,
+										);
+									}
+								}
+							} else if (this.pending.getCell(rowHandle, colHandle) === undefined) {
+								// If there is a pending (unACKed) local write to the same cell, skip the current op
+								// since it "happened before" the pending write.
 								this.cells.setCell(rowHandle, colHandle, value);
-
+								this.cellLastWriteTracker.setCell(rowHandle, colHandle, {
+									seqNum: msg.sequenceNumber,
+									clientId: msg.clientId,
+								});
 								for (const consumer of this.consumers.values()) {
 									consumer.cellsChanged(adjustedRow, adjustedCol, 1, 1, this);
 								}
@@ -694,7 +1016,10 @@ export class SharedMatrix<T = any>
 						}
 					}
 				}
+				break;
 			}
+			default:
+				unreachableCase(target, "unknown target");
 		}
 	}
 
@@ -724,6 +1049,7 @@ export class SharedMatrix<T = any>
 		for (const rowHandle of rowHandles) {
 			this.cells.clearRows(/* rowStart: */ rowHandle, /* rowCount: */ 1);
 			this.pending.clearRows(/* rowStart: */ rowHandle, /* rowCount: */ 1);
+			this.cellLastWriteTracker.clearRows(/* rowStart: */ rowHandle, /* rowCount: */ 1);
 		}
 	};
 
@@ -731,8 +1057,19 @@ export class SharedMatrix<T = any>
 		for (const colHandle of colHandles) {
 			this.cells.clearCols(/* colStart: */ colHandle, /* colCount: */ 1);
 			this.pending.clearCols(/* colStart: */ colHandle, /* colCount: */ 1);
+			this.cellLastWriteTracker.clearCols(/* colStart: */ colHandle, /* colCount: */ 1);
 		}
 	};
+
+	public switchSetCellPolicy() {
+		if (this.setCellLwwToFwwPolicySwitchOpSeqNumber === -1) {
+			if (this.isAttached()) {
+				this.userSwitchedSetCellPolicy = true;
+			} else {
+				this.setCellLwwToFwwPolicySwitchOpSeqNumber = 0;
+			}
+		}
+	}
 
 	/**
 	 * Returns true if the latest pending write to the cell indicated by the given row/col handles
@@ -782,53 +1119,21 @@ export class SharedMatrix<T = any>
 	/**
 	 * {@inheritDoc @fluidframework/shared-object-base#SharedObjectCore.applyStashedOp}
 	 */
-	protected applyStashedOp(content: any): unknown {
-		if (content.target === SnapshotPath.cols || content.target === SnapshotPath.rows) {
-			const op = content as IMergeTreeOp;
-			const currentVector = content.target === SnapshotPath.cols ? this.cols : this.rows;
-			const oppositeVector = content.target === SnapshotPath.cols ? this.rows : this.cols;
-			const metadata = currentVector.applyStashedOp(op);
-			const localSeq = currentVector.getCollabWindow().localSeq;
-			const oppositeWindow = oppositeVector.getCollabWindow();
-
-			assert(
-				localSeq > oppositeWindow.localSeq,
-				0x2d9,
-				/* "The 'localSeq' of the vector applying stashed op must > the 'localSeq' of the other vector." */
-			);
-
-			oppositeWindow.localSeq = localSeq;
-
-			return metadata;
-		} else {
-			assert(content.type === MatrixOp.set, 0x2da /* "Unknown SharedMatrix 'op' type." */);
-
-			const setOp = content as ISetOp<T>;
-			const rowHandle = this.rows.getAllocatedHandle(setOp.row);
-			const colHandle = this.cols.getAllocatedHandle(setOp.col);
-			const rowsRefSeq = this.rows.getCollabWindow().currentSeq;
-			const colsRefSeq = this.cols.getCollabWindow().currentSeq;
-			if (this.undo !== undefined) {
-				let oldValue = this.cells.getCell(rowHandle, colHandle);
-				if (oldValue === null) {
-					oldValue = undefined;
-				}
-
-				this.undo.cellSet(rowHandle, colHandle, oldValue);
+	protected applyStashedOp(_content: unknown): void {
+		const content = _content as MatrixSetOrVectorOp<T>;
+		if (content.type === MatrixOp.set && content.target === undefined) {
+			if (content.fwwMode === true) {
+				this.switchSetCellPolicy();
 			}
-
-			this.cells.setCell(rowHandle, colHandle, setOp.value);
-			const localSeq = this.nextLocalSeq();
-			const metadata: ISetOpMetadata = {
-				rowHandle,
-				colHandle,
-				localSeq,
-				rowsRefSeq,
-				colsRefSeq,
-			};
-
-			this.pending.setCell(rowHandle, colHandle, localSeq);
-			return metadata;
+			this.setCell(content.row, content.col, content.value);
+		} else {
+			const vector = content.target === SnapshotPath.cols ? this.cols : this.rows;
+			vector.applyStashedOp(content);
+			if (content.target === SnapshotPath.cols) {
+				this.submitColMessage(content);
+			} else {
+				this.submitRowMessage(content);
+			}
 		}
 	}
 }

@@ -2,16 +2,18 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { strict as assert } from "assert";
-import { AttributionKey } from "@fluidframework/runtime-definitions";
+
+import { AttributionKey } from "@fluidframework/runtime-definitions/internal";
+
 import {
 	createInsertOnlyAttributionPolicy,
 	createPropertyTrackingAndInsertionAttributionPolicyFactory,
 	createPropertyTrackingAttributionPolicyFactory,
-} from "../attributionPolicy";
-import { TestClient } from "./testClient";
+} from "../attributionPolicy.js";
+
+import { TestClient } from "./testClient.js";
 
 const local: AttributionKey = { type: "local" };
 
@@ -47,11 +49,11 @@ describe("Attribution Policy", () => {
 	function runAnnotateVerificationTests() {
 		it("attributes local property changes", () => {
 			client.applyMsg(client.makeOpMessage(client.insertTextLocal(0, "123"), ++seq));
-			const annotateOp = client.annotateRangeLocal(1, 2, { foo: 1 }, undefined);
+			const annotateOp = client.annotateRangeLocal(1, 2, { foo: 1 });
 			assert.deepEqual(client.getAllAttributionSeqs("foo"), [undefined, local, undefined]);
 			client.applyMsg(client.makeOpMessage(annotateOp, ++seq));
 			client.applyMsg(
-				client.makeOpMessage(client.annotateRangeLocal(0, 3, { bar: 2 }, undefined), ++seq),
+				client.makeOpMessage(client.annotateRangeLocal(0, 3, { bar: 2 }), ++seq),
 			);
 			assert.deepEqual(client.getAllAttributionSeqs("foo"), [undefined, 2, undefined]);
 		});
@@ -64,7 +66,7 @@ describe("Attribution Policy", () => {
 
 		it("uses LWW semantics for conflicting attribution of props", () => {
 			client.applyMsg(client.makeOpMessage(client.insertTextLocal(0, "123"), ++seq));
-			const localPropChange = client.annotateRangeLocal(1, 2, { foo: 1 }, undefined);
+			const localPropChange = client.annotateRangeLocal(1, 2, { foo: 1 });
 			client.annotateRangeRemote(0, 2, { foo: 2 }, ++seq, seq - 1, remoteUserLongId);
 			const firstRemoteAnnotateSeq = seq;
 			assert.equal(client.getPropertiesAtPosition(0)?.foo, 2);
@@ -106,7 +108,7 @@ describe("Attribution Policy", () => {
 		it("attributes annotation in a detached state", () => {
 			client = new TestClient(client.mergeTree.options);
 			client.insertTextLocal(0, "1", undefined);
-			client.annotateRangeLocal(0, 1, { foo: "bar" }, undefined);
+			client.annotateRangeLocal(0, 1, { foo: "bar" });
 			assert.deepEqual(client.getAllAttributionSeqs("foo"), [{ type: "detached", id: 0 }]);
 		});
 
@@ -133,10 +135,10 @@ describe("Attribution Policy", () => {
 		it("ignores local property changes", () => {
 			client.applyMsg(client.makeOpMessage(client.insertTextLocal(0, "123"), ++seq));
 			client.applyMsg(
-				client.makeOpMessage(client.annotateRangeLocal(1, 2, { foo: 1 }, undefined), ++seq),
+				client.makeOpMessage(client.annotateRangeLocal(1, 2, { foo: 1 }), ++seq),
 			);
 			client.applyMsg(
-				client.makeOpMessage(client.annotateRangeLocal(0, 3, { bar: 2 }, undefined), ++seq),
+				client.makeOpMessage(client.annotateRangeLocal(0, 3, { bar: 2 }), ++seq),
 			);
 			assert.deepEqual(client.getAllAttributionSeqs(), [1, 1, 1]);
 		});
@@ -163,17 +165,9 @@ describe("Attribution Policy", () => {
 
 		it("ignores segments inserted locally", () => {
 			const mergeTreeOp = client.insertTextLocal(0, "123");
-			assert.deepEqual(client.getAllAttributionSeqs("foo"), [
-				undefined,
-				undefined,
-				undefined,
-			]);
+			assert.deepEqual(client.getAllAttributionSeqs("foo"), [undefined, undefined, undefined]);
 			client.applyMsg(client.makeOpMessage(mergeTreeOp, ++seq));
-			assert.deepEqual(client.getAllAttributionSeqs("foo"), [
-				undefined,
-				undefined,
-				undefined,
-			]);
+			assert.deepEqual(client.getAllAttributionSeqs("foo"), [undefined, undefined, undefined]);
 		});
 
 		it("ignores segments inserted remotely", () => {
@@ -208,8 +202,7 @@ describe("Attribution Policy", () => {
 			client = new TestClient({
 				attribution: {
 					track: true,
-					policyFactory:
-						createPropertyTrackingAndInsertionAttributionPolicyFactory("foo"),
+					policyFactory: createPropertyTrackingAndInsertionAttributionPolicyFactory("foo"),
 				},
 			});
 			client.startOrUpdateCollaboration(localUserLongId);
@@ -234,10 +227,10 @@ describe("Attribution Policy", () => {
 		it("attributes local property change on ack", () => {
 			client.applyMsg(client.makeOpMessage(client.insertTextLocal(0, "123"), ++seq));
 			client.applyMsg(
-				client.makeOpMessage(client.annotateRangeLocal(1, 2, { foo: 1 }, undefined), ++seq),
+				client.makeOpMessage(client.annotateRangeLocal(1, 2, { foo: 1 }), ++seq),
 			);
 			client.applyMsg(
-				client.makeOpMessage(client.annotateRangeLocal(0, 3, { bar: 2 }, undefined), ++seq),
+				client.makeOpMessage(client.annotateRangeLocal(0, 3, { bar: 2 }), ++seq),
 			);
 			assert.deepEqual(client.getAllAttributionSeqs("foo"), [undefined, 2, undefined]);
 			assert.deepEqual(client.getAllAttributionSeqs("bar"), [3, 3, 3]);

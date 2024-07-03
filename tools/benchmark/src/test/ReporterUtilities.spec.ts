@@ -3,7 +3,10 @@
  * Licensed under the MIT License.
  */
 
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+
 import { expect } from "chai";
+
 import { getArrayStatistics } from "../ReporterUtilities";
 
 describe("getArrayStatistics() function", () => {
@@ -21,27 +24,38 @@ describe("getArrayStatistics() function", () => {
 		);
 	});
 
+	it("Handles a single sample", () => {
+		const array = [5];
+		const results = getArrayStatistics(array);
+		expect(results.arithmeticMean).to.equal(5);
+		expect(results.variance).NaN;
+		expect(results.standardDeviation).NaN;
+		expect(results.standardErrorOfMean).NaN;
+		expect(results.marginOfError).NaN;
+		expect(results.marginOfErrorPercent).NaN;
+	});
+
 	it("Computes correct values when not dropping samples", () => {
 		const array = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 		const results = getArrayStatistics(array);
 
 		// All these hardcoded values correspond to the statistics of an array with integer samples 1 through 10
 		expect(results.arithmeticMean).to.equal(5.5, "Computed incorrect mean");
-		expect(results.variance).to.equal(8.25, "Computed incorrect variance");
+		expect(results.variance).to.equal(9.166_666_666_666_666, "Computed incorrect variance");
 		expect(results.standardDeviation).to.equal(
-			2.8722813232690143,
+			3.027_650_354_097_491_7,
 			"Computed incorrect standard deviation",
 		);
 		expect(results.standardErrorOfMean).to.equal(
-			0.9082951062292475,
+			0.957_427_107_756_338_1,
 			"Computed incorrect sample error of the mean",
 		);
 		expect(results.marginOfError).to.equal(
-			2.0545635302905576,
+			2.165_700_117_744_836_7,
 			"Computed incorrect margin of error",
 		);
 		expect(results.marginOfErrorPercent).to.equal(
-			37.35570055073741,
+			39.376_365_777_178_854,
 			"Computed incorrect relative margin of error",
 		);
 
@@ -55,21 +69,21 @@ describe("getArrayStatistics() function", () => {
 
 		// All these hardcoded values correspond to the statistics of an array with integer samples 1 through 10
 		expect(results.arithmeticMean).to.equal(5.5, "Computed incorrect mean");
-		expect(results.variance).to.equal(8.25, "Computed incorrect variance");
+		expect(results.variance).to.equal(9.166_666_666_666_666, "Computed incorrect variance");
 		expect(results.standardDeviation).to.equal(
-			2.8722813232690143,
+			3.027_650_354_097_491_7,
 			"Computed incorrect standard deviation",
 		);
 		expect(results.standardErrorOfMean).to.equal(
-			0.9082951062292475,
+			0.957_427_107_756_338_1,
 			"Computed incorrect sample error of the mean",
 		);
 		expect(results.marginOfError).to.equal(
-			2.0545635302905576,
+			2.165_700_117_744_836_7,
 			"Computed incorrect margin of error",
 		);
 		expect(results.marginOfErrorPercent).to.equal(
-			37.35570055073741,
+			39.376_365_777_178_854,
 			"Computed incorrect relative margin of error",
 		);
 
@@ -150,4 +164,4 @@ describe("getArrayStatistics() function", () => {
 	});
 });
 
-const mean = (array: number[]) => array.reduce((a, b) => a + b, 0) / array.length;
+const mean = (array: number[]): number => array.reduce((a, b) => a + b, 0) / array.length;

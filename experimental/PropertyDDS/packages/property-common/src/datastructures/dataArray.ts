@@ -13,6 +13,7 @@
 /**
  * A typed data container that is persistable, high-performance, and can be used
  * as a backing store for collaborative property sets.
+ * @internal
  */
 class BaseDataArray {
 	protected _buffer: any;
@@ -41,7 +42,7 @@ class BaseDataArray {
 
 	/**
 	 * Get the value at an index. If no index is passed, return zeroth item.
-	 * @param in_idx -  The specific item in the data array.
+	 * @param in_idx - The specific item in the data array.
 	 * @returns The value at that index.
 	 */
 	getValue(in_idx = 0): any {
@@ -59,7 +60,12 @@ class BaseDataArray {
 	 * @returns the array of values in the range
 	 */
 	getValueRange(in_idxStart: number, in_idxEnd: number) {
-		if (in_idxStart >= this.size || in_idxEnd > this.size || in_idxStart < 0 || in_idxEnd < 0) {
+		if (
+			in_idxStart >= this.size ||
+			in_idxEnd > this.size ||
+			in_idxStart < 0 ||
+			in_idxEnd < 0
+		) {
 			throw new Error("Trying to access out of bounds!");
 		}
 
@@ -279,48 +285,72 @@ class BaseDataArray {
 	}
 }
 
+/**
+ * @internal
+ */
 class Int8DataArray extends BaseDataArray {
 	constructor(size: number) {
 		super(Int8Array, size);
 	}
 }
 
+/**
+ * @internal
+ */
 class Int16DataArray extends BaseDataArray {
 	constructor(size: number) {
 		super(Int16Array, size);
 	}
 }
 
+/**
+ * @internal
+ */
 class Int32DataArray extends BaseDataArray {
 	constructor(size: number) {
 		super(Int32Array, size);
 	}
 }
 
+/**
+ * @internal
+ */
 class Uint8DataArray extends BaseDataArray {
 	constructor(size: number) {
 		super(Uint8Array, size);
 	}
 }
 
+/**
+ * @internal
+ */
 class Uint16DataArray extends BaseDataArray {
 	constructor(size: number) {
 		super(Uint16Array, size);
 	}
 }
 
+/**
+ * @internal
+ */
 class Uint32DataArray extends BaseDataArray {
 	constructor(size: number) {
 		super(Uint32Array, size);
 	}
 }
 
+/**
+ * @internal
+ */
 class Float32DataArray extends BaseDataArray {
 	constructor(size: number) {
 		super(Float32Array, size);
 	}
 }
 
+/**
+ * @internal
+ */
 class Float64DataArray extends BaseDataArray {
 	constructor(size: number) {
 		super(Float64Array, size);
@@ -331,6 +361,7 @@ class Float64DataArray extends BaseDataArray {
  * A data container that can contain every native type
  *
  * @param size - The initial size with which to allocate the array.
+ * @internal
  */
 class UniversalDataArray extends BaseDataArray {
 	constructor(bufferConstructor: any, size: number);
@@ -409,7 +440,12 @@ class UniversalDataArray extends BaseDataArray {
 	 * @returns the array of values in the range
 	 */
 	getValueRange(in_idxStart: number, in_idxEnd: number) {
-		if (in_idxStart >= this.size || in_idxEnd > this.size || in_idxStart < 0 || in_idxEnd < 0) {
+		if (
+			in_idxStart >= this.size ||
+			in_idxEnd > this.size ||
+			in_idxStart < 0 ||
+			in_idxEnd < 0
+		) {
 			throw new Error("Trying to access out of bounds!");
 		}
 		return this._buffer.slice(in_idxStart, in_idxEnd);
@@ -445,6 +481,7 @@ class UniversalDataArray extends BaseDataArray {
 
 /**
  * A data container that contains a string
+ * @internal
  */
 class StringDataArray extends BaseDataArray {
 	constructor() {
@@ -498,7 +535,12 @@ class StringDataArray extends BaseDataArray {
 	 * @returns the characters in the range
 	 */
 	getValueRange(in_idxStart: number, in_idxEnd: number): string {
-		if (in_idxStart >= this.size || in_idxEnd > this.size || in_idxStart < 0 || in_idxEnd < 0) {
+		if (
+			in_idxStart >= this.size ||
+			in_idxEnd > this.size ||
+			in_idxStart < 0 ||
+			in_idxEnd < 0
+		) {
 			throw new Error("Trying to access out of bounds!");
 		}
 		return this._buffer.slice(in_idxStart, in_idxEnd);
@@ -511,6 +553,7 @@ class StringDataArray extends BaseDataArray {
 
 /**
  * A data container that can contain boolean type
+ * @internal
  */
 class BoolDataArray extends UniversalDataArray {
 	/**

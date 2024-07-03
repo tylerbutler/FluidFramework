@@ -3,42 +3,42 @@
  * Licensed under the MIT License.
  */
 
-import { LoggingError } from "@fluidframework/telemetry-utils";
+import { IDisposable } from "@fluidframework/core-interfaces";
+import { ISummaryHandle, ISummaryTree } from "@fluidframework/driver-definitions";
 import {
 	FetchSource,
 	IDocumentStorageService,
 	IDocumentStorageServicePolicies,
+	ISnapshot,
+	ISnapshotFetchOptions,
 	ISummaryContext,
-} from "@fluidframework/driver-definitions";
-import {
 	ICreateBlobResponse,
 	ISnapshotTree,
-	ISummaryHandle,
-	ISummaryTree,
 	IVersion,
-} from "@fluidframework/protocol-definitions";
-import { IDisposable, ITelemetryLogger } from "@fluidframework/common-definitions";
-import { runWithRetry } from "./retryUtils";
+} from "@fluidframework/driver-definitions/internal";
+import {
+	ITelemetryLoggerExt,
+	LoggingError,
+	UsageError,
+} from "@fluidframework/telemetry-utils/internal";
+
+import { runWithRetry } from "./retryUtils.js";
 
 export class RetryErrorsStorageAdapter implements IDocumentStorageService, IDisposable {
 	private _disposed = false;
 	constructor(
 		private readonly internalStorageService: IDocumentStorageService,
-		private readonly logger: ITelemetryLogger,
+		private readonly logger: ITelemetryLoggerExt,
 	) {}
 
 	public get policies(): IDocumentStorageServicePolicies | undefined {
 		return this.internalStorageService.policies;
 	}
-	public get disposed() {
+	public get disposed(): boolean {
 		return this._disposed;
 	}
-	public dispose() {
+	public dispose(): void {
 		this._disposed = true;
-	}
-
-	public get repositoryUrl(): string {
-		return this.internalStorageService.repositoryUrl;
 	}
 
 	// eslint-disable-next-line @rushstack/no-new-null
@@ -47,6 +47,15 @@ export class RetryErrorsStorageAdapter implements IDocumentStorageService, IDisp
 			async () => this.internalStorageService.getSnapshotTree(version),
 			"storage_getSnapshotTree",
 		);
+	}
+
+	public async getSnapshot(snapshotFetchOptions?: ISnapshotFetchOptions): Promise<ISnapshot> {
+		return this.runWithRetry(async () => {
+			if (this.internalStorageService.getSnapshot !== undefined) {
+				return this.internalStorageService.getSnapshot(snapshotFetchOptions);
+			}
+			throw new UsageError("getSnapshot should exist in storage adapter in ODSP driver");
+		}, "storage_getSnapshot");
 	}
 
 	public async readBlob(id: string): Promise<ArrayBufferLike> {
@@ -65,12 +74,7 @@ export class RetryErrorsStorageAdapter implements IDocumentStorageService, IDisp
 	): Promise<IVersion[]> {
 		return this.runWithRetry(
 			async () =>
-				this.internalStorageService.getVersions(
-					versionId,
-					count,
-					scenarioName,
-					fetchSource,
-				),
+				this.internalStorageService.getVersions(versionId, count, scenarioName, fetchSource),
 			"storage_getVersions",
 		);
 	}
@@ -100,7 +104,7 @@ export class RetryErrorsStorageAdapter implements IDocumentStorageService, IDisp
 		);
 	}
 
-	private checkStorageDisposed() {
+	private checkStorageDisposed(): void {
 		if (this._disposed) {
 			// pre-0.58 error message: storageServiceDisposedCannotRetry
 			throw new LoggingError("Storage Service is disposed. Cannot retry", {

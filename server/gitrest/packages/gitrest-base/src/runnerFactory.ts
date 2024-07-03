@@ -4,20 +4,25 @@
  */
 
 import { AsyncLocalStorage } from "async_hooks";
-import { Provider } from "nconf";
-import * as services from "@fluidframework/server-services-shared";
 import * as core from "@fluidframework/server-services-core";
-import { normalizePort } from "@fluidframework/server-services-utils";
+import * as services from "@fluidframework/server-services-shared";
+import {
+	normalizePort,
+	IRedisClientConnectionManager,
+	RedisClientConnectionManager,
+} from "@fluidframework/server-services-utils";
+import { Provider } from "nconf";
 import { ExternalStorageManager } from "./externalStorageManager";
 import { GitrestRunner } from "./runner";
 import {
-	IFileSystemManagerFactory,
+	IFileSystemManagerFactories,
 	IRepositoryManagerFactory,
 	IsomorphicGitManagerFactory,
-	NodegitRepositoryManagerFactory,
-	NodeFsManagerFactory,
 	IStorageDirectoryConfig,
+	NodeFsManagerFactory,
+	RedisFsManagerFactory,
 } from "./utils";
+import { IGitrestResourcesCustomizations } from "./customizations";
 
 export class GitrestResources implements core.IResources {
 	public webServerFactory: core.IWebServerFactory;
@@ -25,12 +30,13 @@ export class GitrestResources implements core.IResources {
 	constructor(
 		public readonly config: Provider,
 		public readonly port: string | number,
-		public readonly fileSystemManagerFactory: IFileSystemManagerFactory,
+		public readonly fileSystemManagerFactories: IFileSystemManagerFactories,
 		public readonly repositoryManagerFactory: IRepositoryManagerFactory,
 		public readonly asyncLocalStorage?: AsyncLocalStorage<string>,
 		public readonly enableOptimizedInitialSummary?: boolean,
 	) {
-		this.webServerFactory = new services.BasicWebServerFactory();
+		const httpServerConfig: services.IHttpServerConfig = config.get("system:httpServer");
+		this.webServerFactory = new services.BasicWebServerFactory(httpServerConfig);
 	}
 
 	public async dispose(): Promise<void> {
@@ -39,49 +45,121 @@ export class GitrestResources implements core.IResources {
 }
 
 export class GitrestResourcesFactory implements core.IResourcesFactory<GitrestResources> {
-	public async create(config: Provider): Promise<GitrestResources> {
+	public async create(
+		config: Provider,
+		customizations?: IGitrestResourcesCustomizations,
+	): Promise<GitrestResources> {
 		const port = normalizePort(process.env.PORT || "3000");
-		const fileSystemManagerFactory = new NodeFsManagerFactory();
-		const externalStorageManager = new ExternalStorageManager(config);
-		const storageDirectoryConfig: IStorageDirectoryConfig = config.get(
-			"storageDir",
-		) as IStorageDirectoryConfig;
-		const gitLibrary: string | undefined = config.get("git:lib:name");
-		const repoPerDocEnabled: boolean = config.get("git:repoPerDocEnabled") ?? false;
-		const enableRepositoryManagerMetrics: boolean =
-			config.get("git:enableRepositoryManagerMetrics") ?? false;
-		const enableSlimGitInit: boolean = config.get("git:enableSlimGitInit") ?? false;
-		const getRepositoryManagerFactory = () => {
-			if (!gitLibrary || gitLibrary === "nodegit") {
-				return new NodegitRepositoryManagerFactory(
-					storageDirectoryConfig,
-					fileSystemManagerFactory,
-					externalStorageManager,
-					repoPerDocEnabled,
-					enableRepositoryManagerMetrics,
-				);
-			} else if (gitLibrary === "isomorphic-git") {
-				return new IsomorphicGitManagerFactory(
-					storageDirectoryConfig,
-					fileSystemManagerFactory,
-					externalStorageManager,
-					repoPerDocEnabled,
-					enableRepositoryManagerMetrics,
-					enableSlimGitInit,
-				);
-			}
-			throw new Error("Invalid git library name.");
-		};
-		const repositoryManagerFactory = getRepositoryManagerFactory();
 		const asyncLocalStorage = config.get("asyncLocalStorageInstance")?.[0];
+
+		const fileSystemManagerFactories = this.getFileSystemManagerFactories(
+			config,
+			customizations,
+		);
+		const repositoryManagerFactory = this.getRepositoryManagerFactory(
+			config,
+			fileSystemManagerFactories,
+		);
 
 		return new GitrestResources(
 			config,
 			port,
-			fileSystemManagerFactory,
+			fileSystemManagerFactories,
 			repositoryManagerFactory,
 			asyncLocalStorage,
 		);
+	}
+
+	private getFileSystemManagerFactories(
+		config: Provider,
+		customizations?: IGitrestResourcesCustomizations,
+	): IFileSystemManagerFactories {
+		const defaultFileSystemName: string = config.get("git:filesystem:name") ?? "nodeFs";
+		const defaultFileSystemMaxFileSizeBytes: number | undefined =
+			config.get("git:filesystem:maxFileSizeBytes") ?? 0;
+
+		const ephemeralFileSystemName: string =
+			config.get("git:ephemeralfilesystem:name") ?? "redisFs";
+		const ephemeralFileSystemMaxFileSizeBytes: number | undefined =
+			config.get("git:ephemeralfilesystem:maxFileSizeBytes") ?? 0;
+
+		// Creating two customizations for redisClientConnectionManager for now.
+		// This may be changed to a single customization in the future.
+		const defaultFileSystemManagerFactory = this.getFileSystemManagerFactoryByName(
+			defaultFileSystemName,
+			config,
+			customizations?.redisClientConnectionManagerForDefaultFileSystem,
+			defaultFileSystemMaxFileSizeBytes,
+		);
+		const ephemeralFileSystemManagerFactory = this.getFileSystemManagerFactoryByName(
+			ephemeralFileSystemName,
+			config,
+			customizations?.redisClientConnectionManagerForEphemeralFileSystem,
+			ephemeralFileSystemMaxFileSizeBytes,
+		);
+
+		return {
+			defaultFileSystemManagerFactory,
+			ephemeralFileSystemManagerFactory,
+		};
+	}
+
+	private getFileSystemManagerFactoryByName(
+		fileSystemName: string,
+		config: Provider,
+		redisClientConnectionManagerCustomization?: IRedisClientConnectionManager,
+		maxFileSizeBytes?: number,
+	) {
+		if (!fileSystemName || fileSystemName === "nodeFs") {
+			return new NodeFsManagerFactory(maxFileSizeBytes);
+		} else if (fileSystemName === "redisFs") {
+			const redisConfig = config.get("redis");
+			const redisClientConnectionManager =
+				redisClientConnectionManagerCustomization ??
+				new RedisClientConnectionManager(
+					undefined,
+					redisConfig,
+					redisConfig.enableClustering,
+					redisConfig.slotsRefreshTimeout,
+				);
+			return new RedisFsManagerFactory(
+				config,
+				redisClientConnectionManager,
+				maxFileSizeBytes,
+			);
+		}
+		throw new Error("Invalid file system name.");
+	}
+
+	private getRepositoryManagerFactory(
+		config: Provider,
+		fileSystemManagerFactories: IFileSystemManagerFactories,
+	) {
+		const externalStorageManager = new ExternalStorageManager(config);
+		const storageDirectoryConfig: IStorageDirectoryConfig = config.get(
+			"storageDir",
+		) as IStorageDirectoryConfig;
+		const gitLibrary: string | undefined = config.get("git:lib:name") ?? "isomporphic-git";
+		const repoPerDocEnabled: boolean = config.get("git:repoPerDocEnabled") ?? false;
+		const enableRepositoryManagerMetrics: boolean =
+			config.get("git:enableRepositoryManagerMetrics") ?? false;
+		const apiMetricsSamplingPeriod: number | undefined = config.get(
+			"git:apiMetricsSamplingPeriod",
+		);
+		const enableSlimGitInit: boolean = config.get("git:enableSlimGitInit") ?? false;
+
+		if (gitLibrary === "isomorphic-git") {
+			return new IsomorphicGitManagerFactory(
+				storageDirectoryConfig,
+				fileSystemManagerFactories,
+				externalStorageManager,
+				repoPerDocEnabled,
+				enableRepositoryManagerMetrics,
+				enableSlimGitInit,
+				apiMetricsSamplingPeriod,
+			);
+		}
+		throw new Error("Invalid git library name.");
 	}
 }
 
@@ -91,7 +169,7 @@ export class GitrestRunnerFactory implements core.IRunnerFactory<GitrestResource
 			resources.webServerFactory,
 			resources.config,
 			resources.port,
-			resources.fileSystemManagerFactory,
+			resources.fileSystemManagerFactories,
 			resources.repositoryManagerFactory,
 			resources.asyncLocalStorage,
 		);

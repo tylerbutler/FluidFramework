@@ -2,12 +2,15 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { DocumentationNode, DocumentationParentNodeBase } from "./DocumentationNode";
-import { DocumentationNodeType } from "./DocumentationNodeType";
-import { createNodesFromPlainText } from "./Utilities";
+
+import { type DocumentationNode, DocumentationParentNodeBase } from "./DocumentationNode.js";
+import { DocumentationNodeType } from "./DocumentationNodeType.js";
+import { createNodesFromPlainText } from "./Utilities.js";
 
 /**
  * Kind of Table Cell.
+ *
+ * @public
  */
 export enum TableCellKind {
 	/**
@@ -43,7 +46,10 @@ export enum TableCellKind {
  * @see
  *
  * - {@link TableNode}
+ *
  * - {@link TableRowNode}
+ *
+ * @public
  */
 export abstract class TableCellNode extends DocumentationParentNodeBase {
 	/**
@@ -64,6 +70,8 @@ export abstract class TableCellNode extends DocumentationParentNodeBase {
 
 /**
  * A {@link TableCellNode} that lives in the heading row of a {@link TableNode}.
+ *
+ * @public
  */
 export class TableHeaderCellNode extends TableCellNode {
 	/**
@@ -88,6 +96,8 @@ export class TableHeaderCellNode extends TableCellNode {
 
 /**
  * A {@link TableCellNode} that lives in the body of a {@link TableNode}.
+ *
+ * @public
  */
 export class TableBodyCellNode extends TableCellNode {
 	/**

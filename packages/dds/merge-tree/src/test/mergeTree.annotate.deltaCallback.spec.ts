@@ -4,12 +4,18 @@
  */
 
 import { strict as assert } from "assert";
-import { MergeTreeDeltaType } from "../ops";
-import { MergeTreeMaintenanceType } from "../mergeTreeDeltaCallback";
-import { LocalClientId, UnassignedSequenceNumber, UniversalSequenceNumber } from "../constants";
-import { TextSegment } from "../textSegment";
-import { MergeTree } from "../mergeTree";
-import { countOperations, insertSegments, insertText, markRangeRemoved } from "./testUtils";
+
+import {
+	LocalClientId,
+	UnassignedSequenceNumber,
+	UniversalSequenceNumber,
+} from "../constants.js";
+import { MergeTree } from "../mergeTree.js";
+import { MergeTreeMaintenanceType } from "../mergeTreeDeltaCallback.js";
+import { MergeTreeDeltaType } from "../ops.js";
+import { TextSegment } from "../textSegment.js";
+
+import { countOperations, insertSegments, insertText, markRangeRemoved } from "./testUtils.js";
 
 describe("MergeTree", () => {
 	let mergeTree: MergeTree;
@@ -45,7 +51,6 @@ describe("MergeTree", () => {
 				{
 					foo: "bar",
 				},
-				undefined,
 				currentSequenceNumber,
 				localClientId,
 				UnassignedSequenceNumber,
@@ -66,7 +71,6 @@ describe("MergeTree", () => {
 				{
 					foo: "bar",
 				},
-				undefined,
 				currentSequenceNumber,
 				localClientId,
 				++currentSequenceNumber,
@@ -98,7 +102,6 @@ describe("MergeTree", () => {
 				{
 					foo: "bar",
 				},
-				undefined,
 				currentSequenceNumber,
 				localClientId,
 				UnassignedSequenceNumber,
@@ -134,7 +137,6 @@ describe("MergeTree", () => {
 				{
 					foo: "bar",
 				},
-				undefined,
 				currentSequenceNumber,
 				localClientId,
 				UnassignedSequenceNumber,
@@ -170,7 +172,6 @@ describe("MergeTree", () => {
 				{
 					foo: "bar",
 				},
-				undefined,
 				currentSequenceNumber,
 				localClientId,
 				UnassignedSequenceNumber,
@@ -206,7 +207,6 @@ describe("MergeTree", () => {
 				{
 					foo: "bar",
 				},
-				undefined,
 				remoteSequenceNumber,
 				remoteClientId,
 				++remoteSequenceNumber,
@@ -214,7 +214,6 @@ describe("MergeTree", () => {
 			);
 
 			assert.deepStrictEqual(count, {
-				[MergeTreeDeltaType.ANNOTATE]: 1,
 				[MergeTreeMaintenanceType.SPLIT]: 2,
 			});
 		});

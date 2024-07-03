@@ -3,18 +3,22 @@
  * Licensed under the MIT License.
  */
 
-import { IFluidHandle } from "@fluidframework/core-interfaces";
+import type { IFluidHandle } from "@fluidframework/core-interfaces";
+import type { ISerializedHandle } from "@fluidframework/runtime-utils/internal";
+import type { IFluidSerializer } from "@fluidframework/shared-object-base/internal";
 import {
-	IFluidSerializer,
-	ISerializedHandle,
+	ValueType,
 	parseHandles,
 	serializeHandles,
-	ValueType,
-} from "@fluidframework/shared-object-base";
-import { ISerializableValue, ISerializedValue } from "./interfaces";
+} from "@fluidframework/shared-object-base/internal";
+
+// eslint-disable-next-line import/no-deprecated
+import type { ISerializableValue, ISerializedValue } from "./internalInterfaces.js";
 
 /**
  * A local value to be stored in a container type Distributed Data Store (DDS).
+ * @legacy
+ * @alpha
  */
 export interface ILocalValue {
 	/**
@@ -51,6 +55,7 @@ export function makeSerializable(
 	localValue: ILocalValue,
 	serializer: IFluidSerializer,
 	bind: IFluidHandle,
+	// eslint-disable-next-line import/no-deprecated
 ): ISerializableValue {
 	const value = localValue.makeSerialized(serializer, bind);
 	return {
@@ -95,19 +100,25 @@ export class PlainLocalValue implements ILocalValue {
 /**
  * Enables a container type {@link https://fluidframework.com/docs/build/dds/ | DDS} to produce and store local
  * values with minimal awareness of how those objects are stored, serialized, and deserialized.
+ * @legacy
+ * @alpha
  */
 export class LocalValueMaker {
 	/**
 	 * Create a new LocalValueMaker.
-	 * @param serializer - The serializer to serialize / parse handles.
 	 */
-	public constructor(private readonly serializer: IFluidSerializer) {}
+	public constructor() {}
 
 	/**
 	 * Create a new local value from an incoming serialized value.
 	 * @param serializable - The serializable value to make local
 	 */
-	public fromSerializable(serializable: ISerializableValue): ILocalValue {
+	public fromSerializable(
+		// eslint-disable-next-line import/no-deprecated
+		serializable: ISerializableValue,
+		serializer: IFluidSerializer,
+		bind: IFluidHandle,
+	): ILocalValue {
 		// Migrate from old shared value to handles
 		if (serializable.type === ValueType[ValueType.Shared]) {
 			serializable.type = ValueType[ValueType.Plain];
@@ -115,12 +126,14 @@ export class LocalValueMaker {
 				type: "__fluid_handle__",
 				url: serializable.value as string,
 			};
-			serializable.value = handle;
+			// NOTE: here we require the use of `parseHandles` because the roundtrip
+			// through a string is necessary to resolve the absolute path of
+			// legacy handles (`ValueType.Shared`)
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			serializable.value = serializer.encode(parseHandles(handle, serializer), bind);
 		}
 
-		const translatedValue: unknown = parseHandles(serializable.value, this.serializer);
-
-		return new PlainLocalValue(translatedValue);
+		return new PlainLocalValue(serializable.value);
 	}
 
 	/**

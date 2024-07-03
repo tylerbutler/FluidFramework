@@ -23,6 +23,10 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- printf "%s-%s" .Release.Name .Values.alfred.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{- define "nexus.fullname" -}}
+{{- printf "%s-%s" .Release.Name .Values.nexus.name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
 {{- define "deli.fullname" -}}
 {{- printf "%s-%s" .Release.Name .Values.deli.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
@@ -33,10 +37,6 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 
 {{- define "scribe.fullname" -}}
 {{- printf "%s-%s" .Release.Name .Values.scribe.name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
-{{- define "foreman.fullname" -}}
-{{- printf "%s-%s" .Release.Name .Values.foreman.name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{- define "riddler.fullname" -}}

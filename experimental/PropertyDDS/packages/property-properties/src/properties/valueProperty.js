@@ -2,8 +2,10 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 const { ChangeSet } = require("@fluid-experimental/property-changeset");
 const { MSG } = require("@fluid-experimental/property-common").constants;
+
 const { BaseProperty } = require("./baseProperty");
 
 /**
@@ -11,6 +13,7 @@ const { BaseProperty } = require("./baseProperty");
  * object's value field. To do this we simply keep a pointer to the object and
  * its associated data field that we are interested in. If no data field is
  * present this property will fail constructing.
+ * @internal
  */
 export class ValueProperty extends BaseProperty {
 	/**
@@ -147,7 +150,7 @@ export class ValueProperty extends BaseProperty {
 	 * this can result in an infinite loop
 	 *
 	 * @return {*} The serialized representation of this property
-	 * @private
+	 * @protected
 	 */
 	_serialize(
 		in_dirtyOnly,
@@ -170,13 +173,15 @@ export class ValueProperty extends BaseProperty {
 	 * @param {function} printFct - Function to call for printing each property
 	 */
 	_prettyPrint(indent, externalId, printFct) {
-		printFct(indent + externalId + this.getId() + " (" + this.getTypeid() + "): " + this.value);
+		printFct(
+			indent + externalId + this.getId() + " (" + this.getTypeid() + "): " + this.value,
+		);
 	}
 
 	/**
 	 * Return a JSON representation of the property.
 	 * @return {object} A JSON representation of the property.
-	 * @private
+	 * @protected
 	 */
 	_toJson() {
 		return {

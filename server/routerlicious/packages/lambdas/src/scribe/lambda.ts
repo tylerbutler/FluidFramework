@@ -36,6 +36,7 @@ import {
 	Lumber,
 	LumberEventName,
 	Lumberjack,
+	CommonProperties,
 } from "@fluidframework/server-services-telemetry";
 import Deque from "double-ended-queue";
 import * as _ from "lodash";
@@ -43,16 +44,21 @@ import {
 	createSessionMetric,
 	logCommonSessionEndMetrics,
 	CheckpointReason,
-	ICheckpoint,
+	IServerMetadata,
+	DocumentCheckpointManager,
 } from "../utils";
+import { ICheckpointManager, IPendingMessageReader, ISummaryWriter } from "./interfaces";
 import {
-	ICheckpointManager,
-	IPendingMessageReader,
-	ISummaryReader,
-	ISummaryWriter,
-} from "./interfaces";
-import { initializeProtocol, sendToDeli } from "./utils";
+	getClientIds,
+	initializeProtocol,
+	isGlobalCheckpoint,
+	isScribeCheckpointQuorumScrubbed,
+	sendToDeli,
+} from "./utils";
 
+/**
+ * @internal
+ */
 export class ScribeLambda implements IPartitionLambda {
 	// Value of the last processed Kafka offset
 	private lastOffset: number;
@@ -79,6 +85,9 @@ export class ScribeLambda implements IPartitionLambda {
 	// Refs of the service summaries generated since the last client generated summary.
 	private validParentSummaries: string[] | undefined;
 
+	// Is the document marked as corrupted
+	private isDocumentCorrupt: boolean = false;
+
 	// Indicates whether cache needs to be cleaned after processing a message
 	private clearCache: boolean = false;
 
@@ -86,82 +95,84 @@ export class ScribeLambda implements IPartitionLambda {
 	private closed: boolean = false;
 
 	// Used to control checkpoint logic
-	private readonly checkpointInfo: ICheckpoint = {
-		lastCheckpointTime: Date.now(),
-		rawMessagesSinceCheckpoint: 0,
-	};
+	private readonly documentCheckpointManager: DocumentCheckpointManager =
+		new DocumentCheckpointManager();
 
-	// Used to checkpoint if no active clients
-	private noActiveClients: boolean = false;
+	private globalCheckpointOnly: boolean;
+
+	private lastCheckpointInsertedNumber = 0;
 
 	constructor(
 		protected readonly context: IContext,
 		protected tenantId: string,
 		protected documentId: string,
 		private readonly summaryWriter: ISummaryWriter,
-		private readonly summaryReader: ISummaryReader,
 		private readonly pendingMessageReader: IPendingMessageReader | undefined,
 		private readonly checkpointManager: ICheckpointManager,
 		scribe: IScribe,
 		private readonly serviceConfiguration: IServiceConfiguration,
 		private readonly producer: IProducer | undefined,
 		private protocolHandler: ProtocolOpHandler,
-		private term: number,
 		private protocolHead: number,
 		messages: ISequencedDocumentMessage[],
 		private scribeSessionMetric: Lumber<LumberEventName.ScribeSessionResult> | undefined,
+		private readonly transientTenants: Set<string>,
+		private readonly disableTransientTenantFiltering: boolean,
+		private readonly restartOnCheckpointFailure: boolean,
+		private readonly kafkaCheckpointOnReprocessingOp: boolean,
+		private readonly isEphemeralContainer: boolean,
+		private readonly localCheckpointEnabled: boolean,
+		private readonly maxPendingCheckpointMessagesLength: number,
 	) {
 		this.lastOffset = scribe.logOffset;
 		this.setStateFromCheckpoint(scribe);
 		this.pendingMessages = new Deque<ISequencedDocumentMessage>(messages);
+		this.globalCheckpointOnly = this.localCheckpointEnabled ? false : true;
 	}
 
-	public async handler(message: IQueuedMessage) {
+	/**
+	 * {@inheritDoc IPartitionLambda.handler}
+	 */
+	public async handler(message: IQueuedMessage): Promise<void> {
 		// Skip any log messages we have already processed. Can occur in the case Kafka needed to restart but
 		// we had already checkpointed at a given offset.
-		if (message.offset <= this.lastOffset) {
-			this.updateCheckpointMessages(message);
-			this.context.checkpoint(message);
+		if (this.lastOffset !== undefined && message.offset <= this.lastOffset) {
+			const reprocessOpsMetric = Lumberjack.newLumberMetric(LumberEventName.ReprocessOps);
+			reprocessOpsMetric.setProperties({
+				...getLumberBaseProperties(this.documentId, this.tenantId),
+				kafkaMessageOffset: message.offset,
+				databaseLastOffset: this.lastOffset,
+			});
+
+			this.documentCheckpointManager.updateCheckpointMessages(message);
+			try {
+				if (this.kafkaCheckpointOnReprocessingOp) {
+					this.context.checkpoint(message, this.restartOnCheckpointFailure);
+				}
+				reprocessOpsMetric.setProperty(
+					"kafkaCheckpointOnReprocessingOp",
+					this.kafkaCheckpointOnReprocessingOp,
+				);
+				reprocessOpsMetric.success(`Successfully reprocessed repeating ops.`);
+			} catch (error) {
+				reprocessOpsMetric.error(`Error while reprocessing ops.`, error);
+			}
 			return;
+		} else if (this.lastOffset === undefined) {
+			Lumberjack.error(
+				`No value for lastOffset`,
+				getLumberBaseProperties(this.documentId, this.tenantId),
+			);
 		}
+		// if lastOffset is undefined or we have skipped all the previously processed ops,
+		// we want to set the offset we store in the database equal to the kafka message offset
+		this.lastOffset = message.offset;
 
 		const boxcar = extractBoxcar(message);
 
 		for (const baseMessage of boxcar.contents) {
 			if (baseMessage.type === SequencedOperationType) {
 				const value = baseMessage as ISequencedOperationMessage;
-
-				// The following block is only invoked once deli enables term flipping.
-				if (this.term && value.operation.term) {
-					if (value.operation.term < this.term) {
-						continue;
-					} else if (value.operation.term > this.term) {
-						const lastSummary = await this.summaryReader.readLastSummary();
-						if (!lastSummary.fromSummary) {
-							const errorMsg = `Required summary can't be fetched`;
-							throw Error(errorMsg);
-						}
-						this.term = lastSummary.term;
-						const lastScribe = JSON.parse(lastSummary.scribe) as IScribe;
-						this.updateProtocolHead(lastSummary.protocolHead);
-						this.protocolHandler = initializeProtocol(
-							lastScribe.protocolState,
-							this.term,
-						);
-						this.setStateFromCheckpoint(lastScribe);
-						this.pendingMessages = new Deque<ISequencedDocumentMessage>(
-							lastSummary.messages.filter(
-								(op) => op.sequenceNumber > lastScribe.protocolState.sequenceNumber,
-							),
-						);
-
-						this.pendingP = undefined;
-						this.pendingCheckpointScribe = undefined;
-						this.pendingCheckpointOffset = undefined;
-
-						await this.checkpointManager.delete(lastScribe.sequenceNumber + 1, false);
-					}
-				}
 
 				// Skip messages that were already checkpointed on a prior run.
 				if (value.operation.sequenceNumber <= this.sequenceNumber) {
@@ -178,11 +189,15 @@ export class ScribeLambda implements IPartitionLambda {
 				}
 
 				// Ensure protocol handler sequence numbers are monotonically increasing
-				// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
 				if (value.operation.sequenceNumber !== lastProtocolHandlerSequenceNumber + 1) {
 					// unexpected sequence number. if a pending message reader is available, ask for those ops
-					if (this.pendingMessageReader !== undefined) {
-						// eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+					if (this.pendingMessageReader === undefined) {
+						const errorMsg =
+							`Invalid message sequence number.` +
+							`Current message @${value.operation.sequenceNumber}.` +
+							`ProtocolHandler @${lastProtocolHandlerSequenceNumber}`;
+						throw new Error(errorMsg);
+					} else {
 						const from = lastProtocolHandlerSequenceNumber + 1;
 						const to = value.operation.sequenceNumber - 1;
 						const additionalPendingMessages =
@@ -190,12 +205,6 @@ export class ScribeLambda implements IPartitionLambda {
 						for (const additionalPendingMessage of additionalPendingMessages) {
 							this.pendingMessages.push(additionalPendingMessage);
 						}
-					} else {
-						const errorMsg =
-							`Invalid message sequence number.` +
-							`Current message @${value.operation.sequenceNumber}.` +
-							`ProtocolHandler @${lastProtocolHandlerSequenceNumber}`;
-						throw new Error(errorMsg);
 					}
 				}
 
@@ -214,7 +223,7 @@ export class ScribeLambda implements IPartitionLambda {
 
 				if (msnChanged) {
 					// When the MSN changes we can process up to it to save space
-					this.processFromPending(this.minSequenceNumber);
+					this.processFromPending(this.minSequenceNumber, message);
 				}
 
 				this.clearCache = false;
@@ -222,7 +231,7 @@ export class ScribeLambda implements IPartitionLambda {
 				// skip summarize messages that deli already acked
 				if (
 					value.operation.type === MessageType.Summarize &&
-					!value.operation.serverMetadata?.deliAcked
+					!(value.operation.serverMetadata as IServerMetadata | undefined)?.deliAcked
 				) {
 					// ensure the client is requesting a summary for a state that scribe can achieve
 					// the clients summary state (ref seq num) must be at least as high as scribes (protocolHandler.sequenceNumber)
@@ -237,7 +246,7 @@ export class ScribeLambda implements IPartitionLambda {
 							protocolState: this.protocolHandler.getProtocolState(),
 							pendingOps: this.pendingMessages.toArray(),
 						};
-						this.processFromPending(value.operation.referenceSequenceNumber);
+						this.processFromPending(value.operation.referenceSequenceNumber, message);
 
 						// When external, only process the op if the protocol state advances.
 						// This eliminates the corner case where we have
@@ -246,6 +255,7 @@ export class ScribeLambda implements IPartitionLambda {
 							try {
 								const scribeCheckpoint = this.generateScribeCheckpoint(
 									this.lastOffset,
+									this.serviceConfiguration.scribe.scrubUserDataInSummaries,
 								);
 								const operation =
 									value.operation as ISequencedDocumentAugmentedMessage;
@@ -254,6 +264,7 @@ export class ScribeLambda implements IPartitionLambda {
 									this.lastClientSummaryHead,
 									scribeCheckpoint,
 									this.pendingCheckpointMessages.toArray(),
+									this.isEphemeralContainer,
 								);
 
 								// This block is only executed if the writer is not external. For an external writer,
@@ -310,13 +321,13 @@ export class ScribeLambda implements IPartitionLambda {
 										);
 									}
 								}
-							} catch (ex) {
+							} catch (error) {
 								const errorMsg = `Client summary failure @${value.operation.sequenceNumber}`;
-								this.context.log?.error(`${errorMsg} Exception: ${inspect(ex)}`);
+								this.context.log?.error(`${errorMsg} Exception: ${inspect(error)}`);
 								Lumberjack.error(
 									errorMsg,
 									getLumberBaseProperties(this.documentId, this.tenantId),
-									ex,
+									error,
 								);
 								this.revertProtocolState(
 									prevState.protocolState,
@@ -332,7 +343,7 @@ export class ScribeLambda implements IPartitionLambda {
 										},
 									});
 								} else {
-									throw ex;
+									throw error;
 								}
 							}
 						}
@@ -346,10 +357,23 @@ export class ScribeLambda implements IPartitionLambda {
 						value.operation.minimumSequenceNumber === value.operation.sequenceNumber,
 						`${value.operation.minimumSequenceNumber} != ${value.operation.sequenceNumber}`,
 					);
-					this.noActiveClients = true;
-					if (this.serviceConfiguration.scribe.generateServiceSummary) {
+
+					this.documentCheckpointManager.setNoActiveClients(true);
+					this.globalCheckpointOnly = true;
+					const enableServiceSummaryForTenant =
+						this.disableTransientTenantFiltering ||
+						!this.transientTenants.has(this.tenantId);
+
+					if (
+						this.serviceConfiguration.scribe.generateServiceSummary &&
+						!this.isEphemeralContainer &&
+						enableServiceSummaryForTenant
+					) {
 						const operation = value.operation as ISequencedDocumentAugmentedMessage;
-						const scribeCheckpoint = this.generateScribeCheckpoint(this.lastOffset);
+						const scribeCheckpoint = this.generateScribeCheckpoint(
+							this.lastOffset,
+							this.serviceConfiguration.scribe.scrubUserDataInSummaries,
+						);
 						try {
 							const summaryResponse = await this.summaryWriter.writeServiceSummary(
 								operation,
@@ -385,7 +409,7 @@ export class ScribeLambda implements IPartitionLambda {
 									getLumberBaseProperties(this.documentId, this.tenantId),
 								);
 							}
-						} catch (ex) {
+						} catch (error) {
 							const errorMsg = `Service summary failure @${operation.sequenceNumber}`;
 
 							// If this flag is set, we should ignore any storage speciic error and move forward
@@ -400,10 +424,12 @@ export class ScribeLambda implements IPartitionLambda {
 								Lumberjack.error(
 									errorMsg,
 									getLumberBaseProperties(this.documentId, this.tenantId),
-									ex,
+									error,
 								);
 							} else {
-								throw ex;
+								// Throwing error here leads to document being marked as corrupt in document partition
+								this.isDocumentCorrupt = true;
+								throw error;
 							}
 						}
 					}
@@ -425,69 +451,106 @@ export class ScribeLambda implements IPartitionLambda {
 							content.summaryProposal.summarySequenceNumber,
 						);
 					}
+				} else if (
+					value.operation.type === MessageType.ClientJoin &&
+					this.localCheckpointEnabled
+				) {
+					this.globalCheckpointOnly = false;
 				}
 			}
 		}
 
 		// Create the checkpoint
-		this.updateCheckpointMessages(message);
-		this.checkpointInfo.rawMessagesSinceCheckpoint++;
+		this.documentCheckpointManager.updateCheckpointMessages(message);
+		this.documentCheckpointManager.incrementRawMessageCounter();
 
-		if (this.noActiveClients) {
+		if (this.documentCheckpointManager.getNoActiveClients()) {
+			if (this.localCheckpointEnabled) {
+				this.globalCheckpointOnly = true;
+			}
 			this.prepareCheckpoint(message, CheckpointReason.NoClients);
-			this.noActiveClients = false;
+			this.documentCheckpointManager.setNoActiveClients(false);
 		} else {
 			const checkpointReason = this.getCheckpointReason();
-			if (checkpointReason !== undefined) {
+			if (checkpointReason === undefined) {
+				this.documentCheckpointManager.updateCheckpointIdleTimer(
+					this.serviceConfiguration.scribe.checkpointHeuristics.idleTime,
+					this.idleTimeCheckpoint,
+					this.isDocumentCorrupt,
+				);
+			} else {
 				// checkpoint the current up-to-date state
 				this.prepareCheckpoint(message, checkpointReason);
-			} else {
-				this.updateCheckpointIdleTimer();
 			}
 		}
 	}
 
-	public prepareCheckpoint(message: IQueuedMessage, checkpointReason: CheckpointReason) {
+	public prepareCheckpoint(
+		message: IQueuedMessage,
+		checkpointReason: CheckpointReason,
+		skipKafkaCheckpoint?: boolean,
+	): void {
+		const isGlobal = isGlobalCheckpoint(
+			this.documentCheckpointManager.getNoActiveClients(),
+			this.globalCheckpointOnly,
+		);
 		// Get checkpoint context
-		const checkpoint = this.generateScribeCheckpoint(message.offset);
-		this.updateCheckpointMessages(message);
+		const checkpoint = this.generateScribeCheckpoint(
+			message.offset,
+			isGlobal
+				? this.serviceConfiguration.scribe.scrubUserDataInGlobalCheckpoints
+				: this.serviceConfiguration.scribe.scrubUserDataInLocalCheckpoints,
+		);
+		this.documentCheckpointManager.updateCheckpointMessages(message);
 
 		// write the checkpoint with the current up-to-date state
-		this.checkpoint(checkpointReason);
-		this.checkpointCore(checkpoint, message, this.clearCache);
+		this.documentCheckpointManager.resetCheckpointTimer();
+		this.checkpointCore(checkpoint, message, this.clearCache, skipKafkaCheckpoint);
 		this.lastOffset = message.offset;
 		const reason = CheckpointReason[checkpointReason];
 		const checkpointResult = `Writing checkpoint. Reason: ${reason}`;
+		const checkpointProperties = this.documentCheckpointManager.getCheckpointInfo();
 		const lumberjackProperties = {
 			...getLumberBaseProperties(this.documentId, this.tenantId),
 			checkpointReason: reason,
 			lastOffset: this.lastOffset,
-			scribeCheckpointOffset: this.checkpointInfo.currentCheckpointMessage?.offset,
-			scribeCheckpointPartition: this.checkpointInfo.currentCheckpointMessage?.partition,
-			kafkaCheckpointOffset: this.checkpointInfo.currentKafkaCheckpointMessage?.offset,
-			kafkaCheckpointPartition: this.checkpointInfo.currentKafkaCheckpointMessage?.partition,
+			scribeCheckpointOffset: checkpointProperties.currentCheckpointMessage?.offset,
+			scribeCheckpointPartition: checkpointProperties.currentCheckpointMessage?.partition,
+			kafkaCheckpointOffset: checkpointProperties.currentKafkaCheckpointMessage?.offset,
+			kafkaCheckpointPartition: checkpointProperties.currentKafkaCheckpointMessage?.partition,
+			clientCount: checkpoint.protocolState.members.length,
+			clients: getClientIds(checkpoint.protocolState, 5),
+			localCheckpointEnabled: this.localCheckpointEnabled,
+			globalCheckpointOnly: this.globalCheckpointOnly,
+			localCheckpoint: this.localCheckpointEnabled && !this.globalCheckpointOnly,
+			checkpointLocation: isGlobal ? "global" : "local",
+			scrubbedUserData: isScribeCheckpointQuorumScrubbed(checkpoint),
 		};
 		Lumberjack.info(checkpointResult, lumberjackProperties);
 	}
 
-	public close(closeType: LambdaCloseType) {
+	public close(closeType: LambdaCloseType): void {
 		this.logScribeSessionMetrics(closeType);
 
 		this.closed = true;
 		this.protocolHandler.close();
 	}
 
-	private logScribeSessionMetrics(closeType: LambdaCloseType) {
+	private logScribeSessionMetrics(closeType: LambdaCloseType): void {
 		if (this.scribeSessionMetric?.isCompleted()) {
 			Lumberjack.info(
 				"Scribe session metric already completed. Creating a new one.",
 				getLumberBaseProperties(this.documentId, this.tenantId),
 			);
+			const isEphemeralContainer: boolean =
+				this.scribeSessionMetric?.properties.get(CommonProperties.isEphemeralContainer) ??
+				false;
 			this.scribeSessionMetric = createSessionMetric(
 				this.tenantId,
 				this.documentId,
 				LumberEventName.ScribeSessionResult,
 				this.serviceConfiguration,
+				isEphemeralContainer,
 			);
 		}
 
@@ -504,7 +567,7 @@ export class ScribeLambda implements IPartitionLambda {
 	// Advances the protocol state up to 'target' sequence number. Having an exception while running this code
 	// is crucial and the document is essentially corrupted at this point. We should start logging this and
 	// have a better understanding of all failure modes.
-	private processFromPending(target: number) {
+	private processFromPending(target: number, queuedMessage: IQueuedMessage): void {
 		while (
 			this.pendingMessages.length > 0 &&
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -519,12 +582,22 @@ export class ScribeLambda implements IPartitionLambda {
 					message.type !== MessageType.ClientLeave
 				) {
 					const clonedMessage = _.cloneDeep(message);
-					clonedMessage.contents = JSON.parse(clonedMessage.contents);
+					clonedMessage.contents = JSON.parse(clonedMessage.contents as string);
 					this.protocolHandler.processMessage(clonedMessage, false);
 				} else {
+					if (message.type === MessageType.ClientLeave) {
+						const systemLeaveMessage = message as ISequencedDocumentSystemMessage;
+						const clientId = JSON.parse(systemLeaveMessage.data) as string;
+						Lumberjack.info(
+							`Removing client from quorum: ${clientId}`,
+							getLumberBaseProperties(this.documentId, this.tenantId),
+						);
+					}
 					this.protocolHandler.processMessage(message, false);
 				}
 			} catch (error) {
+				// We should mark the document as corrupt here
+				this.markDocumentAsCorrupt(queuedMessage);
 				this.context.log?.error(`Protocol error ${error}`, {
 					messageMetaData: {
 						documentId: this.documentId,
@@ -541,16 +614,21 @@ export class ScribeLambda implements IPartitionLambda {
 		}
 	}
 
+	private markDocumentAsCorrupt(message: IQueuedMessage): void {
+		this.isDocumentCorrupt = true;
+		this.prepareCheckpoint(message, CheckpointReason.MarkAsCorrupt, this.isDocumentCorrupt);
+	}
+
 	private revertProtocolState(
 		protocolState: IProtocolState,
 		pendingOps: ISequencedDocumentMessage[],
-	) {
-		this.protocolHandler = initializeProtocol(protocolState, this.term);
+	): void {
+		this.protocolHandler = initializeProtocol(protocolState);
 		this.pendingMessages = new Deque(pendingOps);
 	}
 
-	private generateScribeCheckpoint(logOffset: number): IScribe {
-		const protocolState = this.protocolHandler.getProtocolState();
+	private generateScribeCheckpoint(logOffset: number, scrubUserData = false): IScribe {
+		const protocolState = this.protocolHandler.getProtocolState(scrubUserData);
 		const checkpoint: IScribe = {
 			lastSummarySequenceNumber: this.lastSummarySequenceNumber,
 			lastClientSummaryHead: this.lastClientSummaryHead,
@@ -559,6 +637,9 @@ export class ScribeLambda implements IPartitionLambda {
 			protocolState,
 			sequenceNumber: this.sequenceNumber,
 			validParentSummaries: this.validParentSummaries,
+			isCorrupt: this.isDocumentCorrupt,
+			protocolHead: this.protocolHead,
+			checkpointTimestamp: Date.now(),
 		};
 		return checkpoint;
 	}
@@ -567,7 +648,8 @@ export class ScribeLambda implements IPartitionLambda {
 		checkpoint: IScribe,
 		queuedMessage: IQueuedMessage,
 		clearCache: boolean,
-	) {
+		skipKafkaCheckpoint: boolean = false,
+	): void {
 		if (this.closed) {
 			return;
 		}
@@ -577,15 +659,31 @@ export class ScribeLambda implements IPartitionLambda {
 			this.pendingCheckpointOffset = queuedMessage;
 			return;
 		}
+		let databaseCheckpointFailed = false;
 
-		this.pendingP = clearCache
-			? this.checkpointManager.delete(this.protocolHead, true)
-			: this.writeCheckpoint(checkpoint);
-		this.pendingP.then(
-			() => {
+		this.pendingP = (
+			clearCache
+				? this.checkpointManager.delete(this.protocolHead, true)
+				: this.writeCheckpoint(checkpoint).catch((error) => {
+						databaseCheckpointFailed = true;
+						Lumberjack.error(
+							`Error writing database checkpoint.`,
+							getLumberBaseProperties(this.documentId, this.tenantId),
+							error,
+						);
+				  })
+		)
+			.then(() => {
 				this.pendingP = undefined;
-				this.context.checkpoint(queuedMessage);
-
+				if (!skipKafkaCheckpoint && !databaseCheckpointFailed) {
+					this.context.checkpoint(queuedMessage, this.restartOnCheckpointFailure);
+				} else if (databaseCheckpointFailed) {
+					Lumberjack.info(
+						`Skipping kafka checkpoint due to database checkpoint failure.`,
+						getLumberBaseProperties(this.documentId, this.tenantId),
+					);
+					databaseCheckpointFailed = false;
+				}
 				const pendingScribe = this.pendingCheckpointScribe;
 				const pendingOffset = this.pendingCheckpointOffset;
 				if (pendingScribe && pendingOffset) {
@@ -593,30 +691,44 @@ export class ScribeLambda implements IPartitionLambda {
 					this.pendingCheckpointOffset = undefined;
 					this.checkpointCore(pendingScribe, pendingOffset, clearCache);
 				}
-			},
-			(error) => {
+			})
+			.catch((error) => {
 				const message = "Checkpoint error";
 				Lumberjack.error(
 					message,
 					getLumberBaseProperties(this.documentId, this.tenantId),
 					error,
 				);
-			},
-		);
+			});
 	}
 
-	private async writeCheckpoint(checkpoint: IScribe) {
-		const inserts = this.pendingCheckpointMessages.toArray();
-		await this.checkpointManager.write(checkpoint, this.protocolHead, inserts);
+	private async writeCheckpoint(checkpoint: IScribe): Promise<void> {
+		const inserts = this.pendingCheckpointMessages
+			.toArray()
+			.filter((pcm) => pcm.operation.sequenceNumber > this.lastCheckpointInsertedNumber);
+		await this.checkpointManager.write(
+			checkpoint,
+			this.protocolHead,
+			inserts,
+			this.documentCheckpointManager.getNoActiveClients(),
+			this.globalCheckpointOnly,
+			this.isDocumentCorrupt,
+		);
 		if (inserts.length > 0) {
-			// Since we are storing logTails with every summary, we need to make sure that messages are either in DB
-			// or in memory. In other words, we can only remove messages from memory once there is a copy in the DB
-			const lastInsertedSeqNumber = inserts[inserts.length - 1].operation.sequenceNumber;
+			// pending checkpoint message is still useful during a session to reduce db/alfred call to fetch ops:
+			// 1. For client summary, we can cap these pending ops to the last protocol head
+			// 2. For service summary, given the logtail is appended and protocol head not advance, we should still keep these
+			//    pending ops to reduce db/alfred call to fetch ops, but should cap to a maxtlogtail limit to avoid memory leak.;
+			this.lastCheckpointInsertedNumber =
+				inserts[inserts.length - 1].operation.sequenceNumber;
+			const cappedNumber = Math.max(
+				this.protocolHead,
+				this.lastCheckpointInsertedNumber - this.maxPendingCheckpointMessagesLength,
+			);
 			while (
 				this.pendingCheckpointMessages.length > 0 &&
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				this.pendingCheckpointMessages.peekFront()!.operation.sequenceNumber <=
-					lastInsertedSeqNumber
+				this.pendingCheckpointMessages.peekFront()!.operation.sequenceNumber <= cappedNumber
 			) {
 				this.pendingCheckpointMessages.removeFront();
 			}
@@ -628,7 +740,7 @@ export class ScribeLambda implements IPartitionLambda {
 	 * This method updates the protocol head to the new summary sequence number
 	 * @param protocolHead - The sequence number of the new summary
 	 */
-	private updateProtocolHead(protocolHead: number) {
+	private updateProtocolHead(protocolHead: number): void {
 		this.protocolHead = protocolHead;
 	}
 
@@ -637,7 +749,7 @@ export class ScribeLambda implements IPartitionLambda {
 	 * This method updates it to the sequence number that was part of the latest summary
 	 * @param summarySequenceNumber - The sequence number of the operation that was part of the latest summary
 	 */
-	private updateLastSummarySequenceNumber(summarySequenceNumber: number) {
+	private updateLastSummarySequenceNumber(summarySequenceNumber: number): void {
 		this.lastSummarySequenceNumber = summarySequenceNumber;
 	}
 
@@ -645,14 +757,28 @@ export class ScribeLambda implements IPartitionLambda {
 	 * validParentSummaries tracks summary handles for service summaries that have been written since the latest client summary.
 	 * @param summaryHandle - The handle for a service summary that occurred after latest client summary.
 	 */
-	private updateValidParentSummaries(summaryHandle: string) {
+	private updateValidParentSummaries(summaryHandle: string): void {
 		if (this.validParentSummaries === undefined) {
 			this.validParentSummaries = [];
 		}
 		this.validParentSummaries.push(summaryHandle);
+		const countOverLimit =
+			this.validParentSummaries.length -
+			this.serviceConfiguration.scribe.maxTrackedServiceSummaryVersionsSinceLastClientSummary;
+		if (countOverLimit === 1) {
+			// Remove the oldest handle if we have one over the limit.
+			// This is the most common case once a limit is enforced, and we only need to remove one,
+			// so we use shift() because it is over 2x more performant than splice()
+			// even when removing 2 elements: https://www.measurethat.net/Benchmarks/Show/12324/0/slice-vs-splice-vs-shift
+			this.validParentSummaries.shift();
+		} else if (countOverLimit > 1) {
+			// Older documents from before the limit was enforced can have many more handles than the limit.
+			// Use splice in this case to remove all but the last limit number of handles.
+			this.validParentSummaries.splice(0, countOverLimit);
+		}
 	}
 
-	private async sendSummaryAck(contents: ISummaryAck) {
+	private async sendSummaryAck(contents: ISummaryAck): Promise<void> {
 		const operation: IDocumentSystemMessage = {
 			clientSequenceNumber: -1,
 			contents,
@@ -665,7 +791,7 @@ export class ScribeLambda implements IPartitionLambda {
 		return sendToDeli(this.tenantId, this.documentId, this.producer, operation);
 	}
 
-	private async sendSummaryNack(contents: ISummaryNack) {
+	private async sendSummaryNack(contents: ISummaryNack): Promise<void> {
 		const operation: IDocumentSystemMessage = {
 			clientSequenceNumber: -1,
 			contents,
@@ -686,7 +812,7 @@ export class ScribeLambda implements IPartitionLambda {
 		durableSequenceNumber: number,
 		isClientSummary: boolean,
 		clearCache: boolean,
-	) {
+	): Promise<void> {
 		const controlMessage: IControlMessage = {
 			type: ControlMessageType.UpdateDSN,
 			contents: {
@@ -708,27 +834,13 @@ export class ScribeLambda implements IPartitionLambda {
 		return sendToDeli(this.tenantId, this.documentId, this.producer, operation);
 	}
 
-	private setStateFromCheckpoint(scribe: IScribe) {
+	private setStateFromCheckpoint(scribe: IScribe): void {
 		this.sequenceNumber = scribe.sequenceNumber;
 		this.minSequenceNumber = scribe.minimumSequenceNumber;
 		this.lastClientSummaryHead = scribe.lastClientSummaryHead;
 		this.lastSummarySequenceNumber = scribe.lastSummarySequenceNumber;
 		this.validParentSummaries = scribe.validParentSummaries;
-	}
-
-	private updateCheckpointMessages(message: IQueuedMessage) {
-		// updates scribe checkpoint message
-		this.checkpointInfo.currentCheckpointMessage = message;
-
-		if (this.noActiveClients) {
-			this.checkpointInfo.nextKafkaCheckpointMessage = undefined;
-			this.checkpointInfo.currentKafkaCheckpointMessage = message;
-		} else {
-			// Keeps Kafka checkpoint behind by 1 message (is this necessary?)
-			const kafkaCheckpointMessage = this.checkpointInfo.nextKafkaCheckpointMessage;
-			this.checkpointInfo.nextKafkaCheckpointMessage = message;
-			this.checkpointInfo.currentKafkaCheckpointMessage = kafkaCheckpointMessage;
-		}
+		this.isDocumentCorrupt = scribe.isCorrupt;
 	}
 
 	// Determines checkpoint reason based on some Heuristics
@@ -741,12 +853,14 @@ export class ScribeLambda implements IPartitionLambda {
 			return CheckpointReason.EveryMessage;
 		}
 
-		if (this.checkpointInfo.rawMessagesSinceCheckpoint >= checkpointHeuristics.maxMessages) {
+		const checkpointInfo = this.documentCheckpointManager.getCheckpointInfo();
+
+		if (checkpointInfo.rawMessagesSinceCheckpoint >= checkpointHeuristics.maxMessages) {
 			// exceeded max messages since last checkpoint
 			return CheckpointReason.MaxMessages;
 		}
 
-		if (Date.now() - this.checkpointInfo.lastCheckpointTime >= checkpointHeuristics.maxTime) {
+		if (Date.now() - checkpointInfo.lastCheckpointTime >= checkpointHeuristics.maxTime) {
 			// exceeded max time since last checkpoint
 			return CheckpointReason.MaxTime;
 		}
@@ -754,53 +868,40 @@ export class ScribeLambda implements IPartitionLambda {
 		return undefined;
 	}
 
-	private clearCheckpointIdleTimer() {
-		if (this.checkpointInfo.idleTimer !== undefined) {
-			clearTimeout(this.checkpointInfo.idleTimer);
-			this.checkpointInfo.idleTimer = undefined;
+	private readonly idleTimeCheckpoint = (
+		initialScribeCheckpointMessage: IQueuedMessage,
+	): void => {
+		if (initialScribeCheckpointMessage) {
+			const isGlobal = isGlobalCheckpoint(
+				this.documentCheckpointManager.getNoActiveClients(),
+				this.globalCheckpointOnly,
+			);
+			const checkpoint = this.generateScribeCheckpoint(
+				initialScribeCheckpointMessage.offset,
+				isGlobal
+					? this.serviceConfiguration.scribe.scrubUserDataInGlobalCheckpoints
+					: this.serviceConfiguration.scribe.scrubUserDataInLocalCheckpoints,
+			);
+			this.checkpointCore(checkpoint, initialScribeCheckpointMessage, this.clearCache);
+			const checkpointResult = `Writing checkpoint. Reason: IdleTime`;
+			const checkpointInfo = this.documentCheckpointManager.getCheckpointInfo();
+			const lumberjackProperties = {
+				...getLumberBaseProperties(this.documentId, this.tenantId),
+				checkpointReason: "IdleTime",
+				lastOffset: initialScribeCheckpointMessage.offset,
+				scribeCheckpointOffset: checkpointInfo.currentCheckpointMessage?.offset,
+				scribeCheckpointPartition: checkpointInfo.currentCheckpointMessage?.partition,
+				kafkaCheckpointOffset: checkpointInfo.currentKafkaCheckpointMessage?.offset,
+				kafkaCheckpointPartition: checkpointInfo.currentKafkaCheckpointMessage?.partition,
+				clientCount: checkpoint.protocolState.members.length,
+				clients: getClientIds(checkpoint.protocolState, 5),
+				localCheckpointEnabled: this.localCheckpointEnabled,
+				globalCheckpointOnly: this.globalCheckpointOnly,
+				localCheckpoint: this.localCheckpointEnabled && !this.globalCheckpointOnly,
+				checkpointLocation: isGlobal ? "global" : "local",
+				scrubbedUserData: isScribeCheckpointQuorumScrubbed(checkpoint),
+			};
+			Lumberjack.info(checkpointResult, lumberjackProperties);
 		}
-	}
-
-	private checkpoint(reason: CheckpointReason) {
-		this.clearCheckpointIdleTimer();
-		this.checkpointInfo.lastCheckpointTime = Date.now();
-		this.checkpointInfo.rawMessagesSinceCheckpoint = 0;
-	}
-
-	private updateCheckpointIdleTimer() {
-		this.clearCheckpointIdleTimer();
-
-		const initialScribeCheckpointMessage = this.checkpointInfo.currentCheckpointMessage;
-
-		this.checkpointInfo.idleTimer = setTimeout(() => {
-			this.checkpointInfo.idleTimer = undefined;
-
-			// verify that the current scribe message matches the message that started this timer
-			// same implementation as in Deli
-			if (initialScribeCheckpointMessage === this.checkpointInfo.currentCheckpointMessage) {
-				this.checkpoint(CheckpointReason.IdleTime);
-				if (initialScribeCheckpointMessage) {
-					this.checkpointCore(
-						this.generateScribeCheckpoint(initialScribeCheckpointMessage.offset),
-						initialScribeCheckpointMessage,
-						this.clearCache,
-					);
-					const checkpointResult = `Writing checkpoint. Reason: IdleTime`;
-					const lumberjackProperties = {
-						...getLumberBaseProperties(this.documentId, this.tenantId),
-						checkpointReason: "IdleTime",
-						lastOffset: initialScribeCheckpointMessage.offset,
-						deliCheckpointOffset: this.checkpointInfo.currentCheckpointMessage?.offset,
-						deliCheckpointPartition:
-							this.checkpointInfo.currentCheckpointMessage?.partition,
-						kafkaCheckpointOffset:
-							this.checkpointInfo.currentKafkaCheckpointMessage?.offset,
-						kafkaCheckpointPartition:
-							this.checkpointInfo.currentKafkaCheckpointMessage?.partition,
-					};
-					Lumberjack.info(checkpointResult, lumberjackProperties);
-				}
-			}
-		}, this.serviceConfiguration.scribe.checkpointHeuristics.idleTime);
-	}
+	};
 }

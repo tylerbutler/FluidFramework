@@ -3,10 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import { ITokenClaims, IUser, ScopeType } from "@fluidframework/protocol-definitions";
+import { IUser } from "@fluidframework/driver-definitions";
+import { ITokenClaims, ScopeType } from "@fluidframework/driver-definitions/internal";
 import { KJUR as jsrsasign } from "jsrsasign";
 import { v4 as uuid } from "uuid";
-import { getRandomName } from "@fluidframework/server-services-client";
 
 /**
  * Generates a JWT token to authorize against. We do not use the implementation in
@@ -49,9 +49,13 @@ export function generateToken(
 }
 
 export function generateUser(): IUser {
+	const userId = uuid();
+	const match = userId.match(/^([\da-f]{8})-([\da-f]{4})/);
+	const userName = match !== null ? match[0] : userId; // Just use the first two segments of the (fake) userId as a fake name.
+
 	const randomUser = {
-		id: uuid(),
-		name: getRandomName(" ", true),
+		id: userId,
+		name: userName,
 	};
 
 	return randomUser;

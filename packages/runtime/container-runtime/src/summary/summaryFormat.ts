@@ -3,23 +3,44 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/common-utils";
-import { IDocumentStorageService } from "@fluidframework/driver-definitions";
-import { readAndParse } from "@fluidframework/driver-utils";
+import { assert } from "@fluidframework/core-utils/internal";
+import { SummaryType } from "@fluidframework/driver-definitions";
 import {
-	ISequencedDocumentMessage,
+	IDocumentStorageService,
 	ISnapshotTree,
-	SummaryType,
-} from "@fluidframework/protocol-definitions";
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
 import {
+	blobHeadersBlobName as blobNameForBlobHeaders,
+	readAndParse,
+} from "@fluidframework/driver-utils/internal";
+import {
+	ISummaryTreeWithStats,
 	channelsTreeName,
 	gcTreeKey,
-	ISummaryTreeWithStats,
-} from "@fluidframework/runtime-definitions";
-import { IGCMetadata } from "../gc";
+} from "@fluidframework/runtime-definitions/internal";
 
-type OmitAttributesVersions<T> = Omit<T, "snapshotFormatVersion" | "summaryFormatVersion">;
-interface IFluidDataStoreAttributes0 {
+import { blobsTreeName } from "../blobManager/index.js";
+import { IGCMetadata } from "../gc/index.js";
+
+import { IDocumentSchema } from "./documentSchema.js";
+
+/**
+ * @deprecated - This interface will no longer be exported in the future(AB#8004).
+ * @legacy
+ * @alpha
+ */
+export type OmitAttributesVersions<T> = Omit<
+	T,
+	"snapshotFormatVersion" | "summaryFormatVersion"
+>;
+
+/**
+ * @deprecated - This interface will no longer be exported in the future(AB#8004).
+ * @legacy
+ * @alpha
+ */
+export interface IFluidDataStoreAttributes0 {
 	readonly snapshotFormatVersion?: undefined;
 	readonly summaryFormatVersion?: undefined;
 	pkg: string;
@@ -30,11 +51,25 @@ interface IFluidDataStoreAttributes0 {
 	 */
 	readonly isRootDataStore?: boolean;
 }
-interface IFluidDataStoreAttributes1 extends OmitAttributesVersions<IFluidDataStoreAttributes0> {
+
+/**
+ * @deprecated - This interface will no longer be exported in the future(AB#8004).
+ * @legacy
+ * @alpha
+ */
+export interface IFluidDataStoreAttributes1
+	extends OmitAttributesVersions<IFluidDataStoreAttributes0> {
 	readonly snapshotFormatVersion: "0.1";
 	readonly summaryFormatVersion?: undefined;
 }
-interface IFluidDataStoreAttributes2 extends OmitAttributesVersions<IFluidDataStoreAttributes1> {
+
+/**
+ * @deprecated - This interface will no longer be exported in the future(AB#8004).
+ * @legacy
+ * @alpha
+ */
+export interface IFluidDataStoreAttributes2
+	extends OmitAttributesVersions<IFluidDataStoreAttributes1> {
 	/** Switch from snapshotFormatVersion to summaryFormatVersion */
 	readonly snapshotFormatVersion?: undefined;
 	readonly summaryFormatVersion: 2;
@@ -50,12 +85,20 @@ interface IFluidDataStoreAttributes2 extends OmitAttributesVersions<IFluidDataSt
  * Added IFluidDataStoreAttributes similar to IChannelAttributes which will tell the attributes of a
  * store like the package, snapshotFormatVersion to take different decisions based on a particular
  * snapshotFormatVersion.
+ *
+ * @deprecated - This interface will no longer be exported in the future(AB#8004).
+ *
+ * @legacy
+ * @alpha
+ *
  */
 export type ReadFluidDataStoreAttributes =
 	| IFluidDataStoreAttributes0
 	| IFluidDataStoreAttributes1
 	| IFluidDataStoreAttributes2;
-export type WriteFluidDataStoreAttributes = IFluidDataStoreAttributes1 | IFluidDataStoreAttributes2;
+export type WriteFluidDataStoreAttributes =
+	| IFluidDataStoreAttributes1
+	| IFluidDataStoreAttributes2;
 
 export function getAttributesFormatVersion(attributes: ReadFluidDataStoreAttributes): number {
 	if (attributes.summaryFormatVersion) {
@@ -81,18 +124,31 @@ export function getAttributesFormatVersion(attributes: ReadFluidDataStoreAttribu
 export function hasIsolatedChannels(attributes: ReadFluidDataStoreAttributes): boolean {
 	return !!attributes.summaryFormatVersion && !attributes.disableIsolatedChannels;
 }
+
+/**
+ * @legacy
+ * @alpha
+ */
 export interface IContainerRuntimeMetadata extends ICreateContainerMetadata, IGCMetadata {
 	readonly summaryFormatVersion: 1;
+	/** @deprecated - used by old (prior to 2.0 RC3) runtimes */
+	readonly message?: ISummaryMetadataMessage;
 	/** The last message processed at the time of summary. Only primitive property types are added to the summary. */
-	readonly message: ISummaryMetadataMessage | undefined;
+	readonly lastMessage?: ISummaryMetadataMessage;
 	/** True if channels are not isolated in .channels subtrees, otherwise isolated. */
 	readonly disableIsolatedChannels?: true;
 	/** The summary number for a container's summary. Incremented on summaries throughout its lifetime. */
 	readonly summaryNumber?: number;
 	/** GUID to identify a document in telemetry */
 	readonly telemetryDocumentId?: string;
+
+	readonly documentSchema?: IDocumentSchema;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface ICreateContainerMetadata {
 	/** Runtime version of the container when it was first created */
 	createContainerRuntimeVersion?: string;
@@ -100,7 +156,11 @@ export interface ICreateContainerMetadata {
 	createContainerTimestamp?: number;
 }
 
-/** The properties of an ISequencedDocumentMessage to be stored in the metadata blob in summary. */
+/**
+ * The properties of an ISequencedDocumentMessage to be stored in the metadata blob in summary.
+ * @legacy
+ * @alpha
+ */
 export type ISummaryMetadataMessage = Pick<
 	ISequencedDocumentMessage,
 	| "clientId"
@@ -129,7 +189,7 @@ export const extractSummaryMetadataMessage = (
 				sequenceNumber: message.sequenceNumber,
 				timestamp: message.timestamp,
 				type: message.type,
-		  };
+			};
 
 export function getMetadataFormatVersion(metadata?: IContainerRuntimeMetadata): number {
 	/**
@@ -149,7 +209,8 @@ export const aliasBlobName = ".aliases";
 export const metadataBlobName = ".metadata";
 export const chunksBlobName = ".chunks";
 export const electedSummarizerBlobName = ".electedSummarizer";
-export const blobsTreeName = ".blobs";
+export const idCompressorBlobName = ".idCompressor";
+export const blobHeadersBlobName = blobNameForBlobHeaders;
 
 export function rootHasIsolatedChannels(metadata?: IContainerRuntimeMetadata): boolean {
 	return !!metadata && !metadata.disableIsolatedChannels;
@@ -169,6 +230,7 @@ export const nonDataStorePaths = [
 	".serviceProtocol",
 	blobsTreeName,
 	gcTreeKey,
+	idCompressorBlobName,
 ];
 
 export const dataStoreAttributesBlobName = ".component";
@@ -179,7 +241,9 @@ export const dataStoreAttributesBlobName = ".component";
  * @param summarizeResult - Summary tree and stats to modify
  *
  * @example
+ *
  * Converts from:
+ *
  * ```typescript
  * {
  *     type: SummaryType.Tree,
@@ -200,6 +264,7 @@ export const dataStoreAttributesBlobName = ".component";
  *     },
  * }
  * ```
+ *
  * And adds +1 to treeNodeCount in stats.
  */
 export function wrapSummaryInChannelsTree(summarizeResult: ISummaryTreeWithStats): void {

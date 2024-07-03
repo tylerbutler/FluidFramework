@@ -3,41 +3,42 @@
  * Licensed under the MIT License.
  */
 
-import { assert, Deferred } from "@fluidframework/common-utils";
+import { assert, Deferred } from "@fluidframework/core-utils/internal";
 import {
+	IDocumentDeltaStorageService,
 	IDocumentService,
 	IDocumentStorageService,
-	IDocumentDeltaStorageService,
-} from "@fluidframework/driver-definitions";
-import { readAndParse } from "@fluidframework/driver-utils";
-import {
 	IDocumentAttributes,
-	ISequencedDocumentMessage,
 	ISnapshotTree,
 	IVersion,
-} from "@fluidframework/protocol-definitions";
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import { readAndParse } from "@fluidframework/driver-utils/internal";
 import {
 	FileSnapshotReader,
 	IFileSnapshot,
 	ReadDocumentStorageServiceBase,
 	ReplayController,
 	SnapshotStorage,
-} from "@fluidframework/replay-driver";
-import { IDebuggerController, IDebuggerUI } from "./fluidDebuggerUi";
-import { Sanitizer } from "./sanitizer";
+} from "@fluidframework/replay-driver/internal";
 
+import { IDebuggerController, IDebuggerUI } from "./fluidDebuggerUi.js";
+import { Sanitizer } from "./sanitizer.js";
+
+/**
+ * @internal
+ */
+// eslint-disable-next-line @rushstack/no-new-null
 export type debuggerUIFactory = (controller: IDebuggerController) => IDebuggerUI | null;
 
 /**
  * Replay controller that uses pop-up window to control op playback
+ * @internal
  */
 export class DebugReplayController extends ReplayController implements IDebuggerController {
+	// eslint-disable-next-line @rushstack/no-new-null
 	public static create(createUi: debuggerUIFactory): DebugReplayController | null {
-		if (
-			typeof localStorage === "object" &&
-			localStorage !== null &&
-			localStorage.FluidDebugger
-		) {
+		if (typeof localStorage === "object" && localStorage?.FluidDebugger) {
 			const controller = new DebugReplayController();
 			const ui = createUi(controller);
 			if (ui) {
@@ -275,6 +276,7 @@ export class DebugReplayController extends ReplayController implements IDebugger
 		throw new Error("Reading blob before storage is setup properly");
 	}
 
+	// eslint-disable-next-line @rushstack/no-new-null
 	public async getVersions(versionId: string | null, count: number): Promise<IVersion[]> {
 		if (this.storage !== undefined) {
 			return this.storage.getVersions(versionId, count);
@@ -282,6 +284,7 @@ export class DebugReplayController extends ReplayController implements IDebugger
 		throw new Error("initStorage() was not called!");
 	}
 
+	// eslint-disable-next-line @rushstack/no-new-null
 	public async getSnapshotTree(versionRequested?: IVersion): Promise<ISnapshotTree | null> {
 		if (this.storage !== undefined) {
 			return this.storage.getSnapshotTree(versionRequested);

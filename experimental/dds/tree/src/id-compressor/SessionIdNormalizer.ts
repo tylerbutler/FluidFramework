@@ -3,12 +3,13 @@
  * Licensed under the MIT License.
  */
 
-/* eslint-disable @typescript-eslint/restrict-plus-operands */
+import { assert } from '@fluidframework/core-utils/internal';
 
-import { assert, compareFiniteNumbers, compareFiniteNumbersReversed, fail, Mutable } from '../Common';
-import { FinalCompressedId, LocalCompressedId, SessionSpaceCompressedId } from '../Identifiers';
-import { AppendOnlyDoublySortedMap } from './AppendOnlySortedMap';
-import { SerializedSessionIdNormalizer } from './persisted-types';
+import { Mutable, compareFiniteNumbers, compareFiniteNumbersReversed, fail } from '../Common.js';
+import { FinalCompressedId, LocalCompressedId, SessionSpaceCompressedId } from '../Identifiers.js';
+
+import { AppendOnlyDoublySortedMap } from './AppendOnlySortedMap.js';
+import { SerializedSessionIdNormalizer } from './persisted-types/index.js';
 
 /**
  * Maps IDs created by a session between their local and final forms (i.e. normalization). These IDs are in a contiguous range.
@@ -210,14 +211,14 @@ export class SessionIdNormalizer<TRangeObject> {
 
 		if (this.expensiveAsserts) {
 			if (lastLocalRange === undefined) {
-				assert(localId === -1, 'Local ID space must start at -1.');
+				assert(localId === -1, 0x657 /* Local ID space must start at -1. */);
 			} else {
 				const [firstLocal, [_, finalRanges]] = lastLocalRange;
 				let finalDelta = 0;
 				for (const [_, [firstFinal, lastFinal]] of entries(firstLocal, finalRanges)) {
 					finalDelta += lastFinal - firstFinal + 1;
 				}
-				assert(localId === firstLocal - finalDelta, 'Local ID space must be contiguous.');
+				assert(localId === firstLocal - finalDelta, 0x658 /* Local ID space must be contiguous. */);
 			}
 		}
 
@@ -249,7 +250,7 @@ export class SessionIdNormalizer<TRangeObject> {
 	 * ^final ID 9 is not contiguous and does not have a corresponding local ID
 	 */
 	public addFinalIds(firstFinal: FinalCompressedId, lastFinal: FinalCompressedId, rangeObject: TRangeObject): void {
-		assert(lastFinal >= firstFinal, 'Malformed normalization range.');
+		assert(lastFinal >= firstFinal, 0x659 /* Malformed normalization range. */);
 		const [firstLocal, finalRangesObj] =
 			this.idRanges.last() ?? fail('Final IDs must be added to an existing local range.');
 		const [lastLocal, finalRanges] = finalRangesObj;
@@ -258,12 +259,11 @@ export class SessionIdNormalizer<TRangeObject> {
 			finalRangesObj[1] = [firstFinal, lastFinal, rangeObject];
 			nextLocal = Math.min(this.nextLocalId, firstLocal - (lastFinal - firstFinal) - 1) as LocalCompressedId;
 		} else {
-			const [firstAlignedLocal, lastAlignedLocal, lastAlignedFinal, lastFinalRange] =
-				this.getAlignmentOfLastRange(firstLocal, finalRanges);
-			nextLocal = Math.min(
-				this.nextLocalId,
-				lastAlignedLocal - (lastFinal - firstFinal) - 2
-			) as LocalCompressedId;
+			const [firstAlignedLocal, lastAlignedLocal, lastAlignedFinal, lastFinalRange] = this.getAlignmentOfLastRange(
+				firstLocal,
+				finalRanges
+			);
+			nextLocal = Math.min(this.nextLocalId, lastAlignedLocal - (lastFinal - firstFinal) - 2) as LocalCompressedId;
 			if (firstFinal === lastAlignedFinal + 1) {
 				lastFinalRange[1] = lastFinal;
 			} else {
@@ -278,7 +278,7 @@ export class SessionIdNormalizer<TRangeObject> {
 					rangeMap = finalRanges;
 				}
 				rangeMap.append(alignedLocal, [firstFinal, lastFinal, rangeObject]);
-				assert(alignedLocal >= lastLocal, 'Gaps in final space must align to a local.');
+				assert(alignedLocal >= lastLocal, 0x65a /* Gaps in final space must align to a local. */);
 			}
 			if (this.expensiveAsserts) {
 				this.idRanges.assertValid();
@@ -313,7 +313,7 @@ export class SessionIdNormalizer<TRangeObject> {
 	 *
 	 */
 	public registerFinalIdBlock(firstFinalInBlock: FinalCompressedId, count: number, rangeObject: TRangeObject): void {
-		assert(count >= 1, 'Malformed normalization block.');
+		assert(count >= 1, 0x65b /* Malformed normalization block. */);
 		const [firstLocal, [lastLocal, finalRanges]] =
 			this.idRanges.last() ?? fail('Final ID block should not be registered before any locals.');
 		let unalignedLocalCount: number;
@@ -323,7 +323,10 @@ export class SessionIdNormalizer<TRangeObject> {
 			const [_, lastAlignedLocal] = this.getAlignmentOfLastRange(firstLocal, finalRanges);
 			unalignedLocalCount = lastAlignedLocal - lastLocal;
 		}
-		assert(unalignedLocalCount > 0, 'Final ID block should not be registered without an existing local range.');
+		assert(
+			unalignedLocalCount > 0,
+			0x65c /* Final ID block should not be registered without an existing local range. */
+		);
 		const lastFinal = (firstFinalInBlock + Math.min(unalignedLocalCount, count) - 1) as FinalCompressedId;
 		this.addFinalIds(firstFinalInBlock, lastFinal, rangeObject);
 	}
@@ -335,7 +338,7 @@ export class SessionIdNormalizer<TRangeObject> {
 		firstAlignedLocal: LocalCompressedId,
 		lastAlignedLocal: LocalCompressedId,
 		lastAlignedFinal: FinalCompressedId,
-		lastFinalRange: FinalRange<TRangeObject>
+		lastFinalRange: FinalRange<TRangeObject>,
 	] {
 		const isSingle = isSingleRange(finalRanges);
 		let lastFinalRange: FinalRange<TRangeObject>;
@@ -380,7 +383,10 @@ export class SessionIdNormalizer<TRangeObject> {
 	}
 
 	public serialize(): SerializedSessionIdNormalizer {
-		const serialized: Mutable<SerializedSessionIdNormalizer> = { localRanges: [], nextLocalId: this.nextLocalId };
+		const serialized: Mutable<SerializedSessionIdNormalizer> = {
+			localRanges: [],
+			nextLocalId: this.nextLocalId,
+		};
 		const localRanges = serialized.localRanges as Mutable<typeof serialized.localRanges>;
 		for (const [firstLocal, finalRanges] of this.idRanges.entries()) {
 			const [lastLocal, finalRangesTable] = finalRanges;
@@ -406,7 +412,7 @@ export class SessionIdNormalizer<TRangeObject> {
 		for (const [firstLocal, lastLocal, serializedFinalRanges] of serialized.localRanges) {
 			let finalRanges: FinalRanges<TRangeObject> | undefined;
 			if (serializedFinalRanges !== undefined) {
-				assert(serializedFinalRanges.length !== 0, 'Empty range should not be reified.');
+				assert(serializedFinalRanges.length !== 0, 0x65d /* Empty range should not be reified. */);
 				if (serializedFinalRanges.length === 1) {
 					const [_, firstFinal, lastFinal] = serializedFinalRanges[0];
 					finalRanges = [firstFinal, lastFinal, getRangeObject(firstFinal)];
@@ -440,9 +446,7 @@ export class SessionIdNormalizer<TRangeObject> {
 					const [firstFinalA, lastFinalA, rangeObjectA] = finalRangeA;
 					const [firstFinalB, lastFinalB, rangeObjectB] = finalRangeB;
 					return (
-						firstFinalA === firstFinalB &&
-						lastFinalA === lastFinalB &&
-						compareRangeObjects(rangeObjectA, rangeObjectB)
+						firstFinalA === firstFinalB && lastFinalA === lastFinalB && compareRangeObjects(rangeObjectA, rangeObjectB)
 					);
 				};
 
@@ -462,7 +466,7 @@ export class SessionIdNormalizer<TRangeObject> {
 type FinalRange<TRangeObject> = [
 	firstFinal: FinalCompressedId,
 	lastFinal: FinalCompressedId,
-	rangeObject: TRangeObject
+	rangeObject: TRangeObject,
 ];
 
 type FinalRangesMap<TRangeObject> = AppendOnlyDoublySortedMap<

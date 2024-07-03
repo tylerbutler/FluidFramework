@@ -1,15 +1,17 @@
 {
-    "folders": [
-      {
-        "name": "FluidFramework",
-        "path": "../../../../"
-      },
-      {
-        "name": "@fluid-internal/tree",
-        "path": ".."
-      }
-    ],
-    "settings": {
-      "terminal.integrated.cwd": "../../.."
-    }
-  }
+	"folders": [
+		{
+			"name": "FluidFramework",
+			"path": "../../../../"
+		},
+		{
+			"name": "@fluidframework/tree",
+			"path": ".."
+		}
+	],
+	"settings": {
+		"search.followSymlinks": false,
+		"typescript.preferences.autoImportFileExcludePatterns": ["**/dist/**"],
+		"typescript.preferences.importModuleSpecifier": "project-relative"
+	}
+}

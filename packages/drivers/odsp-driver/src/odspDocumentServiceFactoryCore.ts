@@ -3,44 +3,53 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryBaseLogger } from "@fluidframework/common-definitions";
+import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
+import { PromiseCache } from "@fluidframework/core-utils/internal";
+import { ISummaryTree } from "@fluidframework/driver-definitions";
 import {
 	IDocumentService,
 	IDocumentServiceFactory,
 	IResolvedUrl,
-} from "@fluidframework/driver-definitions";
-import { ISummaryTree } from "@fluidframework/protocol-definitions";
-import { TelemetryLogger, PerformanceEvent } from "@fluidframework/telemetry-utils";
+} from "@fluidframework/driver-definitions/internal";
 import {
 	getDocAttributesFromProtocolSummary,
-	ensureFluidResolvedUrl,
 	isCombinedAppAndProtocolSummary,
-} from "@fluidframework/driver-utils";
+} from "@fluidframework/driver-utils/internal";
 import {
-	TokenFetchOptions,
-	OdspResourceTokenFetchOptions,
-	TokenFetcher,
-	IPersistedCache,
 	HostStoragePolicy,
 	IFileEntry,
 	IOdspUrlParts,
-	SharingLinkScope,
-	SharingLinkRole,
-	ShareLinkTypes,
+	IPersistedCache,
+	IRelaySessionAwareDriverFactory,
 	ISharingLinkKind,
-} from "@fluidframework/odsp-driver-definitions";
+	ISocketStorageDiscovery,
+	OdspResourceTokenFetchOptions,
+	SharingLinkRole,
+	SharingLinkScope,
+	TokenFetchOptions,
+	TokenFetcher,
+} from "@fluidframework/odsp-driver-definitions/internal";
+import { PerformanceEvent, createChildLogger } from "@fluidframework/telemetry-utils/internal";
 import { v4 as uuid } from "uuid";
-import { INonPersistentCache, LocalPersistentCache, NonPersistentCache } from "./odspCache";
-import { createOdspCacheAndTracker, ICacheAndTracker } from "./epochTracker";
-import { OdspDocumentService } from "./odspDocumentService";
+
+import { ICacheAndTracker, createOdspCacheAndTracker } from "./epochTracker.js";
 import {
-	INewFileInfo,
-	getOdspResolvedUrl,
-	createOdspLogger,
-	toInstrumentedOdspTokenFetcher,
+	INonPersistentCache,
+	IPrefetchSnapshotContents,
+	LocalPersistentCache,
+	NonPersistentCache,
+} from "./odspCache.js";
+import { OdspDocumentService } from "./odspDocumentService.js";
+import {
 	IExistingFileInfo,
+	INewFileInfo,
+	createOdspLogger,
+	getJoinSessionCacheKey,
+	getOdspResolvedUrl,
 	isNewFileInfo,
-} from "./odspUtils";
+	toInstrumentedOdspStorageTokenFetcher,
+	toInstrumentedOdspTokenFetcher,
+} from "./odspUtils.js";
 
 /**
  * Factory for creating the sharepoint document service. Use this if you want to
@@ -48,13 +57,38 @@ import {
  *
  * This constructor should be used by environments that support dynamic imports and that wish
  * to leverage code splitting as a means to keep bundles as small as possible.
+ * @legacy
+ * @alpha
  */
-export class OdspDocumentServiceFactoryCore implements IDocumentServiceFactory {
+export class OdspDocumentServiceFactoryCore
+	implements IDocumentServiceFactory, IRelaySessionAwareDriverFactory
+{
 	private readonly nonPersistentCache: INonPersistentCache = new NonPersistentCache();
 	private readonly socketReferenceKeyPrefix?: string;
 
-	public get snapshotPrefetchResultCache() {
+	public get snapshotPrefetchResultCache(): PromiseCache<string, IPrefetchSnapshotContents> {
 		return this.nonPersistentCache.snapshotPrefetchResultCache;
+	}
+
+	// TODO: return `IRelaySessionAwareDriverFactory` instead of `this` (breaking change)
+	public get IRelaySessionAwareDriverFactory(): this {
+		return this;
+	}
+
+	/**
+	 * This function would return info about relay service session only if this factory established (or attempted to
+	 * establish) connection very recently. Otherwise, it will return undefined.
+	 * @param resolvedUrl - resolved url for container
+	 * @returns The current join session response stored in cache. `undefined` if not present.
+	 */
+	public async getRelayServiceSessionInfo(
+		resolvedUrl: IResolvedUrl,
+	): Promise<ISocketStorageDiscovery | undefined> {
+		const odspResolvedUrl = getOdspResolvedUrl(resolvedUrl);
+		const joinSessionResponse = await this.nonPersistentCache.sessionJoinCache.get(
+			getJoinSessionCacheKey(odspResolvedUrl),
+		);
+		return joinSessionResponse?.joinSessionResponse;
 	}
 
 	public async createContainer(
@@ -63,24 +97,15 @@ export class OdspDocumentServiceFactoryCore implements IDocumentServiceFactory {
 		logger?: ITelemetryBaseLogger,
 		clientIsSummarizer?: boolean,
 	): Promise<IDocumentService> {
-		ensureFluidResolvedUrl(createNewResolvedUrl);
-
-		let odspResolvedUrl = getOdspResolvedUrl(createNewResolvedUrl);
+		const odspResolvedUrl = getOdspResolvedUrl(createNewResolvedUrl);
 		const resolvedUrlData: IOdspUrlParts = {
 			siteUrl: odspResolvedUrl.siteUrl,
 			driveId: odspResolvedUrl.driveId,
 			itemId: odspResolvedUrl.itemId,
 		};
-		const [, queryString] = odspResolvedUrl.url.split("?");
-
-		const searchParams = new URLSearchParams(queryString);
-		const filePath = searchParams.get("path");
-		if (filePath === undefined || filePath === null) {
-			throw new Error("File path should be provided!!");
-		}
 
 		let fileInfo: INewFileInfo | IExistingFileInfo;
-		let createShareLinkParam: ShareLinkTypes | ISharingLinkKind | undefined;
+		let createShareLinkParam: ISharingLinkKind | undefined;
 		if (odspResolvedUrl.itemId) {
 			fileInfo = {
 				type: "Existing",
@@ -89,6 +114,12 @@ export class OdspDocumentServiceFactoryCore implements IDocumentServiceFactory {
 				itemId: odspResolvedUrl.itemId,
 			};
 		} else if (odspResolvedUrl.fileName) {
+			const [, queryString] = odspResolvedUrl.url.split("?");
+			const searchParams = new URLSearchParams(queryString);
+			const filePath = searchParams.get("path");
+			if (filePath === undefined || filePath === null) {
+				throw new Error("File path should be provided!!");
+			}
 			createShareLinkParam = getSharingLinkParams(this.hostPolicy, searchParams);
 			fileInfo = {
 				type: "New",
@@ -133,69 +164,61 @@ export class OdspDocumentServiceFactoryCore implements IDocumentServiceFactory {
 				createShareLinkParam: createShareLinkParam
 					? JSON.stringify(createShareLinkParam)
 					: undefined,
-				enableShareLinkWithCreate: this.hostPolicy.enableShareLinkWithCreate,
 				enableSingleRequestForShareLinkWithCreate:
 					this.hostPolicy.enableSingleRequestForShareLinkWithCreate,
 			},
 			async (event) => {
-				const getStorageToken = toInstrumentedOdspTokenFetcher(
+				const getAuthHeader = toInstrumentedOdspStorageTokenFetcher(
 					odspLogger,
 					resolvedUrlData,
 					this.getStorageToken,
-					true /* throwOnNullToken */,
 				);
 				// We can delay load this module as this path will not be executed in load flows and create flow
 				// while only happens once in lifetime of a document happens in the background after creation of
 				// detached container.
 				const module = await import(
-					/* webpackChunkName: "createNewModule" */ "./createNewModule"
+					/* webpackChunkName: "createNewModule" */ "./createNewModule.js"
 				)
 					.then((m) => {
 						odspLogger.sendTelemetryEvent({ eventName: "createNewModuleLoaded" });
 						return m;
 					})
 					.catch((error) => {
-						odspLogger.sendErrorEvent(
-							{ eventName: "createNewModuleLoadFailed" },
-							error,
-						);
+						odspLogger.sendErrorEvent({ eventName: "createNewModuleLoadFailed" }, error);
 						throw error;
 					});
-				odspResolvedUrl = isNewFileInfo(fileInfo)
+				const _odspResolvedUrl = isNewFileInfo(fileInfo)
 					? await module.createNewFluidFile(
-							getStorageToken,
+							getAuthHeader,
 							fileInfo,
 							odspLogger,
 							createNewSummary,
 							cacheAndTracker.epochTracker,
 							fileEntry,
 							this.hostPolicy.cacheCreateNewSummary ?? true,
-							!!this.hostPolicy.sessionOptions
-								?.forceAccessTokenViaAuthorizationHeader,
+							!!this.hostPolicy.sessionOptions?.forceAccessTokenViaAuthorizationHeader,
 							odspResolvedUrl.isClpCompliantApp,
 							this.hostPolicy.enableSingleRequestForShareLinkWithCreate,
-							this.hostPolicy.enableShareLinkWithCreate,
-					  )
+						)
 					: await module.createNewContainerOnExistingFile(
-							getStorageToken,
+							getAuthHeader,
 							fileInfo,
 							odspLogger,
 							createNewSummary,
 							cacheAndTracker.epochTracker,
 							fileEntry,
 							this.hostPolicy.cacheCreateNewSummary ?? true,
-							!!this.hostPolicy.sessionOptions
-								?.forceAccessTokenViaAuthorizationHeader,
+							!!this.hostPolicy.sessionOptions?.forceAccessTokenViaAuthorizationHeader,
 							odspResolvedUrl.isClpCompliantApp,
-					  );
+						);
 				const docService = this.createDocumentServiceCore(
-					odspResolvedUrl,
+					_odspResolvedUrl,
 					odspLogger,
 					cacheAndTracker,
 					clientIsSummarizer,
 				);
 				event.end({
-					docId: odspResolvedUrl.hashedDocumentId,
+					docId: _odspResolvedUrl.hashedDocumentId,
 				});
 				return docService;
 			},
@@ -213,7 +236,9 @@ export class OdspDocumentServiceFactoryCore implements IDocumentServiceFactory {
 	 */
 	constructor(
 		private readonly getStorageToken: TokenFetcher<OdspResourceTokenFetchOptions>,
-		private readonly getWebsocketToken: TokenFetcher<OdspResourceTokenFetchOptions> | undefined,
+		private readonly getWebsocketToken:
+			| TokenFetcher<OdspResourceTokenFetchOptions>
+			| undefined,
 		protected persistedCache: IPersistedCache = new LocalPersistentCache(),
 		private readonly hostPolicy: HostStoragePolicy = {},
 	) {
@@ -244,49 +269,52 @@ export class OdspDocumentServiceFactoryCore implements IDocumentServiceFactory {
 
 	protected async createDocumentServiceCore(
 		resolvedUrl: IResolvedUrl,
-		odspLogger: TelemetryLogger,
+		odspLogger: ITelemetryBaseLogger,
 		cacheAndTrackerArg?: ICacheAndTracker,
 		clientIsSummarizer?: boolean,
 	): Promise<IDocumentService> {
+		const extLogger = createChildLogger({ logger: odspLogger });
 		const odspResolvedUrl = getOdspResolvedUrl(resolvedUrl);
 		const resolvedUrlData: IOdspUrlParts = {
 			siteUrl: odspResolvedUrl.siteUrl,
 			driveId: odspResolvedUrl.driveId,
 			itemId: odspResolvedUrl.itemId,
 		};
+
 		const cacheAndTracker =
 			cacheAndTrackerArg ??
 			createOdspCacheAndTracker(
 				this.persistedCache,
 				this.nonPersistentCache,
 				{ resolvedUrl: odspResolvedUrl, docId: odspResolvedUrl.hashedDocumentId },
-				odspLogger,
+				extLogger,
 				clientIsSummarizer,
 			);
 
-		const storageTokenFetcher = toInstrumentedOdspTokenFetcher(
-			odspLogger,
+		const storageTokenFetcher = toInstrumentedOdspStorageTokenFetcher(
+			extLogger,
 			resolvedUrlData,
 			this.getStorageToken,
-			true /* throwOnNullToken */,
 		);
 
 		const webSocketTokenFetcher =
 			this.getWebsocketToken === undefined
 				? undefined
-				: async (options: TokenFetchOptions) =>
+				: async (options: TokenFetchOptions): Promise<string | null> =>
+						// websocket expects a plain token
 						toInstrumentedOdspTokenFetcher(
-							odspLogger,
+							extLogger,
 							resolvedUrlData,
 							this.getWebsocketToken!,
 							false /* throwOnNullToken */,
+							true /* returnPlainToken */,
 						)(options, "GetWebsocketToken");
 
 		return OdspDocumentService.create(
 			resolvedUrl,
 			storageTokenFetcher,
 			webSocketTokenFetcher,
-			odspLogger,
+			extLogger,
 			cacheAndTracker.cache,
 			this.hostPolicy,
 			cacheAndTracker.epochTracker,
@@ -302,24 +330,21 @@ export class OdspDocumentServiceFactoryCore implements IDocumentServiceFactory {
 function getSharingLinkParams(
 	hostPolicy: HostStoragePolicy,
 	searchParams: URLSearchParams,
-): ShareLinkTypes | ISharingLinkKind | undefined {
+): ISharingLinkKind | undefined {
 	// extract request parameters for creation of sharing link (if provided) if the feature is enabled
-	let createShareLinkParam: ShareLinkTypes | ISharingLinkKind | undefined;
+	let createShareLinkParam: ISharingLinkKind | undefined;
 	if (hostPolicy.enableSingleRequestForShareLinkWithCreate) {
 		const createLinkScope = searchParams.get("createLinkScope");
 		const createLinkRole = searchParams.get("createLinkRole");
 		if (createLinkScope && SharingLinkScope[createLinkScope]) {
 			createShareLinkParam = {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				scope: SharingLinkScope[createLinkScope],
 				...(createLinkRole && SharingLinkRole[createLinkRole]
-					? { role: SharingLinkRole[createLinkRole] }
+					? // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+						{ role: SharingLinkRole[createLinkRole] }
 					: {}),
 			};
-		}
-	} else if (hostPolicy.enableShareLinkWithCreate) {
-		const createLinkType = searchParams.get("createLinkType");
-		if (createLinkType && ShareLinkTypes[createLinkType]) {
-			createShareLinkParam = ShareLinkTypes[createLinkType || ""];
 		}
 	}
 	return createShareLinkParam;

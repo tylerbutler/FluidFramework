@@ -3,19 +3,27 @@
  * Licensed under the MIT License.
  */
 
+/**
+ * @internal
+ */
 export interface BaseFuzzTestState {
 	random: IRandom;
 }
 
+/**
+ * @internal
+ */
 export const done = Symbol("GeneratorDone");
 
 /**
  * Given some input state, synchronously generates outputs.
+ * @internal
  */
 export type Generator<TOut, TState> = (state: TState) => TOut | typeof done;
 
 /**
  * Given some input state, asynchronously generates outputs.
+ * @internal
  */
 export type AsyncGenerator<TOut, TState> = (state: TState) => Promise<TOut | typeof done>;
 
@@ -23,9 +31,11 @@ export type AsyncGenerator<TOut, TState> = (state: TState) => Promise<TOut | typ
  * Given a starting state and an operation to apply to that state, returns a new state.
  * Reducers can also opt to mutate the input state, in which case they should have a void return.
  *
- * @remarks - Opting to use impure reducers may be more ergonomic for workflows which are unlikely
+ * @remarks Opting to use impure reducers may be more ergonomic for workflows which are unlikely
  * to benefit from the advantages of pure ones (ex: state is not serializable or is deeply mutated,
  * which makes things like history tracking less practical)
+ *
+ * @internal
  */
 export type Reducer<TOp, TState> = (state: TState, operation: TOp) => TState | void;
 
@@ -33,12 +43,20 @@ export type Reducer<TOp, TState> = (state: TState, operation: TOp) => TState | v
  * Given a starting state and an operation to apply to that state, asynchronously returns a new state.
  * Reducers can also opt to mutate the input state, in which case they should have a void return.
  *
- * @remarks - Opting to use impure reducers may be more ergonomic for workflows which are unlikely
+ * @remarks Opting to use impure reducers may be more ergonomic for workflows which are unlikely
  * to benefit from the advantages of pure ones (ex: state is not serializable or is deeply mutated,
  * which makes things like history tracking less practical)
+ *
+ * @internal
  */
-export type AsyncReducer<TOp, TState> = (state: TState, operation: TOp) => Promise<TState | void>;
+export type AsyncReducer<TOp, TState> = (
+	state: TState,
+	operation: TOp,
+) => Promise<TState | void>;
 
+/**
+ * @internal
+ */
 export type AcceptanceCondition<TState> = (state: TState) => boolean;
 
 /**
@@ -47,6 +65,8 @@ export type AcceptanceCondition<TState> = (state: TState) => boolean;
  * A generator should only be invoked if the corresponding `AcceptanceCondition` evaluates to true.
  * This is useful in practice to avoid invoking generators for known-to-be invalid actions based on the current state:
  * for example, a "leave" op cannot be generated if there are no currently connected clients.
+ *
+ * @internal
  */
 export type Weights<TOp, TState> = [
 	TOp | Generator<TOp, TState>,
@@ -60,6 +80,8 @@ export type Weights<TOp, TState> = [
  * A generator should only be invoked if the corresponding `AcceptanceCondition` evaluates to true.
  * This is useful in practice to avoid invoking generators for known-to-be invalid actions based on the current state:
  * for example, a "leave" op cannot be generated if there are no currently connected clients.
+ *
+ * @internal
  */
 export type AsyncWeights<TOp, TState> = [
 	TOp | AsyncGenerator<TOp, TState>,
@@ -67,13 +89,25 @@ export type AsyncWeights<TOp, TState> = [
 	AcceptanceCondition<TState>?,
 ][];
 
-export interface SaveInfo {
-	saveOnFailure: boolean;
-	saveOnSuccess?: boolean;
+/**
+ * @internal
+ */
+export interface SaveDestination {
 	/** Filepath to dump the history file. Containing folder is created if it doesn't exist. */
-	filepath: string;
+	readonly path: string;
 }
 
+/**
+ * @internal
+ */
+export interface SaveInfo {
+	saveOnFailure: false | SaveDestination;
+	saveOnSuccess: false | SaveDestination;
+}
+
+/**
+ * @internal
+ */
 export interface IRandom {
 	/**
 	 * Return a pseudorandomly chosen boolean value that is true with the given probability.

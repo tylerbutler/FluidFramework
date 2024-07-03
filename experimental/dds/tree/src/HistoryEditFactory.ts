@@ -3,27 +3,29 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryLogger } from '@fluidframework/common-definitions';
-import { DetachedSequenceId, isDetachedSequenceId, NodeId } from './Identifiers';
-import { assert, fail } from './Common';
-import { rangeFromStableRange } from './TreeViewUtilities';
+import { assert } from '@fluidframework/core-utils/internal';
+import { ITelemetryLoggerExt } from '@fluidframework/telemetry-utils/internal';
+
+import { StablePlace } from './ChangeTypes.js';
+import { fail } from './Common.js';
+import { RangeValidationResultKind, validateStableRange } from './EditUtilities.js';
+import { DetachedSequenceId, NodeId, isDetachedSequenceId } from './Identifiers.js';
+import { RevisionView } from './RevisionView.js';
+import { getChangeNodeFromViewNode } from './SerializationUtilities.js';
+import { TransactionInternal } from './TransactionInternal.js';
+import { TreeView } from './TreeView.js';
+import { rangeFromStableRange } from './TreeViewUtilities.js';
 import {
+	BuildNodeInternal,
 	ChangeInternal,
 	ChangeTypeInternal,
 	DetachInternal,
-	SetValueInternal,
+	EditStatus,
 	InsertInternal,
-	BuildNodeInternal,
+	SetValueInternal,
 	Side,
 	StableRangeInternal,
-	EditStatus,
-} from './persisted-types';
-import { TransactionInternal } from './TransactionInternal';
-import { RangeValidationResultKind, validateStableRange } from './EditUtilities';
-import { StablePlace } from './ChangeTypes';
-import { RevisionView } from './RevisionView';
-import { TreeView } from './TreeView';
-import { getChangeNodeFromViewNode } from './SerializationUtilities';
+} from './persisted-types/index.js';
 
 /**
  * Events emitted from the history edit factory
@@ -51,8 +53,8 @@ export enum HistoryEditFactoryEvents {
 export function revert(
 	changes: readonly ChangeInternal[],
 	before: RevisionView,
-	logger?: ITelemetryLogger,
-	emit?: (event: string | symbol, ...args: any[]) => void
+	logger?: ITelemetryLoggerExt,
+	emit?: (event: string, ...args: any[]) => void
 ): ChangeInternal[] | undefined {
 	const result: ChangeInternal[] = [];
 
@@ -68,8 +70,11 @@ export function revert(
 			case ChangeTypeInternal.Build: {
 				// Save nodes added to the detached state for use in future changes
 				const { destination, source } = change;
-				assert(!builtNodes.has(destination), `Cannot revert Build: destination is already used by a Build`);
-				assert(!detachedNodes.has(destination), `Cannot revert Build: destination is already used by a Detach`);
+				assert(!builtNodes.has(destination), 0x626 /* Cannot revert Build: destination is already used by a Build */);
+				assert(
+					!detachedNodes.has(destination),
+					0x627 /* Cannot revert Build: destination is already used by a Detach */
+				);
 				builtNodes.set(
 					destination,
 					source.reduce((ids: NodeId[], curr: BuildNodeInternal) => {

@@ -3,19 +3,22 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "assert";
-import { IGCTestProvider, runGCTests } from "@fluid-internal/test-dds-utils";
+import { strict as assert } from "node:assert";
+
+import { type IGCTestProvider, runGCTests } from "@fluid-private/test-dds-utils";
+import { AttachState } from "@fluidframework/container-definitions";
 import {
-	MockFluidDataStoreRuntime,
 	MockContainerRuntimeFactory,
 	MockContainerRuntimeFactoryForReconnection,
-	MockContainerRuntimeForReconnection,
-	MockStorage,
+	type MockContainerRuntimeForReconnection,
+	MockFluidDataStoreRuntime,
 	MockSharedObjectServices,
-} from "@fluidframework/test-runtime-utils";
-import { SharedCell } from "../cell";
-import { CellFactory } from "../cellFactory";
-import { ISharedCell, ICellOptions } from "../interfaces";
+	MockStorage,
+} from "@fluidframework/test-runtime-utils/internal";
+
+import { SharedCell } from "../cell.js";
+import { CellFactory } from "../cellFactory.js";
+import type { ICellOptions, ISharedCell } from "../interfaces.js";
 
 function createConnectedCell(
 	id: string,
@@ -26,9 +29,9 @@ function createConnectedCell(
 	const dataStoreRuntime = new MockFluidDataStoreRuntime();
 	dataStoreRuntime.options = options ?? dataStoreRuntime.options;
 
-	const containerRuntime = runtimeFactory.createContainerRuntime(dataStoreRuntime);
+	runtimeFactory.createContainerRuntime(dataStoreRuntime);
 	const services = {
-		deltaConnection: containerRuntime.createDeltaConnection(),
+		deltaConnection: dataStoreRuntime.createDeltaConnection(),
 		objectStorage: new MockStorage(),
 	};
 
@@ -37,7 +40,7 @@ function createConnectedCell(
 	return cell;
 }
 
-function createDetachedCell(id: string, options?: ICellOptions): ISharedCell {
+function createDetachedCell(id: string, options?: ICellOptions): SharedCell {
 	const dataStoreRuntime = new MockFluidDataStoreRuntime();
 	dataStoreRuntime.options = options ?? dataStoreRuntime.options;
 	const subCell = new SharedCell(id, dataStoreRuntime, CellFactory.Attributes);
@@ -51,7 +54,7 @@ function createCellForReconnection(
 	const dataStoreRuntime = new MockFluidDataStoreRuntime();
 	const containerRuntime = runtimeFactory.createContainerRuntime(dataStoreRuntime);
 	const services = {
-		deltaConnection: containerRuntime.createDeltaConnection(),
+		deltaConnection: dataStoreRuntime.createDeltaConnection(),
 		objectStorage: new MockStorage(),
 	};
 
@@ -67,7 +70,7 @@ describe("Cell", () => {
 		 */
 		let cell: ISharedCell;
 
-		beforeEach(() => {
+		beforeEach("createDetachedCell", () => {
 			cell = createDetachedCell("cell");
 		});
 
@@ -132,22 +135,22 @@ describe("Cell", () => {
 				// Load a new SharedCell in connected state from the snapshot of the first one.
 				const containerRuntimeFactory = new MockContainerRuntimeFactory();
 				const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
-				const containerRuntime2 =
-					containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
+
+				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
 				const services2 = MockSharedObjectServices.createFromSummary(
 					cell1.getAttachSummary().summary,
 				);
-				services2.deltaConnection = containerRuntime2.createDeltaConnection();
+				services2.deltaConnection = dataStoreRuntime2.createDeltaConnection();
 
 				const cell2 = new SharedCell("cell2", dataStoreRuntime2, CellFactory.Attributes);
 				await cell2.load(services2);
 
 				// Now connect the first SharedCell
-				dataStoreRuntime1.local = false;
-				const containerRuntime1 =
-					containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
+				dataStoreRuntime1.setAttachState(AttachState.Attached);
+
+				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
 				const services1 = {
-					deltaConnection: containerRuntime1.createDeltaConnection(),
+					deltaConnection: dataStoreRuntime1.createDeltaConnection(),
 					objectStorage: new MockStorage(),
 				};
 				cell1.connect(services1);
@@ -157,7 +160,7 @@ describe("Cell", () => {
 				assert.equal(cell2.get(), value, "The second cell does not have the key");
 
 				// Set a new value in the second SharedCell.
-				const newValue = "newvalue";
+				const newValue = "newValue";
 				cell2.set(newValue);
 
 				// Process the message.
@@ -170,7 +173,7 @@ describe("Cell", () => {
 		});
 
 		describe("Attributor", () => {
-			it("should retrive proper attribution in detached state", async () => {
+			it("should retrieve proper attribution in detached state", async () => {
 				// overwrite the cell with attribution tracking enabled
 				const options: ICellOptions = { attribution: { track: true } };
 				cell = createDetachedCell("cell", options);
@@ -178,11 +181,7 @@ describe("Cell", () => {
 
 				let key = cell.getAttribution();
 
-				assert.equal(
-					key?.type,
-					"detached",
-					"the first cell should have detached attribution",
-				);
+				assert.equal(key?.type, "detached", "the first cell should have detached attribution");
 
 				// load a cell from the snapshot
 				const services = MockSharedObjectServices.createFromSummary(
@@ -212,7 +211,7 @@ describe("Cell", () => {
 		let containerRuntimeFactory: MockContainerRuntimeFactory;
 
 		describe("APIs", () => {
-			beforeEach(() => {
+			beforeEach("createConnectedCells", () => {
 				containerRuntimeFactory = new MockContainerRuntimeFactory();
 				// Connect the first SharedCell.
 				cell1 = createConnectedCell("cell1", containerRuntimeFactory);
@@ -250,11 +249,7 @@ describe("Cell", () => {
 				containerRuntimeFactory.processAllMessages();
 
 				assert.equal(cell1.get(), undefined, "Could not delete cell value");
-				assert.equal(
-					cell2.get(),
-					undefined,
-					"Could not delete cell value from remote client",
-				);
+				assert.equal(cell2.get(), undefined, "Could not delete cell value from remote client");
 			});
 
 			it("Shouldn't overwrite value if there is pending set", () => {
@@ -273,11 +268,7 @@ describe("Cell", () => {
 
 				// Verify the SharedCell with 2 pending messages
 				assert.equal(cell2.empty(), false, "could not find the set value in pending cell");
-				assert.equal(
-					cell2.get(),
-					pending2,
-					"could not get the set value from pending cell",
-				);
+				assert.equal(cell2.get(), pending2, "could not get the set value from pending cell");
 
 				containerRuntimeFactory.processSomeMessages(1);
 
@@ -287,16 +278,12 @@ describe("Cell", () => {
 
 				// Verify the SharedCell with 1 pending message
 				assert.equal(cell2.empty(), false, "could not find the set value in pending cell");
-				assert.equal(
-					cell2.get(),
-					pending2,
-					"could not get the set value from pending cell",
-				);
+				assert.equal(cell2.get(), pending2, "could not get the set value from pending cell");
 			});
 		});
 
 		describe("Attributor", () => {
-			beforeEach(() => {
+			beforeEach("createConnectedCells", () => {
 				const options: ICellOptions = { attribution: { track: true } };
 				containerRuntimeFactory = new MockContainerRuntimeFactory();
 				// Connect the first SharedCell with attribution enabled.
@@ -305,7 +292,7 @@ describe("Cell", () => {
 				cell2 = createConnectedCell("cell2", containerRuntimeFactory, options);
 			});
 
-			it("Retrive proper attribution information in connected state", () => {
+			it("Retrieve proper attribution information in connected state", () => {
 				const value1 = "value1";
 				const value2 = "value2";
 				cell1.set(value1);
@@ -364,7 +351,7 @@ describe("Cell", () => {
 				);
 			});
 
-			it("Retrive proper attribution information after summarization/loading", async () => {
+			it("Retrieve proper attribution information after summarization/loading", async () => {
 				const value1 = "value1";
 				const value2 = "value2";
 				cell1.set(value1);
@@ -418,7 +405,7 @@ describe("Cell", () => {
 		let cell1: ISharedCell;
 		let cell2: ISharedCell;
 
-		beforeEach(() => {
+		beforeEach("createCellsForReconnection", () => {
 			containerRuntimeFactory = new MockContainerRuntimeFactoryForReconnection();
 
 			// Connect the first SharedCell.
@@ -516,7 +503,7 @@ describe("Cell", () => {
 			}
 
 			/**
-			 * {@inheritDoc @fluid-internal/test-dds-utils#IGCTestProvider.sharedObject}
+			 * {@inheritDoc @fluid-private/test-dds-utils#IGCTestProvider.sharedObject}
 			 */
 			public get sharedObject(): ISharedCell {
 				// Return the remote SharedCell because we want to verify its summary data.
@@ -524,14 +511,14 @@ describe("Cell", () => {
 			}
 
 			/**
-			 * {@inheritDoc @fluid-internal/test-dds-utils#IGCTestProvider.expectedOutboundRoutes}
+			 * {@inheritDoc @fluid-private/test-dds-utils#IGCTestProvider.expectedOutboundRoutes}
 			 */
 			public get expectedOutboundRoutes(): string[] {
 				return this._expectedRoutes;
 			}
 
 			/**
-			 * {@inheritDoc @fluid-internal/test-dds-utils#IGCTestProvider.addOutboundRoutes}
+			 * {@inheritDoc @fluid-private/test-dds-utils#IGCTestProvider.addOutboundRoutes}
 			 */
 			public async addOutboundRoutes(): Promise<void> {
 				const newSubCell = createDetachedCell(`subCell-${++this.subCellCount}`);
@@ -541,7 +528,7 @@ describe("Cell", () => {
 			}
 
 			/**
-			 * {@inheritDoc @fluid-internal/test-dds-utils#IGCTestProvider.deleteOutboundRoutes}
+			 * {@inheritDoc @fluid-private/test-dds-utils#IGCTestProvider.deleteOutboundRoutes}
 			 */
 			public async deleteOutboundRoutes(): Promise<void> {
 				this.cell2.delete();
@@ -550,7 +537,7 @@ describe("Cell", () => {
 			}
 
 			/**
-			 * {@inheritDoc @fluid-internal/test-dds-utils#IGCTestProvider.addNestedHandles}
+			 * {@inheritDoc @fluid-private/test-dds-utils#IGCTestProvider.addNestedHandles}
 			 */
 			public async addNestedHandles(): Promise<void> {
 				const newSubCell = createDetachedCell(`subCell-${++this.subCellCount}`);

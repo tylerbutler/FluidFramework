@@ -13,11 +13,11 @@
 
 You can run this example using the following steps:
 
-1. Install [pnpm](https://pnpm.io/) by running `npm i -g pnpm`.
-1. Run `pnpm install` and `npm run build:fast -- --nolint` from the `FluidFramework` root directory.
+1. Enable [corepack](https://nodejs.org/docs/latest-v16.x/api/corepack.html) by running `corepack enable`.
+1. Run `pnpm install` and `pnpm run build:fast --nolint` from the `FluidFramework` root directory.
     - For an even faster build, you can add the package name to the build command, like this:
-      `npm run build:fast -- --nolint @fluid-example/todo`
-1. Run `npm start` from this directory and open <http://localhost:8080> in a web browser to see the app running.
+      `pnpm run build:fast --nolint @fluid-example/todo`
+1. Run `pnpm start` from this directory and open <http://localhost:8080> in a web browser to see the app running.
 
 <!-- prettier-ignore-end -->
 
@@ -39,7 +39,7 @@ A Todo Item is a singular todo entry. It has editable text as well as editable d
 
 ### [TodoView](./src/Todo/TodoView.tsx)
 
-The default view is a TodoView mapping to a Todo. It uses the CollaborativeInput control from the `@fluid-experimental/react-inputs` package to display its title, and TodoItemViews to display the data from its TodoItems. It also provides a text field and button for creating new TodoItems, and buttons for each TodoItem to delete or open directly.
+The default view is a TodoView mapping to a Todo. It uses the CollaborativeInput control from the `@fluid-example/example-utils` package to display its title, and TodoItemViews to display the data from its TodoItems. It also provides a text field and button for creating new TodoItems, and buttons for each TodoItem to delete or open directly.
 
 ### [TodoItemView](./src/TodoItem/TodoItemView.tsx)
 

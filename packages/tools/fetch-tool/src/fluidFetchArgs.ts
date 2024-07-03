@@ -4,7 +4,6 @@
  */
 
 import fs from "fs";
-import { URL } from "url";
 
 export let dumpMessages = false;
 export let dumpMessageStats = false;
@@ -16,15 +15,6 @@ export let paramSnapshotVersionIndex: number | undefined;
 export let paramNumSnapshotVersions = 10;
 export let paramActualFormatting = false;
 
-let paramForceTokenReauth = false;
-
-// Only return true once, to reauth on first call.
-export function getForceTokenReauth() {
-	const result = paramForceTokenReauth;
-	paramForceTokenReauth = false;
-	return result;
-}
-
 export let paramSaveDir: string | undefined;
 export const messageTypeFilter = new Set<string>();
 
@@ -34,14 +24,12 @@ export let paramJWT: string;
 export let connectToWebSocket = false;
 
 export let localDataOnly = false;
-
-export let paramSite: string | undefined;
+export let loginHint: string | undefined;
 
 const optionsArray = [
 	["--dump:rawmessage", "dump all messages"],
 	["--dump:snapshotVersion", "dump a list of snapshot version"],
 	["--dump:snapshotTree", "dump the snapshot trees"],
-	["--forceTokenReauth", "Force reauthorize token (SPO only)"],
 	["--stat:message", "show message type, channel type, data type statistics"],
 	["--stat:snapshot", "show a table of snapshot path and blob size"],
 	["--stat", "Show both messages & snapshot stats"],
@@ -56,9 +44,10 @@ const optionsArray = [
 	["--snapshotVersionIndex <number>", "Index of the version to dump"],
 	["--websocket", "Connect to web socket to download initial messages"],
 	["--local", "Do not connect to storage, use earlier downloaded data. Requires --saveDir."],
+	["--loginHint", "login hint for the user with document access."],
 ];
 
-export function printUsage() {
+function printUsage() {
 	console.log("Usage: fluid-fetch [options] URL");
 	console.log("URL: <ODSP URL>|<Routerlicious URL>");
 	console.log("Options:");
@@ -123,9 +112,6 @@ export function parseArguments() {
 			case "--jwt":
 				paramJWT = parseStrArg(i++, "jwt token");
 				break;
-			case "--forceTokenReauth":
-				paramForceTokenReauth = true;
-				break;
 			case "--snapshotVersionIndex":
 				paramSnapshotVersionIndex = parseIntArg(i++, "version index", true);
 				break;
@@ -143,6 +129,9 @@ export function parseArguments() {
 				break;
 			case "--local":
 				localDataOnly = true;
+				break;
+			case "--loginHint":
+				loginHint = parseStrArg(i++, "login hint");
 				break;
 			default:
 				try {

@@ -18,6 +18,9 @@ import {
 } from "@fluidframework/protocol-definitions";
 import { IQuorumSnapshot, Quorum } from "./quorum";
 
+/**
+ * @alpha
+ */
 export interface IScribeProtocolState {
 	sequenceNumber: number;
 	minimumSequenceNumber: number;
@@ -26,30 +29,9 @@ export interface IScribeProtocolState {
 	values: [string, ICommittedProposal][];
 }
 
-export function isSystemMessage(message: ISequencedDocumentMessage) {
-	switch (message.type) {
-		case MessageType.ClientJoin:
-		case MessageType.ClientLeave:
-		case MessageType.Propose:
-		case MessageType.Reject:
-		case MessageType.NoOp:
-		case MessageType.NoClient:
-		case MessageType.Summarize:
-		case MessageType.SummaryAck:
-		case MessageType.SummaryNack:
-			return true;
-		default:
-			return false;
-	}
-}
-
-export interface ILocalSequencedClient extends ISequencedClient {
-	/**
-	 * True if the client should have left the quorum, false otherwise
-	 */
-	shouldHaveLeft?: boolean;
-}
-
+/**
+ * @alpha
+ */
 export interface IProtocolHandler {
 	readonly quorum: IQuorum;
 	readonly attributes: IDocumentAttributes;
@@ -64,6 +46,7 @@ export interface IProtocolHandler {
 
 /**
  * Handles protocol specific ops.
+ * @internal
  */
 export class ProtocolOpHandler implements IProtocolHandler {
 	private readonly _quorum: Quorum;
@@ -71,18 +54,14 @@ export class ProtocolOpHandler implements IProtocolHandler {
 		return this._quorum;
 	}
 
-	public readonly term: number;
-
 	constructor(
 		public minimumSequenceNumber: number,
 		public sequenceNumber: number,
-		term: number | undefined,
 		members: [string, ISequencedClient][],
 		proposals: [number, ISequencedProposal, string[]][],
 		values: [string, ICommittedProposal][],
 		sendProposal: (key: string, value: any) => number,
 	) {
-		this.term = term ?? 1;
 		this._quorum = new Quorum(members, proposals, values, sendProposal);
 	}
 
@@ -90,7 +69,6 @@ export class ProtocolOpHandler implements IProtocolHandler {
 		return {
 			minimumSequenceNumber: this.minimumSequenceNumber,
 			sequenceNumber: this.sequenceNumber,
-			term: this.term,
 		};
 	}
 
@@ -172,14 +150,31 @@ export class ProtocolOpHandler implements IProtocolHandler {
 
 	/**
 	 * Gets the scribe protocol state
+	 * @param scrubUserData - whether to remove all user data from the quorum members. CAUTION: this will corrupt the quorum if used in a summary.
 	 */
-	public getProtocolState(): IScribeProtocolState {
+	public getProtocolState(scrubUserData = false): IScribeProtocolState {
 		// return a new object every time
 		// this ensures future state changes will not affect outside callers
+		const snapshot = this._quorum.snapshot();
+
+		if (scrubUserData) {
+			// In place, remove any identifying client information
+			snapshot.members = snapshot.members.map(([id, sequencedClient]) => [
+				id,
+				{
+					...sequencedClient,
+					client: {
+						...sequencedClient.client,
+						user: { id: "" },
+					},
+				},
+			]);
+		}
+
 		return {
 			sequenceNumber: this.sequenceNumber,
 			minimumSequenceNumber: this.minimumSequenceNumber,
-			...this._quorum.snapshot(),
+			...snapshot,
 		};
 	}
 }

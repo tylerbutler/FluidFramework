@@ -3,13 +3,18 @@
  * Licensed under the MIT License.
  */
 
+import { strict as assert } from 'assert';
+
+import { validateAssertionError } from '@fluidframework/test-runtime-utils/internal';
 import { expect } from 'chai';
-import { Definition, TraitLabel } from '../Identifiers';
-import { RevisionView } from '../RevisionView';
-import { ChangeNode } from '../persisted-types';
-import { refreshTestTree } from './utilities/TestUtilities';
-import { TestNode } from './utilities/TestNode';
-import { expectDefined } from './utilities/TestCommon';
+
+import { Definition, TraitLabel } from '../Identifiers.js';
+import { RevisionView } from '../RevisionView.js';
+import { ChangeNode } from '../persisted-types/index.js';
+
+import { expectDefined } from './utilities/TestCommon.js';
+import { TestNode } from './utilities/TestNode.js';
+import { refreshTestTree } from './utilities/TestUtilities.js';
 
 describe('TreeView', () => {
 	const testTree = refreshTestTree();
@@ -37,7 +42,10 @@ describe('TreeView', () => {
 		it('with different root ids', () => {
 			const viewA = RevisionView.fromTree(testTree.buildLeaf(testTree.generateNodeId()));
 			const viewB = RevisionView.fromTree(testTree.buildLeaf(testTree.generateNodeId()));
-			expect(() => viewA.delta(viewB)).to.throw('Delta can only be calculated between views that share a root');
+			assert.throws(
+				() => viewA.delta(viewB),
+				(e: Error) => validateAssertionError(e, 'Delta can only be calculated between views that share a root')
+			);
 		});
 
 		it('with different subtrees', () => {

@@ -4,7 +4,7 @@
  */
 
 import { assert } from "chai";
-import { Suite } from "mocha";
+
 import {
 	benchmarkTypes,
 	performanceTestSuiteTag,
@@ -27,11 +27,6 @@ const tags = [
 ];
 
 /**
- * Strip tags and user-specified category from a test suite's name.
- */
-export const getSuiteName = (suite: Suite): string => getName(suite.fullTitle());
-
-/**
  * Strip tags and user-specified category from the specified test/suite name.
  */
 export function getName(name: string): string {
@@ -47,11 +42,11 @@ export function getName(name: string): string {
 }
 
 /**
+ * Creates and returns a padding string consisting of `num` copies of `chr`
  * @param num - Number of characters to pad
  * @param chr - Character to use for padding (space by default)
- * @returns a padding string consisting of `num` copies of `chr`
  */
-export const pad = (num: number, chr = " "): string => Array(num + 1).join(chr);
+export const pad = (num: number, chr = " "): string => Array.from({ length: num + 1 }).join(chr);
 
 /**
  * Nicely format a decimal number to make it human-readable.
@@ -68,7 +63,6 @@ export function prettyNumber(num: number, numDecimals = 3): string {
 	}
 	// Add commas to the numbers before the decimal.
 	// Since this only ever runs on strings <= 9 characters, its not a performance problem problem.
-	// eslint-disable-next-line unicorn/no-unsafe-regex
 	split[0] = split[0].replace(/(\d)(?=(\d{3})+$)/g, "$1,");
 	return split.join(".");
 }
@@ -140,13 +134,16 @@ export interface Stats {
 }
 
 /**
- * Compute statistics for an array of numbers. For homogeneity, it outputs the same
- * object that the Benchmark library does.
+ * Compute statistics for an array of numbers.
+ * This assumes the data is a sample taken from an infinite population and thus reports sample variance.
  *
  * @param array - List of numbers for which to compute the statistics.
  * @param fractionOfSamplesToUse - Percentage of samples to use to get the statistics. The samples at the extremes
  * (lowest, highest) are the ones that get discarded. If an odd number of samples need to be discarded, 1 more sample
  * is discarded from the higher end than the lower end.
+ *
+ * @remarks
+ * This outputs the same object that the Benchmark.js library does.
  */
 export function getArrayStatistics(array: number[], fractionOfSamplesToUse: number = 1): Stats {
 	if (fractionOfSamplesToUse < 0.1 || fractionOfSamplesToUse > 1) {
@@ -165,10 +162,10 @@ export function getArrayStatistics(array: number[], fractionOfSamplesToUse: numb
 	}
 
 	const n = finalSamples.length;
-	let max = -Infinity;
-	let min = Infinity;
+	let max = Number.NEGATIVE_INFINITY;
+	let min = Number.POSITIVE_INFINITY;
 	let mean = 0;
-	finalSamples.forEach((x) => {
+	for (const x of finalSamples) {
 		mean += x;
 		if (x > max) {
 			max = x;
@@ -176,17 +173,20 @@ export function getArrayStatistics(array: number[], fractionOfSamplesToUse: numb
 		if (x < min) {
 			min = x;
 		}
-	});
+	}
 	mean /= n;
 
-	const variance = finalSamples.map((x) => (x - mean) ** 2).reduce((a, b) => a + b) / n;
+	// We want the the sample variance, not population variance (since the dataset is only a subset of the infinite population of possible samples).
+	// Therefor there is additional variance due to how the population is sampled which is accounted for by using `n - 1` here,
+	// See https://en.wikipedia.org/wiki/Variance#Population_variance_and_sample_variance.
+	const variance = finalSamples.map((x) => (x - mean) ** 2).reduce((a, b) => a + b) / (n - 1);
 	const deviation = Math.sqrt(variance);
 	const sem = deviation / Math.sqrt(n); // Standard Error of the Mean
 	const df = n - 1; // Degrees of Freedom
 	const propName = df === 0 ? "1" : df.toString();
-	const critical = tTable[propName] ?? tTable.infinity;
+	const critical = (tTable[propName] as number) ?? tTable.infinity;
 	const moe = sem * critical; // Margin of Error
-	const rme = (moe / Math.abs(mean)) * 100 || 0; // Relative Margin of Error
+	const rme = (moe / Math.abs(mean)) * 100; // Relative Margin of Error
 
 	return {
 		arithmeticMean: mean,

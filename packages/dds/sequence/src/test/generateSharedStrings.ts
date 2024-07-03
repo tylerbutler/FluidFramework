@@ -3,17 +3,17 @@
  * Licensed under the MIT License.
  */
 
-// eslint-disable-next-line import/no-internal-modules
-import { SnapshotLegacy as Snapshot } from "@fluidframework/merge-tree/dist/test";
-import Random from "random-js";
-import * as mocks from "@fluidframework/test-runtime-utils";
-import { SharedString } from "../sharedString";
-import { SharedStringFactory } from "../sequenceFactory";
-import { IntervalType } from "../intervalCollection";
+import { SnapshotLegacy as Snapshot } from "@fluidframework/merge-tree/internal/test";
+import * as mocks from "@fluidframework/test-runtime-utils/internal";
+import { MersenneTwister19937, Random } from "random-js";
+
+import { SharedStringFactory } from "../sequenceFactory.js";
+import { SharedStringClass } from "../sharedString.js";
+
 import {
 	SharedStringWithV1IntervalCollection,
 	V1IntervalCollectionSharedStringFactory,
-} from "./v1IntervalCollectionHelpers";
+} from "./v1IntervalCollectionHelpers.js";
 
 export const LocationBase: string = "src/test/snapshots/";
 
@@ -29,27 +29,27 @@ export const supportedVersions = new Map<string, any>([
 ]);
 
 function createIntervals(sharedString) {
-	const rand = new Random(Random.engines.mt19937().seed(0));
+	const rand = new Random(MersenneTwister19937.seed(0));
 	const collection1 = sharedString.getIntervalCollection("collection1");
-	collection1.add(1, 5, IntervalType.SlideOnRemove, { intervalId: rand.uuid4() });
+	collection1.add({ start: 1, end: 5, props: { intervalId: rand.uuid4() } });
 
 	const collection2 = sharedString.getIntervalCollection("collection2");
 	for (let i = 0; i < sharedString.getLength() - 5; i += 100) {
-		collection2.add(i, i + 5, IntervalType.SlideOnRemove, { intervalId: rand.uuid4() });
+		collection2.add({ start: i, end: i + 5, props: { intervalId: rand.uuid4() } });
 	}
 }
 
 export function* generateStrings(): Generator<{
 	snapshotPath: string;
-	expected: SharedString;
+	expected: SharedStringClass;
 	snapshotIsNormalized: boolean; // false for v1, true for new formats
 }> {
 	for (const [version, options] of supportedVersions) {
 		const documentId = "fakeId";
 		const dataStoreRuntime: mocks.MockFluidDataStoreRuntime =
 			new mocks.MockFluidDataStoreRuntime();
-		const createNewSharedString = (): SharedString => {
-			const string = new SharedString(
+		const createNewSharedString = (): SharedStringClass => {
+			const string = new SharedStringClass(
 				dataStoreRuntime,
 				documentId,
 				SharedStringFactory.Attributes,

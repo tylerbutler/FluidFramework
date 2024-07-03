@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /**
  * @fileoverview Definition of the reference array property class
  */
@@ -9,6 +10,7 @@ const { PathHelper, TypeIdHelper } = require("@fluid-experimental/property-chang
 const { MSG } = require("@fluid-experimental/property-common").constants;
 const { UniversalDataArray, ConsoleUtils } = require("@fluid-experimental/property-common");
 const _ = require("lodash");
+
 const { AbstractStaticCollectionProperty } = require("./abstractStaticCollectionProperty");
 const { BaseProperty } = require("./baseProperty");
 const { ReferenceProperty } = require("./referenceProperty");
@@ -16,6 +18,7 @@ const { ValueArrayProperty } = require("./valueArrayProperty");
 
 /**
  * An ArrayProperty which stores reference values
+ * @internal
  */
 export class ReferenceArrayProperty extends ValueArrayProperty {
 	/**
@@ -46,7 +49,7 @@ export class ReferenceArrayProperty extends ValueArrayProperty {
 	/**
 	 * Resolves the referenced property for the given key
 	 *
-	 * @param {number|array<string|number>} in_ids - the ID of the property or an array of IDs if an array is passed,
+	 * @param {number | Array<string | number>} in_ids - the ID of the property or an array of IDs if an array is passed,
 	 * the .get function will be performed on each id in sequence for example .get([0, 'position','x']) is equivalent to
 	 * .get(0).get('position').get('x'). If `.get` resolves to a ReferenceProperty, it will, by default, return the
 	 * property that the ReferenceProperty refers to.
@@ -134,7 +137,7 @@ export class ReferenceArrayProperty extends ValueArrayProperty {
 
 	/**
 	 * Returns an object with all the nested values contained in this property
-	 * @returns {array<String>} an array of strings representing the paths listed in this array
+	 * @returns {Array<String>} an array of strings representing the paths listed in this array
 	 * for example: ['/path1', '/path2']
 	 */
 	getValues() {
@@ -220,13 +223,13 @@ export class ReferenceArrayProperty extends ValueArrayProperty {
 		return in_segmentType === PathHelper.TOKEN_TYPES.ARRAY_TOKEN
 			? this.get(in_segment, {
 					referenceResolutionMode: BaseProperty.REFERENCE_RESOLUTION.NEVER,
-			  })
+				})
 			: // Everything else is handled by the implementation in the base property
-			  AbstractStaticCollectionProperty.prototype._resolvePathSegment.call(
+				AbstractStaticCollectionProperty.prototype._resolvePathSegment.call(
 					this,
 					in_segment,
 					in_segmentType,
-			  );
+				);
 	}
 
 	/**

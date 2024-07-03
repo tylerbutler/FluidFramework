@@ -3,20 +3,20 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from './Common';
-import { IdCompressor, isFinalId } from './id-compressor';
-import { FinalNodeId, NodeId, OpSpaceNodeId, SessionId, StableNodeId } from './Identifiers';
-import { NodeData } from './persisted-types';
+import { assertWithMessage } from './Common.js';
+import { FinalNodeId, NodeId, OpSpaceNodeId, SessionId, StableNodeId } from './Identifiers.js';
+import { IdCompressor, isFinalId } from './id-compressor/index.js';
+import { NodeData } from './persisted-types/index.js';
 
 /**
  * An object which can generate node IDs and convert node IDs between compressed and stable variants
- * @public
+ * @alpha
  */
 export interface NodeIdContext extends NodeIdGenerator, NodeIdConverter {}
 
 /**
  * An object which can generate node IDs
- * @public
+ * @alpha
  */
 export interface NodeIdGenerator {
 	/**
@@ -35,7 +35,7 @@ export interface NodeIdGenerator {
 
 /**
  * An object which can convert node IDs between compressed and stable variants
- * @public
+ * @alpha
  */
 export interface NodeIdConverter {
 	/**
@@ -109,8 +109,7 @@ export function scopeIdNormalizer<TId extends OpSpaceNodeId>(
 ): ContextualizedNodeIdNormalizer<TId> {
 	return {
 		normalizeToOpSpace: (id) => idNormalizer.normalizeToOpSpace(id),
-		normalizeToSessionSpace: (id) =>
-			idNormalizer.normalizeToSessionSpace(id, sessionId ?? idNormalizer.localSessionId),
+		normalizeToSessionSpace: (id) => idNormalizer.normalizeToSessionSpace(id, sessionId ?? idNormalizer.localSessionId),
 	};
 }
 
@@ -125,12 +124,12 @@ export function sequencedIdNormalizer<TId extends OpSpaceNodeId>(
 	return {
 		normalizeToOpSpace: (id) => {
 			const normalized = idNormalizer.normalizeToOpSpace(id);
-			assert(isFinalId(normalized));
+			assertWithMessage(isFinalId(normalized));
 			return normalized;
 		},
 		normalizeToSessionSpace: (id) => {
 			const normalized = idNormalizer.normalizeToSessionSpace(id, idNormalizer.localSessionId);
-			assert(isFinalId(normalized));
+			assertWithMessage(isFinalId(normalized));
 			return normalized;
 		},
 	};

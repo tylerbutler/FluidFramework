@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { compareArrays } from "../..";
+import { compareArrays } from "@fluidframework/core-utils/internal";
 
 // Paranoid check that typing will prevent comparing with non-Array types like 'compareArrays(null, null)',
 // which would otherwise pass the trivial acceptance clause.
@@ -12,7 +12,7 @@ import { compareArrays } from "../..";
 compareArrays(undefined, undefined);
 
 // @ts-expect-error 'null' is not an array
-compareArrays(null, null);
+compareArrays(null, null); // eslint-disable-line unicorn/no-null
 
 const s = Symbol();
 // @ts-expect-error 'Symbol()' is not an array

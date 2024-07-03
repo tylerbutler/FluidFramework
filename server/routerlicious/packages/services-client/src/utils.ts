@@ -4,13 +4,16 @@
  */
 
 import * as resources from "@fluidframework/gitresources";
-import Axios, { AxiosRequestHeaders } from "axios";
+import { default as Axios, RawAxiosRequestHeaders } from "axios";
 
+/**
+ * @internal
+ */
 export async function getOrCreateRepository(
 	endpoint: string,
 	owner: string,
 	repository: string,
-	headers?: AxiosRequestHeaders,
+	headers?: RawAxiosRequestHeaders,
 ): Promise<void> {
 	console.log(`Get Repo: ${endpoint}/${owner}/${repository}`);
 
@@ -33,3 +36,9 @@ export async function getOrCreateRepository(
 		await Axios.post(`${endpoint}/${owner}/repos`, createParams, { headers });
 	}
 }
+
+/**
+ * getRandomInt is not and should not be used as part of any secure random number generation
+ * @internal
+ */
+export const getRandomInt = (range: number) => Math.floor(Math.random() * range);

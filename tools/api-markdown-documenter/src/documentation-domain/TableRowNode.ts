@@ -2,12 +2,15 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { DocumentationParentNodeBase } from "./DocumentationNode";
-import { DocumentationNodeType } from "./DocumentationNodeType";
-import { TableCellNode, TableHeaderCellNode } from "./TableCellNode";
+
+import { DocumentationParentNodeBase } from "./DocumentationNode.js";
+import { DocumentationNodeType } from "./DocumentationNodeType.js";
+import { type TableCellNode, type TableHeaderCellNode } from "./TableCellNode.js";
 
 /**
  * Kind of Table Row.
+ *
+ * @public
  */
 export enum TableRowKind {
 	/**
@@ -47,7 +50,10 @@ export enum TableRowKind {
  * @see
  *
  * - {@link TableNode}
+ *
  * - {@link TableCellNode}
+ *
+ * @public
  */
 export abstract class TableRowNode extends DocumentationParentNodeBase<TableCellNode> {
 	/**
@@ -68,6 +74,8 @@ export abstract class TableRowNode extends DocumentationParentNodeBase<TableCell
 
 /**
  * A {@link TableRowNode} that represents the header row of a {@link TableNode}.
+ *
+ * @public
  */
 export class TableHeaderRowNode extends TableRowNode {
 	/**
@@ -82,6 +90,8 @@ export class TableHeaderRowNode extends TableRowNode {
 
 /**
  * A {@link TableRowNode} that lives in the body of a {@link TableNode}.
+ *
+ * @public
  */
 export class TableBodyRowNode extends TableRowNode {
 	/**

@@ -3,10 +3,15 @@
  * Licensed under the MIT License.
  */
 
-import { FluidObject } from "@fluidframework/core-interfaces";
-import { IProvideFluidCodeDetailsComparer } from "./fluidPackage";
-import { IRuntimeFactory } from "./runtime";
+import type { FluidObject } from "@fluidframework/core-interfaces";
 
+import type { IProvideFluidCodeDetailsComparer } from "./fluidPackage.js";
+import type { IRuntimeFactory } from "./runtime.js";
+
+/**
+ * @legacy
+ * @alpha
+ */
 export interface IFluidModule {
 	fluidExport: FluidObject<IRuntimeFactory & IProvideFluidCodeDetailsComparer>;
 }

@@ -5,6 +5,9 @@
 
 /**
  * A deferred creates a promise and the ability to resolve or reject it
+ *
+ * @deprecated Moved to the `@fluidframework/core-utils` package.
+ * @internal
  */
 export class Deferred<T> {
 	private readonly p: Promise<T>;
@@ -64,6 +67,9 @@ export class Deferred<T> {
  * the promise is used, e.g. await, then, catch ...
  * The execute function is only called once.
  * All calls are then proxied to the promise returned by the execute method.
+ *
+ * @deprecated Moved to the `@fluidframework/core-utils` package.
+ * @internal
  */
 export class LazyPromise<T> implements Promise<T> {
 	public get [Symbol.toStringTag](): string {
@@ -74,6 +80,7 @@ export class LazyPromise<T> implements Promise<T> {
 
 	constructor(private readonly execute: () => Promise<T>) {}
 
+	// eslint-disable-next-line unicorn/no-thenable
 	public async then<TResult1 = T, TResult2 = never>(
 		// eslint-disable-next-line @rushstack/no-new-null
 		onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | undefined,

@@ -3,15 +3,21 @@
  * Licensed under the MIT License.
  */
 
-import { Redis } from "ioredis";
+import * as Redis from "ioredis";
 
+/**
+ * @internal
+ */
 export interface IRedisParameters {
 	prefix?: string;
 	expireAfterSeconds?: number;
 }
 
+/**
+ * @internal
+ */
 export const executeRedisMultiWithHmsetExpire = async (
-	client: Redis,
+	client: Redis.default | Redis.Cluster,
 	key: string,
 	data: { [key: string]: any },
 	expireAfterSeconds: number,
@@ -22,7 +28,7 @@ export const executeRedisMultiWithHmsetExpire = async (
 			.hmset(key, data)
 			.expire(key, expireAfterSeconds)
 			.exec()
-			.then((results) => {
+			.then((results: any) => {
 				// results` is an array of responses corresponding to the sequence of queued commands.
 				// In other words, it is [Error | null, any][].
 				// Each response follows the format `[err, result]`. `err` refers to runtime errors.
@@ -56,8 +62,11 @@ export const executeRedisMultiWithHmsetExpire = async (
 			});
 	});
 
+/**
+ * @internal
+ */
 export const executeRedisMultiWithHmsetExpireAndLpush = async (
-	client: Redis,
+	client: Redis.default | Redis.Cluster,
 	hKey: string,
 	hData: { [key: string]: any },
 	lKey: string,
@@ -71,7 +80,7 @@ export const executeRedisMultiWithHmsetExpireAndLpush = async (
 			.expire(hKey, expireAfterSeconds)
 			.lpush(lKey, lData)
 			.exec()
-			.then((results) => {
+			.then((results: any) => {
 				// results` is an array of responses corresponding to the sequence of queued commands.
 				// In other words, it is [Error | null, any][].
 				// Each response follows the format `[err, result]`. `err` refers to runtime errors.
@@ -110,3 +119,13 @@ export const executeRedisMultiWithHmsetExpireAndLpush = async (
 				reject(error);
 			});
 	});
+
+export const getRedisClusterRetryStrategy =
+	(
+		options: { delayPerAttemptMs: number; maxDelayMs: number } = {
+			delayPerAttemptMs: 50,
+			maxDelayMs: 2000,
+		},
+	) =>
+	(attempts: number) =>
+		Math.min(attempts * options.delayPerAttemptMs, options.maxDelayMs);

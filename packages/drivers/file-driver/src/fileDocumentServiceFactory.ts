@@ -3,21 +3,23 @@
  * Licensed under the MIT License.
  */
 
+import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
+import { ISummaryTree } from "@fluidframework/driver-definitions";
 import {
 	IDocumentDeltaConnection,
 	IDocumentService,
 	IDocumentServiceFactory,
 	IDocumentStorageService,
 	IResolvedUrl,
-} from "@fluidframework/driver-definitions";
-import { ITelemetryBaseLogger } from "@fluidframework/common-definitions";
-import { ISummaryTree } from "@fluidframework/protocol-definitions";
-import { FileDeltaStorageService } from "./fileDeltaStorageService";
-import { FileDocumentService } from "./fileDocumentService";
+} from "@fluidframework/driver-definitions/internal";
+
+import { FileDeltaStorageService } from "./fileDeltaStorageService.js";
+import { FileDocumentService } from "./fileDocumentService.js";
 
 /**
  * Factory for creating the file document service. Use this if you want to
  * use the local file storage as underlying storage.
+ * @internal
  */
 export class FileDocumentServiceFactory implements IDocumentServiceFactory {
 	constructor(
@@ -33,11 +35,16 @@ export class FileDocumentServiceFactory implements IDocumentServiceFactory {
 	 * @returns file document service.
 	 */
 	public async createDocumentService(
-		fileURL: IResolvedUrl,
+		resolvedUrl: IResolvedUrl,
 		logger?: ITelemetryBaseLogger,
 		clientIsSummarizer?: boolean,
 	): Promise<IDocumentService> {
-		return new FileDocumentService(this.storage, this.deltaStorage, this.deltaConnection);
+		return new FileDocumentService(
+			resolvedUrl,
+			this.storage,
+			this.deltaStorage,
+			this.deltaConnection,
+		);
 	}
 
 	// TODO: Issue-2109 Implement detach container api or put appropriate comment.

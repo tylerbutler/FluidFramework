@@ -3,8 +3,9 @@
  * Licensed under the MIT License.
  */
 
-import { IFluidHandle } from "@fluidframework/core-interfaces";
-import { Jsonable } from "./jsonable";
+import type { IFluidHandle } from "@fluidframework/core-interfaces";
+
+import type { Jsonable } from "./jsonable.js";
 
 /**
  * Used to constrain a type 'T' to types that Fluid can intrinsically serialize.  Produces a
@@ -17,10 +18,12 @@ import { Jsonable } from "./jsonable";
  * Important: `T extends Serializable<T>` is generally incorrect.
  * (Any value of `T` extends the serializable subset of itself.)
  *
- * @example
- * Typical usage:
+ * @example Typical usage
+ *
  * ```typescript
- *      function serialize<T>(value: Serializable<T>) { ... }
+ * function serialize<T>(value: Serializable<T>) { ... }
  * ```
+ * @legacy
+ * @alpha
  */
-export type Serializable<T = any> = Jsonable<T, IFluidHandle>;
+export type Serializable<T> = Jsonable<T, IFluidHandle>;

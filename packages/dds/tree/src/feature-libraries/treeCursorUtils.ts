@@ -3,22 +3,27 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/common-utils";
+import { assert } from "@fluidframework/core-utils/internal";
+
 import {
-	FieldKey,
-	TreeType,
-	UpPath,
 	CursorLocationType,
-	ITreeCursorSynchronous,
-	Value,
-	FieldUpPath,
-	PathRootPrefix,
-} from "../core";
-import { fail } from "../util";
+	CursorMarker,
+	type DetachedField,
+	type FieldKey,
+	type FieldUpPath,
+	type ITreeCursorSynchronous,
+	type PathRootPrefix,
+	type TreeType,
+	type UpPath,
+	type Value,
+	detachedFieldAsKey,
+	rootField,
+} from "../core/index.js";
+import { fail } from "../util/index.js";
 
 /**
  * {@link ITreeCursorSynchronous} that can return the underlying node objects.
- * @alpha
+ * @internal
  */
 export interface CursorWithNode<TNode> extends ITreeCursorSynchronous {
 	/**
@@ -42,19 +47,37 @@ export interface CursorWithNode<TNode> extends ITreeCursorSynchronous {
 /**
  * Create a cursor, in `nodes` mode at the root of the provided tree.
  *
- * @returns an {@link ITreeCursorSynchronous} for a single root.
- * @alpha
+ * @returns an {@link ITreeCursorSynchronous} for a single root in `nodes` mode.
+ * @internal
  */
-export function singleStackTreeCursor<TNode>(
-	root: TNode,
+export function stackTreeNodeCursor<TNode>(
 	adapter: CursorAdapter<TNode>,
+	root: TNode,
 ): CursorWithNode<TNode> {
 	return new StackCursor(adapter, [], [], [root], 0);
 }
 
 /**
- * Provides functionality to allow a {@link singleStackTreeCursor} to implement a cursor.
- * @alpha
+ * Create a cursor, in `fields` mode at the `detachedField` under the provided `root`.
+ *
+ * @returns an {@link ITreeCursorSynchronous} for `detachedField` of `root` in `fields` mode.
+ * @internal
+ */
+export function stackTreeFieldCursor<TNode>(
+	adapter: CursorAdapter<TNode>,
+	root: TNode,
+	detachedField: DetachedField = rootField,
+): CursorWithNode<TNode> {
+	const cursor = stackTreeNodeCursor(adapter, root);
+	// Because the root node in `stackTreeNodeCursor` is treated as the above detached fields node,
+	// using it then just entering the correct field doesn't mess up the paths reported by the cursor.
+	cursor.enterField(detachedFieldAsKey(detachedField));
+	return cursor;
+}
+
+/**
+ * Provides functionality to allow a {@link stackTreeNodeCursor} and {@link stackTreeFieldCursor} to implement cursors.
+ * @internal
  */
 export interface CursorAdapter<TNode> {
 	/**
@@ -81,9 +104,8 @@ type SiblingsOrKey<TNode> = readonly TNode[] | readonly FieldKey[];
  * A class that satisfies part of the ITreeCursorSynchronous implementation.
  */
 export abstract class SynchronousCursor {
-	public get pending(): false {
-		return false;
-	}
+	public readonly [CursorMarker] = true;
+	public readonly pending = false;
 
 	public skipPendingFields(): boolean {
 		return true;
@@ -95,10 +117,16 @@ export abstract class SynchronousCursor {
  *
  * As this is a generic implementation, it's ability to optimize is limited.
  *
+ * @privateRemarks
  * Note that TNode can be `null` (and we should support `undefined` as well),
  * so be careful using types like `TNode | undefined` and expressions like `TNode ??`.
+ *
+ * TODO:
+ * 1. Unit tests for this.
+ * 2. Support for cursors which are field cursors at the root.
  */
 class StackCursor<TNode> extends SynchronousCursor implements CursorWithNode<TNode> {
+	public readonly [CursorMarker] = true;
 	/**
 	 * Might start at special root where fields are detached sequences.
 	 *
@@ -172,7 +200,10 @@ class StackCursor<TNode> extends SynchronousCursor implements CursorWithNode<TNo
 		};
 	}
 
-	private getOffsetPath(offset: number, prefix: PathRootPrefix | undefined): UpPath | undefined {
+	private getOffsetPath(
+		offset: number,
+		prefix: PathRootPrefix | undefined,
+	): UpPath | undefined {
 		// It is more efficient to handle prefix directly in here rather than delegating to PrefixedPath.
 
 		const length = this.indexStack.length - offset;
@@ -293,7 +324,10 @@ class StackCursor<TNode> extends SynchronousCursor implements CursorWithNode<TNo
 	}
 
 	public nextNode(): boolean {
-		assert(this.mode === CursorLocationType.Nodes, 0x406 /* can only nextNode when in Nodes */);
+		assert(
+			this.mode === CursorLocationType.Nodes,
+			0x406 /* can only nextNode when in Nodes */,
+		);
 		this.index++;
 		if (this.index < (this.siblings as []).length) {
 			return true;
@@ -350,14 +384,12 @@ class StackCursor<TNode> extends SynchronousCursor implements CursorWithNode<TNo
 		return this.fieldIndex;
 	}
 
-	public get chunkLength(): number {
-		return 1;
-	}
+	public readonly chunkLength = 1;
 }
 
 /**
  * Apply `prefix` to `path`.
- * @alpha
+ * @internal
  */
 export function prefixPath(
 	prefix: PathRootPrefix | undefined,
@@ -378,7 +410,7 @@ export function prefixPath(
 
 /**
  * Apply `prefix` to `path`.
- * @alpha
+ * @internal
  */
 export function prefixFieldPath(
 	prefix: PathRootPrefix | undefined,
@@ -446,7 +478,10 @@ function applyPrefix(prefix: PathRootPrefix, path: UpPath | undefined): UpPath |
 export class PrefixedPath implements UpPath {
 	public readonly parentField: FieldKey;
 	public readonly parentIndex: number;
-	public constructor(public readonly prefix: PathRootPrefix, public readonly path: UpPath) {
+	public constructor(
+		public readonly prefix: PathRootPrefix,
+		public readonly path: UpPath,
+	) {
 		if (path.parent === undefined) {
 			this.parentField = prefix.rootFieldOverride ?? path.parentField;
 			this.parentIndex = path.parentIndex + (prefix.indexOffset ?? 0);

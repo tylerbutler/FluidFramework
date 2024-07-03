@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /* eslint accessor-pairs: [2, { "getWithoutSet": false }] */
 /**
  * @fileoverview Collection class definition
@@ -17,6 +18,9 @@ const MSGS = {
 	KEY_NOT_VALID: "Key must be of type String or Number",
 };
 
+/**
+ * @internal
+ */
 export class Collection<T> {
 	protected _items: { [key: string]: T } = {};
 	protected _order: (string | number)[] = [];
@@ -27,7 +31,10 @@ export class Collection<T> {
 	 * @param _type - optional parameter pointing to the constructor
 	 * of a type this Collection will host.
 	 */
-	constructor(protected _name = "Untitled Collection", protected _type?: new () => any) {}
+	constructor(
+		protected _name = "Untitled Collection",
+		protected _type?: new () => any,
+	) {}
 
 	// Pass-thru binding handles
 	onAdd(in_key, in_value) {}
@@ -118,8 +125,8 @@ export class Collection<T> {
 	}
 
 	/**
-	 * Return the last item in the collection, null if empty
-	 * @returns - last item, or undefined if empty
+	 * Return the last item in the collection, undefined if empty
+	 * @returns The last item, or undefined if empty
 	 * */
 	getLastItem(): T | undefined {
 		const index = _.last(this._order);
@@ -175,12 +182,12 @@ export class Collection<T> {
 					if (in_filterKey.includes(in_key)) {
 						rtn.add(in_key, in_item);
 					}
-			  }
+				}
 			: function (in_key, in_item) {
 					if (in_key === in_filterKey) {
 						rtn.add(in_key, in_item);
 					}
-			  };
+				};
 
 		this.iterate(filterCb);
 

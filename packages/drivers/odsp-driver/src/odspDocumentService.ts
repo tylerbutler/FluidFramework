@@ -3,45 +3,54 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { assert } from "@fluidframework/common-utils";
-import {
-	ChildLogger,
-	loggerToMonitoringContext,
-	MonitoringContext,
-} from "@fluidframework/telemetry-utils";
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import { assert } from "@fluidframework/core-utils/internal";
+import { IClient } from "@fluidframework/driver-definitions";
 import {
 	IDocumentDeltaConnection,
 	IDocumentDeltaStorageService,
 	IDocumentService,
-	IResolvedUrl,
-	IDocumentStorageService,
+	IDocumentServiceEvents,
 	IDocumentServicePolicies,
-} from "@fluidframework/driver-definitions";
-import { IClient, ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
+	IDocumentStorageService,
+	IResolvedUrl,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
 import {
-	IOdspResolvedUrl,
-	TokenFetchOptions,
-	IEntry,
 	HostStoragePolicy,
+	IEntry,
+	IOdspResolvedUrl,
 	InstrumentedStorageTokenFetcher,
-} from "@fluidframework/odsp-driver-definitions";
-import { HostStoragePolicyInternal } from "./contracts";
-import { IOdspCache } from "./odspCache";
-import { OdspDeltaStorageService, OdspDeltaStorageWithCache } from "./odspDeltaStorageService";
-import { OdspDocumentStorageService } from "./odspDocumentStorageManager";
-import { getOdspResolvedUrl } from "./odspUtils";
-import { isOdcOrigin } from "./odspUrlHelper";
-import { EpochTracker } from "./epochTracker";
-import { OpsCache } from "./opsCaching";
-import { RetryErrorsStorageAdapter } from "./retryErrorsStorageAdapter";
-import type { OdspDelayLoadedDeltaStream } from "./odspDelayLoadedDeltaStream";
+	TokenFetchOptions,
+} from "@fluidframework/odsp-driver-definitions/internal";
+import {
+	ITelemetryLoggerExt,
+	MonitoringContext,
+	createChildMonitoringContext,
+} from "@fluidframework/telemetry-utils/internal";
+
+import { HostStoragePolicyInternal } from "./contracts.js";
+import { EpochTracker } from "./epochTracker.js";
+import { IOdspCache } from "./odspCache.js";
+import type { OdspDelayLoadedDeltaStream } from "./odspDelayLoadedDeltaStream.js";
+import {
+	OdspDeltaStorageService,
+	OdspDeltaStorageWithCache,
+} from "./odspDeltaStorageService.js";
+import { OdspDocumentStorageService } from "./odspDocumentStorageManager.js";
+import { hasOdcOrigin } from "./odspUrlHelper.js";
+import { getOdspResolvedUrl } from "./odspUtils.js";
+import { OpsCache } from "./opsCaching.js";
+import { RetryErrorsStorageAdapter } from "./retryErrorsStorageAdapter.js";
 
 /**
  * The DocumentService manages the Socket.IO connection and manages routing requests to connected
  * clients
  */
-export class OdspDocumentService implements IDocumentService {
+export class OdspDocumentService
+	extends TypedEventEmitter<IDocumentServiceEvents>
+	implements IDocumentService
+{
 	private readonly _policies: IDocumentServicePolicies;
 
 	// Promise to load socket module only once.
@@ -52,8 +61,10 @@ export class OdspDocumentService implements IDocumentService {
 	private odspSocketModuleLoaded: boolean = false;
 
 	/**
+	 * Creates a new OdspDocumentService instance.
+	 *
 	 * @param resolvedUrl - resolved url identifying document that will be managed by returned service instance.
-	 * @param getStorageToken - function that can provide the storage token. This is is also referred to as
+	 * @param getAuthHeader - function that can provide the Authentication header value. This is is also referred to as
 	 * the "Vroom" token in SPO.
 	 * @param getWebsocketToken - function that can provide a token for accessing the web socket. This is also referred
 	 * to as the "Push" token in SPO. If undefined then websocket token is expected to be returned with joinSession
@@ -66,10 +77,10 @@ export class OdspDocumentService implements IDocumentService {
 	 */
 	public static async create(
 		resolvedUrl: IResolvedUrl,
-		getStorageToken: InstrumentedStorageTokenFetcher,
+		getAuthHeader: InstrumentedStorageTokenFetcher,
 		// eslint-disable-next-line @rushstack/no-new-null
 		getWebsocketToken: ((options: TokenFetchOptions) => Promise<string | null>) | undefined,
-		logger: ITelemetryLogger,
+		logger: ITelemetryLoggerExt,
 		cache: IOdspCache,
 		hostPolicy: HostStoragePolicy,
 		epochTracker: EpochTracker,
@@ -78,7 +89,7 @@ export class OdspDocumentService implements IDocumentService {
 	): Promise<IDocumentService> {
 		return new OdspDocumentService(
 			getOdspResolvedUrl(resolvedUrl),
-			getStorageToken,
+			getAuthHeader,
 			getWebsocketToken,
 			logger,
 			cache,
@@ -99,7 +110,7 @@ export class OdspDocumentService implements IDocumentService {
 
 	/**
 	 * @param odspResolvedUrl - resolved url identifying document that will be managed by this service instance.
-	 * @param getStorageToken - function that can provide the storage token. This is is also referred to as
+	 * @param getAuthHeader - function that can provide the Authentication header value. This is is also referred to as
 	 * the "Vroom" token in SPO.
 	 * @param getWebsocketToken - function that can provide a token for accessing the web socket. This is also referred
 	 * to as the "Push" token in SPO. If undefined then websocket token is expected to be returned with joinSession
@@ -113,34 +124,36 @@ export class OdspDocumentService implements IDocumentService {
 	 */
 	private constructor(
 		public readonly odspResolvedUrl: IOdspResolvedUrl,
-		private readonly getStorageToken: InstrumentedStorageTokenFetcher,
+		private readonly getAuthHeader: InstrumentedStorageTokenFetcher,
 		private readonly getWebsocketToken:
 			| ((options: TokenFetchOptions) => Promise<string | null>)
 			| undefined,
-		logger: ITelemetryLogger,
+		logger: ITelemetryLoggerExt,
 		private readonly cache: IOdspCache,
 		hostPolicy: HostStoragePolicy,
 		private readonly epochTracker: EpochTracker,
 		private readonly socketReferenceKeyPrefix?: string,
 		private readonly clientIsSummarizer?: boolean,
 	) {
+		super();
 		this._policies = {
 			// load in storage-only mode if a file version is specified
 			storageOnly: odspResolvedUrl.fileVersion !== undefined,
 			summarizeProtocolTree: true,
+			supportGetSnapshotApi: true,
 		};
 
-		this.mc = loggerToMonitoringContext(
-			ChildLogger.create(logger, undefined, {
+		this.mc = createChildMonitoringContext({
+			logger,
+			properties: {
 				all: {
-					odc: isOdcOrigin(
-						new URL(this.odspResolvedUrl.endpoints.snapshotStorageUrl).origin,
-					),
+					odc: hasOdcOrigin(new URL(this.odspResolvedUrl.endpoints.snapshotStorageUrl)),
 				},
-			}),
-		);
+			},
+		});
 
 		this.hostPolicy = hostPolicy;
+		this.hostPolicy.supportGetSnapshotApi = this._policies.supportGetSnapshotApi;
 		if (this.clientIsSummarizer) {
 			this.hostPolicy = { ...this.hostPolicy, summarizerClient: true };
 		}
@@ -149,7 +162,7 @@ export class OdspDocumentService implements IDocumentService {
 	public get resolvedUrl(): IResolvedUrl {
 		return this.odspResolvedUrl;
 	}
-	public get policies() {
+	public get policies(): IDocumentServicePolicies {
 		return this._policies;
 	}
 
@@ -162,7 +175,7 @@ export class OdspDocumentService implements IDocumentService {
 		if (!this.storageManager) {
 			this.storageManager = new OdspDocumentStorageService(
 				this.odspResolvedUrl,
-				this.getStorageToken,
+				this.getAuthHeader,
 				this.mc.logger,
 				true,
 				this.cache,
@@ -170,14 +183,11 @@ export class OdspDocumentService implements IDocumentService {
 				this.epochTracker,
 				// flushCallback
 				async () => {
-					const currentConnection =
-						this.odspDelayLoadedDeltaStream?.currentDeltaConnection;
+					const currentConnection = this.odspDelayLoadedDeltaStream?.currentDeltaConnection;
 					if (currentConnection !== undefined && !currentConnection.disposed) {
 						return currentConnection.flush();
 					}
-					throw new Error(
-						"Disconnected while uploading summary (attempt to perform flush())",
-					);
+					throw new Error("Disconnected while uploading summary (attempt to perform flush())");
 				},
 				() => {
 					return this.odspDelayLoadedDeltaStream?.relayServiceTenantAndSessionId;
@@ -198,7 +208,7 @@ export class OdspDocumentService implements IDocumentService {
 		const snapshotOps = this.storageManager?.ops ?? [];
 		const service = new OdspDeltaStorageService(
 			this.odspResolvedUrl.endpoints.deltaStorageUrl,
-			this.getStorageToken,
+			this.getAuthHeader,
 			this.epochTracker,
 			this.mc.logger,
 		);
@@ -227,6 +237,7 @@ export class OdspDocumentService implements IDocumentService {
 				}
 			},
 			(ops: ISequencedDocumentMessage[]) => this.opsReceived(ops),
+			() => this.storageManager,
 		);
 	}
 
@@ -256,12 +267,12 @@ export class OdspDocumentService implements IDocumentService {
 	 * This dynamically imports the module for loading the delta connection. In many cases the delta stream, is not
 	 * required during the critical load flow. So this way we don't have to bundle this in the initial bundle and can
 	 * import this later on when required.
-	 * @returns - delta stream object.
+	 * @returns The delta stream object.
 	 */
-	private async getDelayLoadedDeltaStream() {
+	private async getDelayLoadedDeltaStream(): Promise<OdspDelayLoadedDeltaStream> {
 		assert(this.odspSocketModuleLoaded === false, 0x507 /* Should be loaded only once */);
 		const module = await import(
-			/* webpackChunkName: "socketModule" */ "./odspDelayLoadedDeltaStream"
+			/* webpackChunkName: "socketModule" */ "./odspDelayLoadedDeltaStream.js"
 		)
 			.then((m) => {
 				this.mc.logger.sendTelemetryEvent({ eventName: "SocketModuleLoaded" });
@@ -274,34 +285,35 @@ export class OdspDocumentService implements IDocumentService {
 		this.odspDelayLoadedDeltaStream = new module.OdspDelayLoadedDeltaStream(
 			this.odspResolvedUrl,
 			this._policies,
-			this.getStorageToken,
+			this.getAuthHeader,
 			this.getWebsocketToken,
 			this.mc,
 			this.cache,
 			this.hostPolicy,
 			this.epochTracker,
 			(ops: ISequencedDocumentMessage[]) => this.opsReceived(ops),
+			(metadata: Record<string, string>) => this.emit("metadataUpdate", metadata),
 			this.socketReferenceKeyPrefix,
 		);
 		return this.odspDelayLoadedDeltaStream;
 	}
 
-	public dispose(error?: any) {
+	public dispose(error?: unknown): void {
 		// Error might indicate mismatch between client & server knowledge about file
-		// (DriverErrorType.fileOverwrittenInStorage).
+		// (OdspErrorTypes.fileOverwrittenInStorage).
 		// For example, file might have been overwritten in storage without generating new epoch
 		// In such case client cached info is stale and has to be removed.
-		if (error !== undefined) {
-			this.epochTracker.removeEntries().catch(() => {});
-		} else {
+		if (error === undefined) {
 			this._opsCache?.flushOps();
+		} else {
+			this.epochTracker.removeEntries().catch(() => {});
 		}
 		this._opsCache?.dispose();
 		// Only need to dipose this, if it is already loaded.
 		this.odspDelayLoadedDeltaStream?.dispose();
 	}
 
-	protected get opsCache() {
+	protected get opsCache(): OpsCache | undefined {
 		if (this._opsCache) {
 			return this._opsCache;
 		}
@@ -320,11 +332,11 @@ export class OdspDocumentService implements IDocumentService {
 			this.mc.logger,
 			// ICache
 			{
-				write: async (key: string, opsData: string) => {
+				write: async (key: string, opsData: string): Promise<void> => {
 					return this.cache.persistedCache.put({ ...opsKey, key }, opsData);
 				},
 				read: async (key: string) => this.cache.persistedCache.get({ ...opsKey, key }),
-				remove: () => {
+				remove: (): void => {
 					this.cache.persistedCache.removeEntries().catch(() => {});
 				},
 			},
@@ -337,7 +349,7 @@ export class OdspDocumentService implements IDocumentService {
 
 	// Called whenever re receive ops through any channel for this document (snapshot, delta connection, delta storage)
 	// We use it to notify caching layer of how stale is snapshot stored in cache.
-	protected opsReceived(ops: ISequencedDocumentMessage[]) {
+	protected opsReceived(ops: ISequencedDocumentMessage[]): void {
 		// No need for two clients to save same ops
 		if (ops.length === 0 || this.odspResolvedUrl.summarizer) {
 			return;

@@ -4,16 +4,24 @@
  */
 
 import {
+	IChannel,
 	IChannelAttributes,
+	IChannelFactory,
 	IFluidDataStoreRuntime,
 	IChannelServices,
-	IChannel,
-	IChannelFactory,
-} from "@fluidframework/datastore-definitions";
-import { pkgVersion } from "./packageVersion";
-import { SharedMatrix } from "./matrix";
+} from "@fluidframework/datastore-definitions/internal";
+import { createSharedObjectKind } from "@fluidframework/shared-object-base/internal";
 
-export class SharedMatrixFactory implements IChannelFactory {
+import { type ISharedMatrix, SharedMatrix as SharedMatrixClass } from "./matrix.js";
+import { pkgVersion } from "./packageVersion.js";
+
+/**
+ * {@link @fluidframework/datastore-definitions#IChannelFactory} for {@link ISharedMatrix}.
+ * @legacy
+ * @alpha
+ * @deprecated - Use `SharedMatrix.getFactory` instead.
+ */
+export class SharedMatrixFactory implements IChannelFactory<ISharedMatrix> {
 	public static Type = "https://graph.microsoft.com/types/sharedmatrix";
 
 	public static readonly Attributes: IChannelAttributes = {
@@ -38,15 +46,32 @@ export class SharedMatrixFactory implements IChannelFactory {
 		id: string,
 		services: IChannelServices,
 		attributes: IChannelAttributes,
-	): Promise<IChannel> {
-		const matrix = new SharedMatrix(runtime, id, attributes);
+	): Promise<ISharedMatrix & IChannel> {
+		const matrix = new SharedMatrixClass(runtime, id, attributes);
 		await matrix.load(services);
 		return matrix;
 	}
 
-	public create(document: IFluidDataStoreRuntime, id: string): IChannel {
-		const matrix = new SharedMatrix(document, id, this.attributes);
+	public create(document: IFluidDataStoreRuntime, id: string): ISharedMatrix & IChannel {
+		const matrix = new SharedMatrixClass(document, id, this.attributes);
 		matrix.initializeLocal();
 		return matrix;
 	}
 }
+
+/**
+ * Entrypoint for {@link ISharedMatrix} creation.
+ * @legacy
+ * @alpha
+ */
+export const SharedMatrix = createSharedObjectKind<ISharedMatrix>(SharedMatrixFactory);
+
+/**
+ * Convenience alias for {@link ISharedMatrix}. Prefer to use {@link ISharedMatrix} when referring to
+ * SharedMatrix as a type.
+ * @legacy
+ * @alpha
+ * @privateRemarks
+ * This alias is for legacy compat from when the SharedMatrix class was exported as public.
+ */
+export type SharedMatrix<T = any> = ISharedMatrix<T>;

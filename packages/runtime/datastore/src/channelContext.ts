@@ -3,20 +3,36 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { IFluidHandle } from "@fluidframework/core-interfaces";
-import { IChannel } from "@fluidframework/datastore-definitions";
-import { IDocumentStorageService } from "@fluidframework/driver-definitions";
-import { ISequencedDocumentMessage, ISnapshotTree } from "@fluidframework/protocol-definitions";
 import {
-	IGarbageCollectionData,
-	ISummarizeResult,
+	IChannel,
+	IChannelAttributes,
+	IChannelFactory,
+	IFluidDataStoreRuntime,
+} from "@fluidframework/datastore-definitions/internal";
+import {
+	IDocumentStorageService,
+	ISnapshotTree,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import { readAndParse } from "@fluidframework/driver-utils/internal";
+import {
+	IExperimentalIncrementalSummaryContext,
 	ISummaryTreeWithStats,
 	ITelemetryContext,
-} from "@fluidframework/runtime-definitions";
-import { addBlobToSummary } from "@fluidframework/runtime-utils";
-import { ChannelDeltaConnection } from "./channelDeltaConnection";
-import { ChannelStorageService } from "./channelStorageService";
+	IGarbageCollectionData,
+	IFluidDataStoreContext,
+	ISummarizeResult,
+} from "@fluidframework/runtime-definitions/internal";
+import { addBlobToSummary } from "@fluidframework/runtime-utils/internal";
+import {
+	ITelemetryLoggerExt,
+	DataCorruptionError,
+	tagCodeArtifacts,
+} from "@fluidframework/telemetry-utils/internal";
+
+import { ChannelDeltaConnection } from "./channelDeltaConnection.js";
+import { ChannelStorageService } from "./channelStorageService.js";
+import { ISharedObjectRegistry } from "./dataStoreRuntime.js";
 
 export const attributesBlobKey = ".attributes";
 
@@ -25,7 +41,11 @@ export interface IChannelContext {
 
 	setConnectionState(connected: boolean, clientId?: string);
 
-	processOp(message: ISequencedDocumentMessage, local: boolean, localOpMetadata?: unknown): void;
+	processOp(
+		message: ISequencedDocumentMessage,
+		local: boolean,
+		localOpMetadata?: unknown,
+	): void;
 
 	summarize(
 		fullTree?: boolean,
@@ -55,23 +75,26 @@ export interface IChannelContext {
 	updateUsedRoutes(usedRoutes: string[]): void;
 }
 
-export function createServiceEndpoints(
-	id: string,
+export interface ChannelServiceEndpoints {
+	deltaConnection: ChannelDeltaConnection;
+	objectStorage: ChannelStorageService;
+}
+
+export function createChannelServiceEndpoints(
 	connected: boolean,
 	submitFn: (content: any, localOpMetadata: unknown) => void,
 	dirtyFn: () => void,
-	addedGCOutboundReferenceFn: (srcHandle: IFluidHandle, outboundHandle: IFluidHandle) => void,
+	isAttachedAndVisible: () => boolean,
 	storageService: IDocumentStorageService,
-	logger: ITelemetryLogger,
+	logger: ITelemetryLoggerExt,
 	tree?: ISnapshotTree,
 	extraBlobs?: Map<string, ArrayBufferLike>,
-) {
+): ChannelServiceEndpoints {
 	const deltaConnection = new ChannelDeltaConnection(
-		id,
 		connected,
 		(message, localOpMetadata) => submitFn(message, localOpMetadata),
 		dirtyFn,
-		addedGCOutboundReferenceFn,
+		isAttachedAndVisible,
 	);
 	const objectStorage = new ChannelStorageService(tree, storageService, logger, extraBlobs);
 
@@ -81,6 +104,7 @@ export function createServiceEndpoints(
 	};
 }
 
+/** Used to get the channel's summary for the DDS or DataStore attach op */
 export function summarizeChannel(
 	channel: IChannel,
 	fullTree: boolean = false,
@@ -99,10 +123,91 @@ export async function summarizeChannelAsync(
 	fullTree: boolean = false,
 	trackState: boolean = false,
 	telemetryContext?: ITelemetryContext,
+	incrementalSummaryContext?: IExperimentalIncrementalSummaryContext,
 ): Promise<ISummaryTreeWithStats> {
-	const summarizeResult = await channel.summarize(fullTree, trackState, telemetryContext);
+	const summarizeResult = await channel.summarize(
+		fullTree,
+		trackState,
+		telemetryContext,
+		incrementalSummaryContext,
+	);
 
 	// Add the channel attributes to the returned result.
 	addBlobToSummary(summarizeResult, attributesBlobKey, JSON.stringify(channel.attributes));
 	return summarizeResult;
+}
+
+export async function loadChannelFactoryAndAttributes(
+	dataStoreContext: IFluidDataStoreContext,
+	services: ChannelServiceEndpoints,
+	channelId: string,
+	registry: ISharedObjectRegistry,
+	attachMessageType?: string,
+): Promise<{ factory: IChannelFactory; attributes: IChannelAttributes }> {
+	let attributes: IChannelAttributes | undefined;
+	if (await services.objectStorage.contains(attributesBlobKey)) {
+		attributes = await readAndParse<IChannelAttributes | undefined>(
+			services.objectStorage,
+			attributesBlobKey,
+		);
+	}
+
+	// This is a backward compatibility case where the attach message doesn't include attributes. They must
+	// include attach message type.
+	// Since old attach messages will not have attributes, we need to keep this as long as we support old attach
+	// messages.
+	const channelFactoryType = attributes ? attributes.type : attachMessageType;
+	if (channelFactoryType === undefined) {
+		throw new DataCorruptionError(
+			"channelTypeNotAvailable",
+			tagCodeArtifacts({
+				channelId,
+				dataStoreId: dataStoreContext.id,
+				dataStorePackagePath: dataStoreContext.packagePath.join("/"),
+				channelFactoryType,
+			}),
+		);
+	}
+	const factory = registry.get(channelFactoryType);
+	if (factory === undefined) {
+		throw new DataCorruptionError(
+			"channelFactoryNotRegisteredForGivenType",
+			tagCodeArtifacts({
+				channelId,
+				dataStoreId: dataStoreContext.id,
+				dataStorePackagePath: dataStoreContext.packagePath.join("/"),
+				channelFactoryType,
+			}),
+		);
+	}
+	// This is a backward compatibility case where the attach message doesn't include attributes. Get the attributes
+	// from the factory.
+	attributes = attributes ?? factory.attributes;
+	return { factory, attributes };
+}
+
+export async function loadChannel(
+	dataStoreRuntime: IFluidDataStoreRuntime,
+	attributes: IChannelAttributes,
+	factory: IChannelFactory,
+	services: ChannelServiceEndpoints,
+	logger: ITelemetryLoggerExt,
+	channelId: string,
+): Promise<IChannel> {
+	// Compare snapshot version to collaborative object version
+	if (
+		attributes.snapshotFormatVersion !== undefined &&
+		attributes.snapshotFormatVersion !== factory.attributes.snapshotFormatVersion
+	) {
+		logger.sendTelemetryEvent({
+			eventName: "ChannelAttributesVersionMismatch",
+			...tagCodeArtifacts({
+				channelType: attributes.type,
+				channelSnapshotVersion: `${attributes.snapshotFormatVersion}@${attributes.packageVersion}`,
+				channelCodeVersion: `${factory.attributes.snapshotFormatVersion}@${factory.attributes.packageVersion}`,
+			}),
+		});
+	}
+
+	return factory.load(dataStoreRuntime, channelId, services, attributes);
 }

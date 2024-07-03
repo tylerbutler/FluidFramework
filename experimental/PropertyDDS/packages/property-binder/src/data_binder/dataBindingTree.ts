@@ -2,6 +2,9 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
+import { PathHelper } from "@fluid-experimental/property-changeset";
+import { PATH_TOKENS_TYPE, TOKEN_TYPES_TYPE } from "@fluid-experimental/property-properties";
 /**
  * @fileoverview Defines a data structure for storing an DataBinding tree that mirrors a property set hierarchy with
  * DataBindings representing certain properties. Meant to handle the case where there are many properties but only some
@@ -10,9 +13,7 @@
  * TODO: this is getting a bit messy. Refactor to have a(n abstract) baseclass and proper derived classes
  */
 import _ from "underscore";
-import { PathHelper } from "@fluid-experimental/property-changeset";
-import { PATH_TOKENS_TYPE, TOKEN_TYPES_TYPE } from "@fluid-experimental/property-properties";
-import { DataBinding } from "./dataBinding";
+import { DataBinding } from "./dataBinding.js";
 
 export type NodeType = DataBindingTree | ArrayNode | null | undefined;
 interface Value {
@@ -487,7 +488,9 @@ export class DataBindingTree {
 				parentNode._actualLength = originalLength;
 			}
 			// if the array already contained a child with a path callback but the new index is higher, we have to update it
-			if (lastElem! > parentNode._highestPathCallbackIndex) {
+			// WARNING: 'lastElem' is 'string | number'.  The cast to 'number' preserves the JavaScript coercion
+			//          behavior, which was permitted prior to TS5.
+			if ((lastElem as number)! > parentNode._highestPathCallbackIndex) {
 				parentNode._highestPathCallbackIndex = parseInt(lastElem as string, 10);
 			}
 		}
@@ -584,7 +587,10 @@ export class DataBindingTree {
 	 * @param io_parentNode - parent node whose child we convert
 	 * @param in_key - key (index) of the child we want to replace
 	 */
-	private _convertToMapNode(io_parentNode: DataBindingTree | MapNode, in_key: string | number) {
+	private _convertToMapNode(
+		io_parentNode: DataBindingTree | MapNode,
+		in_key: string | number,
+	) {
 		let replacementNode = new MapNode();
 		// this syntax should work both for ArrayNodes and DataBindingTree parent nodes
 		let oldDataBindingTreeNode = io_parentNode._childNodes[in_key];
@@ -689,7 +695,11 @@ export class DataBindingTree {
 	 * @param - The path up to this node
 	 * @package
 	 */
-	forEachChild(callback: Function, postCallback?: Function, in_path: (string | number)[] = []) {
+	forEachChild(
+		callback: Function,
+		postCallback?: Function,
+		in_path: (string | number)[] = [],
+	) {
 		callback(this._value, in_path, this);
 
 		let keys = _.keys(this._childNodes);
@@ -756,11 +766,12 @@ export class DataBindingTree {
 
 			// The fact that paths with collections are stored in new nodes should be transparent to the user
 			// of DataBindingTree. So we also have to return the nodes stored in any ArrayNodes or MapNodes we may have.
-			that._childNodes[key]
-				.getChildren()
-				.forEach(function (childInfo: { path: string; node: any }) {
-					children[key + childInfo.path] = childInfo.node;
-				});
+			that._childNodes[key].getChildren().forEach(function (childInfo: {
+				path: string;
+				node: any;
+			}) {
+				children[key + childInfo.path] = childInfo.node;
+			});
 		});
 
 		return children;
@@ -1227,11 +1238,7 @@ export class ArrayNode extends DataBindingTree {
 		//      ' length: ' + length + ' high: ' + this._highestPathCallbackIndex);
 		if (isNaN(in_index) || in_index < 0 || in_index > length) {
 			throw new Error(
-				"Invalid removal index " +
-					in_index +
-					". Index should be in range [0, " +
-					length +
-					"]",
+				"Invalid removal index " + in_index + ". Index should be in range [0, " + length + "]",
 			);
 		}
 		// If this array contains references we can only remove from the end of the array (that is filled in so far) *or*
@@ -1273,7 +1280,11 @@ export class ArrayNode extends DataBindingTree {
 	 * @param in_path - The path up to this node
 	 * @package
 	 */
-	forEachChild(callback: Function, postCallback?: Function, in_path: (string | number)[] = []) {
+	forEachChild(
+		callback: Function,
+		postCallback?: Function,
+		in_path: (string | number)[] = [],
+	) {
 		callback(this._value, in_path, this);
 
 		let i = 0;

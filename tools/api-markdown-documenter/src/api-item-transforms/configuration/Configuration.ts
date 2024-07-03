@@ -2,21 +2,24 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { ApiModel } from "@microsoft/api-extractor-model";
 
-import { ConfigurationBase } from "../../ConfigurationBase";
-import { defaultConsoleLogger } from "../../Logging";
+import { type ApiModel } from "@microsoft/api-extractor-model";
+
+import { type ConfigurationBase } from "../../ConfigurationBase.js";
+import { defaultConsoleLogger } from "../../Logging.js";
 import {
-	DocumentationSuiteOptions,
+	type DocumentationSuiteOptions,
 	getDocumentationSuiteOptionsWithDefaults,
-} from "./DocumentationSuiteOptions";
+} from "./DocumentationSuiteOptions.js";
 import {
-	ApiItemTransformationOptions,
+	type ApiItemTransformationOptions,
 	getApiItemTransformationOptionsWithDefaults,
-} from "./TransformationOptions";
+} from "./TransformationOptions.js";
 
 /**
  * API Item transformation configuration.
+ *
+ * @public
  */
 export interface ApiItemTransformationConfiguration
 	extends ApiItemTransformationOptions,
@@ -43,17 +46,20 @@ export interface ApiItemTransformationConfiguration
 /**
  * Gets a complete {@link ApiItemTransformationConfiguration} using the provided partial configuration, and filling
  * in the remainder with the documented defaults.
+ *
+ * @public
  */
 export function getApiItemTransformationConfigurationWithDefaults(
 	inputOptions: ApiItemTransformationConfiguration,
 ): Required<ApiItemTransformationConfiguration> {
+	const logger = inputOptions.logger ?? defaultConsoleLogger;
 	const documentationSuiteOptions = getDocumentationSuiteOptionsWithDefaults(inputOptions);
 	const transformationOptions = getApiItemTransformationOptionsWithDefaults(inputOptions);
 	return {
-		apiModel: inputOptions.apiModel,
-		uriRoot: inputOptions.uriRoot,
-		logger: inputOptions.logger ?? defaultConsoleLogger,
 		...documentationSuiteOptions,
 		...transformationOptions,
+		apiModel: inputOptions.apiModel,
+		uriRoot: inputOptions.uriRoot,
+		logger,
 	};
 }

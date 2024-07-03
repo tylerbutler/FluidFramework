@@ -4,30 +4,33 @@
  */
 
 import { strict as assert } from "assert";
-import { ISummaryTree } from "@fluidframework/protocol-definitions";
-import { IChannelServices } from "@fluidframework/datastore-definitions";
+
+import { AttachState } from "@fluidframework/container-definitions";
+import { IChannelServices } from "@fluidframework/datastore-definitions/internal";
+import { ISummaryTree } from "@fluidframework/driver-definitions";
 import {
-	appendToMergeTreeDeltaRevertibles,
 	Marker,
-	matchProperties,
 	MergeTreeDeltaRevertible,
 	ReferenceType,
+	appendToMergeTreeDeltaRevertibles,
+	matchProperties,
 	reservedMarkerIdKey,
 	reservedMarkerSimpleTypeKey,
 	reservedTileLabelsKey,
 	revertMergeTreeDeltaRevertibles,
-} from "@fluidframework/merge-tree";
+} from "@fluidframework/merge-tree/internal";
 import {
-	MockFluidDataStoreRuntime,
 	MockContainerRuntimeFactory,
 	MockContainerRuntimeFactoryForReconnection,
 	MockContainerRuntimeForReconnection,
 	MockEmptyDeltaConnection,
+	MockFluidDataStoreRuntime,
 	MockStorage,
 	validateAssertionError,
-} from "@fluidframework/test-runtime-utils";
-import { getTextAndMarkers, SharedString } from "../sharedString";
-import { SharedStringFactory } from "../sequenceFactory";
+} from "@fluidframework/test-runtime-utils/internal";
+
+import { SharedStringFactory, type SharedString } from "../sequenceFactory.js";
+import { SharedStringClass, getTextAndMarkers } from "../sharedString.js";
 
 describe("SharedString", () => {
 	let sharedString: SharedString;
@@ -35,7 +38,7 @@ describe("SharedString", () => {
 
 	beforeEach(() => {
 		dataStoreRuntime1 = new MockFluidDataStoreRuntime();
-		sharedString = new SharedString(
+		sharedString = new SharedStringClass(
 			dataStoreRuntime1,
 			"shared-string-1",
 			SharedStringFactory.Attributes,
@@ -47,20 +50,19 @@ describe("SharedString", () => {
 			dataStoreRuntime1.local = true;
 		});
 
-		// Creates a new SharedString and loads it from the passed snaphost tree.
+		// Creates a new SharedString and loads it from the passed snapshot tree.
 		async function CreateStringAndCompare(summaryTree: ISummaryTree): Promise<void> {
 			const services: IChannelServices = {
 				deltaConnection: new MockEmptyDeltaConnection(),
 				objectStorage: MockStorage.createFromSummary(summaryTree),
 			};
 			const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
-			const sharedString2 = new SharedString(
+			const sharedString2 = new SharedStringClass(
 				dataStoreRuntime2,
 				"shared-string-2",
 				SharedStringFactory.Attributes,
 			);
 			await sharedString2.load(services);
-			await sharedString2.loaded;
 
 			assert.equal(
 				sharedString.getText(),
@@ -105,11 +107,7 @@ describe("SharedString", () => {
 			assert.equal(sharedString.getText(), "hello there!", "Could not replace text");
 
 			sharedString.replaceText(0, 5, "hi");
-			assert.equal(
-				sharedString.getText(),
-				"hi there!",
-				"Could not replace text at beginning",
-			);
+			assert.equal(sharedString.getText(), "hi there!", "Could not replace text at beginning");
 		});
 
 		it("can remove text", async () => {
@@ -203,7 +201,7 @@ describe("SharedString", () => {
 			assert.equal(
 				simpleMarker?.properties?.markerSimpleType,
 				"markerKeyValue",
-				"markerSimpleType is incorrrect",
+				"markerSimpleType is incorrect",
 			);
 
 			// Insert a tile marker.
@@ -254,7 +252,7 @@ describe("SharedString", () => {
 				() => {
 					sharedString.annotateMarker(simpleMarker, newIdProps);
 				},
-				(e) =>
+				(e: Error) =>
 					validateAssertionError(e, "Cannot change the markerId of an existing marker"),
 				"Error from attempting to update marker was not thrown or was not the expected error",
 			);
@@ -274,7 +272,7 @@ describe("SharedString", () => {
 				() => {
 					sharedString.annotateMarker(simpleMarker, newIdProps);
 				},
-				(e) =>
+				(e: Error) =>
 					validateAssertionError(e, "Cannot change the markerId of an existing marker"),
 				"Error from attempting to update marker was not thrown or was not the expected error",
 			);
@@ -294,7 +292,7 @@ describe("SharedString", () => {
 				() => {
 					sharedString.annotateMarker(simpleMarker, newIdProps);
 				},
-				(e) =>
+				(e: Error) =>
 					validateAssertionError(e, "Cannot change the markerId of an existing marker"),
 				"Error from attempting to update marker was not thrown or was not the expected error",
 			);
@@ -382,16 +380,13 @@ describe("SharedString", () => {
 			// Load a new Ink in connected state from the snapshot of the first one.
 			const containerRuntimeFactory = new MockContainerRuntimeFactory();
 			const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
-			const containerRuntime2 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
 			const services2: IChannelServices = {
-				deltaConnection: containerRuntime2.createDeltaConnection(),
-				objectStorage: MockStorage.createFromSummary(
-					sharedString.getAttachSummary().summary,
-				),
+				deltaConnection: dataStoreRuntime2.createDeltaConnection(),
+				objectStorage: MockStorage.createFromSummary(sharedString.getAttachSummary().summary),
 			};
 
-			const sharedString2 = new SharedString(
+			const sharedString2 = new SharedStringClass(
 				dataStoreRuntime2,
 				"shared-string-2",
 				SharedStringFactory.Attributes,
@@ -399,11 +394,10 @@ describe("SharedString", () => {
 			await sharedString2.load(services2);
 
 			// Now connect the first Ink
-			dataStoreRuntime1.local = false;
-			const containerRuntime1 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
+			dataStoreRuntime1.setAttachState(AttachState.Attached);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
 			const services1 = {
-				deltaConnection: containerRuntime1.createDeltaConnection(),
+				deltaConnection: dataStoreRuntime1.createDeltaConnection(),
 				objectStorage: new MockStorage(undefined),
 			};
 			sharedString.connect(services1);
@@ -448,11 +442,10 @@ describe("SharedString", () => {
 			containerRuntimeFactory = new MockContainerRuntimeFactory();
 
 			// Connect the first SharedString.
-			dataStoreRuntime1.local = false;
-			const containerRuntime1 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
+			dataStoreRuntime1.setAttachState(AttachState.Attached);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
 			const services1 = {
-				deltaConnection: containerRuntime1.createDeltaConnection(),
+				deltaConnection: dataStoreRuntime1.createDeltaConnection(),
 				objectStorage: new MockStorage(),
 			};
 			sharedString.initializeLocal();
@@ -460,14 +453,13 @@ describe("SharedString", () => {
 
 			// Create and connect a second SharedString.
 			const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
-			const containerRuntime2 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
 			const services2 = {
-				deltaConnection: containerRuntime2.createDeltaConnection(),
+				deltaConnection: dataStoreRuntime2.createDeltaConnection(),
 				objectStorage: new MockStorage(),
 			};
 
-			sharedString2 = new SharedString(
+			sharedString2 = new SharedStringClass(
 				dataStoreRuntime2,
 				"shared-string-2",
 				SharedStringFactory.Attributes,
@@ -563,7 +555,7 @@ describe("SharedString", () => {
 				);
 			}
 
-			// Annote the properties.
+			// Annotate the properties.
 			const colorProps = { color: "green" };
 			sharedString.annotateRange(6, text.length, colorProps);
 
@@ -596,12 +588,12 @@ describe("SharedString", () => {
 				assert.equal(
 					marker.properties.markerSimpleType,
 					simpleKey,
-					"markerSimpleType is incorrrect",
+					"markerSimpleType is incorrect",
 				);
 				assert.equal(
 					marker.properties.referenceTileLabels[0],
 					label,
-					"markerSimpleType is incorrrect",
+					"markerSimpleType is incorrect",
 				);
 			};
 
@@ -661,7 +653,6 @@ describe("SharedString", () => {
 	describe("reconnect", () => {
 		let containerRuntimeFactory: MockContainerRuntimeFactoryForReconnection;
 		let containerRuntime1: MockContainerRuntimeForReconnection;
-		let containerRuntime2: MockContainerRuntimeForReconnection;
 		let sharedString2: SharedString;
 
 		beforeEach(async () => {
@@ -670,7 +661,7 @@ describe("SharedString", () => {
 			// Connect the first SharedString.
 			containerRuntime1 = containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
 			const services1: IChannelServices = {
-				deltaConnection: containerRuntime1.createDeltaConnection(),
+				deltaConnection: dataStoreRuntime1.createDeltaConnection(),
 				objectStorage: new MockStorage(),
 			};
 			sharedString.initializeLocal();
@@ -678,14 +669,14 @@ describe("SharedString", () => {
 
 			// Create and connect a second SharedString.
 			const runtime2 = new MockFluidDataStoreRuntime();
-			containerRuntime2 = containerRuntimeFactory.createContainerRuntime(runtime2);
-			sharedString2 = new SharedString(
+			containerRuntimeFactory.createContainerRuntime(runtime2);
+			sharedString2 = new SharedStringClass(
 				runtime2,
 				"shared-string-2",
 				SharedStringFactory.Attributes,
 			);
 			const services2: IChannelServices = {
-				deltaConnection: containerRuntime2.createDeltaConnection(),
+				deltaConnection: runtime2.createDeltaConnection(),
 				objectStorage: new MockStorage(),
 			};
 			sharedString2.initializeLocal();
@@ -708,6 +699,43 @@ describe("SharedString", () => {
 
 			// Verify that the changes were correctly received by the second SharedString
 			assert.equal(sharedString2.getText(), "hello friend");
+		});
+
+		it("insert in middle of multibyte character", async () => {
+			let base = "🎉";
+
+			sharedString.insertText(0, "🎉");
+
+			assert.equal(sharedString.getText(), base);
+			assert.equal(sharedString.getLength(), base.length);
+
+			containerRuntimeFactory.processAllMessages();
+
+			base = `${base.slice(0, 1)}a${base.slice(1)}`;
+			sharedString.insertText(1, "a");
+
+			containerRuntimeFactory.processAllMessages();
+
+			assert.equal(sharedString.getText(), base); // not 🎉a
+			assert.equal(sharedString.getLength(), base.length);
+		});
+
+		it("insert in middle of surrogate pair", async () => {
+			let base = "👨🏻‍🦱";
+			sharedString.insertText(0, "👨🏻‍🦱");
+
+			assert.equal(sharedString.getText(), base);
+			assert.equal(sharedString.getLength(), base.length);
+
+			containerRuntimeFactory.processAllMessages();
+
+			base = `${base.slice(0, 2)}a${base.slice(2)}`;
+			sharedString.insertText(2, "a");
+
+			containerRuntimeFactory.processAllMessages();
+
+			assert.equal(sharedString.getText(), base); // not 👨🏻‍🦱a
+			assert.equal(sharedString.getLength(), base.length);
 		});
 
 		it("can store ops in disconnected state and resend them on reconnection", async () => {
@@ -735,7 +763,7 @@ describe("SharedString", () => {
 		it("insert", () => {
 			const revertibles: MergeTreeDeltaRevertible[] = [];
 			sharedString.on("sequenceDelta", (event) =>
-				appendToMergeTreeDeltaRevertibles(sharedString, event.deltaArgs, revertibles),
+				appendToMergeTreeDeltaRevertibles(event.deltaArgs, revertibles),
 			);
 			for (let i = 0; i < 10; i++) {
 				sharedString.insertText(sharedString.getLength(), i.toString());
@@ -755,7 +783,7 @@ describe("SharedString", () => {
 			sharedString.insertText(sharedString.getLength(), "hello world");
 			const revertibles: MergeTreeDeltaRevertible[] = [];
 			sharedString.on("sequenceDelta", (event) =>
-				appendToMergeTreeDeltaRevertibles(sharedString, event.deltaArgs, revertibles),
+				appendToMergeTreeDeltaRevertibles(event.deltaArgs, revertibles),
 			);
 			while (sharedString.getLength() > 0) {
 				const middle = Math.floor(sharedString.getLength() / 2);
@@ -780,7 +808,7 @@ describe("SharedString", () => {
 
 			const revertibles: MergeTreeDeltaRevertible[] = [];
 			sharedString.on("sequenceDelta", (event) =>
-				appendToMergeTreeDeltaRevertibles(sharedString, event.deltaArgs, revertibles),
+				appendToMergeTreeDeltaRevertibles(event.deltaArgs, revertibles),
 			);
 
 			for (let i = 0; i < sharedString.getLength(); i++) {

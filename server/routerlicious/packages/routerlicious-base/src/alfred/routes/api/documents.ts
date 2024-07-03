@@ -11,6 +11,9 @@ import {
 	ICache,
 	IDocumentRepository,
 	ITokenRevocationManager,
+	IRevokeTokenOptions,
+	IRevokedTokenChecker,
+	IClusterDrainingChecker,
 } from "@fluidframework/server-services-core";
 import {
 	verifyStorageToken,
@@ -18,16 +21,30 @@ import {
 	throttle,
 	IThrottleMiddlewareOptions,
 	getParam,
-	validateTokenRevocationClaims,
+	validateTokenScopeClaims,
+	getBooleanFromConfig,
+	getCorrelationIdWithHttpFallback,
 } from "@fluidframework/server-services-utils";
-import { validateRequestParams, handleResponse } from "@fluidframework/server-services";
+import {
+	getBooleanParam,
+	validateRequestParams,
+	handleResponse,
+} from "@fluidframework/server-services";
 import { Router } from "express";
 import winston from "winston";
-import { IAlfredTenant, ISession, NetworkError } from "@fluidframework/server-services-client";
+import {
+	convertFirstSummaryWholeSummaryTreeToSummaryTree,
+	IAlfredTenant,
+	ISession,
+	NetworkError,
+	DocDeleteScopeType,
+	TokenRevokeScopeType,
+} from "@fluidframework/server-services-client";
 import { getLumberBaseProperties, Lumberjack } from "@fluidframework/server-services-telemetry";
 import { Provider } from "nconf";
 import { v4 as uuid } from "uuid";
 import { Constants, getSession } from "../../../utils";
+import { IDocumentDeleteService } from "../../services";
 
 export function create(
 	storage: IDocumentStorage,
@@ -38,16 +55,28 @@ export function create(
 	config: Provider,
 	tenantManager: ITenantManager,
 	documentRepository: IDocumentRepository,
-	tokenManager?: ITokenRevocationManager,
+	documentDeleteService: IDocumentDeleteService,
+	tokenRevocationManager?: ITokenRevocationManager,
+	revokedTokenChecker?: IRevokedTokenChecker,
+	clusterDrainingChecker?: IClusterDrainingChecker,
 ): Router {
 	const router: Router = Router();
 	const externalOrdererUrl: string = config.get("worker:serverUrl");
 	const externalHistorianUrl: string = config.get("worker:blobStorageUrl");
 	const externalDeltaStreamUrl: string =
 		config.get("worker:deltaStreamUrl") || externalOrdererUrl;
+	const messageBrokerId: string | undefined =
+		config.get("kafka:lib:eventHubConnString") !== undefined
+			? crypto
+					.createHash("sha1")
+					.update(config.get("kafka:lib:endpoint") ?? "")
+					.digest("hex")
+			: undefined;
 	const sessionStickinessDurationMs: number | undefined = config.get(
 		"alfred:sessionStickinessDurationMs",
 	);
+
+	const ignoreEphemeralFlag: boolean = config.get("alfred:ignoreEphemeralFlag") ?? true;
 	// Whether to enforce server-generated document ids in create doc flow
 	const enforceServerGeneratedDocumentId: boolean =
 		config.get("alfred:enforceServerGeneratedDocumentId") ?? false;
@@ -78,27 +107,41 @@ export function create(
 		throttleIdSuffix: Constants.alfredRestThrottleIdSuffix,
 	};
 
+	// Jwt token cache
+	const enableJwtTokenCache: boolean = getBooleanFromConfig(
+		"alfred:jwtTokenCache:enable",
+		config,
+	);
+
+	const defaultTokenValidationOptions = {
+		requireDocumentId: true,
+		ensureSingleUseToken: false,
+		singleUseTokenCache: undefined,
+		enableTokenCache: enableJwtTokenCache,
+		tokenCache: singleUseTokenCache,
+		revokedTokenChecker,
+	};
+
+	const isHttpUsageCountingEnabled: boolean = config.get("usage:httpUsageCountingEnabled");
+
 	router.get(
 		"/:tenantId/:id",
 		validateRequestParams("tenantId", "id"),
-		verifyStorageToken(tenantManager, config, tokenManager),
 		throttle(generalTenantThrottler, winston, tenantThrottleOptions),
+		verifyStorageToken(tenantManager, config, defaultTokenValidationOptions),
 		(request, response, next) => {
-			const documentP = storage.getDocument(
-				getParam(request.params, "tenantId") || appTenants[0].id,
-				getParam(request.params, "id"),
-			);
-			documentP.then(
-				(document) => {
+			const documentP = storage
+				.getDocument(
+					getParam(request.params, "tenantId") || appTenants[0].id,
+					getParam(request.params, "id"),
+				)
+				.then((document) => {
 					if (!document || document.scheduledDeletionTime) {
-						response.status(404);
+						throw new NetworkError(404, "Document not found.");
 					}
-					response.status(200).json(document);
-				},
-				(error) => {
-					response.status(400).json(error);
-				},
-			);
+					return document;
+				});
+			handleResponse(documentP, response);
 		},
 	);
 
@@ -108,11 +151,6 @@ export function create(
 	router.post(
 		"/:tenantId",
 		validateRequestParams("tenantId"),
-		verifyStorageToken(tenantManager, config, tokenManager, {
-			requireDocumentId: false,
-			ensureSingleUseToken: true,
-			singleUseTokenCache,
-		}),
 		throttle(
 			clusterThrottlers.get(Constants.createDocThrottleIdPrefix),
 			winston,
@@ -122,7 +160,17 @@ export function create(
 			tenantThrottlers.get(Constants.createDocThrottleIdPrefix),
 			winston,
 			createDocTenantThrottleOptions,
+			isHttpUsageCountingEnabled,
 		),
+		verifyStorageToken(tenantManager, config, {
+			requireDocumentId: false,
+			ensureSingleUseToken: true,
+			singleUseTokenCache,
+			enableTokenCache: enableJwtTokenCache,
+			tokenCache: singleUseTokenCache,
+			revokedTokenChecker,
+		}),
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		async (request, response, next) => {
 			// Tenant and document
 			const tenantId = getParam(request.params, "tenantId");
@@ -132,25 +180,39 @@ export function create(
 				: (request.body.id as string) || uuid();
 
 			// Summary information
-			const summary = request.body.summary;
+			const summary = request.body.enableAnyBinaryBlobOnFirstSummary
+				? convertFirstSummaryWholeSummaryTreeToSummaryTree(request.body.summary)
+				: request.body.summary;
+
+			Lumberjack.info(
+				`Whole summary on First Summary: ${request.body.enableAnyBinaryBlobOnFirstSummary}.`,
+			);
 
 			// Protocol state
-			const { sequenceNumber, values, generateToken = false } = request.body;
+			const {
+				sequenceNumber,
+				values,
+				generateToken = false,
+				isEphemeralContainer = false,
+			} = request.body;
 
 			const enableDiscovery: boolean = request.body.enableDiscovery ?? false;
+			const isEphemeral: boolean =
+				getBooleanParam(isEphemeralContainer) && !ignoreEphemeralFlag;
 
 			const createP = storage.createDocument(
 				tenantId,
 				id,
 				summary,
 				sequenceNumber,
-				1,
 				crypto.randomBytes(4).toString("hex"),
 				externalOrdererUrl,
 				externalHistorianUrl,
 				externalDeltaStreamUrl,
 				values,
 				enableDiscovery,
+				isEphemeral,
+				messageBrokerId,
 			);
 
 			// Handle backwards compatibility for older driver versions.
@@ -177,6 +239,10 @@ export function create(
 						isSessionAlive: false,
 						isSessionActive: false,
 					};
+					// if undefined and added directly to the session object - will be serialized as null in mongo which is undesirable
+					if (messageBrokerId) {
+						session.messageBrokerId = messageBrokerId;
+					}
 					responseBody.session = session;
 				}
 				handleResponse(
@@ -203,7 +269,6 @@ export function create(
 	 */
 	router.get(
 		"/:tenantId/session/:id",
-		verifyStorageToken(tenantManager, config, tokenManager),
 		throttle(
 			clusterThrottlers.get(Constants.getSessionThrottleIdPrefix),
 			winston,
@@ -214,6 +279,8 @@ export function create(
 			winston,
 			getSessionTenantThrottleOptions,
 		),
+		verifyStorageToken(tenantManager, config, defaultTokenValidationOptions),
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		async (request, response, next) => {
 			const documentId = getParam(request.params, "id");
 			const tenantId = getParam(request.params, "tenantId");
@@ -225,8 +292,30 @@ export function create(
 				documentId,
 				documentRepository,
 				sessionStickinessDurationMs,
+				messageBrokerId,
+				clusterDrainingChecker,
 			);
 			handleResponse(session, response, false);
+		},
+	);
+
+	/**
+	 * Delete a document
+	 */
+	router.delete(
+		"/:tenantId/document/:id",
+		validateRequestParams("tenantId", "id"),
+		validateTokenScopeClaims(DocDeleteScopeType),
+		verifyStorageToken(tenantManager, config, defaultTokenValidationOptions),
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
+		async (request, response, next) => {
+			const documentId = getParam(request.params, "id");
+			const tenantId = getParam(request.params, "tenantId");
+			const lumberjackProperties = getLumberBaseProperties(documentId, tenantId);
+			Lumberjack.info(`Received document delete request.`, lumberjackProperties);
+
+			const deleteP = documentDeleteService.deleteDocument(tenantId, documentId);
+			handleResponse(deleteP, response, undefined, undefined, 204);
 		},
 	);
 
@@ -236,9 +325,10 @@ export function create(
 	router.post(
 		"/:tenantId/document/:id/revokeToken",
 		validateRequestParams("tenantId", "id"),
-		validateTokenRevocationClaims(),
-		verifyStorageToken(tenantManager, config, tokenManager),
 		throttle(generalTenantThrottler, winston, tenantThrottleOptions),
+		validateTokenScopeClaims(TokenRevokeScopeType),
+		verifyStorageToken(tenantManager, config, defaultTokenValidationOptions),
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		async (request, response, next) => {
 			const documentId = getParam(request.params, "id");
 			const tenantId = getParam(request.params, "tenantId");
@@ -254,8 +344,17 @@ export function create(
 					response,
 				);
 			}
-			if (tokenManager) {
-				const resultP = tokenManager.revokeToken(tenantId, documentId, tokenId);
+			if (tokenRevocationManager) {
+				const correlationId = getCorrelationIdWithHttpFallback(request, response);
+				const options: IRevokeTokenOptions = {
+					correlationId,
+				};
+				const resultP = tokenRevocationManager.revokeToken(
+					tenantId,
+					documentId,
+					tokenId,
+					options,
+				);
 				return handleResponse(resultP, response);
 			} else {
 				return handleResponse(

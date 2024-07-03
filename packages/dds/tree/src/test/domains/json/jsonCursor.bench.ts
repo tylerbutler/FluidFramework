@@ -4,40 +4,56 @@
  */
 
 import { strict as assert } from "assert";
-import { benchmark, BenchmarkType, isInPerformanceTestingMode } from "@fluid-tools/benchmark";
+
+import { BenchmarkType, benchmark, isInPerformanceTestingMode } from "@fluid-tools/benchmark";
+
 import {
-	ITreeCursor,
-	singleJsonCursor,
-	jsonableTreeFromCursor,
 	EmptyKey,
-	cursorToJsonObject,
-	jsonSchemaData,
-	JsonCompatible,
-} from "../../..";
-import {
-	buildForest,
-	defaultSchemaPolicy,
-	mapTreeFromCursor,
-	singleMapTreeCursor,
-	singleTextCursor,
-	buildChunkedForest,
-} from "../../../feature-libraries";
-import {
+	type FieldKey,
+	type ITreeCursor,
+	type JsonableTree,
+	TreeStoredSchemaRepository,
 	initializeForest,
-	InMemoryStoredSchemaRepository,
-	JsonableTree,
 	moveToDetachedField,
-} from "../../../core";
+} from "../../../core/index.js";
+import {
+	SchemaBuilder,
+	cursorToJsonObject,
+	jsonRoot,
+	jsonSchema,
+	singleJsonCursor,
+} from "../../../domains/index.js";
 import {
 	basicChunkTree,
 	defaultChunkPolicy,
+	makeTreeChunker,
 	// eslint-disable-next-line import/no-internal-modules
-} from "../../../feature-libraries/chunked-forest/chunkTree";
-import { Canada, generateCanada } from "./canada";
-import { averageTwoValues, sum, sumMap } from "./benchmarks";
-import { generateTwitterJsonByByteSize, Twitter } from "./twitter";
-import { CitmCatalog, generateCitmJson } from "./citm";
-import { clone } from "./jsObjectUtil";
+} from "../../../feature-libraries/chunked-forest/chunkTree.js";
+import {
+	buildChunkedForest,
+	buildForest,
+	cursorForJsonableTreeNode,
+	cursorForMapTreeNode,
+	defaultSchemaPolicy,
+	intoStoredSchema,
+	jsonableTreeFromCursor,
+	mapTreeFromCursor,
+} from "../../../feature-libraries/index.js";
+import { brand, type JsonCompatible } from "../../../util/index.js";
+
+import { testIdCompressor, testRevisionTagCodec } from "../../utils.js";
+import { averageValues, sum, sumMap } from "./benchmarks.js";
+import { Canada, generateCanada } from "./canada.js";
+import { CitmCatalog, generateCitmJson } from "./citm.js";
+import { clone } from "./jsObjectUtil.js";
+import { generateTwitterJsonByByteSize } from "./twitter.js";
+
+// Shared tree keys that map to the type used by the Twitter type/dataset
+export const TwitterKey = {
+	statuses: brand<FieldKey>("statuses"),
+	retweetCount: brand<FieldKey>("retweet_count"),
+	favoriteCount: brand<FieldKey>("favorite_count"),
+};
 
 /**
  * Performance test suite that measures a variety of access patterns using ITreeCursor.
@@ -45,11 +61,16 @@ import { clone } from "./jsObjectUtil";
 function bench(
 	data: {
 		name: string;
-		getJson: () => any;
-		dataConsumer: (cursor: ITreeCursor, calculate: (...operands: any[]) => void) => any;
+		getJson: () => JsonCompatible;
+		// Some synthetic workload that invokes this callback with numbers from the data.
+		dataConsumer: (cursor: ITreeCursor, calculate: (a: number) => void) => void;
 	}[],
 ) {
-	const schema = new InMemoryStoredSchemaRepository(defaultSchemaPolicy, jsonSchemaData);
+	const schemaCollection = new SchemaBuilder({
+		scope: "JsonCursor benchmark",
+		libraries: [jsonSchema],
+	}).intoSchema(SchemaBuilder.optional(jsonRoot));
+	const schema = new TreeStoredSchemaRepository(intoStoredSchema(schemaCollection));
 	for (const { name, getJson, dataConsumer } of data) {
 		describe(name, () => {
 			let json: JsonCompatible;
@@ -65,11 +86,7 @@ function bench(
 				before: () => {
 					const cloned = clone(json);
 					assert.deepEqual(cloned, json, "clone() must return an equivalent tree.");
-					assert.notEqual(
-						cloned,
-						json,
-						"clone() must not return the same tree instance.",
-					);
+					assert.notEqual(cloned, json, "clone() must not return the same tree instance.");
 				},
 				benchmarkFn: () => {
 					clone(json);
@@ -78,16 +95,22 @@ function bench(
 
 			const cursorFactories: [string, () => ITreeCursor][] = [
 				["JsonCursor", () => singleJsonCursor(json)],
-				["TextCursor", () => singleTextCursor(encodedTree)],
+				["TextCursor", () => cursorForJsonableTreeNode(encodedTree)],
 				[
 					"MapCursor",
-					() => singleMapTreeCursor(mapTreeFromCursor(singleTextCursor(encodedTree))),
+					() =>
+						cursorForMapTreeNode(mapTreeFromCursor(cursorForJsonableTreeNode(encodedTree))),
 				],
 				[
 					"object-forest Cursor",
 					() => {
-						const forest = buildForest(schema);
-						initializeForest(forest, [singleTextCursor(encodedTree)]);
+						const forest = buildForest();
+						initializeForest(
+							forest,
+							[cursorForJsonableTreeNode(encodedTree)],
+							testRevisionTagCodec,
+							testIdCompressor,
+						);
 						const cursor = forest.allocateCursor();
 						moveToDetachedField(forest, cursor);
 						assert(cursor.firstNode());
@@ -97,7 +120,7 @@ function bench(
 				[
 					"BasicChunkCursor",
 					() => {
-						const input = singleTextCursor(encodedTree);
+						const input = cursorForJsonableTreeNode(encodedTree);
 						const chunk = basicChunkTree(input, defaultChunkPolicy);
 						const cursor = chunk.cursor();
 						cursor.enterNode(0);
@@ -107,8 +130,13 @@ function bench(
 				[
 					"chunked-forest Cursor",
 					() => {
-						const forest = buildChunkedForest(schema);
-						initializeForest(forest, [singleTextCursor(encodedTree)]);
+						const forest = buildChunkedForest(makeTreeChunker(schema, defaultSchemaPolicy));
+						initializeForest(
+							forest,
+							[cursorForJsonableTreeNode(encodedTree)],
+							testRevisionTagCodec,
+							testIdCompressor,
+						);
 						const cursor = forest.allocateCursor();
 						moveToDetachedField(forest, cursor);
 						assert(cursor.firstNode());
@@ -121,10 +149,7 @@ function bench(
 				string,
 				(
 					cursor: ITreeCursor,
-					dataConsumer: (
-						cursor: ITreeCursor,
-						calculate: (...operands: any[]) => void,
-					) => any,
+					dataConsumer: (cursor: ITreeCursor, calculate: (a: number) => void) => unknown,
 				) => void,
 			][] = [
 				["cursorToJsonObject", cursorToJsonObject],
@@ -132,7 +157,7 @@ function bench(
 				["mapTreeFromCursor", mapTreeFromCursor],
 				["sum", sum],
 				["sum-map", sumMap],
-				["averageTwoValues", averageTwoValues],
+				["averageValues", averageValues],
 			];
 
 			for (const [factoryName, factory] of cursorFactories) {
@@ -167,7 +192,7 @@ const canada = generateCanada(
 
 function extractCoordinatesFromCanada(
 	cursor: ITreeCursor,
-	calculate: (x: number, y: number) => void,
+	calculate: (x: number) => void,
 ): void {
 	cursor.enterField(Canada.SharedTreeFieldKey.features);
 	cursor.enterNode(0);
@@ -194,7 +219,8 @@ function extractCoordinatesFromCanada(
 			cursor.exitNode();
 			cursor.exitField();
 
-			calculate(x, y);
+			calculate(x);
+			calculate(y);
 		}
 
 		cursor.exitField();
@@ -216,18 +242,18 @@ function extractAvgValsFromTwitter(
 	cursor: ITreeCursor,
 	calculate: (x: number, y: number) => void,
 ): void {
-	cursor.enterField(Twitter.SharedTreeFieldKey.statuses); // move from root to field
+	cursor.enterField(TwitterKey.statuses); // move from root to field
 	cursor.enterNode(0); // move from field to node at 0 (which is an object of type array)
 	cursor.enterField(EmptyKey); // enter the array field at the node,
 
 	for (let result = cursor.firstNode(); result; result = cursor.nextNode()) {
-		cursor.enterField(Twitter.SharedTreeFieldKey.retweetCount);
+		cursor.enterField(TwitterKey.retweetCount);
 		cursor.enterNode(0);
 		const retweetCount = cursor.value as number;
 		cursor.exitNode();
 		cursor.exitField();
 
-		cursor.enterField(Twitter.SharedTreeFieldKey.favoriteCount);
+		cursor.enterField(TwitterKey.favoriteCount);
 		cursor.enterNode(0);
 		const favoriteCount = cursor.value;
 		cursor.exitNode();
@@ -275,13 +301,34 @@ function extractAvgValsFromCitm(
 }
 
 // The original benchmark twitter.json is 466906 Bytes according to getSizeInBytes.
-const twitter = generateTwitterJsonByByteSize(isInPerformanceTestingMode ? 2500000 : 466906, true);
+const twitter = generateTwitterJsonByByteSize(
+	isInPerformanceTestingMode ? 2500000 : 466906,
+	true,
+);
 // The original benchmark citm_catalog.json 500299 Bytes according to getSizeInBytes.
 const citm = isInPerformanceTestingMode
 	? generateCitmJson(2, 2500000)
 	: generateCitmJson(1, 500299);
 describe("ITreeCursor", () => {
-	bench([{ name: "canada", getJson: () => canada, dataConsumer: extractCoordinatesFromCanada }]);
-	bench([{ name: "twitter", getJson: () => twitter, dataConsumer: extractAvgValsFromTwitter }]);
-	bench([{ name: "citm", getJson: () => citm, dataConsumer: extractAvgValsFromCitm }]);
+	bench([
+		{
+			name: "canada",
+			getJson: () => canada as unknown as JsonCompatible,
+			dataConsumer: (cursor) => averageValues(cursor, extractCoordinatesFromCanada),
+		},
+	]);
+	bench([
+		{
+			name: "twitter",
+			getJson: () => twitter as unknown as JsonCompatible,
+			dataConsumer: extractAvgValsFromTwitter,
+		},
+	]);
+	bench([
+		{
+			name: "citm",
+			getJson: () => citm as unknown as JsonCompatible,
+			dataConsumer: extractAvgValsFromCitm,
+		},
+	]);
 });

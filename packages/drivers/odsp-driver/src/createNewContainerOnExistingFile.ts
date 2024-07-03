@@ -3,39 +3,44 @@
  * Licensed under the MIT License.
  */
 
-import { ISummaryTree } from "@fluidframework/protocol-definitions";
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { UsageError } from "@fluidframework/driver-utils";
+import { ISummaryTree } from "@fluidframework/driver-definitions";
+import { ISnapshot } from "@fluidframework/driver-definitions/internal";
+import { UsageError } from "@fluidframework/driver-utils/internal";
 import {
 	IFileEntry,
-	InstrumentedStorageTokenFetcher,
 	IOdspResolvedUrl,
-} from "@fluidframework/odsp-driver-definitions";
-import { IWriteSummaryResponse } from "./contracts";
-import { createCacheSnapshotKey, getOrigin, IExistingFileInfo } from "./odspUtils";
-import { ISnapshotContents } from "./odspPublicUtils";
-import { createOdspUrl } from "./createOdspUrl";
-import { getApiRoot } from "./odspUrlHelper";
-import { EpochTracker } from "./epochTracker";
-import { OdspDriverUrlResolver } from "./odspDriverUrlResolver";
+	InstrumentedStorageTokenFetcher,
+} from "@fluidframework/odsp-driver-definitions/internal";
+import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils/internal";
+
+import { IWriteSummaryResponse } from "./contracts.js";
+import { ClpCompliantAppHeader } from "./contractsPublic.js";
 import {
 	convertCreateNewSummaryTreeToTreeAndBlobs,
 	convertSummaryIntoContainerSnapshot,
 	createNewFluidContainerCore,
-} from "./createNewUtils";
-import { ClpCompliantAppHeader } from "./contractsPublic";
+} from "./createNewUtils.js";
+import { createOdspUrl } from "./createOdspUrl.js";
+import { EpochTracker } from "./epochTracker.js";
+import { OdspDriverUrlResolver } from "./odspDriverUrlResolver.js";
+import { getApiRoot } from "./odspUrlHelper.js";
+import { IExistingFileInfo, createCacheSnapshotKey } from "./odspUtils.js";
 
 /**
  * Creates a new Fluid container on an existing file.
- * This requires service's capability to manage Fluid container inside an existing file.
- * @example - This enables a scenario where Fluid data is not stored as a standalone file but in a way that is managed
- *  by an existing file. For example, SharePoint Pages is able to store Fluid container in an
- *  "alternative file partition" where the main File stub is an ASPX page.
+ *
+ * @remarks This requires service's capability to manage Fluid container inside an existing file.
+ *
+ * @example
+ *
+ * This enables a scenario where Fluid data is not stored as a standalone file but in a way that is managed
+ * by an existing file. For example, SharePoint Pages is able to store Fluid container in an
+ * "alternative file partition" where the main File stub is an ASPX page.
  */
 export async function createNewContainerOnExistingFile(
-	getStorageToken: InstrumentedStorageTokenFetcher,
+	getAuthHeader: InstrumentedStorageTokenFetcher,
 	fileInfo: IExistingFileInfo,
-	logger: ITelemetryLogger,
+	logger: ITelemetryLoggerExt,
 	createNewSummary: ISummaryTree | undefined,
 	epochTracker: EpochTracker,
 	fileEntry: IFileEntry,
@@ -47,7 +52,7 @@ export async function createNewContainerOnExistingFile(
 		throw new UsageError("createNewSummary must exist to create a new container");
 	}
 
-	const baseUrl = `${getApiRoot(getOrigin(fileInfo.siteUrl))}/drives/${fileInfo.driveId}/items/${
+	const baseUrl = `${getApiRoot(new URL(fileInfo.siteUrl))}/drives/${fileInfo.driveId}/items/${
 		fileInfo.itemId
 	}`;
 
@@ -57,7 +62,7 @@ export async function createNewContainerOnExistingFile(
 
 	const { id: summaryHandle } = await createNewFluidContainerCore<IWriteSummaryResponse>({
 		containerSnapshot,
-		getStorageToken,
+		getAuthHeader,
 		logger,
 		initialUrl,
 		forceAccessTokenViaAuthorizationHeader,
@@ -77,7 +82,7 @@ export async function createNewContainerOnExistingFile(
 
 	if (createNewCaching) {
 		// converting summary and getting sequence number
-		const snapshot: ISnapshotContents = convertCreateNewSummaryTreeToTreeAndBlobs(
+		const snapshot: ISnapshot = convertCreateNewSummaryTreeToTreeAndBlobs(
 			createNewSummary,
 			summaryHandle,
 		);

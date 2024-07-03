@@ -3,12 +3,17 @@
  * Licensed under the MIT License.
  */
 
+import { strict as assert } from 'assert';
+
+import { validateAssertionError } from '@fluidframework/test-runtime-utils/internal';
 import { expect } from 'chai';
-import { compareForestNodes, Forest, ForestNode } from '../Forest';
-import { NodeId, TraitLabel } from '../Identifiers';
-import { Payload } from '../persisted-types';
-import { TestTree } from './utilities/TestNode';
-import { refreshTestTree } from './utilities/TestUtilities';
+
+import { Forest, ForestNode, compareForestNodes } from '../Forest.js';
+import { NodeId, TraitLabel } from '../Identifiers.js';
+import { Payload } from '../persisted-types/index.js';
+
+import { TestTree } from './utilities/TestNode.js';
+import { refreshTestTree } from './utilities/TestUtilities.js';
 
 const mainTraitLabel = 'main' as TraitLabel;
 
@@ -61,11 +66,11 @@ describe('Forest', () => {
 	});
 
 	it('fails on multiparenting', () => {
-		expect(() => oneNodeForest.add([makeForestNodeWithChildren(testTree, parentId, childId, childId)])).to.throw();
+		assert.throws(() => oneNodeForest.add([makeForestNodeWithChildren(testTree, parentId, childId, childId)]));
 	});
 
 	it('cannot add a node with a duplicate ID', () => {
-		expect(() => oneNodeForest.add([makeForestNodeWithChildren(testTree, parentId)])).to.throw();
+		assert.throws(() => oneNodeForest.add([makeForestNodeWithChildren(testTree, parentId)]));
 	});
 
 	it('can get nodes in the forest', () => {
@@ -140,11 +145,13 @@ describe('Forest', () => {
 
 	it('only accepts valid indices for attaches', () => {
 		const twoNodeForest = oneNodeForest.add([makeForestNodeWithChildren(testTree, childId)]);
-		expect(() => twoNodeForest.attachRangeOfChildren(parentId, mainTraitLabel, -1, [childId])).to.throw(
-			'invalid attach index'
+		assert.throws(
+			() => twoNodeForest.attachRangeOfChildren(parentId, mainTraitLabel, -1, [childId]),
+			(e: Error) => validateAssertionError(e, 'invalid attach index')
 		);
-		expect(() => twoNodeForest.attachRangeOfChildren(parentId, mainTraitLabel, 1, [childId])).to.throw(
-			'invalid attach index'
+		assert.throws(
+			() => twoNodeForest.attachRangeOfChildren(parentId, mainTraitLabel, 1, [childId]),
+			(e: Error) => validateAssertionError(e, 'invalid attach index')
 		);
 	});
 
@@ -167,25 +174,33 @@ describe('Forest', () => {
 	});
 
 	it('only accepts valid indices for detaches', () => {
-		expect(() => parentForest.detachRangeOfChildren(parentId, mainTraitLabel, -1, -1)).to.throw(
-			'invalid detach index range'
+		assert.throws(
+			() => parentForest.detachRangeOfChildren(parentId, mainTraitLabel, -1, -1),
+			(e: Error) => validateAssertionError(e, 'invalid detach index range')
 		);
-		expect(() => parentForest.detachRangeOfChildren(parentId, mainTraitLabel, -1, 0)).to.throw(
-			'invalid detach index range'
+		assert.throws(
+			() => parentForest.detachRangeOfChildren(parentId, mainTraitLabel, -1, 0),
+			(e: Error) => validateAssertionError(e, 'invalid detach index range')
 		);
-		expect(() => parentForest.detachRangeOfChildren(parentId, mainTraitLabel, 1, 0)).to.throw(
-			'invalid detach index range'
+		assert.throws(
+			() => parentForest.detachRangeOfChildren(parentId, mainTraitLabel, 1, 0),
+			(e: Error) => validateAssertionError(e, 'invalid detach index range')
 		);
-		expect(() => parentForest.detachRangeOfChildren(parentId, mainTraitLabel, 0, 2)).to.throw(
-			'invalid detach index range'
+		assert.throws(
+			() => parentForest.detachRangeOfChildren(parentId, mainTraitLabel, 0, 2),
+			(e: Error) => validateAssertionError(e, 'invalid detach index range')
 		);
-		expect(() => parentForest.detachRangeOfChildren(parentId, mainTraitLabel, 1, 2)).to.throw(
-			'invalid detach index range'
+		assert.throws(
+			() => parentForest.detachRangeOfChildren(parentId, mainTraitLabel, 1, 2),
+			(e: Error) => validateAssertionError(e, 'invalid detach index range')
 		);
 	});
 
 	it('cannot delete parented nodes', () => {
-		expect(() => parentForest.delete([childId], false)).throws('deleted nodes must be unparented');
+		assert.throws(
+			() => parentForest.delete([childId], false),
+			(e: Error) => validateAssertionError(e, 'deleted nodes must be unparented')
+		);
 	});
 
 	it('can delete a root', () => {
@@ -253,12 +268,7 @@ describe('Forest', () => {
 		const parent = forest.get(parentId);
 		const expectedTrait = [...(parent.traits.get(label) ?? [])];
 		const spliced = expectedTrait.splice(startIndex, endIndex - startIndex);
-		const { forest: forestWithDetach, detached } = forest.detachRangeOfChildren(
-			parentId,
-			label,
-			startIndex,
-			endIndex
-		);
+		const { forest: forestWithDetach, detached } = forest.detachRangeOfChildren(parentId, label, startIndex, endIndex);
 
 		const newParent = forestWithDetach.get(parentId);
 		const trait = newParent.traits.get(label);

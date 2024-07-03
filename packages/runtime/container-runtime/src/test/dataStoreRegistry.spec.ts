@@ -2,10 +2,13 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import { strict as assert } from "assert";
-import { NamedFluidDataStoreRegistryEntries } from "@fluidframework/runtime-definitions";
-import { UsageError } from "@fluidframework/container-utils";
-import { FluidDataStoreRegistry } from "../dataStoreRegistry";
+
+import { ContainerErrorTypes } from "@fluidframework/container-definitions/internal";
+import { NamedFluidDataStoreRegistryEntries } from "@fluidframework/runtime-definitions/internal";
+
+import { FluidDataStoreRegistry } from "../dataStoreRegistry.js";
 
 describe("Data Store Registry Creation Tests", () => {
 	// Define two entries with the same name
@@ -20,7 +23,7 @@ describe("Data Store Registry Creation Tests", () => {
 			new FluidDataStoreRegistry(entries as NamedFluidDataStoreRegistryEntries);
 			assert.fail();
 		} catch (error: any) {
-			assert.strictEqual(error instanceof UsageError, true);
+			assert.strictEqual(error.errorType, ContainerErrorTypes.usageError);
 			assert.strictEqual(error.message, "Duplicate entry names exist");
 		}
 	});

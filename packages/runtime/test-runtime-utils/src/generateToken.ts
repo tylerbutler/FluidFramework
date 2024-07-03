@@ -3,10 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import type { ITokenClaims, ScopeType } from "@fluidframework/protocol-definitions";
+import type { ITokenClaims, ScopeType } from "@fluidframework/driver-definitions/internal";
 import { KJUR as jsrsasign } from "jsrsasign";
 import { v4 as uuid } from "uuid";
-import { IInsecureUser } from "./insecureUsers";
+
+import { IInsecureUser } from "./insecureUsers.js";
 
 /**
  * IMPORTANT: This function is duplicated in ./azure/packages/azure-service-utils/src/generateToken.ts. There is no need
@@ -88,9 +89,8 @@ export function generateToken(
 }
 
 /**
- * Generates an arbitrary ("random") {@link @fluidframework/test-client-utils#IInsecureUser} by generating a
- * random UUID for its {@link @fluidframework/test-client-utils#IInsecureUser.id}
- * and {@link @fluidframework/test-client-utils#IInsecureUser.name} properties.
+ * Generates an arbitrary ("random") {@link IInsecureUser} by generating a
+ * random UUID for its {@link @fluidframework/protocol-definitions#IUser.id | id} and {@link IInsecureUser.name | name} properties.
  */
 export function generateUser(): IInsecureUser {
 	const randomUser = {

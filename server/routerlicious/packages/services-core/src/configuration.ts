@@ -10,6 +10,9 @@ import {
 } from "@fluidframework/protocol-definitions";
 
 // Deli lambda configuration
+/**
+ * @internal
+ */
 export interface IDeliServerConfiguration {
 	// Enables nack messages logic
 	enableNackMessages: boolean;
@@ -22,6 +25,12 @@ export interface IDeliServerConfiguration {
 
 	// Enables creating join/leave signals for write clients
 	enableWriteClientSignals: boolean;
+
+	// Enables ephemeral container summary deletion on deli close
+	enableEphemeralContainerSummaryCleanup: boolean;
+
+	// Time to wait before deleting ephemeral container summaries
+	ephemeralContainerSoftDeleteTimeInMs: number;
 
 	// Enables deli to maintain batches as it produces them to the next lambdas
 	maintainBatches: boolean;
@@ -58,8 +67,17 @@ export interface IDeliServerConfiguration {
 
 	// enables marking leave ops with a flag when they were the last client
 	enableLeaveOpNoClientServerMetadata: boolean;
+
+	// enables restarting the process when deli fails to checkpoint
+	restartOnCheckpointFailure: boolean;
+
+	// enables kafka checkpoints when reprocessing messages
+	kafkaCheckpointOnReprocessingOp: boolean;
 }
 
+/**
+ * @internal
+ */
 export interface ICheckpointHeuristicsServerConfiguration {
 	// Enables checkpointing based on the heuristics
 	enable: boolean;
@@ -74,6 +92,9 @@ export interface ICheckpointHeuristicsServerConfiguration {
 	maxMessages: number;
 }
 
+/**
+ * @internal
+ */
 export interface IDeliOpEventServerConfiguration {
 	// Enables emitting events based on the heuristics
 	enable: boolean;
@@ -88,12 +109,18 @@ export interface IDeliOpEventServerConfiguration {
 	maxOps: number | undefined;
 }
 
+/**
+ * @internal
+ */
 export interface IBroadcasterServerConfiguration {
 	// Enables including the event name in the topic name for message batching
 	includeEventInMessageBatchName: boolean;
 }
 
 // Scribe lambda configuration
+/**
+ * @internal
+ */
 export interface IScribeServerConfiguration {
 	// Enables generating service summaries
 	generateServiceSummary: boolean;
@@ -109,8 +136,25 @@ export interface IScribeServerConfiguration {
 
 	// Controls how often scribe should checkpoint
 	checkpointHeuristics: ICheckpointHeuristicsServerConfiguration;
+
+	// Enables scrubbing user data from protocol state quorum in Summaries
+	scrubUserDataInSummaries: boolean;
+
+	// Enables scrubbing user data from protocol state quorum in local checkpoints
+	scrubUserDataInLocalCheckpoints: boolean;
+
+	// Enables scrubbing user data from protocol state quorum in global checkpoints
+	scrubUserDataInGlobalCheckpoints: boolean;
+
+	// Limits the number of service summary versions to track as "valid parent summaries"
+	// since the last client summary. If the list grows beyond this limit, the oldest
+	// service summary version is removed.
+	maxTrackedServiceSummaryVersionsSinceLastClientSummary: number;
 }
 
+/**
+ * @internal
+ */
 export interface IDeliSummaryNackMessagesServerConfiguration {
 	// Enables nacking non-system & non-summarizer client message if
 	// the op count since the last summary exceeds this limit
@@ -128,6 +172,9 @@ export interface IDeliSummaryNackMessagesServerConfiguration {
 }
 
 // Document lambda configuration
+/**
+ * @internal
+ */
 export interface IDocumentLambdaServerConfiguration {
 	// Expire document partitions after this long of no activity
 	partitionActivityTimeout: number;
@@ -137,6 +184,9 @@ export interface IDocumentLambdaServerConfiguration {
 }
 
 // Moira lambda configuration
+/**
+ * @internal
+ */
 export interface IMoiraServerConfiguration {
 	// Enables Moira submission lambda
 	enable: boolean;
@@ -145,6 +195,7 @@ export interface IMoiraServerConfiguration {
 
 /**
  * Key value store of service configuration properties
+ * @internal
  */
 export interface IServiceConfiguration extends IClientConfiguration, IServerConfiguration {
 	[key: string]: any;
@@ -152,6 +203,7 @@ export interface IServiceConfiguration extends IClientConfiguration, IServerConf
 
 /**
  * Key value store of service configuration properties for the server
+ * @internal
  */
 export interface IServerConfiguration {
 	// Deli lambda configuration
@@ -176,6 +228,9 @@ export interface IServerConfiguration {
 	enableLumberjack: boolean;
 }
 
+/**
+ * @internal
+ */
 export const DefaultServiceConfiguration: IServiceConfiguration = {
 	blockSize: 64436,
 	maxMessageSize: 16 * 1024,
@@ -185,6 +240,8 @@ export const DefaultServiceConfiguration: IServiceConfiguration = {
 		enableNackMessages: true,
 		enableOpHashing: true,
 		enableAutoDSNUpdate: false,
+		enableEphemeralContainerSummaryCleanup: true,
+		ephemeralContainerSoftDeleteTimeInMs: -1,
 		checkForIdleClientsOnStartup: false,
 		maintainBatches: false,
 		enableWriteClientSignals: false,
@@ -218,6 +275,8 @@ export const DefaultServiceConfiguration: IServiceConfiguration = {
 		skipSummarizeAugmentationForSingleCommmit: false,
 		disableNoClientMessage: false,
 		enableLeaveOpNoClientServerMetadata: false,
+		restartOnCheckpointFailure: true,
+		kafkaCheckpointOnReprocessingOp: true,
 	},
 	broadcaster: {
 		includeEventInMessageBatchName: false,
@@ -233,6 +292,10 @@ export const DefaultServiceConfiguration: IServiceConfiguration = {
 			maxTime: 1 * 60 * 1000,
 			maxMessages: 500,
 		},
+		scrubUserDataInSummaries: false,
+		scrubUserDataInLocalCheckpoints: false,
+		scrubUserDataInGlobalCheckpoints: false,
+		maxTrackedServiceSummaryVersionsSinceLastClientSummary: 10,
 	},
 	moira: {
 		enable: false,

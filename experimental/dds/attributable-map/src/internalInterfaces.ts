@@ -3,8 +3,9 @@
  * Licensed under the MIT License.
  */
 
-import { ISerializableValue } from "./interfaces";
-import { ILocalValue } from "./localValues";
+// eslint-disable-next-line import/no-deprecated
+import { ISerializableValue } from "./interfaces.js";
+import { ILocalValue } from "./localValues.js";
 
 /**
  * Operation indicating a value should be set for a key.
@@ -23,6 +24,7 @@ export interface IMapSetOperation {
 	/**
 	 * Value to be set on the key.
 	 */
+	// eslint-disable-next-line import/no-deprecated
 	value: ISerializableValue;
 }
 

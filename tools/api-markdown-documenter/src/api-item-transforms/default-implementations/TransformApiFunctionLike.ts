@@ -2,10 +2,11 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { SectionNode } from "../../documentation-domain";
-import { ApiFunctionLike } from "../ApiItemUtilities";
-import { ApiItemTransformationConfiguration } from "../configuration";
-import { createParametersSection, createReturnsSection } from "../helpers";
+
+import { type SectionNode } from "../../documentation-domain/index.js";
+import { type ApiFunctionLike } from "../../utilities/index.js";
+import { type ApiItemTransformationConfiguration } from "../configuration/index.js";
+import { createParametersSection, createReturnsSection } from "../helpers/index.js";
 
 /**
  * Default documentation transform for function-like API items (constructors, functions, methods).
@@ -28,5 +29,5 @@ export function transformApiFunctionLike(
 		childSections.push(renderedReturnsSection);
 	}
 
-	return config.createChildContentSections(apiFunctionLike, childSections, config);
+	return config.createDefaultLayout(apiFunctionLike, childSections, config);
 }

@@ -5,6 +5,8 @@
 
 /**
  * Specifies an environment on Fluid property of a IFluidPackage.
+ * @legacy
+ * @alpha
  */
 export interface IFluidPackageEnvironment {
 	/**
@@ -35,6 +37,8 @@ export interface IFluidPackageEnvironment {
  * While compatible with the npm package format it is not necessary that that package is an
  * npm package:
  * {@link https://stackoverflow.com/questions/10065564/add-custom-metadata-or-config-to-package-json-is-it-valid}
+ * @legacy
+ * @alpha
  */
 export interface IFluidPackage {
 	/**
@@ -62,12 +66,18 @@ export interface IFluidPackage {
 /**
  * Check if the package.json defines a Fluid package
  * @param pkg - the package json data to check if it is a Fluid package.
+ * @legacy
+ * @alpha
  */
-export const isFluidPackage = (pkg: any): pkg is Readonly<IFluidPackage> =>
-	typeof pkg === "object" && typeof pkg?.name === "string" && typeof pkg?.fluid === "object";
+export const isFluidPackage = (pkg: unknown): pkg is Readonly<IFluidPackage> =>
+	typeof pkg === "object" &&
+	typeof (pkg as Partial<IFluidPackage>)?.name === "string" &&
+	typeof (pkg as Partial<IFluidPackage>)?.fluid === "object";
 
 /**
  * Package manager configuration. Provides a key value mapping of config values
+ * @legacy
+ * @alpha
  */
 export interface IFluidCodeDetailsConfig {
 	readonly [key: string]: string;
@@ -75,6 +85,8 @@ export interface IFluidCodeDetailsConfig {
 
 /**
  * Data structure used to describe the code to load on the Fluid document
+ * @legacy
+ * @alpha
  */
 export interface IFluidCodeDetails {
 	/**
@@ -92,7 +104,13 @@ export interface IFluidCodeDetails {
 	readonly config?: IFluidCodeDetailsConfig;
 }
 
-export const isFluidCodeDetails = (details: unknown): details is Readonly<IFluidCodeDetails> => {
+/**
+ * Determines if any object is an IFluidCodeDetails
+ * @internal
+ */
+export const isFluidCodeDetails = (
+	details: unknown,
+): details is Readonly<IFluidCodeDetails> => {
 	const maybeCodeDetails = details as Partial<IFluidCodeDetails> | undefined;
 	return (
 		typeof maybeCodeDetails === "object" &&
@@ -102,15 +120,25 @@ export const isFluidCodeDetails = (details: unknown): details is Readonly<IFluid
 	);
 };
 
+/**
+ * @legacy
+ * @alpha
+ */
 export const IFluidCodeDetailsComparer: keyof IProvideFluidCodeDetailsComparer =
 	"IFluidCodeDetailsComparer";
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface IProvideFluidCodeDetailsComparer {
 	readonly IFluidCodeDetailsComparer: IFluidCodeDetailsComparer;
 }
 
 /**
  * Provides capability to compare Fluid code details.
+ * @legacy
+ * @alpha
  */
 export interface IFluidCodeDetailsComparer extends IProvideFluidCodeDetailsComparer {
 	/**

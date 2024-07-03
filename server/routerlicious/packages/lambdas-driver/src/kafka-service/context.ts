@@ -10,6 +10,7 @@ import {
 	ILogger,
 	IContextErrorData,
 } from "@fluidframework/server-services-core";
+import { Lumberjack } from "@fluidframework/server-services-telemetry";
 import { CheckpointManager } from "./checkpointManager";
 
 export class Context extends EventEmitter implements IContext {
@@ -25,7 +26,7 @@ export class Context extends EventEmitter implements IContext {
 	/**
 	 * Updates the checkpoint for the partition
 	 */
-	public checkpoint(queuedMessage: IQueuedMessage) {
+	public checkpoint(queuedMessage: IQueuedMessage, restartFlag?: boolean) {
 		if (this.closed) {
 			return;
 		}
@@ -38,7 +39,7 @@ export class Context extends EventEmitter implements IContext {
 
 			// Close context on error. Once the checkpointManager enters an error state it will stay there.
 			// We will look to restart on checkpointing given it likely indicates a Kafka connection issue.
-			this.error(error, { restart: true });
+			this.error(error, { restart: restartFlag ?? true });
 		});
 	}
 
@@ -48,6 +49,7 @@ export class Context extends EventEmitter implements IContext {
 	 * @param errorData - Additional information about the error
 	 */
 	public error(error: any, errorData: IContextErrorData) {
+		Lumberjack.verbose("Emitting error from context");
 		this.emit("error", error, errorData);
 	}
 

@@ -3,14 +3,29 @@
  * Licensed under the MIT License.
  */
 
-import { hashFile, IsoBuffer } from "@fluidframework/common-utils";
-import { ISequencedDocumentMessage, ISnapshotTree } from "@fluidframework/protocol-definitions";
+import { IsoBuffer, hashFile } from "@fluid-internal/client-utils";
+import {
+	ISnapshotTree,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
 
+/**
+ * Creates a unique and stable id for a document stored in ODSP which doesn't expose the driveId and itemId of
+ * said document.
+ *
+ * @legacy
+ * @alpha
+ */
 export async function getHashedDocumentId(driveId: string, itemId: string): Promise<string> {
 	const buffer = IsoBuffer.from(`${driveId}_${itemId}`);
 	return encodeURIComponent(await hashFile(buffer, "SHA-256", "base64"));
 }
 
+/**
+ * @legacy
+ * @alpha
+ * @deprecated - This is deprecated.
+ */
 export interface ISnapshotContents {
 	snapshotTree: ISnapshotTree;
 	blobs: Map<string, ArrayBuffer>;

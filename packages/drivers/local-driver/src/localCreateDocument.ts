@@ -3,25 +3,29 @@
  * Licensed under the MIT License.
  */
 
-import { IFluidResolvedUrl } from "@fluidframework/driver-definitions";
+import { ISummaryTree } from "@fluidframework/driver-definitions";
+import { IResolvedUrl } from "@fluidframework/driver-definitions/internal";
 import {
 	getDocAttributesFromProtocolSummary,
 	getQuorumValuesFromProtocolSummary,
 	isCombinedAppAndProtocolSummary,
-} from "@fluidframework/driver-utils";
-import { ISummaryTree } from "@fluidframework/protocol-definitions";
+} from "@fluidframework/driver-utils/internal";
 import { LocalDeltaConnectionServer } from "@fluidframework/server-local-server";
 import { defaultHash } from "@fluidframework/server-services-client";
 
 export async function createDocument(
 	localDeltaConnectionServer,
-	resolvedUrl: IFluidResolvedUrl,
+	resolvedUrl: IResolvedUrl,
 	summary: ISummaryTree,
 ) {
 	const pathName = new URL(resolvedUrl.url).pathname;
 	const pathArr = pathName.split("/");
-	const tenantId = pathArr[pathArr.length - 2];
-	const id = pathArr[pathArr.length - 1];
+	// TODO Why are we non null asserting here
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	const tenantId = pathArr[pathArr.length - 2]!;
+	// TODO Why are we non null asserting here
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	const id = pathArr[pathArr.length - 1]!;
 	const documentStorage = (localDeltaConnectionServer as LocalDeltaConnectionServer)
 		.documentStorage;
 	if (!isCombinedAppAndProtocolSummary(summary)) {
@@ -37,12 +41,12 @@ export async function createDocument(
 		id,
 		appSummary,
 		sequenceNumber,
-		documentAttributes.term ?? 1,
 		defaultHash,
 		resolvedUrl.endpoints.ordererUrl ?? "",
 		resolvedUrl.endpoints.storageUrl ?? "",
 		resolvedUrl.endpoints.deltaStorageUrl ?? "",
 		quorumValues,
 		false /* enableDiscovery */,
+		false /* isEphemeralContainer */,
 	);
 }

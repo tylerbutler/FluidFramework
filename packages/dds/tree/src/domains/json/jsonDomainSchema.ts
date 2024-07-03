@@ -3,77 +3,46 @@
  * Licensed under the MIT License.
  */
 
-import { FieldKinds, TypedSchema, SchemaAware } from "../../feature-libraries";
-import { ValueSchema, FieldSchema, SchemaData, EmptyKey } from "../../core";
+// Adding this unused import makes the generated d.ts file produced by TypeScript stop breaking API-Extractor's rollup generation.
+// Without this import, TypeScript generates inline `import("../..")` statements in the d.ts file,
+// which API-Extractor leaves as is when generating the rollup, leaving them pointing at the wrong directory.
+// API-Extractor issue: https://github.com/microsoft/rushstack/issues/4507
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-imports
+import { ValueSchema } from "../../core/index.js";
+import {
+	FieldKinds,
+	type FlexAllowedTypes,
+	FlexFieldSchema,
+	SchemaBuilderInternal,
+} from "../../feature-libraries/index.js";
+import type { requireAssignableTo } from "../../util/index.js";
+import { leaf } from "../leafDomain.js";
+
+const builder = new SchemaBuilderInternal({
+	scope: "com.fluidframework.json",
+	libraries: [leaf.library],
+});
+
+const jsonPrimitives = [...leaf.primitives, leaf.null] as const;
 
 /**
  * Types allowed as roots of Json content.
- * Since the Json domain is recursive, this set is declared,
- * then used in the schema, then populated below.
  */
-const jsonTypes = [
-	"Json.Object",
-	"Json.Array",
-	"Json.Number",
-	"Json.String",
-	"Json.Null",
-	"Json.Boolean",
-] as const;
+export const jsonRoot = [() => jsonObject, () => jsonArray, ...jsonPrimitives] as const;
 
-/**
- * @alpha
- */
-export const jsonObject = TypedSchema.tree("Json.Object", {
-	extraLocalFields: TypedSchema.field(FieldKinds.optional, ...jsonTypes),
-});
+{
+	// Recursive objects don't get this type checking automatically, so confirm it
+	type _check = requireAssignableTo<typeof jsonRoot, FlexAllowedTypes>;
+}
 
-/**
- * @alpha
- */
-export const jsonArray = TypedSchema.tree("Json.Array", {
-	local: { [EmptyKey]: TypedSchema.field(FieldKinds.sequence, ...jsonTypes) },
-});
-
-/**
- * @alpha
- */
-export const jsonNumber = TypedSchema.tree("Json.Number", {
-	value: ValueSchema.Number,
-});
-
-/**
- * @alpha
- */
-export const jsonString = TypedSchema.tree("Json.String", {
-	value: ValueSchema.String,
-});
-
-/**
- * @alpha
- */
-export const jsonNull = TypedSchema.tree("Json.Null", {});
-
-/**
- * @alpha
- */
-export const jsonBoolean = TypedSchema.tree("Json.Boolean", {
-	value: ValueSchema.Boolean,
-});
-
-/**
- * @alpha
- */
-export const jsonSchemaData: SchemaData = SchemaAware.typedSchemaData(
-	[],
-	jsonObject,
-	jsonArray,
-	jsonNumber,
-	jsonString,
-	jsonNull,
-	jsonBoolean,
+export const jsonObject = builder.mapRecursive(
+	"object",
+	FlexFieldSchema.createUnsafe(FieldKinds.optional, jsonRoot),
 );
 
-/**
- * @alpha
- */
-export const jsonRoot: FieldSchema = TypedSchema.field(FieldKinds.value, ...jsonTypes);
+export const jsonArray = builder.fieldNodeRecursive(
+	"array",
+	FlexFieldSchema.createUnsafe(FieldKinds.sequence, jsonRoot),
+);
+
+export const jsonSchema = builder.intoLibrary();

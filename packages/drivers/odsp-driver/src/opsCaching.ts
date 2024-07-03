@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { performance } from "@fluidframework/common-utils";
+import { performance } from "@fluid-internal/client-utils";
+import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils/internal";
 
 // ISequencedDocumentMessage
 export interface IMessage {
@@ -34,11 +34,11 @@ export class OpsCache {
 
 	constructor(
 		startingSequenceNumber: number,
-		private readonly logger: ITelemetryLogger,
+		private readonly logger: ITelemetryLoggerExt,
 		private readonly cache: ICache,
 		private readonly batchSize: number,
-		private readonly timerGranularity,
-		private totalOpsToCache,
+		private readonly timerGranularity: number,
+		private totalOpsToCache: number,
 	) {
 		/**
 		 * Initial batch is a special case because it will never be full - all ops prior (inclusive) to
@@ -55,7 +55,7 @@ export class OpsCache {
 		}
 	}
 
-	public dispose() {
+	public dispose(): void {
 		this.batches.clear();
 		if (this.timer !== undefined) {
 			clearTimeout(this.timer);
@@ -63,9 +63,16 @@ export class OpsCache {
 		}
 	}
 
-	public flushOps() {
+	public flushOps(): void {
 		for (const [key, value] of this.batches) {
-			if (value === null || !value.dirty) {
+			// Don't flush if the batch has no ops, already flushed or has empty slots at both beginning and end.
+			if (
+				value === null ||
+				!value.dirty ||
+				value.batchData.length === 0 ||
+				(value.batchData[0] === undefined &&
+					value.batchData[value.batchData.length - 1] === undefined)
+			) {
 				continue;
 			}
 			value.dirty = false;
@@ -73,7 +80,7 @@ export class OpsCache {
 		}
 	}
 
-	public addOps(ops: IMessage[]) {
+	public addOps(ops: IMessage[]): void {
 		if (this.totalOpsToCache <= 0) {
 			return;
 		}
@@ -107,6 +114,7 @@ export class OpsCache {
 			if (currentBatch.remainingSlots === 0) {
 				// batch is full, flush to cache
 				this.write(batchNumber, currentBatch);
+				// eslint-disable-next-line unicorn/no-null
 				this.batches.set(batchNumber, null);
 			} else {
 				this.scheduleTimer();
@@ -137,7 +145,8 @@ export class OpsCache {
 			if (res === undefined) {
 				return messages;
 			}
-			const result: CacheEntry = JSON.parse(res);
+			const result: CacheEntry = JSON.parse(res) as CacheEntry;
+			const prevMessagesLength = messages.length;
 			for (const op of result) {
 				// Note that we write out undefined, but due to JSON.stringify, it turns into null!
 				if (op) {
@@ -152,11 +161,17 @@ export class OpsCache {
 						}
 					}
 					messages.push(op);
-				} else if (messages.length !== 0) {
+				} else if (messages.length > 0) {
+					// If there is any gap, return the messages till now.
 					return messages;
 				}
 			}
 
+			// If we didn't get any op from this batch, then return messages till now. As it tells us that,
+			// either the first message "from" is not present in cache or a gap will occur from 1 batch to next.
+			if (prevMessagesLength === messages.length) {
+				return messages;
+			}
 			batchNumber++;
 		}
 	}
@@ -185,7 +200,7 @@ export class OpsCache {
 		return messages;
 	}
 
-	protected write(batchNumber: number, payload: IBatch) {
+	protected write(batchNumber: number, payload: IBatch): void {
 		// Errors are caught and logged by PersistedCacheWithErrorHandling that sits
 		// in the adapter chain of cache adapters
 		this.cache
@@ -195,7 +210,7 @@ export class OpsCache {
 			});
 	}
 
-	protected scheduleTimer() {
+	protected scheduleTimer(): void {
 		if (!this.timer && this.timerGranularity > 0) {
 			this.timer = setTimeout(() => {
 				this.timer = undefined;
@@ -204,15 +219,15 @@ export class OpsCache {
 		}
 	}
 
-	private getBatchNumber(sequenceNumber: number) {
+	private getBatchNumber(sequenceNumber: number): number {
 		return Math.floor(sequenceNumber / this.batchSize);
 	}
 
-	private getPositionInBatchArray(sequenceNumber: number) {
+	private getPositionInBatchArray(sequenceNumber: number): number {
 		return sequenceNumber % this.batchSize;
 	}
 
-	private initializeNewBatchDataArray() {
+	private initializeNewBatchDataArray(): IMessage[] {
 		const tempArray: IMessage[] = [];
 		tempArray.length = this.batchSize; // fill with empty, undefined elements
 		return tempArray;

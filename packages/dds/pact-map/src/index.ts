@@ -3,5 +3,5 @@
  * Licensed under the MIT License.
  */
 
-export { IPactMap, IPactMapEvents } from "./interfaces";
-export { PactMap } from "./pactMap";
+export type { IPactMap, IPactMapEvents, IAcceptedPact } from "./interfaces.js";
+export { PactMap } from "./pactMapFactory.js";

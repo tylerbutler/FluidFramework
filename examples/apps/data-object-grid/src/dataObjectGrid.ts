@@ -3,15 +3,13 @@
  * Licensed under the MIT License.
  */
 
-import EventEmitter from "events";
-
-import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct";
-import { Serializable } from "@fluidframework/datastore-definitions";
-
+import type { EventEmitter } from "@fluid-example/example-utils";
+import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct/internal";
+import { Serializable } from "@fluidframework/datastore-definitions/internal";
 import { Layout } from "react-grid-layout";
 import { v4 as uuid } from "uuid";
 
-import { registryEntries, dataObjectRegistry } from "./dataObjectRegistry";
+import { dataObjectRegistry, registryEntries } from "./dataObjectRegistry.js";
 
 /**
  * Interface for the data object grid data object.
@@ -62,7 +60,7 @@ export interface IDataObjectGridItem {
 	/**
 	 * The unknown blob of data that backs the instance of the item.  Probably contains handles, etc.
 	 */
-	readonly serializableData: Serializable;
+	readonly serializableData: Serializable<unknown>;
 	/**
 	 * The react grid layout of the item.
 	 */
@@ -73,9 +71,7 @@ export interface IDataObjectGridItem {
  * DataObjectGrid manages multiple subcomponents and their layouts.
  */
 export class DataObjectGrid extends DataObject implements IDataObjectGrid {
-	public static get ComponentName() {
-		return "@fluid-example/data-object-grid";
-	}
+	public static readonly ComponentName = "@fluid-example/data-object-grid";
 
 	private static readonly factory = new DataObjectFactory(
 		DataObjectGrid.ComponentName,

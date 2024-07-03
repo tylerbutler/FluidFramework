@@ -3,19 +3,25 @@
  * Licensed under the MIT License.
  */
 
-import { FieldChangeHandler } from "../modular-schema";
-import { Changeset, isEmpty } from "./format";
-import { sequenceFieldChangeRebaser } from "./sequenceFieldChangeRebaser";
-import { sequenceFieldChangeEncoder } from "./sequenceFieldChangeEncoder";
-import { SequenceFieldEditor, sequenceFieldEditor } from "./sequenceFieldEditor";
-import { sequenceFieldToDelta } from "./sequenceFieldToDelta";
+import type { FieldChangeHandler } from "../modular-schema/index.js";
+
+import { relevantRemovedRoots } from "./relevantRemovedRoots.js";
+import { sequenceFieldChangeRebaser } from "./sequenceFieldChangeRebaser.js";
+import { sequenceFieldChangeCodecFactory } from "./sequenceFieldCodecs.js";
+import { type SequenceFieldEditor, sequenceFieldEditor } from "./sequenceFieldEditor.js";
+import { sequenceFieldToDelta } from "./sequenceFieldToDelta.js";
+import type { Changeset } from "./types.js";
+import { createEmpty, getNestedChanges, isEmpty } from "./utils.js";
 
 export type SequenceFieldChangeHandler = FieldChangeHandler<Changeset, SequenceFieldEditor>;
 
 export const sequenceFieldChangeHandler: SequenceFieldChangeHandler = {
 	rebaser: sequenceFieldChangeRebaser,
-	encoder: sequenceFieldChangeEncoder,
+	codecsFactory: sequenceFieldChangeCodecFactory,
 	editor: sequenceFieldEditor,
 	intoDelta: sequenceFieldToDelta,
+	relevantRemovedRoots,
 	isEmpty,
+	getNestedChanges,
+	createEmpty,
 };

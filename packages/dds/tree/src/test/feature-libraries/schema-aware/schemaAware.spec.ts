@@ -3,301 +3,338 @@
  * Licensed under the MIT License.
  */
 
-import {
-	ApiMode,
-	NodeDataFor,
-	TypeSetToTypedTrees,
-	TypedSchemaData,
-	typedSchemaData,
-	TypedNode,
-	/* eslint-disable-next-line import/no-internal-modules */
-} from "../../../feature-libraries/schema-aware/schemaAware";
+// This file replicates a lot of generated types manually for test comparisons.
+// Since "type" and "interface" type check slightly different, this file needs to create types when the linter recommends interfaces.
+/* eslint-disable @typescript-eslint/consistent-type-definitions */
 
-import { GlobalFieldKey, TreeSchema, TreeSchemaIdentifier, ValueSchema } from "../../../core";
-import { areSafelyAssignable, requireAssignableTo, requireTrue } from "../../../util";
+import type { TreeNodeSchemaIdentifier } from "../../../core/index.js";
+import { SchemaBuilder, leaf } from "../../../domains/index.js";
 import {
-	valueSymbol,
+	type ContextuallyTypedNodeDataObject,
 	FieldKinds,
-	defaultSchemaPolicy,
+	type FlexAllowedTypes,
+	FlexFieldSchema,
+	type FlexTreeNodeSchema,
 	typeNameSymbol,
-	TypedSchema,
-	ContextuallyTypedNodeDataObject,
-	FieldViewSchema,
-} from "../../../feature-libraries";
-import {
-	FlattenKeys,
+	valueSymbol,
+	type FlexFieldKind,
+} from "../../../feature-libraries/index.js";
+import type {
+	AllowedTypesToFlexInsertableTree,
+	InsertableFlexField,
+	InsertableFlexNode,
+	TypedFields,
+	UnbrandedName,
 	// eslint-disable-next-line import/no-internal-modules
-} from "../../../feature-libraries/modular-schema/typedSchema/typeUtils";
+} from "../../../feature-libraries/schema-aware/schemaAware.js";
+import type {
+	FlexList,
+	FlexListToNonLazyArray,
+	// eslint-disable-next-line import/no-internal-modules
+} from "../../../feature-libraries/typed-schema/flexList.js";
+import type {
+	areSafelyAssignable,
+	requireAssignableTo,
+	requireTrue,
+} from "../../../util/index.js";
 
-// Aliases for conciseness
-const { optional, value, sequence } = FieldKinds;
-const { tree, field } = TypedSchema;
-
-// Example Schema:
-
-// Declare a simple type which just holds a number.
-const numberSchema = tree("number", {
-	value: ValueSchema.Number,
-});
-
-// Check the various ways to refer to child types produce the same results
+// Test UnbrandedName
 {
-	const numberField1 = field(value, numberSchema);
-	const numberField2 = field(value, numberSchema.name);
-	const numberField3 = field(value, numberSchema.typeInfo.name);
-	const numberField4 = field(value, "number");
-	type check1_ = requireAssignableTo<typeof numberField1, typeof numberField2>;
-	type check2_ = requireAssignableTo<typeof numberField2, typeof numberField3>;
-	type check3_ = requireAssignableTo<typeof numberField3, typeof numberField4>;
-	type check4_ = requireAssignableTo<typeof numberField4, typeof numberField1>;
+	type BrandedName = TreeNodeSchemaIdentifier<"X">;
+	type Unbranded = UnbrandedName<BrandedName>;
+	type _check = requireTrue<areSafelyAssignable<Unbranded, "X">>;
 }
-
-const ballSchema = tree("ball", {
-	local: {
-		// Test schema objects in as well as strings.
-		x: field(value, numberSchema),
-		y: field(value, "number"),
-		size: field(optional, "number"),
-	},
-});
-
-const boxSchema = tree("box", {
-	local: {
-		// Use name for recursive case:
-		children: field(sequence, ballSchema, "box"),
-	},
-});
-
-type x = typeof numberSchema.typeInfo.name;
-const schemaData = typedSchemaData([], numberSchema, ballSchema, boxSchema);
-
-const schemaData2 = {
-	policy: defaultSchemaPolicy,
-	globalFieldSchema: new Map() as ReadonlyMap<GlobalFieldKey, FieldViewSchema>,
-	treeSchema: new Map<TreeSchemaIdentifier, TreeSchema>([
-		[numberSchema.name, numberSchema],
-		[ballSchema.name, ballSchema],
-		[boxSchema.name, boxSchema],
-	]) as ReadonlyMap<TreeSchemaIdentifier, TreeSchema>,
-	treeSchemaObject: {
-		number: numberSchema,
-		ball: ballSchema,
-		box: boxSchema,
-	} as unknown as SchemaMap,
-	allTypes: constArray("number", "ball", "box"),
-} as const;
 
 {
-	type check1_ = requireAssignableTo<typeof schemaData, TypedSchemaData>;
-	type check2_ = requireAssignableTo<typeof schemaData2, TypedSchemaData>;
-	type check3_ = requireAssignableTo<typeof schemaData, typeof schemaData2>;
-	type check4_ = requireAssignableTo<typeof schemaData2, typeof schemaData>;
-}
+	// Aliases for conciseness
+	const { optional, required, sequence } = FieldKinds;
 
-// Infers more specific type for the items than an array literal would, but doesn't add "readonly".
-// Useful since "readonly" is mostly just noise for arrays with have statically known content.
-function constArray<T extends string[]>(...a: T): T {
-	return a;
-}
+	// Example Schema:
+	const builder = new SchemaBuilder({ scope: "SchemaAwareTests" });
 
-interface SchemaMap {
-	number: typeof numberSchema;
-	ball: typeof ballSchema;
-	box: typeof boxSchema;
-}
+	// Declare a simple type which just holds a number.
+	const numberSchema = leaf.number;
 
-const extractedNumber = schemaData.treeSchemaObject.number;
-const extractedNumber2 = schemaData2.treeSchemaObject.number;
+	// Check the various ways to refer to child types produce the same results
+	{
+		const numberField1 = FlexFieldSchema.create(required, [numberSchema]);
+		const numberField2 = SchemaBuilder.required(numberSchema);
+		const numberField3 = FlexFieldSchema.createUnsafe(required, [numberSchema]);
+		type check1_ = requireAssignableTo<typeof numberField1, typeof numberField2>;
+		type check2_ = requireAssignableTo<typeof numberField2, typeof numberField3>;
+		type check3_ = requireAssignableTo<typeof numberField3, typeof numberField1>;
 
-const extractedTypes = schemaData.allTypes;
-const extractedTypes2 = schemaData2.allTypes;
-
-// Example Use:
-type BallTreeX = FlattenKeys<TypedNode<readonly ["ball"], ApiMode.Flexible, typeof schemaData>>;
-type BallTree = NodeDataFor<typeof schemaData, ApiMode.Flexible, typeof ballSchema>;
-
-{
-	type check1_ = requireAssignableTo<BallTree, ContextuallyTypedNodeDataObject>;
-}
-
-// We can also get the type for the "number" nodes.
-type NumberTree = TypedNode<readonly ["number"], ApiMode.Flexible, typeof schemaData>;
-
-const n1: NumberTree = 5;
-const n2: NumberTree = { [valueSymbol]: 5 };
-const n3: NumberTree = { [typeNameSymbol]: "number", [valueSymbol]: 5 };
-
-const b1: BallTree = { x: 1, y: 2, size: 10 };
-const b1x: BallTree = { x: 1, y: 2 };
-const b2: BallTree = { [typeNameSymbol]: "ball", x: 1, y: 2 };
-const b4: BallTree = { [typeNameSymbol]: "ball", x: 1, y: n3 };
-const b6: BallTree = { [typeNameSymbol]: ballSchema.name, x: 1, y: n3 };
-
-// This is type safe, so we can only access fields that are in the schema.
-// @ts-expect-error This is an error since it accesses an invalid field.
-const b5: BallTree = { [typeNameSymbol]: ballSchema.name, x: 1, z: n3 };
-
-// @ts-expect-error Wrong type
-const nError1: NumberTree = { [typeNameSymbol]: ballSchema.name, [valueSymbol]: 5 };
-
-{
-	// A concrete example for the "x" field:
-	type BallXFieldInfo = typeof ballSchema.typeInfo.local.x;
-	type BallXFieldTypes = BallXFieldInfo["types"];
-	type check_ = requireAssignableTo<BallXFieldTypes, TypedSchema.NameSet<["number"]>>;
-
-	type Child = TypeSetToTypedTrees<typeof schemaData, ApiMode.Flexible, BallXFieldTypes>;
-
-	type check3_ = requireAssignableTo<Child, NumberTree>;
-	type check4_ = requireAssignableTo<NumberTree, Child>;
-	type Child2 = TypeSetToTypedTrees<
-		typeof schemaData,
-		ApiMode.Flexible,
-		TypedSchema.NameSet<["number"]>
-	>;
-
-	type check3x_ = requireAssignableTo<Child2, NumberTree>;
-	type check4x_ = requireAssignableTo<NumberTree, Child2>;
-}
-
-interface TypeBuilder<TSchema extends TypedSchema.LabeledTreeSchema> {
-	a: NodeDataFor<typeof schemaData, ApiMode.Flexible, TSchema>;
-	b: NodeDataFor<typeof schemaData, ApiMode.Normalized, TSchema>;
-	c: NodeDataFor<typeof schemaData, ApiMode.Wrapped, TSchema>;
-}
-
-type FlexNumber =
-	| number
-	| {
-			[typeNameSymbol]?: "number" | undefined;
-			[valueSymbol]: number;
-	  };
-
-// This type type checks differently if its an interface, which breaks.
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-type WrappedNumber = {
-	[typeNameSymbol]: "number";
-	[valueSymbol]: number;
-};
-
-// Test terminal cases:
-{
-	type F = TypeBuilder<typeof numberSchema>;
-	type XA = F["a"];
-	type XB = F["b"];
-	type XC = F["c"];
-	type _check1 = requireTrue<areSafelyAssignable<XA, FlexNumber>>;
-	type _check2 = requireTrue<areSafelyAssignable<XB, number>>;
-	type _check3 = requireTrue<areSafelyAssignable<XC, WrappedNumber>>;
-}
-
-interface FlexBall {
-	[typeNameSymbol]?: "ball" | undefined;
-	x: FlexNumber;
-	y: FlexNumber;
-	size?: FlexNumber | undefined;
-}
-
-interface NormalizedBall {
-	[typeNameSymbol]: typeof ballSchema.name;
-	x: number;
-	y: number;
-	size?: number;
-}
-
-// This type type checks differently if its an interface, which breaks.
-// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-type WrappedBall = {
-	[typeNameSymbol]: "ball";
-	[valueSymbol]: undefined;
-	x: WrappedNumber;
-	y: WrappedNumber;
-	size: WrappedNumber | undefined;
-};
-
-// Test non recursive cases:
-{
-	type F = TypeBuilder<typeof ballSchema>;
-	type XA = F["a"];
-	type XB = F["b"];
-	type XC = F["c"];
-	type _check1 = requireTrue<areSafelyAssignable<XA, FlexBall>>;
-	type _check2 = requireTrue<areSafelyAssignable<XB, NormalizedBall>>;
-	type _check3 = requireTrue<areSafelyAssignable<XC, WrappedBall>>;
-}
-
-// Test recursive cases:
-{
-	type F = TypeBuilder<typeof boxSchema>;
-	type XA = F["a"];
-	type XB = F["b"];
-	type XC = F["c"];
-
-	interface FlexBox {
-		[typeNameSymbol]?: "box";
-		children: (FlexBall | FlexBox)[];
+		const numberFieldLazy = FlexFieldSchema.create(required, [() => numberSchema]);
+		type NonLazy = FlexListToNonLazyArray<typeof numberFieldLazy.allowedTypes>;
+		type check4_ = requireAssignableTo<NonLazy, typeof numberField1.allowedTypes>;
 	}
-	type _check1 = requireTrue<areSafelyAssignable<XA, FlexBox>>;
-	interface NormalizedBox {
-		[typeNameSymbol]: typeof boxSchema.name;
-		children: (NormalizedBall | NormalizedBox)[];
+
+	// Simple object
+	{
+		const simpleObject = builder.object("simple", {
+			x: builder.required(numberSchema),
+		});
 	}
-	type _check2 = requireTrue<areSafelyAssignable<XB, NormalizedBox>>;
+
+	const ballSchema = builder.object("ball", {
+		// Test schema objects in as well as lazy functions
+		x: numberSchema,
+		y: [() => numberSchema],
+		size: builder.optional(numberSchema),
+	});
+
+	// Recursive case:
+	const boxSchema = builder.objectRecursive("box", {
+		children: FlexFieldSchema.createUnsafe(sequence, [ballSchema, () => boxSchema]),
+	});
 
 	{
-		const child: XA = {
-			children: [],
-		};
-		const parent: XA = {
-			children: [
-				child,
-				{
-					// TODO: this should be required to disambiguate but currently its not.
-					[typeNameSymbol]: "ball",
-					x: 1,
-					y: { [typeNameSymbol]: "number", [valueSymbol]: 2 },
-				},
-			],
-		};
+		// Recursive objects don't get this type checking automatically, so confirm it
+		type _check = requireAssignableTo<typeof boxSchema, FlexTreeNodeSchema>;
 	}
 
-	{
-		const child: XB = {
-			[typeNameSymbol]: boxSchema.name,
-			children: [],
-		};
-		const parent: XB = {
-			[typeNameSymbol]: boxSchema.name,
-			children: [
-				child,
-				{
-					[typeNameSymbol]: ballSchema.name,
-					x: 1,
-					y: 2,
-				},
-			],
-		};
-	}
+	type x = typeof numberSchema.name;
+	const schemaData = builder.intoLibrary();
+
+	// Example Use:
+	type BallTree = InsertableFlexNode<typeof ballSchema>;
 
 	{
-		const child: XC = {
-			[typeNameSymbol]: "box",
-			children: [],
-			[valueSymbol]: undefined,
-		};
-		const parent: XC = {
-			[typeNameSymbol]: "box",
-			children: [
-				child,
+		type check1_ = requireAssignableTo<BallTree, ContextuallyTypedNodeDataObject>;
+	}
+
+	// We can also get the type for the "number" nodes.
+	type NumberTree = InsertableFlexNode<typeof numberSchema>;
+
+	const n1: NumberTree = 5;
+
+	const b1: BallTree = { x: 1, y: 2, size: 10 };
+	const b1x: BallTree = { x: 1, y: 2, size: undefined }; // TODO: restore ability to omit optional fields.
+	const b2: BallTree = { [typeNameSymbol]: ballSchema.name, x: 1, y: 2, size: undefined };
+	const b4: BallTree = {
+		[typeNameSymbol]: "SchemaAwareTests.ball",
+		x: 1,
+		y: 5,
+		size: undefined,
+	};
+	const b6: BallTree = { [typeNameSymbol]: ballSchema.name, x: 1, y: 5, size: undefined };
+
+	// This is type safe, so we can only access fields that are in the schema.
+	// @ts-expect-error This is an error since it accesses an invalid field.
+	const b5: BallTree = { [typeNameSymbol]: ballSchema.name, x: 1, z: 5 };
+
+	// @ts-expect-error Missing required field
+	const b7: BallTree = { [typeNameSymbol]: ballSchema.name, x: 1 };
+
+	{
+		type XField = (typeof ballSchema)["objectNodeFieldsObject"]["x"];
+		type XMultiplicity = XField["kind"]["multiplicity"];
+		type XContent = InsertableFlexField<XField>;
+		type XChild = XField["allowedTypes"];
+		type _check = requireAssignableTo<XContent, number>;
+	}
+
+	// @ts-expect-error Wrong type
+	const nError1: NumberTree = { [typeNameSymbol]: ballSchema.name, [valueSymbol]: 5 };
+
+	{
+		// A concrete example for the "x" field:
+		type BallXFieldInfo = typeof ballSchema.objectNodeFieldsObject.x;
+		type BallXFieldTypes = BallXFieldInfo["allowedTypes"];
+		type check_ = requireAssignableTo<BallXFieldTypes, readonly [typeof numberSchema]>;
+
+		type Child = AllowedTypesToFlexInsertableTree<BallXFieldTypes>;
+
+		type check3_ = requireAssignableTo<Child, NumberTree>;
+		type check4_ = requireAssignableTo<NumberTree, Child>;
+		type Child2 = AllowedTypesToFlexInsertableTree<[typeof numberSchema]>;
+
+		type check3x_ = requireAssignableTo<Child2, NumberTree>;
+		type check4x_ = requireAssignableTo<NumberTree, Child2>;
+	}
+
+	type FlexNumber =
+		| number
+		| {
+				[typeNameSymbol]?: "com.fluidframework.leaf.number";
+				[valueSymbol]: number;
+		  };
+
+	// Test terminal cases:
+	{
+		type S = InsertableFlexNode<typeof numberSchema>;
+		type _check4 = requireTrue<areSafelyAssignable<S, number>>;
+	}
+
+	interface FlexBall {
+		[typeNameSymbol]?: "SchemaAwareTests.ball";
+		x: FlexNumber;
+		y: FlexNumber;
+		size: FlexNumber | undefined;
+	}
+
+	interface EditableBall {
+		[typeNameSymbol]: typeof ballSchema.name;
+		x: number;
+		y: number;
+		size: number | undefined;
+	}
+
+	// This type type checks differently if its an interface, which breaks.
+	type SimpleBall = {
+		[typeNameSymbol]?: "SchemaAwareTests.ball";
+		x: number;
+		y: number;
+		size: number | undefined;
+	};
+
+	// Test non recursive cases:
+	{
+		type S = InsertableFlexNode<typeof ballSchema>;
+		type _check4 = requireTrue<areSafelyAssignable<S, SimpleBall>>;
+	}
+
+	// Test polymorphic cases:
+	{
+		const builder2 = new SchemaBuilder({ scope: "SchemaAwarePolymorphicTest" });
+		const bool = leaf.boolean;
+		const str = leaf.string;
+		const parentField = SchemaBuilder.required([str, bool]);
+		const parent = builder2.object("parent", { child: parentField });
+
+		interface SimpleParent {
+			[typeNameSymbol]?: "SchemaAwarePolymorphicTest.parent";
+			child: boolean | string;
+		}
+
+		// Check child handling
+		{
+			type ChildSchema = typeof parentField;
+			type ChildSchemaTypes = ChildSchema extends FlexFieldSchema<FlexFieldKind, infer Types>
+				? Types
+				: never;
+			type AllowedChildTypes = ChildSchema["allowedTypes"];
+			type _check = requireAssignableTo<ChildSchemaTypes, AllowedChildTypes>;
+			type BoolChild = ChildSchemaTypes[1];
+			type _check3 = requireAssignableTo<ChildSchemaTypes, FlexAllowedTypes>;
+			type _check4 = requireAssignableTo<ChildSchemaTypes, FlexList<FlexTreeNodeSchema>>;
+			type NormalizedChildSchemaTypes = FlexListToNonLazyArray<ChildSchemaTypes>;
+			type ChildTypes = AllowedTypesToFlexInsertableTree<ChildSchemaTypes>;
+		}
+
+		{
+			type S = InsertableFlexNode<typeof parent>;
+			type _check4 = requireTrue<areSafelyAssignable<S, SimpleParent>>;
+		}
+	}
+
+	// Test simple recursive cases:
+	{
+		const builder2 = new SchemaBuilder({ scope: "SchemaAwareRecursiveTest" });
+		const rec = builder2.objectRecursive("rec", {
+			x: FlexFieldSchema.createUnsafe(optional, [() => rec]),
+		});
+
+		type RecObjectSchema = typeof rec;
+		type RecFieldSchema = typeof rec.objectNodeFieldsObject.x;
+
+		{
+			// Recursive objects don't get this type checking automatically, so confirm it
+			type _check1 = requireAssignableTo<RecObjectSchema, FlexTreeNodeSchema>;
+			type _check2 = requireAssignableTo<RecFieldSchema, FlexFieldSchema>;
+		}
+
+		// Confirm schema's recursive type is correct.
+		{
+			type Allowed = RecFieldSchema["allowedTypes"];
+			type AllowedNonLazy = FlexListToNonLazyArray<Allowed>[0];
+			type _check1 = requireTrue<areSafelyAssignable<AllowedNonLazy, RecObjectSchema>>;
+		}
+
+		// Check generated schema aware types
+		{
+			type ExpectedFlexible = {
+				[typeNameSymbol]?: "SchemaAwareRecursiveTest.rec";
+				x: ExpectedFlexible | undefined;
+			};
+
+			type ExpectedSimple = {
+				[typeNameSymbol]?: "SchemaAwareRecursiveTest.rec";
+				x: ExpectedSimple | undefined;
+			};
+
+			type ExpectedSimple2 = {
+				x: ExpectedSimple2 | undefined;
+			};
+
+			type Simple = InsertableFlexNode<typeof rec>;
+
+			// Check Simple's field type unit tests
+			{
+				type ChildTree = AllowedTypesToFlexInsertableTree<RecFieldSchema["allowedTypes"]>;
+				type SimpleField = InsertableFlexField<RecFieldSchema>;
+			}
+
+			// Overall integration tests
+			// type _check2 = requireTrue<areSafelyAssignable<XB, EditableParent>>;
+			type _check3 = requireTrue<areSafelyAssignable<Simple, ExpectedSimple>>;
+		}
+	}
+
+	// Test recursive cases:
+	{
+		type S = InsertableFlexNode<typeof boxSchema>;
+
+		interface FlexBox {
+			[typeNameSymbol]?: "SchemaAwareTests.box";
+			children: (FlexBall | FlexBox)[];
+		}
+
+		// Check child handling
+		{
+			type ChildSchema = typeof boxSchema.objectNodeFieldsObject.children;
+			type ChildSchemaTypes = ChildSchema extends FlexFieldSchema<FlexFieldKind, infer Types>
+				? Types
+				: never;
+			type AllowedChildTypes = ChildSchema["allowedTypes"];
+			type _check = requireAssignableTo<ChildSchemaTypes, AllowedChildTypes>;
+			type BoxChild = ChildSchemaTypes[1];
+			type _check3 = requireAssignableTo<ChildSchemaTypes, FlexAllowedTypes>;
+			type _check4 = requireAssignableTo<ChildSchemaTypes, FlexList<FlexTreeNodeSchema>>;
+			type NormalizedChildSchemaTypes = FlexListToNonLazyArray<ChildSchemaTypes>;
+			{
 				{
-					[typeNameSymbol]: "ball",
-					[valueSymbol]: undefined,
-					x: { [typeNameSymbol]: "number", [valueSymbol]: 1 },
-					y: { [typeNameSymbol]: "number", [valueSymbol]: 2 },
-					size: undefined,
-				},
-			],
-			[valueSymbol]: undefined,
-		};
+					// Should be the same as FlexBox
+					type BoxChildType3 = InsertableFlexNode<typeof boxSchema>;
+
+					type BoxChildTypeFields = TypedFields<typeof boxSchema.objectNodeFieldsObject>;
+
+					type BoxChildTypeField = InsertableFlexField<
+						typeof boxSchema.objectNodeFieldsObject.children
+					>;
+				}
+			}
+			type ChildTypes = AllowedTypesToFlexInsertableTree<ChildSchemaTypes>;
+			type Field = InsertableFlexField<ChildSchema>;
+		}
+
+		{
+			const child: S = {
+				[typeNameSymbol]: boxSchema.name,
+				children: [],
+			};
+			const parent: S = {
+				[typeNameSymbol]: boxSchema.name,
+				children: [
+					child,
+					{
+						[typeNameSymbol]: ballSchema.name,
+						x: 1,
+						y: 2,
+						size: undefined,
+					},
+				],
+			};
+		}
 	}
 }

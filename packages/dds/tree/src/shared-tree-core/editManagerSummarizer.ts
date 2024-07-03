@@ -3,39 +3,28 @@
  * Licensed under the MIT License.
  */
 
-import { assert, bufferToString, IsoBuffer } from "@fluidframework/common-utils";
-import { IFluidHandle } from "@fluidframework/core-interfaces";
-import {
-	IChannelStorageService,
-	IFluidDataStoreRuntime,
-} from "@fluidframework/datastore-definitions";
-import {
+import { bufferToString } from "@fluid-internal/client-utils";
+import { assert } from "@fluidframework/core-utils/internal";
+import type { IChannelStorageService } from "@fluidframework/datastore-definitions/internal";
+import type {
 	IGarbageCollectionData,
 	ISummaryTreeWithStats,
 	ITelemetryContext,
-} from "@fluidframework/runtime-definitions";
-import { createSingleBlobSummary } from "@fluidframework/shared-object-base";
-import { JsonCompatibleReadOnly, mapIterable } from "../util";
-import {
-	cachedValue,
-	ChangeFamily,
-	Commit,
-	EditManager,
-	ICachedValue,
-	SummaryData,
-	recordDependency,
-	SessionId,
-	SummaryBranch,
-	SequencedCommit,
-	ChangeEncoder,
-	ChangeFamilyEditor,
-} from "../core";
-import { Summarizable, SummaryElementParser, SummaryElementStringifier } from "./sharedTreeCore";
+} from "@fluidframework/runtime-definitions/internal";
+import { createSingleBlobSummary } from "@fluidframework/shared-object-base/internal";
 
-/**
- * The storage key for the blob in the summary containing EditManager data
- */
-const blobKey = "Blob";
+import type { IJsonCodec } from "../codec/index.js";
+import type { ChangeFamily, ChangeFamilyEditor, SchemaAndPolicy } from "../core/index.js";
+import type { JsonCompatibleReadOnly } from "../util/index.js";
+
+import type { EditManager, SummaryData } from "./editManager.js";
+import type { EditManagerEncodingContext } from "./editManagerCodecs.js";
+import type {
+	Summarizable,
+	SummaryElementParser,
+	SummaryElementStringifier,
+} from "./sharedTreeCore.js";
+import type { IIdCompressor } from "@fluidframework/id-compressor";
 
 const stringKey = "String";
 
@@ -45,25 +34,21 @@ const stringKey = "String";
 export class EditManagerSummarizer<TChangeset> implements Summarizable {
 	public readonly key = "EditManager";
 
-	private readonly editDataBlob: ICachedValue<Promise<IFluidHandle<ArrayBufferLike>>>;
-
 	public constructor(
-		private readonly runtime: IFluidDataStoreRuntime,
 		private readonly editManager: EditManager<
+			ChangeFamilyEditor,
 			TChangeset,
 			ChangeFamily<ChangeFamilyEditor, TChangeset>
 		>,
-	) {
-		this.editDataBlob = cachedValue(async (observer) => {
-			recordDependency(observer, this.editManager);
-			const dataString = stringifySummary(
-				this.editManager.getSummaryData(),
-				this.editManager.changeFamily.encoder,
-			);
-			// For now we are not chunking the edit data, but still put it in a reusable blob:
-			return this.runtime.uploadBlob(IsoBuffer.from(dataString));
-		});
-	}
+		private readonly codec: IJsonCodec<
+			SummaryData<TChangeset>,
+			JsonCompatibleReadOnly,
+			JsonCompatibleReadOnly,
+			EditManagerEncodingContext
+		>,
+		private readonly idCompressor: IIdCompressor,
+		private readonly schemaAndPolicy?: SchemaAndPolicy,
+	) {}
 
 	public getAttachSummary(
 		stringify: SummaryElementStringifier,
@@ -71,11 +56,7 @@ export class EditManagerSummarizer<TChangeset> implements Summarizable {
 		trackState?: boolean,
 		telemetryContext?: ITelemetryContext,
 	): ISummaryTreeWithStats {
-		const dataString = stringifySummary(
-			this.editManager.getSummaryData(),
-			this.editManager.changeFamily.encoder,
-		);
-		return createSingleBlobSummary(stringKey, dataString);
+		return this.summarizeCore(stringify);
 	}
 
 	public async summarize(
@@ -84,9 +65,17 @@ export class EditManagerSummarizer<TChangeset> implements Summarizable {
 		trackState?: boolean,
 		telemetryContext?: ITelemetryContext,
 	): Promise<ISummaryTreeWithStats> {
-		const editDataBlobHandle = await this.editDataBlob.get();
-		const content = stringify(editDataBlobHandle);
-		return createSingleBlobSummary(blobKey, content);
+		return this.summarizeCore(stringify);
+	}
+
+	private summarizeCore(stringify: SummaryElementStringifier): ISummaryTreeWithStats {
+		const context: EditManagerEncodingContext =
+			this.schemaAndPolicy !== undefined
+				? { schema: this.schemaAndPolicy, idCompressor: this.idCompressor }
+				: { idCompressor: this.idCompressor };
+		const jsonCompatible = this.codec.encode(this.editManager.getSummaryData(), context);
+		const dataString = stringify(jsonCompatible);
+		return createSingleBlobSummary(stringKey, dataString);
 	}
 
 	public getGCData(fullGC?: boolean): IGarbageCollectionData {
@@ -103,19 +92,7 @@ export class EditManagerSummarizer<TChangeset> implements Summarizable {
 		services: IChannelStorageService,
 		parse: SummaryElementParser,
 	): Promise<void> {
-		let schemaBuffer: ArrayBufferLike;
-		if (await services.contains(blobKey)) {
-			const handleBuffer = await services.readBlob(blobKey);
-			const handleString = bufferToString(handleBuffer, "utf-8");
-			const handle = parse(handleString) as IFluidHandle<ArrayBufferLike>;
-			schemaBuffer = await handle.get();
-		} else {
-			assert(
-				await services.contains(stringKey),
-				0x42b /* EditManager data is required in summary */,
-			);
-			schemaBuffer = await services.readBlob(stringKey);
-		}
+		const schemaBuffer: ArrayBufferLike = await services.readBlob(stringKey);
 
 		// After the awaits, validate that the data is in a clean state.
 		// This detects any data that could have been accidentally added through
@@ -125,64 +102,8 @@ export class EditManagerSummarizer<TChangeset> implements Summarizable {
 			0x42c /* There should not already be stored EditManager data when loading from summary */,
 		);
 
-		const dataString = bufferToString(schemaBuffer, "utf-8");
-		const data = parseSummary(dataString, this.editManager.changeFamily.encoder);
+		const summary = parse(bufferToString(schemaBuffer, "utf-8")) as JsonCompatibleReadOnly;
+		const data = this.codec.decode(summary, { idCompressor: this.idCompressor });
 		this.editManager.loadSummaryData(data);
 	}
-}
-
-/**
- * The in-memory data that summaries contain, in a JSON-compatible format.
- * Used as an implementation detail of {@link parseSummary} and {@link stringifySummary}.
- */
-interface ReadonlyJsonSummaryData {
-	readonly trunk: readonly Readonly<SequencedCommit<JsonCompatibleReadOnly>>[];
-	readonly branches: readonly [SessionId, Readonly<SummaryBranch<JsonCompatibleReadOnly>>][];
-}
-
-export interface CommitEncoder<TChange, TCommit extends Commit<TChange>> {
-	readonly encode: (commit: TCommit) => SequencedCommit<JsonCompatibleReadOnly>;
-	readonly decode: (commit: SequencedCommit<JsonCompatibleReadOnly>) => SequencedCommit<TChange>;
-}
-
-export function parseSummary<TChangeset>(
-	summary: string,
-	encoder: ChangeEncoder<TChangeset>,
-): SummaryData<TChangeset> {
-	const decodeCommit = <T extends Commit<JsonCompatibleReadOnly>>(commit: T) => ({
-		...commit,
-		change: encoder.decodeJson(0, commit.change),
-	});
-
-	const json: ReadonlyJsonSummaryData = JSON.parse(summary);
-
-	return {
-		trunk: json.trunk.map(decodeCommit),
-		branches: new Map(
-			mapIterable(json.branches, ([sessionId, branch]) => [
-				sessionId,
-				{ ...branch, commits: branch.commits.map(decodeCommit) },
-			]),
-		),
-	};
-}
-
-export function stringifySummary<TChangeset>(
-	data: SummaryData<TChangeset>,
-	encoder: ChangeEncoder<TChangeset>,
-): string {
-	const encodeCommit = <T extends Commit<TChangeset>>(commit: T) => ({
-		...commit,
-		change: encoder.encodeForJson(0, commit.change),
-	});
-
-	const json: ReadonlyJsonSummaryData = {
-		trunk: data.trunk.map(encodeCommit),
-		branches: Array.from(data.branches.entries(), ([sessionId, branch]) => [
-			sessionId,
-			{ ...branch, commits: branch.commits.map(encodeCommit) },
-		]),
-	};
-
-	return JSON.stringify(json);
 }

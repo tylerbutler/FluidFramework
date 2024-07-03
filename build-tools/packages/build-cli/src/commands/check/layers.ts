@@ -2,20 +2,22 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import { Timer } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
-import path from "path";
 
-import { LayerGraph, Timer, writeFileAsync } from "@fluidframework/build-tools";
-
-import { BaseCommand } from "../../base";
+import { BaseCommand, LayerGraph } from "../../library/index.js";
 
 const packagesMdFileName = "PACKAGES.md";
 
 export class CheckLayers extends BaseCommand<typeof CheckLayers> {
-	static description =
+	static readonly description =
 		"Checks that the dependencies between Fluid Framework packages are properly layered.";
 
-	static flags = {
+	static readonly flags = {
 		md: Flags.string({
 			description: `Generate ${packagesMdFileName} file at this path relative to repo root`,
 			required: false,
@@ -34,30 +36,23 @@ export class CheckLayers extends BaseCommand<typeof CheckLayers> {
 			required: false,
 		}),
 		...BaseCommand.flags,
-	};
+	} as const;
 
-	async run() {
-		const flags = this.flags;
+	async run(): Promise<void> {
+		const { flags } = this;
 		const timer = new Timer(flags.timer);
 
 		const context = await this.getContext();
-		const resolvedRoot = context.repo.resolvedRoot;
-
-		// Load the package
-		const packages = context.repo.packages;
+		const { packages, resolvedRoot } = context.repo;
 
 		timer.time("Package scan completed");
 
-		const layerGraph = LayerGraph.load(resolvedRoot, packages, flags.info);
+		const layerGraph = LayerGraph.load(resolvedRoot, packages.packages, flags.info);
 
 		// Write human-readable package list organized by layer
 		if (flags.md !== undefined) {
-			const packagesMdFilePath: string = path.join(
-				resolvedRoot,
-				flags.md,
-				packagesMdFileName,
-			);
-			await writeFileAsync(
+			const packagesMdFilePath: string = path.join(resolvedRoot, flags.md, packagesMdFileName);
+			await writeFile(
 				packagesMdFilePath,
 				layerGraph.generatePackageLayersMarkdown(resolvedRoot),
 			);
@@ -65,7 +60,7 @@ export class CheckLayers extends BaseCommand<typeof CheckLayers> {
 
 		// Write machine-readable dot file used to render a dependency graph
 		if (flags.dot !== undefined) {
-			await writeFileAsync(flags.dot, layerGraph.generateDotGraph());
+			await writeFile(flags.dot, layerGraph.generateDotGraph());
 		}
 
 		const success: boolean = layerGraph.verify();

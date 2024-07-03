@@ -3,7 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { EventEmitter } from "events";
+import events_pkg from "events_pkg";
+const { EventEmitter } = events_pkg;
 import * as util from "util";
 import {
 	BoxcarType,
@@ -19,6 +20,7 @@ import { ensureTopics } from "./kafkaTopics";
 
 /**
  * Kafka producer using the kafka-node library
+ * @internal
  */
 export class KafkaNodeProducer implements IProducer {
 	private readonly messages = new Map<string, IPendingBoxcar[]>();

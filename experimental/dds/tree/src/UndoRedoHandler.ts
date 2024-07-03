@@ -3,10 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import { assertNotUndefined } from './Common';
-import { SharedTreeEvent } from './EventTypes';
-import { EditId } from './Identifiers';
-import { EditCommittedEventArguments, SharedTree } from './SharedTree';
+import { assertNotUndefined } from './Common.js';
+import { SharedTreeEvent } from './EventTypes.js';
+import { EditId } from './Identifiers.js';
+import { EditCommittedEventArguments, SharedTree } from './SharedTree.js';
 
 // TODO: We temporarily duplicate these contracts from 'framework/undo-redo' to unblock development
 // while we decide on the correct layering for undo.
@@ -55,7 +55,10 @@ export class SharedTreeUndoRedoHandler {
  * Tracks a change on a shared tree and allows reverting it
  */
 export class SharedTreeRevertible implements IRevertible {
-	constructor(private readonly editId: EditId, private readonly tree: SharedTree) {}
+	constructor(
+		private readonly editId: EditId,
+		private readonly tree: SharedTree
+	) {}
 
 	public revert() {
 		this.tree.revert(this.editId);

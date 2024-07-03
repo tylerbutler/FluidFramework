@@ -3,12 +3,25 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryBufferedLogger } from "@fluidframework/test-driver-definitions";
-import { ITelemetryBaseEvent } from "@fluidframework/common-definitions";
+import { ITelemetryBufferedLogger } from "@fluid-internal/test-driver-definitions";
+import { ITelemetryBaseEvent } from "@fluidframework/core-interfaces";
 import * as mochaModule from "mocha";
-import { pkgName } from "./packageVersion";
+
+import { pkgName } from "./packageVersion.js";
+
+// this will enabling capturing the full stack for errors
+// since this is test capturing the full stack is worth it
+// in non-test environment we need to be more cautious
+// as this will incur a perf impact when errors are
+// thrown and will take more storage in any logging sink
+// https://v8.dev/docs/stack-trace-api
+Error.stackTraceLimit = Infinity;
 
 const testVariant = process.env.FLUID_TEST_VARIANT;
+const propsDict =
+	process.env.FLUID_LOGGER_PROPS != null
+		? JSON.parse(process.env.FLUID_LOGGER_PROPS)
+		: undefined;
 
 const _global: any = global;
 class TestLogger implements ITelemetryBufferedLogger {
@@ -24,7 +37,7 @@ class TestLogger implements ITelemetryBufferedLogger {
 		event.testName = this.testName ?? currentTestName;
 		event.testVariant = testVariant;
 		event.hostName = pkgName;
-		this.parentLogger.send(event);
+		this.parentLogger.send({ ...event, ...propsDict });
 	}
 	async flush() {
 		return this.parentLogger.flush();
@@ -45,6 +58,10 @@ const warn = console.warn;
 let currentTestLogger: ITelemetryBufferedLogger | undefined;
 let currentTestName: string | undefined;
 let originalLogger: ITelemetryBufferedLogger;
+
+/**
+ * @internal
+ */
 export const mochaHooks = {
 	beforeAll() {
 		originalLogger = _global.getTestLogger?.() ?? nullLogger;
@@ -96,6 +113,8 @@ export const mochaHooks = {
 			timedOut: this.currentTest?.timedOut,
 			testVariant,
 			hostName: pkgName,
+			error: this.currentTest?.err?.message,
+			stack: this.currentTest?.err?.stack,
 		});
 
 		console.log = log;

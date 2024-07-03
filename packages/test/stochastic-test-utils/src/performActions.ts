@@ -3,18 +3,19 @@
  * Licensed under the MIT License.
  */
 
-import { promises as fs, writeFileSync, mkdirSync } from "fs";
+import { promises as fs, mkdirSync, writeFileSync } from "fs";
 import path from "path";
+
+import { combineReducers, combineReducersAsync } from "./combineReducers.js";
 import {
 	AsyncGenerator,
 	AsyncReducer,
 	BaseFuzzTestState,
-	done,
 	Generator,
 	Reducer,
 	SaveInfo,
-} from "./types";
-import { combineReducers, combineReducersAsync } from "./combineReducers";
+	done,
+} from "./types.js";
 
 /**
  * Performs random actions on a set of clients.
@@ -31,6 +32,8 @@ import { combineReducers, combineReducersAsync } from "./combineReducers";
  * a given filepath.
  * This can be useful for debugging why a fuzz test may have failed.
  * Files can also be saved on failure.
+ *
+ * @internal
  */
 export async function performFuzzActionsAsync<
 	TOperation extends { type: string | number },
@@ -68,6 +71,8 @@ export async function performFuzzActionsAsync<
  * a given filepath.
  * This can be useful for debugging why a fuzz test may have failed.
  * Files can also be saved on failure.
+ *
+ * @internal
  */
 export async function performFuzzActionsAsync<
 	TOperation extends { type: string | number },
@@ -80,6 +85,9 @@ export async function performFuzzActionsAsync<
 	initialState: TState,
 	saveInfo?: SaveInfo,
 ): Promise<TState>;
+/**
+ * @internal
+ */
 export async function performFuzzActionsAsync<
 	TOperation extends { type: string | number },
 	TState extends BaseFuzzTestState,
@@ -89,7 +97,7 @@ export async function performFuzzActionsAsync<
 		| AsyncReducer<TOperation, TState>
 		| { [K in TOperation["type"]]: AsyncReducer<Extract<TOperation, { type: K }>, TState> },
 	initialState: TState,
-	saveInfo?: SaveInfo,
+	saveInfo: SaveInfo = { saveOnFailure: false, saveOnSuccess: false },
 ): Promise<TState> {
 	const operations: TOperation[] = [];
 	let state: TState = initialState;
@@ -100,26 +108,24 @@ export async function performFuzzActionsAsync<
 	const applyOperation: (operation: TOperation) => Promise<TState> = async (op) =>
 		(await reducer(state, op)) ?? state;
 
-	for (
-		let operation = await generator(state);
-		operation !== done;
-		operation = await generator(state)
-	) {
-		operations.push(operation);
-
-		try {
+	try {
+		for (
+			let operation = await generator(state);
+			operation !== done;
+			operation = await generator(state)
+		) {
+			operations.push(operation);
 			state = (await applyOperation(operation)) ?? state;
-		} catch (err) {
-			console.log(`Error encountered on operation number ${operations.length}`);
-			if (saveInfo?.saveOnFailure === true) {
-				await saveOpsToFile(saveInfo.filepath, operations);
-			}
-			throw err;
 		}
+	} catch (err) {
+		if (saveInfo.saveOnFailure !== false) {
+			await saveOpsToFile(saveInfo.saveOnFailure.path, operations);
+		}
+		throw err;
 	}
 
-	if (saveInfo?.saveOnSuccess === true) {
-		await saveOpsToFile(saveInfo.filepath, operations);
+	if (saveInfo.saveOnSuccess !== false) {
+		await saveOpsToFile(saveInfo.saveOnSuccess.path, operations);
 	}
 
 	return state;
@@ -130,8 +136,13 @@ export async function performFuzzActionsAsync<
  *
  * @param filepath - path to the file
  * @param operations - operations to save in the file
+ *
+ * @internal
  */
-async function saveOpsToFile(filepath: string, operations: { type: string | number }[]) {
+export async function saveOpsToFile(
+	filepath: string,
+	operations: { type: string | number }[],
+) {
 	await fs.mkdir(path.dirname(filepath), { recursive: true });
 	await fs.writeFile(filepath, JSON.stringify(operations, undefined, 4));
 }
@@ -151,6 +162,8 @@ async function saveOpsToFile(filepath: string, operations: { type: string | numb
  * a given filepath.
  * This can be useful for debugging why a fuzz test may have failed.
  * Files can also be saved on failure.
+ *
+ * @internal
  */
 export function performFuzzActions<
 	TOperation extends { type: string | number },
@@ -188,6 +201,8 @@ export function performFuzzActions<
  * a given filepath.
  * This can be useful for debugging why a fuzz test may have failed.
  * Files can also be saved on failure.
+ *
+ * @internal
  */
 export function performFuzzActions<
 	TOperation extends { type: string | number },
@@ -198,6 +213,9 @@ export function performFuzzActions<
 	initialState: TState,
 	saveInfo?: SaveInfo,
 ): TState;
+/**
+ * @internal
+ */
 export function performFuzzActions<
 	TOperation extends { type: string | number },
 	TState extends BaseFuzzTestState,
@@ -207,7 +225,7 @@ export function performFuzzActions<
 		| Reducer<TOperation, TState>
 		| { [K in TOperation["type"]]: Reducer<Extract<TOperation, { type: K }>, TState> },
 	initialState: TState,
-	saveInfo?: SaveInfo,
+	saveInfo: SaveInfo = { saveOnFailure: false, saveOnSuccess: false },
 ): TState {
 	const operations: TOperation[] = [];
 	let state: TState = initialState;
@@ -215,24 +233,23 @@ export function performFuzzActions<
 		typeof reducerOrMap === "function"
 			? reducerOrMap
 			: combineReducers<TOperation, TState>(reducerOrMap);
-	const applyOperation: (operation: TOperation) => TState = (op) => reducer(state, op) ?? state;
+	const applyOperation: (operation: TOperation) => TState = (op) =>
+		reducer(state, op) ?? state;
 
-	for (let operation = generator(state); operation !== done; operation = generator(state)) {
-		operations.push(operation);
-
-		try {
+	try {
+		for (let operation = generator(state); operation !== done; operation = generator(state)) {
+			operations.push(operation);
 			state = applyOperation(operation);
-		} catch (err) {
-			console.log(`Error encountered on operation number ${operations.length}`);
-			if (saveInfo?.saveOnFailure === true) {
-				saveOpsToFileSync(saveInfo.filepath, operations);
-			}
-			throw err;
 		}
+	} catch (err) {
+		if (saveInfo.saveOnFailure !== false) {
+			saveOpsToFileSync(saveInfo.saveOnFailure.path, operations);
+		}
+		throw err;
 	}
 
-	if (saveInfo?.saveOnSuccess === true) {
-		saveOpsToFileSync(saveInfo.filepath, operations);
+	if (saveInfo.saveOnSuccess !== false) {
+		saveOpsToFileSync(saveInfo.saveOnSuccess.path, operations);
 	}
 
 	return state;
@@ -243,6 +260,8 @@ export function performFuzzActions<
  *
  * @param filepath - path to the file
  * @param operations - operations to save in the file
+ *
+ * @internal
  */
 function saveOpsToFileSync(filepath: string, operations: { type: string | number }[]) {
 	mkdirSync(path.dirname(filepath), { recursive: true });

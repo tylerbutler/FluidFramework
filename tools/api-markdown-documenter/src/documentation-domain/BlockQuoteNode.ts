@@ -2,13 +2,14 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import {
-	DocumentationNode,
+	type DocumentationNode,
 	DocumentationParentNodeBase,
-	MultiLineDocumentationNode,
-} from "./DocumentationNode";
-import { DocumentationNodeType } from "./DocumentationNodeType";
-import { createNodesFromPlainText } from "./Utilities";
+	type MultiLineDocumentationNode,
+} from "./DocumentationNode.js";
+import { DocumentationNodeType } from "./DocumentationNodeType.js";
+import { createNodesFromPlainText } from "./Utilities.js";
 
 /**
  * A quotation block.
@@ -30,6 +31,8 @@ import { createNodesFromPlainText } from "./Utilities";
  * 	Bar
  * </blockquote>
  * ```
+ *
+ * @public
  */
 export class BlockQuoteNode
 	extends DocumentationParentNodeBase

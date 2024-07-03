@@ -2,12 +2,13 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { strict as assert } from "assert";
-import { IMergeBlock } from "../mergeTreeNodes";
-import { zamboniSegments, packParent } from "../zamboni";
-import { TestClient } from "./testClient";
+
+import { MergeBlock } from "../mergeTreeNodes.js";
+import { packParent, zamboniSegments } from "../zamboni.js";
+
+import { TestClient } from "./testClient.js";
 
 describe("Zamboni Logic", () => {
 	let client: TestClient;
@@ -35,7 +36,7 @@ describe("Zamboni Logic", () => {
 				client.getCurrentSeq(),
 			),
 		);
-		assert.equal(client.mergeTree.root.cachedLength, 0);
+		assert.equal(client.mergeTree.root.cachedLength ?? 0, 0);
 
 		packParent(client.mergeTree.root, client.mergeTree);
 
@@ -51,14 +52,14 @@ describe("Zamboni Logic", () => {
 		assert.equal(childCount, client.mergeTree.root.childCount);
 	});
 	it("zamboni with one segment to scour", () => {
-		const initialChildCount = (client.mergeTree.root.children[0] as IMergeBlock).childCount;
-		const initialCachedLength = client.mergeTree.root.cachedLength;
+		const initialChildCount = (client.mergeTree.root.children[0] as MergeBlock).childCount;
+		const initialCachedLength = client.mergeTree.root.cachedLength ?? 0;
 		client.removeRangeLocal(0, 1);
 		zamboniSegments(client.mergeTree);
 
 		assert.equal(client.mergeTree.root.cachedLength, initialCachedLength - 1);
 		assert.equal(
-			(client.mergeTree.root.children[0] as IMergeBlock).childCount,
+			(client.mergeTree.root.children[0] as MergeBlock).childCount,
 			initialChildCount,
 		);
 	});

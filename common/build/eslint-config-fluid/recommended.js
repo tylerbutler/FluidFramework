@@ -12,7 +12,13 @@
  * For packages whose APIs are intended for wide use, the "Strict" configuration should be used instead.
  */
 module.exports = {
-	extends: ["./minimal.js", "plugin:unicorn/recommended"],
+	env: {
+		browser: true,
+		es6: true,
+		es2024: false,
+		node: true,
+	},
+	extends: ["./minimal-deprecated.js", "plugin:unicorn/recommended"],
 	plugins: ["eslint-plugin-tsdoc"],
 	rules: {
 		// RECOMMENDED RULES
@@ -30,7 +36,7 @@ module.exports = {
 		"@typescript-eslint/explicit-function-return-type": [
 			"error",
 			{
-				allowExpressions: false,
+				allowExpressions: true,
 				allowTypedFunctionExpressions: true,
 				allowHigherOrderFunctions: true,
 				allowDirectConstAssertionInArrowFunctions: true,
@@ -57,19 +63,61 @@ module.exports = {
 		"unicorn/no-useless-undefined": "off",
 
 		/**
-		 * "node:" imports are not supported prior to Node.js v16.
-		 * TODO: re-enable this (remove override) once the repo has been updated to v16.
+		 * By default, this rule conflicts with our internal error code formats.
+		 * Only enforce `_` separator consistency if any such separators appear in the number literal.
 		 */
-		"unicorn/prefer-node-protocol": "off",
+		"unicorn/numeric-separators-style": ["error", { onlyIfContainsSeparator: true }],
 
 		"unicorn/prevent-abbreviations": "off",
+
+		/**
+		 * Disabled because we don't yet target a ES version that includes .at().
+		 */
+		"unicorn/prefer-at": "off",
+
+		/**
+		 * Disabled because we use EventEmitter everywhere today and changing it will be a bigger change outside of lint
+		 * rules.
+		 */
+		"unicorn/prefer-event-target": "off",
+
+		/**
+		 * Disabled because we don't yet target a ES version that includes string.replaceAll.
+		 */
+		"unicorn/prefer-string-replace-all": "off",
+
+		/**
+		 * Disabled because we will lean on the formatter (i.e. prettier) to enforce indentation policy.
+		 */
+		"unicorn/template-indent": "off",
+
+		/**
+		 * Disabled because it is incompatible with prettier.
+		 */
+		"unicorn/number-literal-case": "off",
+
+		/**
+		 * The rule seems to crash on some of our code
+		 */
+		"unicorn/expiring-todo-comments": "off",
 
 		/**
 		 * Disallows the `any` type.
 		 * Using the `any` type defeats the purpose of using TypeScript.
 		 * When `any` is used, all compiler type checks around that value are ignored.
+		 *
+		 * @see https://typescript-eslint.io/rules/no-explicit-any
 		 */
-		"@typescript-eslint/no-explicit-any": "error",
+		"@typescript-eslint/no-explicit-any": [
+			"error",
+			{
+				/**
+				 * For certain cases, like rest parameters, any is required to allow arbitrary argument types.
+				 * @see https://typescript-eslint.io/rules/no-explicit-any/#ignorerestargs
+				 */
+				ignoreRestArgs: true,
+			},
+		],
 
 		/**
 		 * Requires explicit typing for anything exported from a module. Explicit types for function return
@@ -136,6 +184,14 @@ module.exports = {
 			files: ["*.jsx", "*.tsx"],
 			rules: {
 				// Conflicts with best practices for various React hooks.
+				"unicorn/consistent-function-scoping": "off",
+			},
+		},
+		{
+			// Rules for test code
+			files: ["*.spec.ts", "*.test.ts", "**/test/**"],
+			rules: {
+				// Does not work well with describe/it block scoping
 				"unicorn/consistent-function-scoping": "off",
 			},
 		},

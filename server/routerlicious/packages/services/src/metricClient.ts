@@ -16,9 +16,12 @@ class TelegrafClient implements IMetricClient {
 			host: config.host,
 			port: config.port,
 		});
-		this.telegrafClient.connect().then(() => {
-			this.connected = true;
-		});
+		this.telegrafClient
+			.connect()
+			.then(() => {
+				this.connected = true;
+			})
+			.catch(() => {});
 	}
 
 	// eslint-disable-next-line @typescript-eslint/promise-function-async
@@ -32,7 +35,6 @@ class TelegrafClient implements IMetricClient {
 		const row = {};
 		const Float = telegraf.Float;
 		for (const trace of traces) {
-			// tslint:disable prefer-template
 			const column = `${trace.service}${trace.action ? `-${trace.action}` : ""}`;
 			row[column] = new Float(trace.timestamp);
 		}
@@ -47,6 +49,9 @@ class TelegrafClient implements IMetricClient {
 	}
 }
 
+/**
+ * @internal
+ */
 export function createMetricClient(config: any): IMetricClient {
 	return config !== undefined && config.client === "telegraf"
 		? new TelegrafClient(config.telegraf)

@@ -3,11 +3,13 @@
  * Licensed under the MIT License.
  */
 
-import { CollaborativeInput } from "@fluid-experimental/react-inputs";
-import { SharedString } from "@fluidframework/sequence";
+import { CollaborativeInput } from "@fluid-example/example-utils";
+import { SharedString } from "@fluidframework/sequence/internal";
 import React, { useEffect, useRef, useState } from "react";
-import { TodoItem, TodoItemView } from "../TodoItem";
-import { Todo } from "./Todo";
+
+import { TodoItem, TodoItemView } from "../TodoItem/index.js";
+
+import { Todo } from "./Todo.js";
 
 // eslint-disable-next-line import/no-unassigned-import
 import "./style.css";
@@ -74,6 +76,7 @@ export const TodoView: React.FC<TodoViewProps> = (props: TodoViewProps) => {
 
 	// TodoView is made up of an editable title input, an input/button for submitting new items, and the list
 	// of TodoItemViews.
+	/* eslint-disable @typescript-eslint/no-misused-promises */
 	return (
 		<div className="todo-view">
 			<CollaborativeInput className="todo-title" sharedString={titleString} />
@@ -92,4 +95,5 @@ export const TodoView: React.FC<TodoViewProps> = (props: TodoViewProps) => {
 			<div className="todo-item-list">{todoItemViews}</div>
 		</div>
 	);
+	/* eslint-enable @typescript-eslint/no-misused-promises */
 };

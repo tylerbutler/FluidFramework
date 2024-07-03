@@ -7,13 +7,13 @@
  * Default {@link @microsoft/api-extractor-model#ApiItem} transformation implementations.
  */
 
-export { createSectionWithChildContent } from "./CreateSectionWithChildContent";
-export { transformApiClass } from "./TransformApiClass";
-export { transformApiEnum } from "./TransformApiEnum";
-export { transformApiFunctionLike } from "./TransformApiFunctionLike";
-export { transformApiInterface } from "./TransformApiInterface";
-export { transformApiItemWithoutChildren } from "./TransformApiItemWithoutChildren";
-export { transformApiModel } from "./TransformApiModel";
-export { transformApiModuleLike } from "./TransformApiModuleLike";
-export { transformApiNamespace } from "./TransformApiNamespace";
-export { transformApiPackage } from "./TransformApiPackage";
+export { createDefaultLayout } from "./CreateDefaultLayout.js";
+export { transformApiClass } from "./TransformApiClass.js";
+export { transformApiEntryPoint } from "./TransformApiEntryPoint.js";
+export { transformApiEnum } from "./TransformApiEnum.js";
+export { transformApiFunctionLike } from "./TransformApiFunctionLike.js";
+export { transformApiInterface } from "./TransformApiInterface.js";
+export { transformApiItemWithoutChildren } from "./TransformApiItemWithoutChildren.js";
+export { transformApiModel } from "./TransformApiModel.js";
+export { transformApiModuleLike } from "./TransformApiModuleLike.js";
+export { transformApiNamespace } from "./TransformApiNamespace.js";

@@ -3,17 +3,32 @@
  * Licensed under the MIT License.
  */
 
-import { getUnexpectedLogErrorException, TestObjectProvider } from "@fluidframework/test-utils";
-import { ITelemetryGenericEvent } from "@fluidframework/common-definitions";
+import { TestDriverTypes } from "@fluid-internal/test-driver-definitions";
+import {
+	type ITelemetryGenericEventExt,
+	createChildLogger,
+} from "@fluidframework/telemetry-utils/internal";
+import {
+	getUnexpectedLogErrorException,
+	TestObjectProvider,
+} from "@fluidframework/test-utils/internal";
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Context } from "mocha";
-import { TestDriverTypes } from "@fluidframework/test-driver-definitions";
 
+/**
+ * @internal
+ */
 export type ExpectedEvents =
-	| ITelemetryGenericEvent[]
-	| Partial<Record<TestDriverTypes, ITelemetryGenericEvent[]>>;
+	| ITelemetryGenericEventExt[]
+	| Partial<Record<TestDriverTypes, ITelemetryGenericEventExt[]>>;
 
-function createExpectsTest(orderedExpectedEvents: ExpectedEvents, test: Mocha.AsyncFunc) {
+/**
+ * @internal
+ */
+export function createExpectsTest(
+	orderedExpectedEvents: ExpectedEvents,
+	test: Mocha.AsyncFunc,
+) {
 	return async function (this: Context) {
 		const provider: TestObjectProvider | undefined = this.__fluidTestProvider;
 		if (provider === undefined) {
@@ -24,24 +39,30 @@ function createExpectsTest(orderedExpectedEvents: ExpectedEvents, test: Mocha.As
 			: orderedExpectedEvents[provider.driver.type] ?? [];
 
 		try {
-			provider.logger.registerExpectedEvent(...orderedEvents);
+			provider.tracker.registerExpectedEvent(...orderedEvents);
 			await test.bind(this)();
 		} catch (error) {
 			// only use TestException if the event is provided.
 			// it must be last, as the events are ordered, so all other events must come first
 			if (orderedEvents[orderedEvents.length - 1]?.eventName === "TestException") {
-				provider.logger.sendErrorEvent({ eventName: "TestException" }, error);
+				createChildLogger({ logger: provider.logger }).sendErrorEvent(
+					{ eventName: "TestException" },
+					error,
+				);
 			} else {
 				throw error;
 			}
 		}
-		const err = getUnexpectedLogErrorException(provider.logger);
+		const err = getUnexpectedLogErrorException(provider.tracker);
 		if (err !== undefined) {
 			throw err;
 		}
 	};
 }
 
+/**
+ * @internal
+ */
 export type ExpectsTest = (
 	name: string,
 	orderedExpectedEvents: ExpectedEvents,
@@ -51,6 +72,8 @@ export type ExpectsTest = (
 /**
  * Similar to mocha's it function, but allow specifying expected events.
  * That must occur during the execution of the test.
+ *
+ * @internal
  */
 export const itExpects: ExpectsTest & Record<"only" | "skip", ExpectsTest> = (
 	name: string,
@@ -58,8 +81,14 @@ export const itExpects: ExpectsTest & Record<"only" | "skip", ExpectsTest> = (
 	test: Mocha.AsyncFunc,
 ): Mocha.Test => it(name, createExpectsTest(orderedExpectedEvents, test));
 
-itExpects.only = (name: string, orderedExpectedEvents: ExpectedEvents, test: Mocha.AsyncFunc) =>
-	it.only(name, createExpectsTest(orderedExpectedEvents, test));
+itExpects.only = (
+	name: string,
+	orderedExpectedEvents: ExpectedEvents,
+	test: Mocha.AsyncFunc,
+) => it.only(name, createExpectsTest(orderedExpectedEvents, test));
 
-itExpects.skip = (name: string, orderedExpectedEvents: ExpectedEvents, test: Mocha.AsyncFunc) =>
-	it.skip(name, createExpectsTest(orderedExpectedEvents, test));
+itExpects.skip = (
+	name: string,
+	orderedExpectedEvents: ExpectedEvents,
+	test: Mocha.AsyncFunc,
+) => it.skip(name, createExpectsTest(orderedExpectedEvents, test));

@@ -4,13 +4,20 @@
  */
 
 import {
-	IFluidDataStoreRuntime,
-	IChannelServices,
 	IChannelAttributes,
 	IChannelFactory,
-} from "@fluidframework/datastore-definitions";
-import { ISharedObject, ISharedObjectEvents } from "@fluidframework/shared-object-base";
+	IFluidDataStoreRuntime,
+	IChannelServices,
+} from "@fluidframework/datastore-definitions/internal";
+import {
+	ISharedObject,
+	ISharedObjectEvents,
+} from "@fluidframework/shared-object-base/internal";
 
+/**
+ * @legacy
+ * @alpha
+ */
 export enum ConsensusResult {
 	Release,
 	Complete,
@@ -19,6 +26,8 @@ export enum ConsensusResult {
 /**
  * Callback provided to acquire() and waitAndAcquire() methods.
  * @returns ConsensusResult indicating whether item was completed, or releases back to the queue.
+ * @legacy
+ * @alpha
  */
 export type ConsensusCallback<T> = (value: T) => Promise<ConsensusResult>;
 
@@ -27,6 +36,7 @@ export type ConsensusCallback<T> = (value: T) => Promise<ConsensusResult>;
  *
  * Extends the base IChannelFactory to return a more definite type of IConsensusOrderedCollection
  * Use for the runtime to create and load distributed data structure by type name of each channel
+ * @internal
  */
 export interface IConsensusOrderedCollectionFactory extends IChannelFactory {
 	load(
@@ -41,6 +51,8 @@ export interface IConsensusOrderedCollectionFactory extends IChannelFactory {
 
 /**
  * Events notifying about addition, acquisition, release and completion of items
+ * @legacy
+ * @alpha
  */
 export interface IConsensusOrderedCollectionEvents<T> extends ISharedObjectEvents {
 	/**
@@ -93,6 +105,8 @@ export interface IConsensusOrderedCollectionEvents<T> extends ISharedObjectEvent
  * All objects added to the collection will be cloned (via JSON).
  * They will not be references to the original input object.  Thus changed to
  * the input object will not reflect the object in the collection.
+ * @legacy
+ * @alpha
  */
 export interface IConsensusOrderedCollection<T = any>
 	extends ISharedObject<IConsensusOrderedCollectionEvents<T>> {
@@ -120,6 +134,8 @@ export interface IConsensusOrderedCollection<T = any>
  *
  * TODO: move this to be use in other place
  * TODO: currently input and output is not symmetrical, can they become symmetrical?
+ * @legacy
+ * @alpha
  */
 export interface ISnapshotable<T> {
 	asArray(): T[];
@@ -133,6 +149,8 @@ export interface ISnapshotable<T> {
  * Collection of objects that has deterministic add and remove ordering.
  * Object implementing this interface can be used as the data backing
  * for the ConsensusOrderedCollection
+ * @legacy
+ * @alpha
  */
 export interface IOrderedCollection<T = any> extends ISnapshotable<T> {
 	/**

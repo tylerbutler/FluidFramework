@@ -3,81 +3,55 @@
  * Licensed under the MIT License.
  */
 
-export {
-	Attach,
-	NewAttach,
+export type {
 	Changeset,
-	Delete,
+	Remove,
 	Detach,
-	Effects,
-	HasChanges,
 	HasMoveId,
-	HasPlaceFields,
 	HasRevisionTag,
-	HasTiebreakPolicy,
 	Insert,
 	Mark,
 	MarkList,
-	Modify,
 	MoveIn,
 	MoveOut,
-	NodeChangeType,
-	NodeCount,
+	CellCount as NodeCount,
 	MoveId,
-	ObjectMark,
-	PriorOp,
-	ProtoNode,
-	RangeType,
-	Reattach,
-	ReturnFrom,
-	ReturnTo,
-	Revive,
-	Tiebreak,
-	Skip,
-	LineageEvent,
-	HasReattachFields,
-	CellSpanningMark,
-	InputSpanningMark,
-	OutputSpanningMark,
-	SkipLikeReattach,
-	Conflicted,
-	CanConflict,
-} from "./format";
+	Attach,
+	NoopMark,
+	CellId,
+	HasMarkFields,
+	CellMark,
+	AttachAndDetach,
+} from "./types.js";
+export { DetachIdOverrideType } from "./formatV1.js";
 export {
-	SequenceFieldChangeHandler,
+	type SequenceFieldChangeHandler,
 	sequenceFieldChangeHandler,
-} from "./sequenceFieldChangeHandler";
-export { SequenceChangeRebaser, sequenceFieldChangeRebaser } from "./sequenceFieldChangeRebaser";
+} from "./sequenceFieldChangeHandler.js";
 export {
-	decodeJson,
-	encodeForJson,
-	NodeChangeDecoder,
-	NodeChangeEncoder,
-	sequenceFieldChangeEncoder,
-} from "./sequenceFieldChangeEncoder";
-export { sequenceFieldToDelta, ToDelta } from "./sequenceFieldToDelta";
-export { SequenceFieldEditor, sequenceFieldEditor } from "./sequenceFieldEditor";
-export { MarkListFactory } from "./markListFactory";
-export { amendRebase, NodeChangeRebaser, rebase } from "./rebase";
-export { amendInvert, invert, NodeChangeInverter } from "./invert";
-export { amendCompose, compose, NodeChangeComposer } from "./compose";
+	type SequenceChangeRebaser,
+	sequenceFieldChangeRebaser,
+} from "./sequenceFieldChangeRebaser.js";
+export { sequenceFieldChangeCodecFactory } from "./sequenceFieldCodecs.js";
+export { sequenceFieldToDelta } from "./sequenceFieldToDelta.js";
+export { type SequenceFieldEditor, sequenceFieldEditor } from "./sequenceFieldEditor.js";
+export { MarkListFactory } from "./markListFactory.js";
+export { rebase } from "./rebase.js";
+export { invert } from "./invert.js";
+export { compose } from "./compose.js";
 export {
-	areComposable,
-	areRebasable,
-	isActiveReattach,
 	getInputLength,
-	isDetachMark,
-	isReattach,
-	DetachedNodeTracker,
+	isDetach,
 	newCrossFieldTable,
-	newMoveEffectTable,
-	CrossFieldTable,
-} from "./utils";
+	type CrossFieldTable,
+	cloneMark,
+	extractMarkEffect,
+} from "./utils.js";
 export {
 	isMoveMark,
-	MoveMark,
-	MoveEffectTable,
-	MoveEffect,
-	PairedMarkUpdate,
-	splitMarkOnOutput,
-} from "./moveEffectTable";
+	type MoveMark,
+	type MoveEffectTable,
+	type MoveEffect,
+} from "./moveEffectTable.js";
+
+export { relevantRemovedRoots } from "./relevantRemovedRoots.js";

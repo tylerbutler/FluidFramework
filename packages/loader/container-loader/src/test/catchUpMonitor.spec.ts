@@ -3,26 +3,38 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "assert";
-import { IDeltaManager, IDeltaManagerEvents } from "@fluidframework/container-definitions";
-import { TypedEventEmitter } from "@fluidframework/common-utils";
-import { CatchUpMonitor } from "../catchUpMonitor";
+import { strict as assert } from "node:assert";
+
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import {
+	IDeltaManager,
+	IDeltaManagerEvents,
+} from "@fluidframework/container-definitions/internal";
+
+import { CatchUpMonitor } from "../catchUpMonitor.js";
 
 class MockDeltaManagerForCatchingUp
 	extends TypedEventEmitter<IDeltaManagerEvents>
-	implements Pick<IDeltaManager<any, any>, "lastSequenceNumber" | "lastKnownSeqNumber">
+	implements Pick<IDeltaManager<unknown, unknown>, "lastSequenceNumber" | "lastKnownSeqNumber">
 {
-	constructor(public lastSequenceNumber: number = 5, public lastKnownSeqNumber: number = 10) {
+	constructor(
+		public lastSequenceNumber: number = 5,
+		public lastKnownSeqNumber: number = 10,
+	) {
 		super();
 	}
 
-	/** Simulate processing op with the given sequence number, to trigger CatchUpMonitor */
-	emitOpWithSequenceNumber(sequenceNumber: number) {
+	/**
+	 * Simulate processing op with the given sequence number, to trigger CatchUpMonitor
+	 */
+	emitOpWithSequenceNumber(sequenceNumber: number): void {
 		this.emit("op", { sequenceNumber });
 	}
 
-	/** Trigger the CatchUpMonitor by emitting op with the target sequence number */
-	emitOpToCatchUp() {
+	/**
+	 * Trigger the CatchUpMonitor by emitting op with the target sequence number
+	 */
+	emitOpToCatchUp(): void {
 		this.emitOpWithSequenceNumber(this.lastKnownSeqNumber);
 	}
 
@@ -31,12 +43,11 @@ class MockDeltaManagerForCatchingUp
 			lastSequenceNumber?: number;
 			lastKnownSeqNumber?: number;
 		} = {},
-	): MockDeltaManagerForCatchingUp & IDeltaManager<any, any> {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+	): MockDeltaManagerForCatchingUp & IDeltaManager<unknown, unknown> {
 		return new MockDeltaManagerForCatchingUp(
 			sequenceNumbers.lastSequenceNumber,
 			sequenceNumbers.lastKnownSeqNumber,
-		) as any;
+		) as MockDeltaManagerForCatchingUp & IDeltaManager<unknown, unknown>;
 	}
 }
 

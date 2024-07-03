@@ -5,26 +5,28 @@
 
 /**
  * Text formatting options.
+ *
+ * @public
  */
 export interface TextFormatting {
 	/**
 	 * Whether or not the text should be rendered in italics.
 	 *
-	 * @defaultValue Inherit
+	 * @defaultValue Inherit formatting from ancestry, if any exists.
 	 */
 	readonly italic?: boolean;
 
 	/**
 	 * Whether or not the text should be rendered in bold.
 	 *
-	 * @defaultValue Inherit
+	 * @defaultValue Inherit formatting from ancestry, if any exists.
 	 */
 	readonly bold?: boolean;
 
 	/**
 	 * Whether or not the text should be rendered with a strikethrough.
 	 *
-	 * @defaultValue Inherit
+	 * @defaultValue Inherit formatting from ancestry, if any exists.
 	 */
 	readonly strikethrough?: boolean;
 }

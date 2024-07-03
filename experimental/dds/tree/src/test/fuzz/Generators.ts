@@ -3,8 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { IsoBuffer } from '@fluidframework/common-utils';
-import { IFluidHandle } from '@fluidframework/core-interfaces';
+import { IsoBuffer } from '@fluid-internal/client-utils';
 import {
 	AcceptanceCondition,
 	AsyncGenerator,
@@ -13,13 +12,16 @@ import {
 	createWeightedAsyncGenerator,
 	done,
 	makeRandom,
-} from '@fluid-internal/stochastic-test-utils';
-import { Side, TraitMap, WriteFormat } from '../../persisted-types';
-import { BuildNode, ChangeType, StablePlace, StableRange } from '../../ChangeTypes';
-import { TraitLocation, TreeView, TreeViewRange } from '../../TreeView';
-import { Definition, DetachedSequenceId, NodeId, TraitLabel } from '../../Identifiers';
-import { fail } from '../../Common';
-import { rangeFromStableRange } from '../../TreeViewUtilities';
+} from '@fluid-private/stochastic-test-utils';
+import { IFluidHandle } from '@fluidframework/core-interfaces';
+
+import { BuildNode, ChangeType, StablePlace, StableRange } from '../../ChangeTypes.js';
+import { fail } from '../../Common.js';
+import { Definition, DetachedSequenceId, NodeId, TraitLabel } from '../../Identifiers.js';
+import { TraitLocation, TreeView, TreeViewRange } from '../../TreeView.js';
+import { rangeFromStableRange } from '../../TreeViewUtilities.js';
+import { Side, TraitMap, WriteFormat } from '../../persisted-types/index.js';
+
 import {
 	EditGenerationConfig,
 	FuzzChange,
@@ -33,7 +35,7 @@ import {
 	OperationGenerationConfig,
 	TreeContext,
 	TreeLeave,
-} from './Types';
+} from './Types.js';
 
 const defaultJoinConfig: Required<JoinGenerationConfig> = {
 	maximumActiveCollaborators: 10,
@@ -51,12 +53,10 @@ function makeJoinGenerator(passedConfig: JoinGenerationConfig): AsyncGenerator<O
 			activeAllowed && passiveAllowed
 				? random.bool()
 				: activeAllowed
-				? false
-				: passiveAllowed
-				? true
-				: fail(
-						'Cannot generate join op when both active and passive collaborators are at the configured limit.'
-				  );
+					? false
+					: passiveAllowed
+						? true
+						: fail('Cannot generate join op when both active and passive collaborators are at the configured limit.');
 		return {
 			type: 'join',
 			summarizeHistory: random.pick(config.summarizeHistory),
@@ -77,10 +77,10 @@ async function leaveGenerator({
 		canUsePassive && canUseActive
 			? random.bool()
 			: canUsePassive
-			? true
-			: canUseActive
-			? false
-			: fail('Cannot generate a leave op when there are no clients.');
+				? true
+				: canUseActive
+					? false
+					: fail('Cannot generate a leave op when there are no clients.');
 	const index = random.integer(0, (isObserver ? passiveCollaborators : activeCollaborators).length - 1);
 	return { type: 'leave', isObserver, index };
 }
@@ -111,10 +111,7 @@ const makeEditGenerator = (
 	const traitLabelPool = Array.from({ length: config.traitLabelPoolSize }, () => poolRand.uuid4() as TraitLabel);
 	const traitLabelGenerator = ({ random }: FuzzTestState) => random.pick(traitLabelPool);
 
-	const definitionPool = Array.from(
-		{ length: insertConfig.definitionPoolSize },
-		() => poolRand.uuid4() as Definition
-	);
+	const definitionPool = Array.from({ length: insertConfig.definitionPoolSize }, () => poolRand.uuid4() as Definition);
 	const definitionGenerator = ({ random }: FuzzTestState) => random.pick(definitionPool);
 	type EditState = FuzzTestState & TreeContext;
 
@@ -248,9 +245,7 @@ const makeEditGenerator = (
 			build: {
 				type: ChangeType.Build,
 				destination: id,
-				source: Array.from({ length: state.random.integer(1, maxTreeSequenceSize) }, () =>
-					treeGenerator(state)
-				),
+				source: Array.from({ length: state.random.integer(1, maxTreeSequenceSize) }, () => treeGenerator(state)),
 			},
 			insert: {
 				type: ChangeType.Insert,
@@ -331,9 +326,7 @@ const makeEditGenerator = (
 
 	async function setPayloadGenerator({ dataStoreRuntime, idList, random, view }: EditState): Promise<FuzzChange> {
 		const nodeToModify = random.pick(idList);
-		const getPayloadContents = async (
-			random: IRandom
-		): Promise<string | { blob: IFluidHandle<ArrayBufferLike> }> => {
+		const getPayloadContents = async (random: IRandom): Promise<string | { blob: IFluidHandle<ArrayBufferLike> }> => {
 			if (random.bool()) {
 				return random.string(4);
 			}
@@ -407,7 +400,10 @@ export function makeOpGenerator(passedConfig: OperationGenerationConfig): AsyncG
 		...passedConfig,
 	};
 
-	const { maximumPassiveCollaborators, maximumActiveCollaborators } = { ...defaultJoinConfig, ...config.joinConfig };
+	const { maximumPassiveCollaborators, maximumActiveCollaborators } = {
+		...defaultJoinConfig,
+		...config.joinConfig,
+	};
 	const maximumCollaborators = maximumPassiveCollaborators + maximumActiveCollaborators;
 
 	const collaboratorsMatches =
@@ -425,7 +421,8 @@ export function makeOpGenerator(passedConfig: OperationGenerationConfig): AsyncG
 			collaboratorsMatches((count) => count < maximumCollaborators),
 		],
 		[leaveGenerator, config.leaveWeight, atLeastOneClient],
-		[makeEditGenerator(config.editConfig, config.joinConfig, true), config.stashWeight, atLeastOneActiveClient],
+		// TODO:#5357: Re-enable stashed ops tests
+		// [makeEditGenerator(config.editConfig, config.joinConfig, true), config.stashWeight, atLeastOneActiveClient],
 		[{ type: 'synchronize' }, config.synchronizeWeight, atLeastOneClient],
 	];
 	return createWeightedAsyncGenerator(opWeights);

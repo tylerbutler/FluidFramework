@@ -7,17 +7,20 @@ import {
 	getUnexpectedLogErrorException,
 	ITestObjectProvider,
 	TestObjectProvider,
-} from "@fluidframework/test-utils";
-import { driver, r11sEndpointName, tenantIndex } from "./compatOptions";
-import { getVersionedTestObjectProvider } from "./compatUtils";
-import { ITestObjectProviderOptions } from "./describeCompat";
-import { pkgVersion } from "./packageVersion";
-import { ensurePackageInstalled, InstalledPackage } from "./testApi";
+} from "@fluidframework/test-utils/internal";
+
+import { driver, odspEndpointName, r11sEndpointName, tenantIndex } from "./compatOptions.js";
+import { getVersionedTestObjectProvider } from "./compatUtils.js";
+import { ITestObjectProviderOptions } from "./describeCompat.js";
+import { pkgVersion } from "./packageVersion.js";
+import { ensurePackageInstalled, InstalledPackage } from "./testApi.js";
 
 /**
  * Interface to hold the requested versions which should be installed
  * prior to running the test suite. The properties are cumulative, as all
  * versions deduced from all properties will be installed.
+ *
+ * @internal
  */
 export interface IRequestedFluidVersions {
 	/**
@@ -85,7 +88,7 @@ function createTestSuiteWithInstalledVersion(
 					version: pkgVersion,
 					config: {
 						r11s: { r11sEndpointName },
-						odsp: { tenantIndex },
+						odsp: { tenantIndex, odspEndpointName },
 					},
 				}, // driverConfig
 				pkgVersion, // runtimeVersion
@@ -105,7 +108,7 @@ function createTestSuiteWithInstalledVersion(
 		});
 
 		afterEach(function (done: Mocha.Done) {
-			const logErrors = getUnexpectedLogErrorException(defaultProvider.logger);
+			const logErrors = getUnexpectedLogErrorException(defaultProvider.tracker);
 			// if the test failed for another reason
 			// then we don't need to check errors
 			// and fail the after each as well
@@ -122,7 +125,10 @@ function createTestSuiteWithInstalledVersion(
 	};
 }
 
-type DescribeSuiteWithVersions = (
+/**
+ * @internal
+ */
+export type DescribeSuiteWithVersions = (
 	name: string,
 	tests: (
 		this: Mocha.Suite,
@@ -130,7 +136,10 @@ type DescribeSuiteWithVersions = (
 	) => void,
 ) => Mocha.Suite | void;
 
-type DescribeWithVersions = DescribeSuiteWithVersions &
+/**
+ * @internal
+ */
+export type DescribeWithVersions = DescribeSuiteWithVersions &
 	Record<"skip" | "only", DescribeSuiteWithVersions>;
 
 /**
@@ -146,6 +155,8 @@ type DescribeWithVersions = DescribeSuiteWithVersions &
  * @param timeoutMs - the timeout for the tests in milliseconds, as package installation is time consuming.
  * If unspecified, the timeout is 20000 ms.
  * @returns A mocha test suite
+ *
+ * @internal
  */
 export function describeInstallVersions(
 	requestedVersions?: IRequestedFluidVersions,

@@ -2,21 +2,24 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import {
-	ApiCallSignature,
-	ApiClass,
-	ApiConstructor,
-	ApiIndexSignature,
-	ApiItem,
+	type ApiCallSignature,
+	type ApiClass,
+	type ApiConstructor,
+	type ApiIndexSignature,
+	type ApiItem,
 	ApiItemKind,
-	ApiMethod,
-	ApiProperty,
+	type ApiMethod,
+	type ApiPropertyItem,
 } from "@microsoft/api-extractor-model";
 
-import { SectionNode } from "../../documentation-domain";
-import { ApiModifier, filterByKind, isStatic } from "../ApiItemUtilities";
-import { ApiItemTransformationConfiguration } from "../configuration";
-import { createChildDetailsSection, createMemberTables } from "../helpers";
+import type { SectionNode } from "../../documentation-domain/index.js";
+import { ApiModifier, isStatic } from "../../utilities/index.js";
+import type { ApiItemTransformationConfiguration } from "../configuration/index.js";
+import { createChildDetailsSection, createMemberTables } from "../helpers/index.js";
+import { filterChildMembers } from "../ApiItemTransformUtilities.js";
+import { getScopedMemberNameForDiagnostics } from "../Utilities.js";
 
 /**
  * Default documentation transform for `Class` items.
@@ -64,17 +67,48 @@ export function transformApiClass(
 ): SectionNode[] {
 	const sections: SectionNode[] = [];
 
-	const hasAnyChildren = apiClass.members.length > 0;
-
-	if (hasAnyChildren) {
+	const filteredChildren = filterChildMembers(apiClass, config);
+	if (filteredChildren.length > 0) {
 		// Accumulate child items
-		const constructors = filterByKind(apiClass.members, [ApiItemKind.Constructor]).map(
-			(apiItem) => apiItem as ApiConstructor,
-		);
-
-		const allProperties = filterByKind(apiClass.members, [ApiItemKind.Property]).map(
-			(apiItem) => apiItem as ApiProperty,
-		);
+		const constructors: ApiConstructor[] = [];
+		const allProperties: ApiPropertyItem[] = [];
+		const callSignatures: ApiCallSignature[] = [];
+		const indexSignatures: ApiIndexSignature[] = [];
+		const allMethods: ApiMethod[] = [];
+		for (const child of filteredChildren) {
+			switch (child.kind) {
+				case ApiItemKind.Constructor: {
+					constructors.push(child as ApiConstructor);
+					break;
+				}
+				case ApiItemKind.Property: {
+					allProperties.push(child as ApiPropertyItem);
+					break;
+				}
+				case ApiItemKind.CallSignature: {
+					callSignatures.push(child as ApiCallSignature);
+					break;
+				}
+				case ApiItemKind.IndexSignature: {
+					indexSignatures.push(child as ApiIndexSignature);
+					break;
+				}
+				case ApiItemKind.Method: {
+					allMethods.push(child as ApiMethod);
+					break;
+				}
+				default: {
+					config.logger?.error(
+						`Child item "${
+							child.displayName
+						}" of Class "${getScopedMemberNameForDiagnostics(
+							apiClass,
+						)}" is of unsupported API item kind: "${child.kind}"`,
+					);
+					break;
+				}
+			}
+		}
 
 		// Split properties into event properties and non-event properties
 		const standardProperties = allProperties.filter(
@@ -94,18 +128,6 @@ export function transformApiClass(
 		);
 		const nonStaticEventProperties = eventProperties.filter(
 			(apiProperty) => !isStatic(apiProperty),
-		);
-
-		const callSignatures = filterByKind(apiClass.members, [ApiItemKind.CallSignature]).map(
-			(apiItem) => apiItem as ApiCallSignature,
-		);
-
-		const indexSignatures = filterByKind(apiClass.members, [ApiItemKind.IndexSignature]).map(
-			(apiItem) => apiItem as ApiIndexSignature,
-		);
-
-		const allMethods = filterByKind(apiClass.members, [ApiItemKind.Method]).map(
-			(apiItem) => apiItem as ApiMethod,
 		);
 
 		// Split methods into static and non-static methods
@@ -229,5 +251,5 @@ export function transformApiClass(
 		}
 	}
 
-	return config.createChildContentSections(apiClass, sections, config);
+	return config.createDefaultLayout(apiClass, sections, config);
 }

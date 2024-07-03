@@ -3,21 +3,22 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/common-utils";
-import { compareArrays } from "@fluidframework/core-utils";
+import { assert, compareArrays } from "@fluidframework/core-utils/internal";
+
 import {
-	FieldKey,
-	TreeSchemaIdentifier,
 	CursorLocationType,
-	FieldUpPath,
-	UpPath,
-	TreeValue,
-	Value,
-	PathRootPrefix,
-} from "../../core";
-import { fail, ReferenceCountedBase } from "../../util";
-import { prefixFieldPath, prefixPath, SynchronousCursor } from "../treeCursorUtils";
-import { ChunkedCursor, cursorChunk, dummyRoot, TreeChunk } from "./chunk";
+	type FieldKey,
+	type FieldUpPath,
+	type PathRootPrefix,
+	type TreeNodeSchemaIdentifier,
+	type TreeValue,
+	type UpPath,
+	type Value,
+} from "../../core/index.js";
+import { ReferenceCountedBase, fail } from "../../util/index.js";
+import { SynchronousCursor, prefixFieldPath, prefixPath } from "../treeCursorUtils.js";
+
+import { type ChunkedCursor, type TreeChunk, cursorChunk, dummyRoot } from "./chunk.js";
 
 /**
  * Create a tree chunk with ref count 1.
@@ -42,7 +43,10 @@ export class UniformChunk extends ReferenceCountedBase implements TreeChunk {
 	 * @param shape - describes the semantics and layout of `values`.
 	 * @param values - provides exclusive ownership of this array to this object (which might mutate it in the future).
 	 */
-	public constructor(public shape: ChunkShape, public values: TreeValue[]) {
+	public constructor(
+		public shape: ChunkShape,
+		public values: TreeValue[],
+	) {
 		super();
 		assert(
 			shape.treeShape.valuesPerTopLevelNode * shape.topLevelLength === values.length,
@@ -62,7 +66,7 @@ export class UniformChunk extends ReferenceCountedBase implements TreeChunk {
 		return new Cursor(this);
 	}
 
-	protected dispose(): void {}
+	protected onUnreferenced(): void {}
 }
 
 /**
@@ -90,7 +94,7 @@ export class TreeShape {
 	public readonly positions: readonly NodePositionInfo[];
 
 	public constructor(
-		public readonly type: TreeSchemaIdentifier,
+		public readonly type: TreeNodeSchemaIdentifier,
 		public readonly hasValue: boolean,
 		public readonly fieldsArray: readonly FieldShape[],
 	) {
@@ -196,12 +200,12 @@ export class ChunkShape {
 }
 
 /**
- * Shape of a field (like `FieldShape`) but with information about how it would be offset withing a chunk because of its parents.
+ * Shape of a field (like `FieldShape`) but with information about how it would be offset within a chunk because of its parents.
  */
 class OffsetShape {
 	/**
 	 * @param shape - the shape of each child in this field
-	 * @param topLevelLength - number of top level nodes in this sequence chunk (either field withing a chunk, or top level chunk)
+	 * @param topLevelLength - number of top level nodes in this sequence chunk (either field within a chunk, or top level chunk)
 	 * @param offset - number of nodes before this in the parent's subtree
 	 * @param key - field key
 	 * @param indexOfParentField - index of node with this shape
@@ -297,7 +301,7 @@ class Cursor extends SynchronousCursor implements ChunkedCursor {
 	}
 
 	/**
-	 * Change the current node withing the chunk.
+	 * Change the current node within the chunk.
 	 * See `nodeInfo` for getting data about the current node.
 	 *
 	 * @param positionIndex - index of the position of the newly selected node in `positions`.
@@ -308,10 +312,7 @@ class Cursor extends SynchronousCursor implements ChunkedCursor {
 		this.positionIndex = positionIndex;
 		if (this.nodePositionInfo === undefined) {
 			assert(positionIndex === 0, 0x561 /* expected root at start */);
-			assert(
-				this.mode === CursorLocationType.Fields,
-				0x562 /* expected root to be a field */,
-			);
+			assert(this.mode === CursorLocationType.Fields, 0x562 /* expected root to be a field */);
 		}
 	}
 
@@ -448,9 +449,7 @@ class Cursor extends SynchronousCursor implements ChunkedCursor {
 		return this.nodeInfo(CursorLocationType.Nodes).parentIndex;
 	}
 
-	public get chunkStart(): number {
-		return 0;
-	}
+	public readonly chunkStart: number = 0;
 
 	public get chunkLength(): number {
 		return this.nodeInfo(CursorLocationType.Nodes).topLevelLength;
@@ -513,7 +512,7 @@ class Cursor extends SynchronousCursor implements ChunkedCursor {
 		this.mode = CursorLocationType.Fields;
 	}
 
-	public get type(): TreeSchemaIdentifier {
+	public get type(): TreeNodeSchemaIdentifier {
 		return this.nodeInfo(CursorLocationType.Nodes).shape.type;
 	}
 

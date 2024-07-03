@@ -3,13 +3,18 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { DocumentDeltaConnection } from "@fluidframework/driver-base";
-import { IAnyDriverError, IDocumentDeltaConnection } from "@fluidframework/driver-definitions";
-import { IClient, IConnect } from "@fluidframework/protocol-definitions";
+import { DocumentDeltaConnection } from "@fluidframework/driver-base/internal";
+import { IClient } from "@fluidframework/driver-definitions";
+import {
+	IDocumentDeltaConnection,
+	IAnyDriverError,
+	IConnect,
+} from "@fluidframework/driver-definitions/internal";
+import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils/internal";
 import type { io as SocketIOClientStatic } from "socket.io-client";
-import { errorObjectFromSocketError, IR11sSocketError } from "./errorUtils";
-import { pkgVersion as driverVersion } from "./packageVersion";
+
+import { IR11sSocketError, errorObjectFromSocketError } from "./errorUtils.js";
+import { pkgVersion as driverVersion } from "./packageVersion.js";
 
 const protocolVersions = ["^0.4.0", "^0.3.0", "^0.2.0", "^0.1.0"];
 
@@ -24,8 +29,9 @@ export class R11sDocumentDeltaConnection extends DocumentDeltaConnection {
 		io: typeof SocketIOClientStatic,
 		client: IClient,
 		url: string,
-		logger: ITelemetryLogger,
+		logger: ITelemetryLoggerExt,
 		timeoutMs = 20000,
+		enableLongPollingDowngrade = true,
 	): Promise<IDocumentDeltaConnection> {
 		const socket = io(url, {
 			query: {
@@ -50,13 +56,11 @@ export class R11sDocumentDeltaConnection extends DocumentDeltaConnection {
 			),
 		};
 
-		// TODO: expose to host at factory level
-		const enableLongPollingDowngrades = true;
 		const deltaConnection = new R11sDocumentDeltaConnection(
 			socket,
 			id,
 			logger,
-			enableLongPollingDowngrades,
+			enableLongPollingDowngrade,
 		);
 
 		await deltaConnection.initialize(connectMessage, timeoutMs);

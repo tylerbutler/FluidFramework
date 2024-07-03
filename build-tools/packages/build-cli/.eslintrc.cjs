@@ -9,12 +9,12 @@ module.exports = {
 		"oclif",
 		"oclif-typescript",
 		// eslint-disable-next-line node/no-extraneous-require
-		require.resolve("@fluidframework/eslint-config-fluid/minimal"),
+		require.resolve("@fluidframework/eslint-config-fluid/recommended"),
 		"prettier",
 	],
 	rules: {
-		"@typescript-eslint/no-unused-vars": "warn",
-		"unused-imports/no-unused-imports": "warn",
+		// This rule is often triggered when using custom Flags, so disabling.
+		"object-shorthand": "off",
 
 		// This package is exclusively used in a Node.js context
 		"import/no-nodejs-modules": "off",
@@ -22,12 +22,26 @@ module.exports = {
 		// oclif uses default exports for commands
 		"import/no-default-export": "off",
 
-		// This package uses interfaces and types that are not exposed directly by npm-check-updates.
-		// We also call commands' run method directly in some cases, so these are all excluded.
 		"import/no-internal-modules": [
 			"error",
 			{
-				allow: ["npm-check-updates/build/src/types/**", "**/commands/**"],
+				allow: [
+					// fs-extra's ./esm export is needed for ESM support.
+					"fs-extra/esm",
+
+					// This package uses interfaces and types that are not exposed directly by npm-check-updates.
+					"npm-check-updates/build/src/types/**",
+
+					// We call oclif commands' run method directly in some cases, so these are all excluded.
+					"**/commands/**",
+
+					// These are all excluded because they're "submodules" used for organization.
+					// AB#8118 tracks removing the barrel files and importing directly from the submodules.
+					"**/library/index.js",
+					"**/handlers/index.js",
+					"**/machines/index.js",
+					"**/repoPolicyCheck/index.js",
+				],
 			},
 		],
 
@@ -44,10 +58,32 @@ module.exports = {
 		// The default for this rule is 4, but 5 is better
 		"max-params": ["warn", 5],
 
-		// Causes issues with some versions of node
-		"unicorn/prefer-node-protocol": "off",
+		// Too strict for our needs
+		"unicorn/filename-case": "off",
+
+		// In commands, destructuring is useful in some places but makes others less legible, so consistency isn't preferred.
+		"unicorn/consistent-destructuring": "off",
 
 		// Deprecated in 2018: https://eslint.org/blog/2018/11/jsdoc-end-of-life/
 		"valid-jsdoc": "off",
+
+		// Disable all perfectionist rules that are inherited from oclif's lint config.
+		"perfectionist/sort-array-includes": "off",
+		"perfectionist/sort-astro-attributes": "off",
+		"perfectionist/sort-classes": "off",
+		"perfectionist/sort-enums": "off",
+		"perfectionist/sort-exports": "off",
+		"perfectionist/sort-imports": "off",
+		"perfectionist/sort-interfaces": "off",
+		"perfectionist/sort-intersection-types": "off",
+		"perfectionist/sort-jsx-props": "off",
+		"perfectionist/sort-maps": "off",
+		"perfectionist/sort-named-exports": "off",
+		"perfectionist/sort-named-imports": "off",
+		"perfectionist/sort-object-types": "off",
+		"perfectionist/sort-objects": "off",
+		"perfectionist/sort-svelte-attributes": "off",
+		"perfectionist/sort-union-types": "off",
+		"perfectionist/sort-vue-attributes": "off",
 	},
 };

@@ -2,40 +2,17 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import { assert } from "chai";
 
 import {
 	bumpRange,
 	detectBumpType,
-	detectConstraintType,
 	getPreviousVersions,
 	isPrereleaseVersion,
 } from "../semver";
 
 describe("semver", () => {
-	describe("detect constraint types", () => {
-		it("patch constraint", () => {
-			const input = `>=2.0.0-internal.1.0.23 <2.0.0-internal.1.1.0`;
-			const expected = `patch`;
-			const result = detectConstraintType(input);
-			assert.strictEqual(result, expected);
-		});
-
-		it("minor constraint", () => {
-			const input = `>=2.0.0-internal.1.0.0 <2.0.0-internal.2.0.0`;
-			const expected = `minor`;
-			const result = detectConstraintType(input);
-			assert.strictEqual(result, expected);
-		});
-
-		it("minor constraint with higher majors", () => {
-			const input = `>=2.0.0-internal.2.21.34 <2.0.0-internal.3.0.0`;
-			const expected = `minor`;
-			const result = detectConstraintType(input);
-			assert.strictEqual(result, expected);
-		});
-	});
-
 	describe("detectBumpType semver", () => {
 		it("major", () => {
 			assert.equal(detectBumpType("0.0.1", "1.0.0"), "major");
@@ -47,6 +24,22 @@ describe("semver", () => {
 
 		it("patch", () => {
 			assert.equal(detectBumpType("0.0.1", "0.0.2"), "patch");
+		});
+
+		it("RC patch", () => {
+			assert.equal(detectBumpType("2.0.0-rc.5.0.2", "2.0.0-rc.5.0.3"), "patch");
+		});
+
+		it("internal version scheme patch", () => {
+			assert.equal(detectBumpType("2.0.0-internal.4.0.7", "2.0.0-internal.4.0.8"), "patch");
+		});
+
+		it("internal -> RC is major", () => {
+			assert.equal(detectBumpType("2.0.0-internal.1.0.7", "2.0.0-rc.2.0.8"), "major");
+		});
+
+		it("RC -> internal throws", () => {
+			assert.throws(() => detectBumpType("2.0.0-rc.4.0.7", "2.0.0-internal.5.0.0"));
 		});
 
 		it("premajor", () => {
@@ -107,12 +100,6 @@ describe("semver", () => {
 			assert.equal(detectBumpType("1.1.1-foo", "1.1.2"), "patch");
 		});
 
-		it("prerelease bump type returns undefined", () => {
-			assert.isUndefined(
-				detectBumpType("2.0.0-internal.1.0.0.82134", "2.0.0-internal.1.0.0"),
-			);
-		});
-
 		it("v1 >= v2 throws", () => {
 			assert.throws(() => detectBumpType("0.0.1", "0.0.1"));
 			assert.throws(() => detectBumpType("0.0.2", "0.0.1"));
@@ -149,6 +136,26 @@ describe("semver", () => {
 
 		it("v1 is semver, v2 is internal but smaller than v1", () => {
 			assert.throws(() => detectBumpType("2.1.0", "2.0.0-internal.3.0.0"));
+		});
+
+		it("v1 is internal, v2 is rc", () => {
+			assert.equal(detectBumpType("2.0.0-internal.8.0.1", "2.0.0-rc.1.0.0"), "major");
+		});
+
+		it("v1 is rc, v2 is rc", () => {
+			assert.equal(detectBumpType("2.0.0-rc.1.0.0", "2.0.0-rc.1.0.1"), "patch");
+		});
+
+		it("v1 is rc, v2 is semver with major < 1", () => {
+			assert.throws(() => detectBumpType("2.0.0-rc.5.0.0", "1.6.0"));
+		});
+
+		it("v1 is rc, v2 is semver with major === 2", () => {
+			assert.equal(detectBumpType("1.0.0-rc.5.0.0", "2.0.0"), "major");
+		});
+
+		it("v1 is rc, v2 is semver with major > 2", () => {
+			assert.equal(detectBumpType("1.0.0-rc.5.0.0", "3.0.0"), "major");
 		});
 	});
 

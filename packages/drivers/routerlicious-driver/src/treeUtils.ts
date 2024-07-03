@@ -3,13 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { assert, IsoBuffer } from "@fluidframework/common-utils";
-import {
-	SummaryType,
-	ISnapshotTree,
-	ISummaryTree,
-	SummaryObject,
-} from "@fluidframework/protocol-definitions";
+import { IsoBuffer } from "@fluid-internal/client-utils";
+import { assert } from "@fluidframework/core-utils/internal";
+import { ISummaryTree, SummaryObject, SummaryType } from "@fluidframework/driver-definitions";
+import { ISnapshotTree } from "@fluidframework/driver-definitions/internal";
+
+import { INormalizedWholeSnapshot } from "./contracts.js";
 
 /**
  * Summary tree assembler props
@@ -19,6 +18,7 @@ export interface ISummaryTreeAssemblerProps {
 	 * Indicates that this tree is unreferenced. If this is not present, the tree is considered referenced.
 	 */
 	unreferenced?: true;
+	groupId?: string;
 }
 
 /**
@@ -38,6 +38,7 @@ export class SummaryTreeAssembler {
 			type: SummaryType.Tree,
 			tree: { ...this.summaryTree },
 			unreferenced: this.props?.unreferenced,
+			groupId: this.props?.groupId,
 		};
 	}
 
@@ -93,6 +94,7 @@ export function convertSnapshotAndBlobsToSummaryTree(
 ): ISummaryTree {
 	const assembler = new SummaryTreeAssembler({
 		unreferenced: snapshot.unreferenced,
+		groupId: snapshot.groupId,
 	});
 	for (const [path, id] of Object.entries(snapshot.blobs)) {
 		const blob = blobs.get(id);
@@ -104,4 +106,33 @@ export function convertSnapshotAndBlobsToSummaryTree(
 		assembler.addTree(key, subtree);
 	}
 	return assembler.summary;
+}
+
+export function evalBlobsAndTrees(snapshot: INormalizedWholeSnapshot) {
+	const trees = countTreesInSnapshotTree(snapshot.snapshotTree);
+	const numBlobs = snapshot.blobs.size;
+	let encodedBlobsSize = 0;
+	for (const [_, blobContent] of snapshot.blobs) {
+		encodedBlobsSize += blobContent.byteLength;
+	}
+	return { trees, numBlobs, encodedBlobsSize };
+}
+
+export function validateBlobsAndTrees(snapshot: ISnapshotTree) {
+	assert(
+		snapshot.trees !== undefined,
+		0x5d0 /* Returned r11s snapshot is malformed. No trees! */,
+	);
+	assert(
+		snapshot.blobs !== undefined,
+		0x5d1 /* Returned r11s snapshot is malformed. No blobs! */,
+	);
+}
+
+function countTreesInSnapshotTree(snapshotTree: ISnapshotTree): number {
+	let numTrees = 0;
+	for (const [_, tree] of Object.entries(snapshotTree.trees)) {
+		numTrees += 1 + countTreesInSnapshotTree(tree);
+	}
+	return numTrees;
 }

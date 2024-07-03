@@ -3,23 +3,29 @@
  * Licensed under the MIT License.
  */
 
-import { ChildLogger, EventEmitterWithErrorHandling } from '@fluidframework/telemetry-utils';
-import { IDisposable, IErrorEvent, ITelemetryLogger, ITelemetryProperties } from '@fluidframework/common-definitions';
-import { assert, fail, RestOrArray, unwrapRestOrArray } from './Common';
-import { EditId } from './Identifiers';
-import { CachingLogViewer } from './LogViewer';
-import { TreeView } from './TreeView';
-import { RevisionView } from './RevisionView';
-import { EditCommittedHandler, SharedTree } from './SharedTree';
-import { EditingResult, GenericTransaction, TransactionInternal, ValidEditingResult } from './TransactionInternal';
-import { ChangeInternal, Edit, EditStatus } from './persisted-types';
-import { SharedTreeEvent } from './EventTypes';
-import { newEditId } from './EditUtilities';
-import { Change } from './ChangeTypes';
+import { IDisposable, IErrorEvent, ITelemetryBaseProperties } from '@fluidframework/core-interfaces';
+import { assert } from '@fluidframework/core-utils/internal';
+import {
+	ITelemetryLoggerExt,
+	EventEmitterWithErrorHandling,
+	createChildLogger,
+} from '@fluidframework/telemetry-utils/internal';
+
+import { Change } from './ChangeTypes.js';
+import { RestOrArray, assertWithMessage, fail, unwrapRestOrArray } from './Common.js';
+import { newEditId } from './EditUtilities.js';
+import { SharedTreeEvent } from './EventTypes.js';
+import { EditId } from './Identifiers.js';
+import { CachingLogViewer } from './LogViewer.js';
+import { RevisionView } from './RevisionView.js';
+import { EditCommittedHandler, SharedTree } from './SharedTree.js';
+import { EditingResult, GenericTransaction, TransactionInternal, ValidEditingResult } from './TransactionInternal.js';
+import { TreeView } from './TreeView.js';
+import { ChangeInternal, Edit, EditStatus } from './persisted-types/index.js';
 
 /**
  * An event emitted by a `Checkout` to indicate a state change. See {@link ICheckoutEvents} for event argument information.
- * @public
+ * @alpha
  */
 export enum CheckoutEvent {
 	/**
@@ -31,6 +37,7 @@ export enum CheckoutEvent {
 
 /**
  * Events which may be emitted by `Checkout`. See {@link CheckoutEvent} for documentation of event semantics.
+ * @alpha
  */
 export interface ICheckoutEvents extends IErrorEvent {
 	(event: 'viewChange', listener: (before: TreeView, after: TreeView) => void);
@@ -38,7 +45,7 @@ export interface ICheckoutEvents extends IErrorEvent {
 
 /**
  * The result of validation of an Edit.
- * @public
+ * @alpha
  */
 export enum EditValidationResult {
 	/**
@@ -72,7 +79,7 @@ export enum EditValidationResult {
  * Events emitted by `Checkout` are documented in {@link CheckoutEvent}.
  * Exceptions thrown during event handling will be emitted as error events, which are automatically surfaced as error events on the
  * `SharedTree` used at construction time.
- * @public
+ * @alpha
  */
 export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEvents> implements IDisposable {
 	/**
@@ -114,7 +121,7 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 	 */
 	private currentEdit?: GenericTransaction;
 
-	private readonly logger: ITelemetryLogger;
+	private readonly logger: ITelemetryLoggerExt;
 
 	public disposed: boolean = false;
 
@@ -123,7 +130,7 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 			this.tree.emit('error', error);
 		});
 		this.tree = tree;
-		this.logger = ChildLogger.create(this.tree.logger, 'Checkout');
+		this.logger = createChildLogger({ logger: this.tree.logger, namespace: 'Checkout' });
 		if (tree.logViewer instanceof CachingLogViewer) {
 			this.cachingLogViewer = tree.logViewer;
 		}
@@ -144,7 +151,6 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 
 	/**
 	 * @returns true iff there is an open edit.
-	 * @internal
 	 */
 	public hasOpenEdit(): boolean {
 		return this.currentEdit !== undefined;
@@ -155,7 +161,7 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 	 * Changes accumulate in the edit via calls to `applyChanges()`.
 	 */
 	public openEdit(): void {
-		assert(this.currentEdit === undefined, 'An edit is already open.');
+		assert(this.currentEdit === undefined, 0x600 /* An edit is already open. */);
 		this.currentEdit = TransactionInternal.factory(this.latestCommittedView);
 	}
 
@@ -169,11 +175,12 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 	 */
 	public closeEdit(): EditId {
 		const { currentEdit } = this;
-		assert(currentEdit !== undefined, 'An edit is not open.');
+		assert(currentEdit !== undefined, 0x601 /* An edit is not open. */);
 		this.currentEdit = undefined;
-		if (currentEdit.failure !== undefined) {
-			fail('Cannot close a transaction that has already failed. Use abortEdit instead.');
-		}
+		assert(
+			currentEdit.failure === undefined,
+			0x66d /* Cannot close a transaction that has already failed. Use abortEdit instead. */
+		);
 
 		const editingResult = currentEdit.close();
 		this.validateChangesApplied(editingResult);
@@ -195,7 +202,7 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 		}
 
 		const { failure } = result as { failure: TransactionInternal.Failure };
-		const additionalProps: ITelemetryProperties = {};
+		const additionalProps: ITelemetryBaseProperties = {};
 		switch (failure.kind) {
 			case TransactionInternal.FailureKind.BadPlace:
 				additionalProps.placeFailure = failure.placeFailure;
@@ -257,7 +264,7 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 	public applyChanges(changes: readonly Change[]): void;
 	public applyChanges(...changes: readonly Change[]): void;
 	public applyChanges(...changes: RestOrArray<Change>): void {
-		assert(this.currentEdit, 'Changes must be applied as part of an ongoing edit.');
+		assert(this.currentEdit !== undefined, 0x602 /* Changes must be applied as part of an ongoing edit. */);
 		const changeArray = unwrapRestOrArray(changes);
 		const { status } = this.currentEdit.applyChanges(changeArray.map((c) => this.tree.internalizeChange(c)));
 		this.validateChangesApplied({ status, failure: this.currentEdit.failure });
@@ -272,7 +279,7 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 	protected tryApplyChangesInternal(changes: readonly ChangeInternal[]): EditStatus;
 	protected tryApplyChangesInternal(...changes: readonly ChangeInternal[]): EditStatus;
 	protected tryApplyChangesInternal(...changes: RestOrArray<ChangeInternal>): EditStatus {
-		assert(this.currentEdit, 'Changes must be applied as part of an ongoing edit.');
+		assert(this.currentEdit !== undefined, 0x603 /* Changes must be applied as part of an ongoing edit. */);
 		const changeArray = unwrapRestOrArray(changes);
 		const { status } = this.currentEdit.applyChanges(changeArray);
 		if (status === EditStatus.Applied) {
@@ -304,7 +311,7 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 	public tryApplyEdit(...changes: RestOrArray<Change>): EditId | undefined {
 		this.openEdit();
 
-		assert(this.currentEdit, 'Changes must be applied as part of an ongoing edit.');
+		assert(this.currentEdit !== undefined, 0x604 /* Changes must be applied as part of an ongoing edit. */);
 		const changeArray = unwrapRestOrArray(changes);
 		const { status } = this.currentEdit.applyChanges(changeArray.map((c) => this.tree.internalizeChange(c)));
 		if (status === EditStatus.Applied) {
@@ -318,6 +325,7 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 
 	/**
 	 * Rebases the ongoing edit to the latest revision loaded by this 'Checkout'.
+	 *
 	 * If the rebase succeeds (none of the changes in the ongoing edit became invalid), the ongoing edit will remain open and the current
 	 * view will reflect those changes.
 	 *
@@ -325,18 +333,19 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 	 * currentView will return to showing the newest committed revision as it always does when there is no ongoing edit.
 	 *
 	 * Must only be called during an open edit.
-	 * @returns - the result of the rebase.
+	 *
+	 * @returns The result of the rebase.
 	 */
 	public rebaseCurrentEdit(): EditValidationResult.Valid | EditValidationResult.Invalid {
-		assert(this.currentEdit !== undefined, 'An edit is not open.');
-		assert(this.currentEdit.status === EditStatus.Applied, 'Local edits should always be valid.');
+		assert(this.currentEdit !== undefined, 0x605 /* An edit is not open. */);
+		assert(this.currentEdit.status === EditStatus.Applied, 0x606 /* Local edits should always be valid. */);
 		// When closed, the result might indicate Malformed due to unused detached entities.
 		// This is not an error, as the edit was still open and can still use those entities.
 		const priorResults = this.currentEdit.close();
 		const rebasedEdit = TransactionInternal.factory(this.latestCommittedView).applyChanges(priorResults.changes);
 		assert(
 			rebasedEdit.status !== EditStatus.Malformed,
-			'Malformed changes should have been caught on original application.'
+			0x607 /* Malformed changes should have been caught on original application. */
 		);
 		let status: EditValidationResult.Valid | EditValidationResult.Invalid;
 		if (rebasedEdit.status === EditStatus.Invalid) {
@@ -356,7 +365,7 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 	 */
 	public abortEdit(): void {
 		const { currentEdit } = this;
-		assert(currentEdit !== undefined, 'An edit is not open.');
+		assert(currentEdit !== undefined, 0x608 /* An edit is not open. */);
 		this.currentEdit = undefined;
 		this.emitChange();
 	}
@@ -368,7 +377,7 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 	 */
 	public getEditStatus(): EditStatus {
 		const { currentEdit } = this;
-		assert(currentEdit !== undefined, 'An edit is not open.');
+		assert(currentEdit !== undefined, 0x609 /* An edit is not open. */);
 		// TODO: could this ever be anything other than 'Applied'
 		// TODO: shouldn't this be an EditValidationResult since 'Applied' does not indicate the edit has been applied?
 		return currentEdit.status;
@@ -379,7 +388,7 @@ export abstract class Checkout extends EventEmitterWithErrorHandling<ICheckoutEv
 	 * @param editIds - the edits to revert
 	 */
 	public revert(editId: EditId): void {
-		assert(this.currentEdit !== undefined);
+		assertWithMessage(this.currentEdit !== undefined);
 		const index = this.tree.edits.getIndexOfId(editId);
 		const edit =
 			this.tree.edits.tryGetEditAtIndex(index) ?? fail('Edit with the specified ID does not exist in memory');

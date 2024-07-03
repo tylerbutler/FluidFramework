@@ -1,5 +1,44 @@
 # @fluidframework/sequence
 
+<!-- AUTO-GENERATED-CONTENT:START (README_DEPENDENCY_GUIDELINES_SECTION:includeHeading=TRUE) -->
+
+<!-- prettier-ignore-start -->
+<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
+
+## Using Fluid Framework libraries
+
+When taking a dependency on a Fluid Framework library's public APIs, we recommend using a `^` (caret) version range, such as `^1.3.4`.
+While Fluid Framework libraries may use different ranges with interdependencies between other Fluid Framework libraries,
+library consumers should always prefer `^`.
+
+If using any of Fluid Framework's unstable APIs (for example, its `beta` APIs), we recommend using a more constrained version range, such as `~`.
+
+<!-- prettier-ignore-end -->
+
+<!-- AUTO-GENERATED-CONTENT:END -->
+
+<!-- AUTO-GENERATED-CONTENT:START (README_IMPORT_INSTRUCTIONS:includeHeading=TRUE) -->
+
+<!-- prettier-ignore-start -->
+<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
+
+## Importing from this package
+
+This package leverages [package.json exports](https://nodejs.org/api/packages.html#exports) to separate its APIs by support level.
+For more information on the related support guarantees, see [API Support Levels](https://fluidframework.com/docs/build/releases-and-apitags/#api-support-levels).
+
+To access the `public` ([SemVer](https://semver.org/)) APIs, import via `@fluidframework/sequence` like normal.
+
+To access the `beta` APIs, import via `@fluidframework/sequence/beta`.
+
+To access the `legacy` APIs, import via `@fluidframework/sequence/legacy`.
+
+<!-- prettier-ignore-end -->
+
+<!-- AUTO-GENERATED-CONTENT:END -->
+
+## Description
+
 The **@fluidframework/sequence** package supports distributed data structures which are list-like.
 Its main export is [SharedString][], a DDS for storing and simultaneously editing a sequence of text.
 
@@ -166,6 +205,8 @@ sharedString.on("sequenceDelta", ({ deltaOperation, ranges, isLocal }) => {
 
 Internally, the sequence package depends on `@fluidframework/merge-tree`, and also raises `MergeTreeMaintenance` events on that tree as _maintenance_ events.
 These events don't correspond directly to APIs invoked on a sequence DDS, but may be useful for advanced users.
+Maintenance events are raised whenever the underlying structure of the merge-tree changes (segments are merged, split, unlinked, etc),
+so applications attempting to synchronize a data model dependent on the segment structure of merge-tree should look into the semantics of these events; see `MergeTreeMaintenanceType`.
 
 Both sequenceDelta and maintenance events are commonly used to synchronize or invalidate a view an application might have over a backing sequence DDS.
 
@@ -328,8 +369,8 @@ The following example illustrates these properties and highlights the major APIs
 
 const comments = sharedString.getIntervalCollection("comments");
 const comment = comments.add(
-	3,
-	7, // (inclusive range): references "world"
+	3, // (inclusive)
+	8, // (exclusive): references "world"
 	IntervalType.SlideOnRemove,
 	{
 		creator: "my-user-id",
@@ -338,7 +379,7 @@ const comment = comments.add(
 );
 //   content: hi world!
 // positions: 012345678
-//   comment:    [   ]
+//   comment:    [    )
 
 // Interval collection supports iterating over all intervals via Symbol.iterator or `.map()`:
 const allIntervalsInCollection = Array.from(comments);
@@ -347,14 +388,14 @@ const allProperties = comments.map((comment) => comment.properties);
 const intervalsOverlappingFirstHalf = comments.findOverlappingIntervals(0, 4);
 
 // Interval endpoints are LocalReferencePositions, so all APIs in the above section can be used:
-const startPosition = sharedString.localReferencePositionToPosition(comment.start);
-const endPosition = sharedString.localReferencePositionToPosition(comment.end);
+const startPosition = sharedString.localReferencePositionToPosition(comment.start); // returns 3
+const endPosition = sharedString.localReferencePositionToPosition(comment.end); // returns 8: note this is exclusive!
 
 // Intervals can be modified:
 comments.change(comment.getIntervalId(), 0, 1);
 //   content: hi world!
 // positions: 012345678
-//   comment: []
+//   comment: [)
 
 // their properties can be changed:
 comments.changeProperties(comment.getIntervalId(), { status: "resolved" });
@@ -363,6 +404,132 @@ comments.changeProperties(comment.getIntervalId(), { status: "resolved" });
 // and they can be removed:
 comments.removeIntervalById(comment.getIntervalId());
 ```
+
+### Interval stickiness
+
+"Stickiness" refers to the behavior of intervals when text is inserted on either
+side of the interval. A "sticky" interval is one which expands to include text
+inserted directly adjacent to it.
+
+A "start sticky" interval is one which expands only to include text inserted to
+the start of it. An "end sticky" interval is the same, but with regard to text
+inserted adjacent to the end.
+
+For example, let's look at the string "abc". If we have an interval on the
+character "b", what happens when we insert text on either side of it? In the
+below diagrams, we represent an interval by putting a caret directly underneath
+the characters it contains.
+
+#### Example
+
+##### Original string
+
+```typescript
+abc
+ ^
+```
+
+##### No stickiness
+
+```typescript
+aXbYc
+  ^
+```
+
+The interval does not expand to include the newly inserted characters `X` and `Y`.
+
+##### Start stickiness
+
+```typescript
+aXbYc
+ ^^
+```
+
+##### End stickiness
+
+```typescript
+aXbYc
+  ^^
+```
+
+##### Full stickiness
+
+```typescript
+aXbYc
+ ^^^
+```
+
+#### Concrete Implementation
+
+The above is a description of the abstract semantics of the concept of stickiness.
+In practice, this is implemented using the concept of "sides."
+
+For a given sequence of N characters, there are 2N + 2 positions which can be
+referenced: the position immediately before and after each character, and two
+special endpoint segments denoting the position before and after the start and
+end of the sequence respectively.
+
+By placing the endpoints of an interval either before or after a character, it
+is possible to make the endpoints inclusive or exclusive. An exclusive endpoint
+in a given direction implies stickiness in that direction. Whether an endpoint
+is inclusive or exclusive depends on both the Side and if it is the start or the
+end.
+
+Given the string "ABCD":
+
+```typescript
+// Refers to "BC". If any content is inserted before B or after C, this
+// interval will include that content
+//
+// Picture:
+// {start} - A[- B - C -]D - {end}
+// {start} - A - B - C - D - {end}
+collection.add(
+	{ pos: 0, side: Side.After },
+	{ pos: 3, side: Side.Before },
+	IntervalType.SlideOnRemove,
+);
+// Equivalent to specifying the same positions and Side.Before.
+// Refers to "ABC". Content inserted after C will be included in the
+// interval, but content inserted before A will not.
+// {start} -[A - B - C -]D - {end}
+// {start} - A - B - C - D - {end}
+collection.add(0, 3, IntervalType.SlideOnRemove);
+```
+
+In the case of the first interval shown, if text is deleted,
+
+```typescript
+// Delete the character "B"
+string.removeRange(1, 2);
+```
+
+The start point of the interval will slide to the position immediately before
+"C", and the same will be true.
+
+```typescript
+{start} - A[- C -]D - {end}
+```
+
+In this case, text inserted immediately before "C" would be included in the
+interval.
+
+```typescript
+string.insertText(1, "EFG");
+```
+
+With the string now being,
+
+```typescript
+{start} - A[- E - F - G - C -]D - {end}
+```
+
+Note that the endpoint continues to remain with the associated character, except
+when the character is removed. When content containing endpoints is removed,
+`After` endpoints move backward and `Before` endpoints move forward to maintain their
+side value and inclusive/exclusive behavior.
+
+<!-- This line ends the content that is copied to the sequences.md README -->
 
 ## SharedString
 
@@ -404,7 +571,7 @@ Using the interval collection API has two main benefits:
 
 ### Attribution
 
-**Important: Attribution is currently in alpha: expect breaking changes in minor releases as we get feedback on the API shape.**
+**Important: Attribution is currently in alpha development and is marked internal: expect breaking changes in minor releases as we get feedback on the API shape.**
 
 SharedString supports storing information attributing each character position to the user who inserted it and the time at which that insertion happened.
 This functionality is off by default.
@@ -421,8 +588,10 @@ const options: ILoaderOptions = {
 ```
 
 This ensures that the client is able to load existing documents containing attribution information,
-and specifies which kinds of operations should be attributed at the SharedString level (currently, only insertions).
+and specifies which kinds of operations should be attributed at the SharedString level.
 The stored attribution information can be found on the `attribution` field of the SharedString's segments.
+
+> To attribute property changes as well as insertions, use `createPropertyTrackingAndInsertionAttributionPolicyFactory` in place of the insert-only factory.
 
 Next, enable the `"Fluid.Attribution.EnableOnNewFile"` config flag to start tracking attribution information for new files.
 
@@ -433,9 +602,14 @@ const key = segment.attribution.getAtOffset(offset);
 // See the @fluid-experimental/attributor package for more details.
 ```
 
+Note that because attribution information is only finalized upon receiving acknowledgement from the server,
+any queries for attribution keys on unacked changes will return `LocalAttributionKey`.
+To listen for changes to attribution information (e.g. to synchronize a data model with a `SharedString`),
+use the "maintenance" event for acknowledgement.
+
 For further reading on attribution, see the [@fluid-experimental/attributor README](https://github.com/microsoft/FluidFramework/blob/main/packages/framework/attributor/README.md).
 
-There are plans to make attribution policies more flexible, for example tracking attribution of property changes separately from segment insertion.
+<!-- This line begins the content that is copied to the string.md README -->
 
 ### Examples
 
@@ -450,8 +624,59 @@ There are plans to make attribution policies more flexible, for example tracking
     -   [smde](https://github.com/microsoft/FluidFramework/tree/main/examples/data-objects/smde)
 
 -   Plain Text Editor Implementations
-    -   [collaborativeTextArea](https://github.com/microsoft/FluidFramework/blob/main/experimental/framework/react-inputs/src/CollaborativeTextArea.tsx)
-    -   [collaborativeInput](https://github.com/microsoft/FluidFramework/blob/main/experimental/framework/react-inputs/src/CollaborativeInput.tsx)
+    -   [collaborativeTextArea](https://github.com/microsoft/FluidFramework/blob/main/examples/utils/example-utils/src/reactInputs/CollaborativeTextArea.tsx)
+    -   [collaborativeInput](https://github.com/microsoft/FluidFramework/blob/main/examples/utils/example-utils/src/reactInputs/CollaborativeInput.tsx)
+
+<!-- This line ends the content that is copied to the string.md README -->
+
+<!-- AUTO-GENERATED-CONTENT:START (LIBRARY_PACKAGE_README:scripts=FALSE&installation=FALSE&importInstructions=FALSE) -->
+
+<!-- prettier-ignore-start -->
+<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
+
+## API Documentation
+
+API documentation for **@fluidframework/sequence** is available at <https://fluidframework.com/docs/apis/sequence>.
+
+## Contribution Guidelines
+
+There are many ways to [contribute](https://github.com/microsoft/FluidFramework/blob/main/CONTRIBUTING.md) to Fluid.
+
+-   Participate in Q&A in our [GitHub Discussions](https://github.com/microsoft/FluidFramework/discussions).
+-   [Submit bugs](https://github.com/microsoft/FluidFramework/issues) and help us verify fixes as they are checked in.
+-   Review the [source code changes](https://github.com/microsoft/FluidFramework/pulls).
+-   [Contribute bug fixes](https://github.com/microsoft/FluidFramework/blob/main/CONTRIBUTING.md).
+
+Detailed instructions for working in the repo can be found in the [Wiki](https://github.com/microsoft/FluidFramework/wiki).
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+This project may contain Microsoft trademarks or logos for Microsoft projects, products, or services.
+Use of these trademarks or logos must follow Microsoft’s [Trademark & Brand Guidelines](https://www.microsoft.com/trademarks).
+Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
+
+## Help
+
+Not finding what you're looking for in this README? Check out [fluidframework.com](https://fluidframework.com/docs/).
+
+Still not finding what you're looking for? Please [file an issue](https://github.com/microsoft/FluidFramework/wiki/Submitting-Bugs-and-Feature-Requests).
+
+Thank you!
+
+## Trademark
+
+This project may contain Microsoft trademarks or logos for Microsoft projects, products, or services.
+
+Use of these trademarks or logos must follow Microsoft's [Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+
+Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
+
+<!-- prettier-ignore-end -->
+
+<!-- AUTO-GENERATED-CONTENT:END -->
+
+<!-- Links -->
 
 [sharedmap]: https://fluidframework.com/docs/data-structures/map/
 [sharedstring]: https://github.com/microsoft/FluidFramework/blob/main/packages/dds/sequence/src/sharedString.ts

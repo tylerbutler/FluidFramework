@@ -2,32 +2,37 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import * as fs from 'fs';
 import { join } from 'path';
-import { expect } from 'chai';
+
+import { ISummaryBlob, SummaryType } from '@fluidframework/driver-definitions';
+import { assert, expect } from 'chai';
 import { v5 } from 'uuid';
-import { Change, StablePlace, StableRange } from '../ChangeTypes';
-import { assert, fail, RecursiveMutable } from '../Common';
-import { areRevisionViewsSemanticallyEqual } from '../EditUtilities';
-import { EditId, NodeId, SessionId, StableId, TraitLabel } from '../Identifiers';
-import { initialTree } from '../InitialTree';
-import { reservedIdCount, SharedTreeSummary, SharedTreeSummary_0_0_2, WriteFormat } from '../persisted-types';
-import { getChangeNodeFromView } from '../SerializationUtilities';
-import { SharedTree } from '../SharedTree';
-import { deserialize, getSummaryStatistics, SummaryStatistics } from '../SummaryBackCompatibility';
-import { IdCompressor } from '../id-compressor';
-import { convertEditIds } from '../IdConversion';
-import { MutableStringInterner } from '../StringInterner';
-import { sequencedIdNormalizer } from '../NodeIdUtilities';
-import { expectDefined } from './utilities/TestCommon';
-import { TestFluidSerializer } from './utilities/TestSerializer';
+
+import { Change, StablePlace, StableRange } from '../ChangeTypes.js';
+import { RecursiveMutable, fail } from '../Common.js';
+import { areRevisionViewsSemanticallyEqual } from '../EditUtilities.js';
+import { convertEditIds } from '../IdConversion.js';
+import { EditId, NodeId, SessionId, StableId, TraitLabel } from '../Identifiers.js';
+import { initialTree } from '../InitialTree.js';
+import { sequencedIdNormalizer } from '../NodeIdUtilities.js';
+import { getChangeNodeFromView } from '../SerializationUtilities.js';
+import { SharedTree } from '../SharedTree.js';
+import { MutableStringInterner } from '../StringInterner.js';
+import { SummaryStatistics, deserialize, getSummaryStatistics } from '../SummaryBackCompatibility.js';
+import { IdCompressor } from '../id-compressor/index.js';
+import { SharedTreeSummary, SharedTreeSummary_0_0_2, WriteFormat, reservedIdCount } from '../persisted-types/index.js';
+
+import { expectDefined } from './utilities/TestCommon.js';
+import { TestFluidSerializer } from './utilities/TestSerializer.js';
 import {
 	getEditLogInternal,
 	getIdNormalizerFromSharedTree,
 	makeNodeIdContext,
 	setUpLocalServerTestSharedTree,
 	testDocumentsPathBase,
-} from './utilities/TestUtilities';
+} from './utilities/TestUtilities.js';
 
 const directory = join(testDocumentsPathBase, 'summary-tests');
 
@@ -138,7 +143,7 @@ export async function createSummaryTestTree(writeFormat: WriteFormat, summarizeH
 				? [
 						interner.getOrCreateInternedId(initialTree.definition),
 						normalizer.normalizeToOpSpace(context.convertToNodeId(initialTree.identifier)),
-				  ]
+					]
 				: undefined,
 			editHistory: {
 				editIds: [],
@@ -189,14 +194,18 @@ export function runSummaryTests(title: string): void {
 
 				const { tree: expectedTree } = await setUp002Tree({});
 				expectedTree.loadSerializedSummary(summaryFileWithHistory_0_0_2);
-				expect(getChangeNodeFromView(tree.currentView)).deep.equals(
-					getChangeNodeFromView(expectedTree.currentView)
-				);
+				expect(getChangeNodeFromView(tree.currentView)).deep.equals(getChangeNodeFromView(expectedTree.currentView));
 			});
 
 			it('writes 0.0.2 files without history', async () => {
 				const tree = await setUp002SummaryTestTree(false);
-				const summary: RecursiveMutable<SharedTreeSummary_0_0_2> = JSON.parse(tree.saveSerializedSummary());
+
+				const { summary: attachSummary } = tree.getAttachSummary();
+				expect(attachSummary.type).to.equal(SummaryType.Tree, 'Summary type should be Tree');
+				expect(attachSummary.tree.header.type).to.equal(SummaryType.Blob, 'Summary should contain header blob');
+				const serializedSummary = (attachSummary.tree.header as ISummaryBlob).content as string;
+
+				const summary: RecursiveMutable<SharedTreeSummary_0_0_2> = JSON.parse(serializedSummary);
 				const expectedSummary: SharedTreeSummary_0_0_2 = JSON.parse(summaryFileNoHistory_0_0_2);
 				// The edit ID of the single "no history edit" is generated randomly. Replace it with the baseline edit for the sake of this test.
 				summary.sequencedEdits[0].id = expectedSummary.sequencedEdits[0].id;
@@ -205,9 +214,7 @@ export function runSummaryTests(title: string): void {
 
 			it('writes 0.0.2 files with history', async () => {
 				const tree = await setUp002SummaryTestTree(true);
-				expect(JSON.parse(tree.saveSerializedSummary())).to.deep.equal(
-					JSON.parse(summaryFileWithHistory_0_0_2)
-				);
+				expect(JSON.parse(tree.saveSerializedSummary())).to.deep.equal(JSON.parse(summaryFileWithHistory_0_0_2));
 			});
 
 			describe('reading the same version', () => {
@@ -276,9 +283,7 @@ export function runSummaryTests(title: string): void {
 
 			it('writes 0.1.1 files with history', async () => {
 				const tree = await setUp011SummaryTestTree(true);
-				expect(JSON.parse(tree.saveSerializedSummary())).to.deep.equal(
-					JSON.parse(summaryFileWithHistory_0_1_1)
-				);
+				expect(JSON.parse(tree.saveSerializedSummary())).to.deep.equal(JSON.parse(summaryFileWithHistory_0_1_1));
 			});
 
 			describe('reading the same version', () => {
@@ -308,9 +313,7 @@ export function runSummaryTests(title: string): void {
 					const { tree } = await setUp011Tree({});
 					tree.loadSerializedSummary(summaryFileWithHistory_0_0_2);
 					await expectSharedTreesEqual(tree, expectedTree);
-					expect(JSON.parse(tree.saveSerializedSummary())).to.deep.equal(
-						JSON.parse(summaryFileWithHistory_0_0_2)
-					);
+					expect(JSON.parse(tree.saveSerializedSummary())).to.deep.equal(JSON.parse(summaryFileWithHistory_0_0_2));
 				});
 
 				it('upgrades 0.0.2', async () => {
@@ -320,9 +323,7 @@ export function runSummaryTests(title: string): void {
 					await testObjectProvider.ensureSynchronized();
 					const expectedTree = await setUp011SummaryTestTree(true);
 					await expectSharedTreesEqual(tree, expectedTree);
-					expect(JSON.parse(tree.saveSerializedSummary())).to.deep.equal(
-						JSON.parse(summaryFileUpgrade_0_1_1)
-					);
+					expect(JSON.parse(tree.saveSerializedSummary())).to.deep.equal(JSON.parse(summaryFileUpgrade_0_1_1));
 				});
 
 				it('upgrades 0.0.2 that has several stale ops that it resubmits', async () => {
@@ -337,13 +338,6 @@ export function runSummaryTests(title: string): void {
 					await testObjectProvider.ensureSynchronized();
 					await expectSharedTreesEqual(resubmitTree, tree);
 					await expectSharedTreesEqual(tree, await createSummaryTestTree(WriteFormat.v0_1_1, true));
-
-					// https://dev.azure.com/fluidframework/internal/_workitems/edit/3347
-					const events = testObjectProvider.logger.reportAndClearTrackedEvents();
-					expect(events.unexpectedErrors.length).to.equal(1);
-					expect(events.unexpectedErrors[0].eventName).to.equal(
-						'fluid:telemetry:ContainerRuntime:Outbox:ReferenceSequenceNumberMismatch'
-					);
 				});
 
 				it('Normalizes a denormalized summary containing nodes with empty traits', async () => {
@@ -352,14 +346,7 @@ export function runSummaryTests(title: string): void {
 
 					const { tree: expectedTree } = await setUp011Tree({});
 					expectedTree.loadSerializedSummary(summaryFileWithHistory_0_0_2);
-					expect(
-						areRevisionViewsSemanticallyEqual(
-							tree.currentView,
-							tree,
-							expectedTree.currentView,
-							expectedTree
-						)
-					);
+					expect(areRevisionViewsSemanticallyEqual(tree.currentView, tree, expectedTree.currentView, expectedTree));
 				});
 			});
 
@@ -387,9 +374,7 @@ async function expectSharedTreesEqual(
 	sharedTreeB: SharedTree,
 	compareEditIds = true
 ): Promise<void> {
-	if (
-		!areRevisionViewsSemanticallyEqual(sharedTreeA.currentView, sharedTreeA, sharedTreeB.currentView, sharedTreeB)
-	) {
+	if (!areRevisionViewsSemanticallyEqual(sharedTreeA.currentView, sharedTreeA, sharedTreeB.currentView, sharedTreeB)) {
 		expect.fail('trees have different current views');
 	}
 
@@ -476,7 +461,10 @@ class DeterministicIdGenerator {
 	private editIdCount = 0;
 	private readonly constantIdCompressor?: IdCompressor;
 
-	public constructor(public readonly writeFormat: WriteFormat, private readonly sharedTree: SharedTree) {
+	public constructor(
+		public readonly writeFormat: WriteFormat,
+		private readonly sharedTree: SharedTree
+	) {
 		if (this.writeFormat === WriteFormat.v0_1_1) {
 			assert(getIdNormalizerFromSharedTree(sharedTree).localSessionId === DeterministicIdGenerator.sessionId);
 		} else {

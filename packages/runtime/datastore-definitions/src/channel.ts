@@ -3,23 +3,27 @@
  * Licensed under the MIT License.
  */
 
-import { IFluidHandle, IFluidLoadable } from "@fluidframework/core-interfaces";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import {
+import type { IFluidLoadable } from "@fluidframework/core-interfaces";
+import type { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+import type {
+	IExperimentalIncrementalSummaryContext,
 	IGarbageCollectionData,
 	ISummaryTreeWithStats,
 	ITelemetryContext,
-} from "@fluidframework/runtime-definitions";
-import { IChannelAttributes } from "./storage";
-import { IFluidDataStoreRuntime } from "./dataStoreRuntime";
+} from "@fluidframework/runtime-definitions/internal";
 
+import type { IFluidDataStoreRuntime } from "./dataStoreRuntime.js";
+import type { IChannelAttributes } from "./storage.js";
+
+/**
+ * @legacy
+ * @alpha
+ */
 export interface IChannel extends IFluidLoadable {
 	/**
 	 * A readonly identifier for the channel
 	 */
 	readonly id: string;
-
-	readonly owner?: string;
 
 	readonly attributes: IChannelAttributes;
 
@@ -91,6 +95,7 @@ export interface IChannel extends IFluidLoadable {
 		fullTree?: boolean,
 		trackState?: boolean,
 		telemetryContext?: ITelemetryContext,
+		incrementalSummaryContext?: IExperimentalIncrementalSummaryContext,
 	): Promise<ISummaryTreeWithStats>;
 
 	/**
@@ -115,6 +120,8 @@ export interface IChannel extends IFluidLoadable {
 
 /**
  * Handler provided by shared data structure to process requests from the runtime.
+ * @legacy
+ * @alpha
  */
 export interface IDeltaHandler {
 	/**
@@ -124,7 +131,11 @@ export interface IDeltaHandler {
 	 * @param localOpMetadata - For local client messages, this is the metadata that was submitted with the message.
 	 * For messages from a remote client, this will be undefined.
 	 */
-	process: (message: ISequencedDocumentMessage, local: boolean, localOpMetadata: unknown) => void;
+	process: (
+		message: ISequencedDocumentMessage,
+		local: boolean,
+		localOpMetadata: unknown,
+	) => void;
 
 	/**
 	 * State change events to indicate changes to the delta connection
@@ -143,14 +154,21 @@ export interface IDeltaHandler {
 	reSubmit(message: any, localOpMetadata: unknown): void;
 
 	/**
-	 * Apply changes from an op. Used when rehydrating an attached container
+	 * Apply changes from an op just as if a local client has made the change,
+	 * including submitting the op. Used when rehydrating an attached container
 	 * with pending changes. This prepares the SharedObject for seeing an ACK
 	 * for the op or resubmitting the op upon reconnection.
-	 * @param message - Contents of a stashed op.
-	 * @returns localMetadata of the op, to be passed to process() or resubmit()
-	 * when the op is ACKed or resubmitted, respectively
+	 * @param content - Contents of a stashed op.
+	 * @returns Should return void.
+	 *
+	 * @privateRemarks
+	 * This interface is undergoing changes. Right now it support both the old
+	 * flow, where just local metadata is returned, and a more ergonomic flow
+	 * where operations are applied just like local edits, including
+	 * submission of the op if attached. Soon the old flow will be removed
+	 * and only the new flow will be supported.
 	 */
-	applyStashedOp(message: any): unknown;
+	applyStashedOp(message: any): void;
 
 	/**
 	 * Revert a local op.
@@ -162,6 +180,8 @@ export interface IDeltaHandler {
 
 /**
  * Interface to represent a connection to a delta notification stream.
+ * @legacy
+ * @alpha
  */
 export interface IDeltaConnection {
 	connected: boolean;
@@ -185,18 +205,12 @@ export interface IDeltaConnection {
 	 * that needs to be part of the summary but does not generate ops.
 	 */
 	dirty(): void;
-
-	/**
-	 * Called when a new outbound reference is added to another node. This is used by garbage collection to identify
-	 * all references added in the system.
-	 * @param srcHandle - The handle of the node that added the reference.
-	 * @param outboundHandle - The handle of the outbound node that is referenced.
-	 */
-	addedGCOutboundReference?(srcHandle: IFluidHandle, outboundHandle: IFluidHandle): void;
 }
 
 /**
  * Storage services to read the objects at a given path.
+ * @legacy
+ * @alpha
  */
 export interface IChannelStorageService {
 	/**
@@ -217,6 +231,8 @@ export interface IChannelStorageService {
 
 /**
  * Storage services to read the objects at a given path using the given delta connection.
+ * @legacy
+ * @alpha
  */
 export interface IChannelServices {
 	deltaConnection: IDeltaConnection;
@@ -227,6 +243,8 @@ export interface IChannelServices {
 /**
  * Definitions of a channel factory.
  *
+ * @remarks
+ *
  * The runtime must be able to produce "channels" of the correct in-memory object type for the collaborative session.
  * Here "channels" are typically distributed data structures (DDSs).
  *
@@ -235,12 +253,23 @@ export interface IChannelServices {
  * (ops), which indicate a new instance of a channel being introduced to the collaboration session, to produce the
  * appropriate in-memory object.
  *
- * @example If a collaboration includes a {@link https://fluidframework.com/docs/data-structures/map/ | SharedMap},
- * the collaborating clients will need to have access to a factory that can produce the `SharedMap` obect.
+ * Factories follow a common model but enable custom behavior.
  *
- * @remarks Factories follow a common model but enable custom behavior.
+ * @example
+ *
+ * If a collaboration includes a {@link https://fluidframework.com/docs/data-structures/map/ | SharedMap},
+ * the collaborating clients will need to have access to a factory that can produce the `SharedMap` object.
+ *
+ * @privateRemarks
+ * TChannel is intersected with IChannel when returned instead of constrained to it since doing so enables LoadableObjectClass to be covariant over its input parameter.
+ * This means that code like fluid-static's `InitialObjects` can be simple and type safe and LoadableObjectClass<any> is not needed.
+ * This approach (not requiring TChannel to extend IChannel) also makes it possible for SharedObject's public interfaces to not include IChannel if desired
+ * (while still requiring the implementation to implement it).
+ *
+ * @legacy
+ * @alpha
  */
-export interface IChannelFactory {
+export interface IChannelFactory<out TChannel = unknown> {
 	/**
 	 * String representing the type of the factory.
 	 */
@@ -271,7 +300,7 @@ export interface IChannelFactory {
 		id: string,
 		services: IChannelServices,
 		channelAttributes: Readonly<IChannelAttributes>,
-	): Promise<IChannel>;
+	): Promise<TChannel & IChannel>;
 
 	/**
 	 * Creates a local version of the channel.
@@ -284,5 +313,5 @@ export interface IChannelFactory {
 	 * NOTE here - When we attach we need to submit all the pending ops prior to actually doing the attach
 	 * for consistency.
 	 */
-	create(runtime: IFluidDataStoreRuntime, id: string): IChannel;
+	create(runtime: IFluidDataStoreRuntime, id: string): TChannel & IChannel;
 }

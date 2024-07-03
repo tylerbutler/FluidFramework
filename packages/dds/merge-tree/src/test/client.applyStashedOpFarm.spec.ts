@@ -3,22 +3,24 @@
  * Licensed under the MIT License.
  */
 
-import { describeFuzz, makeRandom } from "@fluid-internal/stochastic-test-utils";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { IMergeTreeOp } from "../ops";
-import { SegmentGroup } from "../mergeTreeNodes";
+import { describeFuzz, makeRandom } from "@fluid-private/stochastic-test-utils";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+
+import { SegmentGroup } from "../mergeTreeNodes.js";
+import { IMergeTreeOp, MergeTreeDeltaType } from "../ops.js";
+
 import {
-	generateClientNames,
-	doOverRange,
-	runMergeTreeOperationRunner,
-	annotateRange,
-	removeRange,
-	IMergeTreeOperationRunnerConfig,
 	IConfigRange,
+	IMergeTreeOperationRunnerConfig,
+	annotateRange,
+	doOverRange,
+	generateClientNames,
 	insert,
-} from "./mergeTreeOperationRunner";
-import { TestClient } from "./testClient";
-import { TestClientLogger } from "./testClientLogger";
+	removeRange,
+	runMergeTreeOperationRunner,
+} from "./mergeTreeOperationRunner.js";
+import { TestClient } from "./testClient.js";
+import { TestClientLogger } from "./testClientLogger.js";
 
 function applyMessagesWithReconnect(
 	startingSeq: number,
@@ -34,9 +36,19 @@ function applyMessagesWithReconnect(
 	const stashedOps: [IMergeTreeOp, SegmentGroup | SegmentGroup[], number][] = [];
 	for (const messageData of messageDatas) {
 		if (messageData[0].clientId !== clients[1].longClientId) {
-			const index = clients.map((c) => c.longClientId).indexOf(messageData[0].clientId);
-			const localMetadata = stashClients[index].applyStashedOp(messageData[0].contents);
-			stashedOps.push([messageData[0].contents, localMetadata, index]);
+			const index = clients
+				.map((c) => c.longClientId)
+				.indexOf(messageData[0].clientId as string);
+			const op = messageData[0].contents as IMergeTreeOp;
+			stashClients[index].applyStashedOp(op);
+			stashedOps.push([
+				op,
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				stashClients[index].peekPendingSegmentGroups(
+					op.type === MergeTreeDeltaType.GROUP ? op.ops.length : 1,
+				)!,
+				index,
+			]);
 		}
 	}
 	// this should put all stash clients (except #1) in the same state as the
@@ -88,8 +100,15 @@ function applyMessagesWithReconnect(
 	// apply regenerated ops as stashed ops for client #1
 	const stashedRegeneratedOps: [IMergeTreeOp, SegmentGroup | SegmentGroup[]][] =
 		reconnectMsgs.map((message) => {
-			const localMetadata = stashClients[1].applyStashedOp(message.contents);
-			return [message.contents, localMetadata];
+			const op = message.contents as IMergeTreeOp;
+			stashClients[1].applyStashedOp(op);
+			return [
+				op,
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				stashClients[1].peekPendingSegmentGroups(
+					op.type === MergeTreeDeltaType.GROUP ? op.ops.length : 1,
+				)!,
+			];
 		});
 	// now both clients at index 1 should be the same
 	TestClientLogger.validate([clients[1], stashClients[1]]);
@@ -135,7 +154,10 @@ export const defaultOptions: IApplyStashedOpFarmConfig = {
 // Generate a list of single character client names, support up to 69 clients
 const clientNames = generateClientNames();
 
-function runApplyStashedOpFarmTests(opts: IApplyStashedOpFarmConfig, extraSeed?: number): void {
+function runApplyStashedOpFarmTests(
+	opts: IApplyStashedOpFarmConfig,
+	extraSeed?: number,
+): void {
 	doOverRange(opts.clients, opts.growthFunc.bind(opts), (clientCount) => {
 		it(`applyStashedOpFarm_${clientCount}`, async () => {
 			const random = makeRandom(0xdeadbeef, 0xfeedbed, clientCount, extraSeed ?? 0);

@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import { Type, TypeChecker } from "ts-morph";
 
 export interface DecompositionResult {
@@ -60,7 +61,9 @@ function mergeResults(
 		into.requiredGenerics = from.requiredGenerics;
 	} else {
 		into.typeAsString = `${into.typeAsString}${separator}${from.typeAsString}`;
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		from.replacedTypes.forEach((v) => into.replacedTypes!.add(v));
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		into.requiredGenerics!.merge(from.requiredGenerics);
 	}
 }
@@ -70,7 +73,7 @@ function mergeResults(
  * type, etc. (ts-morph doesn't expose this fn on TypeChecker and it gets verbose to use inline)
  * @param typeChecker - TypeChecker object from the type's TS project to get the type string
  * @param type - Type node to get string representation
- * @returns - The type as a string
+ * @returns The type as a string
  */
 export function typeToString(typeChecker: TypeChecker, type: Type): string {
 	return typeChecker.compilerObject.typeToString(type.compilerType);
@@ -92,7 +95,7 @@ export function typeToString(typeChecker: TypeChecker, type: Type): string {
  * TODO: handle index types, splat, rest
  * @param checker - The TypeChecker object from the node's TS project for getting type names
  * @param node - The type node to decompose
- * @returns - DecompositionResult for the type
+ * @returns DecompositionResult for the type
  */
 export function decomposeType(checker: TypeChecker, node: Type): DecompositionResult {
 	const result = {
@@ -132,6 +135,7 @@ export function decomposeType(checker: TypeChecker, node: Type): DecompositionRe
 			// Array shorthand (type[]) is handled by type arguments
 			const typeArgsResult = decomposeTypes(checker, typeArgs, ", ");
 			const symbolName = checker.compilerObject.symbolToString(
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				node.compilerType.getSymbol()!,
 			);
 			typeArgsResult.requiredGenerics.set(symbolName, typeArgs.length);
@@ -150,7 +154,7 @@ export function decomposeType(checker: TypeChecker, node: Type): DecompositionRe
  * @param checker - The TypeChecker object from the node's TS project for getting type names
  * @param nodes - The type nodes to decompose
  * @param separator - String separator used to merge the results of the decomposition
- * @returns - Combined DecompositionResult for the types
+ * @returns Combined DecompositionResult for the types
  */
 export function decomposeTypes(
 	checker: TypeChecker,

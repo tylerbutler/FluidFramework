@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /**
  * @fileoverview Definition of the ReferenceProperty class
  */
@@ -9,6 +10,7 @@
 const { PathHelper, TypeIdHelper } = require("@fluid-experimental/property-changeset");
 const { MSG } = require("@fluid-experimental/property-common").constants;
 const _ = require("lodash");
+
 const { AbstractStaticCollectionProperty } = require("./abstractStaticCollectionProperty");
 const { BaseProperty } = require("./baseProperty");
 const { _castFunctors } = require("./primitiveTypeCasts");
@@ -19,6 +21,7 @@ const { ValueProperty } = require("./valueProperty");
  * object's value field. To do this we simply keep a pointer to the object and
  * it's associated data field that we are interested in. If no data field is
  * present this property will have an undefined value.
+ * @internal
  */
 export class ReferenceProperty extends ValueProperty {
 	/**
@@ -59,14 +62,14 @@ export class ReferenceProperty extends ValueProperty {
 	/**
 	 * Resolves the referenced property
 	 *
-	 * @param {string|number|array<string|number>} in_ids - The ID of the property or an array of IDs if an array is
+	 * @param {string | number | Array<string | number>} in_ids - The ID of the property or an array of IDs if an array is
 	 * passed, the .get function will be performed on each id in sequence for example .get(['position','x']) is
 	 * equivalent to .get('position').get('x'). If .get resolves to a ReferenceProperty, it will return the property
 	 * that the ReferenceProperty refers to.
 	 * @param {Object} in_options - parameter object
 	 * @param {property-properties.BaseProperty.REFERENCE_RESOLUTION} [in_options.referenceResolutionMode=ALWAYS] - How
 	 * should this function behave during reference resolution?
-	 * @returns {property-properties.BaseProperty|undefined} The property object the reference points to or undefined if
+	 * @returns {BaseProperty | undefined} The property object the reference points to or undefined if
 	 * it could not be resolved
 	 */
 	get(in_ids, in_options) {
@@ -98,7 +101,7 @@ export class ReferenceProperty extends ValueProperty {
 
 		return resolvedProperty !== undefined && _.isArray(in_ids)
 			? // Forward handling of arrays to the BaseProperty function
-			  resolvedProperty.get(in_ids, in_options)
+				resolvedProperty.get(in_ids, in_options)
 			: resolvedProperty;
 	}
 
@@ -109,7 +112,7 @@ export class ReferenceProperty extends ValueProperty {
 	 * @param {Object} in_options - Parameter object
 	 * @param {property-properties.BaseProperty.REFERENCE_RESOLUTION} [in_options.referenceResolutionMode=ALWAYS] - How
 	 * should this function behave during reference resolution?
-	 * @returns {property-properties.BaseProperty|undefined} resolved path
+	 * @returns {BaseProperty | undefined} resolved path
 	 * @throws if the path resolves to a primitive value
 	 * @throws if in_path is not a valid path
 	 */
@@ -179,7 +182,7 @@ export class ReferenceProperty extends ValueProperty {
 					this,
 					in_segment,
 					in_segmentType,
-			  );
+				);
 	}
 
 	// Define a property to simplify accessing the referenced path
@@ -212,9 +215,7 @@ export class ReferenceProperty extends ValueProperty {
 		} else if (in_value instanceof String) {
 			path = String(in_value);
 		} else {
-			throw new TypeError(
-				MSG.PROPERTY_OR_UNDEFINED + "(" + typeof in_value + ") " + in_value,
-			);
+			throw new TypeError(MSG.PROPERTY_OR_UNDEFINED + "(" + typeof in_value + ") " + in_value);
 		}
 		return path;
 	}

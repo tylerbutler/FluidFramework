@@ -3,25 +3,27 @@
  * Licensed under the MIT License.
  */
 
-import { EventEmitter } from "events";
-import {
-	IClientConfiguration,
-	IClientDetails,
-	IDocumentMessage,
-	ISequencedDocumentMessage,
-	ISignalMessage,
-	MessageType,
-} from "@fluidframework/protocol-definitions";
+import { EventEmitter, TypedEventEmitter } from "@fluid-internal/client-utils";
 import {
 	IDeltaManager,
 	IDeltaManagerEvents,
 	IDeltaQueue,
 	ReadOnlyInfo,
-} from "@fluidframework/container-definitions";
-import { assert, TypedEventEmitter } from "@fluidframework/common-utils";
+} from "@fluidframework/container-definitions/internal";
+import { assert } from "@fluidframework/core-utils/internal";
+import { IClientDetails } from "@fluidframework/driver-definitions";
+import {
+	IClientConfiguration,
+	IDocumentMessage,
+	MessageType,
+	ISequencedDocumentMessage,
+	ISignalMessage,
+} from "@fluidframework/driver-definitions/internal";
 
 /**
  * Mock implementation of IDeltaQueue for testing that does nothing
+ * @legacy
+ * @alpha
  */
 export class MockDeltaQueue<T> extends EventEmitter implements IDeltaQueue<T> {
 	protected readonly queue: T[] = [];
@@ -96,6 +98,8 @@ export class MockDeltaQueue<T> extends EventEmitter implements IDeltaQueue<T> {
 
 /**
  * Mock implementation of IDeltaManager for testing that creates mock DeltaQueues for testing
+ * @legacy
+ * @alpha
  */
 export class MockDeltaManager
 	extends TypedEventEmitter<IDeltaManagerEvents>
@@ -141,17 +145,13 @@ export class MockDeltaManager
 		return undefined as any as string;
 	}
 
-	public get maxMessageSize(): number {
-		return 0;
-	}
+	public readonly maxMessageSize: number = 0;
 
 	public get serviceConfiguration(): IClientConfiguration {
 		return undefined as any as IClientConfiguration;
 	}
 
-	public get active(): boolean {
-		return true;
-	}
+	public readonly active: boolean = true;
 
 	public close(): void {}
 
@@ -159,17 +159,49 @@ export class MockDeltaManager
 
 	public flush() {}
 
-	public submit(type: MessageType, contents: any, batch = false, localOpMetadata: any): number {
+	public submit(
+		type: MessageType,
+		contents: any,
+		batch = false,
+		localOpMetadata: any,
+	): number {
 		return 0;
 	}
 
-	public dispose() {}
+	public dispose() {
+		this.removeAllListeners();
+	}
 
-	constructor() {
+	public clientSequenceNumber = 0;
+
+	public process(message: ISequencedDocumentMessage): void {
+		assert(message.sequenceNumber !== undefined, "message missing sequenceNumber");
+		assert(
+			message.minimumSequenceNumber !== undefined,
+			"message missing minimumSequenceNumber",
+		);
+		this.lastSequenceNumber = message.sequenceNumber;
+		this.lastMessage = message;
+		this.minimumSequenceNumber = message.minimumSequenceNumber;
+		this.emit("op", message);
+	}
+
+	constructor(private readonly getClientId?: () => string) {
 		super();
 
 		this._inbound = new MockDeltaQueue<ISequencedDocumentMessage>();
+
 		this._outbound = new MockDeltaQueue<IDocumentMessage[]>();
+		this._outbound.on("push", (messages: IDocumentMessage[]) => {
+			messages.forEach((message: IDocumentMessage) => {
+				// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+				this._inbound.push({
+					...message,
+					clientId: this.getClientId?.() ?? null,
+					// ! sequenceNumber and minimumSequenceNumber should be added by MockContainerRuntimeFactory
+				} as ISequencedDocumentMessage);
+			});
+		});
 		this._inboundSignal = new MockDeltaQueue<ISignalMessage>();
 	}
 }

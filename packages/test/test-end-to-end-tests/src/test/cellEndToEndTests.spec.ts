@@ -4,33 +4,39 @@
  */
 
 import { strict as assert } from "assert";
-import { ISharedCell, SharedCell } from "@fluidframework/cell";
-import { IFluidHandle } from "@fluidframework/core-interfaces";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import {
-	ITestObjectProvider,
-	ITestContainerConfig,
-	DataObjectFactoryType,
-	ITestFluidObject,
-	ChannelFactoryRegistry,
-} from "@fluidframework/test-utils";
-import { describeFullCompat, describeNoCompat } from "@fluid-internal/test-version-utils";
 
-import { ContainerRuntime } from "@fluidframework/container-runtime";
-import { ConfigTypes, IConfigProviderBase } from "@fluidframework/telemetry-utils";
-import { Serializable } from "@fluidframework/datastore-definitions";
-import { IContainer } from "@fluidframework/container-definitions";
+import { describeCompat } from "@fluid-private/test-version-utils";
+import type { ISharedCell } from "@fluidframework/cell/internal";
+import { IContainer } from "@fluidframework/container-definitions/internal";
+import { ContainerRuntime } from "@fluidframework/container-runtime/internal";
+import {
+	ConfigTypes,
+	IConfigProviderBase,
+	IFluidHandle,
+} from "@fluidframework/core-interfaces";
+import { Serializable } from "@fluidframework/datastore-definitions/internal";
+import {
+	ChannelFactoryRegistry,
+	DataObjectFactoryType,
+	ITestContainerConfig,
+	ITestFluidObject,
+	ITestObjectProvider,
+	getContainerEntryPointBackCompat,
+} from "@fluidframework/test-utils/internal";
 
 const cellId = "cellKey";
-const registry: ChannelFactoryRegistry = [[cellId, SharedCell.getFactory()]];
-const testContainerConfig: ITestContainerConfig = {
-	fluidDataObjectType: DataObjectFactoryType.Test,
-	registry,
-};
 
-describeFullCompat("SharedCell", (getTestObjectProvider) => {
+describeCompat("SharedCell", "FullCompat", (getTestObjectProvider, apis) => {
+	const { SharedCell } = apis.dds;
+
+	const registry: ChannelFactoryRegistry = [[cellId, SharedCell.getFactory()]];
+	const testContainerConfig: ITestContainerConfig = {
+		fluidDataObjectType: DataObjectFactoryType.Test,
+		registry,
+	};
+
 	let provider: ITestObjectProvider;
-	beforeEach(() => {
+	beforeEach("getTestObjectProvider", () => {
 		provider = getTestObjectProvider();
 	});
 
@@ -42,21 +48,21 @@ describeFullCompat("SharedCell", (getTestObjectProvider) => {
 	let sharedCell2: ISharedCell;
 	let sharedCell3: ISharedCell;
 
-	beforeEach(async () => {
+	beforeEach("setup", async () => {
 		// Create a Container for the first client.
 		const container1 = await provider.makeTestContainer(testContainerConfig);
-		dataObject1 = await requestFluidObject<ITestFluidObject>(container1, "default");
-		sharedCell1 = await dataObject1.getSharedObject<SharedCell>(cellId);
+		dataObject1 = await getContainerEntryPointBackCompat<ITestFluidObject>(container1);
+		sharedCell1 = await dataObject1.getSharedObject<ISharedCell>(cellId);
 
 		// Load the Container that was created by the first client.
 		const container2 = await provider.loadTestContainer(testContainerConfig);
-		const dataObject2 = await requestFluidObject<ITestFluidObject>(container2, "default");
-		sharedCell2 = await dataObject2.getSharedObject<SharedCell>(cellId);
+		const dataObject2 = await getContainerEntryPointBackCompat<ITestFluidObject>(container2);
+		sharedCell2 = await dataObject2.getSharedObject<ISharedCell>(cellId);
 
 		// Load the Container that was created by the first client.
 		const container3 = await provider.loadTestContainer(testContainerConfig);
-		const dataObject3 = await requestFluidObject<ITestFluidObject>(container3, "default");
-		sharedCell3 = await dataObject3.getSharedObject<SharedCell>(cellId);
+		const dataObject3 = await getContainerEntryPointBackCompat<ITestFluidObject>(container3);
+		sharedCell3 = await dataObject3.getSharedObject<ISharedCell>(cellId);
 
 		// Set a starting value in the cell
 		sharedCell1.set(initialCellValue);
@@ -102,8 +108,11 @@ describeFullCompat("SharedCell", (getTestObjectProvider) => {
 
 	it("can create the cell in 3 containers correctly", async () => {
 		// Cell was created and populated in beforeEach
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		assert.ok(sharedCell1, `Couldn't find the cell in container1, instead got ${sharedCell1}`);
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		assert.ok(sharedCell2, `Couldn't find the cell in container2, instead got ${sharedCell2}`);
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		assert.ok(sharedCell3, `Couldn't find the cell in container3, instead got ${sharedCell3}`);
 	});
 
@@ -299,26 +308,29 @@ describeFullCompat("SharedCell", (getTestObjectProvider) => {
 	});
 });
 
-describeNoCompat("SharedCell orderSequentially", (getTestObjectProvider) => {
+describeCompat("SharedCell orderSequentially", "NoCompat", (getTestObjectProvider, apis) => {
+	const { SharedCell } = apis.dds;
+
 	let provider: ITestObjectProvider;
-	beforeEach(() => {
+	beforeEach("getTestObjectProvider", () => {
 		provider = getTestObjectProvider();
 	});
 
 	let container: IContainer;
 	let dataObject: ITestFluidObject;
-	let sharedCell: SharedCell;
+	let sharedCell: ISharedCell;
 	let containerRuntime: ContainerRuntime;
-	let changedEventData: Serializable[];
+	let changedEventData: Serializable<unknown>[];
 
 	const configProvider = (settings: Record<string, ConfigTypes>): IConfigProviderBase => ({
 		getRawConfig: (name: string): ConfigTypes => settings[name],
 	});
 	const errorMessage = "callback failure";
 
-	beforeEach(async () => {
-		const configWithFeatureGates = {
-			...testContainerConfig,
+	beforeEach("setup", async () => {
+		const configWithFeatureGates: ITestContainerConfig = {
+			fluidDataObjectType: DataObjectFactoryType.Test,
+			registry: [[cellId, SharedCell.getFactory()]],
 			loaderProps: {
 				configProvider: configProvider({
 					"Fluid.ContainerRuntime.EnableRollback": true,
@@ -326,8 +338,8 @@ describeNoCompat("SharedCell orderSequentially", (getTestObjectProvider) => {
 			},
 		};
 		container = await provider.makeTestContainer(configWithFeatureGates);
-		dataObject = await requestFluidObject<ITestFluidObject>(container, "default");
-		sharedCell = await dataObject.getSharedObject<SharedCell>(cellId);
+		dataObject = (await container.getEntryPoint()) as ITestFluidObject;
+		sharedCell = await dataObject.getSharedObject<ISharedCell>(cellId);
 		containerRuntime = dataObject.context.containerRuntime as ContainerRuntime;
 		changedEventData = [];
 		sharedCell.on("valueChanged", (value) => {

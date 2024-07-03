@@ -3,31 +3,31 @@
  * Licensed under the MIT License.
  */
 
-import type { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { stringToBuffer, Uint8ArrayToString } from "@fluidframework/common-utils";
+import { Uint8ArrayToString, stringToBuffer } from "@fluid-internal/client-utils";
+import { ISummaryHandle, ISummaryTree } from "@fluidframework/driver-definitions";
 import {
 	IDocumentStorageService,
-	ISummaryContext,
 	IDocumentStorageServicePolicies,
-} from "@fluidframework/driver-definitions";
-import { buildHierarchy } from "@fluidframework/protocol-base";
-import {
+	ISummaryContext,
 	ICreateBlobResponse,
 	ISnapshotTreeEx,
-	ISummaryHandle,
-	ISummaryTree,
 	IVersion,
-} from "@fluidframework/protocol-definitions";
+} from "@fluidframework/driver-definitions/internal";
+import { buildGitTreeHierarchy } from "@fluidframework/driver-utils/internal";
 import {
-	GitManager,
-	ISummaryUploadManager,
-	SummaryTreeUploadManager,
-} from "@fluidframework/server-services-client";
-import { PerformanceEvent } from "@fluidframework/telemetry-utils";
-import { IRouterliciousDriverPolicies } from "./policies";
-import { ICache, InMemoryCache } from "./cache";
-import { RetriableGitManager } from "./retriableGitManager";
-import { ISnapshotTreeVersion } from "./definitions";
+	ITelemetryLoggerExt,
+	MonitoringContext,
+	PerformanceEvent,
+	createChildMonitoringContext,
+} from "@fluidframework/telemetry-utils/internal";
+
+import { ICache, InMemoryCache } from "./cache.js";
+import { ISnapshotTreeVersion } from "./definitions.js";
+import { GitManager } from "./gitManager.js";
+import { IRouterliciousDriverPolicies } from "./policies.js";
+import { RetriableGitManager } from "./retriableGitManager.js";
+import { ISummaryUploadManager } from "./storageContracts.js";
+import { SummaryTreeUploadManager } from "./summaryTreeUploadManager.js";
 
 const isNode = typeof window === "undefined";
 
@@ -37,15 +37,12 @@ const isNode = typeof window === "undefined";
  * Downloads summaries piece-by-piece on-demand, or up-front when prefetch is enabled.
  */
 export class ShreddedSummaryDocumentStorageService implements IDocumentStorageService {
+	private readonly mc: MonitoringContext;
 	// The values of this cache is useless. We only need the keys. So we are always putting
 	// empty strings as values.
 	protected readonly blobsShaCache = new Map<string, string>();
 	private readonly blobCache: ICache<ArrayBufferLike> | undefined;
 	private readonly snapshotTreeCache: ICache<ISnapshotTreeVersion> | undefined;
-
-	public get repositoryUrl(): string {
-		return "";
-	}
 
 	private async getSummaryUploadManager(): Promise<ISummaryUploadManager> {
 		const manager = await this.getStorageManager();
@@ -59,7 +56,7 @@ export class ShreddedSummaryDocumentStorageService implements IDocumentStorageSe
 	constructor(
 		protected readonly id: string,
 		protected readonly manager: GitManager,
-		protected readonly logger: ITelemetryLogger,
+		protected readonly logger: ITelemetryLoggerExt,
 		public readonly policies: IDocumentStorageServicePolicies,
 		driverPolicies?: IRouterliciousDriverPolicies,
 		blobCache?: ICache<ArrayBufferLike>,
@@ -72,6 +69,10 @@ export class ShreddedSummaryDocumentStorageService implements IDocumentStorageSe
 			this.blobCache = blobCache ?? new InMemoryCache();
 			this.snapshotTreeCache = snapshotTreeCache ?? new InMemoryCache();
 		}
+
+		this.mc = createChildMonitoringContext({
+			logger,
+		});
 	}
 
 	public async getVersions(versionId: string | null, count: number): Promise<IVersion[]> {
@@ -85,7 +86,7 @@ export class ShreddedSummaryDocumentStorageService implements IDocumentStorageSe
 			},
 			async () => {
 				const manager = await this.getStorageManager();
-				return manager.getCommits(id, count);
+				return (await manager.getCommits(id, count)).content;
 			},
 		);
 		return commits.map((commit) => ({
@@ -121,14 +122,14 @@ export class ShreddedSummaryDocumentStorageService implements IDocumentStorageSe
 			},
 			async (event) => {
 				const manager = await this.getStorageManager();
-				const response = await manager.getTree(requestVersion!.treeId);
+				const response = (await manager.getTree(requestVersion.treeId)).content;
 				event.end({
 					size: response.tree.length,
 				});
 				return response;
 			},
 		);
-		const tree = buildHierarchy(rawTree, this.blobsShaCache, true);
+		const tree = buildGitTreeHierarchy(rawTree, this.blobsShaCache, true);
 		await this.snapshotTreeCache?.put(this.getCacheKey(tree.id), {
 			id: requestVersion.id,
 			snapshotTree: tree,
@@ -150,12 +151,14 @@ export class ShreddedSummaryDocumentStorageService implements IDocumentStorageSe
 			},
 			async (event) => {
 				const manager = await this.getStorageManager();
-				const response = await manager.getBlob(blobId);
+				const response = (await manager.getBlob(blobId)).content;
 				event.end({
 					size: response.size,
 				});
 				return response;
 			},
+			undefined, // workers
+			this.mc.config.getNumber("Fluid.Driver.ReadBlobTelemetrySampling"),
 		);
 		this.blobsShaCache.set(value.sha, "");
 		const bufferContent = stringToBuffer(value.content, value.encoding);
@@ -203,7 +206,7 @@ export class ShreddedSummaryDocumentStorageService implements IDocumentStorageSe
 				const manager = await this.getStorageManager();
 				const response = await manager
 					.createBlob(Uint8ArrayToString(uint8ArrayFile, "base64"), "base64")
-					.then((r) => ({ id: r.sha, url: r.url }));
+					.then((r) => ({ id: r.content.sha, url: r.content.url }));
 				event.end({
 					blobId: response.id,
 				});
@@ -220,7 +223,7 @@ export class ShreddedSummaryDocumentStorageService implements IDocumentStorageSe
 					// Clear the cache as the getSnapshotTree call will fill the cache.
 					this.blobsShaCache.clear();
 					return this.getSnapshotTree(versions[0]);
-			  })
+				})
 			: undefined;
 	}
 

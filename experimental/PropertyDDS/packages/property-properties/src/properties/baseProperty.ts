@@ -5,14 +5,15 @@
 
 /* eslint accessor-pairs: [2, { "getWithoutSet": false }] */
 
-import _ from "lodash";
 import {
 	ChangeSet,
 	PathHelper,
 	SerializedChangeSet,
 	TypeIdHelper,
 } from "@fluid-experimental/property-changeset";
-import { ConsoleUtils, constants } from "@fluid-experimental/property-common";
+import { constants, ConsoleUtils } from "@fluid-experimental/property-common";
+import _ from "lodash";
+
 import { LazyLoadedProperties as Property } from "./lazyLoadedProperties";
 
 const { MSG, PROPERTY_PATH_DELIMITER } = constants;
@@ -100,6 +101,7 @@ interface ISerializeOptions {
  * Thus, with the filtering options, it is NOT possible to prevent a part of a ChangeSet from being
  * processed (in `applyChangeSet()` for example), it is NOT possible to prevent a property from being
  * created by a direct call to a function like `deserialize()` or `createProperty()`.
+ * @internal
  */
 export abstract class BaseProperty {
 	protected _id: string | undefined;
@@ -330,16 +332,13 @@ export abstract class BaseProperty {
 	// TODO: Cleaner way to make the property tree aware of the DDS hosting it.
 	// Currently, this._tree is set in SharedPropertyTree constructor.
 	_reportDirtinessToView() {
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		let currentNode: BaseProperty = this;
 
-		// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
 		while (currentNode._parent) {
 			currentNode = currentNode._parent;
 		}
 
 		if (
-			// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
 			currentNode._tree &&
 			currentNode._tree.notificationDelayScope === 0 &&
 			currentNode._isDirty(BaseProperty.MODIFIED_STATE_FLAGS.DIRTY)
@@ -578,7 +577,7 @@ export abstract class BaseProperty {
 	 *
 	 * @returns The path segment to resolve the child property under this property
 	 */
-	_getPathSegmentForChildNode(in_childNode: BaseProperty): string {
+	protected _getPathSegmentForChildNode(in_childNode: BaseProperty): string {
 		return PROPERTY_PATH_DELIMITER + PathHelper.quotePathSegmentIfNeeded(in_childNode.getId());
 	}
 
@@ -589,9 +588,8 @@ export abstract class BaseProperty {
 	 * @param {property-properties.PathHelper.TOKEN_TYPES} in_segmentType - The type of segment in the tokenized path
 	 *
 	 * @return {property-properties.BaseProperty|undefined} The child property that has been resolved
-	 * @protected
 	 */
-	_resolvePathSegment(in_segment: string, in_segmentType: PathHelper.TOKEN_TYPES) {
+	protected _resolvePathSegment(in_segment: string, in_segmentType: PathHelper.TOKEN_TYPES) {
 		// Base Properties only support paths separated via dots
 		if (in_segmentType !== PathHelper.TOKEN_TYPES.PATH_SEGMENT_TOKEN) {
 			throw new Error(MSG.INVALID_PATH_TOKEN + in_segment);
@@ -670,7 +668,7 @@ export abstract class BaseProperty {
 	 *
 	 * @returns the flat representation
 	 */
-	private _flatten(): object {
+	protected _flatten(): object {
 		return { propertyNode: this };
 	}
 
@@ -689,10 +687,8 @@ export abstract class BaseProperty {
 
 	/**
 	 * Return a JSON representation of the properties and its children.
-	 * @return {object} A JSON representation of the properties and its children.
-	 * @private
 	 */
-	_toJson() {
+	protected _toJson(): Object {
 		var json = {
 			id: this.getId(),
 			context: this._context,
@@ -782,8 +778,9 @@ export abstract class BaseProperty {
 			for (const key of keys) {
 				if (key) {
 					var repoRef =
-						repoInfo._referencedByPropertyInstanceGUIDs[key]
-							._repositoryReferenceProperties[key].property;
+						repoInfo._referencedByPropertyInstanceGUIDs[key]._repositoryReferenceProperties[
+							key
+						].property;
 					if (that.getRoot() === repoRef.getReferencedRepositoryRoot()) {
 						referenceProps.push(repoRef);
 					}
@@ -881,7 +878,7 @@ export abstract class BaseProperty {
 			var result = path.reverse().join("");
 
 			// We don't use a PROPERTY_PATH_DELIMITER at the start of the path
-			if (result[0] === PROPERTY_PATH_DELIMITER) {
+			if (result.startsWith(PROPERTY_PATH_DELIMITER)) {
 				result = result.substr(1);
 			}
 			return result;
@@ -979,9 +976,7 @@ export abstract class BaseProperty {
 
 						let refRoot;
 						try {
-							refRoot = refProperty
-								? refProperty.getReferencedRepositoryRoot()
-								: undefined;
+							refRoot = refProperty ? refProperty.getReferencedRepositoryRoot() : undefined;
 						} catch (e) {
 							console.warn(e.message);
 						}
@@ -1007,7 +1002,7 @@ export abstract class BaseProperty {
 		var absolutePath = path.reverse().join("");
 
 		// We don't use the property path separator at the start of the path
-		if (absolutePath[0] === PROPERTY_PATH_DELIMITER) {
+		if (absolutePath.startsWith(PROPERTY_PATH_DELIMITER)) {
 			absolutePath = absolutePath.substr(1);
 		}
 		absolutePath = "/" + absolutePath;
@@ -1047,7 +1042,7 @@ export abstract class BaseProperty {
 	 * @param in_flags - Which types of dirtiness are we looking for? If none is given, all types are regarded as dirty.
 	 * @returns The list of keys identifying the dirty children.
 	 */
-	private _getDirtyChildren(in_flags: MODIFIED_STATE_FLAGS): string[] {
+	protected _getDirtyChildren(in_flags: MODIFIED_STATE_FLAGS): string[] {
 		return [];
 	}
 
@@ -1134,7 +1129,7 @@ export abstract class BaseProperty {
 	 *
 	 * @returns The serialized representation of this property
 	 */
-	_serialize(
+	protected _serialize(
 		in_dirtyOnly: boolean = false,
 		in_includeRootTypeid: boolean = false,
 		in_dirtinessType: MODIFIED_STATE_FLAGS = MODIFIED_STATE_FLAGS.PENDING_CHANGE,
@@ -1308,10 +1303,7 @@ export abstract class BaseProperty {
 			if (this.isPrimitiveType()) {
 				const childrenIds = this.getContext() === "single" ? [] : this.getIds();
 				for (const childId of childrenIds) {
-					const childPath = PathHelper.getChildAbsolutePathCanonical(
-						in_basePath,
-						childId,
-					);
+					const childPath = PathHelper.getChildAbsolutePathCanonical(in_basePath, childId);
 					if (
 						PathHelper.getPathCoverage(childPath, coverage.pathList).coverageExtent ===
 						PathHelper.CoverageExtent.UNCOVERED
@@ -1324,10 +1316,7 @@ export abstract class BaseProperty {
 				const childrenIds = this.getIds();
 				for (const childId of childrenIds) {
 					const child = this.get(childId);
-					const childPath = PathHelper.getChildAbsolutePathCanonical(
-						in_basePath,
-						childId,
-					);
+					const childPath = PathHelper.getChildAbsolutePathCanonical(in_basePath, childId);
 					if (!child._coveredByPaths(childPath, coverage.pathList)) {
 						return false;
 					}

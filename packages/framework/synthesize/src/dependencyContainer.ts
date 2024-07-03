@@ -3,18 +3,22 @@
  * Licensed under the MIT License.
  */
 
+import { LazyPromise } from "@fluidframework/core-utils/internal";
+
+import { IFluidDependencySynthesizer } from "./IFluidDependencySynthesizer.js";
 import {
 	AsyncFluidObjectProvider,
-	FluidObjectSymbolProvider,
-	FluidObjectProvider,
 	AsyncOptionalFluidObjectProvider,
 	AsyncRequiredFluidObjectProvider,
-} from "./types";
-import { IFluidDependencySynthesizer } from "./IFluidDependencySynthesizer";
+	FluidObjectProvider,
+	FluidObjectSymbolProvider,
+} from "./types.js";
 
 /**
  * DependencyContainer is similar to a IoC Container. It takes providers and will
  * synthesize an object based on them when requested.
+ * @legacy
+ * @alpha
  */
 export class DependencyContainer<TMap> implements IFluidDependencySynthesizer {
 	private readonly providers = new Map<keyof TMap, FluidObjectProvider<any>>();
@@ -120,9 +124,7 @@ export class DependencyContainer<TMap> implements IFluidDependencySynthesizer {
 			const provider = this.resolveProvider(key);
 			if (provider === undefined) {
 				throw new Error(
-					`Object attempted to be created without registered required provider ${String(
-						key,
-					)}`,
+					`Object attempted to be created without registered required provider ${String(key)}`,
 				);
 			}
 			Object.defineProperty(base, key, provider);
@@ -164,6 +166,7 @@ export class DependencyContainer<TMap> implements IFluidDependencySynthesizer {
 		// The double nested gets are required for lazy loading the provider resolution
 		if (typeof provider === "function") {
 			return {
+				// eslint-disable-next-line @typescript-eslint/promise-function-async
 				get() {
 					if (provider && typeof provider === "function") {
 						return Promise.resolve(this[IFluidDependencySynthesizer])
@@ -176,10 +179,12 @@ export class DependencyContainer<TMap> implements IFluidDependencySynthesizer {
 		return {
 			get() {
 				if (provider) {
-					return Promise.resolve(provider).then((p) => {
-						if (p) {
-							return p[t];
-						}
+					return new LazyPromise(async () => {
+						return Promise.resolve(provider).then((p) => {
+							if (p) {
+								return p[t];
+							}
+						});
 					});
 				}
 			},

@@ -2,13 +2,14 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import {
 	DocumentationParentNodeBase,
-	MultiLineDocumentationNode,
-	SingleLineDocumentationNode,
-} from "./DocumentationNode";
-import { DocumentationNodeType } from "./DocumentationNodeType";
-import { PlainTextNode } from "./PlainTextNode";
+	type MultiLineDocumentationNode,
+	type SingleLineDocumentationNode,
+} from "./DocumentationNode.js";
+import { DocumentationNodeType } from "./DocumentationNodeType.js";
+import { PlainTextNode } from "./PlainTextNode.js";
 
 // TODOs:
 // - Add support for nested lists
@@ -33,6 +34,8 @@ import { PlainTextNode } from "./PlainTextNode";
  * 	<li>Baz</li>
  * </ol>
  * ```
+ *
+ * @public
  */
 export class OrderedListNode
 	extends DocumentationParentNodeBase<SingleLineDocumentationNode>

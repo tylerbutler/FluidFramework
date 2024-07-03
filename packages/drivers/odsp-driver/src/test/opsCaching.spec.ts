@@ -2,13 +2,19 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { strict as assert } from "assert";
-import { TelemetryUTLogger } from "@fluidframework/telemetry-utils";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { IStream } from "@fluidframework/driver-definitions";
-import { delay } from "@fluidframework/common-utils";
-import { OdspDeltaStorageWithCache } from "../odspDeltaStorageService";
-import { OpsCache, ICache, IMessage, CacheEntry } from "../opsCaching";
+
+import { strict as assert } from "node:assert";
+
+import { delay } from "@fluidframework/core-utils/internal";
+import {
+	IStream,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import { MockLogger } from "@fluidframework/telemetry-utils/internal";
+
+import { OdspDeltaStorageWithCache } from "../odspDeltaStorageService.js";
+import { OdspDocumentStorageService } from "../odspDocumentStorageManager.js";
+import { CacheEntry, ICache, IMessage, OpsCache } from "../opsCaching.js";
 
 export type MyDataInput = IMessage & { data: string };
 
@@ -16,7 +22,7 @@ class MockCache implements ICache {
 	public writeCount = 0;
 	public opsWritten = 0;
 
-	public async write(batchNumber: string, data: string) {
+	public async write(batchNumber: string, data: string): Promise<void> {
 		this.writeCount++;
 		this.data[batchNumber] = JSON.parse(data);
 		for (const op of this.data[batchNumber] as CacheEntry) {
@@ -27,7 +33,7 @@ class MockCache implements ICache {
 		}
 	}
 
-	public async read(batchNumber: string) {
+	public async read(batchNumber: string): Promise<string | undefined> {
 		const content = this.data[batchNumber];
 		if (content === undefined) {
 			return undefined;
@@ -35,14 +41,14 @@ class MockCache implements ICache {
 		return JSON.stringify(content);
 	}
 
-	public remove() {
+	public remove(): void {
 		// Do not reset this.writeCount such that we can test that writes happened, but later on data was cleared
 		this.writeCount++;
 		this.opsWritten++;
 		this.data = {};
 	}
 
-	public data: { [key: string]: any } = {};
+	public data: { [key: string]: unknown } = {};
 }
 
 async function validate(
@@ -50,7 +56,7 @@ async function validate(
 	expected: { [key: number]: (MyDataInput | undefined)[] },
 	cache: OpsCache,
 	initialSeq: number,
-) {
+): Promise<void> {
 	assert.deepEqual(mockCache.data, JSON.parse(JSON.stringify(expected)));
 
 	const expectedArr: MyDataInput[] = [];
@@ -102,12 +108,13 @@ async function runTestNoTimer(
 	mockData: MyDataInput[],
 	expected: { [key: number]: (MyDataInput | undefined)[] },
 	initialWritesExpected: number,
-) {
+	totalOpsWritten?: number,
+): Promise<void> {
 	const mockCache = new MockCache();
-
+	const logger = new MockLogger();
 	const cache = new OpsCache(
 		initialSeq,
-		new TelemetryUTLogger(),
+		logger.toTelemetryLogger(),
 		mockCache,
 		batchSize,
 		-1, // timerGranularity
@@ -117,7 +124,7 @@ async function runTestNoTimer(
 	cache.addOps(mockData);
 
 	const writes = mockCache.writeCount;
-	assert.equal(writes, initialWritesExpected);
+	assert.equal(writes, initialWritesExpected, "initialWrites should match");
 
 	// Validate that writing same ops is not going to change anything
 	cache.addOps(mockData);
@@ -127,12 +134,17 @@ async function runTestNoTimer(
 
 	// ensure all ops are flushed properly
 	cache.flushOps();
-	assert.equal(mockCache.opsWritten, mockData.length);
+	assert.equal(mockCache.opsWritten, totalOpsWritten ?? mockData.length);
 
 	// ensure adding same ops and flushing again is doing nothing
 	cache.addOps(mockData);
 	cache.flushOps();
-	assert.equal(mockCache.opsWritten, mockData.length);
+	assert.equal(
+		mockCache.opsWritten,
+		totalOpsWritten ?? mockData.length,
+		"ops written does not match",
+	);
+	logger.assertMatchNone([{ category: "error" }]);
 }
 
 export async function runTestWithTimer(
@@ -142,12 +154,13 @@ export async function runTestWithTimer(
 	expected: { [key: number]: (MyDataInput | undefined)[] },
 	initialWritesExpected: number,
 	totalWritesExpected: number,
-) {
+	totalOpsWritten?: number,
+): Promise<void> {
 	const mockCache = new MockCache();
-
+	const logger = new MockLogger();
 	const cache = new OpsCache(
 		initialSeq,
-		new TelemetryUTLogger(),
+		logger.toTelemetryLogger(),
 		mockCache,
 		batchSize,
 		1, // timerGranularity
@@ -162,7 +175,8 @@ export async function runTestWithTimer(
 		await delay(1);
 	}
 	assert.equal(mockCache.writeCount, totalWritesExpected);
-	assert.equal(mockCache.opsWritten, mockData.length);
+	assert.equal(mockCache.opsWritten, totalOpsWritten ?? mockData.length);
+	logger.assertMatchNone([{ category: "error" }]);
 }
 
 export async function runTest(
@@ -172,8 +186,16 @@ export async function runTest(
 	expected: { [key: string]: (MyDataInput | undefined)[] },
 	initialWritesExpected: number,
 	totalWritesExpected: number,
-) {
-	await runTestNoTimer(batchSize, initialSeq, mockData, expected, initialWritesExpected);
+	totalOpsWritten?: number,
+): Promise<void> {
+	await runTestNoTimer(
+		batchSize,
+		initialSeq,
+		mockData,
+		expected,
+		initialWritesExpected,
+		totalOpsWritten,
+	);
 	await runTestWithTimer(
 		batchSize,
 		initialSeq,
@@ -181,6 +203,7 @@ export async function runTest(
 		expected,
 		initialWritesExpected,
 		totalWritesExpected,
+		totalOpsWritten,
 	);
 }
 
@@ -202,7 +225,7 @@ describe("OpsCache", () => {
 	});
 
 	it("2 element in each batch of 10 should not commit", async () => {
-		await runTest(10, 100, mockData1, {}, 0, 5);
+		await runTest(10, 100, mockData1, {}, 0, 4, 8);
 	});
 
 	it("6 sequential elements with batch of 5 should commit 1 batch", async () => {
@@ -227,6 +250,47 @@ describe("OpsCache", () => {
 			},
 			1,
 			2,
+		);
+	});
+
+	it("Epmty ops at beginning and end of batch should cause the batch to not be cached", async () => {
+		await runTest(
+			5,
+			100,
+			[
+				{ sequenceNumber: 101, data: "101" },
+				{ sequenceNumber: 102, data: "102" },
+				{ sequenceNumber: 103, data: "103" },
+			],
+			{},
+			0,
+			0,
+			0,
+		);
+	});
+
+	it("Epmty ops at just the beginning should still cause the batch to be cached", async () => {
+		await runTest(
+			5,
+			100,
+			[
+				{ sequenceNumber: 101, data: "101" },
+				{ sequenceNumber: 102, data: "102" },
+				{ sequenceNumber: 103, data: "103" },
+				{ sequenceNumber: 104, data: "104" },
+			],
+			{
+				"5_20": [
+					undefined,
+					{ sequenceNumber: 101, data: "101" },
+					{ sequenceNumber: 102, data: "102" },
+					{ sequenceNumber: 103, data: "103" },
+					{ sequenceNumber: 104, data: "104" },
+				],
+			},
+			1,
+			1,
+			4,
 		);
 	});
 
@@ -307,10 +371,10 @@ describe("OpsCache", () => {
 			{ sequenceNumber: 110, data: "110" },
 			{ sequenceNumber: 111, data: "111" },
 		];
-
+		const logger = new MockLogger();
 		const cache = new OpsCache(
 			initialSeq,
-			new TelemetryUTLogger(),
+			logger.toTelemetryLogger(),
 			mockCache,
 			5 /* batchSize */,
 			-1, // timerGranularity
@@ -329,11 +393,14 @@ describe("OpsCache", () => {
 			{ sequenceNumber: 105, data: "105" },
 			{ sequenceNumber: 106, data: "106" },
 		]);
+		logger.assertMatchNone([{ category: "error" }]);
 	});
 });
 
 describe("OdspDeltaStorageWithCache", () => {
-	async function readAll(stream: IStream<ISequencedDocumentMessage[]>) {
+	async function readAll(
+		stream: IStream<ISequencedDocumentMessage[]>,
+	): Promise<ISequencedDocumentMessage[]> {
 		const ops: ISequencedDocumentMessage[] = [];
 		// eslint-disable-next-line no-constant-condition
 		while (true) {
@@ -346,7 +413,7 @@ describe("OdspDeltaStorageWithCache", () => {
 		return ops;
 	}
 
-	function createOps(fromArg: number, length: number) {
+	function createOps(fromArg: number, length: number): ISequencedDocumentMessage[] {
 		const ops: ISequencedDocumentMessage[] = [];
 		let from = fromArg;
 		const to = from + length;
@@ -358,11 +425,15 @@ describe("OdspDeltaStorageWithCache", () => {
 		return ops;
 	}
 
-	function filterOps(ops: ISequencedDocumentMessage[], from: number, to: number) {
+	function filterOps(
+		ops: ISequencedDocumentMessage[],
+		from: number,
+		to: number,
+	): ISequencedDocumentMessage[] {
 		return ops.filter((op) => op.sequenceNumber >= from && op.sequenceNumber < to);
 	}
 
-	function validateOps(ops: ISequencedDocumentMessage[], from: number, to: number) {
+	function validateOps(ops: ISequencedDocumentMessage[], from: number, to: number): void {
 		if (to < from) {
 			assert(ops.length === 0);
 		} else {
@@ -381,22 +452,22 @@ describe("OdspDeltaStorageWithCache", () => {
 		opsFromStorage: number,
 		concurrency = 1,
 		batchSize = 100,
-	) {
+	): Promise<void> {
 		const snapshotOps = createOps(fromTotal, opsFromSnapshot);
 		const cachedOps = createOps(fromTotal + opsFromSnapshot, opsFromCache);
 		const storageOps = createOps(fromTotal + opsFromSnapshot + opsFromCache, opsFromStorage);
 
 		let totalOps = opsFromSnapshot + opsFromCache + (cacheOnly ? 0 : opsFromStorage);
-		const actualTo = toTotal === undefined ? fromTotal + totalOps : toTotal;
+		const actualTo = toTotal ?? fromTotal + totalOps;
 		assert(actualTo <= fromTotal + totalOps); // code will deadlock if that's not the case
 		const askingOps = actualTo - fromTotal;
 		totalOps = Math.min(totalOps, askingOps);
 
 		let opsToCache: ISequencedDocumentMessage[] = [];
-
+		const logger = new MockLogger();
 		const storage = new OdspDeltaStorageWithCache(
 			snapshotOps,
-			new TelemetryUTLogger(),
+			logger.toTelemetryLogger(),
 			batchSize,
 			concurrency,
 			// getFromStorage
@@ -409,6 +480,7 @@ describe("OdspDeltaStorageWithCache", () => {
 			(from: number, to: number) => {},
 			// opsReceived
 			(ops: ISequencedDocumentMessage[]) => opsToCache.push(...ops),
+			() => ({ isFirstSnapshotFromNetwork: false }) as unknown as OdspDocumentStorageService,
 		);
 
 		const stream = storage.fetchMessages(
@@ -431,6 +503,7 @@ describe("OdspDeltaStorageWithCache", () => {
 				fromTotal + totalOps,
 			);
 		}
+		logger.assertMatchNone([{ category: "error" }]);
 	}
 
 	it("basic permutations", async () => {

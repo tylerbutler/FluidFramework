@@ -3,17 +3,24 @@
  * Licensed under the MIT License.
  */
 
+import { strict as assert } from "assert";
 import * as fs from "fs";
 import path from "path";
-import { strict as assert } from "assert";
-import { MockLogger } from "@fluidframework/telemetry-utils";
-import { createContainerAndExecute, exportFile } from "../exportFile";
-import { getSnapshotFileContent } from "../utils";
-// eslint-disable-next-line import/no-internal-modules
-import { executeResult, fluidExport } from "./sampleCodeLoaders/sampleCodeLoader";
+
+import { MockLogger } from "@fluidframework/telemetry-utils/internal";
+
+/* eslint-disable import/no-internal-modules */
+import { createContainerAndExecute, exportFile } from "../exportFile.js";
+import { getSnapshotFileContent } from "../utils.js";
+
+import { _dirname } from "./dirname.cjs";
+import { fluidExport as networkFetchFluidExport } from "./sampleCodeLoaders/networkFetchCodeLoader.js";
+import { executeResult, fluidExport } from "./sampleCodeLoaders/sampleCodeLoader.js";
+import { fluidExport as timeoutFluidExport } from "./sampleCodeLoaders/timeoutCodeLoader.js";
+/* eslint-enable import/no-internal-modules */
 
 describe("exportFile", () => {
-	const folderRoot = path.join(__dirname, "../../src/test");
+	const folderRoot = path.join(_dirname, "../../src/test");
 	const outputFolder = path.join(folderRoot, "outputFolder");
 	const outputFilePath = path.join(outputFolder, "result.txt");
 	const telemetryFile = path.join(outputFolder, "telemetry.txt");
@@ -21,6 +28,9 @@ describe("exportFile", () => {
 
 	beforeEach(() => {
 		fs.mkdirSync(outputFolder);
+		global.fetch = (async () => {
+			return undefined;
+		}) as any;
 	});
 
 	afterEach(() => {
@@ -42,22 +52,70 @@ describe("exportFile", () => {
 				assert(fs.existsSync(outputFilePath), "result file does not exist");
 
 				const resultFileContent = fs.readFileSync(outputFilePath, { encoding: "utf-8" });
-				assert.strictEqual(
-					resultFileContent,
-					executeResult,
-					"result output is not correct",
-				);
+				assert.strictEqual(resultFileContent, executeResult, "result output is not correct");
 			});
 
 			it("Execution result is correct", async () => {
 				const result = await createContainerAndExecute(
 					getSnapshotFileContent(path.join(snapshotFolder, snapshotFileName)),
 					fluidExport,
-					new MockLogger(),
+					new MockLogger().toTelemetryLogger(),
 				);
 				assert.deepStrictEqual(result, executeResult, "result objects do not match");
 			});
 		});
+	});
+
+	it("fails on timeout", async () => {
+		const result = await exportFile(
+			timeoutFluidExport,
+			path.join(snapshotFolder, "odspSnapshot1.json"),
+			outputFilePath,
+			telemetryFile,
+			undefined,
+			undefined,
+			1,
+		);
+
+		assert(!result.success, "result should not be successful");
+		assert(
+			result.error?.message.toLowerCase().includes("timed out"),
+			`error message does not contain "timed out" [${result.error?.message}]`,
+		);
+	});
+
+	it("fails on disallowed network fetch", async () => {
+		const result = await exportFile(
+			networkFetchFluidExport,
+			path.join(snapshotFolder, "odspSnapshot1.json"),
+			outputFilePath,
+			telemetryFile,
+			undefined,
+			undefined,
+			undefined,
+			true,
+		);
+
+		assert(!result.success, "result should not be successful");
+		assert(
+			result.error?.message.toLowerCase().includes("network fetch"),
+			`error message does not contain "network fetch" [${result.error?.message}]`,
+		);
+	});
+
+	it("succeeds when allowed network fetch occurs", async () => {
+		const result = await exportFile(
+			networkFetchFluidExport,
+			path.join(snapshotFolder, "odspSnapshot1.json"),
+			outputFilePath,
+			telemetryFile,
+			undefined,
+			undefined,
+			undefined,
+			false,
+		);
+
+		assert(result.success, "result should be successful");
 	});
 
 	describe("Validate arguments", () => {
@@ -90,6 +148,24 @@ describe("exportFile", () => {
 			assert(
 				result.errorMessage.toLowerCase().includes("output file"),
 				`error message does not contain "output file" [${result.errorMessage}]`,
+			);
+		});
+
+		it("timeout", async () => {
+			const result = await exportFile(
+				fluidExport,
+				snapshotFilePath,
+				outputFilePath,
+				telemetryFile,
+				undefined,
+				undefined,
+				-1,
+			);
+
+			assert(!result.success, "result should not be successful");
+			assert(
+				result.errorMessage.toLowerCase().includes("timeout"),
+				`error message does not contain "timeout" [${result.errorMessage}]`,
 			);
 		});
 	});

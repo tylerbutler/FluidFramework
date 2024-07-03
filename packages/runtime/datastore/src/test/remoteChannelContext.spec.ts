@@ -4,24 +4,28 @@
  */
 
 import { strict as assert } from "assert";
+
+import { ISnapshotTree } from "@fluidframework/driver-definitions/internal";
 import {
 	CreateChildSummarizerNodeFn,
 	IContainerRuntimeBase,
 	IFluidDataStoreContext,
-} from "@fluidframework/runtime-definitions";
+} from "@fluidframework/runtime-definitions/internal";
 import {
 	MockFluidDataStoreContext,
 	validateAssertionError,
-} from "@fluidframework/test-runtime-utils";
-import { ISnapshotTree } from "@fluidframework/protocol-definitions";
-import { FluidDataStoreRuntime, ISharedObjectRegistry } from "../dataStoreRuntime";
-import { RemoteChannelContext } from "../remoteChannelContext";
+} from "@fluidframework/test-runtime-utils/internal";
+
+import { FluidDataStoreRuntime, ISharedObjectRegistry } from "../dataStoreRuntime.js";
+import { RemoteChannelContext } from "../remoteChannelContext.js";
 
 describe("RemoteChannelContext Tests", () => {
 	let dataStoreContext: MockFluidDataStoreContext;
 	let sharedObjectRegistry: ISharedObjectRegistry;
 	const loadRuntime = (context: IFluidDataStoreContext, registry: ISharedObjectRegistry) =>
-		new FluidDataStoreRuntime(context, registry, /* existing */ false);
+		new FluidDataStoreRuntime(context, registry, /* existing */ false, async () => ({
+			myProp: "myValue",
+		}));
 
 	beforeEach(() => {
 		dataStoreContext = new MockFluidDataStoreContext();
@@ -45,7 +49,6 @@ describe("RemoteChannelContext Tests", () => {
 				dataStoreContext.storage,
 				(c, lom) => {},
 				(s: string) => {},
-				(s, o) => {},
 				invalidId,
 				undefined as unknown as ISnapshotTree,
 				sharedObjectRegistry,
@@ -55,7 +58,7 @@ describe("RemoteChannelContext Tests", () => {
 			);
 		assert.throws(
 			codeBlock,
-			(e) => validateAssertionError(e, "Channel context ID cannot contain slashes"),
+			(e: Error) => validateAssertionError(e, "Channel context ID cannot contain slashes"),
 			"Expected exception was not thrown",
 		);
 	});

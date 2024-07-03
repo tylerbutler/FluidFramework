@@ -16,6 +16,9 @@ import { Lumberjack } from "@fluidframework/server-services-telemetry";
 // mysterious overhead.
 const MaxKafkaMessageSize = 900 * 1024;
 
+/**
+ * @internal
+ */
 export function createProducer(
 	type: string,
 	kafkaEndPoint: string,
@@ -27,6 +30,9 @@ export function createProducer(
 	replicationFactor?: number,
 	maxBatchSize?: number,
 	sslCACertFilePath?: string,
+	eventHubConnString?: string,
+	additionalOptions?: object,
+	oauthBearerConfig?: any,
 ): IProducer {
 	let producer: IProducer;
 
@@ -38,10 +44,18 @@ export function createProducer(
 			replicationFactor,
 			maxMessageSize: MaxKafkaMessageSize,
 			sslCACertFilePath,
+			eventHubConnString,
+			additionalOptions,
+			oauthBearerConfig,
 		});
 
 		producer.on("error", (error, errorData: IContextErrorData) => {
 			if (errorData?.restart) {
+				Lumberjack.error(
+					"Kafka Producer emitted an error that is configured to restart the process.",
+					{ errorLabel: errorData?.errorLabel },
+					error,
+				);
 				throw new Error(error);
 			} else {
 				winston.error(
@@ -50,7 +64,7 @@ export function createProducer(
 				winston.error(inspect(error));
 				Lumberjack.error(
 					"Kafka Producer emitted an error that is not configured to restart the process.",
-					undefined,
+					{ errorLabel: errorData?.errorLabel },
 					error,
 				);
 			}

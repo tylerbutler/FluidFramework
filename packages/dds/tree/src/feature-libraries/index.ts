@@ -2,146 +2,318 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-export {
-	DefaultChangeset,
-	DefaultChangeFamily,
-	defaultChangeFamily,
-	DefaultEditBuilder,
-	IDefaultEditBuilder,
-	ValueFieldEditBuilder,
-	OptionalFieldEditBuilder,
-	SequenceFieldEditBuilder,
-} from "./defaultChangeFamily";
-export {
-	EditableField,
-	EditableTree,
-	EditableTreeContext,
-	EditableTreeOrPrimitive,
-	getEditableTreeContext,
-	typeSymbol,
-	isEditableField,
-	isPrimitive,
-	isUnwrappedNode,
-	proxyTargetSymbol,
-	UnwrappedEditableField,
-	UnwrappedEditableTree,
-	getField,
-	createField,
-	replaceField,
-	parentField,
-	EditableTreeEvents,
-	on,
-	contextSymbol,
-} from "./editable-tree";
 
+export {
+	createDataBinderBuffering,
+	createDataBinderDirect,
+	createDataBinderInvalidating,
+	createBinderOptions,
+	createFlushableBinderOptions,
+	type DataBinder,
+	type BinderOptions,
+	type Flushable,
+	type FlushableBinderOptions,
+	type FlushableDataBinder,
+	type MatchPolicy,
+	type SubtreePolicy,
+	type BindSyntaxTree,
+	indexSymbol,
+	type BindPolicy,
+	type BindTree,
+	type BindTreeDefault,
+	type DownPath,
+	type BindPath,
+	type PathStep,
+	BindingType,
+	type BindingContextType,
+	type BindingContext,
+	type VisitorBindingContext,
+	type RemoveBindingContext,
+	type InsertBindingContext,
+	type BatchBindingContext,
+	type InvalidationBindingContext,
+	type OperationBinderEvents,
+	type InvalidationBinderEvents,
+	type CompareFunction,
+	type BinderEventsCompare,
+	type AnchorsCompare,
+	toDownPath,
+	comparePipeline,
+	compileSyntaxTree,
+} from "./editableTreeBinder.js";
 export {
 	typeNameSymbol,
 	valueSymbol,
-	isPrimitiveValue,
-	getPrimaryField,
-	PrimitiveValue,
-	ContextuallyTypedNodeDataObject,
-	ContextuallyTypedNodeData,
-	MarkedArrayLike,
-	isWritableArrayLike,
+	type ContextuallyTypedNodeDataObject,
+	type ContextuallyTypedNodeData,
+	type MarkedArrayLike,
 	isContextuallyTypedNodeDataObject,
 	getFieldKind,
-	getFieldSchema,
-	ArrayLikeMut,
+	type ArrayLikeMut,
 	cursorFromContextualData,
 	cursorsFromContextualData,
-	ContextuallyTypedFieldData,
-} from "./contextuallyTyped";
+	type ContextuallyTypedFieldData,
+	cursorForTypedData,
+	cursorForTypedTreeData,
+	cursorsForTypedFieldData,
+	normalizeNewFieldContent,
+	type NewFieldContent,
+	getPossibleTypes,
+	getAllowedTypes,
+} from "./contextuallyTyped.js";
 
-export { ForestSummarizer } from "./forestSummarizer";
-export { singleMapTreeCursor, mapTreeFromCursor } from "./mapTreeCursor";
-export { buildForest } from "./object-forest";
-export { SchemaSummarizer, SchemaEditor } from "./schemaSummarizer";
-// This is exported because its useful for doing comparisons of schema in tests.
-export { getSchemaString } from "./schemaIndexFormat";
+export { allowsValue, assertAllowedValue, isTreeValue } from "./valueUtilities.js";
+
+export type { FieldGenerator, TreeDataContext } from "./fieldGenerator.js";
+
+export { ForestSummarizer } from "./forest-summary/index.js";
 export {
-	singleStackTreeCursor,
-	CursorAdapter,
+	cursorForMapTreeField,
+	cursorForMapTreeNode,
+	mapTreeFromCursor,
+} from "./mapTreeCursor.js";
+export { MemoizedIdRangeAllocator, type IdRange } from "./memoizedIdRangeAllocator.js";
+export { buildForest } from "./object-forest/index.js";
+export { SchemaSummarizer, encodeTreeSchema, makeSchemaCodec } from "./schema-index/index.js";
+export {
+	stackTreeNodeCursor,
+	type CursorAdapter,
 	prefixPath,
 	prefixFieldPath,
-	CursorWithNode,
-} from "./treeCursorUtils";
-export { singleTextCursor, jsonableTreeFromCursor } from "./treeTextCursor";
+	type CursorWithNode,
+	stackTreeFieldCursor,
+} from "./treeCursorUtils.js";
+export {
+	cursorForJsonableTreeNode,
+	cursorForJsonableTreeField,
+	jsonableTreeFromCursor,
+	jsonableTreeFromFieldCursor,
+	jsonableTreeFromForest,
+} from "./treeTextCursor.js";
 
 // Split this up into separate import and export for compatibility with API-Extractor.
-import * as SequenceField from "./sequence-field";
+import * as SequenceField from "./sequence-field/index.js";
 export { SequenceField };
 
-export { defaultSchemaPolicy, emptyField, neverField, neverTree } from "./defaultSchema";
+export {
+	isNeverField,
+	ModularEditBuilder,
+	type FieldEditDescription as EditDescription,
+	type FieldChangeHandler,
+	type FieldChangeRebaser,
+	type FieldEditor,
+	type FieldChangeMap,
+	type FieldChange,
+	type FieldChangeset,
+	type ToDelta,
+	type ModularChangeset,
+	makeModularChangeCodecFamily,
+	type NodeChangeComposer,
+	type NodeChangeInverter,
+	type NodeChangeRebaser,
+	type NodeChangePruner,
+	type CrossFieldManager,
+	CrossFieldTarget,
+	FlexFieldKind,
+	type FullSchemaPolicy,
+	allowsRepoSuperset,
+	type GenericChangeset,
+	genericFieldKind,
+	type HasFieldChanges,
+	type NodeExistsConstraint,
+	FieldKindWithEditor,
+	ModularChangeFamily,
+	type RelevantRemovedRootsFromChild,
+	EncodedModularChangeset,
+	updateRefreshers,
+	type NodeId,
+	type FieldChangeEncodingContext,
+	type FieldKindConfiguration,
+	type FieldKindConfigurationEntry,
+} from "./modular-schema/index.js";
 
 export {
-	ChangesetLocalId,
-	idAllocatorFromMaxId,
-	isNeverField,
-	ModularChangeFamily,
-	ModularEditBuilder,
-	EditDescription,
-	FieldChangeHandler,
-	FieldChangeRebaser,
-	FieldChangeEncoder,
-	FieldEditor,
-	NodeChangeset,
-	ValueChange,
-	FieldChangeMap,
-	FieldChange,
-	FieldChangeset,
-	ToDelta,
-	ModularChangeset,
-	IdAllocator,
-	NodeChangeComposer,
-	NodeChangeInverter,
-	NodeChangeRebaser,
-	NodeChangeEncoder,
-	NodeChangeDecoder,
-	CrossFieldManager,
-	CrossFieldTarget,
-	FieldKind,
-	Multiplicity,
-	FullSchemaPolicy,
-	allowsRepoSuperset,
-	GenericChangeset,
-	genericFieldKind,
-	NodeReviver,
-	RevisionIndexer,
-	RevisionMetadataSource,
-	RevisionInfo,
-	HasFieldChanges,
-	ValueConstraint,
-	TypedSchema,
-	revisionMetadataSourceFromInfo,
+	type FlexTreeNodeSchema,
+	type FlexAllowedTypes,
+	FlexFieldSchema,
+	type FlexTreeSchema,
+	Any,
+	type SchemaLibraryData,
+	type LazyTreeNodeSchema,
 	ViewSchema,
-	ViewSchemaCollection,
-	FieldViewSchema,
-	TreeViewSchema,
-} from "./modular-schema";
+	type SchemaLintConfiguration,
+	FlexFieldNodeSchema,
+	LeafNodeSchema,
+	FlexMapNodeSchema,
+	FlexObjectNodeSchema,
+	schemaIsFieldNode,
+	schemaIsLeaf,
+	schemaIsMap,
+	schemaIsObjectNode,
+	type Unenforced,
+	type AllowedTypeSet,
+	markEager,
+	type FlexMapFieldSchema,
+	type SchemaCollection,
+	TreeNodeSchemaBase,
+	type LazyItem,
+	type FlexListToUnion,
+	type ExtractItemType,
+	isLazy,
+	type NormalizeObjectNodeFields,
+	type NormalizeField as NormalizeFieldSchema,
+	type FlexObjectNodeFields,
+	intoStoredSchema,
+	intoStoredSchemaCollection,
+	type NormalizeLazyItem,
+	type FlexList,
+} from "./typed-schema/index.js";
 
-export { mapFieldMarks, mapMark, mapMarkList, populateChildModifications } from "./deltaUtils";
+export {
+	SchemaBuilderBase,
+	type SchemaLibrary,
+	type FlexImplicitFieldSchema,
+	type NormalizeField,
+	type FlexImplicitAllowedTypes,
+	type NormalizeAllowedTypes,
+	type SchemaBuilderOptions,
+	normalizeAllowedTypes,
+	normalizeField,
+} from "./schemaBuilderBase.js";
+export { SchemaBuilderInternal } from "./schemaBuilder.js";
 
-export { ForestRepairDataStore } from "./forestRepairDataStore";
-export { dummyRepairDataStore } from "./fakeRepairDataStore";
+export { mapRootChanges } from "./deltaUtils.js";
 
-export { mapFromNamed, namedTreeSchema } from "./viewSchemaUtil";
+export {
+	type TreeChunk,
+	chunkTree,
+	chunkFieldSingle,
+	buildChunkedForest,
+	defaultChunkPolicy,
+	type FieldBatch,
+	type FieldBatchCodec,
+	makeTreeChunker,
+	makeFieldBatchCodec,
+	type FieldBatchEncodingContext,
+} from "./chunked-forest/index.js";
 
-export { TreeChunk, chunkTree, buildChunkedForest, defaultChunkPolicy } from "./chunked-forest";
+export {
+	compareLocalNodeKeys,
+	createNodeKeyManager,
+	isStableNodeKey,
+	type LocalNodeKey,
+	MockNodeKeyManager,
+	NodeKeyIndex,
+	type NodeKeyManager,
+	nodeKeyTreeIdentifier,
+	type StableNodeKey,
+} from "./node-key/index.js";
 
-// Split into separate import and export for compatibility with API-Extractor.
-import * as SchemaAware from "./schema-aware";
-import * as FieldKindsOriginal from "./defaultFieldKinds";
-export { SchemaAware };
+export {
+	FieldKinds,
+	type Required,
+	type Optional,
+	type Sequence,
+	type Identifier,
+	type Forbidden,
+	type DefaultChangeset,
+	DefaultChangeFamily,
+	DefaultEditBuilder,
+	type IDefaultEditBuilder,
+	type ValueFieldEditBuilder,
+	type OptionalFieldEditBuilder,
+	type SequenceFieldEditBuilder,
+	defaultSchemaPolicy,
+	fieldKinds,
+	fieldKindConfigurations,
+	intoDelta,
+	relevantRemovedRoots,
+	SchemaValidationErrors,
+	isNodeInSchema,
+} from "./default-schema/index.js";
 
-// Export subset of FieldKinds in an API-Extractor compatible way:
-import { FieldEditor, FieldKind, Multiplicity } from "./modular-schema";
+export {
+	type AssignableFieldKinds,
+	type FlexTreeFieldNode,
+	type FlexibleFieldContent,
+	type FlexibleNodeContent,
+	type FlexTreeLeafNode,
+	type FlexTreeMapNode,
+	type FlexTreeOptionalField,
+	type FlexTreeRequiredField,
+	type FlexTreeSequenceField,
+	Skip,
+	type FlexTreeObjectNode,
+	type FlexTreeObjectNodeTyped,
+	type FlexTreeContext,
+	type FlexTreeTypedField,
+	type FlexTreeTypedNode,
+	type FlexTreeTypedNodeUnion,
+	type FlexTreeEntity,
+	type FlexTreeField,
+	type FlexTreeNode,
+	getTreeContext,
+	type CheckTypesOverlap,
+	TreeStatus,
+	Context,
+	type FlexTreeNodeEvents,
+	type FlexTreeUnknownUnboxed,
+	isFlexTreeNode,
+	ContextSlot,
+	// Internal
+	type FlexTreeTypedFieldInner,
+	type FlexTreeUnboxFieldInner,
+	type FlexTreeObjectNodeFields,
+	type FlexTreeUnboxField,
+	type FlexTreeUnboxNode,
+	type FlexTreeUnboxNodeUnion,
+	type FlexTreeNodeKeyField,
+	type IsArrayOfOne,
+	type FlexibleNodeSubSequence,
+	flexTreeMarker,
+	FlexTreeEntityKind,
+	type PropertyNameFromFieldKey,
+	type ReservedObjectNodeFieldPropertyNames,
+	type ReservedObjectNodeFieldPropertyNamePrefixes,
+	reservedObjectNodeFieldPropertyNames,
+	reservedObjectNodeFieldPropertyNamePrefixes,
+	type FlexTreeObjectNodeFieldsInner,
+	assertFlexTreeEntityNotFreed,
+	flexTreeSlot,
+	getSchemaAndPolicy,
+} from "./flex-tree/index.js";
 
-/**
- * @alpha
- */
-export const FieldKinds: {
-	readonly value: FieldKind<FieldEditor<any>, Multiplicity.Value>;
-	readonly optional: FieldKind<FieldEditor<any>, Multiplicity.Optional>;
-	readonly sequence: FieldKind<FieldEditor<any>, Multiplicity.Sequence>;
-} = FieldKindsOriginal;
+export { treeSchemaFromStoredSchema } from "./storedToViewSchema.js";
+
+export { TreeCompressionStrategy } from "./treeCompressionUtils.js";
+
+export { valueSchemaAllows } from "./valueUtilities.js";
+
+export type {
+	InsertableFlexNode,
+	InsertableFlexField,
+	AllowedTypesToFlexInsertableTree,
+	ApplyMultiplicity,
+	// Internal
+	CollectOptions,
+	TypedFields,
+	UnbrandedName,
+	EmptyObject,
+} from "./schema-aware/index.js";
+
+export { DetachedFieldIndexSummarizer } from "./detachedFieldIndexSummarizer.js";
+
+export {
+	type SchemaChange,
+	makeSchemaChangeCodecs,
+	EncodedSchemaChange,
+} from "./schema-edits/index.js";
+
+export { makeMitigatedChangeFamily } from "./mitigatedChangeFamily.js";
+
+export {
+	type MapTreeNode,
+	isMapTreeNode,
+	getOrCreateMapTreeNode,
+	tryGetMapTreeNode,
+} from "./flex-map-tree/index.js";

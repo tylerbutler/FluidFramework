@@ -15,15 +15,15 @@ const {
 } = require("@fluid-experimental/property-changeset");
 const { MSG } = require("@fluid-experimental/property-common").constants;
 const { UniversalDataArray, ConsoleUtils } = require("@fluid-experimental/property-common");
-const fastestJSONCopy = require("fastest-json-copy");
 const _ = require("lodash");
+const { cloneDeep: deepCopy } = _;
+
 const { deserializeNonPrimitiveArrayElements } = require("../containerSerializer");
 const { validationsEnabled } = require("../enableValidations");
+
 const { AbstractStaticCollectionProperty } = require("./abstractStaticCollectionProperty");
 const { BaseProperty } = require("./baseProperty");
 const { LazyLoadedProperties: Property } = require("./lazyLoadedProperties");
-
-const deepCopy = fastestJSONCopy.copy;
 
 var MODIFIED_STATE_FLAGS = BaseProperty.MODIFIED_STATE_FLAGS;
 
@@ -147,6 +147,9 @@ var _getLongestIncreasingSubsequenceSegments = function (in_segmentStarts, in_se
 	return longestSequence;
 };
 
+/**
+ * @internal
+ */
 export class ArrayProperty extends AbstractStaticCollectionProperty {
 	/**
 	 * Default constructor for ArrayProperty
@@ -193,7 +196,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 	 * @param {String} in_segment - The path segment to resolve
 	 * @param {property-properties.PathHelper.TOKEN_TYPES} in_segmentType - The type of segment in the tokenized path
 	 *
-	 * @return {property-properties.BaseProperty|undefined} The child property that has been resolved
+	 * @return {BaseProperty | undefined} The child property that has been resolved
 	 * @protected
 	 */
 	_resolvePathSegment(in_segment, in_segmentType) {
@@ -367,9 +370,9 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 	 *
 	 * See {@link ArrayProperty.setValues}
 	 *
-	 * @param {Array<*>} in_values - The list of typed values.
-	 * @param {Bool} in_typed - Whether the values are typed/polymorphic.
-	 * @param {Bool} in_initial - Whether we are setting default/initial values
+	 * @param {Array | string} in_values - The list of typed values.
+	 * @param {boolean} in_typed - Whether the values are typed/polymorphic.
+	 * @param {boolean} in_initial - Whether we are setting default/initial values
 	 * or if the function is called directly with the values to set.
 	 * @protected
 	 * @override
@@ -394,7 +397,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 									null,
 									in_values[i].value,
 									this._getScope(),
-							  );
+								);
 
 					arr.push(prop);
 				}
@@ -416,7 +419,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 	/**
 	 * See {@link ArrayProperty.setValues}
 	 *
-	 * @param {Array<*>|Object} in_values - an array or object containing the values to be set.
+	 * @param {Array | string} in_values - an array or object containing the values to be set.
 	 */
 	_setValuesInternal(in_values) {
 		this._checkIsNotReadOnly(true);
@@ -431,10 +434,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 		} else {
 			if (_.isArray(in_values)) {
 				if (in_values.length < this._dataArrayGetLength()) {
-					this.removeRange(
-						in_values.length,
-						this._dataArrayGetLength() - in_values.length,
-					);
+					this.removeRange(in_values.length, this._dataArrayGetLength() - in_values.length);
 				}
 				this.setRange(0, in_values.slice(0, this._dataArrayGetLength()));
 				if (in_values.length > this._dataArrayGetLength()) {
@@ -466,7 +466,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 	 * items at those indexes.
 	 * For arrays of Properties, this can be used to set nested values in properties found in the array.
 	 * For example: setValues({0: {position: {x: 2, y:3}}});
-	 * @param {Array<*>|Object} in_values - An array or object containing the values to be set.
+	 * @param {Array | string} in_values - An array or object containing the values to be set.
 	 * @throws if one of the path in in_values does not correspond to a path in the property
 	 */
 	setValues(in_values) {
@@ -707,7 +707,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 	 * @throws if in_deleteCount is not a number
 	 * @throws if trying to remove an item with a parent
 	 * @throws if in_offset is smaller than zero or if in_offset + in_delete count is larger than the length of the array
-	 * @return {Array<*>| Array<property-properties.BaseProperty>} an array containing the values or
+	 * @return {Array | string} an array containing the values or
 	 * properties removed.
 	 */
 	removeRange(in_offset, in_deleteCount) {
@@ -884,7 +884,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 
 	/**
 	 * Gets the array element at a given index
-	 * @param {number | array<string|number>} in_position - The target index if an array is passed, elements in the
+	 * @param {number | Array<string | number>} in_position - The target index if an array is passed, elements in the
 	 * array will be treated as part of a path. The first item in an array should be a position in the array. For
 	 * example, .get([0,'position','x']) is the equivalent of .get(0).get('position').get('x') If it encounters a
 	 * ReferenceProperty, .get will, by default, resolve the property it refers to.
@@ -924,8 +924,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 			}
 			for (var i = iterationStart; i < in_position.length && prop; i++) {
 				if (
-					in_options.referenceResolutionMode ===
-					BaseProperty.REFERENCE_RESOLUTION.NO_LEAFS
+					in_options.referenceResolutionMode === BaseProperty.REFERENCE_RESOLUTION.NO_LEAFS
 				) {
 					mode =
 						i !== in_position.length - 1
@@ -957,9 +956,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 				var pos = Math.floor(in_position);
 				ConsoleUtils.assert(isFinite(pos), MSG.IN_POSITION_MUST_BE_NUMBER);
 				var result = this._dataArrayGetValue(pos);
-				if (
-					in_options.referenceResolutionMode === BaseProperty.REFERENCE_RESOLUTION.ALWAYS
-				) {
+				if (in_options.referenceResolutionMode === BaseProperty.REFERENCE_RESOLUTION.ALWAYS) {
 					if (result instanceof Property.ReferenceProperty) {
 						result = result.ref;
 					}
@@ -971,7 +968,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 
 	/**
 	 * Returns an object with all the nested values contained in this property
-	 * @return {array<object> | array<*>} an array of objects or values representing the values of your property.
+	 * @return { Array } an array of objects or values representing the values of your property.
 	 * For example:
 	 *
 	 * ```json
@@ -1041,8 +1038,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 							insertedPropertyInstances.push(createdProperty);
 						}
 						this._insertRangeWithoutDirtying(
-							arrayIterator.opDescription.operation[0] +
-								arrayIterator.opDescription.offset,
+							arrayIterator.opDescription.operation[0] + arrayIterator.opDescription.offset,
 							this._deserializeArray(insertedPropertyInstances),
 							false,
 						);
@@ -1054,8 +1050,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 							numRemoved = numRemoved.length;
 						}
 						this._removeRangeWithoutDirtying(
-							arrayIterator.opDescription.operation[0] +
-								arrayIterator.opDescription.offset,
+							arrayIterator.opDescription.operation[0] + arrayIterator.opDescription.offset,
 							numRemoved,
 						);
 						break;
@@ -1063,8 +1058,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 						// Handle modifies
 						var propertyDescriptions = arrayIterator.opDescription.operation[1];
 						var startIndex =
-							arrayIterator.opDescription.operation[0] +
-							arrayIterator.opDescription.offset;
+							arrayIterator.opDescription.operation[0] + arrayIterator.opDescription.offset;
 						for (var i = 0; i < propertyDescriptions.length; ++i) {
 							var modifiedProperty = this.get(startIndex + i, {
 								referenceResolutionMode: BaseProperty.REFERENCE_RESOLUTION.NEVER,
@@ -1077,9 +1071,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 						break;
 					default:
 						console.error(
-							"applyChangeset: " +
-								MSG.UNKNOWN_OPERATION +
-								arrayIterator.opDescription.type,
+							"applyChangeset: " + MSG.UNKNOWN_OPERATION + arrayIterator.opDescription.type,
 						);
 				}
 				arrayIterator.next();
@@ -1091,8 +1083,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 					case ArrayChangeSetIterator.types.INSERT:
 						// Handle inserts
 						this._insertRangeWithoutDirtying(
-							arrayIterator.opDescription.operation[0] +
-								arrayIterator.opDescription.offset,
+							arrayIterator.opDescription.operation[0] + arrayIterator.opDescription.offset,
 							this._deserializeArray(arrayIterator.opDescription.operation[1]),
 						);
 						break;
@@ -1104,24 +1095,20 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 						}
 
 						this._removeRangeWithoutDirtying(
-							arrayIterator.opDescription.operation[0] +
-								arrayIterator.opDescription.offset,
+							arrayIterator.opDescription.operation[0] + arrayIterator.opDescription.offset,
 							removeLength,
 						);
 						break;
 					case ArrayChangeSetIterator.types.MODIFY:
 						// Handle modifies
 						this._modifyRangeWithoutDirtying(
-							arrayIterator.opDescription.operation[0] +
-								arrayIterator.opDescription.offset,
+							arrayIterator.opDescription.operation[0] + arrayIterator.opDescription.offset,
 							this._deserializeArray(arrayIterator.opDescription.operation[1]),
 						);
 						break;
 					default:
 						console.error(
-							"applyChangeset: " +
-								MSG.UNKNOWN_OPERATION +
-								arrayIterator.opDescription.type,
+							"applyChangeset: " + MSG.UNKNOWN_OPERATION + arrayIterator.opDescription.type,
 						);
 				}
 				arrayIterator.next();
@@ -1323,10 +1310,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 				);
 				changes.insert.push([lastPositionInInitialArray, deepCopy(elementsToInsert)]);
 				var scope = this._getScope();
-				var insertedProperties = deserializeNonPrimitiveArrayElements(
-					elementsToInsert,
-					scope,
-				);
+				var insertedProperties = deserializeNonPrimitiveArrayElements(elementsToInsert, scope);
 				this._insertRangeWithoutDirtying(
 					lastPositionInInitialArray + offset,
 					insertedProperties,
@@ -1440,6 +1424,9 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 
 	/**
 	 * @inheritdoc
+	 *
+	 * @param {object} [in_filteringOptions = {}] - The filtering options to consider while deserializing the property.
+	 * @param {boolean} [in_createChangeSet = true] - Should a changeset be created for this deserialization?
 	 */
 	_deserialize(in_serializedObj, in_reportToView, in_filteringOptions, in_createChangeSet) {
 		this._checkIsNotReadOnly(false);
@@ -1593,10 +1580,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 					var lastModify = undefined;
 					if (result.modify && result.modify.length > 0) {
 						lastModify = result.modify[result.modify.length - 1];
-						if (
-							lastModify[0] + lastModify[1].length ===
-							currentArrayIndex - op.offset
-						) {
+						if (lastModify[0] + lastModify[1].length === currentArrayIndex - op.offset) {
 							// we need to combine, keep lastModify
 						} else {
 							lastModify = undefined;
@@ -1737,12 +1721,12 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 								this._getPendingChanges(),
 								in_dirtinessType,
 								in_includeReferencedRepositories,
-						  )
+							)
 						: this._getChangesetForCustomTypeArray(
 								this._getDirtyChanges(),
 								in_dirtinessType,
 								in_includeReferencedRepositories,
-						  ),
+							),
 				);
 
 				return result;
@@ -1827,7 +1811,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 	/**
 	 * Return a JSON representation of the array and its items.
 	 * @return {object} A JSON representation of the array and its items.
-	 * @private
+	 * @protected
 	 */
 	_toJson() {
 		var json = {
@@ -1923,7 +1907,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 
 	/**
 	 * Set the array to the given new array
-	 * @param {Array} in_newArray - The new contents of the array
+	 * @param {Array | string} in_newArray - The new contents of the array
 	 */
 	_dataArrayDeserialize(in_newArray) {
 		this._dataArrayRef.deserialize(in_newArray);
@@ -1932,7 +1916,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 	/**
 	 * Inserts a range into the data array
 	 * @param {Number} in_position - Position at which the insert should be done
-	 * @param {Array} in_range - The array to insert
+	 * @param {Array | string} in_range - The array to insert
 	 */
 	_dataArrayInsertRange(in_position, in_range) {
 		this._dataArrayRef.insertRange(in_position, in_range);
@@ -1950,7 +1934,7 @@ export class ArrayProperty extends AbstractStaticCollectionProperty {
 	/**
 	 * Overwrites a range in the data array
 	 * @param {Number} in_position - Position at which to start the removal
-	 * @param {Array} in_range - The array to overwrite
+	 * @param {Array | string} in_range - The array to overwrite
 	 */
 	_dataArraySetRange(in_position, in_range) {
 		this._dataArrayRef.set(in_position, in_range);

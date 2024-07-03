@@ -3,5 +3,12 @@
  * Licensed under the MIT License.
  */
 
-export { ITaskManager, ITaskManagerEvents } from "./interfaces";
-export { TaskManager } from "./taskManager";
+/**
+ * Contains a distributed data structure, {@link ITaskManager}, to track the queues of clients that want to
+ * exclusively run tasks.
+ *
+ * @packageDocumentation
+ */
+
+export { ITaskManager, ITaskManagerEvents, TaskEventListener } from "./interfaces.js";
+export { TaskManager } from "./taskManagerFactory.js";

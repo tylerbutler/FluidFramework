@@ -3,35 +3,39 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/common-utils";
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import { assert } from "@fluidframework/core-utils/internal";
+import { IClient, ISummaryTree } from "@fluidframework/driver-definitions";
 import {
 	IDocumentDeltaConnection,
 	IDocumentDeltaStorageService,
 	IDocumentService,
+	IDocumentServiceEvents,
 	IDocumentServiceFactory,
 	IDocumentStorageService,
 	IResolvedUrl,
-} from "@fluidframework/driver-definitions";
-import { buildSnapshotTree } from "@fluidframework/driver-utils";
-import {
-	IClient,
 	ISnapshotTree,
 	ITree,
 	IVersion,
-	ISummaryTree,
-} from "@fluidframework/protocol-definitions";
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { EmptyDeltaStorageService } from "./emptyDeltaStorageService";
-import { ReadDocumentStorageServiceBase } from "./replayController";
+} from "@fluidframework/driver-definitions/internal";
+import { buildSnapshotTree } from "@fluidframework/driver-utils/internal";
+import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils/internal";
+
+import { EmptyDeltaStorageService } from "./emptyDeltaStorageService.js";
+import { ReadDocumentStorageServiceBase } from "./replayController.js";
 
 /**
  * Structure of snapshot on disk, when we store snapshot as single file
+ * @internal
  */
 export interface IFileSnapshot {
 	tree: ITree;
 	commits: { [key: string]: ITree };
 }
 
+/**
+ * @internal
+ */
 export class FileSnapshotReader
 	extends ReadDocumentStorageServiceBase
 	implements IDocumentStorageService
@@ -72,6 +76,7 @@ export class FileSnapshotReader
 			return this.docTree;
 		}
 		if (versionRequested.treeId !== FileSnapshotReader.FileStorageVersionTreeId) {
+			// eslint-disable-next-line @typescript-eslint/no-base-to-string
 			throw new Error(`Unknown version id: ${versionRequested}`);
 		}
 
@@ -99,6 +104,9 @@ export class FileSnapshotReader
 	}
 }
 
+/**
+ * @internal
+ */
 export class SnapshotStorage extends ReadDocumentStorageServiceBase {
 	protected docId?: string;
 
@@ -133,29 +141,18 @@ export class SnapshotStorage extends ReadDocumentStorageServiceBase {
 	}
 }
 
-export class OpStorage extends ReadDocumentStorageServiceBase {
-	public async getVersions(versionId: string | null, count: number): Promise<IVersion[]> {
-		return [];
+export class StaticStorageDocumentService
+	extends TypedEventEmitter<IDocumentServiceEvents>
+	implements IDocumentService
+{
+	constructor(
+		public readonly resolvedUrl: IResolvedUrl,
+		private readonly storage: IDocumentStorageService,
+	) {
+		super();
 	}
-
-	public async getSnapshotTree(version?: IVersion): Promise<ISnapshotTree | null> {
-		throw new Error("no snapshot tree should be asked when playing ops");
-	}
-
-	public async readBlob(blobId: string): Promise<ArrayBufferLike> {
-		throw new Error(`Unknown blob ID: ${blobId}`);
-	}
-}
-
-export class StaticStorageDocumentService implements IDocumentService {
-	constructor(private readonly storage: IDocumentStorageService) {}
 
 	public dispose() {}
-
-	// TODO: Issue-2109 Implement detach container api or put appropriate comment.
-	public get resolvedUrl(): IResolvedUrl {
-		throw new Error("Not implemented");
-	}
 
 	public async connectToStorage(): Promise<IDocumentStorageService> {
 		return this.storage;
@@ -171,22 +168,25 @@ export class StaticStorageDocumentService implements IDocumentService {
 	}
 }
 
+/**
+ * @internal
+ */
 export class StaticStorageDocumentServiceFactory implements IDocumentServiceFactory {
 	public constructor(protected readonly storage: IDocumentStorageService) {}
 
 	public async createDocumentService(
 		fileURL: IResolvedUrl,
-		logger?: ITelemetryLogger,
+		logger?: ITelemetryLoggerExt,
 		clientIsSummarizer?: boolean,
 	): Promise<IDocumentService> {
-		return new StaticStorageDocumentService(this.storage);
+		return new StaticStorageDocumentService(fileURL, this.storage);
 	}
 
 	// TODO: Issue-2109 Implement detach container api or put appropriate comment.
 	public async createContainer(
 		createNewSummary: ISummaryTree,
 		resolvedUrl: IResolvedUrl,
-		logger: ITelemetryLogger,
+		logger: ITelemetryLoggerExt,
 		clientIsSummarizer?: boolean,
 	): Promise<IDocumentService> {
 		throw new Error("Not implemented");

@@ -6,11 +6,6 @@
 import { fromBase64ToUtf8 } from "@fluidframework/common-utils";
 import { ICreateCommitParams, ICreateTreeEntry } from "@fluidframework/gitresources";
 import {
-	generateServiceProtocolEntries,
-	getQuorumTreeEntries,
-	mergeAppAndProtocolTree,
-} from "@fluidframework/protocol-base";
-import {
 	ISequencedDocumentMessage,
 	ISummaryContent,
 	ITreeEntry,
@@ -26,6 +21,13 @@ import {
 	ISummaryTree,
 	NetworkError,
 	WholeSummaryUploadManager,
+	getQuorumTreeEntries,
+	generateServiceProtocolEntries,
+	mergeAppAndProtocolTree,
+	mergeSortedArrays,
+	dedupeSortedArray,
+	mergeKArrays,
+	convertSortedNumberArrayToRanges,
 } from "@fluidframework/server-services-client";
 import {
 	ICollection,
@@ -47,6 +49,7 @@ import { ISummaryWriteResponse, ISummaryWriter } from "./interfaces";
 
 /**
  * Git specific implementation of ISummaryWriter
+ * @internal
  */
 export class SummaryWriter implements ISummaryWriter {
 	private readonly lumberProperties: Record<string, any>;
@@ -60,6 +63,7 @@ export class SummaryWriter implements ISummaryWriter {
 		private readonly lastSummaryMessages: ISequencedDocumentMessage[],
 		private readonly getDeltasViaAlfred: boolean,
 		private readonly maxRetriesOnError: number = 6,
+		private readonly maxLogtailLength: number = 2000,
 	) {
 		this.lumberProperties = getLumberBaseProperties(this.documentId, this.tenantId);
 	}
@@ -70,6 +74,7 @@ export class SummaryWriter implements ISummaryWriter {
 	 * such as a job queue. If set to 'true', the return value of writeClientSummary/writeServiceSummary will not
 	 * be used by the lambda. The external process will be responsible for sending the updates to the op stream.
 	 */
+	// eslint-disable-next-line @typescript-eslint/class-literal-property-style
 	public get isExternal(): boolean {
 		return false;
 	}
@@ -90,10 +95,11 @@ export class SummaryWriter implements ISummaryWriter {
 		lastSummaryHead: string | undefined,
 		checkpoint: IScribe,
 		pendingOps: ISequencedOperationMessage[],
+		isEphemeralContainer?: boolean,
 	): Promise<ISummaryWriteResponse> {
 		const clientSummaryMetric = Lumberjack.newLumberMetric(LumberEventName.ClientSummary);
-		this.setSummaryProperties(clientSummaryMetric, op);
-		const content = JSON.parse(op.contents) as ISummaryContent;
+		this.setSummaryProperties(clientSummaryMetric, op, isEphemeralContainer);
+		const content = JSON.parse(op.contents as string) as ISummaryContent;
 		try {
 			// The summary must reference the existing summary to be valid. This guards against accidental sends of
 			// two summaries at the same time. In this case the first one wins.
@@ -132,7 +138,7 @@ export class SummaryWriter implements ISummaryWriter {
 									existingRef ? existingRef.object.sha : "n/a"
 								}" nor other valid parent summaries "[${
 									checkpoint.validParentSummaries?.join(",") ?? ""
-								}]".`,
+								}] nor the last known client summary "${lastSummaryHead}".`,
 								summaryProposal: {
 									summarySequenceNumber: op.sequenceNumber,
 								},
@@ -171,8 +177,8 @@ export class SummaryWriter implements ISummaryWriter {
 						shouldRetryNetworkError,
 						this.maxRetriesOnError,
 					);
-				} catch (e) {
-					clientSummaryMetric.error(`One or more parent summaries are invalid`, e);
+				} catch (error) {
+					clientSummaryMetric.error(`One or more parent summaries are invalid`, error);
 					return {
 						message: {
 							message: "One or more parent summaries are invalid",
@@ -203,10 +209,8 @@ export class SummaryWriter implements ISummaryWriter {
 
 			// At this point the summary op and its data are all valid and we can perform the write to history
 			const protocolEntries: ITreeEntry[] = getQuorumTreeEntries(
-				this.documentId,
 				checkpoint.protocolState.minimumSequenceNumber,
 				checkpoint.protocolState.sequenceNumber,
-				op.term ?? 1,
 				checkpoint.protocolState,
 			);
 
@@ -217,7 +221,6 @@ export class SummaryWriter implements ISummaryWriter {
 						checkpoint.protocolState.sequenceNumber,
 						op.sequenceNumber + 1,
 						pendingOps,
-						this.lastSummaryMessages,
 					),
 				"writeClientSummary_generateLogtailEntries",
 				this.lumberProperties,
@@ -289,18 +292,20 @@ export class SummaryWriter implements ISummaryWriter {
 				const newTreeEntries = mergeAppAndProtocolTree(appSummaryTree, protocolTree);
 
 				// Now combine with .logtail and .serviceProtocol
-				newTreeEntries.push({
-					mode: FileMode.Directory,
-					path: ".logTail",
-					sha: logTailTree.sha,
-					type: "tree",
-				});
-				newTreeEntries.push({
-					mode: FileMode.Directory,
-					path: ".serviceProtocol",
-					sha: serviceProtocolTree.sha,
-					type: "tree",
-				});
+				newTreeEntries.push(
+					{
+						mode: FileMode.Directory,
+						path: ".logTail",
+						sha: logTailTree.sha,
+						type: "tree",
+					},
+					{
+						mode: FileMode.Directory,
+						path: ".serviceProtocol",
+						sha: serviceProtocolTree.sha,
+						type: "tree",
+					},
+				);
 
 				// Finally perform the write to git
 				const gitTree = await requestWithRetry(
@@ -398,9 +403,10 @@ export class SummaryWriter implements ISummaryWriter {
 		currentProtocolHead: number,
 		checkpoint: IScribe,
 		pendingOps: ISequencedOperationMessage[],
+		isEphemeralContainer?: boolean,
 	): Promise<string | false> {
 		const serviceSummaryMetric = Lumberjack.newLumberMetric(LumberEventName.ServiceSummary);
-		this.setSummaryProperties(serviceSummaryMetric, op);
+		this.setSummaryProperties(serviceSummaryMetric, op, isEphemeralContainer);
 		try {
 			const existingRef = await requestWithRetry(
 				async () => this.summaryStorage.getRef(encodeURIComponent(this.documentId)),
@@ -432,7 +438,6 @@ export class SummaryWriter implements ISummaryWriter {
 						currentProtocolHead,
 						op.sequenceNumber + 1,
 						pendingOps,
-						this.lastSummaryMessages,
 					),
 				"writeServiceSummary_generateLogtailEntries",
 				this.lumberProperties,
@@ -505,18 +510,20 @@ export class SummaryWriter implements ISummaryWriter {
 					};
 					return createTreeEntry;
 				});
-				newTreeEntries.push({
-					mode: FileMode.Directory,
-					path: ".logTail",
-					sha: logTailTree.sha,
-					type: "tree",
-				});
-				newTreeEntries.push({
-					mode: FileMode.Directory,
-					path: ".serviceProtocol",
-					sha: serviceProtocolTree.sha,
-					type: "tree",
-				});
+				newTreeEntries.push(
+					{
+						mode: FileMode.Directory,
+						path: ".logTail",
+						sha: logTailTree.sha,
+						type: "tree",
+					},
+					{
+						mode: FileMode.Directory,
+						path: ".serviceProtocol",
+						sha: serviceProtocolTree.sha,
+						type: "tree",
+					},
+				);
 
 				// Finally perform the write to git
 				const gitTree = await requestWithRetry(
@@ -574,115 +581,44 @@ export class SummaryWriter implements ISummaryWriter {
 	private setSummaryProperties(
 		summaryMetric: Lumber<LumberEventName.ClientSummary | LumberEventName.ServiceSummary>,
 		op: ISequencedDocumentAugmentedMessage,
-	) {
+		isEphemeralContainer?: boolean,
+	): void {
 		summaryMetric.setProperties(getLumberBaseProperties(this.documentId, this.tenantId));
 		summaryMetric.setProperties({
 			[CommonProperties.clientId]: op.clientId,
 			[CommonProperties.sequenceNumber]: op.sequenceNumber,
 			[CommonProperties.minSequenceNumber]: op.minimumSequenceNumber,
+			[CommonProperties.isEphemeralContainer]: isEphemeralContainer ?? false,
 		});
 	}
 
 	private async generateLogtailEntries(
-		from: number,
-		to: number,
+		gt: number,
+		lt: number,
 		pending: ISequencedOperationMessage[],
-		lastSummaryMessages: ISequencedDocumentMessage[] | undefined,
 	): Promise<ITreeEntry[]> {
-		const logTail = await this.getLogTail(from, to, pending);
+		let to = lt;
+		const from = gt;
+		const LogtailRequestedLength = to - from - 1;
 
-		// Some ops would be missing if we switch cluster during routing.
-		// We need to load these missing ops from the last summary.
-		const missingOps = await this.getMissingOpsFromLastSummaryLogtail(
-			from,
-			to,
-			logTail,
-			lastSummaryMessages,
-		);
-		const fullLogTail = missingOps
-			? missingOps.concat(logTail).sort((op1, op2) => op1.sequenceNumber - op2.sequenceNumber)
-			: logTail;
-
-		// Check the missing operations in the fullLogTail. We would treat
-		// isLogtailEntriesMatch as true when the fullLogTail's length is extact same as the requested range.
-		// As well as the first SN of fullLogTail - 1 is equal to from,
-		// and the last SN of fullLogTail + 1 is equal to to.
-		// For example, from: 2, to: 5, fullLogTail with SN [3, 4] is the true scenario.
-		const isLogtailEntriesMatch =
-			fullLogTail &&
-			fullLogTail.length > 0 &&
-			fullLogTail.length === to - from - 1 &&
-			from === fullLogTail[0].sequenceNumber - 1 &&
-			to === fullLogTail[fullLogTail.length - 1].sequenceNumber + 1;
-		if (!isLogtailEntriesMatch) {
-			const missingOpsSequenceNumbers: number[] = [];
-			const fullLogTailSequenceNumbersSet = new Set();
-			fullLogTail?.map((op) => fullLogTailSequenceNumbersSet.add(op.sequenceNumber));
-			for (let i = from + 1; i < to; i++) {
-				if (!fullLogTailSequenceNumbersSet.has(i)) {
-					missingOpsSequenceNumbers.push(i);
-				}
-			}
-			Lumberjack.info(
-				`FullLogTail missing ops from: ${from} exclusive, to: ${to} exclusive with sequence numbers: ${JSON.stringify(
-					missingOpsSequenceNumbers,
-				)}`,
-				this.lumberProperties,
-			);
+		if (LogtailRequestedLength > this.maxLogtailLength) {
+			Lumberjack.warning(`Limiting logtail length`, this.lumberProperties);
+			to = from + this.maxLogtailLength + 1;
 		}
 
-		const logTailEntries: ITreeEntry[] = [
+		const logTail = await this.getLogTail(from, to, pending);
+
+		return [
 			{
 				mode: FileMode.File,
 				path: "logTail",
 				type: TreeEntry.Blob,
 				value: {
-					contents: JSON.stringify(fullLogTail),
+					contents: JSON.stringify(logTail),
 					encoding: "utf-8",
 				},
 			},
 		];
-
-		if (fullLogTail.length > 0) {
-			Lumberjack.info(
-				`FullLogTail of length ${fullLogTail.length} generated from seq no ${
-					fullLogTail[0].sequenceNumber
-				} to ${fullLogTail[fullLogTail.length - 1].sequenceNumber}`,
-				this.lumberProperties,
-			);
-		}
-
-		return logTailEntries;
-	}
-
-	private async getMissingOpsFromLastSummaryLogtail(
-		gt: number,
-		lt: number,
-		logTail: ISequencedDocumentMessage[],
-		lastSummaryMessages: ISequencedDocumentMessage[] | undefined,
-	): Promise<ISequencedDocumentMessage[] | undefined> {
-		if (lt - gt <= 1) {
-			return undefined;
-		}
-		const logtailSequenceNumbers = new Set();
-		logTail.forEach((ms) => logtailSequenceNumbers.add(ms.sequenceNumber));
-		const missingOps = lastSummaryMessages?.filter(
-			(ms) =>
-				!logtailSequenceNumbers.has(ms.sequenceNumber) &&
-				ms.sequenceNumber > gt &&
-				ms.sequenceNumber < lt,
-		);
-		const missingOpsSN: number[] = [];
-		missingOps?.forEach((op) => missingOpsSN.push(op.sequenceNumber));
-		if (missingOpsSN.length > 0) {
-			Lumberjack.info(
-				`Fetched ops gt: ${gt} exclusive, lt: ${lt} exclusive of last summary logtail: ${JSON.stringify(
-					missingOpsSN,
-				)}`,
-				this.lumberProperties,
-			);
-		}
-		return missingOps;
 	}
 
 	private async getLogTail(
@@ -692,72 +628,160 @@ export class SummaryWriter implements ISummaryWriter {
 	): Promise<ISequencedDocumentMessage[]> {
 		if (lt - gt <= 1) {
 			return [];
-		} else if (pending.length > 0) {
-			// Check for logtail ops in the unprocessed ops currently present in memory
-			const pendingOps = pending
+		}
+
+		// Define these for the finally block, these should be used as const
+		let logTailFromLastSummary: ISequencedDocumentMessage[] = [];
+		let logTailFromPending: ISequencedDocumentMessage[] = [];
+		let logtailFromMemory: ISequencedDocumentMessage[] = [];
+		let logtailGaps: number[][] = [];
+		let retrievedGaps: ISequencedDocumentMessage[][] = [];
+		let finalLogTail: ISequencedDocumentMessage[] = [];
+
+		try {
+			// Read from last summary logtail first, which is in memory
+			logTailFromLastSummary =
+				this.lastSummaryMessages?.filter(
+					(ms) => ms.sequenceNumber > gt && ms.sequenceNumber < lt,
+				) ?? [];
+
+			logTailFromPending = pending
 				.filter(
 					(op) => op.operation.sequenceNumber > gt && op.operation.sequenceNumber < lt,
 				)
 				.map((op) => op.operation);
-			if (
-				pendingOps.length > 0 &&
-				pendingOps[0].sequenceNumber === gt + 1 &&
-				pendingOps[pendingOps.length - 1].sequenceNumber === lt - 1
-			) {
-				Lumberjack.info(
-					`LogTail of length ${pendingOps.length} between ${gt + 1} and ${
-						lt - 1
-					} fetched from pending ops`,
-					this.lumberProperties,
-				);
-				return pendingOps;
+
+			logtailFromMemory = dedupeSortedArray(
+				mergeSortedArrays(
+					logTailFromLastSummary,
+					logTailFromPending,
+					(opS, opP) => opS.sequenceNumber - opP.sequenceNumber,
+				),
+				(op) => op.sequenceNumber,
+			);
+
+			logtailGaps = this.findMissingGapsInLogtail(logtailFromMemory, gt + 1, lt - 1);
+			if (logtailGaps.length === 0) {
+				finalLogTail = logtailFromMemory;
+				return finalLogTail;
 			}
-		}
 
-		let logTail: ISequencedDocumentMessage[] = [];
+			retrievedGaps = await Promise.all(
+				logtailGaps.map(async ([gapBeginInclusive, gapEndInclusive]) => {
+					return this.retrieveOps(gapBeginInclusive - 1, gapEndInclusive + 1);
+				}),
+			);
 
-		if (this.getDeltasViaAlfred) {
-			logTail = await this.deltaService.getDeltas("", this.tenantId, this.documentId, gt, lt);
-		} else {
-			const query = {
-				"documentId": this.documentId,
-				"tenantId": this.tenantId,
-				"operation.sequenceNumber": {
-					$gt: gt,
-					$lt: lt,
-				},
+			const nonEmptyRetrievedGaps = retrievedGaps.filter((gap) => gap.length > 0);
+
+			if (nonEmptyRetrievedGaps.length === 0) {
+				finalLogTail = logtailFromMemory;
+				return finalLogTail;
+			}
+
+			const minHeapComparator = (
+				a: ISequencedDocumentMessage,
+				b: ISequencedDocumentMessage,
+			): 1 | 0 | -1 => {
+				if (a.sequenceNumber < b.sequenceNumber) {
+					return -1;
+				}
+				if (a.sequenceNumber > b.sequenceNumber) {
+					return 1;
+				}
+				return 0;
 			};
 
-			// Fetching ops from the local db
-			const logTailOpMessage = await this.opStorage.find(query, {
-				"operation.sequenceNumber": 1,
-			});
-			logTail = logTailOpMessage.map((log) => log.operation);
-		}
-
-		Lumberjack.info(
-			`LogTail of length ${logTail.length} fetched from seq no ${gt} to ${lt}`,
-			this.lumberProperties,
-		);
-
-		// If the db is not updated with all logs yet, get them from checkpoint messages.
-		if (logTail.length !== lt - gt - 1) {
-			const nextSeq =
-				logTail.length === 0 ? gt : logTail[logTail.length - 1].sequenceNumber + 1;
-			for (const message of pending) {
-				if (
-					message.operation.sequenceNumber >= nextSeq &&
-					message.operation.sequenceNumber < lt
-				) {
-					logTail.push(message.operation);
-				}
-			}
+			finalLogTail = dedupeSortedArray(
+				mergeKArrays<ISequencedDocumentMessage>(
+					[...nonEmptyRetrievedGaps, logtailFromMemory],
+					minHeapComparator,
+				),
+				(op) => op.sequenceNumber,
+			);
+			return finalLogTail;
+		} finally {
+			const logtailRangeFromLastSummary = convertSortedNumberArrayToRanges(
+				logTailFromLastSummary.map((op) => op.sequenceNumber),
+			);
+			const logtailRangeFromPending = convertSortedNumberArrayToRanges(
+				logTailFromPending.map((op) => op.sequenceNumber),
+			);
+			const logtailRangeFromMemory = convertSortedNumberArrayToRanges(
+				logtailFromMemory.map((op) => op.sequenceNumber),
+			);
+			const retrievedGapsRange = retrievedGaps.map((retrievedGap) =>
+				convertSortedNumberArrayToRanges(retrievedGap.map((op) => op.sequenceNumber)),
+			);
+			const finalLogtailRange = convertSortedNumberArrayToRanges(
+				finalLogTail.map((op) => op.sequenceNumber),
+			);
 			Lumberjack.info(
-				`Populated logtail gaps. nextSeq: ${nextSeq} LogtailLength: ${logTail.length}`,
-				this.lumberProperties,
+				`LogTail of length ${finalLogTail.length} fetched from seq no ${gt} to ${lt}`,
+				{
+					...this.lumberProperties,
+					logtailRangeFromLastSummary,
+					logtailRangeFromPending,
+					logtailRangeFromMemory,
+					logtailGaps,
+					retrievedGapsRange,
+					finalLogtailRange,
+				},
 			);
 		}
-		return logTail;
+	}
+
+	private async retrieveOps(gt: number, lt: number): Promise<ISequencedDocumentMessage[]> {
+		if (this.getDeltasViaAlfred) {
+			return this.deltaService.getDeltas(
+				"",
+				this.tenantId,
+				this.documentId,
+				gt,
+				lt,
+				"scribe",
+			);
+		}
+
+		const query = {
+			"documentId": this.documentId,
+			"tenantId": this.tenantId,
+			"operation.sequenceNumber": {
+				$gt: gt,
+				$lt: lt,
+			},
+		};
+
+		// Fetching ops from the local db
+		// False positive: `this.opStorage` is not a plain array, the second argument to `find()` is not "thisArg".
+		// eslint-disable-next-line unicorn/no-array-method-this-argument
+		const logTailOpMessage = await this.opStorage.find(query, {
+			"operation.sequenceNumber": 1,
+		});
+		return logTailOpMessage.map((log) => log.operation);
+	}
+
+	private findMissingGapsInLogtail(
+		existingTail: ISequencedDocumentMessage[],
+		fromInclusive: number,
+		toInclusive: number,
+	): number[][] {
+		const gaps: number[][] = [];
+		let next = fromInclusive;
+		const existingTailWithInRange = existingTail.filter(
+			(op) => op.sequenceNumber >= fromInclusive && op.sequenceNumber <= toInclusive,
+		);
+		for (const op of existingTailWithInRange) {
+			if (op.sequenceNumber > next) {
+				gaps.push([next, op.sequenceNumber - 1]);
+			}
+			next = op.sequenceNumber + 1;
+		}
+
+		if (next <= toInclusive) {
+			gaps.push([next, toInclusive]);
+		}
+		return gaps;
 	}
 
 	// When 'includesProtocolTree' is set, client uploads two top level nodes: '.app' and '.protocol'.

@@ -3,17 +3,17 @@
  * Licensed under the MIT License.
  */
 
-import { copyPropertyIfDefined, fail, Mutable, MutableMap } from './Common';
-import { Forest } from './Forest';
-import { NodeId, StableNodeId, TraitLabel } from './Identifiers';
-import { NodeIdConverter } from './NodeIdUtilities';
-import { Payload, TreeNode, TreeNodeSequence } from './persisted-types';
-import { TreeView, TreeViewNode, TreeViewPlace, TreeViewRange } from './TreeView';
-import { HasVariadicTraits } from './ChangeTypes';
+import { HasVariadicTraits } from './ChangeTypes.js';
+import { Mutable, MutableMap, copyPropertyIfDefined, fail } from './Common.js';
+import { Forest } from './Forest.js';
+import { NodeId, StableNodeId, TraitLabel } from './Identifiers.js';
+import { NodeIdConverter } from './NodeIdUtilities.js';
+import { TreeView, TreeViewNode, TreeViewPlace, TreeViewRange } from './TreeView.js';
+import { Payload, TreeNode, TreeNodeSequence } from './persisted-types/index.js';
 
 /**
  * An immutable view of a distributed tree.
- * @public
+ * @alpha
  */
 export class RevisionView extends TreeView {
 	/**
@@ -86,7 +86,7 @@ export class RevisionView extends TreeView {
 
 /**
  * An view of a distributed tree that is part of an ongoing transaction between `RevisionView`s.
- * @public
+ * @alpha
  */
 export class TransactionView extends TreeView {
 	/** Conclude a transaction by generating an immutable `RevisionView` from this view */
@@ -119,7 +119,10 @@ export class TransactionView extends TreeView {
 	 * Detaches a range of nodes from their parent. The detached nodes remain in the view.
 	 * @param rangeToDetach - the range of nodes to detach
 	 */
-	public detachRange(rangeToDetach: TreeViewRange): { view: TransactionView; detached: readonly NodeId[] } {
+	public detachRange(rangeToDetach: TreeViewRange): {
+		view: TransactionView;
+		detached: readonly NodeId[];
+	} {
 		const { start, end } = rangeToDetach;
 		const { trait: traitLocation } = start;
 		const { parent, label } = traitLocation;
@@ -156,7 +159,7 @@ export class TransactionView extends TreeView {
  */
 export function convertTreeNodesToViewNodes<
 	TIn extends HasVariadicTraits<TIn>,
-	TOut extends TreeViewNode = TreeViewNode
+	TOut extends TreeViewNode = TreeViewNode,
 >(root: TIn, convert: (node: TIn) => Omit<TOut, 'traits'>): TOut[];
 
 /**
@@ -166,7 +169,7 @@ export function convertTreeNodesToViewNodes<
  */
 export function convertTreeNodesToViewNodes<
 	TIn extends HasVariadicTraits<TIn>,
-	TOut extends TreeViewNode = TreeViewNode
+	TOut extends TreeViewNode = TreeViewNode,
 >(root: TIn, convert: (node: TIn) => Omit<TOut, 'traits'> | undefined): TOut[] | undefined;
 
 /**
@@ -178,7 +181,7 @@ export function convertTreeNodesToViewNodes<
  */
 export function convertTreeNodesToViewNodes<
 	TIn extends HasVariadicTraits<TIn>,
-	TOut extends TreeViewNode = TreeViewNode
+	TOut extends TreeViewNode = TreeViewNode,
 >(root: TIn, convert: (node: TIn) => Omit<TOut, 'traits'> | undefined): TOut[] | undefined {
 	const convertedRoot = convert(root) as Mutable<TOut>;
 	if (convertedRoot === undefined || root.traits === undefined) {

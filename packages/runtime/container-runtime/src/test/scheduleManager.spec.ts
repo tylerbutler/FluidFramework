@@ -4,11 +4,16 @@
  */
 
 import { strict as assert } from "assert";
-import { EventEmitter } from "events";
-import { ISequencedDocumentMessage, MessageType } from "@fluidframework/protocol-definitions";
-import { MockDeltaManager } from "@fluidframework/test-runtime-utils";
-import { DebugLogger } from "@fluidframework/telemetry-utils";
-import { ScheduleManager } from "../scheduleManager";
+
+import { EventEmitter } from "@fluid-internal/client-utils";
+import {
+	MessageType,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import { createChildLogger } from "@fluidframework/telemetry-utils/internal";
+import { MockDeltaManager } from "@fluidframework/test-runtime-utils/internal";
+
+import { ScheduleManager } from "../scheduleManager.js";
 
 describe("ScheduleManager", () => {
 	describe("Batch processing events", () => {
@@ -32,7 +37,7 @@ describe("ScheduleManager", () => {
 				deltaManager,
 				emitter,
 				() => testClientId,
-				DebugLogger.create("fluid:testScheduleManager"),
+				createChildLogger({ namespace: "fluid:testScheduleManager" }),
 			);
 
 			emitter.on("batchBegin", () => {

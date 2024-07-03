@@ -3,10 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { RevisionTag } from "../../core";
-import { Mark, MarkList, ObjectMark, Skip } from "./format";
-import { MoveEffectTable } from "./moveEffectTable";
-import { isObjMark, isSkipMark, tryExtendMark } from "./utils";
+import type { Mark, MarkList } from "./types.js";
+import { isNoopMark, isTombstone, tryMergeMarks as tryMergeMarks } from "./utils.js";
 
 /**
  * Helper class for constructing an offset list of marks that...
@@ -15,39 +13,36 @@ import { isObjMark, isSkipMark, tryExtendMark } from "./utils";
  * - Merges runs of offsets together
  * - Merges marks together
  */
-export class MarkListFactory<TNodeChange> {
+export class MarkListFactory {
 	private offset = 0;
-	public readonly list: MarkList<TNodeChange> = [];
+	public readonly list: MarkList = [];
 
-	public constructor(
-		// TODO: Is there a usage of MarkListFactory where we need a non-undefined revision?
-		private readonly revision?: RevisionTag | undefined,
-		private readonly moveEffects?: MoveEffectTable<TNodeChange>,
-		private readonly recordMerges: boolean = false,
-	) {}
+	public constructor() {}
 
-	public push(...marks: Mark<TNodeChange>[]): void {
+	public push(...marks: Mark[]): void {
 		for (const item of marks) {
-			if (isSkipMark(item)) {
-				this.pushOffset(item);
-			} else {
-				this.pushContent(item);
-			}
+			this.pushContent(item);
 		}
 	}
 
-	public pushOffset(offset: Skip): void {
+	public pushOffset(offset: number): void {
 		this.offset += offset;
 	}
 
-	public pushContent(mark: ObjectMark<TNodeChange>): void {
+	public pushContent(mark: Mark): void {
+		if (isNoopMark(mark) && mark.changes === undefined && !isTombstone(mark)) {
+			this.pushOffset(mark.count);
+			return;
+		}
 		if (this.offset > 0) {
-			this.list.push(this.offset);
+			this.list.push({ count: this.offset });
 			this.offset = 0;
 		}
 		const prev = this.list[this.list.length - 1];
-		if (isObjMark(prev) && prev.type === mark.type) {
-			if (tryExtendMark(prev, mark, this.revision, this.moveEffects, this.recordMerges)) {
+		if (prev !== undefined && prev.type === mark.type) {
+			const merged = tryMergeMarks(prev, mark);
+			if (merged !== undefined) {
+				this.list.splice(this.list.length - 1, 1, merged);
 				return;
 			}
 		}

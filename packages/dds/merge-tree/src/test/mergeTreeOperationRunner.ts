@@ -7,14 +7,18 @@
 
 import { strict as assert } from "assert";
 import * as fs from "fs";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { IRandom } from "@fluid-internal/stochastic-test-utils";
-import { IMergeTreeOp, MergeTreeDeltaType, ReferenceType } from "../ops";
-import { TextSegment } from "../textSegment";
-import { ISegment, SegmentGroup, toRemovalInfo } from "../mergeTreeNodes";
-import { walkAllChildSegments } from "../mergeTreeNodeWalk";
-import { TestClient } from "./testClient";
-import { TestClientLogger } from "./testClientLogger";
+
+import { IRandom } from "@fluid-private/stochastic-test-utils";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+
+import { walkAllChildSegments } from "../mergeTreeNodeWalk.js";
+import { ISegment, SegmentGroup, toRemovalInfo } from "../mergeTreeNodes.js";
+import { IMergeTreeOp, MergeTreeDeltaType, ReferenceType } from "../ops.js";
+import { TextSegment } from "../textSegment.js";
+
+import { _dirname } from "./dirname.cjs";
+import { TestClient } from "./testClient.js";
+import { TestClientLogger } from "./testClientLogger.js";
 
 export type TestOperation = (
 	client: TestClient,
@@ -23,11 +27,23 @@ export type TestOperation = (
 	random: IRandom,
 ) => IMergeTreeOp | undefined;
 
-export const removeRange: TestOperation = (client: TestClient, opStart: number, opEnd: number) =>
-	client.removeRangeLocal(opStart, opEnd);
+export const removeRange: TestOperation = (
+	client: TestClient,
+	opStart: number,
+	opEnd: number,
+) => client.removeRangeLocal(opStart, opEnd);
 
-export const annotateRange: TestOperation = (client: TestClient, opStart: number, opEnd: number) =>
-	client.annotateRangeLocal(opStart, opEnd, { client: client.longClientId }, undefined);
+export const obliterateRange: TestOperation = (
+	client: TestClient,
+	opStart: number,
+	opEnd: number,
+) => client.obliterateRangeLocal(opStart, opEnd);
+
+export const annotateRange: TestOperation = (
+	client: TestClient,
+	opStart: number,
+	opEnd: number,
+) => client.annotateRangeLocal(opStart, opEnd, { client: client.longClientId });
 
 export const insertAtRefPos: TestOperation = (
 	client: TestClient,
@@ -60,7 +76,7 @@ export const insertAtRefPos: TestOperation = (
 						ReferenceType.Simple,
 						ReferenceType.SlideOnRemove,
 						ReferenceType.Transient,
-				  ]),
+					]),
 			undefined,
 		);
 
@@ -89,11 +105,15 @@ export interface IConfigRange {
 
 export function doOverRange(
 	range: IConfigRange,
-	growthFunc: (input: number) => number,
+	defaultGrowthFunc: (input: number) => number,
 	doAction: (current: number) => void,
 ) {
 	let lastCurrent = Number.NaN;
-	for (let current = range.min; current <= range.max; current = growthFunc(current)) {
+	for (
+		let current = range.min;
+		current <= range.max;
+		current = (range.growthFunc ?? defaultGrowthFunc)(current)
+	) {
 		// let growth funcs be simple
 		// especially around 0 and 1
 		// if the value didn't change,
@@ -101,8 +121,10 @@ export function doOverRange(
 		if (current === lastCurrent) {
 			current++;
 		}
-		lastCurrent = current;
-		doAction(current);
+		if (current <= range.max) {
+			lastCurrent = current;
+			doAction(current);
+		}
 	}
 }
 
@@ -136,7 +158,9 @@ function isConfigRange(t: any): t is IConfigRange {
 
 type ReplaceRangeWith<T, TReplace> = T extends { min: number; max: number } ? TReplace : never;
 
-type RangePropertyNames<T> = { [K in keyof T]-?: T[K] extends IConfigRange ? K : never }[keyof T];
+type RangePropertyNames<T> = {
+	[K in keyof T]-?: T[K] extends IConfigRange ? K : never;
+}[keyof T];
 
 type PickFromRanges<T> = {
 	[K in RangePropertyNames<T>]: ReplaceRangeWith<T[K], number>;
@@ -162,7 +186,7 @@ export function doOverRanges<T extends ProvidesGrowthFunc>(
 		if (selections.length === rangeEntries.length) {
 			const selectionsObj = {};
 			for (const [key, value] of selections) {
-				selections[key] = value;
+				selectionsObj[key] = value;
 			}
 			const description = selections.map(([key, value]) => `${key}:${value}`).join("_");
 			doAction(selectionsObj as PickFromRanges<T>, description);
@@ -195,7 +219,7 @@ export interface ReplayGroup {
 	seq: number;
 }
 
-export const replayResultsPath = `${__dirname}/../../src/test/results`;
+export const replayResultsPath = `${_dirname}/../../src/test/results`;
 
 export function runMergeTreeOperationRunner(
 	random: IRandom,

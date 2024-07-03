@@ -3,9 +3,11 @@
  * Licensed under the MIT License.
  */
 
+// eslint-disable-next-line unicorn/prefer-node-protocol
 import { strict as assert } from "assert";
-import { IOdspSnapshot } from "../contracts";
-import { convertOdspSnapshotToSnapshotTreeAndBlobs } from "../odspSnapshotParser";
+
+import { IOdspSnapshot } from "../contracts.js";
+import { convertOdspSnapshotToSnapshotTreeAndBlobs } from "../odspSnapshotParser.js";
 
 const snapshotTree: IOdspSnapshot = {
 	id: "bBzkVAgAHAAAA",
@@ -73,7 +75,6 @@ const snapshotTree: IOdspSnapshot = {
 				minimumSequenceNumber: 136505,
 				referenceSequenceNumber: 136505,
 				sequenceNumber: 2,
-				term: 1,
 				timestamp: 1657840275913,
 				type: "op",
 			},
@@ -87,7 +88,6 @@ const snapshotTree: IOdspSnapshot = {
 				minimumSequenceNumber: 136505,
 				referenceSequenceNumber: -1,
 				sequenceNumber: 3,
-				term: 1,
 				timestamp: 1657840275922,
 				type: "join",
 			},
@@ -102,13 +102,17 @@ describe("JSON Snapshot Format Conversion Tests", () => {
 		assert(result.latestSequenceNumber === 3, "Latest sequence number should match");
 		assert((result.snapshotTree.id = snapshotTree.id), "Snapshot id should match");
 		assert(result.ops.length === 2, "2 ops should be there");
-		assert(result.blobs.size === 2, "2 blobs should be there");
+		assert(result.blobContents.size === 2, "2 blobs should be there");
 		assert(Object.keys(result.snapshotTree.trees).length === 2, "2 trees should be there");
 		const shouldBeEmptyTree =
 			result.snapshotTree.trees[".app"]?.trees[".channels"]?.trees[
 				"23c54bd8-ef53-42fa-a898-413de4c6f0f2"
 			]?.trees["d65a4af3-0bf8-4052-8442-a898651ad9b8"];
-		const emptyTree = { blobs: {}, trees: {}, unreferenced: undefined };
-		assert.deepStrictEqual(shouldBeEmptyTree, emptyTree, "Tree should have no blobs and trees");
+		const emptyTree = { blobs: {}, trees: {}, unreferenced: undefined, groupId: undefined };
+		assert.deepStrictEqual(
+			shouldBeEmptyTree,
+			emptyTree,
+			"Tree should have no blobs and trees",
+		);
 	});
 });

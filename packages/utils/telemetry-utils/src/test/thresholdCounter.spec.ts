@@ -3,32 +3,34 @@
  * Licensed under the MIT License.
  */
 
-import assert from "assert";
-import {
-	ITelemetryBaseEvent,
-	ITelemetryErrorEvent,
-	ITelemetryPerformanceEvent,
-	ITelemetryGenericEvent,
-	ITelemetryLogger,
-} from "@fluidframework/common-definitions";
-import { ThresholdCounter } from "../thresholdCounter";
+import assert from "node:assert";
 
-class FakeTelemetryLogger implements ITelemetryLogger {
-	public events: ITelemetryGenericEvent[] = [];
+import type { ITelemetryBaseEvent } from "@fluidframework/core-interfaces";
+
+import type {
+	ITelemetryErrorEventExt,
+	ITelemetryGenericEventExt,
+	ITelemetryLoggerExt,
+	ITelemetryPerformanceEventExt,
+} from "../telemetryTypes.js";
+import { ThresholdCounter } from "../thresholdCounter.js";
+
+class FakeTelemetryLogger implements ITelemetryLoggerExt {
+	public events: ITelemetryGenericEventExt[] = [];
 
 	public send(_event: ITelemetryBaseEvent): void {
 		assert.fail("Should not be called");
 	}
 
-	public sendTelemetryEvent(_event: ITelemetryGenericEvent, _error?: any) {
+	public sendTelemetryEvent(_event: ITelemetryGenericEventExt, _error?: unknown): void {
 		assert.fail("Should not be called");
 	}
 
-	public sendErrorEvent(_event: ITelemetryErrorEvent, _error?: any) {
+	public sendErrorEvent(_event: ITelemetryErrorEventExt, _error?: unknown): void {
 		assert.fail("Should not be called");
 	}
 
-	public sendPerformanceEvent(event: ITelemetryPerformanceEvent, _error?: any): void {
+	public sendPerformanceEvent(event: ITelemetryPerformanceEventExt, _error?: unknown): void {
 		this.events.push(event);
 	}
 }

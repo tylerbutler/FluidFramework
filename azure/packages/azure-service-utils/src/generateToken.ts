@@ -2,10 +2,11 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
+import type { IUser } from "@fluidframework/driver-definitions";
+import type { ITokenClaims, ScopeType } from "@fluidframework/driver-definitions/internal";
 import { KJUR as jsrsasign } from "jsrsasign";
 import { v4 as uuid } from "uuid";
-
-import type { ITokenClaims, IUser, ScopeType } from "@fluidframework/protocol-definitions";
 
 /**
  * IMPORTANT: This function is duplicated in ./packages/runtime/test-runtime-utils/src/generateToken.ts. There is no
@@ -47,6 +48,9 @@ import type { ITokenClaims, IUser, ScopeType } from "@fluidframework/protocol-de
  * Default: 3600 (1 hour).
  * @param ver - See {@link @fluidframework/protocol-definitions#ITokenClaims.ver}.
  * Default: `1.0`.
+ *
+ * @legacy
+ * @alpha
  */
 export function generateToken(
 	tenantId: string,
@@ -55,26 +59,26 @@ export function generateToken(
 	documentId?: string,
 	user?: IUser,
 	lifetime: number = 60 * 60,
+	// Naming intended to match `ITokenClaims.ver`
+	// eslint-disable-next-line unicorn/prevent-abbreviations
 	ver: string = "1.0",
 ): string {
-	let userClaim = user ? user : generateUser();
+	let userClaim = user ?? generateUser();
 	if (userClaim.id === "" || userClaim.id === undefined) {
 		userClaim = generateUser();
 	}
 
 	// Current time in seconds
 	const now = Math.round(Date.now() / 1000);
-	const docId = documentId ?? "";
 
 	const claims: ITokenClaims & { jti: string } = {
-		documentId: docId,
+		documentId: documentId ?? "",
 		scopes,
 		tenantId,
 		user: userClaim,
 		iat: now,
 		exp: now + lifetime,
 		ver,
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 		jti: uuid(),
 	};
 
@@ -96,9 +100,7 @@ export function generateToken(
  */
 export function generateUser(): IUser {
 	const randomUser = {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 		id: uuid(),
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 		name: uuid(),
 	};
 

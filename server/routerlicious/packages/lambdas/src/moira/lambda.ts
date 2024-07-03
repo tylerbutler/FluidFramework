@@ -18,8 +18,11 @@ import {
 	Lumberjack,
 } from "@fluidframework/server-services-telemetry";
 import shajs from "sha.js";
-import Axios from "axios";
+import axios from "axios";
 
+/**
+ * @internal
+ */
 export class MoiraLambda implements IPartitionLambda {
 	private pending = new Map<string, ISequencedOperationMessage[]>();
 	private pendingOffset: IQueuedMessage | undefined;
@@ -32,7 +35,10 @@ export class MoiraLambda implements IPartitionLambda {
 		private readonly documentId: string,
 	) {}
 
-	public handler(message: IQueuedMessage) {
+	/**
+	 * {@inheritDoc IPartitionLambda.handler}
+	 */
+	public handler(message: IQueuedMessage): undefined {
 		const boxcar = extractBoxcar(message);
 
 		for (const baseMessage of boxcar.contents) {
@@ -60,12 +66,12 @@ export class MoiraLambda implements IPartitionLambda {
 		return undefined;
 	}
 
-	public close() {
+	public close(): void {
 		this.pending.clear();
 		this.current.clear();
 	}
 
-	private sendPending() {
+	private sendPending(): void {
 		// If there is work currently being sent or we have no pending work return early
 		if (this.current.size > 0 || this.pending.size === 0) {
 			return;
@@ -85,32 +91,33 @@ export class MoiraLambda implements IPartitionLambda {
 			allProcessed.push(processP);
 		}
 
-		Promise.all(allProcessed).then(
-			() => {
+		Promise.all(allProcessed)
+			.then(() => {
 				this.current.clear();
 				this.context.checkpoint(batchOffset as IQueuedMessage);
 				this.sendPending();
-			},
-			(error) => {
+			})
+			.catch((error) => {
 				this.context.error(error, { restart: true });
-			},
-		);
+			});
 	}
 
-	private createDerivedGuid(referenceGuid: string, identifier: string) {
+	private createDerivedGuid(referenceGuid: string, identifier: string): string {
 		const hexHash = shajs("sha1").update(`${referenceGuid}:${identifier}`).digest("hex");
 		return (
-			`${hexHash.substr(0, 8)}-${hexHash.substr(8, 4)}-` +
-			`${hexHash.substr(12, 4)}-${hexHash.substr(16, 4)}-${hexHash.substr(20, 12)}`
+			`${hexHash.slice(0, 8)}-${hexHash.slice(8, 12)}-` +
+			`${hexHash.slice(12, 16)}-${hexHash.slice(16, 20)}-${hexHash.slice(20, 32)}`
 		);
 	}
 
-	private async processMoiraCoreParallel(messages: ISequencedOperationMessage[]) {
+	private async processMoiraCoreParallel(
+		messages: ISequencedOperationMessage[],
+	): Promise<void[]> {
 		const processedMessages: Map<string, Promise<void>> = new Map();
 
 		for (const message of messages) {
 			if (message?.operation?.type === "op") {
-				const contents = JSON.parse(message.operation.contents);
+				const contents = JSON.parse(message.operation.contents as string);
 				const opData = contents.contents?.contents?.content?.contents;
 				if (opData && opData.op === 0 && opData.changeSet !== undefined) {
 					// At this point is checked to be submitted to Moira
@@ -163,7 +170,7 @@ export class MoiraLambda implements IPartitionLambda {
 
 	private async createBranch(branchGuid: string): Promise<string> {
 		const rootCommitGuid = this.createDerivedGuid(branchGuid, "root");
-		const branchCreationResponse = await Axios.post(
+		const branchCreationResponse = await axios.post(
 			`${this.serviceConfiguration.moira.endpoint}/branch`,
 			{
 				guid: branchGuid,
@@ -200,7 +207,7 @@ export class MoiraLambda implements IPartitionLambda {
 		branchGuid: string,
 		opData: any,
 		message: ISequencedOperationMessage,
-	) {
+	): Promise<void> {
 		try {
 			const commitData = {
 				guid: commitGuid,
@@ -213,7 +220,7 @@ export class MoiraLambda implements IPartitionLambda {
 					minimumSequenceNumber: message.operation.minimumSequenceNumber,
 				},
 			};
-			const commitCreationResponse = await Axios.post(
+			const commitCreationResponse = await axios.post(
 				`${this.serviceConfiguration.moira.endpoint}/branch/${branchGuid}/commit`,
 				{
 					...commitData,
@@ -240,14 +247,14 @@ export class MoiraLambda implements IPartitionLambda {
 					Lumberjack.error(logMessage, lumberProperties);
 				}
 			}
-		} catch (e: any) {
-			const logMessage = `Commit failed. ${e.message}`;
+		} catch (error: any) {
+			const logMessage = `Commit failed. ${error.message}`;
 			this.context.log?.error(logMessage);
 			if (this.serviceConfiguration.enableLumberjack) {
 				Lumberjack.error(
 					logMessage,
 					getLumberBaseProperties(this.documentId, this.tenantId),
-					e,
+					error,
 				);
 			}
 		}

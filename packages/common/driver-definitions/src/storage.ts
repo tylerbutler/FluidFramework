@@ -3,13 +3,16 @@
  * Licensed under the MIT License.
  */
 
-import {
+import type {
 	IDisposable,
-	IEventProvider,
 	IErrorEvent,
+	IEvent,
+	IEventProvider,
 	ITelemetryBaseLogger,
-} from "@fluidframework/common-definitions";
-import {
+} from "@fluidframework/core-interfaces";
+
+import type { IAnyDriverError } from "./driverError.js";
+import type {
 	ConnectionMode,
 	IClient,
 	IClientConfiguration,
@@ -24,10 +27,12 @@ import {
 	ISummaryTree,
 	ITokenClaims,
 	IVersion,
-} from "@fluidframework/protocol-definitions";
-import { IAnyDriverError } from "./driverError";
-import { IResolvedUrl } from "./urlResolver";
+} from "./protocol/index.js";
+import type { IResolvedUrl } from "./urlResolver.js";
 
+/**
+ * @internal
+ */
 export interface IDeltasFetchResult {
 	/**
 	 * Sequential set of messages starting from 'from' sequence number.
@@ -45,6 +50,7 @@ export interface IDeltasFetchResult {
 
 /**
  * Interface to provide access to stored deltas for a shared object
+ * @internal
  */
 export interface IDeltaStorageService {
 	/**
@@ -53,9 +59,9 @@ export interface IDeltaStorageService {
 	 * @param id - document id.
 	 * @param from - first op to retrieve (inclusive)
 	 * @param to - first op not to retrieve (exclusive end)
-	 * @param fetchReason - Reason for fetching the messages. Example, gap between seq number
-	 * of Op on wire and known seq number. It should not contain any PII. It can be logged by
-	 * spo which could help in debugging sessions if any issue occurs.
+	 * @param fetchReason - Reason for fetching the messages, for logging.
+	 * Example, gap between seq number of Op on wire and known seq number.
+	 * It can be logged by spo which could help in debugging sessions if any issue occurs.
 	 */
 	get(
 		tenantId: string,
@@ -66,10 +72,16 @@ export interface IDeltaStorageService {
 	): Promise<IDeltasFetchResult>;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export type IStreamResult<T> = { done: true } | { done: false; value: T };
 
 /**
  * Read interface for the Queue
+ * @legacy
+ * @alpha
  */
 export interface IStream<T> {
 	read(): Promise<IStreamResult<T>>;
@@ -77,6 +89,8 @@ export interface IStream<T> {
 
 /**
  * Interface to provide access to stored deltas for a shared object
+ * @legacy
+ * @alpha
  */
 export interface IDocumentDeltaStorageService {
 	/**
@@ -85,9 +99,9 @@ export interface IDocumentDeltaStorageService {
 	 * @param to - first op not to retrieve (exclusive end)
 	 * @param abortSignal - signal that aborts operation
 	 * @param cachedOnly - return only cached ops, i.e. ops available locally on client.
-	 * @param fetchReason - Reason for fetching the messages. Example, gap between seq number
-	 * of Op on wire and known seq number. It should not contain any PII. It can be logged by
-	 * spo which could help in debugging sessions if any issue occurs.
+	 * @param fetchReason - Reason for fetching the messages, for logging.
+	 * Example, gap between seq number of Op on wire and known seq number.
+	 * It can be logged by spo which could help in debugging sessions if any issue occurs.
 	 */
 	fetchMessages(
 		from: number,
@@ -102,23 +116,23 @@ export interface IDocumentDeltaStorageService {
 // If a driver started using a larger value,
 // internal assumptions of the Runtime's GC feature will be violated
 // DO NOT INCREASE THIS TYPE'S VALUE
+/**
+ * @legacy
+ * @alpha
+ */
 export type FiveDaysMs = 432_000_000; /* 5 days in milliseconds */
 
 /**
  * Policies describing attributes or characteristics of the driver's storage service,
  * to direct how other components interact with the driver
+ * @legacy
+ * @alpha
  */
 export interface IDocumentStorageServicePolicies {
 	/**
 	 * Should the Loader implement any sort of pre-fetching or caching mechanism?
 	 */
 	readonly caching?: LoaderCachingPolicy;
-
-	/**
-	 * If this policy is provided, it tells runtime on ideal size for blobs.
-	 * Blobs that are smaller than that size should be aggregated into bigger blobs.
-	 */
-	readonly minBlobSize?: number;
 
 	/**
 	 * IMPORTANT: This policy MUST be set to 5 days and PROPERLY ENFORCED for drivers that are used
@@ -133,10 +147,10 @@ export interface IDocumentStorageServicePolicies {
 
 /**
  * Interface to provide access to snapshots saved for a shared object
+ * @legacy
+ * @alpha
  */
 export interface IDocumentStorageService extends Partial<IDisposable> {
-	repositoryUrl: string;
-
 	/**
 	 * Policies implemented/instructed by driver.
 	 */
@@ -151,6 +165,14 @@ export interface IDocumentStorageService extends Partial<IDisposable> {
 	// TODO: use `undefined` instead.
 	// eslint-disable-next-line @rushstack/no-new-null
 	getSnapshotTree(version?: IVersion, scenarioName?: string): Promise<ISnapshotTree | null>;
+
+	/**
+	 * Returns the snapshot which can contain other artifacts too like blob contents, ops etc. It is different from
+	 * `getSnapshotTree` api in that, that API only returns the snapshot tree from the snapshot.
+	 * @param snapshotFetchOptions - Options specified by the caller to specify and want certain behavior from the
+	 * driver when fetching the snapshot.
+	 */
+	getSnapshot?(snapshotFetchOptions?: ISnapshotFetchOptions): Promise<ISnapshot>;
 
 	/**
 	 * Retrieves all versions of the document starting at the specified versionId - or null if from the head
@@ -197,17 +219,38 @@ export interface IDocumentStorageService extends Partial<IDisposable> {
 	downloadSummary(handle: ISummaryHandle): Promise<ISummaryTree>;
 }
 
+/**
+ * Events emitted by {@link IDocumentService}.
+ * @legacy
+ * @alpha
+ */
+export interface IDocumentServiceEvents extends IEvent {
+	/**
+	 * This event is used to communicate any metadata related to the container. We might have received metadata from the service.
+	 * Read more info on this event from here `IContainer.containerMetadata`.
+	 */
+	(event: "metadataUpdate", listener: (metadata: Record<string, string>) => void);
+}
+
+/**
+ * @legacy
+ * @alpha
+ */
 export interface IDocumentDeltaConnectionEvents extends IErrorEvent {
 	(event: "nack", listener: (documentId: string, message: INack[]) => void);
 	(event: "disconnect", listener: (reason: IAnyDriverError) => void);
 	(event: "op", listener: (documentId: string, messages: ISequencedDocumentMessage[]) => void);
-	(event: "signal", listener: (message: ISignalMessage) => void);
+	(event: "signal", listener: (message: ISignalMessage | ISignalMessage[]) => void);
 	(event: "pong", listener: (latency: number) => void);
 	// TODO: Use something other than `any`.
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	(event: "error", listener: (error: any) => void);
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface IDocumentDeltaConnection
 	extends IDisposable,
 		IEventProvider<IDocumentDeltaConnectionEvents> {
@@ -279,13 +322,18 @@ export interface IDocumentDeltaConnection
 	submit(messages: IDocumentMessage[]): void;
 
 	/**
-	 * Submit a new signal to the server
+	 * Submits a new signal to the server
+	 *
+	 * @privateRemarks
+	 * UnknownShouldBe<string> can be string if {@link IDocumentServiceFactory} becomes internal.
 	 */
-	// TODO: Use something other than `any`.
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	submitSignal(message: any): void;
+	submitSignal: (content: string, targetClientId?: string) => void;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export enum LoaderCachingPolicy {
 	/**
 	 * The loader should not implement any prefetching or caching policy.
@@ -298,6 +346,10 @@ export enum LoaderCachingPolicy {
 	Prefetch,
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface IDocumentServicePolicies {
 	/**
 	 * Do not connect to delta stream
@@ -308,9 +360,20 @@ export interface IDocumentServicePolicies {
 	 * Summarizer uploads the protocol tree too when summarizing.
 	 */
 	readonly summarizeProtocolTree?: boolean;
+
+	/**
+	 * Whether the driver supports the new getSnapshot api which returns snapshot which
+	 * contains all contents along with the snapshot tree. Enable this by default when the
+	 * driver can fully support the api.
+	 */
+	readonly supportGetSnapshotApi?: boolean;
 }
 
-export interface IDocumentService {
+/**
+ * @legacy
+ * @alpha
+ */
+export interface IDocumentService extends IEventProvider<IDocumentServiceEvents> {
 	resolvedUrl: IResolvedUrl;
 
 	/**
@@ -348,6 +411,10 @@ export interface IDocumentService {
 	dispose(error?: any): void;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface IDocumentServiceFactory {
 	/**
 	 * Creates the document service after extracting different endpoints URLs from a resolved URL.
@@ -388,6 +455,8 @@ export interface IDocumentServiceFactory {
 /**
  * Context for uploading a summary to storage.
  * Indicates the previously acked summary.
+ * @legacy
+ * @alpha
  */
 export interface ISummaryContext {
 	/**
@@ -403,7 +472,73 @@ export interface ISummaryContext {
 	readonly referenceSequenceNumber: number;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export enum FetchSource {
 	default = "default",
 	noCache = "noCache",
+}
+
+/**
+ * A "Full" container Snapshot, including ISnapshotTree, blobs and outstanding ops (and other metadata)
+ *
+ * @legacy
+ * @alpha
+ */
+export interface ISnapshot {
+	snapshotTree: ISnapshotTree;
+	blobContents: Map<string, ArrayBuffer>;
+	ops: ISequencedDocumentMessage[];
+
+	/**
+	 * Sequence number of the snapshot
+	 */
+	sequenceNumber: number | undefined;
+
+	/**
+	 * Sequence number for the latest op/snapshot for the file in ODSP
+	 */
+	latestSequenceNumber: number | undefined;
+
+	snapshotFormatV: 1;
+}
+
+/**
+ * Snapshot fetch options which are used to communicate different things to the driver
+ * when fetching the snapshot.
+ * @legacy
+ * @alpha
+ */
+export interface ISnapshotFetchOptions {
+	/**
+	 * Indicates scenario in which the snapshot is fetched. It is a free form string  mostly
+	 * used for telemetry purposes.
+	 */
+	scenarioName?: string;
+	/**
+	 * Tell driver to cache the fetched snapshot. Driver is supposed to cache the fetched snapshot if this is
+	 * set to true. If undefined, then it is upto the driver, to cache it or not.
+	 */
+	cacheSnapshot?: boolean;
+
+	/**
+	 * Version of the snapshot to be fetched. Certain storage services just keep 1 snapshot for the
+	 * container, so specifying version is not necessary for storage services.
+	 */
+	versionId?: string;
+
+	/**
+	 * List of loading groupId of datastores for which the snapshot needs to be fetched. If not provided, content with
+	 * default/missing groupIDs will be requested from the service. It is upto the service, to include snapshot for
+	 * content with groupIds or not. Don't provide anything here for fetching content for initial container boot.
+	 */
+	loadingGroupIds?: string[];
+
+	/**
+	 * Specify if you want default behavior of the driver to fetch the snapshot like lets say simultaneously fetch from
+	 * network and cache or specify FetchSource.noCache to just fetch from network.
+	 */
+	fetchSource?: FetchSource;
 }

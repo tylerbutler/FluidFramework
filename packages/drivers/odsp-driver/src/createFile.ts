@@ -3,47 +3,46 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/common-utils";
-import { NonRetryableError } from "@fluidframework/driver-utils";
-import { ISummaryTree } from "@fluidframework/protocol-definitions";
-import { ITelemetryLogger } from "@fluidframework/common-definitions";
-import { PerformanceEvent } from "@fluidframework/telemetry-utils";
+import { assert } from "@fluidframework/core-utils/internal";
+import { ISummaryTree } from "@fluidframework/driver-definitions";
+import { ISnapshot } from "@fluidframework/driver-definitions/internal";
+import { NonRetryableError } from "@fluidframework/driver-utils/internal";
 import {
-	InstrumentedStorageTokenFetcher,
-	IOdspResolvedUrl,
-	OdspErrorType,
-	ShareLinkInfoType,
-	ISharingLinkKind,
-	ShareLinkTypes,
 	IFileEntry,
-} from "@fluidframework/odsp-driver-definitions";
-import { DriverErrorType } from "@fluidframework/driver-definitions";
-import { ICreateFileResponse } from "./contracts";
-import { getUrlAndHeadersWithAuth } from "./getUrlAndHeadersWithAuth";
+	IOdspResolvedUrl,
+	InstrumentedStorageTokenFetcher,
+	OdspErrorTypes,
+	ShareLinkInfoType,
+} from "@fluidframework/odsp-driver-definitions/internal";
 import {
-	buildOdspShareLinkReqParams,
-	createCacheSnapshotKey,
-	getWithRetryForTokenRefresh,
-	INewFileInfo,
-	getOrigin,
-} from "./odspUtils";
-import { ISnapshotContents } from "./odspPublicUtils";
-import { createOdspUrl } from "./createOdspUrl";
-import { getApiRoot } from "./odspUrlHelper";
-import { EpochTracker } from "./epochTracker";
-import { OdspDriverUrlResolver } from "./odspDriverUrlResolver";
+	ITelemetryLoggerExt,
+	PerformanceEvent,
+} from "@fluidframework/telemetry-utils/internal";
+
+import { ICreateFileResponse } from "./contracts.js";
+import { ClpCompliantAppHeader } from "./contractsPublic.js";
 import {
 	convertCreateNewSummaryTreeToTreeAndBlobs,
 	convertSummaryIntoContainerSnapshot,
 	createNewFluidContainerCore,
-} from "./createNewUtils";
-import { runWithRetry } from "./retryUtils";
-import { pkgVersion as driverVersion } from "./packageVersion";
-import { ClpCompliantAppHeader } from "./contractsPublic";
+} from "./createNewUtils.js";
+import { createOdspUrl } from "./createOdspUrl.js";
+import { EpochTracker } from "./epochTracker.js";
+import { getHeadersWithAuth } from "./getUrlAndHeadersWithAuth.js";
+import { OdspDriverUrlResolver } from "./odspDriverUrlResolver.js";
+import { getApiRoot } from "./odspUrlHelper.js";
+import {
+	INewFileInfo,
+	buildOdspShareLinkReqParams,
+	createCacheSnapshotKey,
+	getWithRetryForTokenRefresh,
+} from "./odspUtils.js";
+import { pkgVersion as driverVersion } from "./packageVersion.js";
+import { runWithRetry } from "./retryUtils.js";
 
 const isInvalidFileName = (fileName: string): boolean => {
 	const invalidCharsRegex = /["*/:<>?\\|]+/g;
-	return !!fileName.match(invalidCharsRegex);
+	return invalidCharsRegex.test(fileName);
 };
 
 /**
@@ -51,9 +50,9 @@ const isInvalidFileName = (fileName: string): boolean => {
  * Returns resolved url
  */
 export async function createNewFluidFile(
-	getStorageToken: InstrumentedStorageTokenFetcher,
+	getAuthHeader: InstrumentedStorageTokenFetcher,
 	newFileInfo: INewFileInfo,
-	logger: ITelemetryLogger,
+	logger: ITelemetryLoggerExt,
 	createNewSummary: ISummaryTree | undefined,
 	epochTracker: EpochTracker,
 	fileEntry: IFileEntry,
@@ -61,14 +60,13 @@ export async function createNewFluidFile(
 	forceAccessTokenViaAuthorizationHeader: boolean,
 	isClpCompliantApp?: boolean,
 	enableSingleRequestForShareLinkWithCreate?: boolean,
-	enableShareLinkWithCreate?: boolean,
 ): Promise<IOdspResolvedUrl> {
 	// Check for valid filename before the request to create file is actually made.
 	if (isInvalidFileName(newFileInfo.filename)) {
 		throw new NonRetryableError(
 			// pre-0.58 error message: Invalid filename
 			"Invalid filename for createNew",
-			OdspErrorType.invalidFileNameError,
+			OdspErrorTypes.invalidFileNameError,
 			{ driverVersion },
 		);
 	}
@@ -77,16 +75,10 @@ export async function createNewFluidFile(
 	let summaryHandle: string = "";
 	let shareLinkInfo: ShareLinkInfoType | undefined;
 	if (createNewSummary === undefined) {
-		itemId = await createNewEmptyFluidFile(
-			getStorageToken,
-			newFileInfo,
-			logger,
-			epochTracker,
-			forceAccessTokenViaAuthorizationHeader,
-		);
+		itemId = await createNewEmptyFluidFile(getAuthHeader, newFileInfo, logger, epochTracker);
 	} else {
 		const content = await createNewFluidFileFromSummary(
-			getStorageToken,
+			getAuthHeader,
 			newFileInfo,
 			logger,
 			createNewSummary,
@@ -96,12 +88,7 @@ export async function createNewFluidFile(
 		itemId = content.itemId;
 		summaryHandle = content.id;
 
-		shareLinkInfo = extractShareLinkData(
-			newFileInfo.createLinkType,
-			content,
-			enableSingleRequestForShareLinkWithCreate,
-			enableShareLinkWithCreate,
-		);
+		shareLinkInfo = extractShareLinkData(content, enableSingleRequestForShareLinkWithCreate);
 	}
 
 	const odspUrl = createOdspUrl({ ...newFileInfo, itemId, dataStorePath: "/" });
@@ -118,7 +105,7 @@ export async function createNewFluidFile(
 	if (createNewSummary !== undefined && createNewCaching) {
 		assert(summaryHandle !== undefined, 0x203 /* "Summary handle is undefined" */);
 		// converting summary and getting sequence number
-		const snapshot: ISnapshotContents = convertCreateNewSummaryTreeToTreeAndBlobs(
+		const snapshot: ISnapshot = convertCreateNewSummaryTreeToTreeAndBlobs(
 			createNewSummary,
 			summaryHandle,
 		);
@@ -129,9 +116,9 @@ export async function createNewFluidFile(
 }
 
 /**
- * If user requested creation of a sharing link along with the creation of the file by providing either
- * createLinkType (now deprecated) or createLinkScope in the request parameters, extract and save
- * sharing link information from the response if it is available.
+ * If user requested creation of a sharing link along with the creation of the file by providing
+ * createLinkScope in the request parameters then extract and save the sharing link information from
+ * the response if it is available.
  * In case there was an error in creation of the sharing link, error is provided back in the response,
  * and does not impact the creation of file in ODSP.
  * @param requestedSharingLinkKind - Kind of sharing link requested to be created along with the creation of file.
@@ -139,78 +126,62 @@ export async function createNewFluidFile(
  * @returns Sharing link information received in the response from a successful creation of a file.
  */
 function extractShareLinkData(
-	requestedSharingLinkKind: ShareLinkTypes | ISharingLinkKind | undefined,
 	response: ICreateFileResponse,
 	enableSingleRequestForShareLinkWithCreate?: boolean,
-	enableShareLinkWithCreate?: boolean,
 ): ShareLinkInfoType | undefined {
-	if (!requestedSharingLinkKind) {
-		return;
-	}
 	let shareLinkInfo: ShareLinkInfoType | undefined;
 	if (enableSingleRequestForShareLinkWithCreate) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const { sharing } = response;
 		if (!sharing) {
 			return;
 		}
+		/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 		shareLinkInfo = {
 			createLink: {
-				type: requestedSharingLinkKind,
 				link: sharing.sharingLink
 					? {
 							scope: sharing.sharingLink.scope,
 							role: sharing.sharingLink.type,
 							webUrl: sharing.sharingLink.webUrl,
 							...sharing.sharingLink,
-					  }
+						}
 					: undefined,
 				error: sharing.error,
 				shareId: sharing.shareId,
 			},
 		};
-	} else if (enableShareLinkWithCreate) {
-		const { sharing, sharingLink, sharingLinkErrorReason } = response;
-		if (!sharingLink && !sharingLinkErrorReason) {
-			return;
-		}
-		shareLinkInfo = {
-			createLink: {
-				type: requestedSharingLinkKind,
-				link: sharingLink,
-				error: sharingLinkErrorReason,
-				shareId: sharing?.shareId,
-			},
-		};
+		/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 	}
 	return shareLinkInfo;
 }
 
 export async function createNewEmptyFluidFile(
-	getStorageToken: InstrumentedStorageTokenFetcher,
+	getAuthHeader: InstrumentedStorageTokenFetcher,
 	newFileInfo: INewFileInfo,
-	logger: ITelemetryLogger,
+	logger: ITelemetryLoggerExt,
 	epochTracker: EpochTracker,
-	forceAccessTokenViaAuthorizationHeader: boolean,
 ): Promise<string> {
 	const filePath = newFileInfo.filePath ? encodeURIComponent(`/${newFileInfo.filePath}`) : "";
 	// add .tmp extension to empty file (host is expected to rename)
 	const encodedFilename = encodeURIComponent(`${newFileInfo.filename}.tmp`);
-	const initialUrl = `${getApiRoot(getOrigin(newFileInfo.siteUrl))}/drives/${
+	const initialUrl = `${getApiRoot(new URL(newFileInfo.siteUrl))}/drives/${
 		newFileInfo.driveId
 	}/items/root:/${filePath}/${encodedFilename}:/content?@name.conflictBehavior=rename&select=id,name,parentReference`;
 
 	return getWithRetryForTokenRefresh(async (options) => {
-		const storageToken = await getStorageToken(options, "CreateNewFile");
+		const url = initialUrl;
+		const method = "PUT";
+		const authHeader = await getAuthHeader(
+			{ ...options, request: { url, method } },
+			"CreateNewFile",
+		);
 
 		return PerformanceEvent.timedExecAsync(
 			logger,
 			{ eventName: "createNewEmptyFile" },
 			async (event) => {
-				const { url, headers } = getUrlAndHeadersWithAuth(
-					initialUrl,
-					storageToken,
-					forceAccessTokenViaAuthorizationHeader,
-				);
+				const headers = getHeadersWithAuth(authHeader);
 				headers["Content-Type"] = "application/json";
 
 				const fetchResponse = await runWithRetry(
@@ -220,7 +191,7 @@ export async function createNewEmptyFluidFile(
 							{
 								body: undefined,
 								headers,
-								method: "PUT",
+								method,
 							},
 							"createFile",
 						),
@@ -229,16 +200,15 @@ export async function createNewEmptyFluidFile(
 				);
 
 				const content = fetchResponse.content;
-				if (!content || !content.id) {
+				if (!content?.id) {
 					throw new NonRetryableError(
 						// pre-0.58 error message: ODSP CreateFile call returned no item ID
 						"ODSP CreateFile call returned no item ID (for empty file)",
-						DriverErrorType.incorrectServerResponse,
+						OdspErrorTypes.incorrectServerResponse,
 						{ driverVersion },
 					);
 				}
 				event.end({
-					headers: Object.keys(headers).length !== 0 ? true : undefined,
 					...fetchResponse.propsToLog,
 				});
 				return content.id;
@@ -249,9 +219,9 @@ export async function createNewEmptyFluidFile(
 }
 
 export async function createNewFluidFileFromSummary(
-	getStorageToken: InstrumentedStorageTokenFetcher,
+	getAuthHeader: InstrumentedStorageTokenFetcher,
 	newFileInfo: INewFileInfo,
-	logger: ITelemetryLogger,
+	logger: ITelemetryLoggerExt,
 	createNewSummary: ISummaryTree,
 	epochTracker: EpochTracker,
 	forceAccessTokenViaAuthorizationHeader: boolean,
@@ -259,7 +229,7 @@ export async function createNewFluidFileFromSummary(
 	const filePath = newFileInfo.filePath ? encodeURIComponent(`/${newFileInfo.filePath}`) : "";
 	const encodedFilename = encodeURIComponent(newFileInfo.filename);
 	const baseUrl =
-		`${getApiRoot(getOrigin(newFileInfo.siteUrl))}/drives/${newFileInfo.driveId}/items/root:` +
+		`${getApiRoot(new URL(newFileInfo.siteUrl))}/drives/${newFileInfo.driveId}/items/root:` +
 		`${filePath}/${encodedFilename}`;
 
 	const containerSnapshot = convertSummaryIntoContainerSnapshot(createNewSummary);
@@ -273,7 +243,7 @@ export async function createNewFluidFileFromSummary(
 
 	return createNewFluidContainerCore<ICreateFileResponse>({
 		containerSnapshot,
-		getStorageToken,
+		getAuthHeader,
 		logger,
 		initialUrl,
 		forceAccessTokenViaAuthorizationHeader,
@@ -281,10 +251,10 @@ export async function createNewFluidFileFromSummary(
 		telemetryName: "CreateNewFile",
 		fetchType: "createFile",
 		validateResponseCallback: (content) => {
-			if (!content || !content.itemId) {
+			if (!content?.itemId) {
 				throw new NonRetryableError(
 					"ODSP CreateFile call returned no item ID",
-					DriverErrorType.incorrectServerResponse,
+					OdspErrorTypes.incorrectServerResponse,
 					{ driverVersion },
 				);
 			}

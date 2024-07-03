@@ -2,13 +2,15 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { WithStyles } from "@material-ui/core";
+
+import type { WithStyles } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import { withStyles } from "@material-ui/core/styles";
 import * as React from "react";
-import { ErrorPopup } from "./ErrorPopup";
-import { IDeleteModalTextParameters } from "./DeleteModalTextParameters";
-import { InspectorModal } from "./InspectorModal";
+
+import type { IDeleteModalTextParameters } from "./DeleteModalTextParameters.js";
+import { ErrorPopup } from "./ErrorPopup.js";
+import { InspectorModal } from "./InspectorModal.js";
 
 const styles = () => ({
 	cancelButton: {
@@ -79,6 +81,7 @@ class DeleteModal extends React.Component<
 
 	public render() {
 		const textParameters = this.props.modalTextParameters;
+		/* eslint-disable @typescript-eslint/no-misused-promises */
 		return (
 			<InspectorModal title={textParameters.modalHeader}>
 				<div className={this.props.classes!.contentContainer}>
@@ -114,6 +117,7 @@ class DeleteModal extends React.Component<
 				</div>
 			</InspectorModal>
 		);
+		/* eslint-enable @typescript-eslint/no-misused-promises */
 	}
 
 	private readonly deleteHandler = async () => {

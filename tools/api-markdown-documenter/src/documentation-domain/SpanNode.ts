@@ -2,15 +2,21 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import {
-	DocumentationNode,
+	type DocumentationNode,
 	DocumentationParentNodeBase,
-	SingleLineDocumentationNode,
-} from "./DocumentationNode";
-import { DocumentationNodeType } from "./DocumentationNodeType";
-import { PlainTextNode } from "./PlainTextNode";
-import { TextFormatting } from "./TextFormatting";
-import { createNodesFromPlainText } from "./Utilities";
+	type SingleLineDocumentationNode,
+} from "./DocumentationNode.js";
+import { DocumentationNodeType } from "./DocumentationNodeType.js";
+import { PlainTextNode } from "./PlainTextNode.js";
+import { type TextFormatting } from "./TextFormatting.js";
+import { createNodesFromPlainText } from "./Utilities.js";
+
+// TODO: Rename to "FormattedSpan" - this doesn't really correspond to a "span" in a traditional sense.
+// It just groups child nodes with formatting we want applied to them.
+// It also probably makes sense to not wrap the output in a `<span> tag in HTML, since the formatting tags already
+// group the child content.
 
 /**
  * A grouping of text, potentially spanning multiple lines, which may have some {@link TextFormatting}.
@@ -36,6 +42,8 @@ import { createNodesFromPlainText } from "./Utilities";
  * 	</i>
  * </span>
  * ```
+ *
+ * @public
  */
 export class SpanNode<
 	TDocumentationNode extends DocumentationNode = DocumentationNode,
@@ -53,7 +61,7 @@ export class SpanNode<
 	/**
 	 * Formatting to apply to all {@link DocumentationParentNode.children}.
 	 *
-	 * @defaultValue Inherit
+	 * @defaultValue Inherit formatting from ancestry, if any exists.
 	 */
 	public readonly textFormatting?: TextFormatting;
 
@@ -73,6 +81,8 @@ export class SpanNode<
 
 /**
  * A {@link SpanNode} that contractually fits on a single line.
+ *
+ * @public
  */
 export class SingleLineSpanNode
 	extends SpanNode<SingleLineDocumentationNode>

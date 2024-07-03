@@ -12,6 +12,9 @@ import {
 } from "@fluidframework/protocol-definitions";
 import * as core from "@fluidframework/server-services-core";
 
+/**
+ * @internal
+ */
 export class KafkaOrdererConnection implements core.IOrdererConnection {
 	public static async create(
 		producer: core.IProducer,
@@ -53,27 +56,31 @@ export class KafkaOrdererConnection implements core.IOrdererConnection {
 			detail: this.client,
 		};
 
-        const operation: IDocumentSystemMessage = {
-            clientSequenceNumber: -1,
-            contents: null,
-            data: JSON.stringify(clientDetail),
-            referenceSequenceNumber: -1,
-            traces: this.serviceConfiguration.enableTraces && clientJoinMessageServerMetadata?.connectDocumentStartTime
-            ? [ {
-                    action: "ConnectDocumentStart",
-                    service: "alfred",
-                    timestamp: clientJoinMessageServerMetadata.connectDocumentStartTime,
-                },
-                {
-                    action: "JoinRawOpStart",
-                    service: "alfred",
-                    timestamp: Date.now(),
-                }
-            ]
-            : undefined,
-            type: MessageType.ClientJoin,
-            serverMetadata: clientJoinMessageServerMetadata,
-        };
+		const operation: IDocumentSystemMessage = {
+			clientSequenceNumber: -1,
+			contents: null,
+			data: JSON.stringify(clientDetail),
+			referenceSequenceNumber: -1,
+			traces:
+				this.serviceConfiguration.enableTraces &&
+				// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+				clientJoinMessageServerMetadata?.connectDocumentStartTime
+					? [
+							{
+								action: "ConnectDocumentStart",
+								service: "nexus",
+								timestamp: clientJoinMessageServerMetadata.connectDocumentStartTime,
+							},
+							{
+								action: "JoinRawOpStart",
+								service: "nexus",
+								timestamp: Date.now(),
+							},
+					  ]
+					: undefined,
+			type: MessageType.ClientJoin,
+			serverMetadata: clientJoinMessageServerMetadata,
+		};
 
 		const message: core.IRawOperationMessage = {
 			clientId: null,
@@ -142,12 +149,13 @@ export class KafkaOrdererConnection implements core.IOrdererConnection {
 			// Add trace
 			messages.forEach((message) => {
 				const operation = message.operation;
+				// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
 				if (operation && operation.traces === undefined) {
 					operation.traces = [];
 				} else if (operation?.traces && operation.traces.length > 0) {
 					operation.traces.push({
 						action: "end",
-						service: "alfred",
+						service: "nexus",
 						timestamp: Date.now(),
 					});
 				}
@@ -158,6 +166,9 @@ export class KafkaOrdererConnection implements core.IOrdererConnection {
 	}
 }
 
+/**
+ * @internal
+ */
 export class KafkaOrderer implements core.IOrderer {
 	public static async create(
 		producer: core.IProducer,
@@ -207,6 +218,9 @@ export class KafkaOrderer implements core.IOrderer {
 	}
 }
 
+/**
+ * @internal
+ */
 export class KafkaOrdererFactory {
 	private readonly ordererMap = new Map<string, Promise<core.IOrderer>>();
 
@@ -217,7 +231,7 @@ export class KafkaOrdererFactory {
 	) {}
 
 	public async create(tenantId: string, documentId: string): Promise<core.IOrderer> {
-		const fullId = `${tenantId}/${documentId}`;
+		const fullId = this.getOrdererMapKey(tenantId, documentId);
 
 		let orderer = this.ordererMap.get(fullId);
 		if (orderer === undefined) {
@@ -234,7 +248,17 @@ export class KafkaOrdererFactory {
 		return orderer;
 	}
 
-	public delete(tenantId: string, documentId: string): void {
-		this.ordererMap.delete(`${tenantId}/${documentId}`);
+	public async delete(tenantId: string, documentId: string): Promise<void> {
+		const fullId = this.getOrdererMapKey(tenantId, documentId);
+
+		const orderer = this.ordererMap.get(fullId);
+		if (orderer !== undefined) {
+			this.ordererMap.delete(fullId);
+			await (await orderer).close();
+		}
+	}
+
+	private getOrdererMapKey(tenantId: string, documentId: string) {
+		return `${tenantId}/${documentId}`;
 	}
 }

@@ -9,26 +9,25 @@
  * @packageDocumentation
  */
 
-export { FluidContainer, IFluidContainer, IFluidContainerEvents } from "./fluidContainer";
 export {
-	DOProviderContainerRuntimeFactory,
-	RootDataObject,
-	RootDataObjectProps,
-} from "./rootDataObject";
-export { ServiceAudience } from "./serviceAudience";
-export {
+	createFluidContainer,
+	type IFluidContainer,
+	type IFluidContainerEvents,
+	type InitialObjects,
+} from "./fluidContainer.js";
+export { createDOProviderContainerRuntimeFactory } from "./rootDataObject.js";
+export { createServiceAudience } from "./serviceAudience.js";
+export type {
+	CompatibilityMode,
 	ContainerSchema,
-	DataObjectClass,
+	ContainerAttachProps,
 	IConnection,
 	IMember,
+	IProvideRootDataObject,
 	IRootDataObject,
 	IServiceAudience,
 	IServiceAudienceEvents,
-	LoadableObjectClass,
-	LoadableObjectClassRecord,
-	LoadableObjectCtor,
 	LoadableObjectRecord,
 	MemberChangedListener,
-	SharedObjectClass,
 	Myself,
-} from "./types";
+} from "./types.js";

@@ -2,16 +2,20 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import * as fs from "fs";
 import assert from "assert";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { IMergeTreeOp, MergeTreeDeltaType } from "../ops";
-import { createGroupOp } from "../opBuilder";
-import { TestClient } from "./testClient";
-import { ReplayGroup, replayResultsPath } from "./mergeTreeOperationRunner";
-import { TestClientLogger } from "./testClientLogger";
+import * as fs from "fs";
+
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+
+import { createGroupOp } from "../opBuilder.js";
+import { IMergeTreeOp, MergeTreeDeltaType } from "../ops.js";
+
+import { ReplayGroup, replayResultsPath } from "./mergeTreeOperationRunner.js";
+import { TestClient } from "./testClient.js";
+import { TestClientLogger } from "./testClientLogger.js";
 
 describe("MergeTree.Client", () => {
 	for (const filePath of fs.readdirSync(replayResultsPath)) {
@@ -29,6 +33,7 @@ describe("MergeTree.Client", () => {
 			originalClient.startOrUpdateCollaboration("A");
 			for (const group of file) {
 				for (const msg of group.msgs) {
+					assert(msg.clientId, "expected clientId to be defined");
 					if (!msgClients.has(msg.clientId)) {
 						const client = await TestClient.createFromClientSnapshot(
 							originalClient,
@@ -39,13 +44,11 @@ describe("MergeTree.Client", () => {
 				}
 			}
 			for (const group of file) {
-				const logger = new TestClientLogger(
-					[...msgClients.values()].map((mc) => mc.client),
-				);
+				const logger = new TestClientLogger([...msgClients.values()].map((mc) => mc.client));
 				const initialText = logger.validate();
 				assert.strictEqual(initialText, group.initialText, "Initial text not as expected");
 				for (const msg of group.msgs) {
-					const msgClient = msgClients.get(msg.clientId)!;
+					const msgClient = msgClients.get(msg.clientId!)!;
 					while (
 						msgClient.msgs.length > 0 &&
 						msg.referenceSequenceNumber > msgClient.client.getCurrentSeq()

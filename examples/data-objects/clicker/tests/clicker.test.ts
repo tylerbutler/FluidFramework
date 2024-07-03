@@ -3,8 +3,9 @@
  * Licensed under the MIT License.
  */
 
-import { globals } from "../jest.config";
-import { retryWithEventualValue } from "@fluidframework/test-utils";
+import { retryWithEventualValue } from "@fluidframework/test-utils/internal";
+
+import { globals } from "../jest.config.cjs";
 
 describe("clicker", () => {
 	const getValue = async (index: number, expectedValue: string) =>
@@ -27,11 +28,12 @@ describe("clicker", () => {
 		// Wait for the page to load first before running any tests
 		// so this time isn't attributed to the first test
 		await page.goto(globals.PATH, { waitUntil: "load", timeout: 0 });
+		await page.waitForFunction(() => window["fluidStarted"]);
 	}, 45000);
 
 	beforeEach(async () => {
 		await page.goto(globals.PATH, { waitUntil: "load" });
-		await page.waitFor(() => window["fluidStarted"]);
+		await page.waitForFunction(() => window["fluidStarted"]);
 	});
 
 	it("There's a button to be clicked", async () => {
@@ -49,9 +51,9 @@ describe("clicker", () => {
 		await expect(page).toClick("button", { text: "+" });
 		await page.waitForFunction(
 			() =>
-				(
-					document.querySelector(".clicker-value-class") as HTMLDivElement
-				).innerText.includes("1"),
+				(document.querySelector(".clicker-value-class") as HTMLDivElement).innerText.includes(
+					"1",
+				),
 			{ timeout: 1000 },
 		);
 
@@ -64,7 +66,7 @@ describe("clicker", () => {
 
 	it("Clicking the button after refresh updates both users", async () => {
 		await page.reload({ waitUntil: ["load"] });
-		await page.waitFor(() => window["fluidStarted"]);
+		await page.waitForFunction(() => window["fluidStarted"]);
 
 		// Validate both users have 0 as their value
 		const preValue = await getValue(0, "0");
@@ -76,9 +78,9 @@ describe("clicker", () => {
 		await expect(page).toClick("button", { text: "+" });
 		await page.waitForFunction(
 			() =>
-				(
-					document.querySelector(".clicker-value-class") as HTMLDivElement
-				).innerText.includes("1"),
+				(document.querySelector(".clicker-value-class") as HTMLDivElement).innerText.includes(
+					"1",
+				),
 			{ timeout: 1000 },
 		);
 

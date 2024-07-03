@@ -8,7 +8,7 @@
  *
  * @remarks The following distributed data structures are defined in this library:
  *
- * - {@link SharedMap}
+ * - {@link AttributableMap}
  *
  * @packageDocumentation
  */
@@ -19,6 +19,6 @@ export {
 	ISharedMap,
 	ISharedMapEvents,
 	IValueChanged,
-} from "./interfaces";
-export { LocalValueMaker, ILocalValue } from "./localValues";
-export { MapFactory, SharedMap } from "./map";
+} from "./interfaces.js";
+export { LocalValueMaker, ILocalValue } from "./localValues.js";
+export { AttributableMap } from "./map.js";

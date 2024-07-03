@@ -9,14 +9,26 @@ import {
 	BenchmarkRunningOptionsSync,
 	BenchmarkRunningOptionsAsync,
 	BenchmarkTimingOptions,
+	benchmarkArgumentsIsCustom,
+	BenchmarkTimer,
 } from "./Configuration";
 import { Stats, getArrayStatistics } from "./ReporterUtilities";
-import { Timer, defaultMinTime, timer } from "./timer";
+import { Timer, defaultMinimumTime, timer } from "./timer";
 
-export const defaults: Required<BenchmarkTimingOptions> = {
+/**
+ * @public
+ */
+export enum Phase {
+	WarmUp,
+	AdjustIterationPerBatch,
+	CollectData,
+}
+
+export const defaultTimingOptions: Required<BenchmarkTimingOptions> = {
 	maxBenchmarkDurationSeconds: 5,
 	minBatchCount: 5,
-	minBatchDurationSeconds: defaultMinTime,
+	minBatchDurationSeconds: defaultMinimumTime,
+	startPhase: Phase.WarmUp,
 };
 
 /**
@@ -53,6 +65,24 @@ export interface BenchmarkData {
 export type BenchmarkResult = BenchmarkError | BenchmarkData;
 
 /**
+ * Use for readonly view of Json compatible data.
+ *
+ * Note that this does not robustly forbid non json comparable data via type checking,
+ * but instead mostly restricts access to it.
+ *
+ * @public
+ */
+export type JsonCompatible =
+	| string
+	| number
+	| boolean
+	| readonly JsonCompatible[]
+	| { readonly [P in string]: JsonCompatible | undefined };
+
+export type Results = { readonly [P in string]: JsonCompatible | undefined };
+
+/**
+ * Provides type narrowing when the provided result is a {@link BenchmarkError}.
  * @public
  */
 export function isResultError(result: BenchmarkResult): result is BenchmarkError {
@@ -67,9 +97,19 @@ export interface BenchmarkError {
 	error: string;
 }
 
+/**
+ * Runs the benchmark.
+ * @public
+ */
 export async function runBenchmark(args: BenchmarkRunningOptions): Promise<BenchmarkData> {
+	if (benchmarkArgumentsIsCustom(args)) {
+		const state = new BenchmarkState(timer, args);
+		await args.benchmarkFnCustom(state);
+		return state.computeData();
+	}
+
 	const options = {
-		...defaults,
+		...defaultTimingOptions,
 		...args,
 	};
 	const { isAsync, benchmarkFn: argsBenchmarkFn } = validateBenchmarkArguments(args);
@@ -81,7 +121,7 @@ export async function runBenchmark(args: BenchmarkRunningOptions): Promise<Bench
 	if (isAsync) {
 		data = await runBenchmarkAsync({
 			...options,
-			benchmarkFnAsync: argsBenchmarkFn as any,
+			benchmarkFnAsync: argsBenchmarkFn,
 		});
 	} else {
 		data = runBenchmarkSync({ ...options, benchmarkFn: argsBenchmarkFn });
@@ -101,45 +141,45 @@ function tryRunGarbageCollection(): void {
 	global?.gc?.();
 }
 
-enum Mode {
-	WarmUp,
-	AdjustIterationPerBatch,
-	CollectData,
-}
-
-class BenchmarkState<T> {
+class BenchmarkState<T> implements BenchmarkTimer<T> {
 	/**
 	 * Duration for each batch, in seconds.
 	 */
 	private readonly samples: number[];
 	private readonly options: Readonly<Required<BenchmarkTimingOptions>>;
 	private readonly startTime: T;
-	private mode: Mode = Mode.WarmUp;
+	private phase: Phase;
 	public iterationsPerBatch: number;
-	public constructor(public readonly timer: Timer<T>, options: BenchmarkTimingOptions) {
+	public constructor(
+		public readonly timer: Timer<T>,
+		options: BenchmarkTimingOptions,
+	) {
 		this.startTime = timer.now();
 		this.samples = [];
 		this.options = {
-			...defaults,
+			...defaultTimingOptions,
 			...options,
 		};
+		this.phase = this.options.startPhase;
 
 		if (this.options.minBatchCount < 1) {
 			throw new Error("Invalid minSampleCount");
 		}
-		this.iterationsPerBatch = this.options.minBatchCount;
+		this.iterationsPerBatch = 1;
 		tryRunGarbageCollection();
 	}
 
 	public recordBatch(duration: number): boolean {
-		switch (this.mode) {
-			case Mode.WarmUp: {
-				this.mode = Mode.AdjustIterationPerBatch;
+		switch (this.phase) {
+			case Phase.WarmUp: {
+				this.phase = Phase.AdjustIterationPerBatch;
 				return true;
 			}
-			case Mode.AdjustIterationPerBatch: {
+			case Phase.AdjustIterationPerBatch: {
 				if (!this.growBatchSize(duration)) {
-					this.mode = Mode.CollectData;
+					this.phase = Phase.CollectData;
+					// Since batch is big enough, include it in data collection.
+					return this.addSample(duration);
 				}
 				return true;
 			}
@@ -175,7 +215,7 @@ class BenchmarkState<T> {
 		}
 
 		const stats = getArrayStatistics(this.samples);
-		if (stats.marginOfErrorPercent < 1.0) {
+		if (stats.marginOfErrorPercent < 1) {
 			// Already below 1% margin of error.
 			// Note that this margin of error computation doesn't account for low frequency noise (noise spanning a time scale longer than this test so far)
 			// which can be caused by many factors like CPU frequency changes due to limited boost time or thermals.
@@ -184,7 +224,7 @@ class BenchmarkState<T> {
 		}
 
 		// Exit if way too many samples to avoid out of memory.
-		if (this.samples.length > 1000000) {
+		if (this.samples.length > 1_000_000) {
 			// Test failed to converge after many samples.
 			// TODO: produce some warning or error state in this case (and probably the case for hitting max time as well).
 			return false;
@@ -216,7 +256,9 @@ export function runBenchmarkSync(args: BenchmarkRunningOptionsSync): BenchmarkDa
 	const state = new BenchmarkState(timer, args);
 	while (
 		state.recordBatch(doBatch(state.iterationsPerBatch, args.benchmarkFn, args.beforeEachBatch))
-	) {}
+	) {
+		// No-op
+	}
 	return state.computeData();
 }
 
@@ -236,7 +278,9 @@ export async function runBenchmarkAsync(
 				args.beforeEachBatch,
 			),
 		)
-	) {}
+	) {
+		// No-op
+	}
 	return state.computeData();
 }
 

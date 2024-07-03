@@ -6,9 +6,12 @@
 import { EventEmitter } from "events";
 import * as util from "util";
 import * as core from "@fluidframework/server-services-core";
-import Redis from "ioredis";
 import { Emitter as SocketIoEmitter } from "@socket.io/redis-emitter";
+import type { IRedisClientConnectionManager } from "@fluidframework/server-services-utils";
 
+/**
+ * @internal
+ */
 export class SocketIoRedisTopic implements core.ITopic {
 	constructor(private readonly topic: any) {}
 
@@ -17,18 +20,26 @@ export class SocketIoRedisTopic implements core.ITopic {
 	}
 }
 
+/**
+ * @internal
+ */
 export class SocketIoRedisPublisher implements core.IPublisher {
-	private readonly redisClient: Redis.Redis;
+	private readonly redisClientConnectionManager: IRedisClientConnectionManager;
 	private readonly io: any;
 	private readonly events = new EventEmitter();
 
-	constructor(options: Redis.RedisOptions) {
-		this.redisClient = new Redis(options);
-		this.io = new SocketIoEmitter(this.redisClient);
+	constructor(redisClientConnectionManager: IRedisClientConnectionManager) {
+		this.redisClientConnectionManager = redisClientConnectionManager;
+		this.io = new SocketIoEmitter(redisClientConnectionManager.getRedisClient());
 
-		this.redisClient.on("error", (error) => {
-			this.events.emit("error", error);
-		});
+		redisClientConnectionManager.addErrorHandler(
+			undefined, // lumber properties
+			"Error with SocketIoRedisPublisher", // error message
+			(error) => {
+				this.events.emit("error", error);
+				return false;
+			},
+		);
 	}
 
 	public on(event: string, listener: (...args: any[]) => void) {
@@ -47,7 +58,8 @@ export class SocketIoRedisPublisher implements core.IPublisher {
 
 	// eslint-disable-next-line @typescript-eslint/promise-function-async
 	public close(): Promise<void> {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-		return util.promisify(((callback) => this.redisClient.quit(callback)) as any)();
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/promise-function-async
+		return util.promisify(((callback) =>
+			this.redisClientConnectionManager.getRedisClient().quit(callback)) as any)();
 	}
 }

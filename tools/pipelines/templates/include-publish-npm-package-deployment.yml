@@ -4,28 +4,18 @@
 # include-publish-npm-package-deployment
 
 parameters:
-- name: namespace
-  type: boolean
-
-- name: official
-  type: boolean
-
-- name: feedName
+- name: feedKind
   type: string
 
-- name: devFeedName
+- name: feedUrl
   type: string
 
 - name: environment
   type: string
 
-- name: publishNonScopedPackages
-  type: boolean
-  default: false
-
 - name: pool
   type: object
-  default: Small
+  default: Small-1ES
 
 - name: publishFlags
   type: string
@@ -55,29 +45,14 @@ jobs:
           steps:
           - download: current
             artifact: pack
-          - task: UseNode@1
-            displayName: Use Node 16.x
-            inputs:
-              version: 16.x
-          - template: include-publish-npm-package-steps.yml
+          - template: /tools/pipelines/templates/include-use-node-version.yml@self
+          - template: /tools/pipelines/templates/include-publish-npm-package-steps.yml@self
             parameters:
-              namespace: ${{ parameters.namespace }}
               artifactPath: scoped
-              devFeedName: ${{ parameters.devFeedName }}
-              feedName: ${{ parameters.feedName }}
+              feedUrl: ${{ parameters.feedUrl }}
               customEndPoint: ${{ parameters.customEndPoint }}
-              official: ${{ parameters.official }}
+              feedKind: ${{ parameters.feedKind }}
               publishFlags: ${{ parameters.publishFlags }}
-          - ${{ if eq(parameters.publishNonScopedPackages, true) }}:
-            - template: include-publish-npm-package-steps.yml
-              parameters:
-                namespace: false
-                artifactPath: non-scoped
-                devFeedName: ${{ parameters.devFeedName }}
-                feedName: ${{ parameters.feedName }}
-                official: ${{ parameters.official }}
-                customEndPoint: ${{ parameters.customEndPoint }}
-                publishFlags: ${{ parameters.publishFlags }}
-          - template: include-git-tag-steps.yml
+          - template: /tools/pipelines/templates/include-git-tag-steps.yml@self
             parameters:
               tagName: ${{ parameters.tagName }}

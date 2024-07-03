@@ -3,29 +3,40 @@
  * Licensed under the MIT License.
  */
 
+import type {
+	OdspEndpoint,
+	RouterliciousEndpoint,
+	TestDriverTypes,
+} from "@fluid-internal/test-driver-definitions";
 import nconf from "nconf";
-import { RouterliciousEndpoint, TestDriverTypes } from "@fluidframework/test-driver-definitions";
-import { resolveVersion } from "./versionUtils";
-import { pkgVersion } from "./packageVersion";
 
 /**
  * Different kind of compat version config
  */
-export enum CompatKind {
-	None = "None",
-	Loader = "Loader",
-	NewLoader = "NewLoader",
-	Driver = "Driver",
-	NewDriver = "NewDriver",
-	ContainerRuntime = "ContainerRuntime",
-	NewContainerRuntime = "NewContainerRuntime",
-	DataRuntime = "DataRuntime",
-	NewDataRuntime = "NewDataRuntime",
-	LoaderDriver = "LoaderDriver",
-}
+export const CompatKind = {
+	None: "None",
+	Loader: "Loader",
+	NewLoader: "NewLoader",
+	Driver: "Driver",
+	NewDriver: "NewDriver",
+	ContainerRuntime: "ContainerRuntime",
+	NewContainerRuntime: "NewContainerRuntime",
+	DataRuntime: "DataRuntime",
+	NewDataRuntime: "NewDataRuntime",
+	LoaderDriver: "LoaderDriver",
+	/**
+	 * CrossVersion tests are used to test compatibility when two differently versioned clients connect to the same container.
+	 * This is done by varying the version that the `TestObjectProviderWithVersionedLoad` uses to create and load containers.
+	 *
+	 * Note: Each individual client will use the same version for all layers (loader/driver/runtime/etc). For example, if Client A
+	 * is running version 1.0 and Client B is running version 2.0, then Client A will use version 1.0 for all layers and Client B
+	 * will be use version 2.0 for all layers.
+	 */
+	CrossVersion: "CrossVersion",
+} as const;
 
 /*
- * Parse the command line argument and environment variables.  Arguments take precedent over environment variable
+ * Parse the command line argument and environment variables. Arguments take precedent over environment variable
  * NOTE: Please update this packages README.md if the default versions and config combination changes
  */
 const options = {
@@ -64,6 +75,9 @@ const options = {
 	r11sEndpointName: {
 		type: "string",
 	},
+	odspEndpointName: {
+		type: "string",
+	},
 	tenantIndex: {
 		type: "number",
 	},
@@ -87,8 +101,10 @@ nconf
 		whitelist: [
 			"fluid__test__compatKind",
 			"fluid__test__compatVersion",
+			"fluid__test__backCompat",
 			"fluid__test__driver",
 			"fluid__test__r11sEndpointName",
+			"fluid__test__odspEndpointName",
 			"fluid__test__baseVersion",
 		],
 		transform: (obj: { key: string; value: string }) => {
@@ -110,17 +126,48 @@ nconf
 		fluid: {
 			test: {
 				driver: "local",
-				baseVersion: pkgVersion,
 				r11sEndpointName: "r11s",
 				tenantIndex: 0,
 			},
 		},
 	});
 
+/**
+ * Different kind of compat version config
+ */
+
+/**
+ * @internal
+ */
+export type CompatKind = keyof typeof CompatKind;
+
+/**
+ * @internal
+ */
 export const compatKind = nconf.get("fluid:test:compatKind") as CompatKind[] | undefined;
+/**
+ * @internal
+ */
 export const compatVersions = nconf.get("fluid:test:compatVersion") as string[] | undefined;
+/**
+ * @internal
+ */
 export const driver = nconf.get("fluid:test:driver") as TestDriverTypes;
-export const r11sEndpointName = nconf.get("fluid:test:r11sEndpointName") as RouterliciousEndpoint;
-export const baseVersion = resolveVersion(nconf.get("fluid:test:baseVersion") as string, false);
+/**
+ * @internal
+ */
+export const odspEndpointName = nconf.get("fluid:test:odspEndpointName") as OdspEndpoint;
+/**
+ * @internal
+ */
+export const r11sEndpointName = nconf.get(
+	"fluid:test:r11sEndpointName",
+) as RouterliciousEndpoint;
+/**
+ * @internal
+ */
 export const reinstall = nconf.get("fluid:test:reinstall");
+/**
+ * @internal
+ */
 export const tenantIndex = nconf.get("fluid:test:tenantIndex") as number;

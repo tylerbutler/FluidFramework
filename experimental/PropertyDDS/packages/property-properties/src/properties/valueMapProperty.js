@@ -2,21 +2,25 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /**
  * @fileoverview Definition of the valuemap property class
  */
 
-const _ = require("lodash");
 const { MSG } = require("@fluid-experimental/property-common").constants;
 const { Int64, Uint64 } = require("@fluid-experimental/property-common");
-const { Int64Property, Uint64Property } = require("../properties/intProperties");
+const _ = require("lodash");
+
 const { validationsEnabled } = require("../enableValidations");
-const { _castFunctors } = require("./primitiveTypeCasts");
+const { Int64Property, Uint64Property } = require("../properties/intProperties");
+
 const { BaseProperty } = require("./baseProperty");
 const { MapProperty } = require("./mapProperty");
+const { _castFunctors } = require("./primitiveTypeCasts");
 
 /**
  * A ValueMapProperty is a collection class that can contain an dictionary that maps from strings to primitive types.
+ * @internal
  */
 export class ValueMapProperty extends MapProperty {
 	/**
@@ -48,6 +52,7 @@ export class ValueMapProperty extends MapProperty {
 	 * Returns an object with all the nested values contained in this property.
 	 *
 	 * @example
+	 *
 	 * ```javascript
 	 * {
 	 *   'firstString': 'test1',
@@ -67,7 +72,7 @@ export class ValueMapProperty extends MapProperty {
 	/**
 	 * Return a JSON representation of the map and its items.
 	 * @return {object} A JSON representation of the map and its items.
-	 * @private
+	 * @protected
 	 */
 	_toJson() {
 		return {
@@ -169,9 +174,7 @@ export class ValueMapProperty extends MapProperty {
 
 		// Modify entries
 		if (in_pendingChangeSet.modify) {
-			var modifiedPendingEntries = in_pendingChangeSet
-				? in_pendingChangeSet.modify || {}
-				: {};
+			var modifiedPendingEntries = in_pendingChangeSet ? in_pendingChangeSet.modify || {} : {};
 			var modifiedDirtyEntries = in_dirtyChangeSet ? in_dirtyChangeSet.modify || {} : {};
 			keys = Object.keys(modifiedPendingEntries).concat(Object.keys(modifiedDirtyEntries));
 			for (i = 0; i < keys.length; i++) {

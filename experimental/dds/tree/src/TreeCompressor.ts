@@ -2,12 +2,15 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { isDetachedSequenceId } from './Identifiers';
-import type { Definition, DetachedSequenceId, InternedStringId, OpSpaceNodeId, TraitLabel } from './Identifiers';
-import type { StringInterner } from './StringInterner';
-import type { CompressedTraits, CompressedPlaceholderTree, PlaceholderTree, Payload } from './persisted-types';
-import type { ContextualizedNodeIdNormalizer } from './NodeIdUtilities';
-import { assert, fail, Mutable } from './Common';
+
+import { assert } from '@fluidframework/core-utils/internal';
+
+import { Mutable, fail } from './Common.js';
+import { isDetachedSequenceId } from './Identifiers.js';
+import type { Definition, DetachedSequenceId, InternedStringId, OpSpaceNodeId, TraitLabel } from './Identifiers.js';
+import type { ContextualizedNodeIdNormalizer } from './NodeIdUtilities.js';
+import type { StringInterner } from './StringInterner.js';
+import type { CompressedPlaceholderTree, CompressedTraits, Payload, PlaceholderTree } from './persisted-types/index.js';
 
 /**
  * Compresses a given {@link PlaceholderTree} into a more compact serializable format.
@@ -107,7 +110,7 @@ export class InterningTreeCompressor<TPlaceholder extends DetachedSequenceId | n
 			return node;
 		}
 		const rootId = node[1];
-		assert(typeof rootId === 'number', 'Root node was compressed with no ID');
+		assert(typeof rootId === 'number', 0x63c /* Root node was compressed with no ID */);
 		this.previousId = rootId;
 		return this.decompressI(node, interner, idNormalizer);
 	}
@@ -171,9 +174,7 @@ export class InterningTreeCompressor<TPlaceholder extends DetachedSequenceId | n
 					| CompressedPlaceholderTree<TId, TPlaceholder>
 				)[];
 
-				const decompressedTraits = compressedChildren.map((child) =>
-					this.decompressI(child, interner, idNormalizer)
-				);
+				const decompressedTraits = compressedChildren.map((child) => this.decompressI(child, interner, idNormalizer));
 
 				const label =
 					typeof maybeCompressedLabel === 'string'

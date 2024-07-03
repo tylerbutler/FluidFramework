@@ -4,21 +4,24 @@
  */
 
 import { strict as assert } from "assert";
+
 import {
-	MockFluidDataStoreRuntime,
 	MockContainerRuntimeFactoryForReconnection,
 	MockContainerRuntimeForReconnection,
+	MockFluidDataStoreRuntime,
 	MockStorage,
-} from "@fluidframework/test-runtime-utils";
-import { MapFactory, SharedMap } from "../../map";
+} from "@fluidframework/test-runtime-utils/internal";
+
+import type { ISharedMap } from "../../interfaces.js";
+import { AttributableMapClass, MapFactory } from "../../map.js";
 
 describe("Reconnection", () => {
 	describe("SharedMap", () => {
 		let containerRuntimeFactory: MockContainerRuntimeFactoryForReconnection;
 		let containerRuntime1: MockContainerRuntimeForReconnection;
 		let containerRuntime2: MockContainerRuntimeForReconnection;
-		let map1: SharedMap;
-		let map2: SharedMap;
+		let map1: ISharedMap;
+		let map2: ISharedMap;
 
 		beforeEach(async () => {
 			containerRuntimeFactory = new MockContainerRuntimeFactoryForReconnection();
@@ -27,20 +30,28 @@ describe("Reconnection", () => {
 			const dataStoreRuntime1 = new MockFluidDataStoreRuntime();
 			containerRuntime1 = containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
 			const services1 = {
-				deltaConnection: containerRuntime1.createDeltaConnection(),
+				deltaConnection: dataStoreRuntime1.createDeltaConnection(),
 				objectStorage: new MockStorage(),
 			};
-			map1 = new SharedMap("shared-map-1", dataStoreRuntime1, MapFactory.Attributes);
+			map1 = new AttributableMapClass(
+				"shared-map-1",
+				dataStoreRuntime1,
+				MapFactory.Attributes,
+			);
 			map1.connect(services1);
 
 			// Create the second SharedMap.
 			const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
 			containerRuntime2 = containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
 			const services2 = {
-				deltaConnection: containerRuntime2.createDeltaConnection(),
+				deltaConnection: dataStoreRuntime2.createDeltaConnection(),
 				objectStorage: new MockStorage(),
 			};
-			map2 = new SharedMap("shared-map-2", dataStoreRuntime2, MapFactory.Attributes);
+			map2 = new AttributableMapClass(
+				"shared-map-2",
+				dataStoreRuntime2,
+				MapFactory.Attributes,
+			);
 			map2.connect(services2);
 		});
 

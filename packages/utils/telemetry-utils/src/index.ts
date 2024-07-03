@@ -2,64 +2,87 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 export {
-	MonitoringContext,
-	IConfigProviderBase,
+	createChildMonitoringContext,
+	type MonitoringContext,
 	sessionStorageConfigProvider,
 	mixinMonitoringContext,
-	IConfigProvider,
-	ConfigTypes,
+	type IConfigProvider,
 	loggerToMonitoringContext,
-} from "./config";
-export { DebugLogger } from "./debugLogger";
+	wrapConfigProviderWithDefaults,
+	createConfigBasedOptionsProxy,
+	type OptionConfigReaders,
+} from "./config.js";
+export {
+	DataCorruptionError,
+	DataProcessingError,
+	extractSafePropertiesFromMessage,
+	GenericError,
+	UsageError,
+	validatePrecondition,
+} from "./error.js";
 export {
 	extractLogSafeErrorProperties,
 	generateErrorWithStack,
 	generateStack,
 	getCircularReplacer,
-	IFluidErrorAnnotations,
+	type IFluidErrorAnnotations,
 	isExternalError,
 	isILoggingError,
 	isTaggedTelemetryPropertyValue,
 	LoggingError,
 	NORMALIZED_ERROR_TYPE,
 	normalizeError,
+	overwriteStack,
 	wrapError,
 	wrapErrorAndLog,
-} from "./errorLogging";
-export { EventEmitterWithErrorHandling } from "./eventEmitterWithErrorHandling";
+} from "./errorLogging.js";
+export { EventEmitterWithErrorHandling } from "./eventEmitterWithErrorHandling.js";
 export {
 	connectedEventName,
 	disconnectedEventName,
 	raiseConnectedEvent,
 	safeRaiseEvent,
-} from "./events";
+} from "./events.js";
+export { hasErrorInstanceId, type IFluidErrorBase, isFluidError } from "./fluidErrorBase.js";
 export {
-	hasErrorInstanceId,
-	IFluidErrorBase,
-	isFluidError,
-	isValidLegacyError,
-} from "./fluidErrorBase";
-export {
-	BaseTelemetryNullLogger,
-	ChildLogger,
-	IPerformanceEventMarkers,
-	ITelemetryLoggerPropertyBag,
-	ITelemetryLoggerPropertyBags,
-	MultiSinkLogger,
+	eventNamespaceSeparator,
+	createChildLogger,
+	createMultiSinkLogger,
+	formatTick,
+	type IPerformanceEventMarkers,
+	type ITelemetryLoggerPropertyBag,
+	type ITelemetryLoggerPropertyBags,
+	type MultiSinkLoggerProperties,
+	numberFromString,
 	PerformanceEvent,
 	TaggedLoggerAdapter,
+	tagData,
+	tagCodeArtifacts,
 	TelemetryDataTag,
-	TelemetryEventPropertyTypes,
-	TelemetryLogger,
-	TelemetryNullLogger,
-	TelemetryUTLogger,
-} from "./logger";
-export { MockLogger } from "./mockLogger";
-export { ThresholdCounter } from "./thresholdCounter";
-export { SampledTelemetryHelper } from "./sampledTelemetryHelper";
-export { logIfFalse } from "./utils";
+	type TelemetryEventPropertyTypes,
+} from "./logger.js";
 export {
+	createMockLoggerExt,
+	type IMockLoggerExt,
+	MockLogger,
+	MockLogger2,
+} from "./mockLogger.js";
+export { ThresholdCounter } from "./thresholdCounter.js";
+export {
+	SampledTelemetryHelper,
+	type CustomMetrics,
+	type ICustomData,
+	type MeasureReturnType,
+} from "./sampledTelemetryHelper.js";
+export {
+	createSampledLogger,
+	type IEventSampler,
+	type ISampledTelemetryLogger,
+	measure,
+} from "./utils.js";
+export type {
 	TelemetryEventPropertyTypeExt,
 	ITelemetryEventExt,
 	ITelemetryGenericEventExt,
@@ -68,4 +91,6 @@ export {
 	ITelemetryLoggerExt,
 	ITaggedTelemetryPropertyTypeExt,
 	ITelemetryPropertiesExt,
-} from "./telemetryTypes";
+	TelemetryEventCategory,
+} from "./telemetryTypes.js";
+export { TelemetryEventBatcher } from "./telemetryEventBatcher.js";

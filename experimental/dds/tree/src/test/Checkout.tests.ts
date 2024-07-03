@@ -3,24 +3,29 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryBaseEvent } from '@fluidframework/common-definitions';
+import { strict as assert } from 'assert';
+
+import { ITelemetryBaseEvent } from '@fluidframework/core-interfaces';
+import { validateAssertionError } from '@fluidframework/test-runtime-utils/internal';
 import { expect } from 'chai';
+
 import {
-	setTrait,
+	Change,
+	Checkout,
+	CheckoutEvent,
 	EditStatus,
-	StableRange,
-	StablePlace,
 	EditValidationResult,
 	SharedTree,
 	SharedTreeEvent,
-	Checkout,
-	CheckoutEvent,
-	Change,
 	Side,
+	StablePlace,
+	StableRange,
 	areRevisionViewsSemanticallyEqual,
-} from '../index';
-import { TestTree } from './utilities/TestNode';
-import { setUpTestSharedTree, SharedTreeTestingOptions, setUpTestTree } from './utilities/TestUtilities';
+	setTrait,
+} from '../index.js';
+
+import { TestTree } from './utilities/TestNode.js';
+import { SharedTreeTestingOptions, setUpTestSharedTree, setUpTestTree } from './utilities/TestUtilities.js';
 
 /**
  * Checkout test suite
@@ -85,22 +90,22 @@ export function checkoutTests(
 		it('can only have one edit open at a time', async () => {
 			const { checkout } = await setUpTestCheckout();
 			checkout.openEdit();
-			expect(() => checkout.openEdit()).throws();
+			assert.throws(() => checkout.openEdit());
 		});
 
 		it('can only close an edit if one is open', async () => {
 			const { checkout } = await setUpTestCheckout();
-			expect(() => checkout.closeEdit()).throws();
+			assert.throws(() => checkout.closeEdit());
 		});
 
 		it('can only apply changes if an edit is open', async () => {
 			const { checkout, testTree } = await setUpTestTreeCheckout();
-			expect(() => checkout.applyChanges(Change.delete(StableRange.only(testTree.left)))).throws();
+			assert.throws(() => checkout.applyChanges(Change.delete(StableRange.only(testTree.left))));
 		});
 
 		it('cannot abort an edit if no edit is open', async () => {
 			const { checkout } = await setUpTestCheckout();
-			expect(() => checkout.abortEdit()).throws();
+			assert.throws(() => checkout.abortEdit());
 		});
 
 		it('can abort valid edits', async () => {
@@ -122,9 +127,9 @@ export function checkoutTests(
 			expect(checkout.getEditStatus()).equals(EditStatus.Applied);
 
 			// Is invalid after an invalid edit
-			expect(() =>
-				checkout.applyChanges(Change.insertTree(testTree.left, StablePlace.after(testTree.left)))
-			).throws('Locally constructed edits must be well-formed and valid.');
+			expect(() => checkout.applyChanges(Change.insertTree(testTree.left, StablePlace.after(testTree.left)))).throws(
+				'Locally constructed edits must be well-formed and valid.'
+			);
 			expect(checkout.getEditStatus()).equals(EditStatus.Invalid);
 			checkout.abortEdit();
 
@@ -154,8 +159,10 @@ export function checkoutTests(
 			expect(checkout.getEditStatus()).equals(EditStatus.Malformed);
 
 			// Is still malformed after a subsequent valid edit
-			expect(() => checkout.applyChanges(Change.delete(StableRange.only(testTree.left)))).throws(
-				'Cannot apply change to an edit unless all previous changes have applied'
+			assert.throws(
+				() => checkout.applyChanges(Change.delete(StableRange.only(testTree.left))),
+				(e: Error) =>
+					validateAssertionError(e, 'Cannot apply change to an edit unless all previous changes have applied')
 			);
 			expect(checkout.getEditStatus()).equals(EditStatus.Malformed);
 
@@ -170,7 +177,9 @@ export function checkoutTests(
 		it('emits error telemetry on attempted close of malformed edits', async () => {
 			const events: ITelemetryBaseEvent[] = [];
 			const { checkout } = await setUpTestTreeCheckout({
-				logger: { send: (event) => event.eventName.includes('Checkout') && events.push(event) },
+				logger: {
+					send: (event) => event.eventName.includes('Checkout') && events.push(event),
+				},
 			});
 			checkout.openEdit();
 			// Starts as valid
@@ -199,7 +208,10 @@ export function checkoutTests(
 				status: 'Malformed',
 			});
 
-			expect(() => checkout.closeEdit()).throws('Cannot close a transaction that has already failed.');
+			assert.throws(
+				() => checkout.closeEdit(),
+				(e: Error) => validateAssertionError(e, /Cannot close a transaction that has already failed./)
+			);
 			expect(events.length).to.equal(1);
 		});
 
@@ -208,9 +220,8 @@ export function checkoutTests(
 			const simpleTestTree = setUpTestTree(tree);
 
 			// tryApplyEdit aborts when applying an invalid edit and returns undefined
-			expect(
-				checkout.tryApplyEdit(Change.insertTree(simpleTestTree.left, StablePlace.after(simpleTestTree.left)))
-			).to.be.undefined;
+			expect(checkout.tryApplyEdit(Change.insertTree(simpleTestTree.left, StablePlace.after(simpleTestTree.left)))).to
+				.be.undefined;
 
 			// Next edit is unaffected
 			checkout.openEdit();
@@ -220,7 +231,7 @@ export function checkoutTests(
 
 		it('cannot get the edit status if no edit is open', async () => {
 			const { checkout } = await setUpTestCheckout();
-			expect(() => checkout.getEditStatus()).throws();
+			assert.throws(() => checkout.getEditStatus());
 		});
 
 		it('Surfaces error events to SharedTree', async () => {
@@ -260,18 +271,23 @@ export function checkoutTests(
 			expect(checkout.getEditStatus()).equals(EditStatus.Applied);
 
 			// Is invalid after an invalid edit
-			expect(() =>
-				checkout.applyChanges(Change.insertTree(testTree.left, StablePlace.after(testTree.left)))
-			).throws('Locally constructed edits must be well-formed and valid.');
-			expect(checkout.getEditStatus()).equals(EditStatus.Invalid);
-
-			// Is still invalid after a subsequent valid edit
-			expect(() => checkout.applyChanges(Change.delete(StableRange.only(testTree.left)))).throws(
-				'Cannot apply change to an edit unless all previous changes have applied'
+			expect(() => checkout.applyChanges(Change.insertTree(testTree.left, StablePlace.after(testTree.left)))).throws(
+				'Locally constructed edits must be well-formed and valid.'
 			);
 			expect(checkout.getEditStatus()).equals(EditStatus.Invalid);
 
-			expect(() => checkout.closeEdit()).throws('Cannot close a transaction that has already failed.');
+			// Is still invalid after a subsequent valid edit
+			assert.throws(
+				() => checkout.applyChanges(Change.delete(StableRange.only(testTree.left))),
+				(e: Error) =>
+					validateAssertionError(e, 'Cannot apply change to an edit unless all previous changes have applied')
+			);
+			expect(checkout.getEditStatus()).equals(EditStatus.Invalid);
+
+			assert.throws(
+				() => checkout.closeEdit(),
+				(e: Error) => validateAssertionError(e, /Cannot close a transaction that has already failed./)
+			);
 
 			// Next edit is unaffected
 			checkout.openEdit();
@@ -299,12 +315,17 @@ export function checkoutTests(
 			expect(checkout.getEditStatus()).equals(EditStatus.Malformed);
 
 			// Is still malformed after a subsequent valid edit
-			expect(() => checkout.applyChanges(Change.delete(StableRange.only(testTree.left)))).throws(
-				'Cannot apply change to an edit unless all previous changes have applied'
+			assert.throws(
+				() => checkout.applyChanges(Change.delete(StableRange.only(testTree.left))),
+				(e: Error) =>
+					validateAssertionError(e, 'Cannot apply change to an edit unless all previous changes have applied')
 			);
 			expect(checkout.getEditStatus()).equals(EditStatus.Malformed);
 
-			expect(() => checkout.closeEdit()).throws('Cannot close a transaction that has already failed.');
+			assert.throws(
+				() => checkout.closeEdit(),
+				(e: Error) => validateAssertionError(e, /Cannot close a transaction that has already failed./)
+			);
 
 			// Next edit is unaffected
 			checkout.openEdit();
@@ -445,7 +466,10 @@ export function checkoutTests(
 		it('connected state with a remote SharedTree equates correctly during edits', async () => {
 			// Invalid edits are allowed here because this test creates edits concurrently in two trees,
 			// which after syncing, end up with one being invalid.
-			const { tree, containerRuntimeFactory } = setUpTestSharedTree({ localMode: false, allowInvalid: true });
+			const { tree, containerRuntimeFactory } = setUpTestSharedTree({
+				localMode: false,
+				allowInvalid: true,
+			});
 			const simpleTestTree = setUpTestTree(tree);
 			const { tree: secondTree } = setUpTestSharedTree({
 				containerRuntimeFactory,
@@ -494,7 +518,10 @@ export function checkoutTests(
 		it('can successfully rebase an ongoing local edit', async () => {
 			const { tree, containerRuntimeFactory } = setUpTestSharedTree({ localMode: false });
 			const simpleTestTree = setUpTestTree(tree);
-			const { tree: secondTree } = setUpTestSharedTree({ containerRuntimeFactory, ...secondTreeOptions });
+			const { tree: secondTree } = setUpTestSharedTree({
+				containerRuntimeFactory,
+				...secondTreeOptions,
+			});
 
 			// Sync initial tree
 			containerRuntimeFactory.processAllMessages();
@@ -553,7 +580,10 @@ export function checkoutTests(
 		it('can handle a failed rebase of an ongoing local edit', async () => {
 			const { tree, containerRuntimeFactory } = setUpTestSharedTree({ localMode: false });
 			const simpleTestTree = setUpTestTree(tree);
-			const { tree: secondTree } = setUpTestSharedTree({ containerRuntimeFactory, ...secondTreeOptions });
+			const { tree: secondTree } = setUpTestSharedTree({
+				containerRuntimeFactory,
+				...secondTreeOptions,
+			});
 
 			// Sync initial tree
 			containerRuntimeFactory.processAllMessages();
@@ -584,9 +614,8 @@ export function checkoutTests(
 			// Merge in the latest changes.
 			const rebaseResult = checkout.rebaseCurrentEdit();
 			expect(rebaseResult).equals(EditValidationResult.Invalid);
-			expect(
-				areRevisionViewsSemanticallyEqual(checkout.currentView, tree, secondCheckout.currentView, secondTree)
-			).to.be.true;
+			expect(areRevisionViewsSemanticallyEqual(checkout.currentView, tree, secondCheckout.currentView, secondTree)).to
+				.be.true;
 		});
 
 		it('can dispose and remove listeners', async () => {

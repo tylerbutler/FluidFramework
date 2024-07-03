@@ -3,12 +3,16 @@
  * Licensed under the MIT License.
  */
 
-import { ISharedObject, ISharedObjectEvents } from "@fluidframework/shared-object-base";
-import { Serializable } from "@fluidframework/datastore-definitions";
-import { AttributionKey } from "@fluidframework/runtime-definitions";
+import type { Serializable } from "@fluidframework/datastore-definitions/internal";
+import type { AttributionKey } from "@fluidframework/runtime-definitions/internal";
+import type {
+	ISharedObject,
+	ISharedObjectEvents,
+} from "@fluidframework/shared-object-base/internal";
 
 /**
  * Events emitted by {@link ISharedCell}.
+ * @internal
  */
 export interface ISharedCellEvents<T> extends ISharedObjectEvents {
 	/**
@@ -31,7 +35,7 @@ export interface ISharedCellEvents<T> extends ISharedObjectEvents {
  *
  * @typeParam T - The type of cell data. Must be serializable.
  *
- * @example Creation:
+ * @example Creation
  *
  * To create a `SharedCell`, call the static create method:
  *
@@ -39,7 +43,7 @@ export interface ISharedCellEvents<T> extends ISharedObjectEvents {
  * const myCell = SharedCell.create(this.runtime, id);
  * ```
  *
- * @example Usage:
+ * @example Usage
  *
  * The value stored in the cell can be set with the `.set()` method and retrieved with the `.get()` method:
  *
@@ -68,11 +72,12 @@ export interface ISharedCellEvents<T> extends ISharedObjectEvents {
  * }
  * ```
  *
- * @example Eventing:
+ * @example Eventing
  *
  * `SharedCell` is an `EventEmitter`, and will emit events when other clients make modifications. You should
  * register for these events and respond appropriately as the data is modified. `valueChanged` will be emitted
  * in response to a `set`, and `delete` will be emitted in response to a `delete`.
+ * @internal
  */
 // TODO: use `unknown` instead (breaking change).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,7 +85,7 @@ export interface ISharedCell<T = any> extends ISharedObject<ISharedCellEvents<T>
 	/**
 	 * Retrieves the cell value.
 	 *
-	 * @returns - the value of the cell
+	 * @returns The value of the cell
 	 */
 	get(): Serializable<T> | undefined;
 
@@ -94,7 +99,7 @@ export interface ISharedCell<T = any> extends ISharedObject<ISharedCellEvents<T>
 	/**
 	 * Checks whether cell is empty or not.
 	 *
-	 * @returns - `true` if the value of cell is `undefined`, `false` otherwise
+	 * @returns `true` if the value of cell is `undefined`, `false` otherwise
 	 */
 	empty(): boolean;
 
@@ -104,7 +109,6 @@ export interface ISharedCell<T = any> extends ISharedObject<ISharedCellEvents<T>
 	delete(): void;
 
 	/**
-	 * @alpha
 	 * @returns the AttributionKey associated with the cell's most recent change.
 	 */
 	getAttribution(): AttributionKey | undefined;
@@ -129,8 +133,7 @@ export interface ICellLocalOpMetadata<T = any> {
 
 /**
  * Options related to attribution
- *
- * @alpha
+ * @internal
  */
 export interface ICellOptions {
 	attribution?: ICellAttributionOptions;
@@ -141,8 +144,7 @@ export interface ICellOptions {
  * (i.e. who creeated the content and when it was created)
  *
  * default: false
- *
- * @alpha
+ * @internal
  */
 export interface ICellAttributionOptions {
 	track?: boolean;

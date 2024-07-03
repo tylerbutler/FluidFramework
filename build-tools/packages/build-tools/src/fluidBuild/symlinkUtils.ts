@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import * as fs from "fs";
 import * as path from "path";
 import * as semver from "semver";
@@ -21,10 +22,13 @@ import {
 } from "../common/utils";
 import { FluidRepoBuild } from "./fluidRepoBuild";
 
-const { warning, verbose } = defaultLogger;
+import registerDebug from "debug";
+const traceSymLink = registerDebug("fluid-build:symlink");
+
+const { warning } = defaultLogger;
 
 async function writeAndReplace(outFile: string, bakFile: string, content: string) {
-	verbose(`Writing ${outFile}`);
+	traceSymLink(`Writing ${outFile}`);
 	if (existsSync(`${outFile}`)) {
 		await renameAsync(`${outFile}`, `${bakFile}`);
 	}
@@ -89,7 +93,7 @@ async function fixSymlink(
 	depBuildPackage: Package,
 ) {
 	// Fixing the symlink
-	verbose(`${pkg.nameColored}: Fixing symlink ${symlinkPath}`);
+	traceSymLink(`${pkg.nameColored}: Fixing symlink ${symlinkPath}`);
 	if (stat) {
 		await renameAsync(
 			symlinkPath,
@@ -122,9 +126,9 @@ async function revertSymlink(symlinkPath: string, pkg: Package, depBuildPackage:
 	const origPath = path.join(path.dirname(symlinkPath), `_${path.basename(symlinkPath)}`);
 	if (existsSync(origPath)) {
 		await renameAsync(origPath, symlinkPath);
-		verbose(`${pkg.nameColored}: Reverted symlink ${symlinkPath}`);
+		traceSymLink(`${pkg.nameColored}: Reverted symlink ${symlinkPath}`);
 	} else {
-		verbose(`${pkg.nameColored}: Removed symlink ${symlinkPath}`);
+		traceSymLink(`${pkg.nameColored}: Removed symlink ${symlinkPath}`);
 	}
 
 	if (depBuildPackage.packageJson.bin) {
@@ -159,11 +163,12 @@ export async function symlinkPackage(
 	for (const { name: dep, version } of pkg.combinedDependencies) {
 		const depBuildPackage = buildPackages.get(dep);
 		// Check and fix link if it is a known package and version satisfy the version.
-		// TODO: check of extranous symlinks
+		// TODO: check of extraneous symlinks
 		if (depBuildPackage) {
 			const sameMonoRepo = MonoRepo.isSame(pkg.monoRepo, depBuildPackage.monoRepo);
-			const satisfied = semver.satisfies(depBuildPackage.version, version);
-			verbose(
+			const satisfied =
+				version.startsWith("workspace:") || semver.satisfies(depBuildPackage.version, version);
+			traceSymLink(
 				`${pkg.nameColored}: Dependent ${depBuildPackage.nameColored} version ${
 					depBuildPackage.version
 				} ${satisfied ? "satisfied" : "not satisfied"} by range ${version}`,
@@ -214,7 +219,7 @@ export async function symlinkPackage(
 							}
 							continue;
 						}
-						verbose(
+						traceSymLink(
 							`${pkg.nameColored}: Symlink found ${symlinkPath} @${realPath}, expects ${depBuildPackage.directory}`,
 						);
 					}

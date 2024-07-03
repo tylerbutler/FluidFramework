@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { bufferToString } from "@fluidframework/common-utils";
-import { IDocumentStorageService } from "@fluidframework/driver-definitions";
+import { bufferToString } from "@fluid-internal/client-utils";
+import { IDocumentStorageService } from "@fluidframework/driver-definitions/internal";
 
 /**
  * Read a blob from {@link @fluidframework/driver-definitions#IDocumentStorageService} and
@@ -17,6 +17,7 @@ import { IDocumentStorageService } from "@fluidframework/driver-definitions";
  * @typeParam T - Output type matching JSON format of inpyt blob data.
  *
  * @returns The object that we decoded and parsed via `JSON.parse`.
+ * @internal
  */
 export async function readAndParse<T>(
 	storage: Pick<IDocumentStorageService, "readBlob">,

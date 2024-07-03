@@ -3,23 +3,21 @@
  * Licensed under the MIT License.
  */
 
-import { IDisposable } from "@fluidframework/common-definitions";
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import { IDisposable } from "@fluidframework/core-interfaces";
+import { ConnectionMode } from "@fluidframework/driver-definitions";
 import {
-	IAnyDriverError,
 	IDocumentDeltaConnection,
 	IDocumentDeltaConnectionEvents,
-} from "@fluidframework/driver-definitions";
-import {
-	ConnectionMode,
+	IAnyDriverError,
 	IClientConfiguration,
 	IDocumentMessage,
 	INack,
-	ISequencedDocumentMessage,
 	ISignalClient,
-	ISignalMessage,
 	ITokenClaims,
-} from "@fluidframework/protocol-definitions";
-import { TypedEventEmitter } from "@fluidframework/common-utils";
+	ISequencedDocumentMessage,
+	ISignalMessage,
+} from "@fluidframework/driver-definitions/internal";
 
 // This is coppied from alfred.  Probably should clean this up.
 const DefaultServiceConfiguration: IClientConfiguration = {
@@ -28,7 +26,9 @@ const DefaultServiceConfiguration: IClientConfiguration = {
 };
 
 /**
- * Mock Document Delta Connection for testing
+ * Mock Document Delta Connection for testing.
+ *
+ * @internal
  */
 export class MockDocumentDeltaConnection
 	extends TypedEventEmitter<IDocumentDeltaConnectionEvents>

@@ -6,28 +6,32 @@
 import { strict as assert } from "assert";
 import fs from "fs";
 import nodePath from "path";
+
 import { ReplayArgs, ReplayTool } from "@fluid-internal/replay-tool";
-import { Deferred } from "@fluidframework/common-utils";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { pkgVersion } from "./packageVersion";
-import { validateSnapshots } from "./validateSnapshots";
-import { getMetadata, writeMetadataFile } from "./metadata";
+import { Deferred } from "@fluidframework/core-utils/internal";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+
+import { _dirname } from "./dirname.cjs";
+import { getMetadata, writeMetadataFile } from "./metadata.js";
+import { pkgVersion } from "./packageVersion.js";
+import { getTestContent } from "./testContent.js";
+import { validateSnapshots } from "./validateSnapshots.js";
 
 // Determine relative file locations
 function getFileLocations(): [string, string] {
 	// Correct if executing from working directory of package root
-	const origTestCollateralPath = "content/snapshotTestContent";
-	let testCollateralPath = origTestCollateralPath;
-	let workerPath = "./dist/replayWorker.js";
-	if (fs.existsSync(testCollateralPath)) {
-		assert(fs.existsSync(workerPath), `Cannot find worker js file: ${workerPath}`);
-		return [testCollateralPath, workerPath];
+	const testCollateral = getTestContent("snapshotTestContent");
+	let workerPath = "./lib/replayWorker.js";
+	if (fs.existsSync(workerPath) && testCollateral.exists) {
+		return [testCollateral.path, workerPath];
 	}
 	// Relative to this generated js file being executed
-	testCollateralPath = nodePath.join(__dirname, "..", testCollateralPath);
-	workerPath = nodePath.join(__dirname, "..", workerPath);
-	assert(fs.existsSync(workerPath), `Cannot find worker js file: ${workerPath}`);
-	return [testCollateralPath, workerPath];
+	workerPath = nodePath.join(_dirname, "..", workerPath);
+	assert(
+		fs.existsSync(workerPath),
+		`Cannot find worker js or test content file: ${workerPath}, ${testCollateral.path}`,
+	);
+	return [testCollateral.path, workerPath];
 }
 const [fileLocation, workerLocation] = getFileLocations();
 
@@ -146,8 +150,6 @@ export async function processOneNode(args: IWorkerArgs) {
 export async function processContent(mode: Mode, concurrently = true) {
 	const limiter = new ConcurrencyLimiter(numberOfThreads);
 
-	ensureTestCollateralPath();
-
 	for (const node of fs.readdirSync(fileLocation, { withFileTypes: true })) {
 		if (!node.isDirectory()) {
 			continue;
@@ -211,10 +213,6 @@ export async function processContent(mode: Mode, concurrently = true) {
 	return limiter.waitAll();
 }
 
-export function testCollateralExists() {
-	return fs.existsSync(fileLocation);
-}
-
 /**
  * In Validate mode, we need to validate that we can load documents with snapshots in old versions. We have snapshots
  * from multiple old versions, process snapshot from each of these versions.
@@ -255,7 +253,10 @@ async function processNodeForUpdatingSnapshots(
 	limiter: ConcurrencyLimiter,
 ) {
 	const currentSnapshotsDir = `${data.folder}/${currentSnapshots}`;
-	assert(fs.existsSync(currentSnapshotsDir), `Directory ${currentSnapshotsDir} does not exist!`);
+	assert(
+		fs.existsSync(currentSnapshotsDir),
+		`Directory ${currentSnapshotsDir} does not exist!`,
+	);
 
 	const versionFileName = `${currentSnapshotsDir}/snapshotVersion.json`;
 	assert(fs.existsSync(versionFileName), `Version file ${versionFileName} does not exist`);
@@ -427,9 +428,7 @@ async function processNode(
 					if (code !== 0) {
 						reject(
 							new Error(
-								`${JSON.stringify(
-									workerData,
-								)}\nWorker stopped with exit code ${code}`,
+								`${JSON.stringify(workerData)}\nWorker stopped with exit code ${code}`,
 							),
 						);
 					}
@@ -462,16 +461,4 @@ function cleanFailedSnapshots(dir: string) {
 	}
 
 	fs.rmdirSync(failedSnapshotsDir);
-}
-
-let collateralPathValidated: boolean;
-
-/**
- * Validates that the required external files exist.
- */
-function ensureTestCollateralPath() {
-	if (!collateralPathValidated) {
-		assert(fs.existsSync(fileLocation), `Cannot find test collateral path: ${fileLocation}`);
-		collateralPathValidated = true;
-	}
 }

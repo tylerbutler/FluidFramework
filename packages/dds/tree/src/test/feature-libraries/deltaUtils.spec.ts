@@ -4,109 +4,97 @@
  */
 
 import { strict as assert } from "assert";
-import { Delta, FieldKey, MapTree, TreeSchemaIdentifier } from "../../core";
-import { mapFieldMarks, mapTreeFromCursor, singleMapTreeCursor } from "../../feature-libraries";
-import { brand, brandOpaque } from "../../util";
-import { deepFreeze } from "../utils";
 
-const type: TreeSchemaIdentifier = brand("Node");
+import type {
+	DeltaDetachedNodeId,
+	DeltaFieldChanges,
+	DeltaRoot,
+	FieldKey,
+	MapTree,
+	TreeNodeSchemaIdentifier,
+} from "../../core/index.js";
+import {
+	cursorForMapTreeNode,
+	mapRootChanges,
+	mapTreeFromCursor,
+} from "../../feature-libraries/index.js";
+import { brand } from "../../util/index.js";
+import { deepFreeze } from "@fluidframework/test-runtime-utils/internal";
+
+const type: TreeNodeSchemaIdentifier = brand("Node");
 const emptyMap = new Map();
 const nodeX = { type, value: "X", fields: emptyMap };
-const nodeXCursor = singleMapTreeCursor(nodeX);
+const nodeXCursor = cursorForMapTreeNode(nodeX);
 const fooField = brand<FieldKey>("foo");
-const moveId = brandOpaque<Delta.MoveId>(42);
+const detachId: DeltaDetachedNodeId = { minor: 43 };
 
 describe("DeltaUtils", () => {
 	describe("mapFieldMarks", () => {
 		it("maps delta content", () => {
-			const nestedCursorInsert = new Map([
+			const nestedCursorInsert = new Map<FieldKey, DeltaFieldChanges>([
 				[
 					fooField,
-					[
-						42,
-						{
-							type: Delta.MarkType.Insert,
-							content: [nodeXCursor],
-						},
-					],
+					{
+						local: [
+							{ count: 42 },
+							{
+								count: 1,
+								attach: detachId,
+							},
+						],
+					},
 				],
 			]);
-			const input: Delta.Root = new Map([
-				[
-					fooField,
+			const input: DeltaRoot = {
+				build: [{ id: detachId, trees: [nodeXCursor] }],
+				fields: new Map<FieldKey, DeltaFieldChanges>([
 					[
+						fooField,
 						{
-							type: Delta.MarkType.Modify,
-							setValue: 1,
-							fields: nestedCursorInsert,
-						},
-						{
-							type: Delta.MarkType.MoveOut,
-							count: 1,
-							moveId,
-							setValue: 1,
-							fields: nestedCursorInsert,
-						},
-						{
-							type: Delta.MarkType.Delete,
-							count: 1,
-							setValue: 1,
-							fields: nestedCursorInsert,
-						},
-						{
-							type: Delta.MarkType.Insert,
-							content: [nodeXCursor],
-							setValue: 1,
-							fields: nestedCursorInsert,
+							local: [
+								{
+									count: 1,
+									fields: nestedCursorInsert,
+								},
+							],
+							global: [{ id: detachId, fields: nestedCursorInsert }],
 						},
 					],
-				],
-			]);
+				]),
+			};
 			deepFreeze(input);
-			const actual = mapFieldMarks(input, mapTreeFromCursor);
-			const nestedMapTreeInsert = new Map([
+			const actual = mapRootChanges(input, mapTreeFromCursor);
+			const nestedMapTreeInsert = new Map<FieldKey, DeltaFieldChanges>([
 				[
 					fooField,
-					[
-						42,
-						{
-							type: Delta.MarkType.Insert,
-							content: [nodeX],
-						},
-					],
+					{
+						local: [
+							{ count: 42 },
+							{
+								count: 1,
+								attach: detachId,
+							},
+						],
+					},
 				],
 			]);
-			const expected: Delta.Root<MapTree> = new Map([
-				[
-					fooField,
+			const expected: DeltaRoot<MapTree> = {
+				build: [{ id: detachId, trees: [nodeX] }],
+				fields: new Map<FieldKey, DeltaFieldChanges>([
 					[
+						fooField,
 						{
-							type: Delta.MarkType.Modify,
-							setValue: 1,
-							fields: nestedMapTreeInsert,
-						},
-						{
-							type: Delta.MarkType.MoveOut,
-							count: 1,
-							moveId,
-							setValue: 1,
-							fields: nestedMapTreeInsert,
-						},
-						{
-							type: Delta.MarkType.Delete,
-							count: 1,
-							setValue: 1,
-							fields: nestedMapTreeInsert,
-						},
-						{
-							type: Delta.MarkType.Insert,
-							content: [nodeX],
-							setValue: 1,
-							fields: nestedMapTreeInsert,
+							local: [
+								{
+									count: 1,
+									fields: nestedMapTreeInsert,
+								},
+							],
+							global: [{ id: detachId, fields: nestedMapTreeInsert }],
 						},
 					],
-				],
-			]);
+				]),
+			};
 			deepFreeze(expected);
 			assert.deepEqual(actual, expected);
 		});

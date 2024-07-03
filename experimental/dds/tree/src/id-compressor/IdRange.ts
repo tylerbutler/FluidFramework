@@ -3,8 +3,9 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from '@fluidframework/common-utils';
-import type { IdCreationRange, UnackedLocalId } from './persisted-types';
+import { assert } from '@fluidframework/core-utils/internal';
+
+import type { IdCreationRange, UnackedLocalId } from './persisted-types/index.js';
 
 export function getIds(
 	range: IdCreationRange
@@ -23,7 +24,7 @@ export function getIds(
 		last ??= overrides.overrides[overrides.overrides.length - 1][0];
 	}
 
-	assert(first !== undefined && last !== undefined, 'malformed IdCreationRange');
+	assert(first !== undefined && last !== undefined, 0x656 /* malformed IdCreationRange */);
 
 	return {
 		first,

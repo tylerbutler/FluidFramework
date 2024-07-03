@@ -4,8 +4,9 @@
  */
 
 import assert from "assert";
-import { SharedTreeCore } from "../../shared-tree-core";
-import { spyOnMethod, SummarizeType, TestTreeProvider } from "../utils";
+
+import { SharedTreeCore } from "../../shared-tree-core/index.js";
+import { SummarizeType, TestTreeProvider, spyOnMethod } from "../utils.js";
 
 describe("TestTreeProvider", () => {
 	it("can manually trigger summaries with summarizeOnDemand", async () => {
@@ -18,7 +19,8 @@ describe("TestTreeProvider", () => {
 		const summaries = summaryCount;
 		await provider.summarize();
 
-		assert.strictEqual(summaryCount, summaries + 1);
+		// summarizeCore is invoked as part of getGCData, hence why this is +2 and not +1
+		assert.strictEqual(summaryCount, summaries + 2);
 		unspy();
 	});
 
@@ -54,7 +56,9 @@ describe("TestTreeProvider", () => {
 
 		const summaries = summaryCount;
 		await provider.summarize();
-		assert.strictEqual(summaryCount, summaries + 1);
+
+		// summarizeCore is invoked as part of getGCData, hence why this is +2 and not +1
+		assert.strictEqual(summaryCount, summaries + 2);
 		unspy();
 	});
 });

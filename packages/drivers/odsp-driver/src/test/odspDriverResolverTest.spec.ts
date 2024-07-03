@@ -2,15 +2,18 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { strict as assert } from "assert";
-import { DriverHeader } from "@fluidframework/driver-definitions";
-import { ensureFluidResolvedUrl } from "@fluidframework/driver-utils";
+
+import { strict as assert } from "node:assert";
+
 import { IRequest } from "@fluidframework/core-interfaces";
-import { IOdspResolvedUrl } from "@fluidframework/odsp-driver-definitions";
-import { OdspDriverUrlResolver } from "../odspDriverUrlResolver";
-import { getHashedDocumentId } from "../odspPublicUtils";
-import { createOdspCreateContainerRequest } from "../createOdspCreateContainerRequest";
-import { createOdspUrl } from "../createOdspUrl";
+import { DriverHeader } from "@fluidframework/driver-definitions/internal";
+import { IOdspResolvedUrl } from "@fluidframework/odsp-driver-definitions/internal";
+
+import { createOdspCreateContainerRequest } from "../createOdspCreateContainerRequest.js";
+import { createOdspUrl } from "../createOdspUrl.js";
+import { OdspDriverUrlResolver, decodeOdspUrl } from "../odspDriverUrlResolver.js";
+import { getLocatorFromOdspUrl, storeLocatorInOdspUrl } from "../odspFluidFileLink.js";
+import { getHashedDocumentId } from "../odspPublicUtils.js";
 
 describe("Odsp Driver Resolver", () => {
 	const siteUrl = "https://localhost";
@@ -28,6 +31,7 @@ describe("Odsp Driver Resolver", () => {
 
 	it("Can create new request", async () => {
 		assert.strictEqual(
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			request.headers?.[DriverHeader.createNew].fileName,
 			fileName,
 			"Request should contain fileName",
@@ -70,7 +74,7 @@ describe("Odsp Driver Resolver", () => {
 			type: "fluid",
 			odspResolvedUrl: true,
 			id: "odspCreateNew",
-			url: "fluid-odsp://https://localhost?driveId=driveId&path=path&version=null",
+			url: "https://https://localhost?driveId=driveId&path=path&version=null",
 			siteUrl: "https://localhost",
 			hashedDocumentId: "",
 			driveId: "driveId",
@@ -105,23 +109,16 @@ describe("Odsp Driver Resolver", () => {
 		);
 	});
 
-	it("Should add shareLinkInfo with link type if request contains createLinkType", async () => {
-		const newRequest = request;
-		const createLinkType = "csl";
-		newRequest.url += `&createLinkType=${createLinkType}`;
-		const resolvedUrl = await resolver.resolve(request);
-		assert(resolvedUrl.shareLinkInfo !== undefined);
-		assert(resolvedUrl.shareLinkInfo.createLink !== undefined);
-		assert.strictEqual(resolvedUrl.shareLinkInfo.createLink.type, createLinkType);
-	});
-
 	it("Should resolve url with a string in the codeDetails package", async () => {
 		const resolvedUrl = await resolver.resolve(request);
-		const codeDetails = { package: packageName };
+		const codeDetails = {
+			package: packageName,
+		};
 		// codeDetails is cast to any for testing the IFluidCodeDetails approach
 		const response = await resolver.getAbsoluteUrl(
 			resolvedUrl,
 			"/datastore",
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
 			codeDetails as any,
 		);
 
@@ -189,7 +186,7 @@ describe("Odsp Driver Resolver", () => {
 
 	it("Should resolve url with a IFluidPackage in the codeDetails package", async () => {
 		const resolvedUrl = await resolver.resolve(request);
-		const fluidPackage: any = {
+		const fluidPackage = {
 			name: packageName,
 			fluid: {},
 		};
@@ -198,6 +195,7 @@ describe("Odsp Driver Resolver", () => {
 		const response = await resolver.getAbsoluteUrl(
 			resolvedUrl,
 			"/datastore",
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
 			codeDetails as any,
 		);
 
@@ -275,7 +273,6 @@ describe("Odsp Driver Resolver", () => {
 
 		// Act
 		const resolvedUrl = await resolver.resolve(testRequest);
-		ensureFluidResolvedUrl(resolvedUrl);
 
 		// Assert
 		assert.strictEqual(resolvedUrl.fileName, fileName, "FileName should be equal");
@@ -290,7 +287,7 @@ describe("Odsp Driver Resolver", () => {
 		);
 
 		const expectedResolvedUrl =
-			`fluid-odsp://${siteUrl}?driveId=${driveId}&path=${testFilePath}&itemId=${itemId}` +
+			`https://${siteUrl}?driveId=${driveId}&path=${testFilePath}&itemId=${itemId}` +
 			`&version=null`;
 		assert.strictEqual(resolvedUrl.url, expectedResolvedUrl, "resolved url is wrong");
 	});
@@ -305,7 +302,6 @@ describe("Odsp Driver Resolver", () => {
 
 		// Act
 		const resolvedUrl = await resolver.resolve(testRequest);
-		ensureFluidResolvedUrl(resolvedUrl);
 
 		// Assert
 		assert.strictEqual(resolvedUrl.fileName, "", "FileName should be absent");
@@ -324,8 +320,7 @@ describe("Odsp Driver Resolver", () => {
 		);
 
 		const expectedResolvedUrl =
-			`fluid-odsp://placeholder/placeholder/${resolvedUrl.hashedDocumentId}/` +
-			`${testFilePath}`;
+			`https://placeholder/placeholder/${resolvedUrl.hashedDocumentId}/` + `${testFilePath}`;
 		assert.strictEqual(resolvedUrl.url, expectedResolvedUrl, "resolved url is wrong");
 	});
 
@@ -339,7 +334,6 @@ describe("Odsp Driver Resolver", () => {
 
 		// Act
 		const resolvedUrl = await resolver.resolve(testRequest);
-		ensureFluidResolvedUrl(resolvedUrl);
 
 		// Assert
 		assert.strictEqual(resolvedUrl.fileName, "", "FileName should be absent");
@@ -358,22 +352,20 @@ describe("Odsp Driver Resolver", () => {
 		);
 
 		const expectedResolvedUrl =
-			`fluid-odsp://placeholder/placeholder/${resolvedUrl.hashedDocumentId}/` +
-			`${testFilePath}`;
+			`https://placeholder/placeholder/${resolvedUrl.hashedDocumentId}/` + `${testFilePath}`;
 		assert.strictEqual(resolvedUrl.url, expectedResolvedUrl, "resolved url is wrong");
 	});
 
 	it("Should resolve url with special characters", async () => {
 		// Arrange
 		const testFilePath = "data1/data2/!@$";
-		const itemId = "item!@$";
+		const itemId = "item! @$";
 		const testRequest: IRequest = {
 			url: `${siteUrl}?driveId=${driveId}&path=${testFilePath}&itemId=${itemId}`,
 		};
 
 		// Act
 		const resolvedUrl = await resolver.resolve(testRequest);
-		ensureFluidResolvedUrl(resolvedUrl);
 
 		// Assert
 		assert.strictEqual(resolvedUrl.fileName, "", "FileName should be absent");
@@ -392,9 +384,34 @@ describe("Odsp Driver Resolver", () => {
 		);
 
 		const expectedResolvedUrl =
-			`fluid-odsp://placeholder/placeholder/${resolvedUrl.hashedDocumentId}/` +
-			`${testFilePath}`;
+			`https://placeholder/placeholder/${resolvedUrl.hashedDocumentId}/` + `${testFilePath}`;
 		assert.strictEqual(resolvedUrl.url, expectedResolvedUrl, "resolved url is wrong");
+	});
+
+	it("Should resolve url with URI encodable characters", async () => {
+		const itemId = "item /";
+		const driveId1 = "driveId {}[] ";
+		const encodedUrl = createOdspUrl({
+			siteUrl,
+			driveId: driveId1,
+			itemId,
+			dataStorePath: "",
+		});
+		const decodedOdspUrl = decodeOdspUrl(encodedUrl);
+		assert.strictEqual(itemId, decodedOdspUrl.itemId, "itemid should match");
+		assert.strictEqual(driveId1, decodedOdspUrl.driveId, "driveId should match");
+
+		const testUrl = new URL(siteUrl);
+		storeLocatorInOdspUrl(testUrl, {
+			driveId: driveId1,
+			itemId,
+			siteUrl,
+			dataStorePath: "",
+		});
+		const decodedUrlLocator = getLocatorFromOdspUrl(testUrl);
+		assert(decodedUrlLocator !== undefined, "locator should be present");
+		assert.strictEqual(itemId, decodedUrlLocator.itemId, "itemid should match in locator");
+		assert.strictEqual(driveId1, decodedUrlLocator.driveId, "driveId should match in locator");
 	});
 
 	it("resolves urls with datastore path in url path", async () => {
@@ -403,7 +420,7 @@ describe("Odsp Driver Resolver", () => {
 
 		assert.strictEqual(
 			resolvedUrl.url,
-			"fluid-odsp://placeholder/placeholder/AV5r7rhbMqs3T5cL8TUpqk6FpWldev0qKsKlnjkC5mg%3D/",
+			"https://placeholder/placeholder/AV5r7rhbMqs3T5cL8TUpqk6FpWldev0qKsKlnjkC5mg%3D/",
 		);
 	});
 
@@ -418,7 +435,6 @@ describe("Odsp Driver Resolver", () => {
 
 		// Act
 		const resolvedUrl = await resolver.resolve(testRequest);
-		ensureFluidResolvedUrl(resolvedUrl);
 
 		// Assert
 		assert.strictEqual(resolvedUrl.fileName, "", "FileName should be absent");
@@ -438,8 +454,7 @@ describe("Odsp Driver Resolver", () => {
 		assert.strictEqual(resolvedUrl.fileVersion, fileVersion, "FileVersion should be equal");
 
 		const expectedResolvedUrl =
-			`fluid-odsp://placeholder/placeholder/${resolvedUrl.hashedDocumentId}/` +
-			`${testFilePath}`;
+			`https://placeholder/placeholder/${resolvedUrl.hashedDocumentId}/` + `${testFilePath}`;
 		assert.strictEqual(resolvedUrl.url, expectedResolvedUrl, "resolved url is wrong");
 	});
 });

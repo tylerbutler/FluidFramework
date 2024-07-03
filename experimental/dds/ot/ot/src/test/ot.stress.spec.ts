@@ -4,15 +4,17 @@
  */
 
 import { strict as assert } from "assert";
-import { Random } from "best-random";
-import { IChannelServices } from "@fluidframework/datastore-definitions";
+
+import { IChannelServices } from "@fluidframework/datastore-definitions/internal";
 import {
-	MockFluidDataStoreRuntime,
-	MockStorage,
 	MockContainerRuntimeFactoryForReconnection,
 	MockContainerRuntimeForReconnection,
-} from "@fluidframework/test-runtime-utils";
-import { SharedDelta } from "./delta";
+	MockFluidDataStoreRuntime,
+	MockStorage,
+} from "@fluidframework/test-runtime-utils/internal";
+import { Random } from "best-random";
+
+import { SharedDelta } from "./delta.js";
 
 describe("SharedOT", () => {
 	describe("stress", () => {
@@ -84,15 +86,17 @@ describe("SharedOT", () => {
 
 				// Create docs for this stress run.
 				for (let i = 0; i < numClients; i++) {
-					const dataStoreRuntimeN = new MockFluidDataStoreRuntime();
+					const dataStoreRuntimeN = new MockFluidDataStoreRuntime({
+						registry: [SharedDelta.getFactory()],
+					});
 					const containerRuntimeN =
 						containerRuntimeFactory.createContainerRuntime(dataStoreRuntimeN);
 					const servicesN: IChannelServices = {
-						deltaConnection: containerRuntimeN.createDeltaConnection(),
+						deltaConnection: dataStoreRuntimeN.createDeltaConnection(),
 						objectStorage: new MockStorage(),
 					};
 
-					const docN = SharedDelta.getFactory().create(dataStoreRuntimeN, `doc-${i}`);
+					const docN = SharedDelta.create(dataStoreRuntimeN, `doc-${i}`);
 					docN.connect(servicesN);
 
 					docs.push(docN);
@@ -112,17 +116,13 @@ describe("SharedOT", () => {
 					trace?.push(
 						`doc${
 							docIndex + 1
-						}.insert(/* position: */ ${position}, /* text: */ ${JSON.stringify(
-							text,
-						)});`,
+						}.insert(/* position: */ ${position}, /* text: */ ${JSON.stringify(text)});`,
 					);
 					docs[docIndex].insert(position, text);
 				};
 
 				const del = (docIndex: number, start: number, end: number) => {
-					trace?.push(
-						`doc${docIndex + 1}.delete(/* start: */ ${start}, /* end: */ ${end});`,
-					);
+					trace?.push(`doc${docIndex + 1}.delete(/* start: */ ${start}, /* end: */ ${end});`);
 					docs[docIndex].delete(start, end);
 				};
 
@@ -178,6 +178,7 @@ describe("SharedOT", () => {
 
 				// Also dump the current state of the docs.
 				for (const m of docs) {
+					// eslint-disable-next-line @typescript-eslint/no-base-to-string
 					console.log(m.toString());
 				}
 

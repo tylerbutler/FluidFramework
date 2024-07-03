@@ -4,9 +4,12 @@
  */
 
 export {
-	IFetchSnapshotResult,
+	IRefreshSummaryResult,
 	ISummarizerNodeRootContract,
-	RefreshSummaryResult,
-} from "./summarizerNodeUtils";
-export { IRootSummarizerNode, createRootSummarizerNode } from "./summarizerNode";
-export { IRootSummarizerNodeWithGC, createRootSummarizerNodeWithGC } from "./summarizerNodeWithGc";
+	ValidateSummaryResult,
+} from "./summarizerNodeUtils.js";
+export { IRootSummarizerNode, createRootSummarizerNode } from "./summarizerNode.js";
+export {
+	IRootSummarizerNodeWithGC,
+	createRootSummarizerNodeWithGC,
+} from "./summarizerNodeWithGc.js";

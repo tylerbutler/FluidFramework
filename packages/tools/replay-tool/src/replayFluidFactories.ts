@@ -3,34 +3,38 @@
  * Licensed under the MIT License.
  */
 
-import { SharedCell } from "@fluidframework/cell";
-import { IContainerContext } from "@fluidframework/container-definitions";
-import { ContainerRuntime, IContainerRuntimeOptions } from "@fluidframework/container-runtime";
-import { FluidDataStoreRuntime } from "@fluidframework/datastore";
-import { IChannelFactory } from "@fluidframework/datastore-definitions";
-import { Ink } from "@fluidframework/ink";
-import { SharedMap, SharedDirectory } from "@fluidframework/map";
-import { SharedMatrix } from "@fluidframework/matrix";
-import { ConsensusQueue } from "@fluidframework/ordered-collection";
-import { ConsensusRegisterCollection } from "@fluidframework/register-collection";
+import { Ink } from "@fluid-experimental/ink";
+import {
+	SharedNumberSequence,
+	SharedObjectSequence,
+	SparseMatrix,
+} from "@fluid-experimental/sequence-deprecated";
+import { SharedCell } from "@fluidframework/cell/internal";
+import { IContainerContext } from "@fluidframework/container-definitions/internal";
+import {
+	ContainerRuntime,
+	IContainerRuntimeOptions,
+} from "@fluidframework/container-runtime/internal";
+import { IContainerRuntime } from "@fluidframework/container-runtime-definitions/internal";
+import { FluidDataStoreRuntime } from "@fluidframework/datastore/internal";
+import { IChannelFactory } from "@fluidframework/datastore-definitions/internal";
+import { SharedDirectory, SharedMap } from "@fluidframework/map/internal";
+import { SharedMatrix } from "@fluidframework/matrix/internal";
+import { ConsensusQueue } from "@fluidframework/ordered-collection/internal";
+import { ConsensusRegisterCollection } from "@fluidframework/register-collection/internal";
 import {
 	FluidDataStoreRegistryEntry,
 	IFluidDataStoreContext,
 	IFluidDataStoreFactory,
 	IFluidDataStoreRegistry,
 	NamedFluidDataStoreRegistryEntries,
-} from "@fluidframework/runtime-definitions";
-import { RuntimeFactoryHelper } from "@fluidframework/runtime-utils";
-import { SharedIntervalCollection, SharedString } from "@fluidframework/sequence";
-import { SharedSummaryBlock } from "@fluidframework/shared-summary-block";
-import {
-	SharedNumberSequence,
-	SharedObjectSequence,
-	SparseMatrix,
-} from "@fluid-experimental/sequence-deprecated";
-import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
-import { UnknownChannelFactory } from "./unknownChannel";
-import { ReplayToolContainerEntryPoint } from "./helpers";
+} from "@fluidframework/runtime-definitions/internal";
+import { RuntimeFactoryHelper } from "@fluidframework/runtime-utils/internal";
+import { SharedIntervalCollection, SharedString } from "@fluidframework/sequence/internal";
+import { SharedSummaryBlock } from "@fluidframework/shared-summary-block/internal";
+
+import { ReplayToolContainerEntryPoint } from "./helpers.js";
+import { UnknownChannelFactory } from "./unknownChannel.js";
 
 /** Simple runtime factory that creates a container runtime */
 export class ReplayRuntimeFactory extends RuntimeFactoryHelper {
@@ -47,7 +51,7 @@ export class ReplayRuntimeFactory extends RuntimeFactoryHelper {
 	): Promise<ContainerRuntime> {
 		return ContainerRuntime.loadRuntime({
 			context,
-			initializeEntryPoint: async (containerRuntime: IContainerRuntime) => {
+			provideEntryPoint: async (containerRuntime: IContainerRuntime) => {
 				// For the replay tool, the entryPoint exposes the containerRuntime itself so the helpers for the tool
 				// can use it. This is an anti-pattern, and is *not* what an actual application should do (it should
 				// expose an object with a defined API that allows hosts that consume the container to interact with it).
@@ -126,6 +130,10 @@ export class ReplayDataStoreFactory
 			context,
 			new Map(allDdsFactories.map((factory) => [factory.type, factory])),
 			true /* existing */,
+			() => {
+				// TODO: AB#4779
+				throw new Error("TODO");
+			},
 		);
 	}
 }

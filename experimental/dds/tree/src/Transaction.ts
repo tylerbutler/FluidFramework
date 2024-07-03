@@ -3,20 +3,21 @@
  * Licensed under the MIT License.
  */
 
-import { IErrorEvent } from '@fluidframework/common-definitions';
-import { TypedEventEmitter } from '@fluidframework/common-utils';
-import { ChangeInternal, Edit, EditStatus } from './persisted-types';
-import { newEditId } from './EditUtilities';
-import { TreeView } from './TreeView';
-import { Change } from './ChangeTypes';
-import { SharedTree } from './SharedTree';
-import { GenericTransaction, TransactionInternal } from './TransactionInternal';
-import { CachingLogViewer } from './LogViewer';
-import { RestOrArray, unwrapRestOrArray } from './Common';
+import { TypedEventEmitter } from '@fluid-internal/client-utils';
+import { IErrorEvent } from '@fluidframework/core-interfaces';
+
+import { Change } from './ChangeTypes.js';
+import { RestOrArray, unwrapRestOrArray } from './Common.js';
+import { newEditId } from './EditUtilities.js';
+import { CachingLogViewer } from './LogViewer.js';
+import { SharedTree } from './SharedTree.js';
+import { GenericTransaction, TransactionInternal } from './TransactionInternal.js';
+import { TreeView } from './TreeView.js';
+import { ChangeInternal, Edit, EditStatus } from './persisted-types/index.js';
 
 /**
  * An event emitted by a `Transaction` to indicate a state change. See {@link TransactionEvents} for event argument information.
- * @public
+ * @alpha
  */
 export enum TransactionEvent {
 	/**
@@ -27,7 +28,7 @@ export enum TransactionEvent {
 
 /**
  * Events which may be emitted by `Transaction`
- * @public
+ * @alpha
  */
 export interface TransactionEvents extends IErrorEvent {
 	(event: TransactionEvent.ViewChange, listener: (before: TreeView, after: TreeView) => void);
@@ -36,6 +37,7 @@ export interface TransactionEvents extends IErrorEvent {
 /**
  * Buffers changes to be applied to an isolated view of a `SharedTree` over time before applying them directly to the tree itself as a
  * single edit
+ * @alpha
  */
 export class Transaction extends TypedEventEmitter<TransactionEvents> {
 	/** The view of the tree when this transaction was created */
@@ -93,10 +95,7 @@ export class Transaction extends TypedEventEmitter<TransactionEvents> {
 			if (changes.length > 0) {
 				const previousView = this.currentView;
 				this.transaction.applyChanges(changes.map((c) => this.tree.internalizeChange(c)));
-				if (
-					this.listenerCount(TransactionEvent.ViewChange) > 0 &&
-					!previousView.hasEqualForest(this.currentView)
-				) {
+				if (this.listenerCount(TransactionEvent.ViewChange) > 0 && !previousView.hasEqualForest(this.currentView)) {
 					this.emit(TransactionEvent.ViewChange, previousView, this.currentView);
 				}
 			}

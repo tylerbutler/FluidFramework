@@ -2,22 +2,25 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import {
-	ApiClass,
-	ApiEnum,
-	ApiFunction,
-	ApiInterface,
-	ApiItem,
+	type ApiClass,
+	type ApiEnum,
+	type ApiFunction,
+	type ApiInterface,
+	type ApiItem,
 	ApiItemKind,
-	ApiNamespace,
-	ApiTypeAlias,
-	ApiVariable,
+	type ApiNamespace,
+	type ApiTypeAlias,
+	type ApiVariable,
 } from "@microsoft/api-extractor-model";
 
-import { SectionNode } from "../../documentation-domain";
-import { ApiModuleLike, filterByKind } from "../ApiItemUtilities";
-import { ApiItemTransformationConfiguration } from "../configuration";
-import { createChildDetailsSection, createMemberTables } from "../helpers";
+import type { SectionNode } from "../../documentation-domain/index.js";
+import type { ApiModuleLike } from "../../utilities/index.js";
+import type { ApiItemTransformationConfiguration } from "../configuration/index.js";
+import { createChildDetailsSection, createMemberTables } from "../helpers/index.js";
+import { filterItems } from "../ApiItemTransformUtilities.js";
+import { getScopedMemberNameForDiagnostics } from "../Utilities.js";
 
 /**
  * Default documentation transform for module-like API items (packages, namespaces).
@@ -58,43 +61,63 @@ import { createChildDetailsSection, createMemberTables } from "../helpers";
  */
 export function transformApiModuleLike(
 	apiItem: ApiModuleLike,
-	childItems: readonly ApiItem[],
 	config: Required<ApiItemTransformationConfiguration>,
 	generateChildContent: (apiItem: ApiItem) => SectionNode[],
 ): SectionNode[] {
 	const children: SectionNode[] = [];
 
-	const hasAnyChildren = apiItem.members.length > 0;
-
-	if (hasAnyChildren) {
+	const filteredChildren = filterItems(apiItem.members, config);
+	if (filteredChildren.length > 0) {
 		// Accumulate child items
-		const interfaces = filterByKind(childItems, [ApiItemKind.Interface]).map(
-			(_apiItem) => _apiItem as ApiInterface,
-		);
-
-		const classes = filterByKind(childItems, [ApiItemKind.Class]).map(
-			(_apiItem) => _apiItem as ApiClass,
-		);
-
-		const namespaces = filterByKind(childItems, [ApiItemKind.Namespace]).map(
-			(_apiItem) => _apiItem as ApiNamespace,
-		);
-
-		const types = filterByKind(childItems, [ApiItemKind.TypeAlias]).map(
-			(_apiItem) => _apiItem as ApiTypeAlias,
-		);
-
-		const functions = filterByKind(childItems, [ApiItemKind.Function]).map(
-			(_apiItem) => _apiItem as ApiFunction,
-		);
-
-		const enums = filterByKind(childItems, [ApiItemKind.Enum]).map(
-			(_apiItem) => _apiItem as ApiEnum,
-		);
-
-		const variables = filterByKind(childItems, [ApiItemKind.Variable]).map(
-			(_apiItem) => _apiItem as ApiVariable,
-		);
+		const interfaces: ApiInterface[] = [];
+		const classes: ApiClass[] = [];
+		const namespaces: ApiNamespace[] = [];
+		const types: ApiTypeAlias[] = [];
+		const functions: ApiFunction[] = [];
+		const enums: ApiEnum[] = [];
+		const variables: ApiVariable[] = [];
+		for (const child of filteredChildren) {
+			switch (child.kind) {
+				case ApiItemKind.Interface: {
+					interfaces.push(child as ApiInterface);
+					break;
+				}
+				case ApiItemKind.Class: {
+					classes.push(child as ApiClass);
+					break;
+				}
+				case ApiItemKind.Namespace: {
+					namespaces.push(child as ApiNamespace);
+					break;
+				}
+				case ApiItemKind.TypeAlias: {
+					types.push(child as ApiTypeAlias);
+					break;
+				}
+				case ApiItemKind.Function: {
+					functions.push(child as ApiFunction);
+					break;
+				}
+				case ApiItemKind.Enum: {
+					enums.push(child as ApiEnum);
+					break;
+				}
+				case ApiItemKind.Variable: {
+					variables.push(child as ApiVariable);
+					break;
+				}
+				default: {
+					config.logger?.error(
+						`Child item "${child.displayName}" of ${
+							apiItem.kind
+						} "${getScopedMemberNameForDiagnostics(
+							apiItem,
+						)}" is of unsupported API item kind: "${child.kind}"`,
+					);
+					break;
+				}
+			}
+		}
 
 		// Render summary tables
 		const memberTableSections = createMemberTables(
@@ -190,5 +213,5 @@ export function transformApiModuleLike(
 		}
 	}
 
-	return config.createChildContentSections(apiItem, children, config);
+	return config.createDefaultLayout(apiItem, children, config);
 }

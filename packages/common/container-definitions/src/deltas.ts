@@ -3,28 +3,36 @@
  * Licensed under the MIT License.
  */
 
-import {
+import type {
 	IDisposable,
-	IEventProvider,
-	IEvent,
+	IErrorBase,
 	IErrorEvent,
-} from "@fluidframework/common-definitions";
-import {
-	ConnectionMode,
+	IEvent,
+	IEventProvider,
+} from "@fluidframework/core-interfaces";
+import type { IClientDetails } from "@fluidframework/driver-definitions";
+import type {
+	IAnyDriverError,
 	IClientConfiguration,
-	IClientDetails,
 	IDocumentMessage,
-	ISequencedDocumentMessage,
-	ISignalClient,
-	ISignalMessage,
 	ITokenClaims,
-} from "@fluidframework/protocol-definitions";
+	ISequencedDocumentMessage,
+	ISignalMessage,
+} from "@fluidframework/driver-definitions/internal";
 
 /**
  * Contract representing the result of a newly established connection to the server for syncing deltas.
+ * @legacy
+ * @alpha
  */
 export interface IConnectionDetails {
+	/**
+	 * The client's unique identifier assigned by the service.
+	 *
+	 * @remarks It is not stable across reconnections.
+	 */
 	clientId: string;
+
 	claims: ITokenClaims;
 	serviceConfiguration: IClientConfiguration;
 
@@ -33,40 +41,19 @@ export interface IConnectionDetails {
 	 *
 	 * @remarks
 	 *
-	 * It may lap actual last sequence number (quite a bit, if container is very active).
-	 * But it's the best information for client to figure out how far it is behind, at least
-	 * for "read" connections. "write" connections may use own "join" op to similar information,
-	 * that is likely to be more up-to-date.
+	 * It may lag behind the actual last sequence number (quite a bit, if the container is very active),
+	 * but it's the best information the client has to figure out how far behind it is, at least
+	 * for "read" connections. "write" connections may use the client's own "join" op to obtain similar
+	 * information which is likely to be more up-to-date.
 	 */
 	checkpointSequenceNumber: number | undefined;
 }
 
 /**
- * Internal version of IConnectionDetails with props are only exposed internally
- */
-export interface IConnectionDetailsInternal extends IConnectionDetails {
-	mode: ConnectionMode;
-	version: string;
-	initialClients: ISignalClient[];
-}
-
-/**
- * Interface used to define a strategy for handling incoming delta messages
- */
-export interface IDeltaHandlerStrategy {
-	/**
-	 * Processes the message.
-	 */
-	process: (message: ISequencedDocumentMessage) => void;
-
-	/**
-	 * Processes the signal.
-	 */
-	processSignal: (message: ISignalMessage) => void;
-}
-
-/**
  * Contract supporting delivery of outbound messages to the server
+ * @sealed
+ * @legacy
+ * @alpha
  */
 export interface IDeltaSender {
 	/**
@@ -77,11 +64,15 @@ export interface IDeltaSender {
 
 /**
  * Events emitted by {@link IDeltaManager}.
+ * @sealed
+ * @legacy
+ * @alpha
  */
 export interface IDeltaManagerEvents extends IEvent {
 	/**
 	 * @deprecated No replacement API recommended.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	(event: "prepareSend", listener: (messageBuffer: any[]) => void);
 
 	/**
@@ -104,22 +95,15 @@ export interface IDeltaManagerEvents extends IEvent {
 	 *
 	 * - `processingTime`: The amount of time it took to process the inbound operation (op), expressed in milliseconds.
 	 */
-	(event: "op", listener: (message: ISequencedDocumentMessage, processingTime: number) => void);
+	(
+		event: "op",
+		listener: (message: ISequencedDocumentMessage, processingTime: number) => void,
+	);
 
 	/**
-	 * @deprecated No replacement API recommended.
-	 */
-	(event: "allSentOpsAckd", listener: () => void);
-
-	/**
-	 * @deprecated No replacement API recommended.
+	 * Emitted periodically with latest information on network roundtrip latency
 	 */
 	(event: "pong", listener: (latency: number) => void);
-
-	/**
-	 * @deprecated No replacement API recommended.
-	 */
-	(event: "processTime", listener: (latency: number) => void);
 
 	/**
 	 * Emitted when the {@link IDeltaManager} completes connecting to the Fluid service.
@@ -143,8 +127,9 @@ export interface IDeltaManagerEvents extends IEvent {
 	 * @remarks Listener parameters:
 	 *
 	 * - `reason`: Describes the reason for which the delta manager was disconnected.
+	 * - `error` : error if any for the disconnect.
 	 */
-	(event: "disconnect", listener: (reason: string) => void);
+	(event: "disconnect", listener: (reason: string, error?: IAnyDriverError) => void);
 
 	/**
 	 * Emitted when read/write permissions change.
@@ -153,38 +138,66 @@ export interface IDeltaManagerEvents extends IEvent {
 	 *
 	 * - `readonly`: Whether or not the delta manager is now read-only.
 	 */
-	(event: "readonly", listener: (readonly: boolean) => void);
+	(
+		event: "readonly",
+		listener: (
+			readonly: boolean,
+			readonlyConnectionReason?: { reason: string; error?: IErrorBase },
+		) => void,
+	);
 }
 
 /**
  * Manages the transmission of ops between the runtime and storage.
+ * @sealed
+ * @legacy
+ * @alpha
  */
 export interface IDeltaManager<T, U>
 	extends IEventProvider<IDeltaManagerEvents>,
-		IDeltaSender,
-		IDisposable {
-	/** The queue of inbound delta messages */
+		IDeltaSender {
+	/**
+	 * The queue of inbound delta messages
+	 * @deprecated Do not use, for internal use only. There are a lot of complications in core pieces of the runtime
+	 * may break if this is used directly. For example summarization and op processing.
+	 */
 	readonly inbound: IDeltaQueue<T>;
 
-	/** The queue of outbound delta messages */
+	/**
+	 * The queue of outbound delta messages
+	 * @deprecated Do not use, for internal use only. There are a lot of complications in core pieces of the runtime
+	 * may break if this is used directly. For example op submission
+	 */
 	readonly outbound: IDeltaQueue<U[]>;
 
-	/** The queue of inbound delta signals */
+	/**
+	 * The queue of inbound delta signals
+	 */
 	readonly inboundSignal: IDeltaQueue<ISignalMessage>;
 
-	/** The current minimum sequence number */
+	/**
+	 * The current minimum sequence number
+	 */
 	readonly minimumSequenceNumber: number;
 
-	/** The last sequence number processed by the delta manager */
+	/**
+	 * The last sequence number processed by the delta manager
+	 */
 	readonly lastSequenceNumber: number;
 
-	/** The last message processed by the delta manager */
+	/**
+	 * The last message processed by the delta manager
+	 */
 	readonly lastMessage: ISequencedDocumentMessage | undefined;
 
-	/** The latest sequence number the delta manager is aware of */
+	/**
+	 * The latest sequence number the delta manager is aware of
+	 */
 	readonly lastKnownSeqNumber: number;
 
-	/** The initial sequence number set when attaching the op handler */
+	/**
+	 * The initial sequence number set when attaching the op handler
+	 */
 	readonly initialSequenceNumber: number;
 
 	/**
@@ -193,29 +206,46 @@ export interface IDeltaManager<T, U>
 	 */
 	readonly hasCheckpointSequenceNumber: boolean;
 
-	/** Details of client */
+	/**
+	 * Details of client
+	 */
 	readonly clientDetails: IClientDetails;
 
-	/** Protocol version being used to communicate with the service */
+	/**
+	 * Protocol version being used to communicate with the service
+	 */
 	readonly version: string;
 
-	/** Max message size allowed to the delta manager */
+	/**
+	 * Max message size allowed to the delta manager
+	 */
 	readonly maxMessageSize: number;
 
-	/** Service configuration provided by the service. */
+	/**
+	 * Service configuration provided by the service.
+	 */
 	readonly serviceConfiguration: IClientConfiguration | undefined;
 
-	/** Flag to indicate whether the client can write or not. */
+	/**
+	 * Flag to indicate whether the client can write or not.
+	 */
 	readonly active: boolean;
 
 	readonly readOnlyInfo: ReadOnlyInfo;
 
-	/** Submit a signal to the service to be broadcast to other connected clients, but not persisted */
-	submitSignal(content: any): void;
+	/**
+	 * Submit a signal to the service to be broadcast to other connected clients, but not persisted
+	 */
+	// TODO: use `unknown` instead (API breaking)
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	submitSignal(content: any, targetClientId?: string): void;
 }
 
 /**
  * Events emitted by {@link IDeltaQueue}.
+ * @sealed
+ * @legacy
+ * @alpha
  */
 export interface IDeltaQueueEvents<T> extends IErrorEvent {
 	/**
@@ -258,6 +288,9 @@ export interface IDeltaQueueEvents<T> extends IErrorEvent {
 
 /**
  * Queue of ops to be sent to or processed from storage
+ * @sealed
+ * @legacy
+ * @alpha
  */
 export interface IDeltaQueue<T> extends IEventProvider<IDeltaQueueEvents<T>>, IDisposable {
 	/**
@@ -305,16 +338,36 @@ export interface IDeltaQueue<T> extends IEventProvider<IDeltaQueueEvents<T>>, ID
 	waitTillProcessingDone(): Promise<{ count: number; duration: number }>;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export type ReadOnlyInfo =
 	| {
 			readonly readonly: false | undefined;
 	  }
 	| {
 			readonly readonly: true;
-			/** read-only because forceReadOnly() was called */
+
+			/**
+			 * Read-only because `forceReadOnly()` was called.
+			 */
 			readonly forced: boolean;
-			/** read-only because client does not have write permissions for document */
+
+			/**
+			 * Read-only because client does not have write permissions for document.
+			 */
 			readonly permissions: boolean | undefined;
-			/** read-only with no delta stream connection */
+
+			/**
+			 * Read-only with no delta stream connection.
+			 */
 			readonly storageOnly: boolean;
+
+			/**
+			 * Extra info on why connection to delta stream is not possible.
+			 *
+			 * @remarks This info might be provided if {@link ReadOnlyInfo.storageOnly} is set to `true`.
+			 */
+			readonly storageOnlyReason?: string;
 	  };

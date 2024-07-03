@@ -3,23 +3,26 @@
  * Licensed under the MIT License.
  */
 
-import type { ITelemetryLogger } from "@fluidframework/common-definitions";
 import {
 	IDocumentStorageService,
 	IDocumentStorageServicePolicies,
 	LoaderCachingPolicy,
-} from "@fluidframework/driver-definitions";
-import { ISnapshotTree, IVersion } from "@fluidframework/protocol-definitions";
-import { GitManager } from "@fluidframework/server-services-client";
+	ISnapshotTree,
+	IVersion,
+} from "@fluidframework/driver-definitions/internal";
 import {
 	DocumentStorageServiceProxy,
 	PrefetchDocumentStorageService,
-} from "@fluidframework/driver-utils";
-import { IRouterliciousDriverPolicies } from "./policies";
-import { ICache } from "./cache";
-import { WholeSummaryDocumentStorageService } from "./wholeSummaryDocumentStorageService";
-import { ShreddedSummaryDocumentStorageService } from "./shreddedSummaryDocumentStorageService";
-import { ISnapshotTreeVersion } from "./definitions";
+} from "@fluidframework/driver-utils/internal";
+import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils/internal";
+
+import { ICache } from "./cache.js";
+import { INormalizedWholeSnapshot } from "./contracts.js";
+import { ISnapshotTreeVersion } from "./definitions.js";
+import { GitManager } from "./gitManager.js";
+import { IRouterliciousDriverPolicies } from "./policies.js";
+import { ShreddedSummaryDocumentStorageService } from "./shreddedSummaryDocumentStorageService.js";
+import { WholeSummaryDocumentStorageService } from "./wholeSummaryDocumentStorageService.js";
 
 export class DocumentStorageService extends DocumentStorageServiceProxy {
 	private _logTailSha: string | undefined = undefined;
@@ -31,11 +34,12 @@ export class DocumentStorageService extends DocumentStorageServiceProxy {
 	private static loadInternalDocumentStorageService(
 		id: string,
 		manager: GitManager,
-		logger: ITelemetryLogger,
+		logger: ITelemetryLoggerExt,
 		policies: IDocumentStorageServicePolicies,
 		driverPolicies?: IRouterliciousDriverPolicies,
 		blobCache?: ICache<ArrayBufferLike>,
-		snapshotTreeCache?: ICache<ISnapshotTreeVersion>,
+		snapshotTreeCache?: ICache<INormalizedWholeSnapshot>,
+		shreddedSummaryTreeCache?: ICache<ISnapshotTreeVersion>,
 		noCacheGitManager?: GitManager,
 		getStorageManager?: (disableCache?: boolean) => Promise<GitManager>,
 	): IDocumentStorageService {
@@ -50,7 +54,7 @@ export class DocumentStorageService extends DocumentStorageServiceProxy {
 					snapshotTreeCache,
 					noCacheGitManager,
 					getStorageManager,
-			  )
+				)
 			: new ShreddedSummaryDocumentStorageService(
 					id,
 					manager,
@@ -58,9 +62,9 @@ export class DocumentStorageService extends DocumentStorageServiceProxy {
 					policies,
 					driverPolicies,
 					blobCache,
-					snapshotTreeCache,
+					shreddedSummaryTreeCache,
 					getStorageManager,
-			  );
+				);
 		// TODO: worth prefetching latest summary making version + snapshot call with WholeSummary storage?
 		if (
 			!driverPolicies?.enableWholeSummaryUpload &&
@@ -74,11 +78,12 @@ export class DocumentStorageService extends DocumentStorageServiceProxy {
 	constructor(
 		public readonly id: string,
 		public manager: GitManager,
-		logger: ITelemetryLogger,
+		logger: ITelemetryLoggerExt,
 		policies: IDocumentStorageServicePolicies,
 		driverPolicies?: IRouterliciousDriverPolicies,
 		blobCache?: ICache<ArrayBufferLike>,
-		snapshotTreeCache?: ICache<ISnapshotTreeVersion>,
+		snapshotTreeCache?: ICache<INormalizedWholeSnapshot>,
+		shreddedSummaryTreeCache?: ICache<ISnapshotTreeVersion>,
 		public noCacheGitManager?: GitManager,
 		getStorageManager?: (disableCache?: boolean) => Promise<GitManager>,
 	) {
@@ -91,6 +96,7 @@ export class DocumentStorageService extends DocumentStorageServiceProxy {
 				driverPolicies,
 				blobCache,
 				snapshotTreeCache,
+				shreddedSummaryTreeCache,
 				noCacheGitManager,
 				getStorageManager,
 			),

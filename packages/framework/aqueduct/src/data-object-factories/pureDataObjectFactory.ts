@@ -3,39 +3,42 @@
  * Licensed under the MIT License.
  */
 
-import { IRequest, IFluidRouter, FluidObject } from "@fluidframework/core-interfaces";
+import { FluidDataStoreRegistry } from "@fluidframework/container-runtime/internal";
+import type { IContainerRuntime } from "@fluidframework/container-runtime-definitions/internal";
+import type { FluidObject, IRequest } from "@fluidframework/core-interfaces";
+import { assert } from "@fluidframework/core-utils/internal";
 import {
 	FluidDataStoreRuntime,
-	ISharedObjectRegistry,
+	type ISharedObjectRegistry,
 	mixinRequestHandler,
-} from "@fluidframework/datastore";
-import { FluidDataStoreRegistry } from "@fluidframework/container-runtime";
-import {
-	IFluidDataStoreContext,
+} from "@fluidframework/datastore/internal";
+import type {
+	IChannelFactory,
+	IFluidDataStoreRuntime,
+} from "@fluidframework/datastore-definitions/internal";
+import type {
 	IContainerRuntimeBase,
+	IDataStore,
+	IFluidDataStoreChannel,
+	IFluidDataStoreContext,
+	IFluidDataStoreContextDetached,
 	IFluidDataStoreFactory,
 	IFluidDataStoreRegistry,
 	IProvideFluidDataStoreRegistry,
 	NamedFluidDataStoreRegistryEntries,
 	NamedFluidDataStoreRegistryEntry,
-	IFluidDataStoreContextDetached,
-} from "@fluidframework/runtime-definitions";
-import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
-import { IChannelFactory, IFluidDataStoreRuntime } from "@fluidframework/datastore-definitions";
-import {
+} from "@fluidframework/runtime-definitions/internal";
+import type {
+	AsyncFluidObjectProvider,
 	FluidObjectSymbolProvider,
-	DependencyContainer,
 	IFluidDependencySynthesizer,
-} from "@fluidframework/synthesize";
+} from "@fluidframework/synthesize/internal";
 
-import { assert } from "@fluidframework/common-utils";
-import { IDataObjectProps, PureDataObject, DataObjectTypes } from "../data-objects";
-/*
- * Useful interface in places where it's useful to do type erasure for PureDataObject generic
- */
-export interface IRootDataObjectFactory extends IFluidDataStoreFactory {
-	createRootInstance(rootDataStoreId: string, runtime: IContainerRuntime): Promise<IFluidRouter>;
-}
+import type {
+	DataObjectTypes,
+	IDataObjectProps,
+	PureDataObject,
+} from "../data-objects/index.js";
 
 /**
  * Proxy over PureDataObject
@@ -52,31 +55,32 @@ async function createDataObject<
 	runtimeClassArg: typeof FluidDataStoreRuntime,
 	existing: boolean,
 	initProps?: I["InitialState"],
-) {
+): Promise<{
+	instance: TObj;
+	runtime: FluidDataStoreRuntime;
+}> {
 	// base
 	let runtimeClass = runtimeClassArg;
 
 	// request mixin in
 	runtimeClass = mixinRequestHandler(
 		async (request: IRequest, runtimeArg: FluidDataStoreRuntime) => {
-			const maybeRouter: FluidObject<IFluidRouter> | undefined =
-				await runtimeArg.entryPoint?.get();
+			// The provideEntryPoint callback below always returns TObj, so this cast is safe
+			const dataObject = (await runtimeArg.entryPoint.get()) as TObj;
 			assert(
-				maybeRouter !== undefined,
-				0x468 /* entryPoint should have been initialized by now */,
+				dataObject.request !== undefined,
+				0x795 /* Data store runtime entryPoint does not have request */,
 			);
-			assert(
-				maybeRouter?.IFluidRouter !== undefined,
-				0x469 /* Data store runtime entryPoint is not an IFluidRouter */,
-			);
-			return maybeRouter?.IFluidRouter.request(request);
+			return dataObject.request(request);
 		},
 		runtimeClass,
 	);
 
-	// Create a new runtime for our data store
+	// Create a new runtime for our data store, as if via new FluidDataStoreRuntime,
+	// but using the runtimeClass that's been augmented with mixins
 	// The runtime is what Fluid uses to create DDS' and route to your data store
 	const runtime: FluidDataStoreRuntime = new runtimeClass(
+		// calls new FluidDataStoreRuntime(...)
 		context,
 		sharedObjectRegistry,
 		existing,
@@ -87,7 +91,7 @@ async function createDataObject<
 			// Without this I ran into issues with the load-existing flow not working correctly.
 			await instance.finishInitialization(true);
 			return instance;
-		},
+		} /* provideEntryPoint */,
 	);
 
 	// Create object right away.
@@ -96,8 +100,14 @@ async function createDataObject<
 	// access DDSes or other services of runtime as objects are not fully initialized.
 	// In order to use object, we need to go through full initialization by calling finishInitialization().
 	const scope: FluidObject<IFluidDependencySynthesizer> = context.scope;
-	const dependencyContainer = new DependencyContainer(scope.IFluidDependencySynthesizer);
-	const providers = dependencyContainer.synthesize<I["OptionalProviders"]>(optionalProviders, {});
+	const providers =
+		scope.IFluidDependencySynthesizer?.synthesize<I["OptionalProviders"]>(
+			optionalProviders,
+			{},
+		) ??
+		// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+		({} as AsyncFluidObjectProvider<never>);
+
 	const instance = new ctor({ runtime, context, providers, initProps });
 
 	// if it's a newly created object, we need to wait for it to finish initialization
@@ -123,19 +133,21 @@ async function createDataObject<
  *
  * @typeParam TObj - DataObject (concrete type)
  * @typeParam I - The input types for the DataObject
+ * @legacy
+ * @alpha
  */
 export class PureDataObjectFactory<
 	TObj extends PureDataObject<I>,
 	I extends DataObjectTypes = DataObjectTypes,
-> implements
-		IFluidDataStoreFactory,
-		Partial<IProvideFluidDataStoreRegistry>,
-		IRootDataObjectFactory
+> implements IFluidDataStoreFactory, Partial<IProvideFluidDataStoreRegistry>
 {
 	private readonly sharedObjectRegistry: ISharedObjectRegistry;
 	private readonly registry: IFluidDataStoreRegistry | undefined;
 
-	constructor(
+	public constructor(
+		/**
+		 * {@inheritDoc @fluidframework/runtime-definitions#IFluidDataStoreFactory."type"}
+		 */
 		public readonly type: string,
 		private readonly ctor: new (props: IDataObjectProps<I>) => TObj,
 		sharedObjects: readonly IChannelFactory[],
@@ -152,11 +164,17 @@ export class PureDataObjectFactory<
 		this.sharedObjectRegistry = new Map(sharedObjects.map((ext) => [ext.type, ext]));
 	}
 
-	public get IFluidDataStoreFactory() {
+	/**
+	 * {@inheritDoc @fluidframework/runtime-definitions#IProvideFluidDataStoreFactory.IFluidDataStoreFactory}
+	 */
+	public get IFluidDataStoreFactory(): this {
 		return this;
 	}
 
-	public get IFluidDataStoreRegistry() {
+	/**
+	 * {@inheritDoc @fluidframework/runtime-definitions#IProvideFluidDataStoreRegistry.IFluidDataStoreRegistry}
+	 */
+	public get IFluidDataStoreRegistry(): IFluidDataStoreRegistry | undefined {
 		return this.registry;
 	}
 
@@ -171,11 +189,12 @@ export class PureDataObjectFactory<
 	}
 
 	/**
-	 * This is where we do data store setup.
-	 *
-	 * @param context - data store context used to load a data store runtime
+	 * {@inheritDoc @fluidframework/runtime-definitions#IFluidDataStoreFactory.instantiateDataStore}
 	 */
-	public async instantiateDataStore(context: IFluidDataStoreContext, existing: boolean) {
+	public async instantiateDataStore(
+		context: IFluidDataStoreContext,
+		existing: boolean,
+	): Promise<IFluidDataStoreChannel> {
 		const { runtime } = await createDataObject(
 			this.ctor,
 			context,
@@ -196,17 +215,20 @@ export class PureDataObjectFactory<
 	 * @param context - The context being used to create the runtime
 	 * (the created object will have its own new context created as well)
 	 * @param initialState - The initial state to provide to the created data store.
+	 * @param loadingGroupId - NOT production ready, EXPERIMENTAL, please read {@link https://github.com/microsoft/FluidFramework/blob/main/packages/runtime/container-runtime/README.md | README}. The service needs to support this feature, does not work for most services
 	 * @returns an object created by this factory. Data store and objects created are not attached to container.
 	 * They get attached only when a handle to one of them is attached to already attached objects.
 	 */
 	public async createChildInstance(
 		parentContext: IFluidDataStoreContext,
 		initialState?: I["InitialState"],
+		loadingGroupId?: string,
 	): Promise<TObj> {
 		return this.createNonRootInstanceCore(
 			parentContext.containerRuntime,
 			[...parentContext.packagePath, this.type],
 			initialState,
+			loadingGroupId,
 		);
 	}
 
@@ -217,17 +239,20 @@ export class PureDataObjectFactory<
 	 * @param context - The component context being used to create the object
 	 * (the created object will have its own new context created as well)
 	 * @param initialState - The initial state to provide to the created component.
+	 * @param loadingGroupId - NOT production ready, EXPERIMENTAL, please read {@link https://github.com/microsoft/FluidFramework/blob/main/packages/runtime/container-runtime/README.md | README}. The service needs to support this feature, does not work for most services
 	 * @returns an object created by this factory. Data store and objects created are not attached to container.
 	 * They get attached only when a handle to one of them is attached to already attached objects.
 	 */
 	public async createPeerInstance(
 		peerContext: IFluidDataStoreContext,
 		initialState?: I["InitialState"],
+		loadingGroupId?: string, // DO NOT USE, this is an experimental feature
 	): Promise<TObj> {
 		return this.createNonRootInstanceCore(
 			peerContext.containerRuntime,
 			peerContext.packagePath,
 			initialState,
+			loadingGroupId,
 		);
 	}
 
@@ -238,14 +263,52 @@ export class PureDataObjectFactory<
 	 * The name in this registry for such record should match type of this factory.
 	 * @param runtime - container runtime. It's registry is used to create an object.
 	 * @param initialState - The initial state to provide to the created component.
+	 * @param loadingGroupId - NOT production ready, EXPERIMENTAL, please read {@link https://github.com/microsoft/FluidFramework/blob/main/packages/runtime/container-runtime/README.md | README}. The service needs to support this feature, does not work for most services
 	 * @returns an object created by this factory. Data store and objects created are not attached to container.
 	 * They get attached only when a handle to one of them is attached to already attached objects.
 	 */
 	public async createInstance(
 		runtime: IContainerRuntimeBase,
 		initialState?: I["InitialState"],
+		loadingGroupId?: string,
 	): Promise<TObj> {
-		return this.createNonRootInstanceCore(runtime, [this.type], initialState);
+		return this.createNonRootInstanceCore(runtime, [this.type], initialState, loadingGroupId);
+	}
+
+	/**
+	 * Creates a new instance of the object with a datastore which exposes the aliasing api.
+	 * @param runtime - container runtime. It is the runtime that will be used to create the object. It will produce
+	 * the underlying infrastructure to get the data object to operate.
+	 * @param initialState - The initial state to provide to the created component.
+	 * @param packagePath - The path to the data store factory to use to create the data object.
+	 * @param loadingGroupId - NOT production ready, EXPERIMENTAL, please read {@link https://github.com/microsoft/FluidFramework/blob/main/packages/runtime/container-runtime/README.md | README}. The service needs to support this feature, does not work for most services
+	 * @returns an array containing the object created by this factory and an IDataStore object that enables users to
+	 * alias the data object.
+	 * The data object is attached only when it is attached to the handle graph that connects to an aliased object or
+	 * when the data object is aliased.
+	 */
+	public async createInstanceWithDataStore(
+		containerRuntime: IContainerRuntimeBase,
+		initialState?: I["InitialState"],
+		packagePath?: Readonly<string[]>,
+		loadingGroupId?: string,
+	): Promise<[TObj, IDataStore]> {
+		const context = containerRuntime.createDetachedDataStore(
+			packagePath ?? [this.type],
+			loadingGroupId,
+		);
+		const { instance, runtime } = await createDataObject(
+			this.ctor,
+			context,
+			this.sharedObjectRegistry,
+			this.optionalProviders,
+			this.runtimeClass,
+			false, // existing
+			initialState,
+		);
+		const dataStore = await context.attachRuntime(this, runtime);
+
+		return [instance, dataStore];
 	}
 
 	/**
@@ -257,22 +320,42 @@ export class PureDataObjectFactory<
 	 * @param initialState - The initial state to provide to the created component.
 	 * @returns an object created by this factory. Data store and objects created are not attached to container.
 	 * They get attached only when a handle to one of them is attached to already attached objects.
+	 *
+	 * @deprecated - the issue is that it does not allow the customer to decide the conflict resolution policy when an
+	 * aliasing conflict occurs. Use {@link PureDataObjectFactory.createInstanceWithDataStore} instead.
 	 */
 	public async createRootInstance(
 		rootDataStoreId: string,
 		runtime: IContainerRuntime,
 		initialState?: I["InitialState"],
 	): Promise<TObj> {
-		const context = runtime.createDetachedRootDataStore([this.type], rootDataStoreId);
-		return this.createInstanceCore(context, initialState);
+		const context = runtime.createDetachedDataStore([this.type]);
+		const { instance, runtime: dataStoreRuntime } = await createDataObject(
+			this.ctor,
+			context,
+			this.sharedObjectRegistry,
+			this.optionalProviders,
+			this.runtimeClass,
+			false, // existing
+			initialState,
+		);
+		const dataStore = await context.attachRuntime(this, dataStoreRuntime);
+		const result = await dataStore.trySetAlias(rootDataStoreId);
+		if (result !== "Success") {
+			const handle = await runtime.getAliasedDataStoreEntryPoint(rootDataStoreId);
+			assert(handle !== undefined, 0x8e1 /* Should have retrieved aliased handle */);
+			return (await handle.get()) as TObj;
+		}
+		return instance;
 	}
 
 	protected async createNonRootInstanceCore(
 		containerRuntime: IContainerRuntimeBase,
 		packagePath: Readonly<string[]>,
 		initialState?: I["InitialState"],
+		loadingGroupId?: string,
 	): Promise<TObj> {
-		const context = containerRuntime.createDetachedDataStore(packagePath);
+		const context = containerRuntime.createDetachedDataStore(packagePath, loadingGroupId);
 		return this.createInstanceCore(context, initialState);
 	}
 

@@ -2,35 +2,44 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { assert } from "@fluidframework/common-utils";
+
 import { IRequest } from "@fluidframework/core-interfaces";
+import { assert } from "@fluidframework/core-utils/internal";
 import {
-	DriverErrorType,
 	DriverHeader,
 	IContainerPackageInfo,
 	IResolvedUrl,
 	IUrlResolver,
-} from "@fluidframework/driver-definitions";
+} from "@fluidframework/driver-definitions/internal";
+import { NonRetryableError } from "@fluidframework/driver-utils/internal";
 import {
 	IOdspResolvedUrl,
-	ShareLinkTypes,
-	ShareLinkInfoType,
-} from "@fluidframework/odsp-driver-definitions";
-import { NonRetryableError } from "@fluidframework/driver-utils";
-import { createOdspUrl } from "./createOdspUrl";
-import { getApiRoot } from "./odspUrlHelper";
-import { getOdspResolvedUrl } from "./odspUtils";
-import { getHashedDocumentId } from "./odspPublicUtils";
-import { ClpCompliantAppHeader } from "./contractsPublic";
-import { pkgVersion } from "./packageVersion";
+	OdspErrorTypes,
+} from "@fluidframework/odsp-driver-definitions/internal";
 
-function getUrlBase(siteUrl: string, driveId: string, itemId: string, fileVersion?: string) {
-	const siteOrigin = new URL(siteUrl).origin;
+import { ClpCompliantAppHeader } from "./contractsPublic.js";
+import { createOdspUrl } from "./createOdspUrl.js";
+import { getHashedDocumentId } from "./odspPublicUtils.js";
+import { getApiRoot } from "./odspUrlHelper.js";
+import { getOdspResolvedUrl } from "./odspUtils.js";
+import { pkgVersion } from "./packageVersion.js";
+
+function getUrlBase(
+	siteUrl: string,
+	driveId: string,
+	itemId: string,
+	fileVersion?: string,
+): string {
 	const version = fileVersion ? `versions/${fileVersion}/` : "";
-	return `${getApiRoot(siteOrigin)}/drives/${driveId}/items/${itemId}/${version}`;
+	return `${getApiRoot(new URL(siteUrl))}/drives/${driveId}/items/${itemId}/${version}`;
 }
 
-function getSnapshotUrl(siteUrl: string, driveId: string, itemId: string, fileVersion?: string) {
+function getSnapshotUrl(
+	siteUrl: string,
+	driveId: string,
+	itemId: string,
+	fileVersion?: string,
+): string {
 	const urlBase = getUrlBase(siteUrl, driveId, itemId, fileVersion);
 	return `${urlBase}opStream/snapshots`;
 }
@@ -40,7 +49,7 @@ function getAttachmentPOSTUrl(
 	driveId: string,
 	itemId: string,
 	fileVersion?: string,
-) {
+): string {
 	const urlBase = getUrlBase(siteUrl, driveId, itemId, fileVersion);
 	return `${urlBase}opStream/attachment`;
 }
@@ -50,7 +59,7 @@ function getAttachmentGETUrl(
 	driveId: string,
 	itemId: string,
 	fileVersion?: string,
-) {
+): string {
 	const urlBase = getUrlBase(siteUrl, driveId, itemId, fileVersion);
 	return `${urlBase}opStream/attachments`;
 }
@@ -60,7 +69,7 @@ function getDeltaStorageUrl(
 	driveId: string,
 	itemId: string,
 	fileVersion?: string,
-) {
+): string {
 	const urlBase = getUrlBase(siteUrl, driveId, itemId, fileVersion);
 	return `${urlBase}opStream`;
 }
@@ -71,43 +80,45 @@ function getDeltaStorageUrl(
  */
 function removeBeginningSlash(str: string): string {
 	if (str.startsWith("/")) {
-		return str.substr(1);
+		return str.slice(1);
 	}
 
 	return str;
 }
 
+// back-compat: GitHub #9653
+const isFluidPackage = (pkg: Record<string, unknown>): boolean =>
+	typeof pkg === "object" && typeof pkg?.name === "string" && typeof pkg?.fluid === "object";
+
 /**
  * Resolver to resolve urls like the ones created by createOdspUrl which is driver inner
  * url format. Ex: `${siteUrl}?driveId=${driveId}&itemId=${itemId}&path=${path}`
+ * @legacy
+ * @alpha
  */
 export class OdspDriverUrlResolver implements IUrlResolver {
 	constructor() {}
 
+	/**
+	 * {@inheritDoc @fluidframework/driver-definitions#IUrlResolver.resolve}
+	 */
 	public async resolve(request: IRequest): Promise<IOdspResolvedUrl> {
 		if (request.headers?.[DriverHeader.createNew]) {
 			const [siteURL, queryString] = request.url.split("?");
 
 			const searchParams = new URLSearchParams(queryString);
-			const fileName = request.headers[DriverHeader.createNew].fileName;
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+			const fileName: string = request.headers[DriverHeader.createNew].fileName;
 			const driveID = searchParams.get("driveId");
 			const filePath = searchParams.get("path");
 			const packageName = searchParams.get("containerPackageName");
-			const createLinkType = searchParams.get("createLinkType");
+			// eslint-disable-next-line @typescript-eslint/prefer-optional-chain -- false positive
 			if (!(fileName && siteURL && driveID && filePath !== null && filePath !== undefined)) {
 				throw new NonRetryableError(
-					"Proper new file params should be there!!",
-					DriverErrorType.genericError,
+					"Proper new file params should be there",
+					OdspErrorTypes.genericError,
 					{ driverVersion: pkgVersion },
 				);
-			}
-			let shareLinkInfo: ShareLinkInfoType | undefined;
-			if (createLinkType && createLinkType in ShareLinkTypes) {
-				shareLinkInfo = {
-					createLink: {
-						type: ShareLinkTypes[createLinkType],
-					},
-				};
 			}
 			return {
 				endpoints: {
@@ -120,7 +131,7 @@ export class OdspDriverUrlResolver implements IUrlResolver {
 				type: "fluid",
 				odspResolvedUrl: true,
 				id: "odspCreateNew",
-				url: `fluid-odsp://${siteURL}?${queryString}&version=null`,
+				url: `https://${siteURL}?${queryString}&version=null`,
 				siteUrl: siteURL,
 				hashedDocumentId: "",
 				driveId: driveID,
@@ -131,17 +142,16 @@ export class OdspDriverUrlResolver implements IUrlResolver {
 					containerPackageName: packageName ?? undefined,
 				},
 				fileVersion: undefined,
-				shareLinkInfo,
+				shareLinkInfo: undefined,
 				isClpCompliantApp: request.headers?.[ClpCompliantAppHeader.isClpCompliantApp],
 			};
 		}
-		const { siteUrl, driveId, itemId, path, containerPackageName, fileVersion } = decodeOdspUrl(
-			request.url,
-		);
+		const { siteUrl, driveId, itemId, path, containerPackageName, fileVersion } =
+			decodeOdspUrl(request.url);
 		const hashedDocumentId = await getHashedDocumentId(driveId, itemId);
 		assert(!hashedDocumentId.includes("/"), 0x0a8 /* "Docid should not contain slashes!!" */);
 
-		const documentUrl = `fluid-odsp://placeholder/placeholder/${hashedDocumentId}/${removeBeginningSlash(
+		const documentUrl = `https://placeholder/placeholder/${hashedDocumentId}/${removeBeginningSlash(
 			path,
 		)}`;
 
@@ -151,12 +161,7 @@ export class OdspDriverUrlResolver implements IUrlResolver {
 			odspResolvedUrl: true,
 			endpoints: {
 				snapshotStorageUrl: getSnapshotUrl(siteUrl, driveId, itemId, fileVersion),
-				attachmentPOSTStorageUrl: getAttachmentPOSTUrl(
-					siteUrl,
-					driveId,
-					itemId,
-					fileVersion,
-				),
+				attachmentPOSTStorageUrl: getAttachmentPOSTUrl(siteUrl, driveId, itemId, fileVersion),
 				attachmentGETStorageUrl: getAttachmentGETUrl(siteUrl, driveId, itemId, fileVersion),
 				deltaStorageUrl: getDeltaStorageUrl(siteUrl, driveId, itemId, fileVersion),
 			},
@@ -199,21 +204,20 @@ export class OdspDriverUrlResolver implements IUrlResolver {
 			dataStorePath = odspResolvedUrl.dataStorePath;
 		}
 		if (dataStorePath.startsWith("/")) {
-			dataStorePath = dataStorePath.substr(1);
+			dataStorePath = dataStorePath.slice(1);
 		}
 
-		// back-compat: GitHub #9653
-		const isFluidPackage = (pkg: any) =>
-			typeof pkg === "object" &&
-			typeof pkg?.name === "string" &&
-			typeof pkg?.fluid === "object";
-		let containerPackageName;
+		let containerPackageName: string | undefined;
 		if (packageInfoSource && "name" in packageInfoSource) {
 			containerPackageName = packageInfoSource.name;
 			// packageInfoSource is cast to any as it is typed to IContainerPackageInfo instead of IFluidCodeDetails
+			// TODO: use stronger type
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
 		} else if (isFluidPackage((packageInfoSource as any)?.package)) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
 			containerPackageName = (packageInfoSource as any)?.package.name;
 		} else {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
 			containerPackageName = (packageInfoSource as any)?.package;
 		}
 		containerPackageName =
@@ -227,7 +231,7 @@ export class OdspDriverUrlResolver implements IUrlResolver {
 	}
 }
 
-function decodeOdspUrl(url: string): {
+export function decodeOdspUrl(url: string): {
 	siteUrl: string;
 	driveId: string;
 	itemId: string;

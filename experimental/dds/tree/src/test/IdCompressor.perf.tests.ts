@@ -5,21 +5,23 @@
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { benchmark, BenchmarkType } from '@fluid-tools/benchmark';
-import { take } from '@fluid-internal/stochastic-test-utils';
-import { fail, Mutable } from '../Common';
-import { defaultClusterCapacity, IdCompressor, isFinalId, isLocalId } from '../id-compressor/IdCompressor';
-import { IdCreationRange, UnackedLocalId, SerializedIdCompressorWithNoSession } from '../id-compressor';
-import { createSessionId, numericUuidFromStableId, stableIdFromNumericUuid } from '../id-compressor/NumericUuid';
-import { CompressedId, FinalCompressedId, LocalCompressedId, OpSpaceCompressedId, SessionId } from '../Identifiers';
+import { take } from '@fluid-private/stochastic-test-utils';
+import { BenchmarkType, benchmark } from '@fluid-tools/benchmark';
+
+import { Mutable, fail } from '../Common.js';
+import { CompressedId, FinalCompressedId, LocalCompressedId, OpSpaceCompressedId, SessionId } from '../Identifiers.js';
+import { IdCompressor, defaultClusterCapacity, isFinalId, isLocalId } from '../id-compressor/IdCompressor.js';
+import { createSessionId, numericUuidFromStableId, stableIdFromNumericUuid } from '../id-compressor/NumericUuid.js';
+import { IdCreationRange, SerializedIdCompressorWithNoSession, UnackedLocalId } from '../id-compressor/index.js';
+
 import {
 	Client,
 	IdCompressorTestNetwork,
+	TestIdData,
 	makeOpGenerator,
 	performFuzzActions,
 	sessionIds,
-	TestIdData,
-} from './utilities/IdCompressorTestUtilities';
+} from './utilities/IdCompressorTestUtilities.js';
 
 describe('IdCompressor Perf', () => {
 	const type = BenchmarkType.Measurement;
@@ -136,10 +138,7 @@ describe('IdCompressor Perf', () => {
 					if (actualOverrideCount > 0) {
 						overrides = [] as unknown as Mutable<IdCreationRange.Overrides>;
 						for (let i = 0; i < actualOverrideCount; i++) {
-							overrides.push([
-								(first - i) as LocalCompressedId & OpSpaceCompressedId,
-								`override${overrideIndex++}`,
-							]);
+							overrides.push([(first - i) as LocalCompressedId & OpSpaceCompressedId, `override${overrideIndex++}`]);
 						}
 					}
 
