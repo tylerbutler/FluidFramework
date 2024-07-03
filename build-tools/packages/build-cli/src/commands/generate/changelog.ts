@@ -6,18 +6,18 @@
 import { strict as assert } from "assert";
 import path from "path";
 
-import { readdir, readFile } from "fs/promises";
 import { existsSync, readFileSync, writeFileSync } from "fs-extra";
+import { readFile, readdir } from "fs/promises";
 import matter from "gray-matter";
 import { rimraf } from "rimraf";
 
+import { VersionBumpType } from "@fluid-tools/version-tools";
+import { MonoRepo, Package } from "@fluidframework/build-tools";
 import { packageOrReleaseGroupArg } from "../../args.js";
 import { BaseCommand } from "../../base.js";
-import { isReleaseGroup } from "../../releaseGroups.js";
-import { MonoRepo, Package } from "@fluidframework/build-tools";
-import { addChangesetsToChangelog, newChangeset, Repository } from "../../library/index.js";
-import { VersionBumpType } from "@fluid-tools/version-tools";
 import { bumpTypeFlag } from "../../flags.js";
+import { Repository, addChangesetsToChangelog, newChangeset } from "../../library/index.js";
+import { isReleaseGroup } from "../../releaseGroups.js";
 
 // IMPORTANT: TypeScript changes imports to require when outputting CJS, which causes dynamic import to fail. This hack
 // creates a function dynamically that's invisible to TypeScript, so the import statements stay in the output JS.

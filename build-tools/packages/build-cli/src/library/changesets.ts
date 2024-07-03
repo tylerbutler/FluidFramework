@@ -3,18 +3,18 @@
  * Licensed under the MIT License.
  */
 
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { ReleaseVersion, VersionBumpType } from "@fluid-tools/version-tools";
 import { Logger, Package } from "@fluidframework/build-tools";
-import { existsSync, readFileSync, writeFileSync } from "fs";
 import matter from "gray-matter";
 
 // eslint-disable-next-line node/no-missing-import
-import type { Parent, Root, Paragraph, Heading, List, Text, Content } from "mdast";
+import type { Content, Heading, List, Paragraph, Parent, Root, Text } from "mdast";
+import type { Plugin } from "unified";
 // eslint-disable-next-line node/no-missing-import
 import type { Node } from "unist";
-import type { Plugin } from "unified";
 
-import { Repository } from "./git";
+import { Repository } from "./git.js";
 
 // IMPORTANT: TypeScript changes imports to require when outputting CJS, which causes dynamic import to fail. This hack
 // creates a function dynamically that's invisible to TypeScript, so the import statements stay in the output JS.
@@ -200,7 +200,7 @@ export async function addChangesetsToChangelog(
 						const topHeading = children[0];
 						mdastAssertParent(topHeading);
 
-						(node as Root).children = children.splice(1, 0, ...changelogEntries)
+						(node as Root).children = children.splice(1, 0, ...changelogEntries);
 						break;
 					}
 
