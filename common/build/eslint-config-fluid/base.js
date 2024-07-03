@@ -19,6 +19,7 @@ module.exports = {
 		// import/recommended is the combination of import/errors and import/warnings
 		"plugin:import/recommended",
 		"plugin:import/typescript",
+		"prettier",
 	],
 	globals: {
 		Atomics: "readonly",
