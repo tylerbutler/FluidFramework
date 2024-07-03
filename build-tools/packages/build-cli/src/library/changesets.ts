@@ -3,96 +3,33 @@
  * Licensed under the MIT License.
  */
 
-import { existsSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { ReleaseVersion, VersionBumpType } from "@fluid-tools/version-tools";
 import { Logger, Package } from "@fluidframework/build-tools";
 import matter from "gray-matter";
 
-// eslint-disable-next-line node/no-missing-import
 import type { Content, Heading, List, Paragraph, Parent, Root, Text } from "mdast";
-import type { Plugin } from "unified";
-// eslint-disable-next-line node/no-missing-import
+import { brk, heading, paragraph, root, text } from "mdast-builder";
+import { assert as mdastAssert, parent as mdastAssertParent } from "mdast-util-assert";
+import { compact } from "mdast-util-compact";
+import { fromMarkdown } from "mdast-util-from-markdown";
+import { toMarkdown } from "mdast-util-to-markdown";
+import { remark } from "remark";
+import remarkFrontmatter from "remark-frontmatter";
+import remarkGfm from "remark-gfm";
+import remarkGitHub from "remark-github";
+import remarkNormalizeHeadings from "remark-normalize-headings";
+import remarkParse from "remark-parse";
+import remarkRemoveComments from "remark-remove-comments";
+import remarkStringify from "remark-stringify";
+import remarkToc from "remark-toc";
+import { type Plugin, unified } from "unified";
 import type { Node } from "unist";
+import { matches, select, selectAll } from "unist-util-select";
+import { visit } from "unist-util-visit";
+import { visitParents } from "unist-util-visit-parents";
 
 import { Repository } from "./git.js";
-
-// IMPORTANT: TypeScript changes imports to require when outputting CJS, which causes dynamic import to fail. This hack
-// creates a function dynamically that's invisible to TypeScript, so the import statements stay in the output JS.
-// eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
-const dynamicImport = new Function("specifier", "return import(specifier)");
-
-let mdast;
-let mdastAssert;
-let mdastAssertParent;
-let mdastFromMarkdown;
-let mdastToMarkdown;
-let compact;
-let visit;
-let visitParents;
-
-let select;
-let matches;
-let selectAll;
-
-let root;
-let paragraph;
-let text;
-let heading;
-let list;
-let listItem;
-let brk;
-
-let remark;
-let remarkFrontmatter;
-let remarkGfm;
-let remarkGitHub;
-let remarkNormalizeHeadings;
-let remarkParse;
-let remarkRemoveComments;
-let remarkStringify;
-let remarkToc;
-let unified;
-
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-(async () => {
-	// ESM-only libraries require dynamic import
-	/* eslint-disable unicorn/no-await-expression-member */
-	// mdast = (await dynamicImport("mdast")).default;
-	compact = (await dynamicImport("mdast-util-compact")).compact;
-
-	const assertLib = await dynamicImport("mdast-util-assert");
-	mdastAssert = assertLib.assert;
-	mdastAssertParent = assertLib.parent;
-
-	visit = (await dynamicImport("unist-util-visit")).visit;
-	visitParents = (await dynamicImport("unist-util-visit-parents")).visitParents;
-
-	const unistSelect = await dynamicImport("unist-util-select");
-	select = unistSelect.select;
-	selectAll = unistSelect.selectAll;
-	matches = unistSelect.matches;
-
-	const builder = await dynamicImport("mdast-builder");
-	root = builder.root;
-	paragraph = builder.paragraph;
-	text = builder.text;
-	heading = builder.heading;
-	brk = builder.brk;
-
-	mdastFromMarkdown = (await dynamicImport("mdast-util-from-markdown")).fromMarkdown;
-	mdastToMarkdown = (await dynamicImport("mdast-util-to-markdown")).toMarkdown;
-	remark = (await dynamicImport("remark")).remark;
-	remarkFrontmatter = (await dynamicImport("remark-frontmatter")).default;
-	remarkGfm = (await dynamicImport("remark-gfm")).default;
-	remarkGitHub = (await dynamicImport("remark-github")).default;
-	remarkParse = (await dynamicImport("remark-parse")).default;
-	remarkRemoveComments = (await dynamicImport("remark-remove-comments")).default;
-	remarkNormalizeHeadings = (await dynamicImport("remark-normalize-headings")).default;
-	remarkStringify = (await dynamicImport("remark-stringify")).default;
-	remarkToc = (await dynamicImport("remark-toc")).default;
-	unified = (await dynamicImport("unified")).unified;
-	/* eslint-enable unicorn/no-await-expression-member */
-})();
 
 export interface Commit {
 	summary: string;
@@ -116,7 +53,7 @@ export async function newChangeset(
 		return undefined;
 	}
 
-	const fileContents = readFileSync(file, "utf-8");
+	const fileContents = readFileSync(file, "utf8");
 	const parsed = matter(fileContents);
 
 	const changeset: Changeset = {
@@ -168,19 +105,18 @@ export async function addChangesetsToChangelog(
 		? readFileSync(changelogPath, "utf-8")
 		: `# ${pkg.name} Changelog\n\n`;
 
-	const changelogEntries: Content[] = [];
+	const changelogEntries: string[] = [];
 	for (const changeset of changesets) {
-		// eslint-disable-next-line no-await-in-loop
-		const changesetContent: Content = await remark()
+		const changesetContent = await unified()
 			.use(remarkParse)
 			.use(remarkGfm)
 			.use(remarkGitHub)
 			.use(firstParagraphToHeading)
 			// .use(buildChangelog(ver, changesets))
-			// .use(remarkNormalizeHeadings)
-			// .use(remarkStringify)
-			.parse(changeset.rawContent);
-		changelogEntries.push(changesetContent);
+			.use(remarkNormalizeHeadings)
+			.use(remarkStringify)
+			.process(changeset.rawContent);
+		changelogEntries.push(changesetContent.toString());
 		// console.warn(JSON.stringify(changesetContent, undefined, 2));
 	}
 
