@@ -8,7 +8,6 @@ import { IChannelStorageService } from '@fluidframework/datastore-definitions';
 import { IContainerContext } from '@fluidframework/container-definitions/internal';
 import { IContainerRuntime } from '@fluidframework/container-runtime-definitions/internal';
 import type { IDeltaManager } from '@fluidframework/container-definitions/internal';
-import type { IDeltaManagerErased } from '@fluidframework/datastore-definitions';
 import type { IDocumentMessage } from '@fluidframework/protocol-definitions';
 import { IFluidDataStoreFactory } from '@fluidframework/runtime-definitions/internal';
 import { IFluidDataStoreRegistry } from '@fluidframework/runtime-definitions/internal';
@@ -204,17 +203,8 @@ export class TelemetryContext implements ITelemetryContext {
     setMultiple(prefix: string, property: string, values: Record<string, TelemetryBaseEventPropertyType>): void;
 }
 
-// @internal
-export function toDeltaManagerErased(deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>): IDeltaManagerErased;
-
 // @alpha
-export function toDeltaManagerInternal(deltaManager: IDeltaManagerErased): IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
-
-// @alpha
-export function toFluidHandleErased<T>(handle: IFluidHandleInternal<T>): IFluidHandleErased<T>;
-
-// @alpha
-export function toFluidHandleInternal<T>(handle: IFluidHandle<T>): IFluidHandleInternal<T>;
+export function toDeltaManagerInternal(deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>): IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
 
 // @internal
 export function unpackChildNodesUsedRoutes(usedRoutes: readonly string[]): Map<string, string[]>;
