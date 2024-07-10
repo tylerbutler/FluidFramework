@@ -4,6 +4,7 @@
  */
 
 import type { IDeltaManager } from "@fluidframework/container-definitions/internal";
+import type { IDeltaManagerErased } from "@fluidframework/datastore-definitions";
 import type {
 	IDocumentMessage,
 	ISequencedDocumentMessage,
@@ -15,7 +16,7 @@ import type {
  * @alpha
  */
 export function toDeltaManagerInternal(
-	deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>,
+	deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage> | IDeltaManagerErased,
 ): IDeltaManager<ISequencedDocumentMessage, IDocumentMessage> {
-	return deltaManager as IDeltaManagerInternal<ISequencedDocumentMessage, IDocumentMessage>;
+	return deltaManager as IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
 }

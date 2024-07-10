@@ -8,6 +8,7 @@ import { IChannelStorageService } from '@fluidframework/datastore-definitions';
 import { IContainerContext } from '@fluidframework/container-definitions/internal';
 import { IContainerRuntime } from '@fluidframework/container-runtime-definitions/internal';
 import type { IDeltaManager } from '@fluidframework/container-definitions/internal';
+import type { IDeltaManagerErased } from '@fluidframework/datastore-definitions';
 import type { IDocumentMessage } from '@fluidframework/protocol-definitions';
 import { IFluidDataStoreFactory } from '@fluidframework/runtime-definitions/internal';
 import { IFluidDataStoreRegistry } from '@fluidframework/runtime-definitions/internal';
@@ -204,7 +205,7 @@ export class TelemetryContext implements ITelemetryContext {
 }
 
 // @alpha
-export function toDeltaManagerInternal(deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>): IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
+export function toDeltaManagerInternal(deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage> | IDeltaManagerErased): IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
 
 // @internal
 export function unpackChildNodesUsedRoutes(usedRoutes: readonly string[]): Map<string, string[]>;
