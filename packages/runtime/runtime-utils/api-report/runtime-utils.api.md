@@ -207,6 +207,8 @@ export class TelemetryContext implements ITelemetryContext {
 
 // @alpha
 export function toDeltaManagerInternal(deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>): IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
+
+// @alpha
 export function toFluidHandleInternal<T>(handle: IFluidHandle<T>): IFluidHandleInternal<T>;
 
 // @internal
