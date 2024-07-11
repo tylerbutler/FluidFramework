@@ -38,7 +38,7 @@ export interface IFluidDataStoreRuntimeEvents extends IEvent {
  * Manages the transmission of ops between the runtime and storage.
  * @public
  */
-export type IDeltaManagerErased = IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>
+export type IDeltaManagerErased = IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
 
 /**
  * Represents the runtime for the data store. Contains helper functions/state of the data store.
