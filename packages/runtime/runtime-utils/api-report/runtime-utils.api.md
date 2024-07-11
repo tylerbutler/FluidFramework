@@ -11,7 +11,9 @@ import type { IDeltaManager } from '@fluidframework/container-definitions/intern
 import type { IDocumentMessage } from '@fluidframework/protocol-definitions';
 import { IFluidDataStoreFactory } from '@fluidframework/runtime-definitions/internal';
 import { IFluidDataStoreRegistry } from '@fluidframework/runtime-definitions/internal';
+import type { IFluidHandle } from '@fluidframework/core-interfaces';
 import { IFluidHandleContext } from '@fluidframework/core-interfaces';
+import type { IFluidHandleInternal } from '@fluidframework/core-interfaces/internal';
 import { IGarbageCollectionData } from '@fluidframework/runtime-definitions';
 import { IProvideFluidDataStoreRegistry } from '@fluidframework/runtime-definitions/internal';
 import { IRequest } from '@fluidframework/core-interfaces';
@@ -205,6 +207,7 @@ export class TelemetryContext implements ITelemetryContext {
 
 // @alpha
 export function toDeltaManagerInternal(deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>): IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
+export function toFluidHandleInternal<T>(handle: IFluidHandle<T>): IFluidHandleInternal<T>;
 
 // @internal
 export function unpackChildNodesUsedRoutes(usedRoutes: readonly string[]): Map<string, string[]>;
