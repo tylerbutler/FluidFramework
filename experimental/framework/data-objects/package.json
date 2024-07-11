@@ -44,13 +44,13 @@
 		"tsc": "fluid-tsc commonjs --project ./tsconfig.cjs.json && copyfiles -f ../../../common/build/build-common/src/cjs/package.json ./dist"
 	},
 	"dependencies": {
-		"@fluid-internal/client-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/aqueduct": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/core-interfaces": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/core-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/datastore-definitions": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/map": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/runtime-definitions": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0"
+		"@fluid-internal/client-utils": "workspace:~",
+		"@fluidframework/aqueduct": "workspace:~",
+		"@fluidframework/core-interfaces": "workspace:~",
+		"@fluidframework/core-utils": "workspace:~",
+		"@fluidframework/datastore-definitions": "workspace:~",
+		"@fluidframework/map": "workspace:~",
+		"@fluidframework/runtime-definitions": "workspace:~"
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.15.2",

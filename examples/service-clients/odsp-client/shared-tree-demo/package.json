@@ -32,11 +32,11 @@
 	},
 	"dependencies": {
 		"@azure/msal-browser": "^2.34.0",
-		"@fluid-experimental/odsp-client": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/odsp-doclib-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/odsp-driver-definitions": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluid-experimental/odsp-client": "workspace:~",
+		"@fluidframework/odsp-doclib-utils": "workspace:~",
+		"@fluidframework/odsp-driver-definitions": "workspace:~",
 		"css-loader": "^1.0.0",
-		"fluid-framework": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"fluid-framework": "workspace:~",
 		"react": "^17.0.1",
 		"react-dom": "^17.0.1",
 		"style-loader": "^1.0.0"

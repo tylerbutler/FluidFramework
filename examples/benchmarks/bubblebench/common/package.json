@@ -36,12 +36,12 @@
 		"lint:fix": "fluid-build . --task eslint:fix --task format"
 	},
 	"dependencies": {
-		"@fluid-experimental/tree": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/aqueduct": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/container-definitions": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/core-interfaces": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/datastore-definitions": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/map": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluid-experimental/tree": "workspace:~",
+		"@fluidframework/aqueduct": "workspace:~",
+		"@fluidframework/container-definitions": "workspace:~",
+		"@fluidframework/core-interfaces": "workspace:~",
+		"@fluidframework/datastore-definitions": "workspace:~",
+		"@fluidframework/map": "workspace:~",
 		"best-random": "^1.0.0",
 		"react": "^17.0.1",
 		"react-dom": "^17.0.1",

@@ -101,14 +101,14 @@
 		"temp-directory": "nyc/.nyc_output"
 	},
 	"dependencies": {
-		"@fluid-internal/client-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/core-interfaces": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/core-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
-		"@fluidframework/driver-definitions": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluid-internal/client-utils": "workspace:~",
+		"@fluidframework/core-interfaces": "workspace:~",
+		"@fluidframework/core-utils": "workspace:~",
+		"@fluidframework/driver-definitions": "workspace:~",
 		"@fluidframework/gitresources": "^4.0.0",
 		"@fluidframework/protocol-base": "^4.0.0",
 		"@fluidframework/protocol-definitions": "^3.2.0",
-		"@fluidframework/telemetry-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/telemetry-utils": "workspace:~",
 		"axios": "^1.6.2",
 		"lz4js": "^0.2.0",
 		"uuid": "^9.0.0"
@@ -116,7 +116,7 @@
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.15.2",
 		"@biomejs/biome": "^1.6.2",
-		"@fluid-internal/mocha-test-setup": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluid-internal/mocha-test-setup": "workspace:~",
 		"@fluid-tools/build-cli": "^0.37.0",
 		"@fluidframework/build-common": "^2.0.3",
 		"@fluidframework/build-tools": "^0.37.0",

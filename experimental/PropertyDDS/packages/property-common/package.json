@@ -67,7 +67,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.6.2",
-		"@fluid-internal/mocha-test-setup": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluid-internal/mocha-test-setup": "workspace:~",
 		"@fluidframework/build-common": "^2.0.3",
 		"@fluidframework/build-tools": "^0.37.0",
 		"@fluidframework/eslint-config-fluid": "^5.1.0",
