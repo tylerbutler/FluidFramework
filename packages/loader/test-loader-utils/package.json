@@ -45,10 +45,10 @@
 		"tsc": "fluid-tsc commonjs --project ./tsconfig.cjs.json && copyfiles -f ../../../common/build/build-common/src/cjs/package.json ./dist"
 	},
 	"dependencies": {
-		"@fluid-internal/client-utils": "workspace:~",
-		"@fluidframework/core-interfaces": "workspace:~",
-		"@fluidframework/driver-definitions": "workspace:~",
-		"@fluidframework/driver-utils": "workspace:~",
+		"@fluid-internal/client-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/core-interfaces": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/driver-definitions": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/driver-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
 		"@fluidframework/protocol-definitions": "^3.2.0"
 	},
 	"devDependencies": {

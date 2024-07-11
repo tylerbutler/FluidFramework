@@ -60,8 +60,8 @@
 		"temp-directory": "nyc/.nyc_output"
 	},
 	"dependencies": {
-		"@fluid-experimental/property-changeset": "workspace:~",
-		"@fluid-experimental/property-common": "workspace:~",
+		"@fluid-experimental/property-changeset": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluid-experimental/property-common": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
 		"ajv": "^8.12.0",
 		"async": "^3.2.2",
 		"fastest-json-copy": "^1.0.1",
@@ -72,7 +72,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.6.2",
-		"@fluid-internal/mocha-test-setup": "workspace:~",
+		"@fluid-internal/mocha-test-setup": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
 		"@fluidframework/build-common": "^2.0.3",
 		"@fluidframework/build-tools": "^0.37.0",
 		"@types/mocha": "^9.1.1",

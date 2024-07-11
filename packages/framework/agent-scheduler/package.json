@@ -74,17 +74,17 @@
 		"typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
 	},
 	"dependencies": {
-		"@fluid-internal/client-utils": "workspace:~",
-		"@fluidframework/container-definitions": "workspace:~",
-		"@fluidframework/core-interfaces": "workspace:~",
-		"@fluidframework/core-utils": "workspace:~",
-		"@fluidframework/datastore": "workspace:~",
-		"@fluidframework/datastore-definitions": "workspace:~",
-		"@fluidframework/map": "workspace:~",
-		"@fluidframework/register-collection": "workspace:~",
-		"@fluidframework/runtime-definitions": "workspace:~",
-		"@fluidframework/runtime-utils": "workspace:~",
-		"@fluidframework/telemetry-utils": "workspace:~",
+		"@fluid-internal/client-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/container-definitions": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/core-interfaces": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/core-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/datastore": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/datastore-definitions": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/map": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/register-collection": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/runtime-definitions": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/runtime-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
+		"@fluidframework/telemetry-utils": ">=2.0.0-rc.3.0.11 <2.0.0-rc.3.1.0",
 		"uuid": "^9.0.0"
 	},
 	"devDependencies": {
