@@ -79,11 +79,21 @@ export abstract class BaseCommand<T extends typeof Command>
 	 */
 	private suppressLogging: boolean = false;
 
+	/**
+	 * If this is set to a string value, it will be displayed as a warning whenever the command is run.
+	 */
+	protected deprecated: string | undefined;
+
+
 	private _context: Context | undefined;
 	private _logger: CommandLogger | undefined;
 
 	public async init(): Promise<void> {
 		await super.init();
+
+		if(this.deprecated !== undefined) {
+			this.warning(this.deprecated);
+		}
 
 		const { args, flags } = await this.parse({
 			flags: this.ctor.flags,

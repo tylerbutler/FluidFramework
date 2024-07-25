@@ -38,6 +38,8 @@ function isDtsKind(str: string | undefined): str is DtsKind {
 export default class SetReleaseTagPublishingCommand extends PackageCommand<
 	typeof SetReleaseTagPublishingCommand
 > {
+	protected deprecated = "This command is deprecated and should no longer be used.";
+
 	static readonly description =
 		"Updates which .d.ts file is referenced by the `types` field in package.json. This command is used during package publishing (by CI) to select the d.ts file which corresponds to the selected API-Extractor release tag.";
 
