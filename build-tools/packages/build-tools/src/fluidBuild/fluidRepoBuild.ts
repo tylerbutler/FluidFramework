@@ -7,7 +7,7 @@ import * as path from "path";
 import chalk from "chalk";
 import registerDebug from "debug";
 import { FluidRepo, IFluidBuildConfig } from "../common/fluidRepo";
-import { getFluidBuildConfig } from "../common/fluidUtils";
+import { getFluidBuildConfig, loadFluidBuildConfig } from "../common/fluidUtils";
 import { defaultLogger } from "../common/logging";
 import { MonoRepo } from "../common/monoRepo";
 import { Package, Packages } from "../common/npmPackage";
@@ -137,7 +137,10 @@ export class FluidRepoBuild extends FluidRepo {
 	}
 
 	public createBuildGraph(options: ISymlinkOptions, buildTargetNames: string[]) {
+		const rootConfig = loadFluidBuildConfig(this.resolvedRoot);
+
 		return new BuildGraph(
+			rootConfig.executableName ?? "fluid-build",
 			this.createPackageMap(),
 			this.getReleaseGroupPackages(),
 			buildTargetNames,

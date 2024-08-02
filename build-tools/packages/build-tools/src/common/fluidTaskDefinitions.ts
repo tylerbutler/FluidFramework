@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { isFluidBuildScript } from "./fluidBuild";
+import { isFluidBuildScript } from "../fluidBuild/options";
 import type { PackageJson } from "./npmPackage";
 
 /**

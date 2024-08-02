@@ -3,9 +3,9 @@
  * Licensed under the MIT License.
  */
 
-import { makeFluidBuildScript } from "../../common/fluidBuild";
 import { getExecutableFromCommand } from "../../common/utils";
 import { BuildPackage } from "../buildGraph";
+import { makeFluidBuildScript } from "../options";
 import { GroupTask } from "./groupTask";
 import { ApiExtractorTask } from "./leaf/apiExtractorTask";
 import { BiomeTask } from "./leaf/biomeTasks";

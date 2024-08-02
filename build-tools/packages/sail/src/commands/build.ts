@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { BaseCommand } from "@fluid-tools/build-cli";
 import { Timer, getResolvedFluidRoot } from "@fluidframework/build-tools";
 import {
 	type BuildGraph,
@@ -8,8 +9,8 @@ import {
 import { FluidRepoBuild } from "@fluidframework/build-tools/dist/fluidBuild/fluidRepoBuild.js";
 import { options as DefaultOptions } from "@fluidframework/build-tools/dist/fluidBuild/options.js";
 import { Args, type Command, Flags } from "@oclif/core";
-import { CommandWithConfig } from "@tylerbu/cli-api";
 import chalk from "chalk";
+import { CommandWithConfig } from "../baseCommand.js";
 import { DefaultSailConfig, type SailConfig } from "../config.js";
 
 // Known task names
@@ -21,7 +22,7 @@ type FluidBuildOptions = typeof DefaultOptions;
 export default class BuildCommand extends CommandWithConfig<typeof BuildCommand, SailConfig> {
 	static override readonly description = "Builds packages.";
 
-	protected override redirectLogToTrace = false;
+	// protected override redirectLogToTrace = false;
 
 	static override readonly args = {
 		buildPath: Args.string({
@@ -36,7 +37,7 @@ export default class BuildCommand extends CommandWithConfig<typeof BuildCommand,
 				return foundPath;
 			},
 		}),
-		...CommandWithConfig.args,
+		...BaseCommand.args,
 	};
 
 	static override readonly flags = {
@@ -67,7 +68,7 @@ export default class BuildCommand extends CommandWithConfig<typeof BuildCommand,
 		vscode: Flags.boolean({
 			description: "Output error message to work with default problem matcher in vscode.",
 		}),
-		...CommandWithConfig.flags,
+		...BaseCommand.flags,
 	};
 
 	static override readonly examples: Command.Example[] = [

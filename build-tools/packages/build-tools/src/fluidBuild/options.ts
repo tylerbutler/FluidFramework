@@ -8,19 +8,20 @@ import * as path from "path";
 
 import { commonOptionString, parseOption } from "../common/commonOptions";
 import { defaultBuildTaskName, defaultCleanTaskName } from "../common/fluidTaskDefinitions";
+import { loadFluidBuildConfig } from "../common/fluidUtils";
 import { defaultLogger } from "../common/logging";
-import { existsSync } from "../common/utils";
+import { existsSync, findGitRootSync } from "../common/utils";
 import { IPackageMatchedOptions } from "./fluidRepoBuild";
 import { ISymlinkOptions } from "./symlinkUtils";
 
 const { log, warning, errorLog } = defaultLogger;
 
 interface FastBuildOptions extends IPackageMatchedOptions, ISymlinkOptions {
-	/**
-	 * The name of the executable that should be parsed and interpreted as fluid-build itself. This enables alternative
-	 * front-end CLIs to re-use the fluid-build core but under a different name.
-	 */
-	executableName: string;
+	// /**
+	//  * The name of the executable that should be parsed and interpreted as fluid-build itself. This enables alternative
+	//  * front-end CLIs to re-use the fluid-build core but under a different name.
+	//  */
+	// executableName: string;
 
 	nolint: boolean;
 	lintonly: boolean;
@@ -44,7 +45,7 @@ interface FastBuildOptions extends IPackageMatchedOptions, ISymlinkOptions {
 
 // defaults
 export const options: FastBuildOptions = {
-	executableName: "fluid-build",
+	// executableName: "fluid-build",
 	nolint: false,
 	lintonly: false,
 	showExec: false,
@@ -341,3 +342,16 @@ export function parseOptions(argv: string[]) {
 		options.buildTaskNames.push(defaultCleanTaskName);
 	}
 }
+
+const repoRoot = findGitRootSync();
+const config = loadFluidBuildConfig(repoRoot);
+
+export const isFluidBuildScript = (script: string | undefined): boolean => {
+	return script === undefined
+		? false
+		: script.startsWith(config.executableName ?? "fluid-build");
+};
+
+export const makeFluidBuildScript = (script: string): string => {
+	return `${config.executableName} ${script}`;
+};

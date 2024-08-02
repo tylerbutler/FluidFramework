@@ -1,9 +1,9 @@
 {
-	"extends": "../../config/tsconfig.strict.json",
+	"extends": "../../../common/build/build-common/tsconfig.node16.json",
 	"include": ["src/**/*"],
 	"compilerOptions": {
 		"rootDir": "src",
-		"outDir": "esm",
+		"outDir": "lib",
 	},
 	"ts-node": {
 		"esm": true,

@@ -19,6 +19,7 @@ const tscDependsOn = ["^tsc", "^api", "build:genver", "ts2esm"];
  * @type {import("@fluidframework/build-tools").IFluidBuildConfig}
  */
 module.exports = {
+	executableName: "sail",
 	tasks: {
 		"ci:build": {
 			dependsOn: [

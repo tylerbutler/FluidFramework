@@ -5,3 +5,4 @@
 
 export { run } from "@oclif/core";
 export type { knownReleaseGroups, ReleaseGroup, ReleasePackage } from "./releaseGroups.js";
+export { BaseCommand } from "./library/index.js";

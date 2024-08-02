@@ -27,7 +27,7 @@ export type {
 	ScriptRequirement,
 } from "./common/fluidRepo";
 
-export { isFluidBuildScript } from "./common/fluidBuild";
+export { isFluidBuildScript } from "./fluidBuild/options";
 
 // For repo policy check
 export {

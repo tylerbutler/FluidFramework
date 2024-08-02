@@ -10,7 +10,6 @@ import * as semver from "semver";
 import * as assert from "assert";
 import registerDebug from "debug";
 import { FileHashCache } from "../common/fileHashCache";
-import { isFluidBuildScript } from "../common/fluidBuild";
 import {
 	TaskDefinition,
 	TaskDefinitions,
@@ -22,7 +21,7 @@ import {
 import { defaultLogger } from "../common/logging";
 import { Package } from "../common/npmPackage";
 import { Timer } from "../common/timer";
-import { options } from "./options";
+import { isFluidBuildScript, options } from "./options";
 import { Task, TaskExec } from "./tasks/task";
 import { TaskFactory } from "./tasks/taskFactory";
 import { WorkerPool } from "./tasks/workers/workerPool";
@@ -61,12 +60,13 @@ class TaskStats {
 	public leafQueueWaitTimeTotal = 0;
 }
 
-class BuildContext {
+export class BuildContext {
 	public readonly fileHashCache = new FileHashCache();
 	public readonly taskStats = new TaskStats();
 	public readonly failedTaskLines: string[] = [];
 	constructor(
 		public readonly repoPackageMap: Map<string, Package>,
+		public readonly executableName: string,
 		public readonly workerPool?: WorkerPool,
 	) {}
 }
@@ -478,6 +478,7 @@ export class BuildGraph {
 	private readonly buildContext;
 
 	public constructor(
+		public readonly executableName: string,
 		packages: Map<string, Package>,
 		releaseGroupPackages: Package[],
 		private readonly buildTaskNames: string[],
@@ -486,6 +487,7 @@ export class BuildGraph {
 	) {
 		this.buildContext = new BuildContext(
 			packages,
+			executableName,
 			options.worker
 				? new WorkerPool(options.workerThreads, options.workerMemoryLimit)
 				: undefined,

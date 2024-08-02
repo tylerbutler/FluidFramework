@@ -24,6 +24,12 @@ const traceInit = registerDebug("fluid-build:init");
  */
 export interface IFluidBuildConfig {
 	/**
+	 * The name of the executable that should be parsed and interpreted as fluid-build itself. This enables alternative
+	 * front-end CLIs to re-use the fluid-build core but under a different name.
+	 */
+	executableName?: string;
+
+	/**
 	 * Build tasks and dependencies definitions
 	 */
 	tasks?: TaskDefinitionsOnDisk;
