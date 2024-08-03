@@ -11,15 +11,15 @@
 	"license": "MIT",
 	"author": "Microsoft and contributors",
 	"scripts": {
-		"build": "pnpm run generate:packageList && fluid-build --task build",
-		"build:compile": "fluid-build --task compile",
-		"build:docs": "fluid-build --task build:docs",
-		"build:fast": "fluid-build --worker",
+		"build": "pnpm run generate:packageList && sail --task build",
+		"build:compile": "sail build . --task compile",
+		"build:docs": "sail build . --task build:docs",
+		"build:fast": "sail build . --worker",
 		"changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 2 --commit-path . -t build-tools_v --context lerna.json",
 		"check:biome": "biome check .",
 		"check:format": "npm run check:biome",
 		"ci:build": "npm run build",
-		"ci:eslint": "fluid-build --task eslint",
+		"ci:eslint": "sail --task eslint",
 		"ci:test": "npm run test:mocha",
 		"ci:test:coverage": "npm run test:coverage",
 		"clean": "pnpm run -r --no-sort --stream clean && npm run clean:docs && npm run clean:nyc",
@@ -51,8 +51,8 @@
 		"test:coverage": "c8 npm run test:mocha",
 		"test:mocha": "pnpm run -r --no-sort --stream --no-bail test:mocha --color",
 		"test:mocha:bail": "pnpm run -r --no-sort --stream test:mocha",
-		"tsc": "fluid-build --task tsc",
-		"tsc:fast": "fluid-build --root . --task tsc --worker",
+		"tsc": "sail --task tsc",
+		"tsc:fast": "sail --root . --task tsc --worker",
 		"watch": "pnpm run -r --parallel tsc --watch"
 	},
 	"c8": {
@@ -74,6 +74,7 @@
 		"@commitlint/config-conventional": "^17.6.6",
 		"@commitlint/cz-commitlint": "^17.5.0",
 		"@fluid-tools/build-cli": "~0.40.0",
+		"@fluid-tools/sail": "~0.40.0",
 		"@fluidframework/build-common": "^2.0.3",
 		"@fluidframework/build-tools": "~0.40.0",
 		"@microsoft/api-documenter": "^7.22.24",
@@ -98,7 +99,7 @@
 		"node": ">=18.17.1"
 	},
 	"dependenciesComments": {
-		"@fluidframework/build-tools": "Provides fluid-build which is used by the `build:fast` script. To allow this to work when the workspace version of build-tools has not been built yet, a prepackaged version is depended on. If this self-dependency becomes problematic, the `build` script can be used which does not require it."
+		"@fluidframework/build-tools": "Provides sail which is used by the `build:fast` script. To allow this to work when the workspace version of build-tools has not been built yet, a prepackaged version is depended on. If this self-dependency becomes problematic, the `build` script can be used which does not require it."
 	},
 	"pnpm": {
 		"peerDependencyComments": [
@@ -123,7 +124,10 @@
 			"qs": "^6.11.0",
 			"sharp": "^0.33.2",
 			"oclif>@aws-sdk/client-cloudfront": "npm:empty-npm-package@1.0.0",
-			"oclif>@aws-sdk/client-s3": "npm:empty-npm-package@1.0.0"
+			"oclif>@aws-sdk/client-s3": "npm:empty-npm-package@1.0.0",
+			"@fluid-tools/build-cli": "workspace:^",
+			"@fluidframework/build-tools": "workspace:^",
+			"@fluid-tools/sail": "workspace:^"
 		},
 		"patchedDependencies": {
 			"jssm@5.98.2": "patches/jssm@5.98.2.patch"

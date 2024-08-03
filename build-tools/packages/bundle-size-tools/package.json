@@ -29,7 +29,7 @@
 		"check:format": "npm run check:biome",
 		"ci:build:docs": "api-extractor run",
 		"clean": "rimraf --glob dist \"*.tsbuildinfo\" _api-extractor-temp",
-		"compile": "fluid-build . --task compile",
+		"compile": "sail build . --task compile",
 		"eslint": "eslint --format stylish src",
 		"eslint:fix": "eslint --format stylish src --fix",
 		"format": "npm run format:biome",
