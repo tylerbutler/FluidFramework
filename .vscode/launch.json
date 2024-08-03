@@ -212,6 +212,15 @@
 			"args": [],
 		},
 		{
+			// Runs the `sail build` command with a debugger attached.
+			"name": "sail build",
+			"program": "${workspaceFolder}/build-tools/packages/sail/bin/dev.js",
+			"cwd": "${workspaceFolder}/build-tools",
+			"request": "launch",
+			"skipFiles": ["<node_internals>/**"],
+			"type": "node",
+		},
+		{
 			"type": "node",
 			"request": "attach",
 			"name": "Attach by Process ID",

@@ -4,7 +4,57 @@
 
 ```ts
 
+import { Command } from '@oclif/core';
+import { FluidRepo } from '@fluidframework/build-tools';
+import { GitRepo } from '@fluidframework/build-tools';
+import { IFluidBuildConfig } from '@fluidframework/build-tools';
+import { Interfaces } from '@oclif/core';
+import { Logger } from '@fluidframework/build-tools';
+import { Package } from '@fluidframework/build-tools';
+import type { PrettyPrintableError } from '@oclif/core/errors';
+import { ReleaseVersion } from '@fluid-tools/version-tools';
 import { run } from '@oclif/core';
+
+// @public
+export abstract class BaseCommand<T extends typeof Command> extends Command implements CommandLogger {
+    // (undocumented)
+    protected args: Args<T>;
+    static readonly baseFlags: {
+        readonly root: Interfaces.OptionFlag<string | undefined, Interfaces.CustomOptions>;
+        readonly verbose: Interfaces.BooleanFlag<boolean>;
+        readonly quiet: Interfaces.BooleanFlag<boolean>;
+        readonly timer: Interfaces.BooleanFlag<boolean>;
+    };
+    // (undocumented)
+    protected catch(err: Error & {
+        exitCode?: number;
+    }): Promise<unknown>;
+    error(input: string | Error, options: {
+        code?: string | undefined;
+        exit: false;
+    } & PrettyPrintableError): void;
+    error(input: string | Error, options?: ({
+        code?: string | undefined;
+        exit?: number | undefined;
+    } & PrettyPrintableError) | undefined): never;
+    errorLog(message: string | Error | undefined): void;
+    // (undocumented)
+    protected finally(_: Error | undefined): Promise<unknown>;
+    // (undocumented)
+    protected flags: Flags<T>;
+    getContext(): Promise<Context>;
+    info(message: string | Error | undefined): void;
+    // (undocumented)
+    init(): Promise<void>;
+    protected get logger(): CommandLogger;
+    logHr(): void;
+    logIndent(input: string, indentNumber?: number): void;
+    verbose(message: string | Error | undefined): void;
+    // @deprecated (undocumented)
+    warn(input: string | Error): string | Error;
+    warning(message: string | Error | undefined): void;
+    warningWithDebugTrace(message: string | Error): string | Error;
+}
 
 // @internal
 export const knownReleaseGroups: readonly ["build-tools", "client", "server", "gitrest", "historian"];

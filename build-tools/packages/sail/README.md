@@ -13,6 +13,7 @@ Speed up TypeScript monorepo builds with Sail. Quick to set up; immediate gains.
 # Command Topics
 
 * [`sail autocomplete`](docs/autocomplete.md) - Display autocomplete installation instructions.
+* [`sail build`](docs/build.md) - Builds packages.
 * [`sail help`](docs/help.md) - Display help for sail.
 
 <!-- commandsstop -->

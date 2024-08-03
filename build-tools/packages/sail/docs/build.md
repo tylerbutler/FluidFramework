@@ -45,5 +45,3 @@ EXAMPLES
 
     $ sail build . -t check -t test
 ```
-
-_See code: [src/commands/build.ts](https://github.com/tylerbutler/tools-monorepo/blob/main/packages/sail/src/commands/build.ts)_
