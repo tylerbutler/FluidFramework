@@ -4,10 +4,11 @@
  */
 
 import * as path from "path";
+import { Package } from "@fluidframework/build-tools";
 
 import { TaskDefinitionsOnDisk } from "./fluidTaskDefinitions";
 import { MonoRepo } from "./monoRepo";
-import { Package, Packages } from "./npmPackage";
+import { Packages } from "./npmPackage";
 import { ExecAsyncResult } from "./utils";
 
 /**

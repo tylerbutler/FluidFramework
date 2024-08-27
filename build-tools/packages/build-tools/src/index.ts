@@ -6,7 +6,7 @@
 export { GitRepo } from "./common/gitRepo";
 export { FluidRepo, type IFluidBuildConfig } from "./common/fluidRepo";
 export { getResolvedFluidRoot, getFluidBuildConfig } from "./common/fluidUtils";
-export type { Logger } from "./common/logging";
+export { type Logger, defaultLogger } from "./common/logging";
 export { MonoRepo } from "./common/monoRepo";
 export {
 	Package,
@@ -17,17 +17,17 @@ export {
 export { Timer } from "./common/timer";
 
 // For repo policy check
-export {
-	normalizeGlobalTaskDefinitions,
-	getTaskDefinitions,
-} from "./common/fluidTaskDefinitions";
-export { getApiExtractorConfigFilePath, getEsLintConfigFilePath } from "./common/taskUtils";
-export * as TscUtils from "./common/tscUtils";
+// export {
+// 	normalizeGlobalTaskDefinitions,
+// 	getTaskDefinitions,
+// } from "./common/fluidTaskDefinitions";
+// export { getApiExtractorConfigFilePath, getEsLintConfigFilePath } from "./common/taskUtils";
+// export * as TscUtils from "./common/tscUtils";
 
-export {
-	type BrokenCompatTypes,
-	type ITypeValidationConfig,
-} from "./common/typeValidatorConfig";
+// export {
+// 	type BrokenCompatTypes,
+// 	type ITypeValidationConfig,
+// } from "./common/typeValidatorConfig";
 export {
 	TypeOnly,
 	MinimalType,
