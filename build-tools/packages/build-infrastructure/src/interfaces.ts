@@ -1,4 +1,23 @@
-import type { Opaque, PackageJson } from "type-fest";
+import type { Opaque, SetRequired, PackageJson as StandardPackageJson } from "type-fest";
+
+/**
+ * A type representing fluid-build-specific config that may be in package.json.
+ */
+export type FluidPackageJsonFields = {
+	/**
+	 * pnpm config
+	 */
+	pnpm?: {
+		overrides?: Record<string, string>;
+	};
+};
+
+export type PackageJson = SetRequired<
+	StandardPackageJson & FluidPackageJsonFields,
+	"name" | "scripts" | "version"
+>;
+
+export type AdditionalPackageProps = Record<string, string> | undefined;
 
 export type PackageManager = "npm" | "pnpm" | "yarn";
 
@@ -11,7 +30,6 @@ export interface IFluidRepo {
 	workspaces: Map<string, IWorkspace>;
 
 	readonly packageManager: PackageManager;
-
 }
 
 export type WorkspaceName = Opaque<string, "WorkspaceName">;
@@ -33,10 +51,17 @@ export interface IReleaseGroup {
 
 export type PackageName = Opaque<string, "PackageName">;
 
-export interface IPackage<T extends PackageJson = PackageJson> {
-	name: PackageName;
-	packageJson: T;
+// export interface IPackage<TAddProps extends AdditionalPackageProps = undefined> {
+export interface IPackage {
+	readonly name: PackageName;
+	readonly nameColored: string;
+	packageJson: PackageJson;
 	readonly packageManager: PackageManager;
+	readonly version: string;
 	readonly isWorkspaceRoot: boolean;
 	readonly packageJsonFilePath: string;
+
+	getScript(name: string): string | undefined;
+	savePackageJson(): Promise<void>;
+	reload(): void;
 }

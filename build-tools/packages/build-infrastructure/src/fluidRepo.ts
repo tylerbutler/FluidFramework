@@ -1,7 +1,7 @@
 import path from "node:path";
-import type { IFluidRepo, IWorkspace, PackageManager } from "./interfaces";
-import { getFluidRepoLayout } from "./config";
-import { Workspace } from "./workspace";
+import { getFluidRepoLayout } from "./config.js";
+import type { IFluidRepo, IWorkspace, PackageManager } from "./interfaces.js";
+import { Workspace } from "./workspace.js";
 
 export class FluidRepo implements IFluidRepo {
 	public readonly root: string;
@@ -36,4 +36,8 @@ export class FluidRepo implements IFluidRepo {
 	public get workspaces() {
 		return this._workspaces;
 	}
+}
+
+export function loadFluidRepo(...args: ConstructorParameters<typeof FluidRepo>): IFluidRepo {
+	return new FluidRepo(...args);
 }

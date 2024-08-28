@@ -1,7 +1,9 @@
 import path from "node:path";
-import type { WorkspaceDefinition } from "./config";
-import type { IPackage, IWorkspace, PackageManager, WorkspaceName } from "./interfaces";
 import { getPackagesSync } from "@manypkg/get-packages";
+
+import type { WorkspaceDefinition } from "./config.js";
+import type { IPackage, IWorkspace, PackageManager, WorkspaceName } from "./interfaces.js";
+import { loadPackage } from "./package.js";
 
 export class Workspace implements IWorkspace {
 	public readonly name: WorkspaceName;
@@ -20,33 +22,30 @@ export class Workspace implements IWorkspace {
 		return new Map();
 	}
 
-	public static load(
-		name: string,
-		{ directory, releaseGroups }: WorkspaceDefinition,
-	): IWorkspace {
+	public static load(name: string, { directory }: WorkspaceDefinition): IWorkspace {
 		const absDirectory = path.resolve(directory);
 
 		let packageManager: PackageManager;
-		let packageDirs: string[];
 
-		const { tool, packages, rootPackage, foundRoot } = getPackagesSync(absDirectory);
+		const {
+			tool,
+			packages: foundPackages,
+			rootPackage: foundRootPackage,
+			rootDir: foundRoot,
+		} = getPackagesSync(absDirectory);
 		if (foundRoot !== absDirectory) {
 			// This is a sanity check. directory is the path passed in when creating the Workspace object, while rootDir is
 			// the dir that manypkg found. They should be the same.
 			throw new Error(
-				`The root dir found by manypkg, '${foundRoot}', does not match the configured directory '${directory}'`,
+				`The root dir found by manypkg, '${foundRoot}', does not match the configured directory '${absDirectory}'`,
 			);
 		}
 
-		if (rootPackage === undefined) {
-			throw new Error(`No root package found for workspace in ${foundRoot}`);
+		if (foundRootPackage === undefined) {
+			throw new Error(`No root package found for workspace in '${foundRoot}'`);
 		}
 
 		switch (tool.type) {
-			case "lerna":
-				// Treat lerna as "npm"
-				packageManager = "npm";
-				break;
 			case "npm":
 			case "pnpm":
 			case "yarn":
@@ -60,6 +59,15 @@ export class Workspace implements IWorkspace {
 		// 	return undefined;
 		// }
 
-		packageDirs = packages.filter((pkg) => pkg.relativeDir !== ".").map((pkg) => pkg.dir);
+		// filter out the root package
+		const filtered = foundPackages.filter((pkg) => pkg.relativeDir !== ".");
+
+		// Absolute paths to all package.jsons for packages in the workspace
+		// const packageJsonPaths = filtered.map((pkg)=> pkg.dir);
+		const packages = filtered.map((pkg) => loadPackage(pkg.dir, packageManager, false));
+		const rootPackage = loadPackage(foundRootPackage.dir, packageManager, true);
+
+		const workspace = new Workspace(name, absDirectory, rootPackage, packages);
+		return workspace;
 	}
 }
