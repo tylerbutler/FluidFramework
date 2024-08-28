@@ -1,0 +1,178 @@
+import { InterdependencyRange } from '@fluid-tools/version-tools';
+import { cosmiconfigSync } from "cosmiconfig";
+
+import type { IPackage } from './interfaces';
+
+/**
+ * The version of the fluidRepo configuration currently used.
+ *
+ * @remarks
+ *
+ * This is not exported outside of the build-infrastructure package; it is only used internally.
+ */
+export const FLUIDREPO_CONFIG_VERSION = 1;
+
+/**
+ * Top-most configuration for repo layout settings.
+ */
+export interface IFluidRepoLayout {
+	/**
+	 * The version of the config.
+	 */
+	version: typeof FLUIDREPO_CONFIG_VERSION;
+
+	/**
+	 * A mapping of package or release group names to metadata about the package or release group. This can only be
+	 * configured in the repo-wide Fluid build config (the repo-root package.json).
+	 *
+	 * @deprecated Use the repoLayout setting instead.
+	 */
+	repoPackages?: {
+		[name: string]: IFluidBuildDirs;
+	};
+
+	repoLayout?: {
+		workspaces: {
+			/**
+			 * A mapping of workspace name to folder containing a workspace config file (e.g. pnpm-workspace.yaml)
+			 */
+			[name: string]: WorkspaceDefinition;
+		};
+
+		/**
+		 * An array of paths containing individual packages that are not part of a workspace.
+		 */
+		// packages?: string[];
+	};
+}
+
+export interface WorkspaceDefinition {
+	directory: string;
+	/**
+	 * The interdependencyRange controls the type of semver range to use between packages in the same release
+	 * group. This setting controls the default range that will be used when updating the version of a release
+	 * group. The default can be overridden using the `--interdependencyRange` flag in the `flub bump` command.
+	 */
+	// defaultInterdependencyRange?: InterdependencyRange;
+	// independentPackages?: {
+	// 	[name: string]: string;
+	// };
+	releaseGroups?: {
+		[name: string]: ReleaseGroupDefinition;
+	};
+}
+
+export interface ReleaseGroupDefinition {
+	/**
+	 * An array of scopes or package names that should be included in the release group. Each package must
+	 * belong to a single release group.
+	 */
+	include: string[];
+
+	/**
+	 * An array of scopes or package names that should be excluded. Exclusions are applied AFTER inclusions, so
+	 * this can be used to exclude specific packages in a certain scope.
+	 */
+	exclude?: string[];
+
+	/**
+	 * The interdependencyRange controls the type of semver range to use between packages in the same release
+	 * group. This setting controls the default range that will be used when updating the version of a release
+	 * group. The default can be overridden using the `--interdependencyRange` flag in the `flub bump` command.
+	 */
+	defaultInterdependencyRange: InterdependencyRange;
+}
+
+export interface IFluidBuildDirs {
+	[name: string]: IFluidBuildDirEntry;
+}
+
+export type IFluidBuildDirEntry = string | IFluidBuildDir | (string | IFluidBuildDir)[];
+
+/**
+ * Configures a package or release group
+ */
+export interface IFluidBuildDir {
+	/**
+	 * The path to the package. For release groups this should be the path to the root of the release group.
+	 */
+	directory: string;
+
+	/**
+	 * An array of paths under `directory` that should be ignored.
+	 */
+	ignoredDirs?: string[];
+}
+
+export function matchesReleaseGroupDefinition(
+	pkg: IPackage,
+	definition: ReleaseGroupDefinition,
+): boolean {
+	const { include, exclude } = definition;
+	let shouldInclude = false;
+	if (
+		// If the package name matches an entry in the include list, it should be included
+		include.includes(pkg.name) ||
+		// If the package name starts with any of the include list entries, it should be included
+		include.some((scope) => pkg.name.startsWith(scope))
+	) {
+		shouldInclude = true;
+	}
+
+	return shouldInclude && !exclude?.includes(pkg.name);
+}
+
+export function findReleaseGroupForPackage(
+	pkg: IPackage,
+	definition: Map<string, ReleaseGroupDefinition>,
+): string | undefined {
+	for (const [rgName, def] of definition) {
+		if (matchesReleaseGroupDefinition(pkg, def)) {
+			return rgName;
+		}
+	}
+}
+
+const configName = "fluidBuild";
+
+/**
+ * A cosmiconfig explorer to find the fluidBuild config. First looks for JavaScript config files and falls back to the
+ * `fluidBuild` property in package.json. We create a single explorer here because cosmiconfig internally caches configs
+ * for performance. The cache is per-explorer, so re-using the same explorer is a minor perf improvement.
+ */
+const configExplorer = cosmiconfigSync(configName, {
+	searchPlaces: [`${configName}.config.cjs`, `${configName}.config.js`, "package.json"],
+	packageProp: [configName],
+});
+
+/**
+ * Get an IFluidRepoLayout from the config file.
+ *
+ * @param rootDir - The path to the root package.json to load.
+ * @param noCache - If true, the config cache will be cleared and the config will be reloaded.
+ * @returns The fluidBuild section of the package.json, or undefined if not found
+ */
+export function getFluidRepoLayout(
+	rootDir: string,
+	noCache = false,
+	// log = defaultLogger,
+): IFluidRepoLayout {
+	if (noCache === true) {
+		configExplorer.clearCaches();
+	}
+
+	const configResult = configExplorer.search(rootDir);
+	const config = configResult?.config as IFluidRepoLayout | undefined;
+
+	if (config === undefined) {
+		throw new Error("No fluidRepo configuration found.");
+	}
+
+	// Only version 1 of the config is supported. If any other value is provided, throw an error.
+	if (config.version !== FLUIDREPO_CONFIG_VERSION) {
+		throw new Error(
+			`Configuration version is not supported: ${config?.version}. Config version must be ${FLUIDREPO_CONFIG_VERSION}.`,
+		);
+	}
+	return config;
+}
