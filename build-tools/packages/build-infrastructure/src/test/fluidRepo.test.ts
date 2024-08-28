@@ -13,7 +13,11 @@ import { loadFluidRepo } from "../fluidRepo.js";
 describe("loadFluidRepo", () => {
 	it("loads correctly", () => {
 		const repo = loadFluidRepo();
-		assert.strictEqual(repo.workspaces.size, "4", `Expected 4 workspaces, found ${repo.workspaces.size}`);
+		assert.strictEqual(
+			repo.workspaces.size,
+			"4",
+			`Expected 4 workspaces, found ${repo.workspaces.size}`,
+		);
 	});
 
 	// it("detects tabs indentation", () => {

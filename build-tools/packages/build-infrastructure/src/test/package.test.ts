@@ -17,7 +17,6 @@ describe("loadPackage", () => {
 	// 	const expectedIndent = "  ";
 	// 	assert.strictEqual(indent, expectedIndent);
 	// });
-
 	// it("detects tabs indentation", () => {
 	// 	const testFile = path.resolve(testDataPath, "tabs/_package.json");
 	// 	const [, indent] = readPackageJsonAndIndent(testFile);

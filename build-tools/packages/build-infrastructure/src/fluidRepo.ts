@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import path from "node:path";
 import * as childProcess from "node:child_process";
+import path from "node:path";
 
 import { getFluidRepoLayout } from "./config.js";
 import type { IFluidRepo, IWorkspace } from "./interfaces.js";
