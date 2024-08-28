@@ -1,3 +1,8 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 import { InterdependencyRange } from "@fluid-tools/version-tools";
 import { cosmiconfigSync } from "cosmiconfig";
 

@@ -1,3 +1,8 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 import path from "node:path";
 import chalk from "chalk";
 import { readJsonSync } from "fs-extra/esm";

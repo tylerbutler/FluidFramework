@@ -1,17 +1,23 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 import path from "node:path";
+import * as childProcess from "node:child_process";
+
 import { getFluidRepoLayout } from "./config.js";
-import type { IFluidRepo, IWorkspace, PackageManager } from "./interfaces.js";
+import type { IFluidRepo, IWorkspace } from "./interfaces.js";
 import { Workspace } from "./workspace.js";
 
 export class FluidRepo implements IFluidRepo {
 	public readonly root: string;
 
 	public constructor(
-		root: string,
-		public readonly packageManager: PackageManager,
+		root?: string,
+		// public readonly packageManager: PackageManager,
 	) {
-		this.root = path.resolve(root);
-
+		this.root = root === undefined ? findGitRoot() : path.resolve(root);
 		const config = getFluidRepoLayout(this.root);
 
 		if (config.repoPackages !== undefined) {
@@ -40,4 +46,21 @@ export class FluidRepo implements IFluidRepo {
 
 export function loadFluidRepo(...args: ConstructorParameters<typeof FluidRepo>): IFluidRepo {
 	return new FluidRepo(...args);
+}
+
+/**
+ * Returns the absolute path to the nearest Git repository found starting at `cwd`.
+ *
+ * @param cwd - The working directory to use to start searching for Git repositories. Defaults to `process.cwd()` if not
+ * provided.
+ */
+export function findGitRoot(cwd?: string) {
+	const gitRoot = childProcess
+		.execSync("git rev-parse --show-toplevel", {
+			cwd,
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "ignore"],
+		})
+		.trim();
+	return gitRoot;
 }

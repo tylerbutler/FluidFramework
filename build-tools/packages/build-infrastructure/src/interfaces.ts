@@ -1,3 +1,8 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 import type { Opaque, SetRequired, PackageJson as StandardPackageJson } from "type-fest";
 
 /**
@@ -29,7 +34,7 @@ export interface IFluidRepo {
 
 	workspaces: Map<string, IWorkspace>;
 
-	readonly packageManager: PackageManager;
+	// readonly packageManager: PackageManager;
 }
 
 export type WorkspaceName = Opaque<string, "WorkspaceName">;
