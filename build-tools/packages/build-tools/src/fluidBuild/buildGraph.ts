@@ -8,9 +8,9 @@ import chalk from "chalk";
 import * as semver from "semver";
 
 import * as assert from "assert";
-import { type IFluidBuildPackage } from "../common/npmPackage";
 import registerDebug from "debug";
 import { defaultLogger } from "../common/logging";
+import { type IFluidBuildPackage } from "../common/npmPackage";
 import { Timer } from "../common/timer";
 import { FileHashCache } from "./fileHashCache";
 import {

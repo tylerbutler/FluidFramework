@@ -4,8 +4,8 @@
  */
 
 import path from "node:path";
-import { Project } from "ts-morph";
 import type { IPackage } from "@fluid-tools/build-infrastructure";
+import { Project } from "ts-morph";
 
 let shouldLog = false;
 export function enableLogging(enable: boolean) {

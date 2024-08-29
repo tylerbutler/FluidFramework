@@ -6,7 +6,7 @@
 import * as path from "path";
 
 import { MonoRepo } from "../common/monoRepo";
-import { Packages, type IFluidBuildPackage } from "../common/npmPackage";
+import { type IFluidBuildPackage, Packages } from "../common/npmPackage";
 import { ExecAsyncResult } from "../common/utils";
 import {
 	type IFluidBuildDir,
@@ -69,7 +69,9 @@ export class FluidRepo {
 	}
 
 	public createPackageMap() {
-		return new Map<string, IFluidBuildPackage>(this.packages.packages.map((pkg) => [pkg.name, pkg]));
+		return new Map<string, IFluidBuildPackage>(
+			this.packages.packages.map((pkg) => [pkg.name, pkg]),
+		);
 	}
 
 	public reload() {

@@ -5,8 +5,8 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import * as semver from "semver";
 import { type IPackage } from "@fluid-tools/build-infrastructure";
+import * as semver from "semver";
 
 import { defaultLogger } from "../common/logging";
 import { MonoRepo } from "../common/monoRepo";

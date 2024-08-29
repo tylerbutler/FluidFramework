@@ -9,7 +9,7 @@ import registerDebug from "debug";
 
 import { defaultLogger } from "../common/logging";
 import { MonoRepo } from "../common/monoRepo";
-import { Packages, type IFluidBuildPackage } from "../common/npmPackage";
+import { type IFluidBuildPackage, Packages } from "../common/npmPackage";
 import { ExecAsyncResult, existsSync, isSameFileOrDir, lookUpDirSync } from "../common/utils";
 import { BuildGraph } from "./buildGraph";
 import type { IFluidBuildDirs } from "./fluidBuildConfig";
