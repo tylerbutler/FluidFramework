@@ -7,6 +7,7 @@ import path from "node:path";
 import * as chalk from "chalk";
 import { readJsonSync } from "fs-extra";
 
+import { readPackageJsonAndIndent, writePackageJson } from "./packageJsonUtils.js";
 import type {
 	AdditionalPackageProps,
 	IPackage,
@@ -14,8 +15,7 @@ import type {
 	PackageJson,
 	PackageManager,
 	PackageName,
-} from "./interfaces.js";
-import { readPackageJsonAndIndent, writePackageJson } from "./packageJsonUtils.js";
+} from "./types.js";
 
 export abstract class PackageBase<
 	TAddProps extends AdditionalPackageProps = undefined,

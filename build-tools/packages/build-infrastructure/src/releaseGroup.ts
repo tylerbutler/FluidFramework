@@ -4,7 +4,7 @@
  */
 
 import { type ReleaseGroupDefinition, matchesReleaseGroupDefinition } from "./config.js";
-import type { IPackage, IReleaseGroup, ReleaseGroupName } from "./interfaces.js";
+import type { IPackage, IReleaseGroup, ReleaseGroupName } from "./types.js";
 
 export class ReleaseGroup implements IReleaseGroup {
 	public readonly name: ReleaseGroupName;
@@ -12,6 +12,7 @@ export class ReleaseGroup implements IReleaseGroup {
 		name: string,
 		releaseGroupDefinition: ReleaseGroupDefinition,
 		packagesInWorkspace: IPackage[],
+		public readonly rootPackage?: IPackage,
 	) {
 		this.name = name as ReleaseGroupName;
 		this.packages = packagesInWorkspace.filter(
@@ -35,4 +36,8 @@ export class ReleaseGroup implements IReleaseGroup {
 	}
 
 	public readonly packages: IPackage[];
+
+	public get rgPackages(): IPackage[] {
+		return this.packages;
+	}
 }

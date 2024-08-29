@@ -7,6 +7,8 @@ import path from "node:path";
 import { getPackagesSync } from "@manypkg/get-packages";
 
 import type { ReleaseGroupDefinition, WorkspaceDefinition } from "./config.js";
+import { loadPackage } from "./package.js";
+import { ReleaseGroup } from "./releaseGroup.js";
 import type {
 	IPackage,
 	IReleaseGroup,
@@ -14,9 +16,7 @@ import type {
 	PackageManager,
 	ReleaseGroupName,
 	WorkspaceName,
-} from "./interfaces.js";
-import { loadPackage } from "./package.js";
-import { ReleaseGroup } from "./releaseGroup.js";
+} from "./types.js";
 
 export class Workspace implements IWorkspace {
 	public readonly name: WorkspaceName;

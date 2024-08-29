@@ -5,10 +5,14 @@
 
 export { loadFluidRepo } from "./fluidRepo.js";
 export type {
-	IPackage,
-	IWorkspace,
 	IFluidRepo,
-	PackageName,
+	IPackage,
+	IReleaseGroup,
+	IWorkspace,
 	PackageJson,
-} from "./interfaces.js";
+	PackageName,
+	ReleaseGroupName,
+	WorkspaceName,
+} from "./types.js";
+export { isIPackage, isIReleaseGroup } from "./types.js";
 export { PackageBase, loadPackage } from "./package.js";

@@ -6,7 +6,7 @@
 import { InterdependencyRange } from "@fluid-tools/version-tools";
 import { cosmiconfigSync } from "cosmiconfig";
 
-import type { IPackage } from "./interfaces.js";
+import type { IPackage } from "./types.js";
 
 /**
  * The version of the fluidRepo configuration currently used.

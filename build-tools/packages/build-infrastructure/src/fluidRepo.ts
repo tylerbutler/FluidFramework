@@ -7,7 +7,7 @@ import * as childProcess from "node:child_process";
 import path from "node:path";
 
 import { getFluidRepoLayout } from "./config.js";
-import type { IFluidRepo, IWorkspace } from "./interfaces.js";
+import type { IFluidRepo, IPackage, IWorkspace } from "./types.js";
 import { Workspace } from "./workspace.js";
 
 export class FluidRepo implements IFluidRepo {
@@ -41,6 +41,15 @@ export class FluidRepo implements IFluidRepo {
 	private readonly _workspaces: Map<string, IWorkspace>;
 	public get workspaces() {
 		return this._workspaces;
+	}
+
+	public get allPackages(): IPackage[] {
+		const pkgs: IPackage[] = [];
+		for (const ws of this.workspaces.values()) {
+			pkgs.push(ws.rootPackage, ...ws.packages);
+		}
+
+		return pkgs;
 	}
 }
 

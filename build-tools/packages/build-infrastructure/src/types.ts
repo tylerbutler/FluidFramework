@@ -35,6 +35,7 @@ export interface IFluidRepo {
 	workspaces: Map<string, IWorkspace>;
 
 	// readonly packageManager: PackageManager;
+	allPackages: IPackage[];
 }
 
 export type WorkspaceName = Opaque<string, "WorkspaceName">;
@@ -47,11 +48,28 @@ export interface IWorkspace {
 	packages: IPackage[];
 }
 
-export type ReleaseGroupName = Opaque<string, "ReleaseGroupName">;
+export type ReleaseGroupName = Opaque<string, IReleaseGroup>;
 
 export interface IReleaseGroup {
 	name: ReleaseGroupName;
+	rootPackage?: IPackage;
 	packages: IPackage[];
+
+	// TODO: is there a better way to implement a type guard than unique names of properties? Maybe something with the
+	// opaque types?
+	rgPackages: IPackage[];
+}
+
+export function isIReleaseGroup(toCheck: any): toCheck is IReleaseGroup {
+	if (!("name" in toCheck)) {
+		return false;
+	}
+
+	if (typeof toCheck !== "object") {
+		return false;
+	}
+
+	return "rgPackages" in toCheck;
 }
 
 /**
@@ -82,4 +100,8 @@ export interface IPackage<J extends PackageJson = PackageJson> {
 	reload(): void;
 
 	combinedDependencies: Generator<PackageDependency, void>;
+}
+
+export function isIPackage(pkg: any): pkg is IPackage {
+	return "getScript" in pkg;
 }

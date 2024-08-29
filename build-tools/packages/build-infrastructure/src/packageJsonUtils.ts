@@ -10,7 +10,7 @@ import detectIndent from "detect-indent";
 import { writeJson, writeJsonSync } from "fs-extra";
 import sortPackageJson from "sort-package-json";
 
-import type { PackageJson } from "./interfaces.js";
+import type { PackageJson } from "./types.js";
 
 /**
  * Reads the contents of package.json, applies a transform function to it, then writes the results back to the source

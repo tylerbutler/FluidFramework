@@ -7,8 +7,8 @@ import { strict as assert } from "node:assert";
 import * as path from "node:path";
 import { describe, it } from "mocha";
 
-import { type PackageJson } from "../interfaces.js";
 import { readPackageJsonAndIndent, updatePackageJsonFile } from "../packageJsonUtils.js";
+import { type PackageJson } from "../types.js";
 import { testDataPath } from "./init.js";
 
 /**
