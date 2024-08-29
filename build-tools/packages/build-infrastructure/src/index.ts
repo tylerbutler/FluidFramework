@@ -4,5 +4,5 @@
  */
 
 export { loadFluidRepo } from "./fluidRepo.js";
-export type { IPackage, IWorkspace, IFluidRepo, PackageName } from "./interfaces.js";
+export type { IPackage, IWorkspace, IFluidRepo, PackageName, PackageJson } from "./interfaces.js";
 export { PackageBase, loadPackage } from "./package.js";

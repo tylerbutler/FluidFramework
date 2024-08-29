@@ -66,10 +66,11 @@ export interface PackageDependency {
 export type PackageName = Opaque<string, "PackageName">;
 
 // export interface IPackage<TAddProps extends AdditionalPackageProps = undefined> {
-export interface IPackage {
+export interface IPackage<J extends PackageJson = PackageJson> {
 	readonly name: PackageName;
 	readonly nameColored: string;
-	packageJson: PackageJson;
+	readonly directory: string,
+	packageJson: J;
 	readonly packageManager: PackageManager;
 	readonly version: string;
 	readonly isWorkspaceRoot: boolean;
