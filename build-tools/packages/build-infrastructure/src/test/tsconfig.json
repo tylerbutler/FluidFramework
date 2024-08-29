@@ -1,14 +1,13 @@
 {
-	"extends": "../../tsconfig.json",
+	"extends": "../../../../../common/build/build-common/tsconfig.test.node16.json",
 	"include": ["./**/*"],
-	"exclude": [],
 	"compilerOptions": {
-		"importHelpers": true,
-		"declarationMap": false,
+		// "importHelpers": true,
+		// "declarationMap": false,
 		"rootDir": "./",
-		"outDir": "../lib/test",
+		"outDir": "../../lib/test",
 		"types": ["node", "mocha", "chai"],
-		"skipLibCheck": true,
+		// "skipLibCheck": true,
 	},
 	"references": [
 		{

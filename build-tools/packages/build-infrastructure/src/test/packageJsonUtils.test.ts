@@ -3,8 +3,9 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "assert";
+import { strict as assert } from "node:assert";
 import * as path from "node:path";
+import { describe, it } from "mocha";
 
 import { type PackageJson } from "../interfaces.js";
 import { readPackageJsonAndIndent, updatePackageJsonFile } from "../packageJsonUtils.js";

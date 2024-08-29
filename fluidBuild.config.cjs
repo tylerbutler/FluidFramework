@@ -560,6 +560,7 @@ module.exports = {
 		},
 	},
 
+	version: 1,
 	repoLayout: {
 		// packages: [
 		// 	"common/build/build-common",
@@ -582,8 +583,11 @@ module.exports = {
 						include: [
 							"@fluidframework",
 							"@fluid-experimental",
+							"@fluid-internal",
+							"@fluid-private",
 							// "@fluid-example",
 							"@fluid-tools",
+							"fluid-framework"
 						],
 						defaultInterdependencyRange: "workspace:~",
 					},

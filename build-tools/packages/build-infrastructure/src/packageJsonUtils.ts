@@ -4,8 +4,10 @@
  */
 
 import path from "node:path";
+import { readFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import detectIndent from "detect-indent";
-import { readFile, readFileSync, writeJson, writeJsonSync } from "fs-extra";
+import { writeJson, writeJsonSync } from "fs-extra/esm";
 import sortPackageJson from "sort-package-json";
 
 import type { PackageJson } from "./interfaces.js";

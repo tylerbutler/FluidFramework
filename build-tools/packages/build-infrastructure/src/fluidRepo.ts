@@ -32,7 +32,7 @@ export class FluidRepo implements IFluidRepo {
 		this._workspaces = new Map<string, IWorkspace>(
 			Object.entries(config.repoLayout.workspaces).map((entry) => {
 				const [name, definition] = entry;
-				const ws = Workspace.load(name, definition);
+				const ws = Workspace.load(name, definition, this.root);
 				return [name, ws];
 			}),
 		);

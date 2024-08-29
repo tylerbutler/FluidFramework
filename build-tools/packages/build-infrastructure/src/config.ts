@@ -111,9 +111,8 @@ export interface IFluidBuildDir {
 
 export function matchesReleaseGroupDefinition(
 	pkg: IPackage,
-	definition: ReleaseGroupDefinition,
+	{ include, exclude } : ReleaseGroupDefinition,
 ): boolean {
-	const { include, exclude } = definition;
 	let shouldInclude = false;
 	if (
 		// If the package name matches an entry in the include list, it should be included

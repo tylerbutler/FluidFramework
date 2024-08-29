@@ -6,29 +6,52 @@
 import path from "node:path";
 import { getPackagesSync } from "@manypkg/get-packages";
 
-import type { WorkspaceDefinition } from "./config.js";
-import type { IPackage, IWorkspace, PackageManager, WorkspaceName } from "./interfaces.js";
+import type { ReleaseGroupDefinition, WorkspaceDefinition } from "./config.js";
+import type {
+	IPackage,
+	IReleaseGroup,
+	IWorkspace,
+	PackageManager,
+	ReleaseGroupName,
+	WorkspaceName,
+} from "./interfaces.js";
 import { loadPackage } from "./package.js";
+import { ReleaseGroup } from "./releaseGroup.js";
 
 export class Workspace implements IWorkspace {
 	public readonly name: WorkspaceName;
+	public readonly releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
 	private constructor(
 		name: string,
 		public readonly directory: string,
 		public readonly rootPackage: IPackage,
 		public readonly packages: IPackage[],
-		// definition: WorkspaceDefinition,
+		// public readonly releaseGroups: Map<ReleaseGroupName, IReleaseGroup>,
+		// releaseGroupDefinition: Record<string, string>
+		definition: WorkspaceDefinition,
 	) {
 		this.name = name as WorkspaceName;
+		const rGroupDefinitions: Map<ReleaseGroupName, ReleaseGroupDefinition> =
+			definition.releaseGroups === undefined
+				? new Map()
+				: new Map(
+						Object.entries(definition.releaseGroups).map((entry) => {
+							return [entry[0] as ReleaseGroupName, entry[1]];
+						}),
+					);
+
+		this.releaseGroups = new Map();
+		for (const [groupName, def] of rGroupDefinitions) {
+			this.releaseGroups.set(groupName, new ReleaseGroup(groupName, def, packages));
+		}
 	}
 
-	public get releaseGroups() {
-		// TODO: implement
-		return new Map();
-	}
-
-	public static load(name: string, { directory }: WorkspaceDefinition): IWorkspace {
-		const absDirectory = path.resolve(directory);
+	public static load(
+		name: string,
+		definition: WorkspaceDefinition,
+		repoRoot: string,
+	): IWorkspace {
+		const absDirectory = path.resolve(repoRoot, definition.directory);
 
 		let packageManager: PackageManager;
 
@@ -69,10 +92,20 @@ export class Workspace implements IWorkspace {
 
 		// Absolute paths to all package.jsons for packages in the workspace
 		// const packageJsonPaths = filtered.map((pkg)=> pkg.dir);
-		const packages = filtered.map((pkg) => loadPackage(pkg.dir, packageManager, false));
-		const rootPackage = loadPackage(foundRootPackage.dir, packageManager, true);
+		const packages = filtered.map((pkg) =>
+			loadPackage(path.join(pkg.dir, "package.json"), packageManager, false),
+		);
+		const rootPackage = loadPackage(
+			path.join(foundRootPackage.dir, "package.json"),
+			packageManager,
+			true,
+		);
 
-		const workspace = new Workspace(name, absDirectory, rootPackage, packages);
+		// const m = definition.releaseGroups === undefined ? new Map() : new Map(Object.entries(definition.releaseGroups).map(([a, b])=> {
+		// 	return [a as ReleaseGroupName, ]
+		// })
+
+		const workspace = new Workspace(name, absDirectory, rootPackage, packages, definition);
 		return workspace;
 	}
 }

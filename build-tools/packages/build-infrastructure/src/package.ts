@@ -199,6 +199,10 @@ export class Package<
 		this._packageJson = readJsonSync(this.packageJsonFilePath);
 	}
 
+	public toString() {
+		return this.name;
+	}
+
 	// public async checkInstall(print: boolean = true) {
 	// 	if (this.combinedDependencies.next().done) {
 	// 		// No dependencies

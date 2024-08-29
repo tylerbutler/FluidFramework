@@ -4,8 +4,11 @@
  */
 
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
- * Path to the test data. It's rooted two directories up because the tests get executed from dist/.
+ * Path to the test data. It's rooted two directories up because the tests get executed from lib/.
  */
 export const testDataPath = path.resolve(__dirname, "../../src/test/data");
