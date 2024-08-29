@@ -44,6 +44,20 @@ export class Workspace implements IWorkspace {
 		for (const [groupName, def] of rGroupDefinitions) {
 			this.releaseGroups.set(groupName, new ReleaseGroup(groupName, def, packages));
 		}
+
+		// sanity check - make sure that all packages are in a release group.
+		const noGroup = new Set(packages.map((p) => p.name));
+		for (const group of this.releaseGroups.values()) {
+			for (const pkg of group.packages) {
+				noGroup.delete(pkg.name);
+			}
+		}
+
+		if (noGroup.size > 0) {
+			const packageList = [...noGroup].join("\n");
+			const message = `Found packages in the ${name} workspace that are not in any release groups. Check your config.\n${packageList}`;
+			throw new Error(message);
+		}
 	}
 
 	public static load(
