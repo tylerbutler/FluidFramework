@@ -4,9 +4,9 @@
  */
 
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+// import { fileURLToPath } from "node:url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Path to the test data. It's rooted two directories up because the tests get executed from lib/.

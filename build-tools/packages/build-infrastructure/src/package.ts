@@ -4,7 +4,7 @@
  */
 
 import path from "node:path";
-import chalk from "chalk";
+import * as chalk from "chalk";
 import { readJsonSync } from "fs-extra/esm";
 
 import type {

@@ -41,7 +41,7 @@ importers:
         version: 2.0.3
       '@fluidframework/build-tools':
         specifier: ~0.40.0
-        version: 0.40.0(@types/node@18.18.6)
+        version: 0.40.0(@types/node@18.18.7)
       '@microsoft/api-documenter':
         specifier: ^7.22.24
         version: 7.22.24
@@ -370,9 +370,6 @@ importers:
       '@fluid-tools/version-tools':
         specifier: workspace:^
         version: link:../version-tools
-      '@fluidframework/build-tools':
-        specifier: workspace:^
-        version: link:../build-tools
       '@manypkg/get-packages':
         specifier: ^2.2.0
         version: 2.2.0
@@ -401,12 +398,18 @@ importers:
       '@fluidframework/build-common':
         specifier: ^2.0.3
         version: 2.0.3
+      '@fluidframework/build-tools-bin':
+        specifier: npm:@fluidframework/build-tools@~0.40.0
+        version: /@fluidframework/build-tools@0.40.0(@types/node@18.18.7)
       '@fluidframework/eslint-config-fluid':
         specifier: ^5.3.0
         version: 5.3.0(eslint@8.57.0)(typescript@5.4.5)
       '@types/async':
         specifier: ^3.2.20
         version: 3.2.20
+      '@types/chai':
+        specifier: ^4.3.5
+        version: 4.3.5
       '@types/fs-extra':
         specifier: ^11.0.4
         version: 11.0.4
@@ -434,6 +437,9 @@ importers:
       '@types/shelljs':
         specifier: ^0.8.12
         version: 0.8.12
+      chai:
+        specifier: ^4.3.7
+        version: 4.4.1
       concurrently:
         specifier: ^8.2.1
         version: 8.2.1
@@ -449,6 +455,9 @@ importers:
 
   packages/build-tools:
     dependencies:
+      '@fluid-tools/build-infrastructure':
+        specifier: workspace:^
+        version: link:../build-infrastructure
       '@manypkg/get-packages':
         specifier: ^2.2.0
         version: 2.2.0
@@ -1212,7 +1221,7 @@ packages:
     dependencies:
       '@andrewbranch/untar.js': 1.0.3
       '@fluid-tools/version-tools': 0.40.0
-      '@fluidframework/build-tools': 0.40.0(@types/node@18.18.6)
+      '@fluidframework/build-tools': 0.40.0(@types/node@18.18.7)
       '@fluidframework/bundle-size-tools': 0.40.0
       '@microsoft/api-extractor': 7.45.1(@types/node@18.18.6)
       '@oclif/core': 3.26.6
@@ -1221,7 +1230,7 @@ packages:
       '@oclif/plugin-help': 6.2.7
       '@oclif/plugin-not-found': 3.2.13
       '@octokit/core': 4.2.4
-      '@rushstack/node-core-library': 3.59.5(@types/node@18.18.6)
+      '@rushstack/node-core-library': 3.59.5(@types/node@18.18.7)
       async: 3.2.4
       chalk: 5.3.0
       change-case: 3.1.0
@@ -1305,6 +1314,48 @@ packages:
       danger: 11.3.0
       date-fns: 2.30.0
       debug: 4.3.4(supports-color@8.1.1)
+      detect-indent: 6.1.0
+      find-up: 7.0.0
+      fs-extra: 11.2.0
+      glob: 7.2.3
+      ignore: 5.2.4
+      json5: 2.2.3
+      lodash: 4.17.21
+      lodash.isequal: 4.5.0
+      picomatch: 2.3.1
+      rimraf: 4.4.1
+      semver: 7.6.2
+      sort-package-json: 1.57.0
+      ts-morph: 22.0.0
+      type-fest: 2.19.0
+      typescript: 5.4.5
+      yaml: 2.3.1
+    transitivePeerDependencies:
+      - '@swc/core'
+      - '@types/node'
+      - encoding
+      - esbuild
+      - supports-color
+      - uglify-js
+      - webpack-cli
+    dev: true
+
+  /@fluidframework/build-tools@0.40.0(@types/node@18.18.7):
+    resolution: {integrity: sha512-4F5tNPlwrlD2QkaJgnkkECy3aWf7TR6fjbPI9RhnFJw2Fo6ZkamoIMWyliqSyiJwrAeLDvsdZsVgVRscjmZTBw==}
+    engines: {node: '>=18.17.1'}
+    hasBin: true
+    dependencies:
+      '@fluid-tools/version-tools': 0.40.0
+      '@fluidframework/bundle-size-tools': 0.40.0
+      '@manypkg/get-packages': 2.2.0
+      '@octokit/core': 4.2.4
+      '@rushstack/node-core-library': 3.59.5(@types/node@18.18.7)
+      async: 3.2.4
+      chalk: 2.4.2
+      cosmiconfig: 8.3.6(typescript@5.4.5)
+      danger: 11.3.0
+      date-fns: 2.30.0
+      debug: 4.3.5(supports-color@8.1.1)
       detect-indent: 6.1.0
       find-up: 7.0.0
       fs-extra: 11.2.0
@@ -1773,7 +1824,7 @@ packages:
     dependencies:
       '@microsoft/api-extractor-model': 7.27.4
       '@microsoft/tsdoc': 0.14.2
-      '@rushstack/node-core-library': 3.59.5(@types/node@18.18.6)
+      '@rushstack/node-core-library': 3.59.5(@types/node@18.18.7)
       '@rushstack/ts-command-line': 4.15.1
       colors: 1.2.5
       js-yaml: 3.13.1
@@ -1787,7 +1838,7 @@ packages:
     dependencies:
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
-      '@rushstack/node-core-library': 3.59.5(@types/node@18.18.6)
+      '@rushstack/node-core-library': 3.59.5(@types/node@18.18.7)
     transitivePeerDependencies:
       - '@types/node'
     dev: true
@@ -2275,6 +2326,24 @@ packages:
       resolve: 1.22.1
       semver: 7.3.8
       z-schema: 5.0.5
+
+  /@rushstack/node-core-library@3.59.5(@types/node@18.18.7):
+    resolution: {integrity: sha512-1IpV7LufrI1EoVO8hYsb3t6L8L+yp40Sa0OaOV2CIu1zx4e6ZeVNaVIEXFgMXBKdGXkAh21MnCaIzlDNpG6ZQw==}
+    peerDependencies:
+      '@types/node': '*'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+    dependencies:
+      '@types/node': 18.18.7
+      colors: 1.2.5
+      fs-extra: 7.0.1
+      import-lazy: 4.0.0
+      jju: 1.4.0
+      resolve: 1.22.8
+      semver: 7.3.8
+      z-schema: 5.0.5
+    dev: true
 
   /@rushstack/node-core-library@5.3.0(@types/node@18.18.6):
     resolution: {integrity: sha512-t23gjdZV6aWkbwXSE3TkKr1UXJFbXICvAOJ0MRQEB/ZYGhfSJqqrQFaGd20I1a/nIIHJEkNO0xzycHixjcbCPw==}
