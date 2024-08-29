@@ -585,9 +585,9 @@ module.exports = {
 							"@fluid-experimental",
 							"@fluid-internal",
 							"@fluid-private",
-							// "@fluid-example",
 							"@fluid-tools",
-							"fluid-framework"
+							"fluid-framework",
+							"@types/jest-environment-puppeteer",
 						],
 						defaultInterdependencyRange: "workspace:~",
 					},
