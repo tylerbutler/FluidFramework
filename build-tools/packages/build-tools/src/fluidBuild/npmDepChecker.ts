@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { Package } from "../common/npmPackage";
+import { type IPackage } from "@fluid-tools/build-infrastructure";
 import { readFileAsync } from "../common/utils";
 
 import registerDebug from "debug";
@@ -45,7 +45,7 @@ export class NpmDepChecker {
 	]);
 
 	constructor(
-		private readonly pkg: Package,
+		private readonly pkg: IPackage,
 		private readonly checkFiles: string[],
 	) {
 		if (checkFiles.length !== 0 && pkg.packageJson.dependencies) {

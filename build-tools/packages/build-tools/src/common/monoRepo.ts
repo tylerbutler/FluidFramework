@@ -10,7 +10,7 @@ import YAML from "yaml";
 
 import { IFluidBuildDir } from "../fluidBuild/fluidBuildConfig";
 import { Logger, defaultLogger } from "./logging";
-import { Package } from "./npmPackage";
+import { type IFluidBuildPackage, Package } from "./npmPackage";
 import { execWithErrorAsync, existsSync, rimrafWithErrorAsync } from "./utils";
 
 import registerDebug from "debug";
@@ -39,10 +39,10 @@ export type PackageManager = "npm" | "pnpm" | "yarn";
  * - If the version was not defined in lerna.json, then the version value in package.json will be used.
  */
 export class MonoRepo {
-	public readonly packages: Package[] = [];
+	public readonly packages: IFluidBuildPackage[] = [];
 	public readonly version: string;
 	public readonly workspaceGlobs: string[];
-	public readonly pkg: Package;
+	public readonly pkg: IFluidBuildPackage;
 
 	public get name(): string {
 		return this.kind;

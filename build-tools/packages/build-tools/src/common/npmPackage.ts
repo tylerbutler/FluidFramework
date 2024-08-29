@@ -5,6 +5,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+import type { IPackage, PackageName } from "@fluid-tools/build-infrastructure";
 import { queue } from "async";
 import * as chalk from "chalk";
 import detectIndent from "detect-indent";
@@ -79,7 +80,25 @@ interface PackageDependency {
 	depClass: "prod" | "dev" | "peer";
 }
 
-export class Package {
+interface IFluidBuildPackageJson extends PackageJson {
+	fluidBuild?: IFluidBuildConfig;
+}
+
+export interface IFluidBuildPackage extends IPackage<IFluidBuildPackageJson> {
+	matched?: boolean;
+
+	/**
+	 * The MonoRepo class is roughly equivalent to a workspace.
+	 */
+	readonly monoRepo?: MonoRepo;
+
+	checkInstall(): Promise<boolean>;
+	cleanNodeModules(): Promise<ExecAsyncResult>;
+	getLockFilePath(): string | undefined;
+	install(): Promise<ExecAsyncResult>;
+}
+
+export class Package implements IFluidBuildPackage {
 	private static packageCount: number = 0;
 	private static readonly chalkColor = [
 		chalk.default.red,
@@ -107,6 +126,10 @@ export class Package {
 	public readonly packageManager: PackageManager;
 	public get packageJson(): PackageJson {
 		return this._packageJson;
+	}
+
+	public get packageJsonFilePath() {
+		return this.packageJsonFileName;
 	}
 
 	/**
@@ -139,8 +162,8 @@ export class Package {
 	/**
 	 * The name of the package including the scope.
 	 */
-	public get name(): string {
-		return this.packageJson.name;
+	public get name(): PackageName {
+		return this.packageJson.name as PackageName;
 	}
 
 	/**
@@ -170,6 +193,11 @@ export class Package {
 	 * Returns true if the package is a release group root package based on its directory path.
 	 */
 	public get isReleaseGroupRoot(): boolean {
+		// release groups and workspaces are the same in this implementation
+		return this.isWorkspaceRoot;
+	}
+
+	public get isWorkspaceRoot(): boolean {
 		return this.monoRepo !== undefined && this.directory === this.monoRepo.repoPath;
 	}
 
@@ -177,8 +205,8 @@ export class Package {
 		return this._matched;
 	}
 
-	public setMatched() {
-		this._matched = true;
+	public set matched(value) {
+		this._matched = value;
 	}
 
 	public get dependencies() {
@@ -390,7 +418,7 @@ async function queueExec<TItem, TResult>(
 }
 
 export class Packages {
-	public constructor(public readonly packages: Package[]) {}
+	public constructor(public readonly packages: IFluidBuildPackage[]) {}
 
 	public static loadDir(
 		dirFullPath: string,
@@ -403,7 +431,7 @@ export class Packages {
 			return [Package.load(packageJsonFileName, group, monoRepo)];
 		}
 
-		const packages: Package[] = [];
+		const packages: IFluidBuildPackage[] = [];
 		const files = fs.readdirSync(dirFullPath, { withFileTypes: true });
 		files.map((dirent) => {
 			if (dirent.isDirectory() && dirent.name !== "node_modules") {
@@ -424,7 +452,7 @@ export class Packages {
 	}
 
 	public async forEachAsync<TResult>(
-		exec: (pkg: Package) => Promise<TResult>,
+		exec: (pkg: IFluidBuildPackage) => Promise<TResult>,
 		parallel: boolean,
 		message?: string,
 	) {
@@ -439,10 +467,10 @@ export class Packages {
 		return results;
 	}
 
-	public static async clean(packages: Package[], status: boolean) {
+	public static async clean(packages: IPackage[], status: boolean) {
 		const cleanP: Promise<ExecAsyncResult>[] = [];
 		let numDone = 0;
-		const execCleanScript = async (pkg: Package, cleanScript: string) => {
+		const execCleanScript = async (pkg: IPackage, cleanScript: string) => {
 			const startTime = Date.now();
 			const result = await execWithErrorAsync(
 				cleanScript,
@@ -480,17 +508,17 @@ export class Packages {
 	}
 
 	private async queueExecOnAllPackageCore<TResult>(
-		exec: (pkg: Package) => Promise<TResult>,
+		exec: (pkg: IFluidBuildPackage) => Promise<TResult>,
 		message?: string,
 	) {
 		const messageCallback = message
-			? (pkg: Package) => ` ${pkg.nameColored}: ${message}`
+			? (pkg: IFluidBuildPackage) => ` ${pkg.nameColored}: ${message}`
 			: undefined;
 		return queueExec(this.packages, exec, messageCallback);
 	}
 
 	private async queueExecOnAllPackage(
-		exec: (pkg: Package) => Promise<ExecAsyncResult>,
+		exec: (pkg: IFluidBuildPackage) => Promise<ExecAsyncResult>,
 		message?: string,
 	) {
 		const results = await this.queueExecOnAllPackageCore(exec, message);

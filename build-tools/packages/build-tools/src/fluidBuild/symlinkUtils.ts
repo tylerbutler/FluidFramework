@@ -6,10 +6,11 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as semver from "semver";
+import { type IPackage } from "@fluid-tools/build-infrastructure";
 
 import { defaultLogger } from "../common/logging";
 import { MonoRepo } from "../common/monoRepo";
-import { Package } from "../common/npmPackage";
+import { type IFluidBuildPackage } from "../common/npmPackage";
 import {
 	existsSync,
 	lstatAsync,
@@ -89,8 +90,8 @@ async function revertBin(dir: string, binName: string) {
 async function fixSymlink(
 	stat: fs.Stats | undefined,
 	symlinkPath: string,
-	pkg: Package,
-	depBuildPackage: Package,
+	pkg: IPackage,
+	depBuildPackage: IPackage,
 ) {
 	// Fixing the symlink
 	traceSymLink(`${pkg.nameColored}: Fixing symlink ${symlinkPath}`);
@@ -121,7 +122,7 @@ async function fixSymlink(
 	}
 }
 
-async function revertSymlink(symlinkPath: string, pkg: Package, depBuildPackage: Package) {
+async function revertSymlink(symlinkPath: string, pkg: IPackage, depBuildPackage: IPackage) {
 	await unlinkAsync(symlinkPath);
 	const origPath = path.join(path.dirname(symlinkPath), `_${path.basename(symlinkPath)}`);
 	if (existsSync(origPath)) {
@@ -145,8 +146,8 @@ export interface ISymlinkOptions {
 
 export async function symlinkPackage(
 	repo: FluidRepoBuild,
-	pkg: Package,
-	buildPackages: Map<string, Package>,
+	pkg: IFluidBuildPackage,
+	buildPackages: Map<string, IFluidBuildPackage>,
 	options: ISymlinkOptions,
 ) {
 	let count = 0;

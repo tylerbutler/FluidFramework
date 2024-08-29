@@ -5,7 +5,7 @@
 
 import path from "node:path";
 import { Project } from "ts-morph";
-import type { Package } from "../common/npmPackage";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 
 let shouldLog = false;
 export function enableLogging(enable: boolean) {
@@ -48,7 +48,7 @@ export interface IValidator {
  * generation and the generation code that mostly lives in build-cli. Long term this function should move to build-cli
  * or a third library package and be used by fluid-build and build-cli.
  */
-export function getTypeTestPreviousPackageDetails(pkg: Package): {
+export function getTypeTestPreviousPackageDetails(pkg: IPackage): {
 	name: string;
 	packageJsonPath: string;
 } {
