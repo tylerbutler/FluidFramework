@@ -54,6 +54,15 @@ export interface IReleaseGroup {
 	packages: IPackage[];
 }
 
+/**
+ * Information about a package dependency.
+ */
+export interface PackageDependency {
+	name: string;
+	version: string;
+	depClass: "prod" | "dev" | "peer";
+}
+
 export type PackageName = Opaque<string, "PackageName">;
 
 // export interface IPackage<TAddProps extends AdditionalPackageProps = undefined> {
@@ -64,9 +73,12 @@ export interface IPackage {
 	readonly packageManager: PackageManager;
 	readonly version: string;
 	readonly isWorkspaceRoot: boolean;
+	isReleaseGroupRoot: boolean;
 	readonly packageJsonFilePath: string;
 
 	getScript(name: string): string | undefined;
 	savePackageJson(): Promise<void>;
 	reload(): void;
+
+	combinedDependencies: Generator<PackageDependency, void>;
 }

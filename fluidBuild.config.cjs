@@ -589,10 +589,12 @@ module.exports = {
 							"fluid-framework",
 							"@types/jest-environment-puppeteer",
 						],
+						rootPackageName: "client-release-group-root",
 						defaultInterdependencyRange: "workspace:~",
 					},
 					examples: {
 						include: ["@fluid-example"],
+						rootPackageName: "examples-release-group-root",
 						defaultInterdependencyRange: "workspace:~",
 					},
 					// "build-tools": {

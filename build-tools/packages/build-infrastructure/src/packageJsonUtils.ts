@@ -3,11 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import path from "node:path";
-import { readFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import detectIndent from "detect-indent";
-import { writeJson, writeJsonSync } from "fs-extra/esm";
+import { writeJson, writeJsonSync } from "fs-extra";
 import sortPackageJson from "sort-package-json";
 
 import type { PackageJson } from "./interfaces.js";

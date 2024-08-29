@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { matchesReleaseGroupDefinition, type ReleaseGroupDefinition } from "./config.js";
+import { type ReleaseGroupDefinition, matchesReleaseGroupDefinition } from "./config.js";
 import type { IPackage, IReleaseGroup, ReleaseGroupName } from "./interfaces.js";
 
 export class ReleaseGroup implements IReleaseGroup {
@@ -14,9 +14,24 @@ export class ReleaseGroup implements IReleaseGroup {
 		packagesInWorkspace: IPackage[],
 	) {
 		this.name = name as ReleaseGroupName;
-		this.packages = packagesInWorkspace.filter((pkg) =>
-			matchesReleaseGroupDefinition(pkg, releaseGroupDefinition),
+		this.packages = packagesInWorkspace.filter(
+			(pkg) =>
+				matchesReleaseGroupDefinition(pkg, releaseGroupDefinition) ||
+				pkg.name === releaseGroupDefinition.rootPackageName,
 		);
+
+		if (releaseGroupDefinition.rootPackageName !== undefined) {
+			// Find the root package in the set of release group packages
+			const releaseGroupRoot = this.packages.find(
+				(pkg) => pkg.name === releaseGroupDefinition.rootPackageName,
+			);
+			if (releaseGroupRoot === undefined) {
+				throw new Error(
+					`Could not find release group root package '${releaseGroupDefinition.rootPackageName}' in release group '${this.name}'`,
+				);
+			}
+			releaseGroupRoot.isReleaseGroupRoot = true;
+		}
 	}
 
 	public readonly packages: IPackage[];

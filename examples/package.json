@@ -1,0 +1,6 @@
+{
+	"name": "example-release-group-root",
+	"private": true,
+	"version": "2.3.0",
+	"dependencies": {}
+}

@@ -81,6 +81,18 @@ export interface ReleaseGroupDefinition {
 	exclude?: string[];
 
 	/**
+	 * The name of the package that should be considered the root package for the release group. If not provided, the
+	 * release group is considered "rootless."
+	 *
+	 * @remarks
+	 *
+	 * A release group may have a "root package" that is part of the workspace but fills a similar role to the
+	 * workspace-root package: it is a convenient place to store release-group-wide scripts as opposed to workspace-wide
+	 * scripts.
+	 */
+	rootPackageName?: string;
+
+	/**
 	 * The interdependencyRange controls the type of semver range to use between packages in the same release
 	 * group. This setting controls the default range that will be used when updating the version of a release
 	 * group. The default can be overridden using the `--interdependencyRange` flag in the `flub bump` command.
@@ -111,7 +123,7 @@ export interface IFluidBuildDir {
 
 export function matchesReleaseGroupDefinition(
 	pkg: IPackage,
-	{ include, exclude } : ReleaseGroupDefinition,
+	{ include, exclude }: ReleaseGroupDefinition,
 ): boolean {
 	let shouldInclude = false;
 	if (

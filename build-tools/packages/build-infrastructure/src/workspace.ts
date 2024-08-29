@@ -36,7 +36,8 @@ export class Workspace implements IWorkspace {
 				? new Map()
 				: new Map(
 						Object.entries(definition.releaseGroups).map((entry) => {
-							return [entry[0] as ReleaseGroupName, entry[1]];
+							const [name, group] = entry;
+							return [name as ReleaseGroupName, group];
 						}),
 					);
 
@@ -104,15 +105,22 @@ export class Workspace implements IWorkspace {
 		// filter out the root package
 		const filtered = foundPackages.filter((pkg) => pkg.relativeDir !== ".");
 
-		// Absolute paths to all package.jsons for packages in the workspace
-		// const packageJsonPaths = filtered.map((pkg)=> pkg.dir);
+		// Load IPackages for all packages in the workspace except the root
 		const packages = filtered.map((pkg) =>
-			loadPackage(path.join(pkg.dir, "package.json"), packageManager, false),
+			loadPackage(
+				path.join(pkg.dir, "package.json"),
+				packageManager,
+				// /* isWorkspaceRoot */ false,
+				// /* isReleaseGroupRoot */ false,
+			),
 		);
+
+		// Load the workspace root IPackage
 		const rootPackage = loadPackage(
 			path.join(foundRootPackage.dir, "package.json"),
 			packageManager,
-			true,
+			/* isWorkspaceRoot */ true,
+			/* isReleaseGroupRoot */ false,
 		);
 
 		// const m = definition.releaseGroups === undefined ? new Map() : new Map(Object.entries(definition.releaseGroups).map(([a, b])=> {
@@ -123,3 +131,5 @@ export class Workspace implements IWorkspace {
 		return workspace;
 	}
 }
+
+// type PackageKinds = "WorkspaceRoot" | "ReleaseGroupMember" | "ReleaseGroupRoot";
