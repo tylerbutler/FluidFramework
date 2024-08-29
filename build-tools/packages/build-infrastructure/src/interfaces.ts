@@ -69,7 +69,7 @@ export type PackageName = Opaque<string, "PackageName">;
 export interface IPackage<J extends PackageJson = PackageJson> {
 	readonly name: PackageName;
 	readonly nameColored: string;
-	readonly directory: string,
+	readonly directory: string;
 	packageJson: J;
 	readonly packageManager: PackageManager;
 	readonly version: string;
