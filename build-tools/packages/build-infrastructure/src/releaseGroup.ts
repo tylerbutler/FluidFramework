@@ -15,11 +15,13 @@ export class ReleaseGroup implements IReleaseGroup {
 		public readonly rootPackage?: IPackage,
 	) {
 		this.name = name as ReleaseGroupName;
-		this.packages = packagesInWorkspace.filter(
-			(pkg) =>
-				matchesReleaseGroupDefinition(pkg, releaseGroupDefinition) ||
-				pkg.name === releaseGroupDefinition.rootPackageName,
-		);
+		this.packages = packagesInWorkspace
+			.filter((pkg) => matchesReleaseGroupDefinition(pkg, releaseGroupDefinition))
+			.map((pkg) => {
+				// update the release group in the package object so we have an easy way to get from packages to release groups
+				pkg.releaseGroup = this.name;
+				return pkg;
+			});
 
 		if (releaseGroupDefinition.rootPackageName !== undefined) {
 			// Find the root package in the set of release group packages
@@ -37,6 +39,9 @@ export class ReleaseGroup implements IReleaseGroup {
 
 	public readonly packages: IPackage[];
 
+	public get version(): string {
+		return this.packages[0]!.version;
+	}
 	public get rgPackages(): IPackage[] {
 		return this.packages;
 	}

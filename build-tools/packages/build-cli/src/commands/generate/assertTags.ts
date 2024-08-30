@@ -67,9 +67,7 @@ export class TagAssertsCommand extends PackageCommand<typeof TagAssertsCommand> 
 		// Further filter packages based on the path regex
 		const before = this.filteredPackages?.length ?? 0;
 		this.filteredPackages = this.filteredPackages?.filter((pkg) => {
-			const tsconfigPath = context.repo.relativeToRepo(
-				path.join(pkg.directory, "tsconfig.json"),
-			);
+			const tsconfigPath = context.relativeToRepo(path.join(pkg.directory, "tsconfig.json"));
 
 			if (!fs.existsSync(tsconfigPath)) {
 				this.verbose(`Skipping '${pkg.name}' because '${tsconfigPath}' doesn't exist.`);
@@ -298,9 +296,7 @@ export class TagAssertsCommand extends PackageCommand<typeof TagAssertsCommand> 
 
 	private async getTsConfigPath(pkg: Package): Promise<string> {
 		const context = await this.getContext();
-		const tsconfigPath = context.repo.relativeToRepo(
-			path.join(pkg.directory, "tsconfig.json"),
-		);
+		const tsconfigPath = context.relativeToRepo(path.join(pkg.directory, "tsconfig.json"));
 		return tsconfigPath;
 	}
 }

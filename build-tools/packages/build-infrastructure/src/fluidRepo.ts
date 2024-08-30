@@ -3,11 +3,19 @@
  * Licensed under the MIT License.
  */
 
-import * as childProcess from "node:child_process";
 import path from "node:path";
 
 import { getFluidRepoLayout } from "./config.js";
-import type { IFluidRepo, IPackage, IWorkspace } from "./types.js";
+import type {
+	IFluidRepo,
+	IPackage,
+	IReleaseGroup,
+	IWorkspace,
+	PackageName,
+	ReleaseGroupName,
+	WorkspaceName,
+} from "./types.js";
+import { findGitRoot } from "./utils.js";
 import { Workspace } from "./workspace.js";
 
 export class FluidRepo implements IFluidRepo {
@@ -29,24 +37,56 @@ export class FluidRepo implements IFluidRepo {
 			throw new Error("old settings");
 		}
 
-		this._workspaces = new Map<string, IWorkspace>(
+		this._workspaces = new Map<WorkspaceName, IWorkspace>(
 			Object.entries(config.repoLayout.workspaces).map((entry) => {
-				const [name, definition] = entry;
-				const ws = Workspace.load(name, definition, this.root);
+				const name = entry[0] as WorkspaceName;
+				const definition = entry[1];
+				const ws = Workspace.load(name, definition);
 				return [name, ws];
 			}),
 		);
+
+		const releaseGroups = new Map<ReleaseGroupName, IReleaseGroup>();
+		for (const ws of this.workspaces.values()) {
+			for (const [rgName, rg] of ws.releaseGroups) {
+				if (releaseGroups.has(rgName)) {
+					throw new Error(`Duplicate release group: ${rgName}`);
+				}
+				releaseGroups.set(rgName, rg);
+			}
+		}
+		this._releaseGroups = releaseGroups;
 	}
 
-	private readonly _workspaces: Map<string, IWorkspace>;
+	private readonly _workspaces: Map<WorkspaceName, IWorkspace>;
 	public get workspaces() {
 		return this._workspaces;
 	}
 
-	public get allPackages(): IPackage[] {
-		const pkgs: IPackage[] = [];
+	private readonly _releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
+	public get releaseGroups() {
+		return this._releaseGroups;
+	}
+
+	// public get packages(): IPackage[] {
+	// 	const pkgs: IPackage[] = [];
+	// 	for (const ws of this.workspaces.values()) {
+	// 		pkgs.push(ws.rootPackage, ...ws.packages);
+	// 	}
+
+	// 	return pkgs;
+	// }
+
+	public get packages(): Map<PackageName, IPackage> {
+		const pkgs: Map<PackageName, IPackage> = new Map();
 		for (const ws of this.workspaces.values()) {
-			pkgs.push(ws.rootPackage, ...ws.packages);
+			for (const pkg of ws.packages) {
+				if (pkgs.has(pkg.name)) {
+					throw new Error(`Duplicate package: ${pkg.name}`);
+				}
+
+				pkgs.set(pkg.name, pkg);
+			}
 		}
 
 		return pkgs;
@@ -55,21 +95,4 @@ export class FluidRepo implements IFluidRepo {
 
 export function loadFluidRepo(...args: ConstructorParameters<typeof FluidRepo>): IFluidRepo {
 	return new FluidRepo(...args);
-}
-
-/**
- * Returns the absolute path to the nearest Git repository found starting at `cwd`.
- *
- * @param cwd - The working directory to use to start searching for Git repositories. Defaults to `process.cwd()` if not
- * provided.
- */
-export function findGitRoot(cwd?: string) {
-	const gitRoot = childProcess
-		.execSync("git rev-parse --show-toplevel", {
-			cwd,
-			encoding: "utf8",
-			stdio: ["ignore", "pipe", "ignore"],
-		})
-		.trim();
-	return gitRoot;
 }

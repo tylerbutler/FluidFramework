@@ -4,10 +4,13 @@
  */
 
 import path from "node:path";
+import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import { Package } from "@fluidframework/build-tools";
 import { type PackageSelectionDefault, filterFlags, selectionFlags } from "./flags.js";
 import { Context, Repository } from "./library/index.js";
 import { ReleaseGroup, knownReleaseGroups } from "./releaseGroups.js";
+
+export const ALL_FILTER = "*";
 
 /**
  * The criteria that should be used for selecting package-like objects from a collection.
@@ -21,12 +24,12 @@ export interface PackageSelectionCriteria {
 	/**
 	 * An array of release groups whose packages are selected.
 	 */
-	releaseGroups: ReleaseGroup[];
+	releaseGroups: ReleaseGroupName[];
 
 	/**
 	 * An array of release groups whose root packages are selected.
 	 */
-	releaseGroupRoots: ReleaseGroup[];
+	releaseGroupRoots: ReleaseGroupName[];
 
 	/**
 	 * If set, only selects the single package in this directory.
@@ -44,8 +47,8 @@ export interface PackageSelectionCriteria {
  */
 export const AllPackagesSelectionCriteria: PackageSelectionCriteria = {
 	independentPackages: true,
-	releaseGroups: [...knownReleaseGroups],
-	releaseGroupRoots: [...knownReleaseGroups],
+	releaseGroups: [ALL_FILTER as ReleaseGroupName],
+	releaseGroupRoots: [ALL_FILTER as ReleaseGroupName],
 	directory: undefined,
 	changedSinceBranch: undefined,
 };
@@ -113,8 +116,8 @@ export const parsePackageSelectionFlags = (
 
 	return {
 		independentPackages: flags.packages ?? false,
-		releaseGroups: (releaseGroups ?? []) as ReleaseGroup[],
-		releaseGroupRoots: (roots ?? []) as ReleaseGroup[],
+		releaseGroups: (releaseGroups ?? []) as ReleaseGroupName[],
+		releaseGroupRoots: (roots ?? []) as ReleaseGroupName[],
 		directory: flags.dir,
 	};
 };

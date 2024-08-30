@@ -15,4 +15,8 @@ export type {
 	WorkspaceName,
 } from "./types.js";
 export { isIPackage, isIReleaseGroup } from "./types.js";
-export { PackageBase, loadPackage } from "./package.js";
+export {
+	PackageBase,
+	// loadPackage
+	loadPackageFromWorkspaceDefinition,
+} from "./package.js";

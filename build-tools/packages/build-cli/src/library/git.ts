@@ -4,13 +4,16 @@
  */
 
 import path from "node:path";
-import { Package } from "@fluidframework/build-tools";
+import type {
+	IPackage,
+	PackageName,
+	ReleaseGroupName,
+} from "@fluid-tools/build-infrastructure";
 import readPkgUp from "read-pkg-up";
 import { SimpleGit, SimpleGitOptions, simpleGit } from "simple-git";
 import type { SetRequired } from "type-fest";
 
 import { CommandLogger } from "../logging.js";
-import { ReleaseGroup } from "../releaseGroups.js";
 import { Context } from "./context.js";
 /**
  * Default options passed to the git client.
@@ -152,26 +155,26 @@ export class Repository {
 	): Promise<{
 		files: string[];
 		dirs: string[];
-		releaseGroups: ReleaseGroup[];
-		packages: Package[];
+		releaseGroups: ReleaseGroupName[];
+		packages: IPackage[];
 	}> {
 		const files = await this.getChangedFilesSinceRef(ref, remote);
 		const dirs = await this.getChangedDirectoriesSinceRef(ref, remote);
 
 		const changedPackageNames = dirs
 			.map((dir) => {
-				const cwd = path.resolve(context.repo.resolvedRoot, dir);
+				const cwd = path.resolve(context.repo.root, dir);
 				return readPkgUp.sync({ cwd })?.packageJson.name;
 			})
 			.filter((name): name is string => name !== undefined);
 
 		const changedPackages = [...new Set(changedPackageNames)]
-			.map((name) => context.fullPackageMap.get(name))
-			.filter((pkg): pkg is Package => pkg !== undefined);
+			.map((name) => context.repo.packages.get(name as PackageName))
+			.filter((pkg): pkg is IPackage => pkg !== undefined);
 
 		const changedReleaseGroups = [
-			...new Set(changedPackages.map((pkg) => pkg.monoRepo?.kind)),
-		].filter((rg): rg is ReleaseGroup => rg !== undefined);
+			...new Set(changedPackages.map((pkg) => pkg.releaseGroup)),
+		].filter((rg): rg is ReleaseGroupName => rg !== undefined);
 
 		return {
 			files,

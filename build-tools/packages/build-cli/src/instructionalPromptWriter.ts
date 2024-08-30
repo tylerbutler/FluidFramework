@@ -6,6 +6,7 @@
 import { StringBuilder } from "@rushstack/node-core-library";
 import chalk from "chalk";
 
+import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 // eslint-disable-next-line import/no-deprecated
 import { MonoRepoKind, indentString } from "./library/index.js";
 import { CommandLogger } from "./logging.js";
@@ -50,7 +51,7 @@ interface Section {
 /**
  * Map release groups to ADO pipeline
  */
-export const ADOPipelineLinks = new Map<ReleasePackage | ReleaseGroup | undefined, string>([
+export const ADOPipelineLinks = new Map<ReleaseGroupName | undefined, string>([
 	[
 		// eslint-disable-next-line import/no-deprecated
 		MonoRepoKind.Client,

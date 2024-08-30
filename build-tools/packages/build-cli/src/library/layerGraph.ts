@@ -7,8 +7,9 @@ import assert from "node:assert";
 import { EOL as newline } from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Package } from "@fluidframework/build-tools";
 import { readJsonSync } from "fs-extra/esm";
+
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 
 import registerDebug from "debug";
 const traceLayerCheck = registerDebug("layer-check");
@@ -192,7 +193,7 @@ class GroupNode extends BaseNode {
 }
 
 class PackageNode extends BaseNode {
-	private _pkg: Package | undefined;
+	private _pkg: IPackage | undefined;
 	private readonly _childDependencies: PackageNode[] = [];
 	private readonly depParents: PackageNode[] = [];
 	private _indirectDependencies: Set<PackageNode> | undefined;
@@ -225,14 +226,14 @@ class PackageNode extends BaseNode {
 		return this.name.replace(/@fluidframework\//i, "").replace(/@fluid-internal\//i, "");
 	}
 
-	public get pkg(): Package {
+	public get pkg(): IPackage {
 		if (!this._pkg) {
 			throw new Error(`ERROR: Package missing from PackageNode ${this.name}`);
 		}
 		return this._pkg;
 	}
 
-	public set pkg(pkg: Package) {
+	public set pkg(pkg: IPackage) {
 		if (this._pkg) {
 			throw new Error(`ERROR: Package assigned twice to a PackageNode ${this.name}`);
 		}
@@ -306,7 +307,7 @@ export class LayerGraph {
 		return packageNode;
 	}
 
-	private constructor(root: string, layerInfo: ILayerInfoFile, packages: Package[]) {
+	private constructor(root: string, layerInfo: ILayerInfoFile, packages: IPackage[]) {
 		this.initializeLayers(root, layerInfo);
 		this.initializePackages(packages);
 
@@ -367,12 +368,12 @@ export class LayerGraph {
 		}
 	}
 
-	private initializePackages(packages: Package[]): void {
+	private initializePackages(packages: IPackage[]): void {
 		this.initializePackageMatching(packages);
 		this.initializeDependencies();
 	}
 
-	private initializePackageMatching(packages: Package[]): void {
+	private initializePackageMatching(packages: IPackage[]): void {
 		// Match the packages to the node if it is not explicitly specified
 		for (const pkg of packages) {
 			const packageNode = this.packageNodeMap.get(pkg.name);
@@ -558,7 +559,7 @@ But some packages in layer A depend on packages in layer B, and likewise some in
 				const dirRelativePath = `/${path
 					.relative(repoRoot, packageNode.pkg.directory)
 					.replace(/\\/g, "/")}`;
-				const ifPrivate = packageNode.pkg.isPublished ? "" : " (private)";
+				const ifPrivate = packageNode.pkg.private === true ? " (private)" : "";
 				packagesInCell.push(`- [${packageNode.name}](${dirRelativePath})${ifPrivate}`);
 			}
 
@@ -592,7 +593,7 @@ ${lines.join(newline)}
 		return packagesMdContents;
 	}
 
-	public static load(root: string, packages: Package[], info?: string): LayerGraph {
+	public static load(root: string, packages: IPackage[], info?: string): LayerGraph {
 		const layerInfoFile = info ?? path.join(__dirname, "..", "..", "data", "layerInfo.json");
 		const layerData = readJsonSync(layerInfoFile) as ILayerInfoFile;
 		return new LayerGraph(root, layerData, packages);

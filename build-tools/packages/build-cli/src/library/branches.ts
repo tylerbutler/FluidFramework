@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { PackageName } from "@rushstack/node-core-library";
+import { PackageName as PackageNameApi } from "@rushstack/node-core-library";
 import * as semver from "semver";
 
 import { Context } from "./context.js";
@@ -22,12 +22,12 @@ import {
 	toVirtualPatchScheme,
 } from "@fluid-tools/version-tools";
 
-import {
-	ReleaseGroup,
-	ReleasePackage,
-	ReleaseSource,
-	isReleaseGroup,
-} from "../releaseGroups.js";
+import type {
+	IReleaseGroup,
+	PackageName,
+	ReleaseGroupName,
+} from "@fluid-tools/build-infrastructure";
+import { ReleaseSource, isReleaseGroup } from "../releaseGroups.js";
 import { DependencyUpdateType } from "./bump.js";
 
 /**
@@ -46,7 +46,7 @@ import { DependencyUpdateType } from "./bump.js";
  */
 export async function createBumpBranch(
 	context: Context,
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
+	releaseGroupOrPackage: ReleaseGroupName | PackageName,
 	bumpType: VersionBumpType,
 ): Promise<string> {
 	const version = context.getVersion(releaseGroupOrPackage);
@@ -71,7 +71,7 @@ export async function createBumpBranch(
  * @internal
  */
 export function generateBumpVersionBranchName(
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
+	releaseGroupOrPackage: ReleaseGroupName | PackageName,
 	bumpType: VersionChangeTypeExtended,
 	version: ReleaseVersion,
 	scheme?: VersionScheme,
@@ -81,7 +81,7 @@ export function generateBumpVersionBranchName(
 		: bumpType.version;
 	const name = isReleaseGroup(releaseGroupOrPackage)
 		? releaseGroupOrPackage
-		: PackageName.getUnscopedName(releaseGroupOrPackage);
+		: PackageNameApi.getUnscopedName(releaseGroupOrPackage);
 	const bumpTypeLog = isVersionBumpTypeExtended(bumpType) ? bumpType : "exact";
 	// eslint-disable-next-line @typescript-eslint/no-base-to-string
 	const branchName = `bump_${name.toLowerCase()}_${bumpTypeLog}_${newVersion}`;
@@ -103,9 +103,9 @@ export function generateBumpVersionBranchName(
  * @internal
  */
 export function generateBumpDepsBranchName(
-	bumpedDep: ReleaseGroup | ReleasePackage,
+	bumpedDep: ReleaseGroupName | PackageName,
 	bumpType: DependencyUpdateType | VersionBumpType,
-	releaseGroup?: ReleaseGroup,
+	releaseGroup?: IReleaseGroup,
 ): string {
 	const releaseGroupSegment = releaseGroup === undefined ? "" : `_${releaseGroup}`;
 	const branchName = `bump_deps_${bumpedDep.toLowerCase()}_${bumpType}${releaseGroupSegment}`;
@@ -127,7 +127,7 @@ export function generateBumpDepsBranchName(
  * @internal
  */
 export function generateReleaseBranchName(
-	releaseGroup: ReleaseGroup | ReleasePackage,
+	releaseGroup: ReleaseGroupName | PackageName,
 	version: string,
 ): string {
 	// An array of all the sections of a "path" branch -- a branch with slashes in the name.
@@ -160,7 +160,7 @@ export function generateReleaseBranchName(
 			branchPath.push(releaseGroup);
 		}
 	} else {
-		branchPath.push(PackageName.getUnscopedName(releaseGroup));
+		branchPath.push(PackageNameApi.getUnscopedName(releaseGroup));
 	}
 
 	let releaseBranchVersion: string;
@@ -198,7 +198,7 @@ export function generateReleaseBranchName(
  * @internal
  */
 export function generateBumpVersionCommitMessage(
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
+	releaseGroupOrPackage: ReleaseGroupName | PackageName,
 	bumpType: VersionChangeTypeExtended,
 	version: ReleaseVersion,
 	scheme?: VersionScheme,
@@ -208,7 +208,7 @@ export function generateBumpVersionCommitMessage(
 		: bumpType.version;
 	const name = isReleaseGroup(releaseGroupOrPackage)
 		? releaseGroupOrPackage
-		: PackageName.getUnscopedName(releaseGroupOrPackage);
+		: PackageNameApi.getUnscopedName(releaseGroupOrPackage);
 	const bumpTypeLog = isVersionBumpTypeExtended(bumpType) ? bumpType : "exact";
 	// eslint-disable-next-line @typescript-eslint/no-base-to-string
 	const message = `[bump] ${name}: ${version} => ${newVersion} (${bumpTypeLog})\n\nBumped ${name} from ${version} to ${newVersion}.`;
@@ -226,16 +226,16 @@ export function generateBumpVersionCommitMessage(
  * @internal
  */
 export function generateBumpDepsCommitMessage(
-	bumpedDep: ReleaseGroup | ReleasePackage | "prerelease",
+	bumpedDep: ReleaseGroupName | PackageName | "prerelease",
 	bumpType: DependencyUpdateType | VersionBumpType,
-	releaseGroup?: ReleaseGroup,
+	releaseGroup?: ReleaseGroupName,
 ): string {
 	const name =
 		bumpedDep === "prerelease"
 			? "released prerelease packages"
 			: isReleaseGroup(bumpedDep)
 				? `${bumpedDep} release group`
-				: PackageName.getUnscopedName(bumpedDep);
+				: PackageNameApi.getUnscopedName(bumpedDep);
 
 	const releaseGroupSegment = isReleaseGroup(releaseGroup)
 		? ` in the ${releaseGroup} release group`
@@ -255,7 +255,7 @@ export function generateBumpDepsCommitMessage(
  */
 export function getDefaultBumpTypeForBranch(
 	branchName: string,
-	releaseGroup: ReleaseGroup = "client",
+	releaseGroup: ReleaseGroupName = "client" as ReleaseGroupName,
 ): VersionBumpType | undefined {
 	if (releaseGroup === "server") {
 		return "major";
@@ -280,7 +280,7 @@ export function getDefaultBumpTypeForBranch(
  * @internal
  */
 export function getReleaseSourceForReleaseGroup(
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
+	releaseGroupOrPackage: ReleaseGroupName | PackageName,
 ): ReleaseSource {
 	// All packages and release groups use release branches.
 	return "releaseBranches";

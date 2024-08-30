@@ -184,7 +184,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 		}
 
 		const filePathsToCheck: string[] = [];
-		const gitRoot = context.repo.resolvedRoot;
+		const gitRoot = context.repo.root;
 
 		if (this.flags.stdin) {
 			const stdInput = await readStdin();
@@ -240,7 +240,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 		const { context, handlers, handlerExclusions, gitRoot } = commandContext;
 
 		// Use the repo-relative path so that regexes that specify string start (^) will match repo paths.
-		const relPath = context.repo.relativeToRepo(file);
+		const relPath = context.relativeToRepo(file);
 
 		const handlerResults = await Promise.all(
 			handlers

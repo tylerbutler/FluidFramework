@@ -5,7 +5,11 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { IPackage, PackageName } from "@fluid-tools/build-infrastructure";
+import type {
+	IPackage,
+	PackageName,
+	ReleaseGroupName,
+} from "@fluid-tools/build-infrastructure";
 import { queue } from "async";
 import * as chalk from "chalk";
 import detectIndent from "detect-indent";
@@ -75,7 +79,7 @@ export type PackageJson = SetRequired<
  * Information about a package dependency.
  */
 interface PackageDependency {
-	name: string;
+	name: PackageName;
 	version: string;
 	depClass: "prod" | "dev" | "peer";
 }
@@ -92,7 +96,6 @@ export interface IFluidBuildPackage extends IPackage<IFluidBuildPackageJson> {
 	 */
 	readonly monoRepo?: MonoRepo;
 
-	checkInstall(): Promise<boolean>;
 	cleanNodeModules(): Promise<ExecAsyncResult>;
 	getLockFilePath(): string | undefined;
 	install(): Promise<ExecAsyncResult>;
@@ -159,6 +162,10 @@ export class Package implements IFluidBuildPackage {
 		Object.assign(this, additionalProperties);
 	}
 
+	public get releaseGroup(): ReleaseGroupName {
+		throw new Error(`Not implemented; do not call.`);
+	}
+
 	/**
 	 * The name of the package including the scope.
 	 */
@@ -209,15 +216,15 @@ export class Package implements IFluidBuildPackage {
 		this._matched = value;
 	}
 
-	public get dependencies() {
-		return Object.keys(this.packageJson.dependencies ?? {});
+	public get dependencies(): PackageName[] {
+		return Object.keys(this.packageJson.dependencies ?? {}).map((p) => p as PackageName);
 	}
 
 	public get combinedDependencies(): Generator<PackageDependency, void> {
 		const it = function* (packageJson: PackageJson) {
 			for (const item in packageJson.dependencies) {
 				yield {
-					name: item,
+					name: item as PackageName,
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					version: packageJson.dependencies[item]!,
 					depClass: "prod",
@@ -225,7 +232,7 @@ export class Package implements IFluidBuildPackage {
 			}
 			for (const item in packageJson.devDependencies) {
 				yield {
-					name: item,
+					name: item as PackageName,
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					version: packageJson.devDependencies[item]!,
 					depClass: "dev",
@@ -233,7 +240,7 @@ export class Package implements IFluidBuildPackage {
 			}
 			for (const item in packageJson.peerDependencies) {
 				yield {
-					name: item,
+					name: item as PackageName,
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					version: packageJson.peerDependencies[item]!,
 					depClass: "peer",

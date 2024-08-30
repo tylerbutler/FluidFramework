@@ -611,6 +611,19 @@ module.exports = {
 			},
 			"build-tools": {
 				directory: "./build-tools",
+				releaseGroups: {
+					"build-tools": {
+						include: [
+							"@fluidframework",
+							"@fluid-experimental",
+							"@fluid-internal",
+							"@fluid-private",
+							"@fluid-tools",
+						],
+						rootPackageName: "build-tools-release-group-root",
+						defaultInterdependencyRange: "workspace:~",
+					},
+				},
 				// defaultInterdependencyRange: "workspace:~",
 			},
 			"server": {

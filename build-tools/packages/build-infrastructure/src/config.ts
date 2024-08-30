@@ -6,7 +6,12 @@
 import { InterdependencyRange } from "@fluid-tools/version-tools";
 import { cosmiconfigSync } from "cosmiconfig";
 
-import type { IPackage } from "./types.js";
+import {
+	type IPackage,
+	type PackageName,
+	type ReleaseGroupName,
+	isIPackage,
+} from "./types.js";
 
 /**
  * The version of the fluidRepo configuration currently used.
@@ -62,7 +67,7 @@ export interface WorkspaceDefinition {
 	// independentPackages?: {
 	// 	[name: string]: string;
 	// };
-	releaseGroups?: {
+	releaseGroups: {
 		[name: string]: ReleaseGroupDefinition;
 	};
 }
@@ -122,29 +127,34 @@ export interface IFluidBuildDir {
 }
 
 export function matchesReleaseGroupDefinition(
-	pkg: IPackage,
-	{ include, exclude }: ReleaseGroupDefinition,
+	pkg: IPackage | PackageName,
+	{ include, exclude, rootPackageName }: ReleaseGroupDefinition,
 ): boolean {
+	const name = isIPackage(pkg) ? pkg.name : pkg;
 	let shouldInclude = false;
 	if (
 		// If the package name matches an entry in the include list, it should be included
-		include.includes(pkg.name) ||
+		include.includes(name) ||
 		// If the package name starts with any of the include list entries, it should be included
-		include.some((scope) => pkg.name.startsWith(scope))
+		include.some((scope) => name.startsWith(scope))
 	) {
 		shouldInclude = true;
 	}
 
-	return shouldInclude && !exclude?.includes(pkg.name);
+	return (
+		(shouldInclude && !exclude?.includes(name)) ||
+		// If the package name matches the root name, it's definitely part of the release group.
+		name === rootPackageName
+	);
 }
 
 export function findReleaseGroupForPackage(
-	pkg: IPackage,
-	definition: Map<string, ReleaseGroupDefinition>,
-): string | undefined {
-	for (const [rgName, def] of definition) {
+	pkg: IPackage | PackageName,
+	definition: Exclude<WorkspaceDefinition["releaseGroups"], undefined>,
+): ReleaseGroupName | undefined {
+	for (const [rgName, def] of Object.entries(definition)) {
 		if (matchesReleaseGroupDefinition(pkg, def)) {
-			return rgName;
+			return rgName as ReleaseGroupName;
 		}
 	}
 }

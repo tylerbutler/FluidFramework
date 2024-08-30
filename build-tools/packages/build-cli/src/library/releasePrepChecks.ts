@@ -3,7 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { MonoRepo, type Package } from "@fluidframework/build-tools";
+import {
+	type IPackage,
+	type IReleaseGroup,
+	isIPackage,
+} from "@fluid-tools/build-infrastructure";
 import execa from "execa";
 import { ResetMode } from "simple-git";
 import type { Context } from "./context.js";
@@ -34,7 +38,7 @@ export type CheckFunction = (
 	 * In this case the MonoRepo class represents a release group. This naming and conceptual conflict will be resolved in
 	 * future refactoring.
 	 */
-	releaseGroupOrPackage: MonoRepo | Package,
+	releaseGroupOrPackage: IReleaseGroup | IPackage,
 ) => Promise<CheckResult>;
 
 /**
@@ -91,12 +95,11 @@ export const CheckNoLocalChanges: CheckFunction = async (
  */
 export const CheckDependenciesInstalled: CheckFunction = async (
 	_context: Context,
-	releaseGroupOrPackage: MonoRepo | Package,
+	releaseGroupOrPackage: IReleaseGroup | IPackage,
 ): Promise<CheckResult> => {
-	const packagesToCheck =
-		releaseGroupOrPackage instanceof MonoRepo
-			? releaseGroupOrPackage.packages
-			: [releaseGroupOrPackage];
+	const packagesToCheck = isIPackage(releaseGroupOrPackage)
+		? [releaseGroupOrPackage]
+		: releaseGroupOrPackage.packages;
 
 	const installChecks = await Promise.all(
 		packagesToCheck.map(async (pkg) => pkg.checkInstall(false)),

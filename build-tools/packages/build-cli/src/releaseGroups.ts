@@ -3,6 +3,8 @@
  * Licensed under the MIT License.
  */
 
+import type { IPackage, IReleaseGroup, PackageName } from "@fluid-tools/build-infrastructure";
+
 /**
  * A type that represents independent packages (as opposed to those that are part of a release group).
  *
@@ -12,8 +14,12 @@
  * full package name including scope.
  *
  * @internal
+ *
+ * @deprecated Replace with PackageName from build-infra.
  */
-export type ReleasePackage = string;
+export type ReleasePackage = PackageName;
+
+export type Package = IPackage;
 
 /**
  * An array of known release groups.
@@ -29,15 +35,21 @@ export const knownReleaseGroups = [
 /**
  * A type that represents release groups.
  */
-export type ReleaseGroup = (typeof knownReleaseGroups)[number];
+// export type ReleaseGroup = (typeof knownReleaseGroups)[number];
+
+export type ReleaseGroup = IReleaseGroup;
+
+// export type ReleaseGroupName = ReleaseGroupName;
+
+export { isIReleaseGroup as isReleaseGroup } from "@fluid-tools/build-infrastructure";
 
 /**
  * A type guard used to determine if a string is a ReleaseGroup.
  */
-export function isReleaseGroup(str: string | undefined): str is ReleaseGroup {
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
-	return str === undefined ? false : knownReleaseGroups.includes(str as any);
-}
+// export function isReleaseGroup(str: string | undefined): str is ReleaseGroup {
+// 	// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+// 	return str === undefined ? false : knownReleaseGroups.includes(str as any);
+// }
 
 /**
  * A type that represents where a release can originate. Most release groups use the releaseBranches value, and
@@ -45,3 +57,9 @@ export function isReleaseGroup(str: string | undefined): str is ReleaseGroup {
  * interactive value means the user should be asked to define the source dynamically.
  */
 export type ReleaseSource = "direct" | "releaseBranches" | "interactive";
+
+export type ReleaseGroupOrPackage = ReleaseGroup | Package;
+
+// export function isReleaseGroupOrPackage(toCheck: ReleaseGroupOrPackage): toCheck is ReleaseGroup | toCheck is Package {
+
+// }

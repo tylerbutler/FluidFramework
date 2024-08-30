@@ -5,8 +5,14 @@
 
 import path from "node:path";
 import * as chalk from "chalk";
-import { readJsonSync } from "fs-extra";
+import { existsSync, readJsonSync } from "fs-extra";
 
+import {
+	// type ReleaseGroupDefinition,
+	type WorkspaceDefinition,
+	findReleaseGroupForPackage,
+	// matchesReleaseGroupDefinition,
+} from "./config.js";
 import { readPackageJsonAndIndent, writePackageJson } from "./packageJsonUtils.js";
 import type {
 	AdditionalPackageProps,
@@ -15,7 +21,9 @@ import type {
 	PackageJson,
 	PackageManager,
 	PackageName,
+	ReleaseGroupName,
 } from "./types.js";
+import { lookUpDirSync } from "./utils.js";
 
 export abstract class PackageBase<
 	TAddProps extends AdditionalPackageProps = undefined,
@@ -50,6 +58,8 @@ export abstract class PackageBase<
 		return Package.chalkColor[this.packageId % Package.chalkColor.length]!;
 	}
 
+	// public releaseGroup: ReleaseGroupName;
+
 	/**
 	 * Create a new package from a package.json file. **Prefer the .load method to calling the contructor directly.**
 	 *
@@ -64,6 +74,7 @@ export abstract class PackageBase<
 		public readonly packageManager: PackageManager,
 		// public readonly workspace?: IWorkspace,
 		public readonly isWorkspaceRoot: boolean,
+		public readonly releaseGroup: ReleaseGroupName,
 		public isReleaseGroupRoot: boolean,
 		additionalProperties?: TAddProps,
 	) {
@@ -78,7 +89,7 @@ export abstract class PackageBase<
 		const it = function* (packageJson: PackageJson) {
 			for (const item in packageJson.dependencies) {
 				yield {
-					name: item,
+					name: item as PackageName,
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					version: packageJson.dependencies[item]!,
 					depClass: "prod",
@@ -86,7 +97,7 @@ export abstract class PackageBase<
 			}
 			for (const item in packageJson.devDependencies) {
 				yield {
-					name: item,
+					name: item as PackageName,
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					version: packageJson.devDependencies[item]!,
 					depClass: "dev",
@@ -94,7 +105,7 @@ export abstract class PackageBase<
 			}
 			for (const item in packageJson.peerDependencies) {
 				yield {
-					name: item,
+					name: item as PackageName,
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					version: packageJson.peerDependencies[item]!,
 					depClass: "peer",
@@ -106,6 +117,10 @@ export abstract class PackageBase<
 
 	public get directory(): string {
 		return path.dirname(this.packageJsonFilePath);
+	}
+
+	public get dependencies(): PackageName[] {
+		return Object.keys(this.packageJson.dependencies ?? {}).map((dep) => dep as PackageName);
 	}
 
 	/**
@@ -149,6 +164,35 @@ export abstract class PackageBase<
 	public getScript(name: string): string | undefined {
 		return this.packageJson.scripts ? this.packageJson.scripts[name] : undefined;
 	}
+
+	public async checkInstall(print: boolean = true) {
+		if (this.combinedDependencies.next().done) {
+			// No dependencies
+			return true;
+		}
+
+		if (!existsSync(path.join(this.directory, "node_modules"))) {
+			if (print) {
+				console.error(`${this.nameColored}: node_modules not installed in ${this.directory}`);
+			}
+			return false;
+		}
+		let succeeded = true;
+		for (const dep of this.combinedDependencies) {
+			if (
+				!lookUpDirSync(this.directory, (currentDir) => {
+					// TODO: check semver as well
+					return existsSync(path.join(currentDir, "node_modules", dep.name));
+				})
+			) {
+				succeeded = false;
+				if (print) {
+					console.error(`${this.nameColored}: dependency ${dep.name} not found`);
+				}
+			}
+		}
+		return succeeded;
+	}
 }
 
 export class Package<
@@ -164,7 +208,31 @@ export class Package<
 	 * @param additionalProperties - An object with additional properties that should be added to the class. This is
 	 * useful to augment the package class with additional properties.
 	 */
-	public static load<
+	// public static load<
+	// 	T extends typeof Package,
+	// 	TAddProps extends AdditionalPackageProps = undefined,
+	// >(
+	// 	this: T,
+	// 	packageJsonFilePath: string,
+	// 	packageManager: PackageManager,
+	// 	// workspace?: IWorkspace,
+	// 	isWorkspaceRoot: boolean,
+	// 	// releaseGroupName: ReleaseGroupName,
+	// 	isReleaseGroupRoot: boolean,
+	// 	additionalProperties?: TAddProps,
+	// ) {
+	// 	return new this(
+	// 		packageJsonFilePath,
+	// 		packageManager,
+	// 		// workspace,
+	// 		isWorkspaceRoot,
+	// 		// releaseGroupName,
+	// 		isReleaseGroupRoot,
+	// 		additionalProperties,
+	// 	) as InstanceType<T> & TAddProps;
+	// }
+
+	public static loadFromWorkspaceDefinition<
 		T extends typeof Package,
 		TAddProps extends AdditionalPackageProps = undefined,
 	>(
@@ -173,32 +241,74 @@ export class Package<
 		packageManager: PackageManager,
 		// workspace?: IWorkspace,
 		isWorkspaceRoot: boolean,
-		isReleaseGroupRoot: boolean,
+		// releaseGroupName: ReleaseGroupName,
+		// isReleaseGroupRoot: boolean,
+		workspaceDefinition: WorkspaceDefinition,
 		additionalProperties?: TAddProps,
 	) {
+		const packageName: PackageName = readJsonSync(packageJsonFilePath).name;
+		const releaseGroupName = findReleaseGroupForPackage(
+			packageName,
+			workspaceDefinition.releaseGroups,
+		);
+
+		if (releaseGroupName === undefined) {
+			throw new Error(`Cannot find release group for package '${packageName}'`);
+		}
+
+		const releaseGroupDefinition =
+			workspaceDefinition.releaseGroups[releaseGroupName as string];
+
+		if (releaseGroupDefinition === undefined) {
+			throw new Error(`Cannot find release group definition for ${releaseGroupName}`);
+		}
+
+		const { rootPackageName } = releaseGroupDefinition;
+		const isReleaseGroupRoot =
+			rootPackageName === undefined ? false : packageName === rootPackageName;
 		return new this(
 			packageJsonFilePath,
 			packageManager,
 			// workspace,
 			isWorkspaceRoot,
+			releaseGroupName,
 			isReleaseGroupRoot,
 			additionalProperties,
 		) as InstanceType<T> & TAddProps;
 	}
 }
 
-export function loadPackage(
+// export function loadPackage(
+// 	packageJsonFilePath: string,
+// 	packageManager: PackageManager,
+// 	isWorkspaceRoot: boolean = false,
+// 	// releaseGroupName: ReleaseGroupName,
+// 	isReleaseGroupRoot: boolean = false,
+// ): IPackage {
+// 	const pkg = Package.load(
+// 		packageJsonFilePath,
+// 		packageManager,
+// 		isWorkspaceRoot,
+// 		// releaseGroupName,
+// 		isReleaseGroupRoot,
+// 		undefined,
+// 	);
+// 	return pkg;
+// }
+
+export function loadPackageFromWorkspaceDefinition(
 	packageJsonFilePath: string,
 	packageManager: PackageManager,
-	isWorkspaceRoot: boolean = false,
-	isReleaseGroupRoot: boolean = false,
-): IPackage {
-	const pkg = Package.load(
+	// workspace?: IWorkspace,
+	isWorkspaceRoot: boolean,
+	// releaseGroupName: ReleaseGroupName,
+	// isReleaseGroupRoot: boolean,
+	workspaceDefinition: WorkspaceDefinition,
+) {
+	return Package.loadFromWorkspaceDefinition(
 		packageJsonFilePath,
 		packageManager,
 		isWorkspaceRoot,
-		isReleaseGroupRoot,
-		undefined,
+		workspaceDefinition,
 	);
-	return pkg;
 }

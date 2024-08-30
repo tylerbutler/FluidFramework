@@ -43,19 +43,16 @@ export class CheckLayers extends BaseCommand<typeof CheckLayers> {
 		const timer = new Timer(flags.timer);
 
 		const context = await this.getContext();
-		const { packages, resolvedRoot } = context.repo;
+		const { packages, repo } = context;
 
 		timer.time("Package scan completed");
 
-		const layerGraph = LayerGraph.load(resolvedRoot, packages.packages, flags.info);
+		const layerGraph = LayerGraph.load(repo.root, packages, flags.info);
 
 		// Write human-readable package list organized by layer
 		if (flags.md !== undefined) {
-			const packagesMdFilePath: string = path.join(resolvedRoot, flags.md, packagesMdFileName);
-			await writeFile(
-				packagesMdFilePath,
-				layerGraph.generatePackageLayersMarkdown(resolvedRoot),
-			);
+			const packagesMdFilePath: string = path.join(repo.root, flags.md, packagesMdFileName);
+			await writeFile(packagesMdFilePath, layerGraph.generatePackageLayersMarkdown(repo.root));
 		}
 
 		// Write machine-readable dot file used to render a dependency graph
@@ -70,6 +67,6 @@ export class CheckLayers extends BaseCommand<typeof CheckLayers> {
 			this.error("Layer check not succesful");
 		}
 
-		this.log(`Layer check passed (${packages.packages.length} packages)`);
+		this.log(`Layer check passed (${packages.length} packages)`);
 	}
 }

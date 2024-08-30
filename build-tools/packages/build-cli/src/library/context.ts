@@ -3,18 +3,33 @@
  * Licensed under the MIT License.
  */
 
-import { PackageName } from "@rushstack/node-core-library";
+import { PackageName as PackageNameApi } from "@rushstack/node-core-library";
+import * as semver from "semver";
 
+import {
+	type IFluidRepo,
+	type IPackage,
+	type PackageName,
+	type ReleaseGroupName,
+	loadFluidRepo,
+} from "@fluid-tools/build-infrastructure";
 import { ReleaseVersion } from "@fluid-tools/version-tools";
 import {
-	FluidRepo,
+	// FluidRepo,
 	GitRepo,
 	type IFluidBuildConfig,
-	Package,
+	// Package,
 	getFluidBuildConfig,
 } from "@fluidframework/build-tools";
-import * as semver from "semver";
+
+import path from "node:path";
 import { type FlubConfig, getFlubConfig } from "../config.js";
+import {
+	type Package,
+	type ReleaseGroup,
+	type ReleaseGroupOrPackage,
+	isReleaseGroup,
+} from "../releaseGroups.js";
 
 /**
  * Represents a release version and its release date, if applicable.
@@ -89,8 +104,8 @@ export function isMonoRepoKind(str: string | undefined): str is MonoRepoKind {
  * Context provides access to data about the Fluid repo, and exposes methods to interrogate the repo state.
  */
 export class Context {
-	public readonly repo: FluidRepo;
-	public readonly fullPackageMap: Map<string, Package>;
+	public readonly repo: IFluidRepo;
+	// public readonly fullPackageMap: Map<string, IPackage>;
 	public readonly fluidBuildConfig: IFluidBuildConfig;
 	public readonly flubConfig: FlubConfig;
 	private readonly newBranches: string[] = [];
@@ -103,8 +118,9 @@ export class Context {
 		// Load the packages
 		this.fluidBuildConfig = getFluidBuildConfig(this.gitRepo.resolvedRoot);
 		this.flubConfig = getFlubConfig(this.gitRepo.resolvedRoot);
-		this.repo = new FluidRepo(this.gitRepo.resolvedRoot, this.fluidBuildConfig.repoPackages);
-		this.fullPackageMap = this.repo.createPackageMap();
+
+		// this.repo = new FluidRepo(this.gitRepo.resolvedRoot, this.fluidBuildConfig.repoPackages);
+		this.repo = loadFluidRepo();
 	}
 
 	/**
@@ -126,9 +142,12 @@ export class Context {
 	 * @param releaseGroup - The release group to filter by
 	 * @returns An array of packages that belong to the release group
 	 */
-	public packagesInReleaseGroup(releaseGroup: string): Package[] {
-		const packages = this.packages.filter((pkg) => pkg.monoRepo?.kind === releaseGroup);
-		return packages;
+	public packagesInReleaseGroup(releaseGroup: ReleaseGroupName): IPackage[] {
+		const rg = this.repo.releaseGroups.get(releaseGroup);
+		if (rg === undefined) {
+			throw new Error(`Unknown release group: ${releaseGroup}`);
+		}
+		return rg.packages;
 	}
 
 	/**
@@ -137,20 +156,32 @@ export class Context {
 	 * @param releaseGroup - The release group or package to filter by.
 	 * @returns An array of packages that do not belong to the release group.
 	 */
-	public packagesNotInReleaseGroup(releaseGroup: string | Package): Package[] {
-		const packages =
-			releaseGroup instanceof Package
-				? this.packages.filter((p) => p.name !== releaseGroup.name)
-				: this.packages.filter((pkg) => pkg.monoRepo?.kind !== releaseGroup);
+	public packagesNotInReleaseGroup(releaseGroup: ReleaseGroup | ReleaseGroupName): IPackage[] {
+		const packages: Package[] = [];
+		const filterName = typeof releaseGroup === "string" ? releaseGroup : releaseGroup.name;
+
+		for (const rg of this.repo.releaseGroups.values()) {
+			if (rg.name !== filterName) {
+				packages.push(...rg.packages);
+			}
+		}
+
 		return packages;
 	}
 
 	/**
-	 * Get all the packages not associated with a release group
+	 * Get all the packages in release groups with only one package.
 	 * @returns An array of packages in the repo that are not associated with a release group.
+	 *
+	 * @deprecated The concept of independent packages is going away.
 	 */
 	public get independentPackages(): Package[] {
-		const packages = this.packages.filter((pkg) => pkg.monoRepo === undefined);
+		const packages: Package[] = [];
+		for (const rg of this.repo.releaseGroups.values()) {
+			if (rg.packages.length === 1) {
+				packages.push(...rg.packages);
+			}
+		}
 		return packages;
 	}
 
@@ -158,8 +189,8 @@ export class Context {
 	 * Get all the packages.
 	 * @returns An array of all packages in the repo.
 	 */
-	public get packages(): Package[] {
-		return [...this.fullPackageMap.values()];
+	public get packages(): IPackage[] {
+		return [...this.repo.packages.values()];
 	}
 
 	/**
@@ -168,22 +199,19 @@ export class Context {
 	 * @returns A version string.
 	 *
 	 */
-	public getVersion(key: string): string {
+	public getVersion(key: ReleaseGroupName | PackageName): string {
 		let ver = "";
 
-		if (isMonoRepoKind(key)) {
-			const rgRepo = this.repo.releaseGroups.get(key);
-			if (rgRepo === undefined) {
-				throw new Error(`Release group not found: ${key}`);
-			}
-			ver = rgRepo.version;
-		} else {
-			const pkg = this.fullPackageMap.get(key);
-			if (pkg === undefined) {
-				throw new Error(`Package not in context: ${key}`);
-			}
-			ver = pkg.version;
+		const rgRepo = this.repo.releaseGroups.get(key as ReleaseGroupName);
+		if (rgRepo !== undefined) {
+			return rgRepo.packages[0].version;
 		}
+
+		const pkg = this.repo.packages.get(key as PackageName);
+		if (pkg === undefined) {
+			throw new Error(`Package not in context: ${key}`);
+		}
+		ver = pkg.version;
 		return ver;
 	}
 
@@ -195,10 +223,13 @@ export class Context {
 	 * @param releaseGroupOrPackage - The release group or independent package to get tags for.
 	 * @returns An array of all all the tags for the release group or package.
 	 */
-	public async getTagsForReleaseGroup(releaseGroupOrPackage: string): Promise<string[]> {
-		const prefix = isMonoRepoKind(releaseGroupOrPackage)
-			? releaseGroupOrPackage.toLowerCase()
-			: PackageName.getUnscopedName(releaseGroupOrPackage);
+	public async getTagsForReleaseGroup(
+		releaseGroupOrPackage: PackageName | ReleaseGroupName,
+	): Promise<string[]> {
+		const prefix = isReleaseGroup(releaseGroupOrPackage)
+			? releaseGroupOrPackage.name.toLowerCase()
+			: PackageNameApi.getUnscopedName(releaseGroupOrPackage as string);
+
 		const cacheEntry = this._tags.get(prefix);
 		if (cacheEntry !== undefined) {
 			return cacheEntry;
@@ -208,7 +239,8 @@ export class Context {
 		return tagList;
 	}
 
-	private readonly _versions: Map<string, VersionDetails[]> = new Map();
+	private readonly _versions: Map<ReleaseGroupName | PackageName, VersionDetails[]> =
+		new Map();
 
 	/**
 	 * Gets all the versions for a release group or independent package. This function only considers the tags in the
@@ -218,7 +250,7 @@ export class Context {
 	 * @returns An array of {@link ReleaseDetails} containing the version and date for each version.
 	 */
 	public async getAllVersions(
-		releaseGroupOrPackage: string,
+		releaseGroupOrPackage: ReleaseGroupName | PackageName,
 	): Promise<VersionDetails[] | undefined> {
 		const cacheEntry = this._versions.get(releaseGroupOrPackage);
 		if (cacheEntry !== undefined) {
@@ -248,5 +280,16 @@ export class Context {
 
 		this._versions.set(releaseGroupOrPackage, toReturn);
 		return toReturn;
+	}
+
+	/**
+	 * Transforms an absolute path to a path relative to the repo root.
+	 *
+	 * @param p - The path to make relative to the repo root.
+	 * @returns the relative path.
+	 */
+	public relativeToRepo(p: string): string {
+		// Replace \ in result with / in case OS is Windows.
+		return path.relative(this.repo.root, p).replace(/\\/g, "/");
 	}
 }

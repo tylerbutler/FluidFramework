@@ -9,6 +9,7 @@ import { describe, it } from "mocha";
 
 // import { type PackageJson } from "../interfaces.js";
 import { loadFluidRepo } from "../fluidRepo.js";
+import type { WorkspaceName } from "../types.js";
 // import { testDataPath } from "./init.js";
 
 describe("loadFluidRepo", () => {
@@ -20,7 +21,7 @@ describe("loadFluidRepo", () => {
 			`Expected 5 workspaces, found ${repo.workspaces.size}`,
 		);
 
-		const client = repo.workspaces.get("client");
+		const client = repo.workspaces.get("client" as WorkspaceName);
 		expect(client).to.not.be.undefined;
 		expect(client?.packages.length).to.equal(158);
 		expect(client?.releaseGroups.size).to.equal(2);

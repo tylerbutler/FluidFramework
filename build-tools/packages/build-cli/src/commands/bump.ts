@@ -9,8 +9,6 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import * as semver from "semver";
 
-import { FluidRepo, MonoRepo, Package } from "@fluidframework/build-tools";
-
 import {
 	InterdependencyRange,
 	RangeOperators,
@@ -23,6 +21,11 @@ import {
 	isInterdependencyRange,
 } from "@fluid-tools/version-tools";
 
+import {
+	type IPackage,
+	type IReleaseGroup,
+	isIReleaseGroup,
+} from "@fluid-tools/build-infrastructure";
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../args.js";
 import { getDefaultInterdependencyRange } from "../config.js";
 import { bumpTypeFlag, checkFlags, skipCheckFlag, versionSchemeFlag } from "../flags.js";
@@ -156,45 +159,41 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		}
 
 		let repoVersion: ReleaseVersion;
-		let packageOrReleaseGroup: Package | MonoRepo;
+		let packageOrReleaseGroup: IPackage | IReleaseGroup;
 		let scheme: VersionScheme | undefined;
 		const exactVersion: semver.SemVer | null = semver.parse(flags.exact);
-		const updatedPackages: Package[] = [];
+		const updatedPackages: IPackage[] = [];
 
 		if (bumpType === undefined && exactVersion === null) {
 			this.error(`--exact value invalid: ${flags.exact}`);
 		}
 
-		if (rgOrPackage instanceof MonoRepo) {
-			const releaseRepo = rgOrPackage;
-			assert(releaseRepo !== undefined, `Release repo not found for ${rgOrPackage.name}`);
-
-			repoVersion = releaseRepo.version;
-			scheme = flags.scheme ?? detectVersionScheme(repoVersion);
-			// Update the interdependency range to the configured default if the one provided isn't valid
-			interdependencyRange =
-				interdependencyRange ?? getDefaultInterdependencyRange(releaseRepo, context);
-			updatedPackages.push(...releaseRepo.packages);
-			packageOrReleaseGroup = releaseRepo;
+		let releaseGroup: IReleaseGroup;
+		if (isIReleaseGroup(rgOrPackage)) {
+			releaseGroup = rgOrPackage;
+			assert(releaseGroup !== undefined, `Release group not found for ${rgOrPackage.name}`);
 		} else {
 			const releasePackage = rgOrPackage;
-
-			if (releasePackage.monoRepo !== undefined) {
-				const rg = releasePackage.monoRepo.kind;
-				this.errorLog(`${releasePackage.name} is part of the ${rg} release group.`);
-				this.errorLog(
-					`If you want to bump that package, run the following command to bump the whole release group:\n\n    ${
-						this.config.bin
-					} ${this.id} ${rg} ${this.argv.slice(1).join(" ")}`,
-				);
-				this.exit(1);
-			}
-
-			repoVersion = releasePackage.version;
-			scheme = flags.scheme ?? detectVersionScheme(repoVersion);
-			updatedPackages.push(releasePackage);
-			packageOrReleaseGroup = releasePackage;
+			const rgName = releasePackage.releaseGroup;
+			releaseGroup = context.repo.releaseGroups.get(rgName)!;
+			// 	if (rg.packages.length !== 1 && releasePackage.name !== ) {
+			// 		this.errorLog(`${releasePackage.name} is part of the ${rg} release group.`);
+			// 	this.errorLog(
+			// 		`If you want to bump that package, run the following command to bump the whole release group:\n\n    ${
+			// 			this.config.bin
+			// 		} ${this.id} ${rg} ${this.argv.slice(1).join(" ")}`,
+			// 	);
+			// 	this.exit(1);
+			// }
 		}
+
+		repoVersion = releaseGroup.packages[0].version;
+		scheme = flags.scheme ?? detectVersionScheme(repoVersion);
+		// Update the interdependency range to the configured default if the one provided isn't valid
+		interdependencyRange =
+			interdependencyRange ?? getDefaultInterdependencyRange(releaseGroup, context);
+		updatedPackages.push(...releaseGroup.packages);
+		packageOrReleaseGroup = releaseGroup;
 
 		const newVersion =
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -252,13 +251,13 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 			this.logger,
 		);
 
-		if (shouldInstall) {
-			if (!(await FluidRepo.ensureInstalled(updatedPackages))) {
-				this.error("Install failed.");
-			}
-		} else {
-			this.warning(`Skipping installation. Lockfiles might be outdated.`);
-		}
+		// if (shouldInstall) {
+		// 	if (!(await FluidRepo.ensureInstalled(updatedPackages))) {
+		// 		this.error("Install failed.");
+		// 	}
+		// } else {
+		this.warning(`Skipping installation. Lockfiles might be outdated.`);
+		// }
 
 		if (shouldCommit) {
 			const commitMessage = generateBumpVersionCommitMessage(

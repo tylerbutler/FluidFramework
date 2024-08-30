@@ -29,42 +29,43 @@ import {
 	isVersionScheme,
 } from "@fluid-tools/version-tools";
 
+import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import type { DependencyUpdateType } from "./library/index.js";
 import { ReleaseGroup, isReleaseGroup } from "./releaseGroups.js";
 
 /**
  * A re-usable CLI flag to parse release groups.
  */
-export const releaseGroupFlag = Flags.custom<ReleaseGroup>({
+export const releaseGroupFlag = Flags.custom<ReleaseGroupName>({
 	char: "g",
 	description: "Name of a release group.",
 	aliases: ["releaseGroups"],
-	options: [...supportedMonoRepoValues()],
+	// options: [...supportedMonoRepoValues()],
 	parse: async (str: string) => {
 		const group = str.toLowerCase();
-		if (!isReleaseGroup(group)) {
-			throw new TypeError(`Not a release group: ${str}`);
-		}
+		// if (!isReleaseGroup(group)) {
+		// 	throw new TypeError(`Not a release group: ${str}`);
+		// }
 
-		return group;
+		return group as ReleaseGroupName;
 	},
 });
 
 /**
  * A re-usable CLI flag to parse release groups along with the value "all" to indicate all release groups.
  */
-export const releaseGroupWithAllFlag = Flags.custom<ReleaseGroup | "all">({
+export const releaseGroupWithAllFlag = Flags.custom<ReleaseGroupName | "all">({
 	char: "g",
 	description: "Name of a release group.",
 	aliases: ["releaseGroups"],
 	options: [...supportedMonoRepoValues(), "all"],
 	parse: async (str: string) => {
 		const group = str.toLowerCase();
-		if (group !== "all" && !isReleaseGroup(group)) {
-			throw new TypeError(`Not a release group: ${str}`);
-		}
+		// if (group !== "all" && !isReleaseGroup(group)) {
+		// 	throw new TypeError(`Not a release group: ${str}`);
+		// }
 
-		return group;
+		return group as ReleaseGroupName;
 	},
 });
 

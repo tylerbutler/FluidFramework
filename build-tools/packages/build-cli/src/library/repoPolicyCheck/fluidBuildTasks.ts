@@ -7,6 +7,12 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import {
+	type IFluidRepo,
+	type IPackage,
+	type PackageName,
+	loadFluidRepo,
+} from "@fluid-tools/build-infrastructure";
+import {
 	FluidRepo,
 	Package,
 	PackageJson,
@@ -46,14 +52,16 @@ const getFluidBuildTasksTscIgnore = (root: string): Set<string> => {
 /**
  * Cache the FluidRepo object, so we don't have to load it repeatedly
  */
-const repoCache = new Map<string, { repo: FluidRepo; packageMap: Map<string, Package> }>();
-function getFluidPackageMap(root: string): Map<string, Package> {
+const repoCache = new Map<
+	string,
+	{ repo: IFluidRepo; packageMap: Map<PackageName, IPackage> }
+>();
+function getFluidPackageMap(root: string): Map<PackageName, IPackage> {
 	const rootDir = path.resolve(root);
 	let record = repoCache.get(rootDir);
 	if (record === undefined) {
-		const fluidBuildConfig = getFluidBuildConfig(rootDir);
-		const repo = new FluidRepo(rootDir, fluidBuildConfig.repoPackages);
-		const packageMap = repo.createPackageMap();
+		const repo = loadFluidRepo(rootDir);
+		const packageMap = repo.packages;
 		record = { repo, packageMap };
 		repoCache.set(rootDir, record);
 	}
@@ -505,7 +513,7 @@ function getTscCommandDependencies(
 	json: Readonly<PackageJson>,
 	script: string,
 	command: string,
-	packageMap: ReadonlyMap<string, Package>,
+	packageMap: ReadonlyMap<PackageName, IPackage>,
 ): (string | string[])[] {
 	// If the project has a referenced project, depend on that instead of the default
 	const parsedCommand = TscUtils.parseCommandLine(command);
@@ -555,7 +563,7 @@ function getTscCommandDependencies(
 		}
 	}
 
-	const curPkgRepoGroup = packageMap.get(json.name)?.group;
+	const curPkgRepoGroup = packageMap.get(json.name as PackageName)?.releaseGroup!;
 	const tscPredecessors = fluidBuildDatabaseCache.getPossiblePredecessorTasks(
 		packageMap,
 		json.name,

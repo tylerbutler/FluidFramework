@@ -32,10 +32,13 @@ export interface IFluidRepo {
 	 */
 	root: string;
 
-	workspaces: Map<string, IWorkspace>;
+	workspaces: Map<WorkspaceName, IWorkspace>;
+
+	releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
 
 	// readonly packageManager: PackageManager;
-	allPackages: IPackage[];
+	// packages: IPackage[];
+	packages: Map<PackageName, IPackage>;
 }
 
 export type WorkspaceName = Opaque<string, "WorkspaceName">;
@@ -51,16 +54,20 @@ export interface IWorkspace {
 export type ReleaseGroupName = Opaque<string, IReleaseGroup>;
 
 export interface IReleaseGroup {
-	name: ReleaseGroupName;
-	rootPackage?: IPackage;
-	packages: IPackage[];
+	readonly name: ReleaseGroupName;
+	readonly version: string;
+	readonly rootPackage?: IPackage;
+	readonly packages: IPackage[];
+	// readonly version: string;
 
 	// TODO: is there a better way to implement a type guard than unique names of properties? Maybe something with the
 	// opaque types?
-	rgPackages: IPackage[];
+	readonly rgPackages: IPackage[];
 }
 
-export function isIReleaseGroup(toCheck: any): toCheck is IReleaseGroup {
+export function isIReleaseGroup(
+	toCheck: Exclude<any, string | number | ReleaseGroupName | PackageName>,
+): toCheck is IReleaseGroup {
 	if (!("name" in toCheck)) {
 		return false;
 	}
@@ -76,7 +83,7 @@ export function isIReleaseGroup(toCheck: any): toCheck is IReleaseGroup {
  * Information about a package dependency.
  */
 export interface PackageDependency {
-	name: string;
+	name: PackageName;
 	version: string;
 	depClass: "prod" | "dev" | "peer";
 }
@@ -91,10 +98,14 @@ export interface IPackage<J extends PackageJson = PackageJson> {
 	packageJson: J;
 	readonly packageManager: PackageManager;
 	readonly version: string;
+	readonly private: boolean;
 	readonly isWorkspaceRoot: boolean;
+	releaseGroup: ReleaseGroupName;
 	isReleaseGroupRoot: boolean;
 	readonly packageJsonFilePath: string;
+	readonly dependencies: PackageName[];
 
+	checkInstall(): Promise<boolean>;
 	getScript(name: string): string | undefined;
 	savePackageJson(): Promise<void>;
 	reload(): void;

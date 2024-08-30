@@ -4,8 +4,8 @@
  */
 
 import { readFile, writeFile } from "node:fs/promises";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import { fromInternalScheme, isInternalVersionScheme } from "@fluid-tools/version-tools";
-import { FluidRepo, Package } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import { command as execCommand } from "execa";
 import { inc } from "semver";
@@ -13,7 +13,6 @@ import { CleanOptions } from "simple-git";
 
 import { checkFlags, releaseGroupFlag } from "../../flags.js";
 import { BaseCommand, Repository } from "../../library/index.js";
-import { isReleaseGroup } from "../../releaseGroups.js";
 
 async function replaceInFile(search: string, replace: string, path: string): Promise<void> {
 	const content = await readFile(path, "utf8");
@@ -47,7 +46,7 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 
 	private repo?: Repository;
 
-	private async processPackage(pkg: Package): Promise<void> {
+	private async processPackage(pkg: IPackage): Promise<void> {
 		const { directory, version: pkgVersion } = pkg;
 
 		// This is the version that the changesets tooling calculates by default. It does a semver major bump on the current
@@ -85,27 +84,27 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 			this.error("ReleaseGroup is possibly 'undefined'");
 		}
 
-		const monorepo =
-			releaseGroup === undefined ? undefined : context.repo.releaseGroups.get(releaseGroup);
-		if (monorepo === undefined) {
+		const rg = context.repo.releaseGroups.get(releaseGroup);
+		if (rg === undefined) {
 			this.error(`Release group ${releaseGroup} not found in repo config`, { exit: 1 });
 		}
 
-		const execDir = monorepo?.directory ?? gitRoot;
+		const execDir = rg.packages[0].directory ?? gitRoot;
 		await execCommand("pnpm exec changeset version", { cwd: execDir });
 
-		const packagesToCheck = isReleaseGroup(releaseGroup)
-			? context.packagesInReleaseGroup(releaseGroup)
-			: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				[context.fullPackageMap.get(releaseGroup)!];
+		const packagesToCheck = context.packagesInReleaseGroup(releaseGroup);
+		// isReleaseGroup(releaseGroup)
+		// 	? context.packagesInReleaseGroup(releaseGroup)
+		// 	: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		// 		[context.fullPackageMap.get(releaseGroup)!];
 
-		if (install) {
-			const installed = await FluidRepo.ensureInstalled(packagesToCheck);
+		// if (install) {
+		// 	const installed = await FluidRepo.ensureInstalled(packagesToCheck);
 
-			if (!installed) {
-				this.error(`Error installing dependencies for: ${releaseGroup}`);
-			}
-		}
+		// 	if (!installed) {
+		// 		this.error(`Error installing dependencies for: ${releaseGroup}`);
+		// 	}
+		// }
 
 		this.repo = new Repository({ baseDir: execDir });
 
