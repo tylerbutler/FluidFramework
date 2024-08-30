@@ -21,16 +21,13 @@ import { Workspace } from "./workspace.js";
 export class FluidRepo implements IFluidRepo {
 	public readonly root: string;
 
-	public constructor(
-		root?: string,
-		// public readonly packageManager: PackageManager,
-	) {
+	public constructor(root?: string) {
 		this.root = root === undefined ? findGitRoot() : path.resolve(root);
 		const config = getFluidRepoLayout(this.root);
 
-		if (config.repoPackages !== undefined) {
-			// TODO: Warning that this setting is deprecated.
-		}
+		// if (config.repoPackages !== undefined) {
+		// 	// TODO: Warning that this setting is deprecated.
+		// }
 
 		if (config.repoLayout === undefined) {
 			// TODO: load using old settings
@@ -93,6 +90,6 @@ export class FluidRepo implements IFluidRepo {
 	}
 }
 
-export function loadFluidRepo(...args: ConstructorParameters<typeof FluidRepo>): IFluidRepo {
-	return new FluidRepo(...args);
+export function loadFluidRepo(root?: string): IFluidRepo {
+	return new FluidRepo(root);
 }

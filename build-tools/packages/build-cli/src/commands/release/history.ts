@@ -21,6 +21,7 @@ import { findPackageOrReleaseGroup } from "../../args.js";
 import { packageSelectorFlag, releaseGroupFlag } from "../../flags.js";
 import { ReleaseGroup, ReleasePackage } from "../../releaseGroups.js";
 import { ReleaseReportBaseCommand, ReleaseSelectionMode } from "./report.js";
+import type { PackageName, ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 
 const DEFAULT_MIN_VERSION = "0.0.0";
 
@@ -72,7 +73,7 @@ export default class ReleaseHistoryCommand extends ReleaseReportBaseCommand<
 	static readonly enableJsonFlag = true;
 
 	readonly defaultMode: ReleaseSelectionMode = "date";
-	releaseGroupName: ReleaseGroup | ReleasePackage | undefined;
+	releaseGroupName: ReleaseGroupName | PackageName | undefined;
 
 	public async run(): Promise<{ reports: ReleaseReport[] }> {
 		const context = await this.getContext();

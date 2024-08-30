@@ -13,6 +13,7 @@ import { MonoRepo } from "@fluidframework/build-tools";
 import { cosmiconfigSync } from "cosmiconfig";
 import { Context } from "./library/index.js";
 import type { ReleaseGroup } from "./releaseGroups.js";
+import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 
 /**
  * Flub configuration that is expected in the flub config file or package.json.
@@ -214,7 +215,7 @@ export interface BumpConfig {
 	 * setting controls the default range that will be used when updating the version of a release group. The default can
 	 * be overridden using the `--interdependencyRange` flag in the `flub bump` command.
 	 */
-	defaultInterdependencyRange?: Record<ReleaseGroup, InterdependencyRange>;
+	defaultInterdependencyRange?: Record<ReleaseGroupName, InterdependencyRange>;
 }
 
 /**
@@ -374,7 +375,7 @@ export function getDefaultInterdependencyRange(
 	}
 
 	const interdependencyRange =
-		interdependencyRangeDefaults?.[releaseGroupName as ReleaseGroup];
+		interdependencyRangeDefaults?.[releaseGroupName as ReleaseGroupName];
 
 	return interdependencyRange ?? DEFAULT_INTERDEPENDENCY_RANGE;
 }

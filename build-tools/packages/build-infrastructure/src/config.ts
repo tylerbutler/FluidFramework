@@ -31,15 +31,15 @@ export interface IFluidRepoLayout {
 	 */
 	version: typeof FLUIDREPO_CONFIG_VERSION;
 
-	/**
-	 * A mapping of package or release group names to metadata about the package or release group. This can only be
-	 * configured in the repo-wide Fluid build config (the repo-root package.json).
-	 *
-	 * @deprecated Use the repoLayout setting instead.
-	 */
-	repoPackages?: {
-		[name: string]: IFluidBuildDirs;
-	};
+	// /**
+	//  * A mapping of package or release group names to metadata about the package or release group. This can only be
+	//  * configured in the repo-wide Fluid build config (the repo-root package.json).
+	//  *
+	//  * @deprecated Use the repoLayout setting instead.
+	//  */
+	// repoPackages?: {
+	// 	[name: string]: IFluidBuildDirs;
+	// };
 
 	repoLayout?: {
 		workspaces: {
@@ -103,6 +103,11 @@ export interface ReleaseGroupDefinition {
 	 * group. The default can be overridden using the `--interdependencyRange` flag in the `flub bump` command.
 	 */
 	defaultInterdependencyRange: InterdependencyRange;
+
+	/**
+	 * A URL to the ADO CI pipeline that builds the release group.
+	 */
+	adoPipelineUrl?: string;
 }
 
 export interface IFluidBuildDirs {
@@ -159,7 +164,7 @@ export function findReleaseGroupForPackage(
 	}
 }
 
-const configName = "fluidBuild";
+const configName = "repoLayout";
 
 /**
  * A cosmiconfig explorer to find the fluidBuild config. First looks for JavaScript config files and falls back to the
@@ -167,7 +172,19 @@ const configName = "fluidBuild";
  * for performance. The cache is per-explorer, so re-using the same explorer is a minor perf improvement.
  */
 const configExplorer = cosmiconfigSync(configName, {
-	searchPlaces: [`${configName}.config.cjs`, `${configName}.config.js`, "package.json"],
+	searchPlaces: [
+		`${configName}.config.cjs`,
+		`${configName}.config.mjs`,
+		`${configName}.config.js`,
+
+		// Load from the fluidBuild config files as a fallback.
+		"fluidBuild.config.cjs",
+		"fluidBuild.config.mjs",
+		"fluidBuild.config.js",
+
+		// Or the repoLayout property in package.json
+		"package.json",
+	],
 	packageProp: [configName],
 });
 

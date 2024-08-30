@@ -273,7 +273,7 @@ export const promptToRelease: StateHandlerFunction = async (
 					chalk.bold("release"),
 				)} build for the following release group in ADO for branch ${chalk.blue(
 					chalk.bold(context.originalBranchName),
-				)}:\n\n    ${chalk.green(chalk.bold(releaseGroup))}: ${mapADOLinks(releaseGroup)}`,
+				)}:\n\n    ${chalk.green(chalk.bold(releaseGroup))}: ${mapADOLinks(context, releaseGroup)}`,
 			},
 			{
 				title: "NEXT",

@@ -3,8 +3,15 @@
  * Licensed under the MIT License.
  */
 
+export {
+	ReleaseGroupDefinition,
+	WorkspaceDefinition,
+	IFluidRepoLayout,
+	FLUIDREPO_CONFIG_VERSION,
+} from "./config.js";
 export { loadFluidRepo } from "./fluidRepo.js";
 export type {
+	AdditionalPackageProps,
 	IFluidRepo,
 	IPackage,
 	IReleaseGroup,
@@ -13,10 +20,13 @@ export type {
 	PackageName,
 	ReleaseGroupName,
 	WorkspaceName,
+	FluidPackageJsonFields,
+	PackageDependency,
+	PackageManager,
 } from "./types.js";
 export { isIPackage, isIReleaseGroup } from "./types.js";
 export {
 	PackageBase,
 	// loadPackage
-	loadPackageFromWorkspaceDefinition,
+	// loadPackageFromWorkspaceDefinition,
 } from "./package.js";

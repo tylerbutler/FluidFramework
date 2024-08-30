@@ -41,6 +41,7 @@ import {
 import { releaseGroupFlag } from "../../flags.js";
 import { CommandLogger } from "../../logging.js";
 import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../../releaseGroups.js";
+import type { IReleaseGroup, PackageName, ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 
 /**
  * Controls behavior when there is a list of releases and one needs to be selected.
@@ -97,7 +98,7 @@ export abstract class ReleaseReportBaseCommand<
 	/**
 	 * The release group or package that is being reported on.
 	 */
-	protected abstract releaseGroupName: ReleaseGroup | ReleasePackage | undefined;
+	protected abstract releaseGroupName: ReleaseGroupName | PackageName | undefined;
 
 	/**
 	 * Returns true if the `date` is within `days` days of the current date.
@@ -122,7 +123,7 @@ export abstract class ReleaseReportBaseCommand<
 	protected async collectReleaseData(
 		context: Context,
 		mode: ReleaseSelectionMode = this.defaultMode,
-		releaseGroupOrPackage?: ReleaseGroup | ReleasePackage,
+		releaseGroupOrPackage?: ReleaseGroupName,
 		includeDependencies = true,
 	): Promise<PackageReleaseData> {
 		const versionData: PackageReleaseData = {};
@@ -133,8 +134,8 @@ export abstract class ReleaseReportBaseCommand<
 			);
 		}
 
-		const rgs: ReleaseGroup[] = [];
-		const pkgs: ReleasePackage[] = [];
+		const rgs: ReleaseGroupName[] = [];
+		const pkgs: PackageName[] = [];
 
 		let rgVerMap: PackageVersionMap | undefined;
 		let pkgVerMap: PackageVersionMap | undefined;
@@ -144,8 +145,8 @@ export abstract class ReleaseReportBaseCommand<
 			if (isReleaseGroup(releaseGroupOrPackage)) {
 				if (includeDependencies) {
 					[rgVerMap, pkgVerMap] = getFluidDependencies(context, releaseGroupOrPackage);
-					rgs.push(...(Object.keys(rgVerMap) as ReleaseGroup[]));
-					pkgs.push(...Object.keys(pkgVerMap));
+					rgs.push(...(Object.keys(rgVerMap) as ReleaseGroupName[]));
+					pkgs.push(...Object.keys(pkgVerMap) as PackageName[]);
 				} else {
 					rgs.push(releaseGroupOrPackage);
 				}

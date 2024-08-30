@@ -3,12 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { StringBuilder } from "@rushstack/node-core-library";
+import { StringBuilder, PackageName as PackageNameApi } from "@rushstack/node-core-library";
 import chalk from "chalk";
 
-import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
+import type { PackageName, ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 // eslint-disable-next-line import/no-deprecated
-import { MonoRepoKind, indentString } from "./library/index.js";
+import { MonoRepoKind, indentString, type Context } from "./library/index.js";
 import { CommandLogger } from "./logging.js";
 import { ReleaseGroup, ReleasePackage } from "./releaseGroups.js";
 
@@ -49,69 +49,19 @@ interface Section {
 }
 
 /**
- * Map release groups to ADO pipeline
- */
-export const ADOPipelineLinks = new Map<ReleaseGroupName | undefined, string>([
-	[
-		// eslint-disable-next-line import/no-deprecated
-		MonoRepoKind.Client,
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=12",
-	],
-	[
-		// eslint-disable-next-line import/no-deprecated
-		MonoRepoKind.Server,
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=30",
-	],
-	// eslint-disable-next-line import/no-deprecated
-	[MonoRepoKind.Azure, "https://dev.azure.com/fluidframework/internal/_build?definitionId=85"],
-	[
-		// eslint-disable-next-line import/no-deprecated
-		MonoRepoKind.BuildTools,
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=14",
-	],
-	[
-		"@fluid-tools/api-markdown-documenter",
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=97",
-	],
-	[
-		"@fluid-tools/benchmark",
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=62",
-	],
-	[
-		"@fluidframework/test-tools",
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=13",
-	],
-	["tinylicious", "https://dev.azure.com/fluidframework/internal/_build?definitionId=22"],
-	[
-		"@fluidframework/build-common",
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=3",
-	],
-	[
-		"@fluidframework/eslint-config-fluid",
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=7",
-	],
-	[
-		"@fluidframework/common-definitions",
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=8",
-	],
-	[
-		"@fluidframework/common-utils",
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=10",
-	],
-	[
-		"@fluidframework/protocol-definitions",
-		"https://dev.azure.com/fluidframework/internal/_build?definitionId=67",
-	],
-]);
-
-/**
  *
  * Returns ADO pipeline link for the releaseGroup
  */
 export const mapADOLinks = (
-	releaseGroup: ReleaseGroup | ReleasePackage | undefined,
+	context: Context,
+	releaseGroup: ReleaseGroupName | PackageName | undefined,
 ): string | undefined => {
-	return ADOPipelineLinks.get(releaseGroup);
+	if (releaseGroup === undefined) {
+		return undefined;
+	}
+	const name = PackageNameApi.getUnscopedName(releaseGroup) as ReleaseGroupName;
+	const rg = context.repo.releaseGroups.get(name);
+	return rg?.adoPipelineUrl;
 };
 
 /**

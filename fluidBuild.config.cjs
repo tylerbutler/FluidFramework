@@ -9,6 +9,15 @@
 
 const tscDependsOn = ["^tsc", "^api", "build:genver", "ts2esm"];
 
+const fluidScopes = [
+	"@fluidframework",
+	"@fluid-example",
+	"@fluid-experimental",
+	"@fluid-internal",
+	"@fluid-private",
+	"@fluid-tools",
+];
+
 /**
  * The settings in this file configure the Fluid build tools, such as fluid-build and flub. Some settings apply to the
  * whole repo, while others apply only to the client release group.
@@ -580,15 +589,7 @@ module.exports = {
 				// independentPackages: ["common", "tools"],
 				releaseGroups: {
 					client: {
-						include: [
-							"@fluidframework",
-							"@fluid-experimental",
-							"@fluid-internal",
-							"@fluid-private",
-							"@fluid-tools",
-							"fluid-framework",
-							"@types/jest-environment-puppeteer",
-						],
+						include: [...fluidScopes, "fluid-framework", "@types/jest-environment-puppeteer"],
 						rootPackageName: "client-release-group-root",
 						defaultInterdependencyRange: "workspace:~",
 					},
@@ -613,6 +614,30 @@ module.exports = {
 				directory: "./build-tools",
 				releaseGroups: {
 					"build-tools": {
+						include: [...fluidScopes],
+						rootPackageName: "build-tools-release-group-root",
+						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=14",
+					},
+				},
+			},
+			"server": {
+				directory: "./server/routerlicious",
+				releaseGroups: {
+					"build-tools": {
+						include: [...fluidScopes],
+						rootPackageName: "server-release-group-root",
+						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=30",
+					},
+				},
+			},
+			"gitrest": {
+				directory: "server/gitrest",
+				releaseGroups: {
+					"build-tools": {
 						include: [
 							"@fluidframework",
 							"@fluid-experimental",
@@ -622,21 +647,130 @@ module.exports = {
 						],
 						rootPackageName: "build-tools-release-group-root",
 						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=26",
 					},
 				},
-				// defaultInterdependencyRange: "workspace:~",
-			},
-			"server": {
-				directory: "./server/routerlicious",
-				// defaultInterdependencyRange: "workspace:~",
-			},
-			"gitrest": {
-				directory: "server/gitrest",
-				// defaultInterdependencyRange: "^",
 			},
 			"historian": {
 				directory: "server/historian",
-				// defaultInterdependencyRange: "^",
+				releaseGroups: {
+					"build-tools": {
+						include: [...fluidScopes],
+						rootPackageName: "build-tools-release-group-root",
+						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=25",
+					},
+				},
+			},
+
+			// legacy independent packages are all in their own workspaces, and are single-package release groups
+			"@fluid-tools/api-markdown-documenter": {
+				directory: "tools/api-markdown-documenter",
+				releaseGroups: {
+					"api-markdown-documenter": {
+						include: ["@fluid-tools/api-markdown-documenter"],
+						rootPackageName: "@fluid-tools/api-markdown-documenter",
+						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=97",
+					},
+				},
+			},
+			"@fluid-tools/benchmark": {
+				directory: "tools/benchmark",
+				releaseGroups: {
+					"benchmark": {
+						include: ["@fluid-tools/benchmark"],
+						rootPackageName: "@fluid-tools/benchmark",
+						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=62",
+					},
+				},
+			},
+			"@fluidframework/build-common": {
+				directory: "common/build/build-common",
+				releaseGroups: {
+					"build-common": {
+						include: ["@fluidframework/build-common"],
+						rootPackageName: "@fluidframework/build-common",
+						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=3",
+					},
+				},
+			},
+			"@fluidframework/common-utils": {
+				directory: "common/lib/common-utils",
+				releaseGroups: {
+					"common-utils": {
+						include: ["@fluidframework/common-utils"],
+						rootPackageName: "@fluidframework/common-utils",
+						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=10",
+					},
+				},
+			},
+			"@fluidframework/eslint-config-fluid": {
+				directory: "common/build/eslint-config-fluid",
+				releaseGroups: {
+					"eslint-config-fluid": {
+						include: ["@fluidframework/eslint-config-fluid"],
+						rootPackageName: "@fluidframework/eslint-config-fluid",
+						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=7",
+					},
+				},
+			},
+			"@fluid-internal/eslint-plugin-fluid": {
+				directory: "common/build/eslint-plugin-fluid",
+				releaseGroups: {
+					"eslint-plugin-fluid": {
+						include: ["@fluid-internal/eslint-plugin-fluid"],
+						rootPackageName: "@fluid-internal/eslint-plugin-fluid",
+						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=135",
+					},
+				},
+			},
+			"@fluid-internal/getkeys": {
+				directory: "tools/getkeys",
+				releaseGroups: {
+					"getkeys": {
+						include: ["@fluid-internal/getkeys"],
+						rootPackageName: "@fluid-internal/getkeys",
+						defaultInterdependencyRange: "workspace:~",
+					},
+				},
+			},
+			"@fluidframework/protocol-definitions": {
+				directory: "common/lib/protocol-definitions",
+				releaseGroups: {
+					"protocol-definitions": {
+						include: ["@fluidframework/protocol-definitions"],
+						rootPackageName: "@fluidframework/protocol-definitions",
+						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=67",
+					},
+				},
+			},
+			"@fluidframework/test-tools": {
+				directory: "tools/test-tools",
+				releaseGroups: {
+					"test-tools": {
+						include: ["@fluidframework/test-tools"],
+						rootPackageName: "@fluidframework/test-tools",
+						defaultInterdependencyRange: "workspace:~",
+						adoPipelineUrl:
+							"https://dev.azure.com/fluidframework/internal/_build?definitionId=13",
+					},
+				},
 			},
 		},
 	},

@@ -58,7 +58,7 @@ export interface IReleaseGroup {
 	readonly version: string;
 	readonly rootPackage?: IPackage;
 	readonly packages: IPackage[];
-	// readonly version: string;
+	readonly adoPipelineUrl?: string;
 
 	// TODO: is there a better way to implement a type guard than unique names of properties? Maybe something with the
 	// opaque types?

@@ -36,10 +36,5 @@ export const findPackageOrReleaseGroup = (
 		return rg;
 	}
 
-	return (
-		context.repo.packages.get(name as PackageName) ??
-		context.independentPackages.find(
-			(pkg) => PackageNameApi.getUnscopedName(pkg.name) === name,
-		)
-	);
+	return context.repo.packages.get(name as PackageName);
 };

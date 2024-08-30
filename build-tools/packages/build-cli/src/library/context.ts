@@ -8,6 +8,7 @@ import * as semver from "semver";
 
 import {
 	type IFluidRepo,
+	type IFluidRepoLayout,
 	type IPackage,
 	type PackageName,
 	type ReleaseGroupName,
@@ -30,6 +31,7 @@ import {
 	type ReleaseGroupOrPackage,
 	isReleaseGroup,
 } from "../releaseGroups.js";
+import { getFluidRepoLayout } from "../../../build-infrastructure/lib/config.js";
 
 /**
  * Represents a release version and its release date, if applicable.
@@ -108,6 +110,7 @@ export class Context {
 	// public readonly fullPackageMap: Map<string, IPackage>;
 	public readonly fluidBuildConfig: IFluidBuildConfig;
 	public readonly flubConfig: FlubConfig;
+	public readonly repoLayout: IFluidRepoLayout;
 	private readonly newBranches: string[] = [];
 
 	constructor(
@@ -118,6 +121,7 @@ export class Context {
 		// Load the packages
 		this.fluidBuildConfig = getFluidBuildConfig(this.gitRepo.resolvedRoot);
 		this.flubConfig = getFlubConfig(this.gitRepo.resolvedRoot);
+		this.repoLayout = getFluidRepoLayout(this.gitRepo.resolvedRoot);
 
 		// this.repo = new FluidRepo(this.gitRepo.resolvedRoot, this.fluidBuildConfig.repoPackages);
 		this.repo = loadFluidRepo();

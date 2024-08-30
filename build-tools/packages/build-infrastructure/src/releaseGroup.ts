@@ -8,6 +8,7 @@ import type { IPackage, IReleaseGroup, ReleaseGroupName } from "./types.js";
 
 export class ReleaseGroup implements IReleaseGroup {
 	public readonly name: ReleaseGroupName;
+	public readonly adoPipelineUrl: string | undefined;
 	public constructor(
 		name: string,
 		releaseGroupDefinition: ReleaseGroupDefinition,
@@ -15,6 +16,7 @@ export class ReleaseGroup implements IReleaseGroup {
 		public readonly rootPackage?: IPackage,
 	) {
 		this.name = name as ReleaseGroupName;
+		this.adoPipelineUrl = releaseGroupDefinition.adoPipelineUrl;
 		this.packages = packagesInWorkspace
 			.filter((pkg) => matchesReleaseGroupDefinition(pkg, releaseGroupDefinition))
 			.map((pkg) => {

@@ -66,7 +66,7 @@ export interface FluidReleaseStateHandlerData {
 	/**
 	 * The release group or package that is being released.
 	 */
-	releaseGroup: ReleaseGroupName | ReleasePackage;
+	releaseGroup: ReleaseGroupName;
 
 	/**
 	 * The version scheme used by the release group or package being released.
