@@ -81,12 +81,18 @@ export const packageSelectorFlag = Flags.custom({
 /**
  * A re-usable CLI flag to parse semver ranges.
  */
-export const semverRangeFlag = Flags.custom<string | undefined>({
+export const semverRangeFlag = Flags.custom<semver.Range, { loose?: boolean }>({
 	description: "A semver version range string.",
-	multiple: false,
-	parse: async (input) => {
-		const range = semver.validRange(input);
-		return range === null ? undefined : input;
+	parse: async (input, _, opts) => {
+		const validRange = semver.validRange(input);
+		if(validRange !== null) {
+			return new semver.Range(validRange, opts.loose);
+		}
+
+		if(opts.required === true) {
+			throw new Error(`Invalid semver range: ${input}`);
+		}
+		return undefined;
 	},
 });
 
