@@ -195,6 +195,10 @@ export type ReleaseGroupName = Opaque<string, IReleaseGroup>;
 export interface WorkspaceDefinition {
     // (undocumented)
     directory: string;
+<<<<<<< HEAD
+=======
+    // (undocumented)
+>>>>>>> bt-build-infra-package
     releaseGroups: {
         [name: string]: ReleaseGroupDefinition;
     };

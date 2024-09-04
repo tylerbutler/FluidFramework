@@ -36,8 +36,6 @@ export interface IFluidRepo {
 
 	releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
 
-	// readonly packageManager: PackageManager;
-	// packages: IPackage[];
 	packages: Map<PackageName, IPackage>;
 }
 
@@ -66,17 +64,18 @@ export interface IReleaseGroup {
 }
 
 export function isIReleaseGroup(
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	toCheck: Exclude<any, string | number | ReleaseGroupName | PackageName>,
 ): toCheck is IReleaseGroup {
 	if (!("name" in toCheck)) {
 		return false;
 	}
 
-	if (typeof toCheck !== "object") {
-		return false;
+	if (typeof toCheck === "object") {
+		return "rgPackages" in toCheck;
 	}
 
-	return "rgPackages" in toCheck;
+	return false;
 }
 
 /**
@@ -90,7 +89,6 @@ export interface PackageDependency {
 
 export type PackageName = Opaque<string, "PackageName">;
 
-// export interface IPackage<TAddProps extends AdditionalPackageProps = undefined> {
 export interface IPackage<J extends PackageJson = PackageJson> {
 	readonly name: PackageName;
 	readonly nameColored: string;
@@ -113,6 +111,10 @@ export interface IPackage<J extends PackageJson = PackageJson> {
 	combinedDependencies: Generator<PackageDependency, void>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- this is a type guard
 export function isIPackage(pkg: any): pkg is IPackage {
-	return "getScript" in pkg;
+	if (typeof pkg === "object") {
+		return "getScript" in pkg;
+	}
+	return false;
 }

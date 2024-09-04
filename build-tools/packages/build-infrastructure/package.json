@@ -1,8 +1,8 @@
 {
 	"name": "@fluid-tools/build-infrastructure",
 	"version": "0.45.0",
-	"description": "Fluid build infrastructure",
 	"private": true,
+	"description": "Fluid build infrastructure",
 	"homepage": "https://fluidframework.com",
 	"repository": {
 		"type": "git",
@@ -30,13 +30,12 @@
 		"build:test": "tsc --project ./src/test/tsconfig.json",
 		"check:biome": "biome check .",
 		"check:format": "npm run check:biome",
-		"clean": "rimraf --glob dist lib \"**/*.tsbuildinfo\" \"**/*.build.log\" nyc",
+		"clean": "rimraf --glob dist lib \"**/*.tsbuildinfo\" \"**/*.build.log\" nyc _api-extractor-temp",
 		"compile": "fluid-build . --task compile",
 		"eslint": "eslint --format stylish src",
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
 		"format": "npm run format:biome",
 		"format:biome": "biome check --write .",
-		"json-schema-to-typescript:biomeConfigTypes": "json2ts --input node_modules/@biomejs/biome/configuration_schema.json --output src/common/biomeConfigTypes.d.ts",
 		"lint": "npm run eslint",
 		"lint:fix": "npm run eslint:fix",
 		"list-repo-files": "cd ../../.. && git ls-files -co --exclude-standard",
@@ -51,6 +50,7 @@
 		"cosmiconfig": "^8.3.6",
 		"detect-indent": "^6.1.0",
 		"fs-extra": "^11.2.0",
+		"sort-package-json": "1.57.0",
 		"type-fest": "^2.19.0",
 		"typescript": "~5.4.5"
 	},
@@ -59,6 +59,7 @@
 		"@fluidframework/build-common": "^2.0.3",
 		"@fluidframework/build-tools-bin": "npm:@fluidframework/build-tools@~0.40.0",
 		"@fluidframework/eslint-config-fluid": "^5.3.0",
+		"@microsoft/api-extractor": "^7.45.1",
 		"@types/async": "^3.2.20",
 		"@types/chai": "^4.3.5",
 		"@types/fs-extra": "^11.0.4",
@@ -74,7 +75,8 @@
 		"concurrently": "^8.2.1",
 		"eslint": "~8.57.0",
 		"json-schema-to-typescript": "^15.0.0",
-		"mocha": "^10.2.0"
+		"mocha": "^10.2.0",
+		"rimraf": "^4.4.1"
 	},
 	"engines": {
 		"node": ">=18.17.1"

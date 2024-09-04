@@ -7,31 +7,38 @@ import { strict as assert } from "node:assert";
 import { expect } from "chai";
 import { describe, it } from "mocha";
 
-// import { type PackageJson } from "../interfaces.js";
 import { loadFluidRepo } from "../fluidRepo.js";
 import type { WorkspaceName } from "../types.js";
-// import { testDataPath } from "./init.js";
 
 describe("loadFluidRepo", () => {
 	it("loads correctly", () => {
 		const repo = loadFluidRepo();
 		assert.strictEqual(
 			repo.workspaces.size,
-			5,
+			14,
 			`Expected 5 workspaces, found ${repo.workspaces.size}`,
 		);
 
 		const client = repo.workspaces.get("client" as WorkspaceName);
 		expect(client).to.not.be.undefined;
-		expect(client?.packages.length).to.equal(158);
-		expect(client?.releaseGroups.size).to.equal(2);
-		console.debug(client?.releaseGroups);
-	});
+		expect(client?.packages.length).to.equal(
+			160,
+			"client workspace has the wrong number of packages",
+		);
+		expect(client?.releaseGroups.size).to.equal(
+			2,
+			"client workspace has the wrong number of release groups",
+		);
 
-	// it("detects tabs indentation", () => {
-	// 	const testFile = path.resolve(testDataPath, "tabs/_package.json");
-	// 	const [, indent] = readPackageJsonAndIndent(testFile);
-	// 	const expectedIndent = "\t";
-	// 	assert.strictEqual(indent, expectedIndent);
-	// });
+		const buildTools = repo.workspaces.get("build-tools" as WorkspaceName);
+		expect(buildTools).to.not.be.undefined;
+		expect(buildTools?.packages.length).to.equal(
+			6,
+			"build-tools workspace has the wrong number of packages",
+		);
+		expect(buildTools?.releaseGroups.size).to.equal(
+			1,
+			"build-tools workspace has the wrong number of release groups",
+		);
+	});
 });

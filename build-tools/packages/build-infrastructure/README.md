@@ -39,7 +39,7 @@ Importantly, release groups are the unit that we release and version. In the v0 
 and workspaces have a 1:1 relationship. With the types defined here in build-infrastructure, workspaces can contain
 multiple release groups.
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > A workspace _must_ have at least one release group, and all packages must be a part of a release group.
 
 ### Packages
@@ -54,11 +54,6 @@ In the v0 version of build-tools, we have the concept of "independent packages:"
 group and are released independently. **This concept no longer exists. There are only release groups.** Packages that
 release independently can either be part of a single-package workspace (and release group), or they can be part of
 another larger workspace, contained within a single-package release group.
-
-###
-
-> [!IMPORTANT]  
-> Crucial information necessary for users to succeed.
 
 ## Configuration
 
@@ -83,7 +78,7 @@ repoLayout: {
         // This key is the name of the release group. It must be unique across all
         // release groups.
         client: {
-          // The include property can contain package names OR package scopes. If 
+          // The include property can contain package names OR package scopes. If
           // a scope is provided, all packages with that scope will be a part of
           // the release group.
           include: [
@@ -100,7 +95,7 @@ repoLayout: {
           // A release group can have an OPTIONAL root package. This package
           // is typically private and is similar to the root package for a workspace.
           // This release group root package may be useful to store scripts or other
-          // configuration only applies on the release group, 
+          // configuration only applies on the release group,
           rootPackageName: "client-release-group-root",
           defaultInterdependencyRange: "workspace:~",
 
