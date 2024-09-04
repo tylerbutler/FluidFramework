@@ -38,10 +38,14 @@ import {
 	isVersionBumpType,
 } from "@fluid-tools/version-tools";
 
+import type {
+	IReleaseGroup,
+	PackageName,
+	ReleaseGroupName,
+} from "@fluid-tools/build-infrastructure";
 import { releaseGroupFlag } from "../../flags.js";
 import { CommandLogger } from "../../logging.js";
 import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../../releaseGroups.js";
-import type { IReleaseGroup, PackageName, ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 
 /**
  * Controls behavior when there is a list of releases and one needs to be selected.
@@ -146,7 +150,7 @@ export abstract class ReleaseReportBaseCommand<
 				if (includeDependencies) {
 					[rgVerMap, pkgVerMap] = getFluidDependencies(context, releaseGroupOrPackage);
 					rgs.push(...(Object.keys(rgVerMap) as ReleaseGroupName[]));
-					pkgs.push(...Object.keys(pkgVerMap) as PackageName[]);
+					pkgs.push(...(Object.keys(pkgVerMap) as PackageName[]));
 				} else {
 					rgs.push(releaseGroupOrPackage);
 				}

@@ -3,12 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { StringBuilder, PackageName as PackageNameApi } from "@rushstack/node-core-library";
+import { PackageName as PackageNameApi, StringBuilder } from "@rushstack/node-core-library";
 import chalk from "chalk";
 
 import type { PackageName, ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 // eslint-disable-next-line import/no-deprecated
-import { MonoRepoKind, indentString, type Context } from "./library/index.js";
+import { type Context, MonoRepoKind, indentString } from "./library/index.js";
 import { CommandLogger } from "./logging.js";
 import { ReleaseGroup, ReleasePackage } from "./releaseGroups.js";
 

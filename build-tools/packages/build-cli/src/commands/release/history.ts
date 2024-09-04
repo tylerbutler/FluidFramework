@@ -17,11 +17,11 @@ import {
 
 import { detectBumpType } from "@fluid-tools/version-tools";
 
+import type { PackageName, ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import { findPackageOrReleaseGroup } from "../../args.js";
 import { packageSelectorFlag, releaseGroupFlag } from "../../flags.js";
 import { ReleaseGroup, ReleasePackage } from "../../releaseGroups.js";
 import { ReleaseReportBaseCommand, ReleaseSelectionMode } from "./report.js";
-import type { PackageName, ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 
 const DEFAULT_MIN_VERSION = "0.0.0";
 

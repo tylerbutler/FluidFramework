@@ -24,6 +24,7 @@ import {
 } from "@fluidframework/build-tools";
 
 import path from "node:path";
+import { getFluidRepoLayout } from "../../../build-infrastructure/lib/config.js";
 import { type FlubConfig, getFlubConfig } from "../config.js";
 import {
 	type Package,
@@ -31,7 +32,6 @@ import {
 	type ReleaseGroupOrPackage,
 	isReleaseGroup,
 } from "../releaseGroups.js";
-import { getFluidRepoLayout } from "../../../build-infrastructure/lib/config.js";
 
 /**
  * Represents a release version and its release date, if applicable.

@@ -4,6 +4,7 @@
  */
 
 import { statSync } from "node:fs";
+import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import {
 	DEFAULT_INTERDEPENDENCY_RANGE,
 	InterdependencyRange,
@@ -13,7 +14,6 @@ import { MonoRepo } from "@fluidframework/build-tools";
 import { cosmiconfigSync } from "cosmiconfig";
 import { Context } from "./library/index.js";
 import type { ReleaseGroup } from "./releaseGroups.js";
-import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 
 /**
  * Flub configuration that is expected in the flub config file or package.json.
