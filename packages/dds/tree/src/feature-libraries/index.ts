@@ -128,8 +128,6 @@ export {
 	FlexMapNodeSchema,
 	FlexObjectNodeSchema,
 	schemaIsLeaf,
-	schemaIsMap,
-	schemaIsObjectNode,
 	type Unenforced,
 	type AllowedTypeSet,
 	markEager,
@@ -140,7 +138,6 @@ export {
 	type FlexListToUnion,
 	type ExtractItemType,
 	isLazy,
-	type FlexObjectNodeFields,
 	intoStoredSchema,
 	intoStoredSchemaCollection,
 	type NormalizeLazyItem,
@@ -198,13 +195,12 @@ export {
 } from "./default-schema/index.js";
 
 export {
-	type FlexTreeLeafNode,
-	type FlexTreeMapNode,
 	type FlexTreeOptionalField,
 	type FlexTreeRequiredField,
 	type FlexTreeSequenceField,
 	Skip,
 	type FlexTreeContext,
+	type FlexTreeHydratedContext,
 	type FlexTreeTypedField,
 	type FlexTreeEntity,
 	type FlexTreeField,
@@ -218,13 +214,14 @@ export {
 	ContextSlot,
 	// Internal
 	flexTreeMarker,
-	FlexTreeEntityKind,
 	assertFlexTreeEntityNotFreed,
 	flexTreeSlot,
 	getSchemaAndPolicy,
 	isFreedSymbol,
 	LazyEntity,
 	treeStatusFromAnchorCache,
+	indexForAt,
+	FlexTreeEntityKind,
 } from "./flex-tree/index.js";
 
 export { treeSchemaFromStoredSchema } from "./storedToViewSchema.js";
@@ -242,12 +239,3 @@ export {
 } from "./schema-edits/index.js";
 
 export { makeMitigatedChangeFamily } from "./mitigatedChangeFamily.js";
-
-export {
-	type MapTreeNode,
-	type MapTreeSequenceField,
-	isMapTreeNode,
-	isMapTreeSequenceField,
-	getOrCreateMapTreeNode,
-	tryGetMapTreeNode,
-} from "./flex-map-tree/index.js";

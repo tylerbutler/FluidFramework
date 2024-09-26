@@ -21,8 +21,10 @@ import type {
 } from "../../simple-tree/schemaTypes.js";
 import { validateAssertionError } from "@fluidframework/test-runtime-utils/internal";
 import { hydrate } from "./utils.js";
-import { isMapTreeNode, TreeStatus } from "../../feature-libraries/index.js";
+import { TreeStatus } from "../../feature-libraries/index.js";
 import { validateUsageError } from "../utils.js";
+// eslint-disable-next-line import/no-internal-modules
+import { UnhydratedFlexTreeNode } from "../../simple-tree/core/unhydratedFlexTree.js";
 
 describe("Unhydrated nodes", () => {
 	const schemaFactory = new SchemaFactory("undefined");
@@ -41,15 +43,15 @@ describe("Unhydrated nodes", () => {
 		const map = new TestMap([]);
 		const array = new TestArray([leaf]);
 		const object = new TestObject({ map, array });
-		assert.equal(isMapTreeNode(getOrCreateInnerNode(leaf)), true);
-		assert.equal(isMapTreeNode(getOrCreateInnerNode(map)), true);
-		assert.equal(isMapTreeNode(getOrCreateInnerNode(array)), true);
-		assert.equal(isMapTreeNode(getOrCreateInnerNode(object)), true);
+		assert.equal(getOrCreateInnerNode(leaf) instanceof UnhydratedFlexTreeNode, true);
+		assert.equal(getOrCreateInnerNode(map) instanceof UnhydratedFlexTreeNode, true);
+		assert.equal(getOrCreateInnerNode(array) instanceof UnhydratedFlexTreeNode, true);
+		assert.equal(getOrCreateInnerNode(object) instanceof UnhydratedFlexTreeNode, true);
 		const hydratedObject = hydrate(TestObject, object);
-		assert.equal(isMapTreeNode(getOrCreateInnerNode(leaf)), false);
-		assert.equal(isMapTreeNode(getOrCreateInnerNode(map)), false);
-		assert.equal(isMapTreeNode(getOrCreateInnerNode(array)), false);
-		assert.equal(isMapTreeNode(getOrCreateInnerNode(object)), false);
+		assert.equal(getOrCreateInnerNode(leaf) instanceof UnhydratedFlexTreeNode, false);
+		assert.equal(getOrCreateInnerNode(map) instanceof UnhydratedFlexTreeNode, false);
+		assert.equal(getOrCreateInnerNode(array) instanceof UnhydratedFlexTreeNode, false);
+		assert.equal(getOrCreateInnerNode(object) instanceof UnhydratedFlexTreeNode, false);
 		assert.equal(hydratedObject, object);
 		assert.equal(hydratedObject.array, array);
 		assert.equal(hydratedObject.map, map);
@@ -176,6 +178,24 @@ describe("Unhydrated nodes", () => {
 		assert.equal(Tree.status(array), TreeStatus.New);
 		const object = new TestObject({ map, array });
 		assert.equal(Tree.status(object), TreeStatus.New);
+	});
+
+	it("preserve event subscriptions during hydration - minimal", () => {
+		const log: unknown[] = [];
+		const leafObject = new TestLeaf({ value: "value" });
+
+		Tree.on(leafObject, "nodeChanged", (data) => {
+			log.push(data);
+		});
+		Tree.on(leafObject, "treeChanged", () => {
+			log.push("treeChanged");
+		});
+
+		hydrate(TestLeaf, leafObject);
+		leafObject.value = "new value";
+		// Assert that the event fired
+		// TODO: Eventually the order of events should be documented, and an approach like this can test that they are ordered as documented.
+		assert.deepEqual(log, [{ changedProperties: new Set(["value"]) }, "treeChanged"]);
 	});
 
 	it("preserve events after hydration", () => {

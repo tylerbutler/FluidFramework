@@ -27,16 +27,17 @@ export {
 	getEsLintConfigFilePath,
 } from "./fluidBuild/tasks/taskUtils";
 export * as TscUtils from "./fluidBuild/tscUtils";
-export {
-	type BrokenCompatTypes,
-	type ITypeValidationConfig,
-} from "./common/typeValidatorConfig";
-export {
+export { getTypeTestPreviousPackageDetails } from "./common/typeTests";
+
+/**
+ * The types defined here cannot be in build-cli because it is an ESM-only package, and these types are imported in
+ * packages that are dual-emit or CJS-only. Long term these types should move to a shared library between build-cli and
+ * build-tools.
+ */
+export type {
 	TypeOnly,
 	MinimalType,
 	FullType,
 	requireAssignableTo,
-} from "./typeValidator/compatibility";
-export { type TestCaseTypeData, buildTestCase } from "./typeValidator/testGeneration";
-export { type TypeData } from "./typeValidator/typeData";
-export { getTypeTestPreviousPackageDetails } from "./typeValidator/validatorUtils";
+	SkipUniqueSymbols,
+} from "./common/typeCompatibility";

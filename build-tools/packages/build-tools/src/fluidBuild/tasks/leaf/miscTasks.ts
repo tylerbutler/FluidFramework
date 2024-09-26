@@ -3,12 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import * as path from "path";
+import { readFile, readdir, stat } from "node:fs/promises";
+import * as path from "node:path";
 
-import { readdir, stat } from "fs/promises";
 import picomatch from "picomatch";
-import { readFileAsync, statAsync } from "../../../common/utils";
-import { getTypeTestPreviousPackageDetails } from "../../../typeValidator/validatorUtils";
+import { getTypeTestPreviousPackageDetails } from "../../../common/typeTests";
 import { BuildPackage } from "../../buildGraph";
 import { globFn, toPosixPath } from "../taskUtils";
 import { LeafTask, LeafWithFileStatDoneFileTask } from "./leafTask";
@@ -48,8 +47,8 @@ export class LesscTask extends LeafTask {
 		const srcPath = unquote(args[1]);
 		const dstPath = unquote(args[2]);
 		try {
-			const srcTimeP = statAsync(path.join(this.node.pkg.directory, srcPath));
-			const dstTimeP = statAsync(path.join(this.node.pkg.directory, dstPath));
+			const srcTimeP = stat(path.join(this.node.pkg.directory, srcPath));
+			const dstTimeP = stat(path.join(this.node.pkg.directory, dstPath));
 			const [srcTime, dstTime] = await Promise.all([srcTimeP, dstTimeP]);
 			const result = srcTime <= dstTime;
 			if (!result) {
@@ -211,7 +210,7 @@ export class GenVerTask extends LeafTask {
 	protected async checkLeafIsUpToDate() {
 		const file = path.join(this.node.pkg.directory, "src/packageVersion.ts");
 		try {
-			const content = await readFileAsync(file, "utf8");
+			const content = await readFile(file, "utf8");
 			const match = content.match(
 				/.*\nexport const pkgName = "(.*)";[\n\r]*export const pkgVersion = "([0-9A-Za-z.+-]+)";.*/m,
 			);
@@ -245,7 +244,9 @@ export class TypeValidationTask extends LeafWithFileStatDoneFileTask {
 	protected async getInputFiles(): Promise<string[]> {
 		if (this.inputFiles === undefined) {
 			this.inputFiles = [path.join(this.node.pkg.directory, "package.json")];
-			if (!(this.node.pkg.packageJson.typeValidation?.disabled === true)) {
+			// Casting as any is a workaround because the typeValidation-related types are in build-cli.
+			// Eventually the common stuff will be split into a shared package; tracked by AB#13197.
+			if (!((this.node.pkg.packageJson as any).typeValidation?.disabled === true)) {
 				// TODO: depend on all of input to product tsc, which impacts the API.
 				// This task is effectively a TscDependentTask with additional input,
 				// but some packages build tests including type tests as part of

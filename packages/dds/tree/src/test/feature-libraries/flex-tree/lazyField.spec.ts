@@ -12,6 +12,7 @@ import { validateAssertionError } from "@fluidframework/test-runtime-utils/inter
 import {
 	type FieldAnchor,
 	type FieldKey,
+	TreeStoredSchemaRepository,
 	type UpPath,
 	rootFieldKey,
 } from "../../../core/index.js";
@@ -25,14 +26,16 @@ import {
 import {
 	FieldKinds,
 	FlexFieldSchema,
+	MockNodeKeyManager,
 	cursorForJsonableTreeNode,
 	defaultSchemaPolicy,
+	getTreeContext,
+	intoStoredSchema,
 	mapTreeFromCursor,
-	type FlexFieldKind,
 	type FlexTreeSchema,
 } from "../../../feature-libraries/index.js";
 import { brand, disposeSymbol } from "../../../util/index.js";
-import { flexTreeViewWithContent, forestWithContent } from "../../utils.js";
+import { flexTreeViewWithContent, forestWithContent, MockTreeCheckout } from "../../utils.js";
 
 import {
 	getReadonlyContext,
@@ -41,15 +44,12 @@ import {
 	rootFieldAnchor,
 } from "./utils.js";
 import {
-	booleanSchema,
 	cursorFromInsertable,
-	nullSchema,
 	numberSchema,
 	SchemaFactory,
 	stringSchema,
-	toFlexSchema,
 } from "../../../simple-tree/index.js";
-import { getFlexSchema } from "../../../simple-tree/toFlexSchema.js";
+import { getFlexSchema, toStoredSchema } from "../../../simple-tree/toFlexSchema.js";
 import { JsonObject, singleJsonCursor } from "../../json/index.js";
 
 const detachedField: FieldKey = brand("detached");
@@ -58,27 +58,27 @@ const detachedFieldAnchor: FieldAnchor = { parent: undefined, fieldKey: detached
 /**
  * Test {@link LazyField} implementation.
  */
-class TestLazyField<TKind extends FlexFieldKind> extends LazyField<TKind> {}
+class TestLazyField extends LazyField {}
 
 describe("LazyField", () => {
 	it("LazyField implementations do not allow edits to detached trees", () => {
-		const schema = toFlexSchema(JsonObject);
+		const schema = toStoredSchema(JsonObject);
 		const forest = forestWithContent({
 			schema,
 			initialTree: singleJsonCursor({}),
 		});
-		const context = getReadonlyContext(forest, schema);
+		const context = getReadonlyContext(forest, JsonObject);
 		const cursor = initializeCursor(context, detachedFieldAnchor);
 
 		const optionalField = new LazyOptionalField(
 			context,
-			FlexFieldSchema.create(FieldKinds.optional, [getFlexSchema(JsonObject)]),
+			FieldKinds.optional.identifier,
 			cursor,
 			detachedFieldAnchor,
 		);
 		const valueField = new LazyValueField(
 			context,
-			FlexFieldSchema.create(FieldKinds.required, [getFlexSchema(JsonObject)]),
+			FieldKinds.required.identifier,
 			cursor,
 			detachedFieldAnchor,
 		);
@@ -100,12 +100,11 @@ describe("LazyField", () => {
 
 		const builder = new SchemaFactory("test");
 		const rootSchema = builder.optional([builder.object("object", {})]);
-		const schema = toFlexSchema(rootSchema);
 
 		// Note: this tree initialization is strictly to enable construction of the lazy field.
 		// The test cases below are strictly in terms of the schema of the created fields.
 		const { context, cursor } = readonlyTreeWithContent({
-			schema,
+			schema: rootSchema,
 			initialTree: singleJsonCursor({}),
 		});
 
@@ -115,29 +114,14 @@ describe("LazyField", () => {
 
 		const booleanOptionalField = new LazyOptionalField(
 			context,
-			FlexFieldSchema.create(FieldKinds.optional, [getFlexSchema(booleanSchema)]),
+			FieldKinds.optional.identifier,
 			cursor,
 			detachedFieldAnchor,
 		);
 
-		assert(
-			booleanOptionalField.isExactly(
-				FlexFieldSchema.create(FieldKinds.optional, [getFlexSchema(booleanSchema)]),
-			),
-		);
-
-		// Different types
-		assert(
-			!booleanOptionalField.isExactly(
-				FlexFieldSchema.create(FieldKinds.optional, [getFlexSchema(nullSchema)]),
-			),
-		);
+		assert(booleanOptionalField.is(FieldKinds.optional));
 		// Different kinds
-		assert(
-			!booleanOptionalField.isExactly(
-				FlexFieldSchema.create(FieldKinds.required, [getFlexSchema(booleanSchema)]),
-			),
-		);
+		assert(!booleanOptionalField.is(FieldKinds.required));
 		// #endregion
 	});
 
@@ -146,16 +130,16 @@ describe("LazyField", () => {
 		class Struct extends factory.object("Struct", {
 			foo: factory.number,
 		}) {}
-		const schema = toFlexSchema(Struct);
+		const schema = toStoredSchema(Struct);
 
 		const { context, cursor } = readonlyTreeWithContent({
-			schema,
+			schema: Struct,
 			initialTree: cursorFromInsertable(Struct, { foo: 5 }),
 		});
 
 		const rootField = new TestLazyField(
 			context,
-			schema.rootFieldSchema,
+			schema.rootFieldSchema.kind,
 			cursor,
 			rootFieldAnchor,
 		);
@@ -172,31 +156,26 @@ describe("LazyField", () => {
 		cursor.enterNode(0);
 		cursor.enterField(brand("foo"));
 
-		const leafField = new TestLazyField(
-			context,
-			toFlexSchema(factory.number).rootFieldSchema,
-			cursor,
-			{
-				parent: parentAnchor,
-				fieldKey: brand("foo"),
-			},
-		);
+		const leafField = new TestLazyField(context, FieldKinds.required.identifier, cursor, {
+			parent: parentAnchor,
+			fieldKey: brand("foo"),
+		});
 		assert.equal(leafField.parent, rootField.boxedAt(0));
 	});
 
 	it("Disposes when context is disposed", () => {
 		const factory = new SchemaFactory("LazyField");
-		const schema = toFlexSchema(factory.number);
+		const schema = toStoredSchema(factory.number);
 		const forest = forestWithContent({
 			schema,
 			initialTree: cursorFromInsertable(factory.number, 5),
 		});
-		const context = getReadonlyContext(forest, schema);
+		const context = getReadonlyContext(forest, factory.number);
 		const cursor = initializeCursor(context, detachedFieldAnchor);
 
 		const field = new TestLazyField(
 			context,
-			schema.rootFieldSchema,
+			schema.rootFieldSchema.kind,
 			cursor,
 			detachedFieldAnchor,
 		);
@@ -209,15 +188,15 @@ describe("LazyField", () => {
 	it("Disposes when parent is disposed", () => {
 		const factory = new SchemaFactory("LazyField");
 		class Holder extends factory.object("holder", { f: factory.number }) {}
-		const schema = toFlexSchema(Holder);
+		const schema = toStoredSchema(Holder);
 		const forest = forestWithContent({
 			schema,
 			initialTree: cursorFromInsertable(Holder, { f: 5 }),
 		});
-		const context = getReadonlyContext(forest, schema);
+		const context = getReadonlyContext(forest, Holder);
 
 		const holder = [...context.root.boxedIterator()][0];
-		assert(holder.is(getFlexSchema(Holder)));
+		assert(holder.schema === Holder.identifier);
 		const field = holder.getBoxed(brand("f"));
 		assert(field instanceof LazyField);
 
@@ -233,15 +212,15 @@ describe("LazyField", () => {
 	it("Disposes when context then parent is disposed", () => {
 		const factory = new SchemaFactory("LazyField");
 		class Holder extends factory.object("holder", { f: factory.number }) {}
-		const schema = toFlexSchema(Holder);
+		const schema = toStoredSchema(Holder);
 		const forest = forestWithContent({
 			schema,
 			initialTree: cursorFromInsertable(Holder, { f: 5 }),
 		});
-		const context = getReadonlyContext(forest, schema);
+		const context = getReadonlyContext(forest, Holder);
 
 		const holder = [...context.root.boxedIterator()][0];
-		assert(holder.is(getFlexSchema(Holder)));
+		assert(holder.schema === Holder.identifier);
 		const field = holder.getBoxed(brand("f"));
 		assert(field instanceof LazyField);
 
@@ -256,15 +235,16 @@ describe("LazyField", () => {
 
 describe("LazyOptionalField", () => {
 	const builder = new SchemaFactory("test");
-	const schema = toFlexSchema(builder.optional(builder.number));
-	const rootSchema = schema.rootFieldSchema as FlexFieldSchema<typeof FieldKinds.optional>;
+	const schema = builder.optional(builder.number);
+	const storedSchema = toStoredSchema(schema);
+	const rootSchema = storedSchema.rootFieldSchema;
 
 	describe("Field with value", () => {
 		const { context, cursor } = readonlyTreeWithContent({
 			schema,
 			initialTree: singleJsonCursor(42),
 		});
-		const field = new LazyOptionalField(context, rootSchema, cursor, rootFieldAnchor);
+		const field = new LazyOptionalField(context, rootSchema.kind, cursor, rootFieldAnchor);
 
 		it("atIndex", () => {
 			assert.equal(field.atIndex(0), 42);
@@ -272,7 +252,7 @@ describe("LazyOptionalField", () => {
 
 		it("boxedAt", () => {
 			const boxedResult = field.boxedAt(0) ?? assert.fail();
-			assert.equal(boxedResult.schema, getFlexSchema(numberSchema));
+			assert.equal(boxedResult.schema, numberSchema.identifier);
 			assert.equal(boxedResult.value, 42);
 		});
 
@@ -293,7 +273,7 @@ describe("LazyOptionalField", () => {
 			schema,
 			initialTree: undefined,
 		});
-		const field = new LazyOptionalField(context, rootSchema, cursor, rootFieldAnchor);
+		const field = new LazyOptionalField(context, rootSchema.kind, cursor, rootFieldAnchor);
 
 		it("atIndex", () => {
 			// Invalid to request the value if there isn't one.
@@ -345,8 +325,9 @@ describe("LazyOptionalField", () => {
 
 describe("LazyValueField", () => {
 	const builder = new SchemaFactory("test");
-	const schema = toFlexSchema(builder.required(builder.string));
-	const rootSchema = schema.rootFieldSchema as FlexFieldSchema<typeof FieldKinds.required>;
+	const schema = builder.required(builder.string);
+	const schemaStored = toStoredSchema(schema);
+	const rootSchema = schemaStored.rootFieldSchema;
 	const initialTree = "Hello world";
 
 	const { context, cursor } = readonlyTreeWithContent({
@@ -354,7 +335,7 @@ describe("LazyValueField", () => {
 		initialTree: singleJsonCursor(initialTree),
 	});
 
-	const field = new LazyValueField(context, rootSchema, cursor, rootFieldAnchor);
+	const field = new LazyValueField(context, rootSchema.kind, cursor, rootFieldAnchor);
 
 	it("atIndex", () => {
 		assert.equal(field.atIndex(0), initialTree);
@@ -362,7 +343,7 @@ describe("LazyValueField", () => {
 
 	it("boxedAt", () => {
 		const boxedResult = field.boxedAt(0) ?? assert.fail();
-		assert.equal(boxedResult.schema, getFlexSchema(stringSchema));
+		assert.equal(boxedResult.schema, stringSchema.identifier);
 		assert.equal(boxedResult.value, initialTree);
 	});
 
@@ -410,11 +391,21 @@ describe("LazySequence", () => {
 	 * Creates a tree with a sequence of numbers at the root, and returns the sequence
 	 */
 	function testSequence(data: number[]) {
-		const { context, cursor } = readonlyTreeWithContent({
-			schema,
-			initialTree: data.map((n) => singleJsonCursor(n)),
+		const content = data.map((n) => singleJsonCursor(n));
+		const forest = forestWithContent({
+			schema: intoStoredSchema(schema),
+			initialTree: content,
 		});
-		return new LazySequence(context, rootSchema, cursor, rootFieldAnchor);
+		const context = getTreeContext(
+			schema.policy,
+			new MockTreeCheckout(forest, {
+				schema: new TreeStoredSchemaRepository(intoStoredSchema(schema)),
+			}),
+			new MockNodeKeyManager(),
+		);
+		const cursor = initializeCursor(context, rootFieldAnchor);
+
+		return new LazySequence(context, rootSchema.stored.kind, cursor, rootFieldAnchor);
 	}
 
 	it("atIndex", () => {
@@ -439,15 +430,15 @@ describe("LazySequence", () => {
 	it("boxedAt", () => {
 		const sequence = testSequence([37, 42]);
 		const boxedResult0 = sequence.boxedAt(0) ?? assert.fail();
-		assert.equal(boxedResult0.schema, getFlexSchema(numberSchema));
+		assert.equal(boxedResult0.schema, numberSchema.identifier);
 		assert.equal(boxedResult0.value, 37);
 
 		const boxedResult1 = sequence.boxedAt(1) ?? assert.fail();
-		assert.equal(boxedResult1.schema, getFlexSchema(numberSchema));
+		assert.equal(boxedResult1.schema, numberSchema.identifier);
 		assert.equal(boxedResult1.value, 42);
 
 		const boxedResultNeg1 = sequence.boxedAt(-1) ?? assert.fail();
-		assert.equal(boxedResultNeg1.schema, getFlexSchema(numberSchema));
+		assert.equal(boxedResultNeg1.schema, numberSchema.identifier);
 		assert.equal(boxedResultNeg1.value, 42);
 
 		assert.equal(sequence.boxedAt(2), undefined);

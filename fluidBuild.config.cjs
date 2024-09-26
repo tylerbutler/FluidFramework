@@ -28,6 +28,7 @@ const fluidScopes = [
  * @type {import("@fluidframework/build-tools").IFluidBuildConfig}
  */
 module.exports = {
+	version: 1,
 	tasks: {
 		"ci:build": {
 			dependsOn: [
@@ -78,10 +79,7 @@ module.exports = {
 		},
 		"build:copy": [],
 		"build:genver": [],
-		// These dependencies for typetests:gen can be removed once build-tools is upgraded to 0.45+.
-		// After that version, typetests are generated from the previous version of the package only, so they have no
-		// dependent tasks.
-		"typetests:gen": ["^tsc"],
+		"typetests:gen": [],
 		"ts2esm": [],
 		"tsc": tscDependsOn,
 		"build:esnext": [...tscDependsOn, "^build:esnext"],
@@ -92,7 +90,7 @@ module.exports = {
 		"build:test:cjs": ["typetests:gen", "tsc", "api-extractor:commonjs"],
 		"build:test:esm": ["typetests:gen", "build:esnext", "api-extractor:esnext"],
 		"api": {
-			dependsOn: ["api-extractor:commonjs", "api-extractor:esnext", "typetests:gen"],
+			dependsOn: ["api-extractor:commonjs", "api-extractor:esnext"],
 			// dependsOn: ["api-extractor:commonjs", "api-extractor:esnext"],
 			script: false,
 		},
@@ -225,7 +223,7 @@ module.exports = {
 			// These should only be files that are not in an pnpm workspace.
 			"common/build/build-common/src/cjs/package.json",
 			"common/build/build-common/src/esm/package.json",
-			"packages/common/client-utils/src/cjs/package.json",
+			"packages/framework/presence/src/cjs/package.json",
 		],
 		// Exclusion per handler
 		handlerExclusions: {
@@ -239,11 +237,7 @@ module.exports = {
 				// TODO: AB#7630 uses lint only ts projects for coverage which don't have representative tsc scripts
 				"^packages/tools/fluid-runner/package.json",
 			],
-			"fluid-build-tasks-tsc": [
-				// This can be removed once the client release group is using build-tools 0.39.0+.
-				// See https://github.com/microsoft/FluidFramework/pull/21238
-				"^packages/test/test-end-to-end-tests/package.json",
-			],
+			"fluid-build-tasks-tsc": [],
 			"html-copyright-file-header": [
 				// Tests generate HTML "snapshot" artifacts
 				"tools/api-markdown-documenter/src/test/snapshots/.*",
@@ -343,6 +337,8 @@ module.exports = {
 				"^examples/data-objects/table-document/",
 				// AB#8147: ./test/EditLog export should be ./internal/... or tagged for support
 				"^experimental/dds/tree/",
+				// comments in api-extractor JSON files fail parsing - PR #22498 to fix
+				"^packages/framework/presence/",
 
 				// Packages with APIs that don't need strict API linting
 				"^build-tools/",

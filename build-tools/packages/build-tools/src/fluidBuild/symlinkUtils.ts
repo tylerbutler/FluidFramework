@@ -3,39 +3,36 @@
  * Licensed under the MIT License.
  */
 
-import * as fs from "fs";
-import * as path from "path";
-import { type IPackage } from "@fluid-tools/build-infrastructure";
+import { type Stats, existsSync } from "node:fs";
+import { lstat, mkdir, realpath, rename, symlink, unlink, writeFile } from "node:fs/promises";
+import * as path from "node:path";
 import * as semver from "semver";
+import { type IPackage } from "@fluid-tools/build-infrastructure";
 
 import { defaultLogger } from "../common/logging";
 import { MonoRepo } from "../common/monoRepo";
-import { type IFluidBuildPackage } from "../common/npmPackage";
-import {
-	existsSync,
-	lstatAsync,
-	mkdirAsync,
-	realpathAsync,
-	renameAsync,
-	symlinkAsync,
-	unlinkAsync,
-	writeFileAsync,
-} from "../common/utils";
 import { FluidRepoBuild } from "./fluidRepoBuild";
 
 import registerDebug from "debug";
+import type { IFluidBuildPackage } from "../common/npmPackage";
 const traceSymLink = registerDebug("fluid-build:symlink");
 
 const { warning } = defaultLogger;
 
+/**
+ * @deprecated symlink-related functionality will be removed in an upcoming release.
+ */
 async function writeAndReplace(outFile: string, bakFile: string, content: string) {
 	traceSymLink(`Writing ${outFile}`);
 	if (existsSync(`${outFile}`)) {
-		await renameAsync(`${outFile}`, `${bakFile}`);
+		await rename(`${outFile}`, `${bakFile}`);
 	}
-	return writeFileAsync(`${outFile}`, content);
+	return writeFile(`${outFile}`, content);
 }
 
+/**
+ * @deprecated symlink-related functionality will be removed in an upcoming release.
+ */
 async function writeBin(dir: string, binName: string, pkgName: string, binPath: string) {
 	const outFile = path.normalize(`${dir}/node_modules/.bin/${binName}`);
 	const bakFile = path.normalize(`${dir}/node_modules/.bin/_${binName}`);
@@ -73,22 +70,28 @@ exit $ret`;
 	await writeAndReplace(`${outFile}`, `${bakFile}`, sh);
 }
 
+/**
+ * @deprecated symlink-related functionality will be removed in an upcoming release.
+ */
 async function revertBin(dir: string, binName: string) {
 	const outFile = path.normalize(`${dir}/node_modules/.bin/${binName}`);
 	const bakFile = path.normalize(`${dir}/node_modules/.bin/_${binName}`);
 	if (process.platform === "win32") {
 		if (existsSync(`${bakFile}.cmd`)) {
-			await renameAsync(`${bakFile}.cmd`, `${outFile}.cmd`);
+			await rename(`${bakFile}.cmd`, `${outFile}.cmd`);
 		}
 	}
 
 	if (existsSync(`${bakFile}`)) {
-		await renameAsync(`${bakFile}`, `${outFile}`);
+		await rename(`${bakFile}`, `${outFile}`);
 	}
 }
 
+/**
+ * @deprecated symlink-related functionality will be removed in an upcoming release.
+ */
 async function fixSymlink(
-	stat: fs.Stats | undefined,
+	stat: Stats | undefined,
 	symlinkPath: string,
 	pkg: IPackage,
 	depBuildPackage: IPackage,
@@ -96,7 +99,7 @@ async function fixSymlink(
 	// Fixing the symlink
 	traceSymLink(`${pkg.nameColored}: Fixing symlink ${symlinkPath}`);
 	if (stat) {
-		await renameAsync(
+		await rename(
 			symlinkPath,
 			path.join(path.dirname(symlinkPath), `_${path.basename(symlinkPath)}`),
 		);
@@ -104,11 +107,11 @@ async function fixSymlink(
 		// Ensure the directory exist
 		const symlinkDir = path.join(symlinkPath, "..");
 		if (!existsSync(symlinkDir)) {
-			await mkdirAsync(symlinkDir, { recursive: true });
+			await mkdir(symlinkDir, { recursive: true });
 		}
 	}
 	// Create symlink
-	await symlinkAsync(depBuildPackage.directory, symlinkPath, "junction");
+	await symlink(depBuildPackage.directory, symlinkPath, "junction");
 
 	if (depBuildPackage.packageJson.bin) {
 		for (const name of Object.keys(depBuildPackage.packageJson.bin)) {
@@ -123,10 +126,10 @@ async function fixSymlink(
 }
 
 async function revertSymlink(symlinkPath: string, pkg: IPackage, depBuildPackage: IPackage) {
-	await unlinkAsync(symlinkPath);
+	await unlink(symlinkPath);
 	const origPath = path.join(path.dirname(symlinkPath), `_${path.basename(symlinkPath)}`);
 	if (existsSync(origPath)) {
-		await renameAsync(origPath, symlinkPath);
+		await rename(origPath, symlinkPath);
 		traceSymLink(`${pkg.nameColored}: Reverted symlink ${symlinkPath}`);
 	} else {
 		traceSymLink(`${pkg.nameColored}: Removed symlink ${symlinkPath}`);
@@ -139,11 +142,17 @@ async function revertSymlink(symlinkPath: string, pkg: IPackage, depBuildPackage
 	}
 }
 
+/**
+ * @deprecated symlink-related functionality will be removed in an upcoming release.
+ */
 export interface ISymlinkOptions {
 	symlink: boolean;
 	fullSymlink: boolean | undefined;
 }
 
+/**
+ * @deprecated symlink-related functionality will be removed in an upcoming release.
+ */
 export async function symlinkPackage(
 	repo: FluidRepoBuild,
 	pkg: IFluidBuildPackage,
@@ -188,7 +197,7 @@ export async function symlinkPackage(
 				: undefined;
 
 			try {
-				let stat: fs.Stats | undefined;
+				let stat: Stats | undefined;
 				let symlinkPath: string | undefined = undefined;
 				if (existsSync(localSymlinkPath)) {
 					symlinkPath = localSymlinkPath;
@@ -199,9 +208,9 @@ export async function symlinkPackage(
 				}
 
 				if (symlinkPath) {
-					stat = await lstatAsync(symlinkPath);
+					stat = await lstat(symlinkPath);
 					if (stat.isSymbolicLink()) {
-						const realPath = await realpathAsync(symlinkPath);
+						const realPath = await realpath(symlinkPath);
 						if (realPath === depBuildPackage.directory) {
 							// Have the correct symlink, continue
 							if (!sameMonoRepo) {
