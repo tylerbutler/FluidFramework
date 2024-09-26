@@ -6,11 +6,11 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import * as path from "node:path";
 import {
-	createPackageManager,
 	type IPackage,
 	type IPackageManager,
 	type PackageName,
 	type ReleaseGroupName,
+	createPackageManager,
 } from "@fluid-tools/build-infrastructure";
 import { queue } from "async";
 import * as chalk from "chalk";

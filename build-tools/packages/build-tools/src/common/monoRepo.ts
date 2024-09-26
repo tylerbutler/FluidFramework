@@ -14,8 +14,8 @@ import { Logger, defaultLogger } from "./logging";
 import { type IFluidBuildPackage, Package } from "./npmPackage";
 import { execWithErrorAsync, rimrafWithErrorAsync } from "./utils";
 
+import { type IPackageManager, createPackageManager } from "@fluid-tools/build-infrastructure";
 import registerDebug from "debug";
-import { createPackageManager, type IPackageManager } from "@fluid-tools/build-infrastructure";
 const traceInit = registerDebug("fluid-build:init");
 
 // export type PackageManager = "npm" | "pnpm" | "yarn";
