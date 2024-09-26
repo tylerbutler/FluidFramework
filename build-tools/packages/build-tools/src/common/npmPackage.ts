@@ -5,10 +5,12 @@
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import * as path from "node:path";
-import type {
-	IPackage,
-	PackageName,
-	ReleaseGroupName,
+import {
+	createPackageManager,
+	type IPackage,
+	type IPackageManager,
+	type PackageName,
+	type ReleaseGroupName,
 } from "@fluid-tools/build-infrastructure";
 import { queue } from "async";
 import * as chalk from "chalk";
@@ -21,7 +23,7 @@ import type { SetRequired, PackageJson as StandardPackageJson } from "type-fest"
 import { type IFluidBuildConfig } from "../fluidBuild/fluidBuildConfig";
 import { options } from "../fluidBuild/options";
 import { defaultLogger } from "./logging";
-import { MonoRepo, PackageManager } from "./monoRepo";
+import { MonoRepo } from "./monoRepo";
 import {
 	ExecAsyncResult,
 	execWithErrorAsync,
@@ -119,7 +121,7 @@ export class Package implements IFluidBuildPackage {
 	private _matched: boolean = false;
 
 	private _indent: string;
-	public readonly packageManager: PackageManager;
+	public readonly packageManager: IPackageManager;
 	public get packageJson(): PackageJson {
 		return this._packageJson;
 	}
@@ -147,10 +149,10 @@ export class Package implements IFluidBuildPackage {
 		const pnpmWorkspacePath = path.join(this.directory, "pnpm-workspace.yaml");
 		const yarnLockPath = path.join(this.directory, "yarn.lock");
 		this.packageManager = existsSync(pnpmWorkspacePath)
-			? "pnpm"
+			? createPackageManager("pnpm")
 			: existsSync(yarnLockPath)
-				? "yarn"
-				: "npm";
+				? createPackageManager("yarn")
+				: createPackageManager("npm");
 		traceInit(`${this.nameColored}: Package loaded`);
 		Object.assign(this, additionalProperties);
 	}
@@ -264,11 +266,7 @@ export class Package implements IFluidBuildPackage {
 	}
 
 	public get installCommand(): string {
-		return this.packageManager === "pnpm"
-			? "pnpm i"
-			: this.packageManager === "yarn"
-				? "npm run install-strict"
-				: "npm i";
+		return `${this.packageManager.name} ${this.packageManager.installCommand(false)}`;
 	}
 
 	private get color() {

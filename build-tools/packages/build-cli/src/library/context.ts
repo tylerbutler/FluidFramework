@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import path from "node:path";
 import { PackageName as PackageNameApi } from "@rushstack/node-core-library";
 import * as semver from "semver";
 
@@ -23,15 +24,10 @@ import {
 	getFluidBuildConfig,
 } from "@fluidframework/build-tools";
 
-import path from "node:path";
+// eslint-disable-next-line import/no-internal-modules
 import { getFluidRepoLayout } from "../../../build-infrastructure/lib/config.js";
 import { type FlubConfig, getFlubConfig } from "../config.js";
-import {
-	type Package,
-	type ReleaseGroup,
-	type ReleaseGroupOrPackage,
-	isReleaseGroup,
-} from "../releaseGroups.js";
+import { type Package, type ReleaseGroup, isReleaseGroup } from "../releaseGroups.js";
 
 /**
  * Represents a release version and its release date, if applicable.
@@ -160,12 +156,11 @@ export class Context {
 	 * @param releaseGroup - The release group or package to filter by.
 	 * @returns An array of packages that do not belong to the release group.
 	 */
-	public packagesNotInReleaseGroup(releaseGroup: ReleaseGroup | ReleaseGroupName): IPackage[] {
+	public packagesNotInReleaseGroup(releaseGroup: ReleaseGroup): IPackage[] {
 		const packages: Package[] = [];
-		const filterName = typeof releaseGroup === "string" ? releaseGroup : releaseGroup.name;
 
 		for (const rg of this.repo.releaseGroups.values()) {
-			if (rg.name !== filterName) {
+			if (rg.name !== releaseGroup.name) {
 				packages.push(...rg.packages);
 			}
 		}

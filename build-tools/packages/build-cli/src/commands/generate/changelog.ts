@@ -6,12 +6,12 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fromInternalScheme, isInternalVersionScheme } from "@fluid-tools/version-tools";
-import { FluidRepo, Package } from "@fluidframework/build-tools";
 import { ux } from "@oclif/core";
 import { command as execCommand } from "execa";
 import { inc } from "semver";
 import { CleanOptions } from "simple-git";
 
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import { checkFlags, releaseGroupFlag, semverFlag } from "../../flags.js";
 import {
 	BaseCommand,
@@ -19,7 +19,6 @@ import {
 	Repository,
 	loadChangesets,
 } from "../../library/index.js";
-import { isReleaseGroup } from "../../releaseGroups.js";
 
 async function replaceInFile(
 	search: string,
@@ -128,7 +127,7 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 			this.error(`Release group ${releaseGroup} not found in repo config`, { exit: 1 });
 		}
 
-		const releaseGroupRoot = monorepo?.directory ?? gitRoot;
+		const releaseGroupRoot = rg.rootPackage?.directory ?? gitRoot;
 
 		// Strips additional custom metadata from the source files before we call `changeset version`,
 		// because the changeset tools - like @changesets/cli - only work on canonical changesets.
@@ -139,19 +138,18 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 		await execCommand("pnpm exec changeset version", { cwd: releaseGroupRoot });
 		ux.action.stop();
 
-		const packagesToCheck = context.packagesInReleaseGroup(releaseGroup);
 		// isReleaseGroup(releaseGroup)
 		// 	? context.packagesInReleaseGroup(releaseGroup)
 		// 	: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		// 		[context.fullPackageMap.get(releaseGroup)!];
 
-		// if (install) {
-		// 	const installed = await FluidRepo.ensureInstalled(packagesToCheck);
+		if (install) {
+			const installed = await rg.workspace.install(true);
 
-		// 	if (!installed) {
-		// 		this.error(`Error installing dependencies for: ${releaseGroup}`);
-		// 	}
-		// }
+			if (!installed) {
+				this.error(`Error installing dependencies for: ${releaseGroup}`);
+			}
+		}
 
 		this.repo = new Repository({ baseDir: gitRoot });
 
@@ -162,6 +160,7 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 		await this.repo.gitClient.raw("restore", "**package.json");
 
 		// Calls processPackage on all packages.
+		const packagesToCheck = context.packagesInReleaseGroup(rg.name);
 		ux.action.start("Processing changelog updates");
 		const processPromises: Promise<void>[] = [];
 		for (const pkg of packagesToCheck) {

@@ -244,7 +244,7 @@ export default class GenerateReleaseNotesCommand extends BaseCommand<
 			await processor.process(`${header}\n\n${intro}\n\n${body.toString()}\n\n${footer}`),
 		);
 
-		const outputPath = path.join(context.repo.resolvedRoot, flags.outFile);
+		const outputPath = path.join(context.repo.root, flags.outFile);
 		this.info(`Writing output file: ${outputPath}`);
 		await writeFile(
 			outputPath,
