@@ -10,7 +10,7 @@ import * as semver from "semver";
 import * as assert from "assert";
 import registerDebug from "debug";
 import { defaultLogger } from "../common/logging";
-import { Package } from "../common/npmPackage";
+import { type IFluidBuildPackage } from "../common/npmPackage";
 import { Timer } from "../common/timer";
 import { FileHashCache } from "./fileHashCache";
 import {
@@ -65,7 +65,7 @@ class BuildContext {
 	public readonly taskStats = new TaskStats();
 	public readonly failedTaskLines: string[] = [];
 	constructor(
-		public readonly repoPackageMap: Map<string, Package>,
+		public readonly repoPackageMap: Map<string, IFluidBuildPackage>,
 		public readonly workerPool?: WorkerPool,
 	) {}
 }
@@ -85,7 +85,7 @@ export class BuildPackage {
 
 	constructor(
 		public readonly buildContext: BuildContext,
-		public readonly pkg: Package,
+		public readonly pkg: IFluidBuildPackage,
 		globalTaskDefinitions: TaskDefinitions,
 	) {
 		this._taskDefinitions = getTaskDefinitions(
@@ -473,15 +473,15 @@ export class BuildPackage {
  */
 export class BuildGraph {
 	private matchedPackages = 0;
-	private readonly buildPackages = new Map<Package, BuildPackage>();
+	private readonly buildPackages = new Map<IFluidBuildPackage, BuildPackage>();
 	private readonly buildContext;
 
 	public constructor(
-		packages: Map<string, Package>,
-		releaseGroupPackages: Package[],
+		packages: Map<string, IFluidBuildPackage>,
+		releaseGroupPackages: IFluidBuildPackage[],
 		private readonly buildTaskNames: string[],
 		globalTaskDefinitions: TaskDefinitionsOnDisk | undefined,
-		getDepFilter: (pkg: Package) => (dep: Package) => boolean,
+		getDepFilter: (pkg: IFluidBuildPackage) => (dep: IFluidBuildPackage) => boolean,
 	) {
 		this.buildContext = new BuildContext(
 			packages,
@@ -588,10 +588,10 @@ export class BuildGraph {
 	}
 
 	private getBuildPackage(
-		pkg: Package,
+		pkg: IFluidBuildPackage,
 		globalTaskDefinitions: TaskDefinitions,
 		pendingInitDep: BuildPackage[],
-	) {
+	): BuildPackage {
 		let buildPackage = this.buildPackages.get(pkg);
 		if (buildPackage === undefined) {
 			try {
@@ -610,10 +610,10 @@ export class BuildGraph {
 	}
 
 	private initializePackages(
-		packages: Map<string, Package>,
-		releaseGroupPackages: Package[],
+		packages: Map<string, IFluidBuildPackage>,
+		releaseGroupPackages: IFluidBuildPackage[],
 		globalTaskDefinitionsOnDisk: TaskDefinitionsOnDisk | undefined,
-		getDepFilter: (pkg: Package) => (dep: Package) => boolean,
+		getDepFilter: (pkg: IFluidBuildPackage) => (dep: IFluidBuildPackage) => boolean,
 	) {
 		const globalTaskDefinitions = normalizeGlobalTaskDefinitions(globalTaskDefinitionsOnDisk);
 		const pendingInitDep: BuildPackage[] = [];
