@@ -6,8 +6,8 @@
 import { type Stats, existsSync } from "node:fs";
 import { lstat, mkdir, realpath, rename, symlink, unlink, writeFile } from "node:fs/promises";
 import * as path from "node:path";
-import * as semver from "semver";
 import { type IPackage } from "@fluid-tools/build-infrastructure";
+import * as semver from "semver";
 
 import { defaultLogger } from "../common/logging";
 import { MonoRepo } from "../common/monoRepo";

@@ -4,8 +4,8 @@
  */
 
 import { type IPackage } from "@fluid-tools/build-infrastructure";
-import { readFile } from "fs/promises";
 import registerDebug from "debug";
+import { readFile } from "fs/promises";
 
 const traceDepCheck = registerDebug("fluid-build:depCheck");
 
