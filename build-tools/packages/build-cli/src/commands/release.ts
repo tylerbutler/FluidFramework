@@ -87,7 +87,7 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 				exit: 1,
 			});
 		}
-		const releaseGroup = packageOrReleaseGroup.name;
+		const releaseGroupName = packageOrReleaseGroup.name;
 		const releaseVersion = packageOrReleaseGroup.version;
 
 		// eslint-disable-next-line no-warning-comments
@@ -106,14 +106,14 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 				: undefined;
 
 		const branchPolicyCheckDefault = getRunPolicyCheckDefault(
-			releaseGroup,
+			releaseGroupName,
 			context.originalBranchName,
 		);
 
 		this.handler = new FluidReleaseStateHandler(machine, logger);
 
 		this.data = {
-			releaseGroup,
+			packageOrReleaseGroup,
 			releaseVersion,
 			context,
 			promptWriter: new PromptWriter(logger),

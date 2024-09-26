@@ -8,7 +8,6 @@ import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import { Package } from "@fluidframework/build-tools";
 import { type PackageSelectionDefault, filterFlags, selectionFlags } from "./flags.js";
 import { Context, Repository } from "./library/index.js";
-import { ReleaseGroup, knownReleaseGroups } from "./releaseGroups.js";
 
 export const ALL_FILTER = "*";
 
@@ -194,7 +193,7 @@ const selectPackagesFromContext = async (
 		);
 		selected.push(
 			...packages.map((p) => {
-				const pkg = Package.load(p.packageJsonFileName, "none", undefined, {
+				const pkg = Package.load(p.packageJsonFilePath, "none", undefined, {
 					kind: "packageFromDirectory" as PackageKind,
 				});
 				return pkg;
@@ -221,7 +220,7 @@ const selectPackagesFromContext = async (
 	if (selection.independentPackages === true) {
 		for (const pkg of context.independentPackages) {
 			selected.push(
-				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, {
+				Package.load(pkg.packageJsonFilePath, pkg.group, pkg.monoRepo, {
 					kind: "independentPackage",
 				}),
 			);
@@ -232,7 +231,7 @@ const selectPackagesFromContext = async (
 	for (const rg of selection.releaseGroups) {
 		for (const pkg of context.packagesInReleaseGroup(rg)) {
 			selected.push(
-				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, {
+				Package.load(pkg.packageJsonFilePath, pkg.group, pkg.monoRepo, {
 					kind: "releaseGroupChildPackage",
 				}),
 			);
@@ -283,7 +282,7 @@ export async function selectAndFilterPackages(
 /**
  * Convenience type that extracts only the properties of a package that are needed for filtering.
  */
-type FilterablePackage = Pick<Package, "name" | "private">;
+type FilterablePackage = Omit<Package, "name"> & { name: string; private: Package["private"] };
 
 /**
  * Filters a list of packages by the filter criteria.

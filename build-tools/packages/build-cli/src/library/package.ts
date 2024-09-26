@@ -7,13 +7,12 @@ import { strict as assert } from "node:assert";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
-	type IFluidRepo,
 	type IPackage,
+	type IReleaseGroup,
 	type PackageJson,
 	type PackageName,
 	type ReleaseGroupName,
 	isIPackage,
-	loadFluidRepo,
 } from "@fluid-tools/build-infrastructure";
 import {
 	InterdependencyRange,
@@ -49,7 +48,7 @@ import {
 	PackageWithKind,
 	selectAndFilterPackages,
 } from "../filter.js";
-import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../releaseGroups.js";
+import { type ReleaseGroupOrPackage, isReleaseGroup } from "../releaseGroups.js";
 import { DependencyUpdateType } from "./bump.js";
 import { zip } from "./collections.js";
 import { Context, VersionDetails } from "./context.js";
@@ -80,8 +79,8 @@ export interface PackageVersionMap {
 // eslint-disable-next-line max-params
 export async function npmCheckUpdates(
 	context: Context,
-	releaseGroup: ReleaseGroup | ReleasePackage | undefined,
-	depsToUpdate: ReleasePackage[] | RegExp[],
+	releaseGroup: ReleaseGroupOrPackage | undefined,
+	depsToUpdate: PackageName[] | RegExp[],
 	releaseGroupFilter: ReleaseGroupName | undefined,
 	depUpdateType: DependencyUpdateType,
 	prerelease = false,
@@ -110,12 +109,12 @@ export async function npmCheckUpdates(
 				? [releaseGroup.name]
 				: undefined;
 
-	const packagesToCheck =
+	const packagesToCheck: IPackage[] =
 		releaseGroup === undefined // run on the whole repo
 			? [...context.independentPackages] // include all independent packages
 			: isReleaseGroup(releaseGroup)
 				? [] // run on a release group so no independent packages should be included
-				: [context.repo.packages.get(releaseGroup)]; // the releaseGroup argument must be a package
+				: [releaseGroup]; // the releaseGroup argument must be a package
 
 	if (releaseGroupsToCheck !== undefined) {
 		for (const group of releaseGroupsToCheck) {
@@ -183,7 +182,7 @@ export async function npmCheckUpdates(
 				const jsonPath = path.join(repoPath, pkgJsonPath);
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 				const { name } = readJsonSync(jsonPath);
-				const pkg = context.repo.packages.get(name);
+				const pkg = context.repo.packages.get(name as PackageName);
 				if (pkg === undefined) {
 					log?.warning(`Package not found in context: ${name}`);
 					continue;
@@ -202,7 +201,7 @@ export async function npmCheckUpdates(
 			const jsonPath = path.join(repoPath, glob, "package.json");
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const { name } = readJsonSync(jsonPath);
-			const pkg = context.repo.packages.get(name);
+			const pkg = context.repo.packages.get(name as PackageName);
 			if (pkg === undefined) {
 				log?.warning(`Package not found in context: ${name}`);
 				continue;
@@ -238,7 +237,7 @@ export interface PreReleaseDependencies {
 	/**
 	 * A map of release packages to a version string. Only includes independent packages.
 	 */
-	packages: Map<ReleasePackage, string>;
+	packages: Map<PackageName, string>;
 	/**
 	 * True if there are no pre-release dependencies. False otherwise.
 	 */
@@ -254,28 +253,23 @@ export interface PreReleaseDependencies {
  */
 export async function getPreReleaseDependencies(
 	context: Context,
-	releaseGroup: ReleaseGroup | ReleaseGroupName, //| IPackage,
+	releaseGroup: ReleaseGroupOrPackage,
 ): Promise<PreReleaseDependencies> {
-	const prereleasePackages = new Map<ReleasePackage, string>();
+	const prereleasePackages = new Map<PackageName, string>();
 	const prereleaseGroups = new Map<ReleaseGroupName, string>();
 	const packagesToCheck: IPackage[] = [];
 
 	/**
 	 * Array of package names; dependencies on these packages will be updated.
 	 */
-	const updateDependenciesOnThesePackages: ReleasePackage[] = [];
+	const updateDependenciesOnThesePackages: PackageName[] = [];
 
-	if (typeof releaseGroup === "string") {
-		const rg = context.repo.releaseGroups.get(releaseGroup)!;
+	if (isReleaseGroup(releaseGroup)) {
+		const rg = releaseGroup;
 		// const name = releaseGroup.name;
 		packagesToCheck.push(...rg.packages);
 		updateDependenciesOnThesePackages.push(
 			...context.packagesNotInReleaseGroup(rg).map((p) => p.name),
-		);
-	} else {
-		packagesToCheck.push(...releaseGroup.packages);
-		updateDependenciesOnThesePackages.push(
-			...context.packagesNotInReleaseGroup(releaseGroup).map((p) => p.name),
 		);
 	}
 
@@ -325,18 +319,13 @@ export async function getPreReleaseDependencies(
  */
 export async function isReleased(
 	context: Context,
-	releaseGroupOrPackage: ReleaseGroupName,
+	releaseGroupOrPackage: ReleaseGroupOrPackage,
 	version: string,
 	log?: Logger,
 ): Promise<boolean> {
 	await context.gitRepo.fetchTags();
 
 	const tagName = generateReleaseGitTagName(releaseGroupOrPackage, version);
-	if (typeof releaseGroupOrPackage === "string" && isReleaseGroup(releaseGroupOrPackage)) {
-		// eslint-disable-next-line no-param-reassign, @typescript-eslint/no-non-null-assertion
-		releaseGroupOrPackage = context.repo.releaseGroups.get(releaseGroupOrPackage)!;
-	}
-
 	log?.verbose(`Checking for tag '${tagName}'`);
 	const rawTag = await context.gitRepo.getTags(tagName);
 	return rawTag.trim() === tagName;
@@ -350,20 +339,18 @@ export async function isReleased(
  * @returns The generated tag name.
  */
 export function generateReleaseGitTagName(
-	releaseGroupOrPackage: ReleaseGroupName | PackageName,
+	releaseGroupOrPackage: ReleaseGroupOrPackage,
 	version?: string,
 ): string {
 	let tagName = "";
 
-	if (releaseGroupOrPackage instanceof MonoRepo) {
-		const kindLowerCase = releaseGroupOrPackage.kind.toLowerCase();
-		tagName = `${kindLowerCase}_v${version ?? releaseGroupOrPackage.version}`;
-	} else if (releaseGroupOrPackage instanceof Package) {
+	if (isReleaseGroup(releaseGroupOrPackage)) {
+		const nameLowerCase = releaseGroupOrPackage.name.toLowerCase();
+		tagName = `${nameLowerCase}_v${version ?? releaseGroupOrPackage.version}`;
+	} else {
 		tagName = `${PackageNameApi.getUnscopedName(releaseGroupOrPackage.name)}_v${
 			version ?? releaseGroupOrPackage.version
 		}`;
-	} else {
-		tagName = `${PackageNameApi.getUnscopedName(releaseGroupOrPackage)}_v${version}`;
 	}
 
 	return tagName;
@@ -426,19 +413,22 @@ export function filterVersionsOlderThan(
  */
 export function getFluidDependencies(
 	context: Context,
-	releaseGroupOrPackage: ReleaseGroup | PackageName,
-): [releaseGroups: PackageVersionMap, packages: PackageVersionMap] {
-	const releaseGroups: PackageVersionMap = {};
-	const packages: PackageVersionMap = {};
+	releaseGroupOrPackage: ReleaseGroupOrPackage,
+): [
+	releaseGroups: Map<ReleaseGroupName, ReleaseVersion>,
+	packages: Map<PackageName, ReleaseVersion>,
+] {
+	const releaseGroups: Map<ReleaseGroupName, ReleaseVersion> = new Map();
+	const packages: Map<PackageName, ReleaseVersion> = new Map();
 	let packagesToCheck: IPackage[];
 
 	if (isReleaseGroup(releaseGroupOrPackage)) {
 		packagesToCheck = context.packagesInReleaseGroup(releaseGroupOrPackage.name);
 	} else {
-		const independentPackage = context.repo.packages.get(releaseGroupOrPackage);
+		const independentPackage = releaseGroupOrPackage;
 		assert(
 			independentPackage !== undefined,
-			`Package not found in context: ${releaseGroupOrPackage}`,
+			`Package not found in context: ${releaseGroupOrPackage.name}`,
 		);
 		packagesToCheck = [independentPackage];
 	}
@@ -459,12 +449,12 @@ export function getFluidDependencies(
 				throw new Error(`Failed to parse depVersion: ${dep.version}`);
 			}
 
-			if (pkg.monoRepo !== undefined) {
-				releaseGroups[pkg.monoRepo.kind] = newVersion.version;
+			if (pkg.releaseGroup !== undefined) {
+				releaseGroups.set(pkg.releaseGroup, newVersion.version);
 				continue;
 			}
 
-			packages[pkg.name] = newVersion.version;
+			packages.set(pkg.name, newVersion.version);
 		}
 	}
 
@@ -472,7 +462,7 @@ export function getFluidDependencies(
 }
 
 export interface DependencyWithRange {
-	pkg: Package;
+	pkg: IPackage;
 	range: InterdependencyRange;
 }
 
@@ -488,7 +478,7 @@ export interface DependencyWithRange {
  */
 export async function setVersion(
 	context: Context,
-	releaseGroupOrPackage: MonoRepo | Package,
+	releaseGroupOrPackage: ReleaseGroupOrPackage,
 	version: semver.SemVer,
 	interdependencyRange: InterdependencyRange = "^",
 	log?: Logger,
@@ -501,9 +491,9 @@ export async function setVersion(
 	let options: execa.Options | undefined;
 
 	// Run npm version in each package to set its version in package.json. Also regenerates packageVersion.ts if needed.
-	if (releaseGroupOrPackage instanceof MonoRepo) {
+	if (isReleaseGroup(releaseGroupOrPackage)) {
 		options = {
-			cwd: releaseGroupOrPackage.repoPath,
+			cwd: releaseGroupOrPackage.workspace.directory,
 			stdio: "inherit",
 			shell: true,
 		};
@@ -552,14 +542,14 @@ export async function setVersion(
 		}
 	}
 
-	if (releaseGroupOrPackage instanceof Package) {
+	if (isIPackage(releaseGroupOrPackage)) {
 		// Return early; packages only need to be bumped using npm. The rest of the logic is only for release groups.
 		return;
 	}
 
 	// Since we don't use lerna to bump, manually updates the lerna.json file. Also updates the root package.json for good
 	// measure. Long term we may consider removing lerna.json and using the root package version as the "source of truth".
-	const lernaPath = path.join(releaseGroupOrPackage.repoPath, "lerna.json");
+	const lernaPath = path.join(releaseGroupOrPackage.workspace.directory, "lerna.json");
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const lernaJson = await readJson(lernaPath);
 
@@ -568,9 +558,12 @@ export async function setVersion(
 	const output = JSON.stringify(lernaJson);
 	await writeFile(lernaPath, output);
 
-	updatePackageJsonFile(path.join(releaseGroupOrPackage.repoPath, "package.json"), (json) => {
-		json.version = translatedVersion.version;
-	});
+	updatePackageJsonFile(
+		path.join(releaseGroupOrPackage.workspace.directory, "package.json"),
+		(json) => {
+			json.version = translatedVersion.version;
+		},
+	);
 
 	context.repo.reload();
 
@@ -673,7 +666,7 @@ function getDependenciesRecord(
  * example, when setting release group package versions in the CI release pipeline.
  */
 async function setPackageDependencies(
-	pkg: Package,
+	pkg: IPackage,
 	dependencyVersionMap: Map<string, DependencyWithRange>,
 	updateWithinSameReleaseGroup = false,
 	writeChanges = true,
@@ -683,7 +676,7 @@ async function setPackageDependencies(
 	for (const { name, depClass } of pkg.combinedDependencies) {
 		const dep = dependencyVersionMap.get(name);
 		if (dep !== undefined) {
-			const isSameReleaseGroup = MonoRepo.isSame(dep.pkg.monoRepo, pkg.monoRepo);
+			const isSameReleaseGroup = dep.pkg.releaseGroup === pkg.releaseGroup;
 			if (!isSameReleaseGroup || (updateWithinSameReleaseGroup && isSameReleaseGroup)) {
 				const dependencies = getDependenciesRecord(pkg.packageJson, depClass);
 				if (dependencies === undefined) {
@@ -708,7 +701,7 @@ async function setPackageDependencies(
 }
 
 async function findDepUpdates(
-	dependencies: ReleasePackage[],
+	dependencies: PackageName[],
 	prerelease: boolean,
 	log?: Logger,
 ): Promise<PackageVersionMap> {
@@ -770,9 +763,9 @@ async function findDepUpdates(
 // eslint-disable-next-line max-params
 export async function npmCheckUpdatesHomegrown(
 	context: Context,
-	releaseGroup: ReleaseGroup | ReleasePackage | undefined,
-	depsToUpdate: ReleasePackage[],
-	releaseGroupFilter: ReleaseGroup | undefined,
+	releaseGroup: IReleaseGroup | undefined,
+	depsToUpdate: PackageName[],
+	releaseGroupFilter: IReleaseGroup | undefined,
 	prerelease = false,
 	writeChanges = true,
 	log?: Logger,
@@ -780,9 +773,9 @@ export async function npmCheckUpdatesHomegrown(
 	updatedPackages: PackageWithKind[];
 	updatedDependencies: PackageVersionMap;
 }> {
-	if (releaseGroupFilter !== undefined && releaseGroup === releaseGroupFilter) {
+	if (releaseGroupFilter !== undefined && releaseGroup?.name === releaseGroupFilter.name) {
 		throw new Error(
-			`releaseGroup and releaseGroupFilter are the same (${releaseGroup}). They must be different values.`,
+			`releaseGroup and releaseGroupFilter are the same (${releaseGroup.name}). They must be different values.`,
 		);
 	}
 	log?.info(`Calculating dependency updates...`);
@@ -802,13 +795,15 @@ export async function npmCheckUpdatesHomegrown(
 				AllPackagesSelectionCriteria
 			: {
 					independentPackages: false,
-					releaseGroups: [releaseGroup as ReleaseGroup],
-					releaseGroupRoots: [releaseGroup as ReleaseGroup],
+					releaseGroups: [releaseGroup.name],
+					releaseGroupRoots: [releaseGroup.name],
 				};
 
 	// Remove the filtered release group from the list if needed
 	if (releaseGroupFilter !== undefined) {
-		const indexOfFilteredGroup = selectionCriteria.releaseGroups.indexOf(releaseGroupFilter);
+		const indexOfFilteredGroup = selectionCriteria.releaseGroups.indexOf(
+			releaseGroupFilter.name,
+		);
 		if (indexOfFilteredGroup !== -1) {
 			selectionCriteria.releaseGroups.splice(indexOfFilteredGroup, 1);
 			selectionCriteria.releaseGroupRoots.splice(indexOfFilteredGroup, 1);
@@ -848,7 +843,7 @@ export async function npmCheckUpdatesHomegrown(
 	// eslint-disable-next-line @typescript-eslint/no-base-to-string
 	log?.verbose(`Calculated new range: ${range}`);
 	for (const dep of Object.keys(dependencyVersionMap)) {
-		const pkg = context.fullPackageMap.get(dep);
+		const pkg = context.repo.packages.get(dep as PackageName);
 
 		if (pkg === undefined) {
 			log?.warning(`Package not found: ${dep}. Skipping.`);

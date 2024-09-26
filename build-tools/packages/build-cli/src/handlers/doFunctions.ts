@@ -43,7 +43,7 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup } = data;
+	const { context, packageOrReleaseGroup: releaseGroup } = data;
 
 	const { releaseGroups, packages, isEmpty } = await getPreReleaseDependencies(
 		context,
@@ -156,7 +156,13 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { bumpType, context, releaseGroup, releaseVersion, shouldInstall } = data;
+	const {
+		bumpType,
+		context,
+		packageOrReleaseGroup: releaseGroup,
+		releaseVersion,
+		shouldInstall,
+	} = data;
 
 	const rgRepo = isReleaseGroup(releaseGroup)
 		? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

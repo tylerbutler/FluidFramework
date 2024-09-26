@@ -11,11 +11,10 @@ import { Context } from "../library/index.js";
 
 import { ReleaseVersion, VersionBumpType, VersionScheme } from "@fluid-tools/version-tools";
 
-import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import { InstructionalPromptWriter } from "../instructionalPromptWriter.js";
 import { CommandLogger } from "../logging.js";
 import { MachineState } from "../machines/index.js";
-import { ReleaseGroup, ReleasePackage } from "../releaseGroups.js";
+import { type ReleaseGroupOrPackage } from "../releaseGroups.js";
 import { askForReleaseType } from "./askFunctions.js";
 import {
 	checkAssertTagging,
@@ -66,7 +65,7 @@ export interface FluidReleaseStateHandlerData {
 	/**
 	 * The release group or package that is being released.
 	 */
-	releaseGroup: ReleaseGroupName;
+	packageOrReleaseGroup: ReleaseGroupOrPackage;
 
 	/**
 	 * The version scheme used by the release group or package being released.

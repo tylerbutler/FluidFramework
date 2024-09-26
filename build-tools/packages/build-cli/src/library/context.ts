@@ -27,7 +27,12 @@ import {
 // eslint-disable-next-line import/no-internal-modules
 import { getFluidRepoLayout } from "../../../build-infrastructure/lib/config.js";
 import { type FlubConfig, getFlubConfig } from "../config.js";
-import { type Package, type ReleaseGroup, isReleaseGroup } from "../releaseGroups.js";
+import {
+	type Package,
+	type ReleaseGroup,
+	type ReleaseGroupOrPackage,
+	isReleaseGroup,
+} from "../releaseGroups.js";
 
 /**
  * Represents a release version and its release date, if applicable.
@@ -223,11 +228,11 @@ export class Context {
 	 * @returns An array of all all the tags for the release group or package.
 	 */
 	public async getTagsForReleaseGroup(
-		releaseGroupOrPackage: PackageName | ReleaseGroupName,
+		releaseGroupOrPackage: ReleaseGroupOrPackage,
 	): Promise<string[]> {
 		const prefix = isReleaseGroup(releaseGroupOrPackage)
 			? releaseGroupOrPackage.name.toLowerCase()
-			: PackageNameApi.getUnscopedName(releaseGroupOrPackage as string);
+			: PackageNameApi.getUnscopedName(releaseGroupOrPackage.name);
 
 		const cacheEntry = this._tags.get(prefix);
 		if (cacheEntry !== undefined) {
@@ -249,9 +254,9 @@ export class Context {
 	 * @returns An array of {@link ReleaseDetails} containing the version and date for each version.
 	 */
 	public async getAllVersions(
-		releaseGroupOrPackage: ReleaseGroupName | PackageName,
+		releaseGroupOrPackage: ReleaseGroupOrPackage,
 	): Promise<VersionDetails[] | undefined> {
-		const cacheEntry = this._versions.get(releaseGroupOrPackage);
+		const cacheEntry = this._versions.get(releaseGroupOrPackage.name);
 		if (cacheEntry !== undefined) {
 			return cacheEntry;
 		}
@@ -277,7 +282,7 @@ export class Context {
 			toReturn.push({ version, date });
 		}
 
-		this._versions.set(releaseGroupOrPackage, toReturn);
+		this._versions.set(releaseGroupOrPackage.name, toReturn);
 		return toReturn;
 	}
 

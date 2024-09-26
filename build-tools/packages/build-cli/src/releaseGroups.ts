@@ -58,7 +58,7 @@ export { isIReleaseGroup as isReleaseGroup } from "@fluid-tools/build-infrastruc
  */
 export type ReleaseSource = "direct" | "releaseBranches" | "interactive";
 
-export type ReleaseGroupOrPackage = ReleaseGroup | Package;
+export type ReleaseGroupOrPackage = IReleaseGroup | IPackage;
 
 // export function isReleaseGroupOrPackage(toCheck: ReleaseGroupOrPackage): toCheck is ReleaseGroup | toCheck is Package {
 

@@ -17,10 +17,9 @@ import {
 
 import { detectBumpType } from "@fluid-tools/version-tools";
 
-import type { PackageName, ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import { findPackageOrReleaseGroup } from "../../args.js";
 import { packageSelectorFlag, releaseGroupFlag } from "../../flags.js";
-import { ReleaseGroup, ReleasePackage } from "../../releaseGroups.js";
+import { type ReleaseGroupOrPackage } from "../../releaseGroups.js";
 import { ReleaseReportBaseCommand, ReleaseSelectionMode } from "./report.js";
 
 const DEFAULT_MIN_VERSION = "0.0.0";
@@ -73,7 +72,7 @@ export default class ReleaseHistoryCommand extends ReleaseReportBaseCommand<
 	static readonly enableJsonFlag = true;
 
 	readonly defaultMode: ReleaseSelectionMode = "date";
-	releaseGroupName: ReleaseGroupName | PackageName | undefined;
+	releaseGroupOrPackage: ReleaseGroupOrPackage | undefined;
 
 	public async run(): Promise<{ reports: ReleaseReport[] }> {
 		const context = await this.getContext();
@@ -119,7 +118,7 @@ export default class ReleaseHistoryCommand extends ReleaseReportBaseCommand<
 	 * Generates table data for all versions of a package/release group.
 	 */
 	private generateAllReleasesTable(
-		pkgOrReleaseGroup: ReleasePackage | ReleaseGroup,
+		pkgOrReleaseGroup: ReleaseGroupOrPackage,
 		versions: VersionDetails[],
 	): string[][] {
 		const tableData: string[][] = [];

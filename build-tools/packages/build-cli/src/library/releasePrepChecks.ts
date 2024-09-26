@@ -10,6 +10,7 @@ import {
 } from "@fluid-tools/build-infrastructure";
 import execa from "execa";
 import { ResetMode } from "simple-git";
+import type { ReleaseGroupOrPackage } from "../releaseGroups.js";
 import type { Context } from "./context.js";
 import { Repository } from "./git.js";
 import { getPreReleaseDependencies } from "./package.js";
@@ -102,7 +103,7 @@ export const CheckDependenciesInstalled: CheckFunction = async (
 		: releaseGroupOrPackage.packages;
 
 	const installChecks = await Promise.all(
-		packagesToCheck.map(async (pkg) => pkg.checkInstall(false)),
+		packagesToCheck.map(async (pkg) => pkg.checkInstall()),
 	);
 
 	// If any of the install checks returned false, dependencies need to be installed
@@ -158,7 +159,7 @@ export const CheckHasRemoteBranchUpToDate: CheckFunction = async (
  */
 export const CheckHasNoPrereleaseDependencies: CheckFunction = async (
 	context: Context,
-	releaseGroupOrPackage: MonoRepo | Package,
+	releaseGroupOrPackage: ReleaseGroupOrPackage,
 ): Promise<CheckResult> => {
 	const { releaseGroups, packages, isEmpty } = await getPreReleaseDependencies(
 		context,
@@ -222,7 +223,7 @@ export const CheckNoUntaggedAsserts: CheckFunction = async (
 	// check for policy check violation
 	const afterPolicyCheckStatus = await context.gitRepo.getStatus();
 	if (afterPolicyCheckStatus !== "") {
-		const repo = new Repository({ baseDir: context.repo.resolvedRoot });
+		const repo = new Repository({ baseDir: context.repo.root });
 		await repo.gitClient.reset(ResetMode.HARD);
 		return {
 			message: "Found some untagged asserts. These should be tagged before release.",

@@ -76,7 +76,7 @@ export const promptToCreateReleaseBranch: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, promptWriter, releaseGroup, releaseVersion } = data;
+	const { command, promptWriter, packageOrReleaseGroup: releaseGroup, releaseVersion } = data;
 
 	if (isReleaseGroup(releaseGroup)) {
 		const releaseBranch = generateReleaseBranchName(releaseGroup, releaseVersion);
@@ -169,7 +169,13 @@ export const promptToPRBump: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, context, promptWriter, releaseGroup, releaseVersion } = data;
+	const {
+		command,
+		context,
+		promptWriter,
+		packageOrReleaseGroup: releaseGroup,
+		releaseVersion,
+	} = data;
 
 	const bumpBranch = await context.gitRepo.getCurrentBranchName();
 	const prompt: InstructionalPrompt = {
@@ -191,8 +197,8 @@ export const promptToPRBump: StateHandlerFunction = async (
 		if (!releaseBranchExists) {
 			prompt.sections.push({
 				title: "NEXT",
-				message: `After PR is merged, switch to the '${releaseBranch}' branch and and use the following command to release the ${releaseGroup} release group:`,
-				cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup}`,
+				message: `After PR is merged, switch to the '${releaseBranch}' branch and and use the following command to release the ${releaseGroup.name} release group:`,
+				cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup.name}`,
 			});
 		}
 	}
@@ -220,7 +226,7 @@ export const promptToPRDeps: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, context, promptWriter, releaseGroup } = data;
+	const { command, context, promptWriter, packageOrReleaseGroup: releaseGroup } = data;
 
 	await promptWriter?.writePrompt({
 		title: "NEED TO UPDATE DEPENDENCIES",
@@ -234,7 +240,7 @@ export const promptToPRDeps: StateHandlerFunction = async (
 			{
 				title: "NEXT",
 				message: `After the PR is merged, run the following command to continue the release:`,
-				cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup}`,
+				cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup.name}`,
 			},
 		],
 	});
@@ -260,7 +266,13 @@ export const promptToRelease: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, context, releaseGroup, releaseVersion, promptWriter } = data;
+	const {
+		command,
+		context,
+		packageOrReleaseGroup: releaseGroup,
+		releaseVersion,
+		promptWriter,
+	} = data;
 
 	const flag = isReleaseGroup(releaseGroup) ? "-g" : "-p";
 
@@ -273,12 +285,12 @@ export const promptToRelease: StateHandlerFunction = async (
 					chalk.bold("release"),
 				)} build for the following release group in ADO for branch ${chalk.blue(
 					chalk.bold(context.originalBranchName),
-				)}:\n\n    ${chalk.green(chalk.bold(releaseGroup))}: ${mapADOLinks(context, releaseGroup)}`,
+				)}:\n\n    ${chalk.green(chalk.bold(releaseGroup))}: ${mapADOLinks(context, releaseGroup.name)}`,
 			},
 			{
 				title: "NEXT",
 				message: `After the build is done and the release group has been published, run the following command to bump the release group to the next version and update dependencies on the newly released package(s):`,
-				cmd: `${command?.config.bin} ${command?.id} ${flag} ${releaseGroup}`,
+				cmd: `${command?.config.bin} ${command?.id} ${flag} ${releaseGroup.name}`,
 			},
 		],
 	};
@@ -306,7 +318,7 @@ export const promptToReleaseDeps: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, context, promptWriter, releaseGroup } = data;
+	const { command, context, promptWriter, packageOrReleaseGroup: releaseGroup } = data;
 
 	const prereleaseDepNames = await getPreReleaseDependencies(context, releaseGroup);
 
@@ -316,7 +328,7 @@ export const promptToReleaseDeps: StateHandlerFunction = async (
 			{
 				title: "DETAILS",
 				message: chalk.red(
-					`Can't release the ${releaseGroup} release group because some of its dependencies need to be released first.`,
+					`Can't release the ${releaseGroup.name} release group because some of its dependencies need to be released first.`,
 				),
 			},
 		],
@@ -372,7 +384,7 @@ export const promptToRunMinorReleaseCommand: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, context, promptWriter, releaseGroup } = data;
+	const { command, context, promptWriter, packageOrReleaseGroup: releaseGroup } = data;
 
 	const prompt: InstructionalPrompt = {
 		title: "NEED TO DO A MINOR RELEASE",
@@ -401,14 +413,14 @@ export const promptToRunMinorReleaseCommand: StateHandlerFunction = async (
 		{
 			title: "FIRST: do a minor release",
 			message: `A minor release needs to be run in order to continue with the major release. To continue with the release, run the following command on the ${context.originalBranchName} branch:`,
-			cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup} -t minor ${chalk.gray(
+			cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup.name} -t minor ${chalk.gray(
 				uniqueArgs.join(" "),
 			)}`,
 		},
 		{
 			title: "NEXT: run the major release again",
 			message: `Once the minor release is fully complete, run the following command on the ${context.originalBranchName} branch to continue the major release.`,
-			cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup} -t major ${chalk.gray(
+			cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup.name} -t major ${chalk.gray(
 				uniqueArgs.join(" "),
 			)}`,
 		},

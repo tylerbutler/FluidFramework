@@ -39,13 +39,14 @@ import {
 } from "@fluid-tools/version-tools";
 
 import type {
+	IPackage,
 	IReleaseGroup,
 	PackageName,
 	ReleaseGroupName,
 } from "@fluid-tools/build-infrastructure";
 import { releaseGroupFlag } from "../../flags.js";
 import { CommandLogger } from "../../logging.js";
-import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../../releaseGroups.js";
+import { type ReleaseGroupOrPackage, isReleaseGroup } from "../../releaseGroups.js";
 
 /**
  * Controls behavior when there is a list of releases and one needs to be selected.
@@ -127,7 +128,7 @@ export abstract class ReleaseReportBaseCommand<
 	protected async collectReleaseData(
 		context: Context,
 		mode: ReleaseSelectionMode = this.defaultMode,
-		releaseGroupOrPackage?: ReleaseGroupName,
+		releaseGroupOrPackage?: ReleaseGroupOrPackage,
 		includeDependencies = true,
 	): Promise<PackageReleaseData> {
 		const versionData: PackageReleaseData = {};
@@ -138,33 +139,34 @@ export abstract class ReleaseReportBaseCommand<
 			);
 		}
 
-		const rgs: ReleaseGroupName[] = [];
-		const pkgs: PackageName[] = [];
+		const rgs: IReleaseGroup[] = [];
+		const pkgs: IPackage[] = [];
 
-		let rgVerMap: PackageVersionMap | undefined;
-		let pkgVerMap: PackageVersionMap | undefined;
+		let rgVerMap: Map<ReleaseGroupName, ReleaseVersion> | undefined;
+		let pkgVerMap: Map<PackageName, ReleaseVersion> | undefined;
 
 		if (mode === "inRepo") {
 			// Get the release group versions and dependency versions from the repo
 			if (isReleaseGroup(releaseGroupOrPackage)) {
 				if (includeDependencies) {
 					[rgVerMap, pkgVerMap] = getFluidDependencies(context, releaseGroupOrPackage);
-					rgs.push(...(Object.keys(rgVerMap) as ReleaseGroupName[]));
+					// rgs.push(rgVerMap.)
+					rgs.push(...(Object.values(rgVerMap) as ReleaseGroupName[]));
 					pkgs.push(...(Object.keys(pkgVerMap) as PackageName[]));
 				} else {
-					rgs.push(releaseGroupOrPackage);
+					rgs.push(releaseGroupOrPackage.name);
 				}
 			}
 		} else if (isReleaseGroup(releaseGroupOrPackage)) {
 			// Filter to only the specified release group
-			rgs.push(releaseGroupOrPackage);
+			rgs.push(releaseGroupOrPackage.name);
 		} else if (releaseGroupOrPackage === undefined) {
 			// No filter, so include all release groups and packages
-			rgs.push(...([...context.repo.releaseGroups.keys()] as ReleaseGroup[]));
+			rgs.push(...context.repo.releaseGroups.keys());
 			pkgs.push(...context.independentPackages.map((p) => p.name));
 		} else {
 			// Filter to only the specified package
-			pkgs.push(releaseGroupOrPackage);
+			pkgs.push(releaseGroupOrPackage.name);
 		}
 
 		// Only start/show the spinner in non-interactive mode.
@@ -213,7 +215,7 @@ export abstract class ReleaseReportBaseCommand<
 	 */
 	private async collectRawReleaseData(
 		context: Context,
-		releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
+		releaseGroupOrPackage: ReleaseGroupOrPackage,
 		repoVersion: string,
 		latestReleaseChooseMode?: ReleaseSelectionMode,
 	): Promise<RawReleaseData | undefined> {

@@ -5,6 +5,7 @@
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import type { PackageName } from "@fluid-tools/build-infrastructure";
 import { VersionBumpType } from "@fluid-tools/version-tools";
 import { Logger } from "@fluidframework/build-tools";
 import { compareAsc, formatISO, parseISO } from "date-fns";
@@ -14,7 +15,6 @@ import issueParser from "issue-parser";
 const { test: hasFrontMatter } = matter;
 
 import type { ReleaseNotesSectionName } from "../config.js";
-import { ReleasePackage } from "../releaseGroups.js";
 import { Repository } from "./git.js";
 
 export const DEFAULT_CHANGESET_PATH = ".changeset";
@@ -97,7 +97,7 @@ export interface Changeset {
 	/**
 	 * The main package for the changeset is the first one listed in the front matter.
 	 */
-	mainPackage: ReleasePackage;
+	mainPackage: PackageName;
 
 	/**
 	 * An array of all the release types (patch, minor, major) contained in the front matter.
@@ -165,7 +165,7 @@ export type ChangesetEntry = Omit<Changeset, "metadata" | "mainPackage" | "chang
 	/**
 	 * The name of the package this ChangesetEntry applies to.
 	 */
-	pkg: string;
+	pkg: PackageName;
 
 	/**
 	 * This will be true if the package in this ChangesetEntry is the main package for the changeset.
@@ -268,7 +268,7 @@ export async function loadChangesets(dir: string, log?: Logger): Promise<Changes
 
 		const newChangeset: Changeset = {
 			metadata: packageBumpTypeMetadata,
-			mainPackage: Object.keys(packageBumpTypeMetadata)[0],
+			mainPackage: Object.keys(packageBumpTypeMetadata)[0] as PackageName,
 			additionalMetadata,
 			body,
 			summary,
@@ -299,8 +299,8 @@ export async function loadChangesets(dir: string, log?: Logger): Promise<Changes
  * @param changesets - An array of changesets to be grouped.
  * @returns a Map of package names to an array of all the changesets that apply to the package.
  */
-export function groupByPackage(changesets: Changeset[]): Map<ReleasePackage, Changeset[]> {
-	const changesetMap = new Map<ReleasePackage, Changeset[]>();
+export function groupByPackage(changesets: Changeset[]): Map<PackageName, Changeset[]> {
+	const changesetMap = new Map<PackageName, Changeset[]>();
 	const flattened = flattenChangesets(changesets);
 	for (const changeset of flattened) {
 		const entries = changesetMap.get(changeset.pkg) ?? [];
@@ -326,8 +326,8 @@ export function groupByPackage(changesets: Changeset[]): Map<ReleasePackage, Cha
  */
 export function groupByMainPackage(
 	changesets: Changeset[],
-): ReadonlyMap<ReleasePackage, Changeset[]> {
-	const changesetMap = new Map<ReleasePackage, Changeset[]>();
+): ReadonlyMap<PackageName, Changeset[]> {
+	const changesetMap = new Map<PackageName, Changeset[]>();
 	for (const changeset of changesets) {
 		const entries = changesetMap.get(changeset.mainPackage) ?? [];
 		entries.push(changeset);
@@ -394,7 +394,7 @@ export function flattenChangesets(
 		let index = 0;
 		for (const [pkg, changeType] of Object.entries(metadata)) {
 			entries.push({
-				pkg,
+				pkg: pkg as PackageName,
 				isMainPackage: index === 0,
 				changeType,
 				body,

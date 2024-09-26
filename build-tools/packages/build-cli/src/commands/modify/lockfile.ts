@@ -58,7 +58,7 @@ export default class UpdateDependencyInLockfileCommand extends BaseCommand<
 		this.info(
 			`Adding pnpm override for ${this.flags.dependencyName}: ${this.flags.version} to package.json`,
 		);
-		updatePackageJsonFile(releaseGroup.directory, (json) => {
+		updatePackageJsonFile(releaseGroup.workspace.directory, (json) => {
 			if (json.pnpm === undefined) {
 				json.pnpm = {};
 			}
@@ -80,19 +80,19 @@ export default class UpdateDependencyInLockfileCommand extends BaseCommand<
 		// Update lockfile
 		this.info(`Updating lockfile`);
 		await execa(`pnpm`, [`install`, `--no-frozen-lockfile`], {
-			cwd: releaseGroup.directory,
+			cwd: releaseGroup.workspace.directory,
 		});
 
 		// Remove override after install
 		this.info(`Restoring package.json to original state`);
 		await execa(`git`, [`restore`, `--source=HEAD`, `package.json`], {
-			cwd: releaseGroup.directory,
+			cwd: releaseGroup.workspace.directory,
 		});
 
 		// Install again to remove the override from the lockfile
 		this.info(`Updating lockfile to remove override`);
 		await execa(`pnpm`, [`install`, `--no-frozen-lockfile`], {
-			cwd: releaseGroup.directory,
+			cwd: releaseGroup.workspace.directory,
 		});
 	}
 }

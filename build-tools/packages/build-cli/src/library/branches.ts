@@ -27,7 +27,11 @@ import type {
 	PackageName,
 	ReleaseGroupName,
 } from "@fluid-tools/build-infrastructure";
-import { ReleaseSource, isReleaseGroup } from "../releaseGroups.js";
+import {
+	type ReleaseGroupOrPackage,
+	ReleaseSource,
+	isReleaseGroup,
+} from "../releaseGroups.js";
 import { DependencyUpdateType } from "./bump.js";
 
 /**
@@ -107,7 +111,7 @@ export function generateBumpDepsBranchName(
 	bumpType: DependencyUpdateType | VersionBumpType,
 	releaseGroup?: IReleaseGroup,
 ): string {
-	const releaseGroupSegment = releaseGroup === undefined ? "" : `_${releaseGroup}`;
+	const releaseGroupSegment = releaseGroup === undefined ? "" : `_${releaseGroup.name}`;
 	const branchName = `bump_deps_${bumpedDep.toLowerCase()}_${bumpType}${releaseGroupSegment}`;
 	return branchName;
 }
@@ -115,7 +119,7 @@ export function generateBumpDepsBranchName(
 /**
  * Generates the correct branch name for the release branch of a given release group and branch.
  *
- * @param releaseGroup - The release group or package for which to generate a branch name.
+ * @param releaseGroupOrPackage - The release group or package for which to generate a branch name.
  * @param version - The version for the release branch. Typically this is a major.minor version, but for release groups
  * using the Fluid internal or virtualPatch version schemes the versions may differ.
  * @returns The generated branch name.
@@ -127,7 +131,7 @@ export function generateBumpDepsBranchName(
  * @internal
  */
 export function generateReleaseBranchName(
-	releaseGroup: ReleaseGroupName | PackageName,
+	releaseGroupOrPackage: ReleaseGroupOrPackage,
 	version: string,
 ): string {
 	// An array of all the sections of a "path" branch -- a branch with slashes in the name.
@@ -149,18 +153,20 @@ export function generateReleaseBranchName(
 		branchVersion = version;
 	}
 
-	if (isReleaseGroup(releaseGroup)) {
-		if (releaseGroup === "client" && schemeIsInternal) {
+	if (isReleaseGroup(releaseGroupOrPackage)) {
+		if (releaseGroupOrPackage.name === "client" && schemeIsInternal) {
 			// Client versions using the internal version scheme
 			const prereleaseId = fromInternalScheme(version, true)[2];
 			// Checking the prerelease ID is necessary because we used "v2int" instead of "internal" in branch names. This
 			// was a bad decision in retrospect, but we're stuck with it for now.
-			branchPath.push(prereleaseId === DEFAULT_PRERELEASE_IDENTIFIER ? "v2int" : releaseGroup);
+			branchPath.push(
+				prereleaseId === DEFAULT_PRERELEASE_IDENTIFIER ? "v2int" : releaseGroupOrPackage.name,
+			);
 		} else {
-			branchPath.push(releaseGroup);
+			branchPath.push(releaseGroupOrPackage.name);
 		}
 	} else {
-		branchPath.push(PackageNameApi.getUnscopedName(releaseGroup));
+		branchPath.push(PackageNameApi.getUnscopedName(releaseGroupOrPackage.name));
 	}
 
 	let releaseBranchVersion: string;

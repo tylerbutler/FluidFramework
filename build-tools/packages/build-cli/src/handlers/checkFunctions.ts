@@ -152,7 +152,7 @@ export const checkDoesReleaseFromReleaseBranch: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { releaseGroup } = data;
+	const { packageOrReleaseGroup: releaseGroup } = data;
 
 	let releaseSource = getReleaseSourceForReleaseGroup(releaseGroup);
 
@@ -233,7 +233,7 @@ export const checkDependenciesInstalled: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup } = data;
+	const { context, packageOrReleaseGroup: releaseGroup } = data;
 
 	const packagesToCheck = isReleaseGroup(releaseGroup)
 		? context.packagesInReleaseGroup(releaseGroup)
@@ -311,7 +311,12 @@ export const checkOnReleaseBranch: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, releaseVersion, shouldCheckBranch } = data;
+	const {
+		context,
+		packageOrReleaseGroup: releaseGroup,
+		releaseVersion,
+		shouldCheckBranch,
+	} = data;
 	assert(context !== undefined, "Context is undefined.");
 
 	const currentBranch = await context.gitRepo.getCurrentBranchName();
@@ -347,7 +352,7 @@ export const checkNoPrereleaseDependencies: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup } = data;
+	const { context, packageOrReleaseGroup: releaseGroup } = data;
 
 	const { releaseGroups, packages, isEmpty } = await getPreReleaseDependencies(
 		context,
@@ -389,7 +394,7 @@ export const checkPolicy: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, shouldCheckPolicy } = data;
+	const { context, packageOrReleaseGroup: releaseGroup, shouldCheckPolicy } = data;
 
 	log.info(`Checking policy`);
 	if (shouldCheckPolicy === true) {
@@ -448,7 +453,7 @@ export const checkAssertTagging: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, shouldCheckPolicy } = data;
+	const { context, packageOrReleaseGroup: releaseGroup, shouldCheckPolicy } = data;
 
 	if (shouldCheckPolicy === true) {
 		if (!getRunPolicyCheckDefault(releaseGroup, context.originalBranchName)) {
@@ -506,7 +511,7 @@ export const checkReleaseBranchExists: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, releaseVersion } = data;
+	const { context, packageOrReleaseGroup: releaseGroup, releaseVersion } = data;
 	assert(isReleaseGroup(releaseGroup), `Not a release group: ${releaseGroup}`);
 	const releaseBranch = generateReleaseBranchName(releaseGroup, releaseVersion);
 
@@ -539,7 +544,7 @@ export const checkReleaseGroupIsBumped: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, releaseVersion, bumpType } = data;
+	const { context, packageOrReleaseGroup: releaseGroup, releaseVersion, bumpType } = data;
 
 	context.repo.reload();
 	const repoVersion = context.getVersion(releaseGroup);
@@ -574,7 +579,7 @@ export const checkReleaseIsDone: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, releaseVersion } = data;
+	const { context, packageOrReleaseGroup: releaseGroup, releaseVersion } = data;
 
 	const wasReleased = await isReleased(context, releaseGroup, releaseVersion);
 	if (wasReleased) {
@@ -605,7 +610,13 @@ export const checkShouldCommit: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { bumpType, context, shouldCommit, releaseGroup, releaseVersion } = data;
+	const {
+		bumpType,
+		context,
+		shouldCommit,
+		packageOrReleaseGroup: releaseGroup,
+		releaseVersion,
+	} = data;
 
 	if (shouldCommit !== true) {
 		BaseStateHandler.signalFailure(machine, state);
@@ -642,7 +653,7 @@ export const checkShouldCommitReleasedDepsBump: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, shouldCommit } = data;
+	const { context, packageOrReleaseGroup: releaseGroup, shouldCommit } = data;
 
 	if (shouldCommit !== true) {
 		BaseStateHandler.signalSuccess(machine, state);
@@ -782,7 +793,7 @@ export const checkValidReleaseGroup: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup } = data;
+	const { context, packageOrReleaseGroup: releaseGroup } = data;
 
 	if (isReleaseGroup(releaseGroup)) {
 		BaseStateHandler.signalSuccess(machine, state);
