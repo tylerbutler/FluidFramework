@@ -26,9 +26,10 @@ export type FluidPackageJsonFields = {
 export const FLUIDREPO_CONFIG_VERSION = 1;
 
 // @public (undocumented)
-export interface IFluidRepo {
+export interface IFluidRepo extends Reloadable {
     // (undocumented)
     packages: Map<PackageName, IPackage>;
+    relativeToRepo(p: string): string;
     // (undocumented)
     releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
     root: string;
@@ -48,7 +49,15 @@ export interface IFluidRepoLayout {
 }
 
 // @public (undocumented)
-export interface IPackage<J extends PackageJson = PackageJson> extends Pick<Installable, "checkInstall"> {
+export interface Installable {
+    // (undocumented)
+    checkInstall(): Promise<boolean>;
+    // (undocumented)
+    install(updateLockfile: boolean): Promise<boolean>;
+}
+
+// @public (undocumented)
+export interface IPackage<J extends PackageJson = PackageJson> extends Pick<Installable, "checkInstall">, Reloadable {
     // (undocumented)
     combinedDependencies: Generator<PackageDependency, void>;
     // (undocumented)
@@ -76,8 +85,6 @@ export interface IPackage<J extends PackageJson = PackageJson> extends Pick<Inst
     // (undocumented)
     releaseGroup: ReleaseGroupName;
     // (undocumented)
-    reload(): void;
-    // (undocumented)
     savePackageJson(): Promise<void>;
     // (undocumented)
     readonly version: string;
@@ -92,7 +99,7 @@ export interface IPackageManager {
 }
 
 // @public (undocumented)
-export interface IReleaseGroup {
+export interface IReleaseGroup extends Reloadable {
     // (undocumented)
     readonly adoPipelineUrl?: string;
     // (undocumented)
@@ -114,7 +121,7 @@ export function isIPackage(pkg: any): pkg is IPackage;
 export function isIReleaseGroup(toCheck: Exclude<any, string | number | ReleaseGroupName | PackageName>): toCheck is IReleaseGroup;
 
 // @public (undocumented)
-export interface IWorkspace extends Installable {
+export interface IWorkspace extends Installable, Reloadable {
     // (undocumented)
     directory: string;
     // (undocumented)
@@ -183,6 +190,9 @@ export interface PackageDependency {
 export type PackageJson = SetRequired<PackageJson_2 & FluidPackageJsonFields, "name" | "scripts" | "version">;
 
 // @public (undocumented)
+export type PackageManagerName = "npm" | "pnpm" | "yarn";
+
+// @public (undocumented)
 export type PackageName = Opaque<string, "PackageName">;
 
 // @public (undocumented)
@@ -196,6 +206,12 @@ export interface ReleaseGroupDefinition {
 
 // @public (undocumented)
 export type ReleaseGroupName = Opaque<string, IReleaseGroup>;
+
+// @public (undocumented)
+export interface Reloadable {
+    // (undocumented)
+    reload(): void;
+}
 
 // @public (undocumented)
 export interface WorkspaceDefinition {

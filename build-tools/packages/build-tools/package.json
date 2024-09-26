@@ -39,7 +39,8 @@
 		"tsc": "tsc"
 	},
 	"dependencies": {
-		"@fluid-tools/build-infrastructure": "workspace:^",
+		"@fluid-tools/build-infrastructure": "workspace:~",
+		"@fluid-tools/version-tools": "workspace:~",
 		"@manypkg/get-packages": "^2.2.0",
 		"async": "^3.2.4",
 		"chalk": "^2.4.2",
