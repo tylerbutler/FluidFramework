@@ -15,14 +15,13 @@ import type {
 	ReleaseGroupName,
 	WorkspaceName,
 } from "./types.js";
-import { findGitRoot } from "./utils.js";
 import { Workspace } from "./workspace.js";
+import { loadWorkspacesFromLegacyConfig } from "./workspaceCompat.js";
 
 export class FluidRepo implements IFluidRepo {
-	public readonly root: string;
+	// public readonly root: string;
 
-	public constructor(root?: string) {
-		this.root = root === undefined ? findGitRoot() : path.resolve(root);
+	public constructor(public readonly root: string) {
 		const config = getFluidRepoLayout(this.root);
 
 		// if (config.repoPackages !== undefined) {
@@ -30,18 +29,22 @@ export class FluidRepo implements IFluidRepo {
 		// }
 
 		if (config.repoLayout === undefined) {
-			// TODO: load using old settings
-			throw new Error("old settings");
+			if (config.repoPackages === undefined) {
+				throw new Error(`Can't find configuration.`);
+			} else {
+				console.warn(`The repoPackages setting is deprecated. Use repoLayout instead.`);
+				this._workspaces = loadWorkspacesFromLegacyConfig(config.repoPackages, this.root);
+			}
+		} else {
+			this._workspaces = new Map<WorkspaceName, IWorkspace>(
+				Object.entries(config.repoLayout.workspaces).map((entry) => {
+					const name = entry[0] as WorkspaceName;
+					const definition = entry[1];
+					const ws = Workspace.load(name, definition);
+					return [name, ws];
+				}),
+			);
 		}
-
-		this._workspaces = new Map<WorkspaceName, IWorkspace>(
-			Object.entries(config.repoLayout.workspaces).map((entry) => {
-				const name = entry[0] as WorkspaceName;
-				const definition = entry[1];
-				const ws = Workspace.load(name, definition);
-				return [name, ws];
-			}),
-		);
 
 		const releaseGroups = new Map<ReleaseGroupName, IReleaseGroup>();
 		for (const ws of this.workspaces.values()) {
@@ -96,6 +99,6 @@ export class FluidRepo implements IFluidRepo {
 	}
 }
 
-export function loadFluidRepo(root?: string): IFluidRepo {
+export function loadFluidRepo(root: string): IFluidRepo {
 	return new FluidRepo(root);
 }
