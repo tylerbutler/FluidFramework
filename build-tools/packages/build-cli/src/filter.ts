@@ -218,7 +218,7 @@ const selectPackagesFromContext = async (
 	if (selection.independentPackages === true) {
 		for (const pkg of context.independentPackages) {
 			selected.push(
-				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, {
+				Package.load(pkg.packageJsonFilePath, pkg.group, pkg.monoRepo, {
 					kind: "independentPackage",
 				}),
 			);
@@ -229,7 +229,7 @@ const selectPackagesFromContext = async (
 	for (const rg of selection.releaseGroups) {
 		for (const pkg of context.packagesInReleaseGroup(rg)) {
 			selected.push(
-				Package.load(pkg.packageJsonFileName, pkg.group, pkg.monoRepo, {
+				Package.load(pkg.packageJsonFilePath, pkg.group, pkg.monoRepo, {
 					kind: "releaseGroupChildPackage",
 				}),
 			);

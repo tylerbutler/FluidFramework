@@ -10,6 +10,7 @@ export { getResolvedFluidRoot, getFluidBuildConfig } from "./fluidBuild/fluidUti
 export type { Logger } from "./common/logging";
 export { MonoRepo } from "./common/monoRepo";
 export {
+	type IFluidBuildPackage,
 	Package,
 	type PackageJson,
 	updatePackageJsonFile,

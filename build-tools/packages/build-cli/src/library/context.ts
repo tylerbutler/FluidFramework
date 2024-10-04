@@ -10,6 +10,7 @@ import {
 	FluidRepo,
 	GitRepo,
 	type IFluidBuildConfig,
+	type IFluidBuildPackage,
 	Package,
 	getFluidBuildConfig,
 } from "@fluidframework/build-tools";
@@ -90,7 +91,7 @@ export function isMonoRepoKind(str: string | undefined): str is MonoRepoKind {
  */
 export class Context {
 	public readonly repo: FluidRepo;
-	public readonly fullPackageMap: Map<string, Package>;
+	public readonly fullPackageMap: Map<string, IFluidBuildPackage>;
 	public readonly fluidBuildConfig: IFluidBuildConfig;
 	public readonly flubConfig: FlubConfig;
 	private readonly newBranches: string[] = [];
@@ -126,7 +127,7 @@ export class Context {
 	 * @param releaseGroup - The release group to filter by
 	 * @returns An array of packages that belong to the release group
 	 */
-	public packagesInReleaseGroup(releaseGroup: string): Package[] {
+	public packagesInReleaseGroup(releaseGroup: string): IFluidBuildPackage[] {
 		const packages = this.packages.filter((pkg) => pkg.monoRepo?.kind === releaseGroup);
 		return packages;
 	}
@@ -137,7 +138,9 @@ export class Context {
 	 * @param releaseGroup - The release group or package to filter by.
 	 * @returns An array of packages that do not belong to the release group.
 	 */
-	public packagesNotInReleaseGroup(releaseGroup: string | Package): Package[] {
+	public packagesNotInReleaseGroup(
+		releaseGroup: string | IFluidBuildPackage,
+	): IFluidBuildPackage[] {
 		const packages =
 			releaseGroup instanceof Package
 				? this.packages.filter((p) => p.name !== releaseGroup.name)
@@ -149,7 +152,7 @@ export class Context {
 	 * Get all the packages not associated with a release group
 	 * @returns An array of packages in the repo that are not associated with a release group.
 	 */
-	public get independentPackages(): Package[] {
+	public get independentPackages(): IFluidBuildPackage[] {
 		const packages = this.packages.filter((pkg) => pkg.monoRepo === undefined);
 		return packages;
 	}
@@ -158,7 +161,7 @@ export class Context {
 	 * Get all the packages.
 	 * @returns An array of all packages in the repo.
 	 */
-	public get packages(): Package[] {
+	public get packages(): IFluidBuildPackage[] {
 		return [...this.fullPackageMap.values()];
 	}
 

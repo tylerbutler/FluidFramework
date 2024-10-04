@@ -9,7 +9,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import * as semver from "semver";
 
-import { FluidRepo, MonoRepo, Package } from "@fluidframework/build-tools";
+import { FluidRepo, type IFluidBuildPackage, MonoRepo } from "@fluidframework/build-tools";
 
 import {
 	InterdependencyRange,
@@ -156,10 +156,10 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		}
 
 		let repoVersion: ReleaseVersion;
-		let packageOrReleaseGroup: Package | MonoRepo;
+		let packageOrReleaseGroup: IFluidBuildPackage | MonoRepo;
 		let scheme: VersionScheme | undefined;
 		const exactVersion: semver.SemVer | null = semver.parse(flags.exact);
-		const updatedPackages: Package[] = [];
+		const updatedPackages: IFluidBuildPackage[] = [];
 
 		if (bumpType === undefined && exactVersion === null) {
 			this.error(`--exact value invalid: ${flags.exact}`);

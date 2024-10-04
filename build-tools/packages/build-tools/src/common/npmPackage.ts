@@ -94,6 +94,13 @@ export interface IFluidBuildPackage extends IPackage<IFluidBuildPackageJson> {
 	cleanNodeModules(): Promise<ExecAsyncResult>;
 	getLockFilePath(): string | undefined;
 	install(): Promise<ExecAsyncResult>;
+
+	/**
+	 * The deprected "group" of the package.
+	 *
+	 * @deprecated Do not use.
+	 */
+	group: string;
 }
 
 export class Package implements IFluidBuildPackage {

@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { MonoRepo, Package } from "@fluidframework/build-tools";
+import { type IFluidBuildPackage, MonoRepo } from "@fluidframework/build-tools";
 import { Args } from "@oclif/core";
 import { PackageName } from "@rushstack/node-core-library";
 import * as semver from "semver";
@@ -27,7 +27,7 @@ export const packageOrReleaseGroupArg = Args.custom({
 export const findPackageOrReleaseGroup = (
 	name: string,
 	context: Context,
-): Package | MonoRepo | undefined => {
+): IFluidBuildPackage | MonoRepo | undefined => {
 	// eslint-disable-next-line import/no-deprecated
 	if (isMonoRepoKind(name)) {
 		return context.repo.releaseGroups.get(name);

@@ -18,6 +18,7 @@ import {
 	isWorkspaceRange,
 } from "@fluid-tools/version-tools";
 import {
+	type IFluidBuildPackage,
 	Logger,
 	MonoRepo,
 	Package,
@@ -79,10 +80,10 @@ export async function npmCheckUpdates(
 	writeChanges = false,
 	log?: Logger,
 ): Promise<{
-	updatedPackages: Package[];
+	updatedPackages: IFluidBuildPackage[];
 	updatedDependencies: PackageVersionMap;
 }> {
-	const updatedPackages: Package[] = [];
+	const updatedPackages: IFluidBuildPackage[] = [];
 
 	/**
 	 * A set of all the packageName, versionString pairs of updated dependencies.
@@ -244,11 +245,11 @@ export interface PreReleaseDependencies {
  */
 export async function getPreReleaseDependencies(
 	context: Context,
-	releaseGroup: ReleaseGroup | ReleasePackage | MonoRepo | Package,
+	releaseGroup: ReleaseGroup | ReleasePackage | MonoRepo | IFluidBuildPackage,
 ): Promise<PreReleaseDependencies> {
 	const prereleasePackages = new Map<ReleasePackage, string>();
 	const prereleaseGroups = new Map<ReleaseGroup, string>();
-	const packagesToCheck: Package[] = [];
+	const packagesToCheck: IFluidBuildPackage[] = [];
 
 	/**
 	 * Array of package names; dependencies on these packages will be updated.
@@ -260,7 +261,10 @@ export async function getPreReleaseDependencies(
 		updateDependenciesOnThesePackages.push(
 			...context.packagesNotInReleaseGroup(releaseGroup).map((p) => p.name),
 		);
-	} else if (releaseGroup instanceof MonoRepo || isReleaseGroup(releaseGroup)) {
+	} else if (
+		releaseGroup instanceof MonoRepo ||
+		(typeof releaseGroup !== "object" && isReleaseGroup(releaseGroup))
+	) {
 		const monorepo =
 			releaseGroup instanceof MonoRepo
 				? releaseGroup
@@ -445,7 +449,7 @@ export function getFluidDependencies(
 ): [releaseGroups: PackageVersionMap, packages: PackageVersionMap] {
 	const releaseGroups: PackageVersionMap = {};
 	const packages: PackageVersionMap = {};
-	let packagesToCheck: Package[];
+	let packagesToCheck: IFluidBuildPackage[];
 
 	if (isReleaseGroup(releaseGroupOrPackage)) {
 		packagesToCheck = context.packagesInReleaseGroup(releaseGroupOrPackage);
@@ -487,7 +491,7 @@ export function getFluidDependencies(
 }
 
 export interface DependencyWithRange {
-	pkg: Package;
+	pkg: IFluidBuildPackage;
 	range: InterdependencyRange;
 }
 
@@ -503,7 +507,7 @@ export interface DependencyWithRange {
  */
 export async function setVersion(
 	context: Context,
-	releaseGroupOrPackage: MonoRepo | Package,
+	releaseGroupOrPackage: MonoRepo | IFluidBuildPackage,
 	version: semver.SemVer,
 	interdependencyRange: InterdependencyRange = "^",
 	log?: Logger,
@@ -567,7 +571,7 @@ export async function setVersion(
 		}
 	}
 
-	if (releaseGroupOrPackage instanceof Package) {
+	if (!(releaseGroupOrPackage instanceof MonoRepo)) {
 		// Return early; packages only need to be bumped using npm. The rest of the logic is only for release groups.
 		return;
 	}
@@ -688,7 +692,7 @@ function getDependenciesRecord(
  * example, when setting release group package versions in the CI release pipeline.
  */
 async function setPackageDependencies(
-	pkg: Package,
+	pkg: IFluidBuildPackage,
 	dependencyVersionMap: Map<string, DependencyWithRange>,
 	updateWithinSameReleaseGroup = false,
 	writeChanges = true,

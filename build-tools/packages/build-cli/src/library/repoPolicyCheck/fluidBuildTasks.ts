@@ -8,7 +8,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import {
 	FluidRepo,
-	Package,
+	type IFluidBuildPackage,
 	PackageJson,
 	TscUtils,
 	getEsLintConfigFilePath,
@@ -46,8 +46,11 @@ const getFluidBuildTasksTscIgnore = (root: string): Set<string> => {
 /**
  * Cache the FluidRepo object, so we don't have to load it repeatedly
  */
-const repoCache = new Map<string, { repo: FluidRepo; packageMap: Map<string, Package> }>();
-function getFluidPackageMap(root: string): Map<string, Package> {
+const repoCache = new Map<
+	string,
+	{ repo: FluidRepo; packageMap: Map<string, IFluidBuildPackage> }
+>();
+function getFluidPackageMap(root: string): Map<string, IFluidBuildPackage> {
 	const rootDir = path.resolve(root);
 	let record = repoCache.get(rootDir);
 	if (record === undefined) {
@@ -505,7 +508,7 @@ function getTscCommandDependencies(
 	json: Readonly<PackageJson>,
 	script: string,
 	command: string,
-	packageMap: ReadonlyMap<string, Package>,
+	packageMap: ReadonlyMap<string, IFluidBuildPackage>,
 ): (string | string[])[] {
 	// If the project has a referenced project, depend on that instead of the default
 	const parsedCommand = TscUtils.parseCommandLine(command);
@@ -555,7 +558,7 @@ function getTscCommandDependencies(
 		}
 	}
 
-	const curPkgRepoGroup = packageMap.get(json.name)?.group;
+	const curPkgRepoGroup = packageMap.get(json.name)?.monoRepo?.kind;
 	const tscPredecessors = fluidBuildDatabaseCache.getPossiblePredecessorTasks(
 		packageMap,
 		json.name,
@@ -580,7 +583,7 @@ function getTscCommandDependencies(
 				// Not known to repo, can be ignored.
 				return true;
 			}
-			if (depPackage.group !== curPkgRepoGroup) {
+			if (depPackage.monoRepo?.kind !== curPkgRepoGroup) {
 				return true;
 			}
 			const satisfied = semver.satisfies(depPackage.version, depSpec.version);
@@ -601,7 +604,7 @@ interface BuildDepsCallbackContext {
 	json: PackageJson;
 	script: string;
 	command: string;
-	packageMap: ReadonlyMap<string, Package>;
+	packageMap: ReadonlyMap<string, IFluidBuildPackage>;
 	root: string;
 }
 

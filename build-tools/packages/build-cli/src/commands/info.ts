@@ -6,7 +6,7 @@
 import { Flags } from "@oclif/core";
 import { type ColumnUserConfig, table } from "table";
 
-import type { Package } from "@fluidframework/build-tools";
+import type { IFluidBuildPackage } from "@fluidframework/build-tools";
 import * as changeCase from "change-case";
 import { releaseGroupFlag } from "../flags.js";
 // eslint-disable-next-line import/no-deprecated
@@ -20,7 +20,7 @@ interface ColumnInfo<TValue> {
 	/**
 	 * Function to extract column value from a Package instance.
 	 */
-	getValue: (pkg: Package) => TValue;
+	getValue: (pkg: IFluidBuildPackage) => TValue;
 
 	/**
 	 * Format the returned value of 'getValue()' as a string for display in the table.
@@ -40,21 +40,21 @@ interface ColumnInfo<TValue> {
  */
 const nameToColumnInfo: Record<string, ColumnInfo<unknown>> = {
 	releaseGroup: {
-		getValue: (pkg: Package) => pkg.monoRepo?.kind ?? "n/a",
+		getValue: (pkg: IFluidBuildPackage) => pkg.monoRepo?.kind ?? "n/a",
 		style: { alignment: "left" },
 	},
-	name: { getValue: (pkg: Package) => pkg.name, style: { alignment: "left" } },
+	name: { getValue: (pkg: IFluidBuildPackage) => pkg.name, style: { alignment: "left" } },
 	private: {
-		getValue: (pkg: Package) => pkg.packageJson.private === true,
+		getValue: (pkg: IFluidBuildPackage) => pkg.packageJson.private === true,
 		formatValue: (value) => (value === true ? "-private-" : ""),
 		style: { alignment: "center" },
 	},
 	version: {
-		getValue: (pkg: Package) => (pkg.monoRepo ? pkg.monoRepo.version : pkg.version),
+		getValue: (pkg: IFluidBuildPackage) => (pkg.monoRepo ? pkg.monoRepo.version : pkg.version),
 		style: { alignment: "left" },
 	},
 	path: {
-		getValue: (pkg: Package) => pkg.directory,
+		getValue: (pkg: IFluidBuildPackage) => pkg.directory,
 		style: { alignment: "left" },
 	},
 };
