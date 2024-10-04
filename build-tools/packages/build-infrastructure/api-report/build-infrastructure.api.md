@@ -7,6 +7,7 @@
 import type { Opaque } from 'type-fest';
 import type { PackageJson as PackageJson_2 } from 'type-fest';
 import type { SetRequired } from 'type-fest';
+import { SimpleGit } from 'simple-git';
 
 // @public (undocumented)
 export type AdditionalPackageProps = Record<string, string> | undefined;
@@ -38,14 +39,19 @@ export interface IFluidBuildDirs {
     [name: string]: IFluidBuildDirEntry;
 }
 
-// @public (undocumented)
+// @public
 export interface IFluidRepo extends Reloadable {
+    getGitRepository(): Promise<Readonly<SimpleGit>>;
+    getPackageReleaseGroup(pkg: Readonly<IPackage>): Readonly<IReleaseGroup>;
+    getPackageWorkspace(pkg: Readonly<IPackage>): Readonly<IWorkspace>;
     // (undocumented)
     packages: Map<PackageName, IPackage>;
     relativeToRepo(p: string): string;
     // (undocumented)
     releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
     root: string;
+    // (undocumented)
+    upstreamRemotePartialUrl?: string;
     // (undocumented)
     workspaces: Map<WorkspaceName, IWorkspace>;
 }
@@ -62,11 +68,9 @@ export interface IFluidRepoLayout {
     version: typeof FLUIDREPO_CONFIG_VERSION;
 }
 
-// @public (undocumented)
+// @public
 export interface Installable {
-    // (undocumented)
     checkInstall(): Promise<boolean>;
-    // (undocumented)
     install(updateLockfile: boolean): Promise<boolean>;
 }
 
@@ -101,6 +105,8 @@ export interface IPackage<J extends PackageJson = PackageJson> extends Pick<Inst
     // (undocumented)
     savePackageJson(): Promise<void>;
     // (undocumented)
+    toString(): string;
+    // (undocumented)
     readonly version: string;
 }
 
@@ -122,6 +128,8 @@ export interface IReleaseGroup extends Reloadable {
     readonly packages: IPackage[];
     // (undocumented)
     readonly rootPackage?: IPackage;
+    // (undocumented)
+    toString(): string;
     // (undocumented)
     readonly version: string;
     // (undocumented)
@@ -146,10 +154,19 @@ export interface IWorkspace extends Installable, Reloadable {
     releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
     // (undocumented)
     rootPackage: IPackage;
+    // (undocumented)
+    toString(): string;
 }
 
+// @public
+export function loadFluidRepo(searchPath: string, upstreamRemotePartialUrl?: string): IFluidRepo;
+
 // @public (undocumented)
-export function loadFluidRepo(root: string): IFluidRepo;
+export class NotInGitRepository extends Error {
+    constructor(path: string);
+    // (undocumented)
+    readonly path: string;
+}
 
 // @public (undocumented)
 export abstract class PackageBase<TAddProps extends AdditionalPackageProps = undefined, J extends PackageJson = PackageJson> implements IPackage {
@@ -185,7 +202,7 @@ export abstract class PackageBase<TAddProps extends AdditionalPackageProps = und
     // (undocumented)
     savePackageJson(): Promise<void>;
     // (undocumented)
-    toString(): PackageName;
+    toString(): string;
     // (undocumented)
     get version(): string;
 }

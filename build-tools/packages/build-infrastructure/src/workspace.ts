@@ -19,7 +19,6 @@ import type {
 	ReleaseGroupName,
 	WorkspaceName,
 } from "./types.js";
-import { findGitRoot } from "./utils.js";
 
 export class Workspace implements IWorkspace {
 	public readonly name: WorkspaceName;
@@ -34,10 +33,14 @@ export class Workspace implements IWorkspace {
 
 	private readonly packageManager: IPackageManager;
 
-	private constructor(name: string, definition: WorkspaceDefinition) {
+	private constructor(
+		name: string,
+		definition: WorkspaceDefinition,
+		public readonly root: string,
+	) {
 		this.name = name as WorkspaceName;
-		const repoRoot = findGitRoot();
-		this.directory = path.resolve(repoRoot, definition.directory);
+		// const repoRoot = findGitRoot();
+		this.directory = path.resolve(root, definition.directory);
 
 		const {
 			tool,
@@ -91,6 +94,7 @@ export class Workspace implements IWorkspace {
 			// Prepend the root package to the list of packages
 			this.packages.unshift(this.rootPackage);
 		} else {
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			this.rootPackage = this.packages[0]!;
 		}
 
@@ -106,7 +110,8 @@ export class Workspace implements IWorkspace {
 
 		this.releaseGroups = new Map();
 		for (const [groupName, def] of rGroupDefinitions) {
-			this.releaseGroups.set(groupName, new ReleaseGroup(groupName, def, this));
+			const newGroup = new ReleaseGroup(groupName, def, this);
+			this.releaseGroups.set(groupName, newGroup);
 		}
 
 		// sanity check - make sure that all packages are in a release group.
@@ -147,8 +152,12 @@ export class Workspace implements IWorkspace {
 		this.packages.forEach((pkg) => pkg.reload());
 	}
 
-	public static load(name: string, definition: WorkspaceDefinition): IWorkspace {
-		const workspace = new Workspace(name, definition);
+	public toString(): string {
+		return `${this.name} (WORKSPACE)`;
+	}
+
+	public static load(name: string, definition: WorkspaceDefinition, root: string): IWorkspace {
+		const workspace = new Workspace(name, definition, root);
 		return workspace;
 	}
 }
