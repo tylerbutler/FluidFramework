@@ -5,7 +5,11 @@
 
 import { strict as assert } from "node:assert";
 import path from "node:path";
-import { Package, PackageJson, updatePackageJsonFile } from "@fluidframework/build-tools";
+import {
+	type IFluidBuildPackage,
+	PackageJson,
+	updatePackageJsonFile,
+} from "@fluidframework/build-tools";
 import { ExtractorConfig } from "@microsoft/api-extractor";
 import { Flags } from "@oclif/core";
 import { PackageCommand } from "../../BasePackageCommand.js";
@@ -69,7 +73,7 @@ export default class SetReleaseTagPublishingCommand extends PackageCommand<
 		packagesUpdated: [],
 	};
 
-	protected async processPackage(pkg: Package): Promise<void> {
+	protected async processPackage(pkg: IFluidBuildPackage): Promise<void> {
 		const configOptions = ExtractorConfig.tryLoadForFolder({
 			startingFolder: pkg.directory,
 		});

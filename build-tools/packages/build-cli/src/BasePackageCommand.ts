@@ -4,7 +4,7 @@
  */
 
 import { strict as assert } from "node:assert";
-import { Package } from "@fluidframework/build-tools";
+import { type IFluidBuildPackage } from "@fluidframework/build-tools";
 import { Command, Flags, ux } from "@oclif/core";
 import async from "async";
 import {
@@ -67,7 +67,7 @@ export abstract class PackageCommand<
 	 * @param kind - The kind of the package.
 	 * @typeparam TPkg - Type of the package-like object being processed.
 	 */
-	protected abstract processPackage<TPkg extends Package>(
+	protected abstract processPackage<TPkg extends IFluidBuildPackage>(
 		pkg: TPkg,
 		kind: PackageKind,
 	): Promise<void>;

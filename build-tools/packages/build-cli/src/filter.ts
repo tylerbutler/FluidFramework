@@ -4,7 +4,7 @@
  */
 
 import path from "node:path";
-import { Package } from "@fluidframework/build-tools";
+import { type IFluidBuildPackage, Package } from "@fluidframework/build-tools";
 import { type PackageSelectionDefault, filterFlags, selectionFlags } from "./flags.js";
 import { Context, Repository } from "./library/index.js";
 import { ReleaseGroup, knownReleaseGroups } from "./releaseGroups.js";
@@ -163,7 +163,7 @@ export type PackageKind =
 /**
  * A convenience type mapping a package to its PackageKind.
  */
-export type PackageWithKind = Package & { kind: PackageKind };
+export type PackageWithKind = IFluidBuildPackage & { kind: PackageKind };
 
 /**
  * Selects packages from the context based on the selection.
@@ -191,7 +191,7 @@ const selectPackagesFromContext = async (
 		);
 		selected.push(
 			...packages.map((p) => {
-				const pkg = Package.load(p.packageJsonFileName, "none", undefined, {
+				const pkg = Package.load(p.packageJsonFilePath, "none", undefined, {
 					kind: "packageFromDirectory" as PackageKind,
 				});
 				return pkg;
@@ -280,7 +280,7 @@ export async function selectAndFilterPackages(
 /**
  * Convenience type that extracts only the properties of a package that are needed for filtering.
  */
-type FilterablePackage = Pick<Package, "name" | "private">;
+type FilterablePackage = Pick<IFluidBuildPackage, "name" | "private">;
 
 /**
  * Filters a list of packages by the filter criteria.

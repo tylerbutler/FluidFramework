@@ -6,7 +6,7 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { VersionBumpType } from "@fluid-tools/version-tools";
-import { Package } from "@fluidframework/build-tools";
+import { IFluidBuildPackage } from "@fluidframework/build-tools";
 import { Flags, ux } from "@oclif/core";
 import { PackageName } from "@rushstack/node-core-library";
 import chalk from "chalk";
@@ -43,7 +43,7 @@ const excludedScopes = new Set(["@fluid-example", "@fluid-internal", "@fluid-tes
  */
 interface Choice {
 	title: string;
-	value?: Package | string;
+	value?: IFluidBuildPackage | string;
 	disabled?: boolean;
 	selected?: boolean;
 	heading?: boolean;
@@ -381,7 +381,8 @@ export default class GenerateChangesetCommand extends BaseCommand<
 		const response = await prompts(questions);
 		// The response.selectedPackages value will be undefined if the question was skipped, so default to an empty array
 		// in that case.
-		const selectedPackages: Package[] = (response.selectedPackages ?? []) as Package[];
+		const selectedPackages: IFluidBuildPackage[] = (response.selectedPackages ??
+			[]) as IFluidBuildPackage[];
 		const bumpType = getDefaultBumpTypeForBranch(branch, releaseGroup) ?? "minor";
 
 		const newFile = await createChangesetFile(
@@ -404,7 +405,7 @@ export default class GenerateChangesetCommand extends BaseCommand<
 
 async function createChangesetFile(
 	rootPath: string,
-	packages: Map<Package, VersionBumpType>,
+	packages: Map<IFluidBuildPackage, VersionBumpType>,
 	body?: string,
 	additionalMetadata?: FluidCustomChangesetMetadata,
 ): Promise<string> {
@@ -416,7 +417,7 @@ async function createChangesetFile(
 }
 
 function createChangesetContent(
-	packages: Map<Package, VersionBumpType>,
+	packages: Map<IFluidBuildPackage, VersionBumpType>,
 	body?: string,
 	additionalMetadata?: FluidCustomChangesetMetadata,
 ): string {
@@ -445,7 +446,7 @@ function createChangesetContent(
 	return changesetContents;
 }
 
-function isIncludedByDefault(pkg: Package): boolean {
+function isIncludedByDefault(pkg: IFluidBuildPackage): boolean {
 	if (pkg.packageJson.private === true || excludedScopes.has(PackageName.getScope(pkg.name))) {
 		return false;
 	}
@@ -460,7 +461,11 @@ function isIncludedByDefault(pkg: Package): boolean {
  * @param b - The second package to compare.
  * @param changedPackages - An array of changed packages.
  */
-function packageComparer(a: Package, b: Package, changedPackages: Package[]): number {
+function packageComparer(
+	a: IFluidBuildPackage,
+	b: IFluidBuildPackage,
+	changedPackages: IFluidBuildPackage[],
+): number {
 	const aChanged = changedPackages.some((cp) => cp.name === a.name);
 	const bChanged = changedPackages.some((cp) => cp.name === b.name);
 

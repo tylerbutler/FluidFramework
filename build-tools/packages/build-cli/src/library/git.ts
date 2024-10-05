@@ -4,7 +4,7 @@
  */
 
 import path from "node:path";
-import { Package } from "@fluidframework/build-tools";
+import { type IFluidBuildPackage, Package } from "@fluidframework/build-tools";
 import readPkgUp from "read-pkg-up";
 import { SimpleGit, SimpleGitOptions, simpleGit } from "simple-git";
 import type { SetRequired } from "type-fest";
@@ -153,7 +153,7 @@ export class Repository {
 		files: string[];
 		dirs: string[];
 		releaseGroups: ReleaseGroup[];
-		packages: Package[];
+		packages: IFluidBuildPackage[];
 	}> {
 		const files = await this.getChangedFilesSinceRef(ref, remote);
 		const dirs = await this.getChangedDirectoriesSinceRef(ref, remote);

@@ -5,6 +5,7 @@
 
 import { writeFileSync } from "node:fs";
 import path from "node:path";
+import type { PackageName } from "@fluid-tools/build-infrastructure";
 import { MonoRepo, Package } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import { mkdirpSync } from "fs-extra";
@@ -127,7 +128,7 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 
 				// Set the tarball name if the tarball flag is set
 				if (tarball === true) {
-					item.name = item.tarball;
+					item.name = item.tarball as PackageName;
 				}
 				return item;
 			});

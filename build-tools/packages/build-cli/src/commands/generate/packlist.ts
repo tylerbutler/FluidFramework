@@ -5,7 +5,7 @@
 
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { Package } from "@fluidframework/build-tools";
+import type { IFluidBuildPackage } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import execa from "execa";
 import { PackageCommand } from "../../BasePackageCommand.js";
@@ -53,7 +53,7 @@ export default class GeneratePackListCommand extends PackageCommand<
 
 	protected defaultSelection = undefined;
 
-	protected async processPackage(pkg: Package): Promise<void> {
+	protected async processPackage(pkg: IFluidBuildPackage): Promise<void> {
 		const { out } = this.flags;
 
 		const outFile = path.join(pkg.directory, out);
