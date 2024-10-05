@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { type IFluidBuildPackage, MonoRepo, type Package } from "@fluidframework/build-tools";
+import { type IFluidBuildPackage, MonoRepo } from "@fluidframework/build-tools";
 import execa from "execa";
 import { ResetMode } from "simple-git";
 import type { Context } from "./context.js";
