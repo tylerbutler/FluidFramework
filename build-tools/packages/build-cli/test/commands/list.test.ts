@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import { GitRepo, type Package, getResolvedFluidRoot } from "@fluidframework/build-tools";
 import { expect } from "chai";
 
@@ -19,10 +20,10 @@ import {
  * published there.
  */
 function FeedsForPackages(
-	packages: Package[],
+	packages: IPackage[],
 	config: PackageNamePolicyConfig,
-): Map<Feed, Package[]> {
-	const mapping = new Map<Feed, Package[]>();
+): Map<Feed, IPackage[]> {
+	const mapping = new Map<Feed, IPackage[]>();
 	for (const pkg of packages) {
 		for (const feed of feeds) {
 			let pkgList = mapping.get(feed);

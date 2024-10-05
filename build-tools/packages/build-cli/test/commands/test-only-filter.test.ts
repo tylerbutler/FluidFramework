@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { Package } from "@fluidframework/build-tools";
+import { IPackage } from "@fluid-tools/build-infrastructure";
 import chai, { expect } from "chai";
 import assertArrays from "chai-arrays";
 
@@ -13,8 +13,8 @@ const test = initializeCommandTestFunction(import.meta.url);
 chai.use(assertArrays);
 
 interface jsonOutput {
-	selected: Package[];
-	filtered: Package[];
+	selected: IPackage[];
+	filtered: IPackage[];
 }
 
 describe("flub test-only-filter", () => {
@@ -51,8 +51,8 @@ describe("flub test-only-filter", () => {
 		.it(`--releaseGroup selector`, (ctx) => {
 			const output: jsonOutput = JSON.parse(ctx.stdout);
 			const { selected, filtered } = output;
-			expect(selected).to.be.ofSize(4);
-			expect(filtered).to.be.ofSize(4);
+			expect(selected).to.be.ofSize(5);
+			expect(filtered).to.be.ofSize(5);
 		});
 
 	test
