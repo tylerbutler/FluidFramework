@@ -3,9 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { type IFluidBuildPackage, MonoRepo } from "@fluidframework/build-tools";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
+import { MonoRepo } from "@fluidframework/build-tools";
 import execa from "execa";
 import { ResetMode } from "simple-git";
+
 import type { Context } from "./context.js";
 import { Repository } from "./git.js";
 import { getPreReleaseDependencies } from "./package.js";
@@ -34,7 +36,7 @@ export type CheckFunction = (
 	 * In this case the MonoRepo class represents a release group. This naming and conceptual conflict will be resolved in
 	 * future refactoring.
 	 */
-	releaseGroupOrPackage: MonoRepo | IFluidBuildPackage,
+	releaseGroupOrPackage: MonoRepo | IPackage,
 ) => Promise<CheckResult>;
 
 /**
@@ -91,7 +93,7 @@ export const CheckNoLocalChanges: CheckFunction = async (
  */
 export const CheckDependenciesInstalled: CheckFunction = async (
 	_context: Context,
-	releaseGroupOrPackage: MonoRepo | IFluidBuildPackage,
+	releaseGroupOrPackage: MonoRepo | IPackage,
 ): Promise<CheckResult> => {
 	const packagesToCheck =
 		releaseGroupOrPackage instanceof MonoRepo
@@ -155,7 +157,7 @@ export const CheckHasRemoteBranchUpToDate: CheckFunction = async (
  */
 export const CheckHasNoPrereleaseDependencies: CheckFunction = async (
 	context: Context,
-	releaseGroupOrPackage: MonoRepo | IFluidBuildPackage,
+	releaseGroupOrPackage: MonoRepo | IPackage,
 ): Promise<CheckResult> => {
 	const { releaseGroups, packages, isEmpty } = await getPreReleaseDependencies(
 		context,

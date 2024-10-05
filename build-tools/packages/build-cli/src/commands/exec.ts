@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { type IFluidBuildPackage } from "@fluidframework/build-tools";
+import { type IPackage } from "@fluid-tools/build-infrastructure";
 import { Args } from "@oclif/core";
 import execa from "execa";
 
@@ -23,7 +23,7 @@ export default class ExecCommand extends PackageCommand<typeof ExecCommand> {
 
 	protected defaultSelection = "all" as PackageSelectionDefault;
 
-	protected async processPackage(pkg: IFluidBuildPackage): Promise<void> {
+	protected async processPackage(pkg: IPackage): Promise<void> {
 		// TODO: The shell option should not need to be true. AB#4067
 		const result = await execa.command(this.args.cmd, {
 			cwd: pkg.directory,

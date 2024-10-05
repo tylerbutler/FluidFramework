@@ -4,7 +4,9 @@
  */
 
 import path from "node:path";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import { type IFluidBuildPackage, Package } from "@fluidframework/build-tools";
+
 import { type PackageSelectionDefault, filterFlags, selectionFlags } from "./flags.js";
 import { Context, Repository } from "./library/index.js";
 import { ReleaseGroup, knownReleaseGroups } from "./releaseGroups.js";
@@ -280,7 +282,7 @@ export async function selectAndFilterPackages(
 /**
  * Convenience type that extracts only the properties of a package that are needed for filtering.
  */
-type FilterablePackage = Pick<IFluidBuildPackage, "name" | "private">;
+type FilterablePackage = Pick<IPackage, "name" | "private">;
 
 /**
  * Filters a list of packages by the filter criteria.

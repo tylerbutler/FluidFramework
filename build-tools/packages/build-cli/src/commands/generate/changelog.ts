@@ -5,8 +5,9 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import { fromInternalScheme, isInternalVersionScheme } from "@fluid-tools/version-tools";
-import { FluidRepo, type IFluidBuildPackage } from "@fluidframework/build-tools";
+import { FluidRepo } from "@fluidframework/build-tools";
 import { ux } from "@oclif/core";
 import { command as execCommand } from "execa";
 import { inc } from "semver";
@@ -57,7 +58,7 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 
 	private repo?: Repository;
 
-	private async processPackage(pkg: IFluidBuildPackage): Promise<void> {
+	private async processPackage(pkg: IPackage): Promise<void> {
 		const { directory, version: pkgVersion } = pkg;
 
 		// This is the version that the changesets tooling calculates by default. It does a semver major bump on the current

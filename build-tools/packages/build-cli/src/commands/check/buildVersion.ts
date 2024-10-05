@@ -4,10 +4,11 @@
  */
 
 import path from "node:path";
-import { type IFluidBuildPackage, type PackageJson } from "@fluidframework/build-tools";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
+import { type PackageJson } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
-
 import { readJson } from "fs-extra/esm";
+
 import { PackageCommand } from "../../BasePackageCommand.js";
 import { semverFlag } from "../../flags.js";
 
@@ -52,8 +53,8 @@ export default class CheckBuildVersionCommand extends PackageCommand<
 		}
 	}
 
-	private readonly invalidVersions: IFluidBuildPackage[] = [];
-	protected async processPackage(pkg: IFluidBuildPackage): Promise<void> {
+	private readonly invalidVersions: IPackage[] = [];
+	protected async processPackage(pkg: IPackage): Promise<void> {
 		if (pkg.version !== this.versionToCheck) {
 			this.invalidVersions.push(pkg);
 		}

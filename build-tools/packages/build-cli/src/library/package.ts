@@ -6,6 +6,7 @@
 import { strict as assert } from "node:assert";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import {
 	InterdependencyRange,
 	ReleaseVersion,
@@ -38,7 +39,6 @@ import * as semver from "semver";
 import {
 	AllPackagesSelectionCriteria,
 	PackageSelectionCriteria,
-	PackageWithKind,
 	selectAndFilterPackages,
 } from "../filter.js";
 import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../releaseGroups.js";
@@ -245,11 +245,11 @@ export interface PreReleaseDependencies {
  */
 export async function getPreReleaseDependencies(
 	context: Context,
-	releaseGroup: ReleaseGroup | ReleasePackage | MonoRepo | IFluidBuildPackage,
+	releaseGroup: ReleaseGroup | ReleasePackage | MonoRepo | IPackage,
 ): Promise<PreReleaseDependencies> {
 	const prereleasePackages = new Map<ReleasePackage, string>();
 	const prereleaseGroups = new Map<ReleaseGroup, string>();
-	const packagesToCheck: IFluidBuildPackage[] = [];
+	const packagesToCheck: IPackage[] = [];
 
 	/**
 	 * Array of package names; dependencies on these packages will be updated.
@@ -449,7 +449,7 @@ export function getFluidDependencies(
 ): [releaseGroups: PackageVersionMap, packages: PackageVersionMap] {
 	const releaseGroups: PackageVersionMap = {};
 	const packages: PackageVersionMap = {};
-	let packagesToCheck: IFluidBuildPackage[];
+	let packagesToCheck: IPackage[];
 
 	if (isReleaseGroup(releaseGroupOrPackage)) {
 		packagesToCheck = context.packagesInReleaseGroup(releaseGroupOrPackage);
@@ -491,7 +491,7 @@ export function getFluidDependencies(
 }
 
 export interface DependencyWithRange {
-	pkg: IFluidBuildPackage;
+	pkg: IPackage;
 	range: InterdependencyRange;
 }
 
@@ -507,7 +507,7 @@ export interface DependencyWithRange {
  */
 export async function setVersion(
 	context: Context,
-	releaseGroupOrPackage: MonoRepo | IFluidBuildPackage,
+	releaseGroupOrPackage: MonoRepo | IPackage,
 	version: semver.SemVer,
 	interdependencyRange: InterdependencyRange = "^",
 	log?: Logger,
@@ -692,7 +692,7 @@ function getDependenciesRecord(
  * example, when setting release group package versions in the CI release pipeline.
  */
 async function setPackageDependencies(
-	pkg: IFluidBuildPackage,
+	pkg: IPackage,
 	dependencyVersionMap: Map<string, DependencyWithRange>,
 	updateWithinSameReleaseGroup = false,
 	writeChanges = true,
@@ -702,7 +702,7 @@ async function setPackageDependencies(
 	for (const { name, depClass } of pkg.combinedDependencies) {
 		const dep = dependencyVersionMap.get(name);
 		if (dep !== undefined) {
-			const isSameReleaseGroup = MonoRepo.isSame(dep.pkg.monoRepo, pkg.monoRepo);
+			const isSameReleaseGroup = dep.pkg.releaseGroup === pkg.releaseGroup;
 			if (!isSameReleaseGroup || (updateWithinSameReleaseGroup && isSameReleaseGroup)) {
 				const dependencies = getDependenciesRecord(pkg.packageJson, depClass);
 				if (dependencies === undefined) {
@@ -796,7 +796,7 @@ export async function npmCheckUpdatesHomegrown(
 	writeChanges = true,
 	log?: Logger,
 ): Promise<{
-	updatedPackages: PackageWithKind[];
+	updatedPackages: IFluidBuildPackage[];
 	updatedDependencies: PackageVersionMap;
 }> {
 	if (releaseGroupFilter !== undefined && releaseGroup === releaseGroupFilter) {

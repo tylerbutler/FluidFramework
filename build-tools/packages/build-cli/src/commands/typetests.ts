@@ -3,7 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { type IFluidBuildPackage, updatePackageJsonFile } from "@fluidframework/build-tools";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
+import { updatePackageJsonFile } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 
 import { PackageCommand } from "../BasePackageCommand.js";
@@ -85,7 +86,7 @@ If targeting prerelease versions, skipping versions, or using skipping some alte
 
 	protected defaultSelection = "dir" as PackageSelectionDefault;
 
-	protected async processPackage(pkg: IFluidBuildPackage): Promise<void> {
+	protected async processPackage(pkg: IPackage): Promise<void> {
 		const version =
 			this.flags.exact ??
 			(this.flags.remove

@@ -4,7 +4,8 @@
  */
 
 import path from "node:path";
-import { type IFluidBuildPackage, Package } from "@fluidframework/build-tools";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
+import { type IFluidBuildPackage } from "@fluidframework/build-tools";
 import readPkgUp from "read-pkg-up";
 import { SimpleGit, SimpleGitOptions, simpleGit } from "simple-git";
 import type { SetRequired } from "type-fest";
@@ -153,7 +154,7 @@ export class Repository {
 		files: string[];
 		dirs: string[];
 		releaseGroups: ReleaseGroup[];
-		packages: IFluidBuildPackage[];
+		packages: IPackage[];
 	}> {
 		const files = await this.getChangedFilesSinceRef(ref, remote);
 		const dirs = await this.getChangedDirectoriesSinceRef(ref, remote);
@@ -167,7 +168,7 @@ export class Repository {
 
 		const changedPackages = [...new Set(changedPackageNames)]
 			.map((name) => context.fullPackageMap.get(name))
-			.filter((pkg): pkg is Package => pkg !== undefined);
+			.filter((pkg): pkg is IFluidBuildPackage => pkg !== undefined);
 
 		const changedReleaseGroups = [
 			...new Set(changedPackages.map((pkg) => pkg.monoRepo?.kind)),

@@ -6,7 +6,7 @@
 import { strict as assert } from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
-import { type IFluidBuildPackage } from "@fluidframework/build-tools";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import { PackageCommand } from "../../BasePackageCommand.js";
 import { PackageKind } from "../../filter.js";
 
@@ -97,7 +97,7 @@ export class TagAssertsCommand extends PackageCommand<typeof TagAssertsCommand> 
 		}
 	}
 
-	protected async processPackage<TPkg extends IFluidBuildPackage>(
+	protected async processPackage<TPkg extends IPackage>(
 		pkg: TPkg,
 		kind: PackageKind,
 	): Promise<void> {
@@ -296,7 +296,7 @@ export class TagAssertsCommand extends PackageCommand<typeof TagAssertsCommand> 
 		}
 	}
 
-	private async getTsConfigPath(pkg: IFluidBuildPackage): Promise<string> {
+	private async getTsConfigPath(pkg: IPackage): Promise<string> {
 		const context = await this.getContext();
 		const tsconfigPath = context.repo.relativeToRepo(
 			path.join(pkg.directory, "tsconfig.json"),

@@ -4,12 +4,12 @@
  */
 
 import { strict as assert } from "node:assert";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
+import { FluidRepo, type IFluidBuildPackage, MonoRepo } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import * as semver from "semver";
-
-import { FluidRepo, type IFluidBuildPackage, MonoRepo } from "@fluidframework/build-tools";
 
 import {
 	InterdependencyRange,
@@ -156,7 +156,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		}
 
 		let repoVersion: ReleaseVersion;
-		let packageOrReleaseGroup: IFluidBuildPackage | MonoRepo;
+		let packageOrReleaseGroup: IPackage | MonoRepo;
 		let scheme: VersionScheme | undefined;
 		const exactVersion: semver.SemVer | null = semver.parse(flags.exact);
 		const updatedPackages: IFluidBuildPackage[] = [];
@@ -179,8 +179,8 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		} else {
 			const releasePackage = rgOrPackage;
 
-			if (releasePackage.monoRepo !== undefined) {
-				const rg = releasePackage.monoRepo.kind;
+			if (releasePackage.releaseGroup !== undefined) {
+				const rg = releasePackage.releaseGroup;
 				this.errorLog(`${releasePackage.name} is part of the ${rg} release group.`);
 				this.errorLog(
 					`If you want to bump that package, run the following command to bump the whole release group:\n\n    ${

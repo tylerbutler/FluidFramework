@@ -4,14 +4,14 @@
  */
 
 import { strict as assert } from "node:assert";
-import { type IFluidBuildPackage } from "@fluidframework/build-tools";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import { PackageCommand } from "../BasePackageCommand.js";
 import { PackageWithKind } from "../filter.js";
 import type { PackageSelectionDefault } from "../flags.js";
 
 interface FilterCommandResult {
-	selected: Pick<IFluidBuildPackage, "name" | "directory">[];
-	filtered: Pick<IFluidBuildPackage, "name" | "directory">[];
+	selected: Pick<IPackage, "name" | "directory">[];
+	filtered: Pick<IPackage, "name" | "directory">[];
 }
 
 /**
@@ -43,7 +43,7 @@ export default class FilterCommand extends PackageCommand<typeof FilterCommand> 
 	static readonly enableJsonFlag = true;
 	protected defaultSelection = "dir" as PackageSelectionDefault;
 
-	protected async processPackage(pkg: IFluidBuildPackage): Promise<void> {
+	protected async processPackage(pkg: IPackage): Promise<void> {
 		// do nothing
 	}
 
