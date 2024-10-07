@@ -78,3 +78,7 @@ export function createDeclarativeTaskHandler(
 	};
 	return handler;
 }
+
+export interface TaskProvider {
+	getTaskHandler(): TaskHandlerFunction;
+}

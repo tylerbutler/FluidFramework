@@ -7,6 +7,13 @@ export { GitRepo } from "./common/gitRepo";
 export { FluidRepo } from "./fluidBuild/fluidRepo";
 export { type IFluidBuildConfig } from "./fluidBuild/fluidBuildConfig";
 export { getResolvedFluidRoot, getFluidBuildConfig } from "./fluidBuild/fluidUtils";
+export {
+	type TaskHandlerFunction,
+	type TaskHandlerConstructor,
+	isConstructorFunction,
+} from "./fluidBuild/tasks/taskHandlers";
+export { type TaskProvider } from "./fluidBuild/tasks/leaf/declarativeTask";
+export { type ILeafTask } from "./fluidBuild/tasks/leaf/leafTask";
 export type { Logger } from "./common/logging";
 export { MonoRepo } from "./common/monoRepo";
 export {
