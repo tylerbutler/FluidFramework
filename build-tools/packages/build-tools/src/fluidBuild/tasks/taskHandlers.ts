@@ -5,7 +5,7 @@
 
 import type { BuildContext } from "../buildContext";
 import type { BuildPackage } from "../buildGraph";
-import type { LeafTask } from "./leaf/leafTask";
+import type { ILeafTask } from "./leaf/leafTask";
 
 /**
  * The definition of a free function that returns a LeafTask subclass.
@@ -15,7 +15,7 @@ export type TaskHandlerFunction = (
 	command: string,
 	context: BuildContext,
 	taskName?: string,
-) => LeafTask;
+) => ILeafTask;
 
 /**
  * The definition of a constructor function that returns a LeafTask subclass.
@@ -25,7 +25,7 @@ export type TaskHandlerConstructor = new (
 	command: string,
 	context: BuildContext,
 	taskName?: string,
-) => LeafTask;
+) => ILeafTask;
 
 /**
  * A TaskHandler is a function that can be used to generate a `LeafTask` that will handle a particular fluid-build task.

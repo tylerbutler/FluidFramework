@@ -9,7 +9,7 @@ import type { BuildContext } from "../../buildContext";
 import type { BuildPackage } from "../../buildGraph";
 import type { DeclarativeTask } from "../../fluidBuildConfig";
 import type { TaskHandlerFunction } from "../taskHandlers";
-import { LeafTask, LeafWithFileStatDoneFileTask } from "./leafTask";
+import { type ILeafTask, LeafWithFileStatDoneFileTask } from "./leafTask";
 
 class DeclarativeTaskHandler extends LeafWithFileStatDoneFileTask {
 	constructor(
@@ -73,7 +73,7 @@ export function createDeclarativeTaskHandler(
 		command: string,
 		context: BuildContext,
 		taskName?: string,
-	): LeafTask => {
+	): ILeafTask => {
 		return new DeclarativeTaskHandler(node, command, context, taskName, taskDefinition);
 	};
 	return handler;

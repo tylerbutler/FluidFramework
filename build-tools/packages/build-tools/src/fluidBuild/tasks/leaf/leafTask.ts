@@ -671,3 +671,5 @@ function sortByName(a: { name: string }, b: { name: string }): number {
 	}
 	return 0;
 }
+
+export type ILeafTask = Omit<typeof LeafTask, "prototype" | "createTaskQueue">;

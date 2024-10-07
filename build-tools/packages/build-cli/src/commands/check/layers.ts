@@ -6,14 +6,18 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { Timer } from "@fluidframework/build-tools";
+import { type TaskHandlerFunction, type TaskProvider, Timer } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 
 import { BaseCommand, LayerGraph } from "../../library/index.js";
 
 const packagesMdFileName = "PACKAGES.md";
 
-export class CheckLayers extends BaseCommand<typeof CheckLayers> {
+export class CheckLayers extends BaseCommand<typeof CheckLayers> implements TaskProvider {
+	static getTaskHandler(): TaskHandlerFunction {
+		throw new Error("Method not implemented.");
+	}
+
 	static readonly description =
 		"Checks that the dependencies between Fluid Framework packages are properly layered.";
 
@@ -37,6 +41,16 @@ export class CheckLayers extends BaseCommand<typeof CheckLayers> {
 		}),
 		...BaseCommand.flags,
 	} as const;
+
+	async init(): Promise<void> {
+		const { args, flags } = await this.parse({
+			flags: this.ctor.flags,
+			baseFlags: (super.ctor as typeof BaseCommand).baseFlags,
+			enableJsonFlag: this.ctor.enableJsonFlag,
+			args: this.ctor.args,
+			strict: this.ctor.strict,
+		});
+	}
 
 	async run(): Promise<void> {
 		const { flags } = this;
