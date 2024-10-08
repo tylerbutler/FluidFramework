@@ -230,14 +230,12 @@ Generates a configuration file for changesets.
 
 ```
 USAGE
-  $ flub generate changeset-config -g client|server|azure|build-tools|gitrest|historian [--json] [-v | --quiet] [-o
-  <value>]
+  $ flub generate changeset-config -w <value> [--json] [-v | --quiet] [-o <value>]
 
 FLAGS
-  -g, --releaseGroup=<option>  (required) Name of a release group.
-                               <options: client|server|azure|build-tools|gitrest|historian>
-  -o, --outFile=<value>        [default: .changeset/config.json] Path to write the changeset config file to. The file
-                               will always be overwritten.
+  -o, --outFile=<value>    [default: .changeset/config.json] Path to write the changeset config file to. The file will
+                           always be overwritten.
+  -w, --workspace=<value>  (required) Name of a workspace.
 
 LOGGING FLAGS
   -v, --verbose  Enable verbose logging.

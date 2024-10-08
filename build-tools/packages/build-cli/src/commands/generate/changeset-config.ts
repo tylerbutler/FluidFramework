@@ -5,17 +5,20 @@
 
 import { existsSync } from "node:fs";
 import path from "node:path";
-import {
-	type ChangesetConfigWritten,
-	Package,
-	type PackageNameOrScope,
-	type PackageScopeSelectors,
-} from "@fluidframework/build-tools";
+import type { IPackage, IReleaseGroup } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import { mkdirp, readJSON, writeJSON } from "fs-extra/esm";
-import { releaseGroupFlag } from "../../flags.js";
-import { BaseCommand, type Context } from "../../library/index.js";
-import type { ReleaseGroup } from "../../releaseGroups.js";
+import sortObject from "sort-object-keys";
+
+import {
+	type ChangesetConfigWritten,
+	type PackageNameOrScope,
+	type PackageScopeSelectors,
+	getFlubConfig,
+	isPackageScope,
+} from "../../config.js";
+import { workspaceNameFlag } from "../../flags.js";
+import { BaseCommand } from "../../library/index.js";
 
 const defaultConfig: ChangesetConfigWritten = {
 	$schema: "https://unpkg.com/@changesets/config@2.3.0/schema.json",
@@ -32,7 +35,7 @@ const defaultConfig: ChangesetConfigWritten = {
  * @param selectors - The selectors to apply.
  * @returns true if the package matches; false otherwise.
  */
-function packageMatchesSelectors(pkg: Package, selectors: PackageScopeSelectors): boolean {
+function packageMatchesSelectors(pkg: IPackage, selectors: PackageScopeSelectors): boolean {
 	for (const selector of Object.values(selectors)) {
 		for (const entry of selector) {
 			if (pkg.name === entry) {
@@ -50,16 +53,15 @@ function packageMatchesSelectors(pkg: Package, selectors: PackageScopeSelectors)
  * Returns an array of package arrays that should be in the 'fixed' section of the changesetsConfig.
  */
 function getFixedPackageGroups(
-	context: Context,
-	releaseGroups: ReleaseGroup[],
+	releaseGroups: IReleaseGroup[],
 	selectors: PackageScopeSelectors | undefined,
 ): PackageNameOrScope[][] {
 	const results: PackageNameOrScope[][] = [];
 
 	for (const releaseGroup of releaseGroups) {
-		const packagesToCheck = context
-			.packagesInReleaseGroup(releaseGroup)
-			.filter((pkg) => selectors !== undefined && packageMatchesSelectors(pkg, selectors));
+		const packagesToCheck = releaseGroup.packages.filter(
+			(pkg) => selectors !== undefined && packageMatchesSelectors(pkg, selectors),
+		);
 		const names = packagesToCheck.map((p) => p.name).sort();
 		if (names.length > 0) {
 			results.push(names);
@@ -80,7 +82,7 @@ export default class GenerateChangesetConfigCommand extends BaseCommand<
 	static readonly enableJsonFlag = true;
 
 	static readonly flags = {
-		releaseGroup: releaseGroupFlag({
+		workspace: workspaceNameFlag({
 			// Changeset config is currently per-workspace/release group, so require a release group to be provided.
 			required: true,
 		}),
@@ -94,14 +96,14 @@ export default class GenerateChangesetConfigCommand extends BaseCommand<
 	} as const;
 
 	public async run(): Promise<ChangesetConfigWritten> {
-		const context = await this.getContext();
-		const { releaseGroup, outFile } = this.flags;
-		const { changesetConfig } = context.flubConfig;
+		const repo = await this.getFluidRepo();
+		const { workspace: workspaceName, outFile } = this.flags;
+		const { changesetConfig } = getFlubConfig(repo.root);
 
-		const monorepo =
-			releaseGroup === undefined ? undefined : context.repo.releaseGroups.get(releaseGroup);
-		if (monorepo === undefined) {
-			this.error(`Release group ${releaseGroup} not found in repo config`, { exit: 1 });
+		const workspace = repo.workspaces.get(workspaceName);
+
+		if (workspace === undefined) {
+			this.error(`Workspace ${workspace} not found in Fluid repo`, { exit: 1 });
 		}
 
 		const currentConfig: ChangesetConfigWritten = existsSync(outFile)
@@ -111,8 +113,14 @@ export default class GenerateChangesetConfigCommand extends BaseCommand<
 		const newConfig = { ...defaultConfig, ...currentConfig };
 
 		// Always override the fixed/linked packages.
-		const newFixed = getFixedPackageGroups(context, [releaseGroup], changesetConfig?.fixed);
-		const newLinked = getFixedPackageGroups(context, [releaseGroup], changesetConfig?.linked);
+		const newFixed = getFixedPackageGroups(
+			[...workspace.releaseGroups.values()],
+			changesetConfig?.fixed,
+		);
+		const newLinked = getFixedPackageGroups(
+			[...workspace.releaseGroups.values()],
+			changesetConfig?.linked,
+		);
 		newConfig.fixed = newFixed.length === 0 ? newConfig.fixed : newFixed;
 		newConfig.linked = newLinked.length === 0 ? newConfig.linked : newLinked;
 

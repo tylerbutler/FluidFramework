@@ -5,6 +5,7 @@
 
 import { statSync } from "node:fs";
 import type { WrittenConfig } from "@changesets/types";
+import type { PackageName } from "@fluid-tools/build-infrastructure";
 import {
 	DEFAULT_INTERDEPENDENCY_RANGE,
 	InterdependencyRange,
@@ -72,11 +73,6 @@ export interface FlubConfig {
 	 */
 	changesetConfig?: ChangesetConfig;
 }
-
-/**
- * A type representing an npm package name.
- */
-export type PackageName = string;
 
 /**
  * A type representing an npm package scope. It is any string that begins with an `@` symbol.

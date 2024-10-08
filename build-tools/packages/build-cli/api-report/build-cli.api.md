@@ -5,8 +5,10 @@
 ```ts
 
 import { InterdependencyRange } from '@fluid-tools/version-tools';
+import type { PackageName } from '@fluid-tools/build-infrastructure';
 import { run } from '@oclif/core';
 import { VersionBumpType } from '@fluid-tools/version-tools';
+import type { WrittenConfig } from '@changesets/types';
 
 // @public (undocumented)
 export interface AssertTaggingConfig {
@@ -23,6 +25,18 @@ export interface BumpConfig {
 }
 
 // @public
+export interface ChangesetConfig extends Omit<ChangesetConfigWritten, "fixed" | "linked"> {
+    fixed?: PackageScopeSelectors;
+    linked?: PackageScopeSelectors;
+}
+
+// @public
+export interface ChangesetConfigWritten extends WrittenConfig {
+    // (undocumented)
+    $schema?: string;
+}
+
+// @public
 export interface FlubConfig {
     assertTagging?: AssertTaggingConfig;
     // @deprecated
@@ -30,6 +44,7 @@ export interface FlubConfig {
         [name: string]: VersionBumpType | PreviousVersionStyle;
     };
     bump?: BumpConfig;
+    changesetConfig?: ChangesetConfig;
     policy?: PolicyConfig;
     releaseNotes?: ReleaseNotesConfig;
     version?: 1;
@@ -37,6 +52,9 @@ export interface FlubConfig {
 
 // @public
 export const knownReleaseGroups: readonly ["build-tools", "client", "server", "gitrest", "historian"];
+
+// @public
+export type PackageNameOrScope = PackageName | PackageScope;
 
 // @public
 export interface PackageNamePolicyConfig {
@@ -57,6 +75,12 @@ export interface PackageRequirements {
     requiredDevDependencies?: string[];
     requiredScripts?: ScriptRequirement[];
 }
+
+// @public
+export type PackageScope = `${"@"}${string}`;
+
+// @public
+export type PackageScopeSelectors = Record<string, PackageNameOrScope[]>;
 
 // @public
 export interface PolicyConfig {
