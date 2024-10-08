@@ -3,12 +3,13 @@
  * Licensed under the MIT License.
  */
 
+import { type IFluidRepo, loadFluidRepo } from "@fluid-tools/build-infrastructure";
+import { GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
 import { Command, Flags, Interfaces } from "@oclif/core";
 // eslint-disable-next-line import/no-internal-modules
 import type { PrettyPrintableError } from "@oclif/core/errors";
 import chalk from "chalk";
 
-import { GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
 import { CommandLogger } from "../../logging.js";
 import { Context } from "../context.js";
 import { indentString } from "../text.js";
@@ -90,6 +91,7 @@ export abstract class BaseCommand<T extends typeof Command>
 
 	private _context: Context | undefined;
 	private _logger: CommandLogger | undefined;
+	private _fluidRepo: IFluidRepo | undefined;
 
 	public async init(): Promise<void> {
 		await super.init();
@@ -154,6 +156,20 @@ export abstract class BaseCommand<T extends typeof Command>
 		}
 
 		return this._context;
+	}
+
+	/**
+	 * The {@link IFluidRepo} closest to the working directory. The Fluid repo is loaded and cached the first time this
+	 * method is called. Subsequent calls will return the cached repo.
+	 *
+	 * @returns The {@link IFluidRepo}.
+	 */
+	protected async getFluidRepo(): Promise<IFluidRepo> {
+		if (this._fluidRepo === undefined) {
+			this._fluidRepo = loadFluidRepo(process.cwd(), "microsoft/FluidFramework");
+		}
+
+		return this._fluidRepo;
 	}
 
 	/**
