@@ -8,7 +8,7 @@
 // @ts-check
 
 /**
- * @type {import("@fluid-tools/build-infrastructure").IFluidRepoLayout}
+ * @type {import("@fluid-tools/build-infrastructure").IFluidRepoLayout & import("@fluid-tools/build-cli").FlubConfig}
  */
 const config = {
 	version: 1,
@@ -36,6 +36,22 @@ const config = {
 				},
 			},
 		},
+	},
+
+	// The configuration used by the `flub generate changeset-config` command.
+	changesetConfig: {
+		changelog: [
+			"@fluid-private/changelog-generator-wrapper",
+			{
+				repoBaseUrl: "https://github.com/microsoft/FluidFramework",
+				issueTemplate: " ([#$issue]($repoBaseUrl/pull/$issue))",
+				commitTemplate: " [$abbrevHash]($repoBaseUrl/commit/$hash)",
+			},
+		],
+		commit: false,
+		access: "public",
+		baseBranch: "main",
+		updateInternalDependencies: "patch",
 	},
 };
 

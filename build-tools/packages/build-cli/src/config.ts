@@ -111,19 +111,7 @@ export type PackageScopeSelectors = Record<string, PackageNameOrScope[]>;
 /**
  * The changeset configuration used in the fluid-build config file.
  */
-export interface ChangesetConfig extends Omit<ChangesetConfigWritten, "fixed" | "linked"> {
-	/**
-	 * An array of package scopes or names that should be included in the "fixed" setting in the changesets config. If a
-	 * scope is provided, then all packages of that scope will be included.
-	 */
-	fixed?: PackageScopeSelectors;
-
-	/**
-	 * An array of package scopes or names that should be included in the "fixed" setting in the changesets config. If a
-	 * scope is provided, then all packages of that scope will be included.
-	 */
-	linked?: PackageScopeSelectors;
-}
+export type ChangesetConfig = Omit<ChangesetConfigWritten, "fixed" | "linked">;
 
 /**
  * A type representing the different version constraint styles we use when determining the previous version for type

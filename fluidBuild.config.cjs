@@ -797,6 +797,7 @@ module.exports = {
 			},
 		},
 	},
+
 	// The configuration used by the `flub generate changeset-config` command.
 	changesetConfig: {
 		changelog: [

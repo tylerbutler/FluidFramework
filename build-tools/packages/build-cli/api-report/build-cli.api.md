@@ -25,10 +25,7 @@ export interface BumpConfig {
 }
 
 // @public
-export interface ChangesetConfig extends Omit<ChangesetConfigWritten, "fixed" | "linked"> {
-    fixed?: PackageScopeSelectors;
-    linked?: PackageScopeSelectors;
-}
+export type ChangesetConfig = Omit<ChangesetConfigWritten, "fixed" | "linked">;
 
 // @public
 export interface ChangesetConfigWritten extends WrittenConfig {

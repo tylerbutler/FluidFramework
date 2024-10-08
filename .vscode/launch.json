@@ -104,11 +104,11 @@
 		{
 			"name": "flub generate changeset-config",
 			"program": "${workspaceFolder}/build-tools/packages/build-cli/bin/dev.js",
-			"cwd": "${workspaceFolder}",
+			"cwd": "${workspaceFolder}/build-tools/packages/build-infrastructure/src/test/data/testRepo/",
 			"request": "launch",
 			"skipFiles": ["<node_internals>/**"],
 			"type": "node",
-			"args": ["generate", "changeset-config", "-g", "client", "-v"],
+			"args": ["generate", "changeset-config", "-w", "main", "-v"],
 		},
 		{
 			"name": "flub generate packlist",

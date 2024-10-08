@@ -8,23 +8,47 @@ importers:
 
   .:
     dependencies:
+      '@fluid-private/changelog-generator-wrapper':
+        specifier: link:../../../../../../../packages/tools/changelog-generator-wrapper
+        version: link:../../../../../../../packages/tools/changelog-generator-wrapper
       '@fluid-tools/build-infrastructure':
         specifier: link:../../../../../build-infrastructure
         version: link:../../../..
 
-  packages/pkg-a:
+  packages/group2/pkg-d:
+    dependencies:
+      '@shared/shared':
+        specifier: workspace:~
+        version: link:../../shared
+      pkg-b:
+        specifier: workspace:~
+        version: link:../../pkg-b
+
+  packages/group2/pkg-e:
     dependencies:
       pkg-b:
         specifier: workspace:~
-        version: link:../pkg-b
-      shared:
+        version: link:../../pkg-b
+
+  packages/pkg-a:
+    dependencies:
+      '@shared/shared':
         specifier: workspace:~
         version: link:../shared
+      pkg-b:
+        specifier: workspace:~
+        version: link:../pkg-b
 
   packages/pkg-b:
     dependencies:
       pkg-b:
         specifier: workspace:~
         version: 'link:'
+
+  packages/pkg-c:
+    dependencies:
+      pkg-b:
+        specifier: workspace:~
+        version: link:../pkg-b
 
   packages/shared: {}

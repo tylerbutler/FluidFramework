@@ -5,18 +5,12 @@
 
 import { existsSync } from "node:fs";
 import path from "node:path";
-import type { IPackage, IReleaseGroup } from "@fluid-tools/build-infrastructure";
+import type { PackageName } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import { mkdirp, readJSON, writeJSON } from "fs-extra/esm";
 import sortObject from "sort-object-keys";
 
-import {
-	type ChangesetConfigWritten,
-	type PackageNameOrScope,
-	type PackageScopeSelectors,
-	getFlubConfig,
-	isPackageScope,
-} from "../../config.js";
+import { type ChangesetConfigWritten } from "../../config.js";
 import { workspaceNameFlag } from "../../flags.js";
 import { BaseCommand } from "../../library/index.js";
 
@@ -27,48 +21,6 @@ const defaultConfig: ChangesetConfigWritten = {
 	baseBranch: "main",
 	updateInternalDependencies: "patch",
 };
-
-/**
- * Returns true if a package matches one of the provided selectors.
- *
- * @param pkg - The package to check.
- * @param selectors - The selectors to apply.
- * @returns true if the package matches; false otherwise.
- */
-function packageMatchesSelectors(pkg: IPackage, selectors: PackageScopeSelectors): boolean {
-	for (const selector of Object.values(selectors)) {
-		for (const entry of selector) {
-			if (pkg.name === entry) {
-				return true;
-			}
-			if (isPackageScope(entry) && pkg.name.startsWith(entry)) {
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-/**
- * Returns an array of package arrays that should be in the 'fixed' section of the changesetsConfig.
- */
-function getFixedPackageGroups(
-	releaseGroups: IReleaseGroup[],
-	selectors: PackageScopeSelectors | undefined,
-): PackageNameOrScope[][] {
-	const results: PackageNameOrScope[][] = [];
-
-	for (const releaseGroup of releaseGroups) {
-		const packagesToCheck = releaseGroup.packages.filter(
-			(pkg) => selectors !== undefined && packageMatchesSelectors(pkg, selectors),
-		);
-		const names = packagesToCheck.map((p) => p.name).sort();
-		if (names.length > 0) {
-			results.push(names);
-		}
-	}
-	return results;
-}
 
 export default class GenerateChangesetConfigCommand extends BaseCommand<
 	typeof GenerateChangesetConfigCommand
@@ -96,10 +48,8 @@ export default class GenerateChangesetConfigCommand extends BaseCommand<
 	} as const;
 
 	public async run(): Promise<ChangesetConfigWritten> {
-		const repo = await this.getFluidRepo();
 		const { workspace: workspaceName, outFile } = this.flags;
-		const { changesetConfig } = getFlubConfig(repo.root);
-
+		const repo = await this.getFluidRepo();
 		const workspace = repo.workspaces.get(workspaceName);
 
 		if (workspace === undefined) {
@@ -112,17 +62,12 @@ export default class GenerateChangesetConfigCommand extends BaseCommand<
 
 		const newConfig = { ...defaultConfig, ...currentConfig };
 
-		// Always override the fixed/linked packages.
-		const newFixed = getFixedPackageGroups(
-			[...workspace.releaseGroups.values()],
-			changesetConfig?.fixed,
-		);
-		const newLinked = getFixedPackageGroups(
-			[...workspace.releaseGroups.values()],
-			changesetConfig?.linked,
-		);
-		newConfig.fixed = newFixed.length === 0 ? newConfig.fixed : newFixed;
-		newConfig.linked = newLinked.length === 0 ? newConfig.linked : newLinked;
+		// Always override the 'fixed' packages.
+		const fixedPackages: PackageName[][] = [];
+		for (const releaseGroup of workspace.releaseGroups.values()) {
+			fixedPackages.push(releaseGroup.packages.map((p) => p.name));
+		}
+		newConfig.fixed = fixedPackages;
 
 		await mkdirp(path.dirname(outFile));
 		await writeJSON(outFile, sortObject(newConfig), { spaces: "\t" });

@@ -12,6 +12,7 @@
 	"license": "MIT",
 	"author": "Microsoft and contributors",
 	"dependencies": {
-		"@fluid-tools/build-infrastructure": "link:../../../../../build-infrastructure"
+		"@fluid-tools/build-infrastructure": "link:../../../../../build-infrastructure",
+		"@fluid-private/changelog-generator-wrapper": "link:../../../../../../../packages/tools/changelog-generator-wrapper"
 	}
 }
