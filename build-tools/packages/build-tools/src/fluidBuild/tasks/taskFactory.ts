@@ -9,7 +9,12 @@ import { BuildPackage } from "../buildGraph";
 import { GroupTask } from "./groupTask";
 import { ApiExtractorTask } from "./leaf/apiExtractorTask";
 import { BiomeTask } from "./leaf/biomeTasks";
-import { FlubCheckLayerTask, FlubCheckPolicyTask, FlubListTask } from "./leaf/flubTasks";
+import {
+	FlubCheckLayerTask,
+	FlubCheckPolicyTask,
+	FlubGenerateChangesetConfigTask,
+	FlubListTask,
+} from "./leaf/flubTasks";
 import { GenerateEntrypointsTask } from "./leaf/generateEntrypointsTask.js";
 import { type LeafTask, UnknownLeafTask } from "./leaf/leafTask";
 import { EsLintTask, TsLintTask } from "./leaf/lintTasks";
@@ -55,6 +60,7 @@ const executableToLeafTask: {
 	"api-extractor": ApiExtractorTask,
 	"flub check layers": FlubCheckLayerTask,
 	"flub check policy": FlubCheckPolicyTask,
+	"flub generate changeset-config": FlubGenerateChangesetConfigTask,
 	"flub generate entrypoints": GenerateEntrypointsTask,
 	"flub generate typetests": TypeValidationTask,
 	"fluid-type-test-generator": TypeValidationTask,

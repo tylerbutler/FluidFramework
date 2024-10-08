@@ -261,6 +261,9 @@ importers:
       sort-json:
         specifier: ^2.0.1
         version: 2.0.1
+      sort-object-keys:
+        specifier: ^1.1.3
+        version: 1.1.3
       sort-package-json:
         specifier: 1.57.0
         version: 1.57.0
@@ -286,6 +289,9 @@ importers:
       '@biomejs/biome':
         specifier: ~1.8.3
         version: 1.8.3
+      '@changesets/types':
+        specifier: ^6.0.0
+        version: 6.0.0
       '@fluidframework/build-common':
         specifier: ^2.0.3
         version: 2.0.3
@@ -343,12 +349,9 @@ importers:
       '@types/sort-json':
         specifier: ^2.0.1
         version: 2.0.1
-      '@types/unist':
-        specifier: ^3.0.3
-        version: 3.0.3
-      '@types/xml2js':
-        specifier: ^0.4.11
-        version: 0.4.11
+      '@types/sort-object-keys':
+        specifier: ^1.1.3
+        version: 1.1.3
       c8:
         specifier: ^7.14.0
         version: 7.14.0
@@ -585,6 +588,9 @@ importers:
       '@biomejs/biome':
         specifier: ~1.8.3
         version: 1.8.3
+      '@changesets/types':
+        specifier: ^6.0.0
+        version: 6.0.0
       '@fluidframework/build-common':
         specifier: ^2.0.3
         version: 2.0.3
@@ -932,6 +938,10 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@changesets/types@6.0.0:
+    resolution: {integrity: sha512-b1UkfNulgKoWfqyHtzKS5fOZYSJO+77adgL7DLRDr+/7jhChN+QcHnbjiQVOz/U+Ts3PGNySq7diAItzDgugfQ==}
+    dev: true
 
   /@colors/colors@1.5.0:
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
@@ -1930,16 +1940,6 @@ packages:
       - '@types/node'
     dev: true
 
-  /@microsoft/api-extractor-model@7.28.21:
-    resolution: {integrity: sha512-AZSdhK/vO4ddukfheXZmrkI5180XLeAqwzu/5pTsJHsXYSyNt3H3VJyynUYKMeNcveG9QLgljH3XRr/LqEfC0Q==}
-    dependencies:
-      '@microsoft/tsdoc': 0.14.2
-      '@microsoft/tsdoc-config': 0.16.2
-      '@rushstack/node-core-library': 5.3.0(@types/node@18.18.7)
-    transitivePeerDependencies:
-      - '@types/node'
-    dev: true
-
   /@microsoft/api-extractor-model@7.28.21(@types/node@18.18.6):
     resolution: {integrity: sha512-AZSdhK/vO4ddukfheXZmrkI5180XLeAqwzu/5pTsJHsXYSyNt3H3VJyynUYKMeNcveG9QLgljH3XRr/LqEfC0Q==}
     dependencies:
@@ -1963,12 +1963,12 @@ packages:
     resolution: {integrity: sha512-FZgcJxEmHA15gxTb1PpXHTforRcyIOLp6GKMqqk+ok8M58QJ0y54Bk+dcTcBC92nmanZppKn5/VRXPP4XvzB3Q==}
     hasBin: true
     dependencies:
-      '@microsoft/api-extractor-model': 7.28.21
+      '@microsoft/api-extractor-model': 7.28.21(@types/node@18.18.7)
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
       '@rushstack/node-core-library': 5.3.0(@types/node@18.18.7)
       '@rushstack/rig-package': 0.5.2
-      '@rushstack/terminal': 0.12.2
+      '@rushstack/terminal': 0.12.2(@types/node@18.18.7)
       '@rushstack/ts-command-line': 4.21.4
       lodash: 4.17.21
       minimatch: 3.0.8
@@ -2635,18 +2635,6 @@ packages:
       resolve: 1.22.8
       strip-json-comments: 3.1.1
 
-  /@rushstack/terminal@0.12.2:
-    resolution: {integrity: sha512-yaHKyD/l6Zg34pC5zzc/KdiRBHy8zAH7ZbL3umpDLnvTrZ0SP8MVYZu9xA2lRsGkKfGbv/6gQhyNq4/tRzXH4A==}
-    peerDependencies:
-      '@types/node': '*'
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-    dependencies:
-      '@rushstack/node-core-library': 5.3.0(@types/node@18.18.7)
-      supports-color: 8.1.1
-    dev: true
-
   /@rushstack/terminal@0.12.2(@types/node@18.18.6):
     resolution: {integrity: sha512-yaHKyD/l6Zg34pC5zzc/KdiRBHy8zAH7ZbL3umpDLnvTrZ0SP8MVYZu9xA2lRsGkKfGbv/6gQhyNq4/tRzXH4A==}
     peerDependencies:
@@ -2688,7 +2676,7 @@ packages:
   /@rushstack/ts-command-line@4.21.4:
     resolution: {integrity: sha512-3ZjQ11kpQwk/lDQqbmxC8UuU6yD20Sy4uNTWIaBEJ5474hEFEE4cbDOS4F9R4zcyCkkaQYv674K2QTunDF5dsQ==}
     dependencies:
-      '@rushstack/terminal': 0.12.2
+      '@rushstack/terminal': 0.12.2(@types/node@18.18.7)
       '@types/argparse': 1.0.38
       argparse: 1.0.10
       string-argv: 0.3.1
@@ -3068,6 +3056,10 @@ packages:
     resolution: {integrity: sha512-HAeJLCXpLg9aMSCJVQcMR3yU0y2PwJUtWv7vogaz0mEhuK1bhvDX/DeDxl4spPUYpnK7PM7hmX2bU5lsghOJNQ==}
     dev: true
 
+  /@types/sort-object-keys@1.1.3:
+    resolution: {integrity: sha512-DBHXe+SvV5yZASv/RnIoIID5cwl4N0dY5aC19jOINFzydZkpJXt8DwRzWUjVnscPQsRkkmQRrcOqMMozSvP5tg==}
+    dev: true
+
   /@types/through@0.0.30:
     resolution: {integrity: sha512-FvnCJljyxhPM3gkRgWmxmDZyAQSiBQQWLI0A0VFL0K7W1oRUrPJSqNO0NvTnLkBcotdlp3lKvaT0JrnyRDkzOg==}
     dependencies:
@@ -3082,12 +3074,6 @@ packages:
 
   /@types/wrap-ansi@3.0.0:
     resolution: {integrity: sha512-ltIpx+kM7g/MLRZfkbL7EsCEjfzCcScLpkg37eXEtx5kmrAKBkTJwd1GIAjDSL8wTpM6Hzn5YO4pSb91BEwu1g==}
-
-  /@types/xml2js@0.4.11:
-    resolution: {integrity: sha512-JdigeAKmCyoJUiQljjr7tQG3if9NkqGUgwEUqBvV0N7LM4HyQk7UXCnusRa1lnvXAEYJ8mw8GtZWioagNztOwA==}
-    dependencies:
-      '@types/node': 18.18.7
-    dev: true
 
   /@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0)(eslint@8.57.0)(typescript@5.4.5):
     resolution: {integrity: sha512-oy9+hTPCUFpngkEZUSzbf9MxI65wbKFoQYsgPdILTfbUldp5ovUuphZVe4i30emU9M/kP+T64Di0mxl7dSw3MA==}
