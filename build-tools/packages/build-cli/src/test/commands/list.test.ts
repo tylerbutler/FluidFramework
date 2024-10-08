@@ -4,7 +4,7 @@
  */
 
 import type { IPackage } from "@fluid-tools/build-infrastructure";
-import { GitRepo, type Package, getResolvedFluidRoot } from "@fluidframework/build-tools";
+import { GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
 import { expect } from "chai";
 
 import { type PackageNamePolicyConfig } from "../../config.js";
