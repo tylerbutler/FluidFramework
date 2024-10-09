@@ -6,16 +6,13 @@
 import * as fs from "node:fs";
 import { EOL as newline } from "node:os";
 import * as path from "node:path";
+import type { IFluidRepo } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import { readJson } from "fs-extra/esm";
 
-import {
-	BaseCommand,
-	Context,
-	Handler,
-	Repository,
-	policyHandlers,
-} from "../../library/index.js";
+// eslint-disable-next-line import/no-internal-modules
+import { getFiles } from "../../library/git.js";
+import { BaseCommand, Handler, policyHandlers } from "../../library/index.js";
 
 type policyAction = "handle" | "resolve" | "final";
 
@@ -50,12 +47,12 @@ interface CheckPolicyCommandContext {
 	/**
 	 * Path to the root of the git repo.
 	 */
-	gitRoot: string;
+	// gitRoot: string;
 
 	/**
 	 * The repo context.
 	 */
-	context: Context;
+	repo: IFluidRepo;
 }
 
 /**
@@ -184,7 +181,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 		}
 
 		const filePathsToCheck: string[] = [];
-		const gitRoot = context.repo.resolvedRoot;
+		const repo = await this.getFluidRepo();
 
 		if (this.flags.stdin) {
 			const stdInput = await readStdin();
@@ -193,8 +190,9 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 				filePathsToCheck.push(...stdInput.split("\n"));
 			}
 		} else {
-			const repo = new Repository({ baseDir: gitRoot });
-			const gitFiles = await repo.getFiles(".");
+			const git = await repo.getGitRepository();
+			// const repo = new Repository({ baseDir: gitRoot });
+			const gitFiles = await getFiles(".", git);
 			filePathsToCheck.push(...gitFiles);
 		}
 
@@ -203,8 +201,8 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 			exclusions,
 			handlers: handlersToRun,
 			handlerExclusions,
-			gitRoot,
-			context,
+			// gitRoot,
+			repo,
 		};
 
 		await this.executePolicy(filePathsToCheck, commandContext);
@@ -237,10 +235,10 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 		file: string,
 		commandContext: CheckPolicyCommandContext,
 	): Promise<void> {
-		const { context, handlers, handlerExclusions, gitRoot } = commandContext;
+		const { repo, handlers, handlerExclusions } = commandContext;
 
 		// Use the repo-relative path so that regexes that specify string start (^) will match repo paths.
-		const relPath = context.repo.relativeToRepo(file);
+		const relPath = repo.relativeToRepo(file);
 
 		const handlerResults = await Promise.all(
 			handlers
@@ -256,7 +254,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 				})
 				.map(async (handler): Promise<{ handler: Handler; result: string | undefined }> => {
 					const result = await runWithPerf(handler.name, "handle", async () =>
-						handler.handler(relPath, gitRoot),
+						handler.handler(relPath, repo.root),
 					);
 					return { handler, result };
 				}),
@@ -273,7 +271,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 					// Resolvers are expected to be run serially to avoid any conflicts.
 					// eslint-disable-next-line no-await-in-loop
 					const resolveResult = await runWithPerf(handler.name, "resolve", async () =>
-						resolver(relPath, gitRoot),
+						resolver(relPath, repo.root),
 					);
 
 					if (resolveResult?.message !== undefined) {
@@ -318,9 +316,9 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 		inputPath: string,
 		commandContext: CheckPolicyCommandContext,
 	): Promise<void> {
-		const { exclusions, gitRoot, pathRegex } = commandContext;
+		const { exclusions, repo, pathRegex } = commandContext;
 
-		const filePath = path.join(gitRoot, inputPath).trim().replace(/\\/g, "/");
+		const filePath = path.join(repo.root, inputPath).trim().replace(/\\/g, "/");
 
 		if (!pathRegex.test(inputPath) || !fs.existsSync(filePath)) {
 			return;
@@ -367,12 +365,12 @@ async function runFinalHandlers(
 	commandContext: CheckPolicyCommandContext,
 	fix: boolean,
 ): Promise<void> {
-	const { gitRoot, handlers } = commandContext;
+	const { repo, handlers } = commandContext;
 	for (const h of handlers) {
 		const { final } = h;
 		if (final) {
 			// eslint-disable-next-line no-await-in-loop
-			const result = await runWithPerf(h.name, "final", async () => final(gitRoot, fix));
+			const result = await runWithPerf(h.name, "final", async () => final(repo.root, fix));
 			// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
 			if (result?.error) {
 				throw new Error(result.error);

@@ -41,7 +41,7 @@ const defaultGitOptions: Partial<SimpleGitOptions> = {
  * Eventually this should replace the legacy GitRepo class in build-tools. That class exec's git commands directly,
  * while this class uses a library wrapper around git where possible instead. Note that git is still called "directly" via the `raw` API.
  *
- * @internal
+ * @deprecated Use SimpleGit directly or, when needed, the free functions in this module.
  */
 export class Repository {
 	private readonly git: SimpleGit;
@@ -402,4 +402,46 @@ export function getVersionFromTag(tag: string): string | undefined {
 	}
 
 	return ver.version;
+}
+
+/**
+ * Returns an array containing repo repo-relative paths to all the files in the provided directory.
+ * A given path will only be included once in the array; that is, there will be no duplicate paths.
+ * Note that this function excludes files that are deleted locally whether the deletion is staged or not.
+ *
+ * @param directory - A directory to filter the results by. Only files under this directory will be returned. To
+ * return all files in the repo use the value `"."`.
+ */
+export async function getFiles(directory: string, git: SimpleGit): Promise<string[]> {
+	// Note that `--deduplicate` is not used here because it is not available until git version 2.31.0.
+	const results = await git.raw(
+		"ls-files",
+		// Includes cached (staged) files.
+		"--cached",
+		// Includes other (untracked) files that are not ignored.
+		"--others",
+		// Excludes files that are ignored by standard ignore rules.
+		"--exclude-standard",
+		// Shows the full path of the files relative to the repository root.
+		"--full-name",
+		directory,
+	);
+
+	// Deduplicate the list of files by building a Set.
+	// This includes paths to deleted, unstaged files, so we get the list of deleted files from git status and remove
+	// those from the full list.
+	const allFiles = new Set(
+		results
+			.split("\n")
+			.map((line) => line.trim())
+			// filter out empty lines
+			.filter((line) => line !== ""),
+	);
+	const status = await git.status();
+	for (const deletedFile of status.deleted) {
+		allFiles.delete(deletedFile);
+	}
+
+	// Files are already repo root-relative
+	return [...allFiles];
 }
