@@ -21,6 +21,10 @@
 		[
 			"@group2/pkg-d",
 			"@group2/pkg-e"
+		],
+		[
+			"@group3/pkg-f",
+			"@group3/pkg-g"
 		]
 	],
 	"ignore": [],
