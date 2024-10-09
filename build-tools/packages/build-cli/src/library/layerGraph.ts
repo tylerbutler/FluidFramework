@@ -240,8 +240,10 @@ class PackageNode extends BaseNode {
 	}
 
 	public initializedDependencies(packageNodeMap: Map<string, PackageNode>): void {
-		for (const {name, depClass} of this.pkg.combinedDependencies) {
-			if(depClass !== "prod") { continue; }
+		for (const { name, depClass } of this.pkg.combinedDependencies) {
+			if (depClass !== "prod") {
+				continue;
+			}
 			const depPackageNode = packageNodeMap.get(name);
 			if (depPackageNode) {
 				this._childDependencies.push(depPackageNode);

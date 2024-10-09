@@ -9,13 +9,13 @@ import { BuildPackage } from "../buildGraph";
 import { GroupTask } from "./groupTask";
 import { ApiExtractorTask } from "./leaf/apiExtractorTask";
 import { BiomeTask } from "./leaf/biomeTasks";
+import { createDeclarativeTaskHandler } from "./leaf/declarativeTask";
 import {
 	FlubCheckLayerTask,
 	FlubCheckPolicyTask,
 	FlubGenerateChangesetConfigTask,
 	FlubListTask,
 } from "./leaf/flubTasks";
-import { createDeclarativeTaskHandler } from "./leaf/declarativeTask";
 import { GenerateEntrypointsTask } from "./leaf/generateEntrypointsTask.js";
 import { UnknownLeafTask } from "./leaf/leafTask";
 import { EsLintTask, TsLintTask } from "./leaf/lintTasks";
