@@ -4,6 +4,7 @@
  */
 
 import path from "node:path";
+
 import execa from "execa";
 
 import { NotInGitRepository } from "./errors.js";
@@ -21,6 +22,7 @@ import { NotInGitRepository } from "./errors.js";
  */
 export function findGitRootSync(cwd = process.cwd()): string {
 	try {
+		// This call will throw outside a git repo, which we'll catch and throw a NotInGitRepo error instead.
 		const result = execa.sync("git", ["rev-parse", "--show-toplevel"], {
 			cwd,
 			encoding: "utf8",
@@ -29,13 +31,18 @@ export function findGitRootSync(cwd = process.cwd()): string {
 		});
 
 		// If anything was written to stderr, then it's not a git repo.
+		// This is likely unnecessary since the earlier exec call should throw, but just in case, throw here as well.
 		if (result.stderr) {
 			throw new NotInGitRepository(cwd);
 		}
 
 		return result.stdout.trim();
 	} catch (error) {
-		throw new NotInGitRepository(cwd);
+		const message = (error as Error).message;
+		if (message.includes("not a git repository")) {
+			throw new NotInGitRepository(cwd);
+		}
+		throw error;
 	}
 }
 
@@ -59,12 +66,26 @@ export function isInGitRepositorySync(cwd = process.cwd()): boolean {
 
 		const isInWorktree = result.stdout.trim() === "true";
 		return isInWorktree;
-	} catch (error) {
+	} catch {
 		return false;
 	}
 }
 
-export function lookUpDirSync(dir: string, callback: (currentDir: string) => boolean) {
+/**
+ * Traverses up the directory tree from the given starting directory, applying the callback function to each directory.
+ * If the callback returns `true` for any directory, that directory path is returned. If the root directory is reached
+ * without the callback returning true, the function returns `undefined`.
+ *
+ * @param dir - The starting directory.
+ * @param callback - A function that will be called for each path. If this function returns true, then the current path
+ * will be returned.
+ * @returns The first path for which the callback function returns true, or `undefined` if the root path is reached
+ * without the callback returning `true`.
+ */
+export function lookUpDirSync(
+	dir: string,
+	callback: (currentDir: string) => boolean,
+): string | undefined {
 	let curr = path.resolve(dir);
 	// eslint-disable-next-line no-constant-condition
 	while (true) {

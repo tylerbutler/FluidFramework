@@ -12,15 +12,15 @@ import { SimpleGit } from 'simple-git';
 // @public (undocumented)
 export type AdditionalPackageProps = Record<string, string> | undefined;
 
-// @public (undocumented)
+// @public
 export function createPackageManager(name: PackageManagerName): IPackageManager;
 
 // @public
-export type FluidPackageJsonFields = {
+export interface FluidPackageJsonFields {
     pnpm?: {
         overrides?: Record<string, string>;
     };
-};
+}
 
 // @public
 export const FLUIDREPO_CONFIG_VERSION = 1;
@@ -130,7 +130,7 @@ export interface IWorkspace extends Installable, Reloadable {
 // @public
 export function loadFluidRepo(searchPath: string, upstreamRemotePartialUrl?: string): IFluidRepo;
 
-// @public (undocumented)
+// @public
 export class NotInGitRepository extends Error {
     constructor(path: string);
     // (undocumented)

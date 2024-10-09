@@ -8,14 +8,14 @@ groups, and leverages workspaces functionality provided by package managers like
 interdependencies between packages across a Fluid repo. It then provides APIs to select, filter, and work with those
 package groups.
 
-Conceptually, a **Fluid repo** is a way to organize npm packages into groups for versioning, release, and dependency
-management. A Fluid repo can contain multiple **workspaces**, each of which may contain one or more **release groups**.
-
 ## API Overview
 
 The API is built around four key types which form a hierarchy: `IFluidRepo`, `IWorkspace`, `IReleaseGroup`, and
 `IPackage`. For the purposes of this documentation, the terms "Fluid repo," "workspace," "release group," and "package"
 generally refer to these types.
+
+Conceptually, a **Fluid repo** is a way to organize npm packages into groups for versioning, release, and dependency
+management. A Fluid repo can contain multiple **workspaces**, each of which may contain one or more **release groups**.
 
 ### The Fluid repo
 
@@ -25,7 +25,7 @@ function are different.
 
 ### Workspaces
 
-Workspaces are a generally a feature provided by the package manager (npm, yarn, pnpm, etc.). A workspace defines the
+Workspaces are generally a feature provided by the package manager (npm, yarn, pnpm, etc.). A workspace defines the
 _physical layout_ of the packages within it. A workspace is rooted in a particular folder, and uses the configuration
 within that folder to determine what packages it contains. The config used is specific to the package manager.
 
@@ -38,7 +38,7 @@ Importantly, this package does not attempt to re-implement any features provided
 expected to configure their package managers' workspace features in addition to the Fluid repo configuration.
 
 A Fluid repo will only load packages identified by the package manager's workspace feature. That is, any package in the
-repo that is not configured as part of a workspace is invisible to the
+repo that is not configured as part of a workspace is invisible to tools using the Fluid repo.
 
 ### Release groups
 
@@ -46,7 +46,6 @@ While workspaces manage dependencies and physical layout of packages, release gr
 that are _versioned and released together_. Release groups are always a subset of a workspace, and must contain at least
 one package. **Release groups cannot span multiple workspaces.**
 
-Importantly, release groups are the unit of packages that are released and versions together.
 
 > [!IMPORTANT]
 > A workspace _must_ have at least one release group, and all packages must be a part of a release group.
@@ -70,18 +69,13 @@ another larger workspace, contained within a single-package release group.
 
 ## Features
 
-In addition to loading and
-
 ### Git repo capabilities
 
 A Fluid repo is often contained within a Git repository, and some functionality expects to be used within a Git
-repository. To support this, the Fluid repo will check if it is within aGit repository upon initialization, and if it
-is, it will instantiate a SimpleGit instance rooted at the root of the Git repo (which may not match the root of the
-Fluid repo).
-
-Features that need to execute Git operations can asynchronously retrieve the SimpleGit instance using the
-`IFluidRepo.getGitRepository` API. If the Fluid repo is not within a Git repo, then that call will throw an exception
-that callers should handle appropriately. If they don't, though, the exception makes it clear what has happened.
+repository. Features that need to execute Git operations can asynchronously retrieve the SimpleGit instance using the
+`IFluidRepo.getGitRepository` API. If the Fluid repo is not within a Git repo, then that call will throw a
+`NotInGitRepository` exception that callers should handle appropriately. If they don't, though, the exception makes it
+clear what has happened.
 
 > [!NOTE]
 >
@@ -93,7 +87,7 @@ that callers should handle appropriately. If they don't, though, the exception m
 
 ### Package selection and filtering APIs
 
-The IFluidRepo object provides access to workspaces, release groups, and their constiuent packages, but often one wants
+The `IFluidRepo` object provides access to workspaces, release groups, and their constituent packages, but often one wants
 to operate on a subset of all packages in the repo. To support this, build-infrastructure provides a selection and
 filtering API. Packages can be selected based on criteria like workspace and release group, and the lists can be further
 filtered by scope or private/not private. Advanced filtering not covered by the built-in filters can be implemented
@@ -102,7 +96,8 @@ using `Array.prototype.filter` on the results of package selection.
 ### Loading old config formats
 
 The `repoPackages` configuration currently used by fluid-build will be loaded if the newer `repoLayout` config can't be
-found. This is for back-compat only and will not be maintained indefinitely. Users should convert to `repoLayout` when possible.
+found. This is for back-compat only and will not be maintained indefinitely. Users should convert to `repoLayout` when
+possible.
 
 ## Configuration
 
@@ -119,13 +114,13 @@ group that contains a single package.
 ```js
 repoLayout: {
   workspaces: {
-    // This is the name of the workspace which is how it's referenced in the API.
+    // This is the name of the workspace which is how it's referenced in the API. All workspaces in a Fluid repo must
+    // have a unique name.
     "client": {
       // This workspace is rooted at the root of the Git repo.
       directory: ".",
       releaseGroups: {
-        // This key is the name of the release group. It must be unique across all
-        // release groups.
+        // This key is the name of the release group. All release groups in a Fluid repo must have a unique name.
         client: {
           // The include property can contain package names OR package scopes. If
           // a scope is provided, all packages with that scope will be a part of
@@ -138,15 +133,15 @@ repoLayout: {
             "@fluid-internal",
             "@fluid-private",
             "@fluid-tools",
+            // This private package is part of the client release group
             "@types/jest-environment-puppeteer"
             "fluid-framework",
           ],
           // A release group can have an OPTIONAL root package. This package
           // is typically private and is similar to the root package for a workspace.
           // This release group root package may be useful to store scripts or other
-          // configuration only applies on the release group,
+          // configuration that only applies on the release group,
           rootPackageName: "client-release-group-root",
-          defaultInterdependencyRange: "workspace:~",
 
           // A release group may have an ADO pipeline URL associated with it. This
           // URL is used to provide direct links to the pipeline when running releases.
@@ -156,8 +151,9 @@ repoLayout: {
         examples: {
           // This release group contains only the @fluid-example packages.
           include: ["@fluid-example"],
+          // Release group root packages are optional but can be useful to store scripts that are tuned to
+          // apply to only that release group.
           rootPackageName: "examples-release-group-root",
-          defaultInterdependencyRange: "workspace:~",
         },
         // If any packages in the workspace don't match a release group, loading the
         // repo layout config will throw an error.
@@ -183,7 +179,6 @@ repoLayout: {
             "@fluid-tools",
           ],
           rootPackageName: "build-tools-release-group-root",
-          defaultInterdependencyRange: "workspace:~",
           adoPipelineUrl:
             "https://dev.azure.com/fluidframework/internal/_build?definitionId=14",
         },

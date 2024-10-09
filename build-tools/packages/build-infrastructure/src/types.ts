@@ -9,14 +9,14 @@ import type { Opaque, SetRequired, PackageJson as StandardPackageJson } from "ty
 /**
  * A type representing fluid-build-specific config that may be in package.json.
  */
-export type FluidPackageJsonFields = {
+export interface FluidPackageJsonFields {
 	/**
 	 * pnpm config
 	 */
 	pnpm?: {
 		overrides?: Record<string, string>;
 	};
-};
+}
 
 export type PackageJson = SetRequired<
 	StandardPackageJson & FluidPackageJsonFields,
@@ -123,6 +123,18 @@ export type WorkspaceName = Opaque<string, "WorkspaceName">;
  * "workspaces" functionality. A Fluid repo can contain multiple workspaces. Workspaces are defined and managed using
  * the package manager directly. A Fluid repo builds on top of workspaces and relies on the package manager to install
  * and manage dependencies and interdependencies within the workspace.
+ *
+ * A workspace defines the _physical layout_ of the packages within it. Workspaces are a generally a feature provided by
+ * the package manager (npm, yarn, pnpm, etc.). A workspace is rooted in a particular folder, and uses the configuration
+ * within that folder to determine what packages it contains. The configuration used is specific to the package manager.
+ *
+ * The workspace is also the boundary at which dependencies are installed and managed. When you install dependencies for
+ * a package in a workspace, all dependencies for all packages in the workspace will be installed. Within a workspace,
+ * it is trivial to link multiple packages so they can depend on one another. The `IWorkspace` type is a thin wrapper on
+ * top of these package manager features.
+ *
+ * A Fluid repo will only load packages identified by the package manager's workspace feature. That is, any package in
+ * the repo that is not configured as part of a workspace is invisible to tools using the Fluid repo.
  *
  * Workspaces are not involved in versioning or releasing packages. They are used for dependency management only.
  * Release groups, on the other hand, are used to group packages into releasable groups. See {@link IReleaseGroup} for
@@ -283,7 +295,7 @@ export interface IPackage<J extends PackageJson = PackageJson>
 	/**
 	 * The package manager used to manage this package.
 	 *
-	 * @internalRemarks
+	 * @privateRemarks
 	 *
 	 * If this is needed at the package level, perhaps it should instead be retrieved from the package's workspace,
 	 * since the package manager is defined at the workspace level.
@@ -344,7 +356,7 @@ export interface IPackage<J extends PackageJson = PackageJson>
 /**
  * A type guard that returns `true` if the item is an {@link IPackage}.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- this is a type guard
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types -- this is a type guard
 export function isIPackage(pkg: any): pkg is IPackage {
 	if (typeof pkg === "object") {
 		return "getScript" in pkg;

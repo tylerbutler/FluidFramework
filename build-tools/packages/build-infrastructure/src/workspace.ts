@@ -4,12 +4,13 @@
  */
 
 import path from "node:path";
+
 import { getPackagesSync } from "@manypkg/get-packages";
 import execa from "execa";
 
 import type { ReleaseGroupDefinition, WorkspaceDefinition } from "./config.js";
 import { loadPackageFromWorkspaceDefinition } from "./package.js";
-import { PackageManager } from "./packageManagers.js";
+import { createPackageManager } from "./packageManagers.js";
 import { ReleaseGroup } from "./releaseGroup.js";
 import type {
 	IPackage,
@@ -63,11 +64,13 @@ export class Workspace implements IWorkspace {
 		switch (tool.type) {
 			case "npm":
 			case "pnpm":
-			case "yarn":
-				this.packageManager = PackageManager.load(tool.type);
+			case "yarn": {
+				this.packageManager = createPackageManager(tool.type);
 				break;
-			default:
+			}
+			default: {
 				throw new Error(`Unknown package manager ${tool.type}`);
+			}
 		}
 
 		this.packages = [];
@@ -100,11 +103,10 @@ export class Workspace implements IWorkspace {
 
 		const rGroupDefinitions: Map<ReleaseGroupName, ReleaseGroupDefinition> =
 			definition.releaseGroups === undefined
-				? new Map()
+				? new Map<ReleaseGroupName, ReleaseGroupDefinition>()
 				: new Map(
-						Object.entries(definition.releaseGroups).map((entry) => {
-							const [name, group] = entry;
-							return [name as ReleaseGroupName, group];
+						Object.entries(definition.releaseGroups).map(([rgName, group]) => {
+							return [rgName as ReleaseGroupName, group];
 						}),
 					);
 
@@ -129,7 +131,7 @@ export class Workspace implements IWorkspace {
 		}
 	}
 
-	public async checkInstall() {
+	public async checkInstall(): Promise<boolean> {
 		let succeeded = true;
 		for (const buildPackage of this.packages) {
 			if (!(await buildPackage.checkInstall())) {
@@ -149,7 +151,9 @@ export class Workspace implements IWorkspace {
 	}
 
 	public reload(): void {
-		this.packages.forEach((pkg) => pkg.reload());
+		for (const pkg of this.packages) {
+			pkg.reload();
+		}
 	}
 
 	public toString(): string {
