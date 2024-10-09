@@ -1,6 +1,14 @@
 {
 	"name": "example-release-group-root",
-	"private": true,
 	"version": "2.3.0",
+	"private": true,
+	"homepage": "https://fluidframework.com",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/microsoft/FluidFramework.git",
+		"directory": "examples"
+	},
+	"license": "MIT",
+	"author": "Microsoft and contributors",
 	"dependencies": {}
 }
