@@ -4,15 +4,26 @@
  */
 
 import path from "node:path";
-import type { IPackage } from "@fluid-tools/build-infrastructure";
+import {
+	type IFluidRepo,
+	type IPackage,
+	type IReleaseGroup,
+	type PackageName,
+	type ReleaseGroupName,
+	isIReleaseGroup,
+} from "@fluid-tools/build-infrastructure";
 import { type IFluidBuildPackage } from "@fluidframework/build-tools";
+import { PackageName as PackageScope } from "@rushstack/node-core-library";
+import { parseISO } from "date-fns";
 import readPkgUp from "read-pkg-up";
+import * as semver from "semver";
 import { SimpleGit, SimpleGitOptions, simpleGit } from "simple-git";
 import type { SetRequired } from "type-fest";
 
 import { CommandLogger } from "../logging.js";
 import { ReleaseGroup } from "../releaseGroups.js";
 import { Context } from "./context.js";
+import type { VersionDetails } from "./release.js";
 /**
  * Default options passed to the git client.
  */
@@ -252,4 +263,143 @@ export class Repository {
 		// Files are already repo root-relative
 		return [...allFiles];
 	}
+}
+
+const _versions: Map<ReleaseGroupName | PackageName, VersionDetails[]> = new Map();
+
+/**
+ * Gets all the versions for a release group or independent package. This function only considers the tags in the
+ * repo to determine releases and dates.
+ *
+ * @param releaseGroupOrPackageName - The release group or package to get versions for.
+ * @returns An array of {@link ReleaseDetails} containing the version and date for each version.
+ */
+export async function getAllVersions(
+	releaseGroupOrPackageName: ReleaseGroupName | PackageName,
+	repo: IFluidRepo,
+): Promise<VersionDetails[] | undefined> {
+	// Try to get the git repo immediately so that if we're outside a repo, we throw immediately.
+	const gitRepo = await repo.getGitRepository();
+
+	const cacheEntry = _versions.get(releaseGroupOrPackageName);
+	if (cacheEntry !== undefined) {
+		return cacheEntry;
+	}
+	const maybeReleaseGroup = repo.releaseGroups.get(
+		releaseGroupOrPackageName as ReleaseGroupName,
+	);
+	const releaseGroupOrPackage =
+		maybeReleaseGroup ?? repo.packages.get(releaseGroupOrPackageName as PackageName);
+
+	if (releaseGroupOrPackage === undefined) {
+		throw new Error(`Release group or package not found: ${releaseGroupOrPackageName}`);
+	}
+
+	/**
+	 * A map of version strings to the date that version was released.
+	 */
+	const versions = new Map<string, Date>();
+	const tags = await getTagsForReleaseGroup(releaseGroupOrPackage, gitRepo);
+
+	for (const tag of tags) {
+		const ver = getVersionFromTag(tag);
+		if (ver !== undefined && ver !== "" && ver !== null) {
+			// eslint-disable-next-line no-await-in-loop
+			const date = await getCommitDate(gitRepo, tag);
+			versions.set(ver, date);
+		}
+	}
+
+	if (versions.size === 0) {
+		return undefined;
+	}
+
+	const toReturn: VersionDetails[] = [];
+	for (const [version, date] of versions) {
+		toReturn.push({ version, date });
+	}
+
+	_versions.set(releaseGroupOrPackageName, toReturn);
+	return toReturn;
+}
+
+const _tags: Map<string, string[]> = new Map();
+
+/**
+ * Returns an array of all the git tags associated with a release group or package.
+ *
+ * @param releaseGroupOrPackage - The release group or package to get tags for.
+ * @returns An array of all all the tags for the release group or package.
+ */
+async function getTagsForReleaseGroup(
+	releaseGroupOrPackage: IReleaseGroup | IPackage,
+	git: SimpleGit,
+): Promise<string[]> {
+	const prefix = isIReleaseGroup(releaseGroupOrPackage)
+		? releaseGroupOrPackage.name.toLowerCase()
+		: PackageScope.getUnscopedName(releaseGroupOrPackage.name);
+
+	const cacheEntry = _tags.get(prefix);
+	if (cacheEntry !== undefined) {
+		return cacheEntry;
+	}
+
+	const tagList = await getAllTags(git, `${prefix}_v*`);
+	return tagList;
+}
+
+/**
+ * Get all tags matching a pattern.
+ *
+ * @param git - A SimpleGit instance to use to retrieve git tags.
+ * @param pattern - Pattern of tags to get.
+ */
+async function getAllTags(git: SimpleGit, pattern?: string): Promise<string[]> {
+	const results =
+		pattern === undefined || pattern.length === 0
+			? await git.raw(`tag -l --sort=-committerdate`)
+			: await git.raw(`tag -l "${pattern}" --sort=-committerdate`);
+	const tags = results.split("\n").filter(
+		// Remove any empty entries
+		(t) => t !== undefined && t !== "" && t !== null,
+	);
+
+	return tags;
+}
+
+/**
+ * Gets the date of a git commit.
+ *
+ * @param gitRef - A reference to a git commit/tag/branch for which the commit date will be parsed.
+ * @returns The commit date of the ref.
+ */
+async function getCommitDate(git: SimpleGit, gitRef: string): Promise<Date> {
+	const result = await git.raw(`show -s --format=%cI "${gitRef}"`);
+	const date = parseISO(result);
+	return date;
+}
+
+/**
+ * Parses the version from a git tag.
+ *
+ * @param tag - The tag.
+ * @returns The version string, or undefined if one could not be found.
+ *
+ * @privateRemarks
+ * TODO: Duplicate code in version-tools/src/schemes.ts
+ */
+export function getVersionFromTag(tag: string): string | undefined {
+	// This is sufficient, but there is a possibility that this will fail if we add a tag that includes "_v" in its
+	// name.
+	const tagSplit = tag.split("_v");
+	if (tagSplit.length !== 2) {
+		return undefined;
+	}
+
+	const ver = semver.parse(tagSplit[1]);
+	if (ver === null) {
+		return undefined;
+	}
+
+	return ver.version;
 }

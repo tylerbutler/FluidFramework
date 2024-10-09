@@ -4,18 +4,15 @@
  */
 
 import { strict as assert } from "node:assert";
-import type { IPackage } from "@fluid-tools/build-infrastructure";
+import {
+	type IPackage,
+	type PackageFilterOptions,
+	type PackageSelectionCriteria,
+	selectAndFilterPackages,
+} from "@fluid-tools/build-infrastructure";
 import { Command, Flags, ux } from "@oclif/core";
 import async from "async";
-import {
-	PackageFilterOptions,
-	PackageKind,
-	PackageSelectionCriteria,
-	PackageWithKind,
-	parsePackageFilterFlags,
-	parsePackageSelectionFlags,
-	selectAndFilterPackages,
-} from "./filter.js";
+import { parsePackageFilterFlags, parsePackageSelectionFlags } from "./filter.js";
 import { type PackageSelectionDefault, filterFlags, selectionFlags } from "./flags.js";
 import { BaseCommand } from "./library/index.js";
 
@@ -53,12 +50,12 @@ export abstract class PackageCommand<
 	 * Note that these packages are not necessarily the ones that are acted on. Packages are selected, then that list is
 	 * further narrowed by filtering criteria, so this array may contain packages that are not acted on.
 	 */
-	protected selectedPackages: PackageWithKind[] | undefined;
+	protected selectedPackages: IPackage[] | undefined;
 
 	/**
 	 * The list of packages after all filters are applied to the selected packages.
 	 */
-	protected filteredPackages: PackageWithKind[] | undefined;
+	protected filteredPackages: IPackage[] | undefined;
 
 	/**
 	 * Called for each package that is selected/filtered based on the filter flags passed in to the command.
@@ -67,10 +64,7 @@ export abstract class PackageCommand<
 	 * @param kind - The kind of the package.
 	 * @typeparam TPkg - Type of the package-like object being processed.
 	 */
-	protected abstract processPackage<TPkg extends IPackage>(
-		pkg: TPkg,
-		kind: PackageKind,
-	): Promise<void>;
+	protected abstract processPackage<TPkg extends IPackage>(pkg: TPkg): Promise<void>;
 
 	protected parseFlags(): void {
 		this.selectionOptions = parsePackageSelectionFlags(this.flags, this.defaultSelection);
@@ -82,9 +76,9 @@ export abstract class PackageCommand<
 			throw new Error(`No packages selected.`);
 		}
 
-		const ctx = await this.getContext();
+		const fluidRepo = await this.getFluidRepo();
 		const { selected, filtered } = await selectAndFilterPackages(
-			ctx,
+			fluidRepo,
 			this.selectionOptions,
 			this.filterOptions,
 		);
@@ -126,7 +120,7 @@ export abstract class PackageCommand<
 	 *
 	 * @returns An array of error strings. If the array is not empty, at least one of the calls to processPackage failed.
 	 */
-	protected async processPackages(packages: PackageWithKind[]): Promise<string[]> {
+	protected async processPackages(packages: IPackage[]): Promise<string[]> {
 		let started = 0;
 		let finished = 0;
 		let succeeded = 0;
@@ -151,11 +145,11 @@ export abstract class PackageCommand<
 		}
 
 		try {
-			await async.mapLimit(packages, this.flags.concurrency, async (pkg: PackageWithKind) => {
+			await async.mapLimit(packages, this.flags.concurrency, async (pkg: IPackage) => {
 				started += 1;
 				updateStatus();
 				try {
-					await this.processPackage(pkg, pkg.kind);
+					await this.processPackage(pkg);
 					succeeded += 1;
 				} catch (error: unknown) {
 					const errorString = `Error updating ${pkg.name}: '${error}'\nStack: ${

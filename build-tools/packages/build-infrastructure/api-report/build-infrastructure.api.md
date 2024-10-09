@@ -13,7 +13,13 @@ import { SimpleGit } from 'simple-git';
 export type AdditionalPackageProps = Record<string, string> | undefined;
 
 // @public
+export const AllPackagesSelectionCriteria: PackageSelectionCriteria;
+
+// @public
 export function createPackageManager(name: PackageManagerName): IPackageManager;
+
+// @public
+export const EmptySelectionCriteria: PackageSelectionCriteria;
 
 // @public
 export interface FluidPackageJsonFields {
@@ -24,6 +30,9 @@ export interface FluidPackageJsonFields {
 
 // @public
 export const FLUIDREPO_CONFIG_VERSION = 1;
+
+// @public
+export type GlobString = string;
 
 // @public @deprecated
 export interface IFluidBuildDir {
@@ -184,6 +193,13 @@ export interface PackageDependency {
     version: string;
 }
 
+// @public
+export interface PackageFilterOptions {
+    private: boolean | undefined;
+    scope?: string[] | undefined;
+    skipScope?: string[] | undefined;
+}
+
 // @public (undocumented)
 export type PackageJson = SetRequired<PackageJson_2 & FluidPackageJsonFields, "name" | "scripts" | "version">;
 
@@ -192,6 +208,16 @@ export type PackageManagerName = "npm" | "pnpm" | "yarn";
 
 // @public
 export type PackageName = Opaque<string, "PackageName">;
+
+// @public
+export interface PackageSelectionCriteria {
+    changedSinceBranch?: string | undefined;
+    directory?: string | undefined;
+    releaseGroupRoots: (GlobString | string)[];
+    releaseGroups: (GlobString | string)[];
+    workspaceRoots: (GlobString | string)[];
+    workspaces: (GlobString | string)[];
+}
 
 // @public (undocumented)
 export interface ReleaseGroupDefinition {
@@ -209,6 +235,12 @@ export interface Reloadable {
     // (undocumented)
     reload(): void;
 }
+
+// @public
+export function selectAndFilterPackages(fluidRepo: IFluidRepo, selection: PackageSelectionCriteria, filter?: PackageFilterOptions): Promise<{
+    selected: IPackage[];
+    filtered: IPackage[];
+}>;
 
 // @public (undocumented)
 export interface WorkspaceDefinition {

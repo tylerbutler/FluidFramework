@@ -3,9 +3,6 @@
  * Licensed under the MIT License.
  */
 
-import { PackageName } from "@rushstack/node-core-library";
-
-import { ReleaseVersion } from "@fluid-tools/version-tools";
 import {
 	FluidRepo,
 	GitRepo,
@@ -14,50 +11,11 @@ import {
 	Package,
 	getFluidBuildConfig,
 } from "@fluidframework/build-tools";
-import * as semver from "semver";
+import { PackageName as PackageScope } from "@rushstack/node-core-library";
 
 import { type FlubConfig, getFlubConfig } from "../config.js";
-
-/**
- * Represents a release version and its release date, if applicable.
- *
- * @internal
- */
-export interface VersionDetails {
-	/**
-	 * The version of the release.
-	 */
-	version: ReleaseVersion;
-
-	/**
-	 * The date the version was released, if applicable.
-	 */
-	date?: Date;
-}
-
-/**
- * Parses the version from a git tag.
- *
- * @param tag - The tag.
- * @returns The version string, or undefined if one could not be found.
- *
- * TODO: Need up reconcile slightly different version in version-tools/src/schemes.ts
- */
-function getVersionFromTag(tag: string): string | undefined {
-	// This is sufficient, but there is a possibility that this will fail if we add a tag that includes "_v" in its
-	// name.
-	const tagSplit = tag.split("_v");
-	if (tagSplit.length !== 2) {
-		return undefined;
-	}
-
-	const ver = semver.parse(tagSplit[1]);
-	if (ver === null) {
-		return undefined;
-	}
-
-	return ver.version;
-}
+import { getVersionFromTag } from "./git.js";
+import type { VersionDetails } from "./release.js";
 
 /**
  * Represents the different types of release groups supported by the build tools. Each of these groups should be defined
@@ -202,7 +160,7 @@ export class Context {
 	public async getTagsForReleaseGroup(releaseGroupOrPackage: string): Promise<string[]> {
 		const prefix = isMonoRepoKind(releaseGroupOrPackage)
 			? releaseGroupOrPackage.toLowerCase()
-			: PackageName.getUnscopedName(releaseGroupOrPackage);
+			: PackageScope.getUnscopedName(releaseGroupOrPackage);
 		const cacheEntry = this._tags.get(prefix);
 		if (cacheEntry !== undefined) {
 			return cacheEntry;

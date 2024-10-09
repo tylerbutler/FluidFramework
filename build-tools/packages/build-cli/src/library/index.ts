@@ -31,7 +31,7 @@ export {
 	BaseCommand,
 	GenerateEntrypointsCommand,
 } from "./commands/index.js";
-export { Context, VersionDetails, isMonoRepoKind, MonoRepoKind } from "./context.js";
+export { VersionDetails, isMonoRepoKind, MonoRepoKind } from "./context.js";
 export { Repository } from "./git.js";
 export {
 	ensureDevDependencyExists,
@@ -61,3 +61,5 @@ export {
 } from "./release.js";
 export { LayerGraph } from "./layerGraph.js";
 export { type Handler, policyHandlers } from "./repoPolicyCheck/index.js";
+
+export { IFluidRepo as Context } from "@fluid-tools/build-infrastructure";

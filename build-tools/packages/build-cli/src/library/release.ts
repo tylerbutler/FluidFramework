@@ -14,6 +14,21 @@ import {
 import { ReleaseGroup } from "../releaseGroups.js";
 
 /**
+ * Represents a release version and its release date, if applicable.
+ */
+export interface VersionDetails {
+	/**
+	 * The version of the release.
+	 */
+	version: ReleaseVersion;
+
+	/**
+	 * The date the version was released, if applicable.
+	 */
+	date?: Date;
+}
+
+/**
  * A map of package names to their versions. This is the format of the "simple" release report.
  */
 export interface PackageVersionList {

@@ -6,6 +6,8 @@
 import { isInternalVersionScheme } from "@fluid-tools/version-tools";
 import * as semver from "semver";
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg, semverArg } from "../../args.js";
+// eslint-disable-next-line import/no-internal-modules
+import { getAllVersions } from "../../library/git.js";
 import { BaseCommand, sortVersions } from "../../library/index.js";
 
 type MajorVersion = number;
@@ -28,15 +30,15 @@ export default class LatestVersionsCommand extends BaseCommand<typeof LatestVers
 
 	public async run(): Promise<void> {
 		const { args } = this;
-		const context = await this.getContext();
+		const repo = await this.getFluidRepo();
 		const versionInput = this.args.version;
 
-		const rgOrPackage = findPackageOrReleaseGroup(args.package_or_release_group, context);
+		const rgOrPackage = findPackageOrReleaseGroup(args.package_or_release_group, repo);
 		if (rgOrPackage === undefined) {
 			this.error(`Package not found: ${args.package_or_release_group}`);
 		}
 
-		const versions = await context.getAllVersions(rgOrPackage.name);
+		const versions = await getAllVersions(rgOrPackage.name, repo);
 
 		if (!versions) {
 			this.error(`No versions found for ${rgOrPackage.name}`);

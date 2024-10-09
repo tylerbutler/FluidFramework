@@ -13,6 +13,14 @@ export {
 	FLUIDREPO_CONFIG_VERSION,
 } from "./config.js";
 export { NotInGitRepository } from "./errors.js";
+export {
+	selectAndFilterPackages,
+	type GlobString,
+	AllPackagesSelectionCriteria,
+	EmptySelectionCriteria,
+	type PackageSelectionCriteria,
+	type PackageFilterOptions,
+} from "./filter.js";
 export { loadFluidRepo } from "./fluidRepo.js";
 export type {
 	AdditionalPackageProps,

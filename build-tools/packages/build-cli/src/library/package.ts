@@ -6,7 +6,16 @@
 import { strict as assert } from "node:assert";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { IPackage } from "@fluid-tools/build-infrastructure";
+import {
+	AllPackagesSelectionCriteria,
+	EmptySelectionCriteria,
+	type IFluidRepo,
+	type IPackage,
+	type PackageName,
+	type PackageSelectionCriteria,
+	type ReleaseGroupName,
+	selectAndFilterPackages,
+} from "@fluid-tools/build-infrastructure";
 import {
 	InterdependencyRange,
 	ReleaseVersion,
@@ -26,7 +35,7 @@ import {
 	type PackageJson,
 	updatePackageJsonFile,
 } from "@fluidframework/build-tools";
-import { PackageName } from "@rushstack/node-core-library";
+import { PackageName as PackageScope } from "@rushstack/node-core-library";
 import { compareDesc, differenceInBusinessDays } from "date-fns";
 import execa from "execa";
 import { readJson, readJsonSync } from "fs-extra/esm";
@@ -36,15 +45,11 @@ import type { Index } from "npm-check-updates/build/src/types/IndexType.js";
 import type { VersionSpec } from "npm-check-updates/build/src/types/VersionSpec.js";
 import * as semver from "semver";
 
-import {
-	AllPackagesSelectionCriteria,
-	PackageSelectionCriteria,
-	selectAndFilterPackages,
-} from "../filter.js";
 import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../releaseGroups.js";
 import { DependencyUpdateType } from "./bump.js";
 import { zip } from "./collections.js";
-import { Context, VersionDetails } from "./context.js";
+import { Context } from "./context.js";
+import type { VersionDetails } from "./release.js";
 import { indentString } from "./text.js";
 
 /**
@@ -378,11 +383,11 @@ export function generateReleaseGitTagName(
 		const kindLowerCase = releaseGroupOrPackage.kind.toLowerCase();
 		tagName = `${kindLowerCase}_v${version ?? releaseGroupOrPackage.version}`;
 	} else if (releaseGroupOrPackage instanceof Package) {
-		tagName = `${PackageName.getUnscopedName(releaseGroupOrPackage.name)}_v${
+		tagName = `${PackageScope.getUnscopedName(releaseGroupOrPackage.name)}_v${
 			version ?? releaseGroupOrPackage.version
 		}`;
 	} else {
-		tagName = `${PackageName.getUnscopedName(releaseGroupOrPackage)}_v${version}`;
+		tagName = `${PackageScope.getUnscopedName(releaseGroupOrPackage)}_v${version}`;
 	}
 
 	return tagName;
@@ -788,15 +793,15 @@ async function findDepUpdates(
  */
 // eslint-disable-next-line max-params
 export async function npmCheckUpdatesHomegrown(
-	context: Context,
-	releaseGroup: ReleaseGroup | ReleasePackage | undefined,
+	repo: IFluidRepo,
+	releaseGroup: ReleaseGroupName | PackageName | undefined,
 	depsToUpdate: ReleasePackage[],
-	releaseGroupFilter: ReleaseGroup | undefined,
+	releaseGroupFilter: ReleaseGroupName | undefined,
 	prerelease = false,
 	writeChanges = true,
 	log?: Logger,
 ): Promise<{
-	updatedPackages: IFluidBuildPackage[];
+	updatedPackages: IPackage[];
 	updatedDependencies: PackageVersionMap;
 }> {
 	if (releaseGroupFilter !== undefined && releaseGroup === releaseGroupFilter) {
@@ -820,9 +825,9 @@ export async function npmCheckUpdatesHomegrown(
 			? // if releaseGroup is undefined it means we should update all packages and release groups
 				AllPackagesSelectionCriteria
 			: {
-					independentPackages: false,
-					releaseGroups: [releaseGroup as ReleaseGroup],
-					releaseGroupRoots: [releaseGroup as ReleaseGroup],
+					...EmptySelectionCriteria,
+					releaseGroups: [releaseGroup],
+					releaseGroupRoots: [releaseGroup],
 				};
 
 	// Remove the filtered release group from the list if needed
@@ -835,7 +840,7 @@ export async function npmCheckUpdatesHomegrown(
 	}
 
 	const { filtered: packagesToUpdate } = await selectAndFilterPackages(
-		context,
+		repo,
 		selectionCriteria,
 	);
 	log?.info(
@@ -867,7 +872,7 @@ export async function npmCheckUpdatesHomegrown(
 	// eslint-disable-next-line @typescript-eslint/no-base-to-string
 	log?.verbose(`Calculated new range: ${range}`);
 	for (const dep of Object.keys(dependencyVersionMap)) {
-		const pkg = context.fullPackageMap.get(dep);
+		const pkg = repo.packages.get(dep as PackageName);
 
 		if (pkg === undefined) {
 			log?.warning(`Package not found: ${dep}. Skipping.`);

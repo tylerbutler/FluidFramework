@@ -205,14 +205,21 @@ export function sortVersions(versionList: string[], allowPrereleases = false): s
  * Parses a version from a git tag.
  * @param tag - The tag.
  * @returns A version parsed from the tag.
- *
- * TODO: Need up reconcile slightly different version in build-cli/src/library/context.ts
+ * @privateRemarks
+ * TODO: Duplicate code in build-cli/src/library/git.ts
  */
 function getVersionFromTag(tag: string): string | undefined {
+	// This is sufficient, but there is a possibility that this will fail if we add a tag that includes "_v" in its
+	// name.
 	const tagSplit = tag.split("_v");
 	if (tagSplit.length !== 2) {
 		return undefined;
 	}
 
-	return tagSplit[1];
+	const ver = semver.parse(tagSplit[1]);
+	if (ver === null) {
+		return undefined;
+	}
+
+	return ver.version;
 }

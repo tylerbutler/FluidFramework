@@ -3,13 +3,16 @@
  * Licensed under the MIT License.
  */
 
-import { type IFluidBuildPackage, MonoRepo } from "@fluidframework/build-tools";
+import {
+	type IFluidRepo,
+	type IPackage,
+	type IReleaseGroup,
+	type PackageName,
+	type ReleaseGroupName,
+} from "@fluid-tools/build-infrastructure";
 import { Args } from "@oclif/core";
-import { PackageName } from "@rushstack/node-core-library";
-
+import { PackageName as PackageScope } from "@rushstack/node-core-library";
 import * as semver from "semver";
-// eslint-disable-next-line import/no-deprecated
-import { Context, isMonoRepoKind } from "./library/index.js";
 
 /**
  * Creates a CLI argument for package or release group names. It's a factory function so that commands can override the
@@ -27,17 +30,18 @@ export const packageOrReleaseGroupArg = Args.custom({
  */
 export const findPackageOrReleaseGroup = (
 	name: string,
-	context: Context,
-): IFluidBuildPackage | MonoRepo | undefined => {
-	// eslint-disable-next-line import/no-deprecated
-	if (isMonoRepoKind(name)) {
-		return context.repo.releaseGroups.get(name);
+	repo: IFluidRepo,
+): IPackage | IReleaseGroup | undefined => {
+	const releaseGroup = repo.releaseGroups.get(name as ReleaseGroupName);
+	if (releaseGroup !== undefined) {
+		return releaseGroup;
 	}
 
-	return (
-		context.fullPackageMap.get(name) ??
-		context.independentPackages.find((pkg) => PackageName.getUnscopedName(pkg.name) === name)
-	);
+	const foundPackage =
+		repo.packages.get(name as PackageName) ??
+		[...repo.packages.values()].find((pkg) => PackageScope.getUnscopedName(pkg.name) === name);
+
+	return foundPackage;
 };
 
 /**
