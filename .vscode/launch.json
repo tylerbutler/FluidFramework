@@ -102,13 +102,13 @@
 			"args": ["generate", "releaseNotes", "-g", "client", "-t", "minor", "-v"],
 		},
 		{
-			"name": "flub generate changeset-config",
+			"name": "flub generate changesetConfig",
 			"program": "${workspaceFolder}/build-tools/packages/build-cli/bin/dev.js",
 			"cwd": "${workspaceFolder}/build-tools/packages/build-infrastructure/src/test/data/testRepo/",
 			"request": "launch",
 			"skipFiles": ["<node_internals>/**"],
 			"type": "node",
-			"args": ["generate", "changeset-config", "-w", "main", "-v"],
+			"args": ["generate", "changesetConfig", "-w", "main", "-v"],
 		},
 		{
 			"name": "flub generate packlist",

@@ -65,7 +65,14 @@ export default class GenerateChangesetConfigCommand extends BaseCommand<
 		// Always override the 'fixed' packages.
 		const fixedPackages: PackageName[][] = [];
 		for (const releaseGroup of workspace.releaseGroups.values()) {
-			fixedPackages.push(releaseGroup.packages.map((p) => p.name));
+			fixedPackages.push(
+				releaseGroup.packages
+					.filter(
+						// exclude release group root packages because the changesets CLI doesn't recognize them
+						(p) => !p.isReleaseGroupRoot,
+					)
+					.map((p) => p.name),
+			);
 		}
 		newConfig.fixed = fixedPackages;
 
