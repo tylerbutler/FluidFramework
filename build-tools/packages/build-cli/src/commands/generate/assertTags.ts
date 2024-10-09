@@ -6,10 +6,8 @@
 import { strict as assert } from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
-import type { IPackage } from "@fluid-tools/build-infrastructure";
-import { PackageCommand } from "../../BasePackageCommand.js";
-import { PackageKind } from "../../filter.js";
 
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import {
 	NoSubstitutionTemplateLiteral,
@@ -20,6 +18,8 @@ import {
 	StringLiteral,
 	SyntaxKind,
 } from "ts-morph";
+
+import { PackageCommand } from "../../BasePackageCommand.js";
 
 const shortCodes = new Map<number, Node>();
 const newAssetFiles = new Set<SourceFile>();
@@ -97,10 +97,7 @@ export class TagAssertsCommand extends PackageCommand<typeof TagAssertsCommand> 
 		}
 	}
 
-	protected async processPackage<TPkg extends IPackage>(
-		pkg: TPkg,
-		kind: PackageKind,
-	): Promise<void> {
+	protected async processPackage<TPkg extends IPackage>(pkg: TPkg): Promise<void> {
 		const tsconfigPath = await this.getTsConfigPath(pkg);
 		this.collectAssertData(tsconfigPath);
 	}
