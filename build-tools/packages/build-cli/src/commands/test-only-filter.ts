@@ -4,9 +4,10 @@
  */
 
 import { strict as assert } from "node:assert";
+
 import type { IPackage } from "@fluid-tools/build-infrastructure";
+
 import { PackageCommand } from "../BasePackageCommand.js";
-import { PackageWithKind } from "../filter.js";
 import type { PackageSelectionDefault } from "../flags.js";
 
 interface FilterCommandResult {
@@ -47,7 +48,7 @@ export default class FilterCommand extends PackageCommand<typeof FilterCommand> 
 		// do nothing
 	}
 
-	protected async processPackages(packages: PackageWithKind[]): Promise<string[]> {
+	protected async processPackages(packages: IPackage[]): Promise<string[]> {
 		// do nothing
 		return [];
 	}
