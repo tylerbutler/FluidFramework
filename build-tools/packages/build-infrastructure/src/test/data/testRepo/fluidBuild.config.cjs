@@ -24,6 +24,9 @@ const config = {
 					group2: {
 						include: ["@group2"],
 					},
+					group3: {
+						include: ["@group3"],
+					},
 				},
 			},
 			second: {
