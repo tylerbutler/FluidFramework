@@ -5,6 +5,13 @@
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import * as path from "node:path";
+import {
+	type IPackage,
+	type IPackageManager,
+	type PackageName,
+	type ReleaseGroupName,
+	createPackageManager,
+} from "@fluid-tools/build-infrastructure";
 import { queue } from "async";
 import * as chalk from "chalk";
 import detectIndent from "detect-indent";
@@ -16,7 +23,7 @@ import type { SetRequired, PackageJson as StandardPackageJson } from "type-fest"
 import { type IFluidBuildConfig } from "../fluidBuild/fluidBuildConfig";
 import { options } from "../fluidBuild/options";
 import { defaultLogger } from "./logging";
-import { MonoRepo, PackageManager } from "./monoRepo";
+import { MonoRepo } from "./monoRepo";
 import {
 	ExecAsyncResult,
 	execWithErrorAsync,
@@ -67,12 +74,36 @@ export type PackageJson = SetRequired<
  * Information about a package dependency.
  */
 interface PackageDependency {
-	name: string;
+	name: PackageName;
 	version: string;
 	depClass: "prod" | "dev" | "peer";
 }
 
-export class Package {
+interface IFluidBuildPackageJson extends PackageJson {
+	fluidBuild?: IFluidBuildConfig;
+}
+
+export interface IFluidBuildPackage extends IPackage<IFluidBuildPackageJson> {
+	matched?: boolean;
+
+	/**
+	 * The MonoRepo class is roughly equivalent to a workspace.
+	 */
+	readonly monoRepo?: MonoRepo;
+
+	cleanNodeModules(): Promise<ExecAsyncResult>;
+	getLockFilePath(): string | undefined;
+	install(): Promise<ExecAsyncResult>;
+
+	/**
+	 * The deprected "group" of the package.
+	 *
+	 * @deprecated Do not use.
+	 */
+	group: string;
+}
+
+export class Package implements IFluidBuildPackage {
 	private static packageCount: number = 0;
 	private static readonly chalkColor = [
 		chalk.default.red,
@@ -97,9 +128,13 @@ export class Package {
 	private _matched: boolean = false;
 
 	private _indent: string;
-	public readonly packageManager: PackageManager;
+	public readonly packageManager: IPackageManager;
 	public get packageJson(): PackageJson {
 		return this._packageJson;
+	}
+
+	public get packageJsonFilePath() {
+		return this.packageJsonFileName;
 	}
 
 	/**
@@ -121,19 +156,23 @@ export class Package {
 		const pnpmWorkspacePath = path.join(this.directory, "pnpm-workspace.yaml");
 		const yarnLockPath = path.join(this.directory, "yarn.lock");
 		this.packageManager = existsSync(pnpmWorkspacePath)
-			? "pnpm"
+			? createPackageManager("pnpm")
 			: existsSync(yarnLockPath)
-				? "yarn"
-				: "npm";
+				? createPackageManager("yarn")
+				: createPackageManager("npm");
 		traceInit(`${this.nameColored}: Package loaded`);
 		Object.assign(this, additionalProperties);
+	}
+
+	public get releaseGroup(): ReleaseGroupName {
+		throw new Error(`Not implemented; do not call.`);
 	}
 
 	/**
 	 * The name of the package including the scope.
 	 */
-	public get name(): string {
-		return this.packageJson.name;
+	public get name(): PackageName {
+		return this.packageJson.name as PackageName;
 	}
 
 	/**
@@ -163,6 +202,11 @@ export class Package {
 	 * Returns true if the package is a release group root package based on its directory path.
 	 */
 	public get isReleaseGroupRoot(): boolean {
+		// release groups and workspaces are the same in this implementation
+		return this.isWorkspaceRoot;
+	}
+
+	public get isWorkspaceRoot(): boolean {
 		return this.monoRepo !== undefined && this.directory === this.monoRepo.repoPath;
 	}
 
@@ -170,19 +214,19 @@ export class Package {
 		return this._matched;
 	}
 
-	public setMatched() {
-		this._matched = true;
+	public set matched(value) {
+		this._matched = value;
 	}
 
-	public get dependencies() {
-		return Object.keys(this.packageJson.dependencies ?? {});
+	public get dependencies(): PackageName[] {
+		return Object.keys(this.packageJson.dependencies ?? {}).map((p) => p as PackageName);
 	}
 
 	public get combinedDependencies(): Generator<PackageDependency, void> {
 		const it = function* (packageJson: PackageJson) {
 			for (const item in packageJson.dependencies) {
 				yield {
-					name: item,
+					name: item as PackageName,
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					version: packageJson.dependencies[item]!,
 					depClass: "prod",
@@ -190,7 +234,7 @@ export class Package {
 			}
 			for (const item in packageJson.devDependencies) {
 				yield {
-					name: item,
+					name: item as PackageName,
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					version: packageJson.devDependencies[item]!,
 					depClass: "dev",
@@ -198,7 +242,7 @@ export class Package {
 			}
 			for (const item in packageJson.peerDependencies) {
 				yield {
-					name: item,
+					name: item as PackageName,
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					version: packageJson.peerDependencies[item]!,
 					depClass: "peer",
@@ -229,11 +273,7 @@ export class Package {
 	}
 
 	public get installCommand(): string {
-		return this.packageManager === "pnpm"
-			? "pnpm i"
-			: this.packageManager === "yarn"
-				? "npm run install-strict"
-				: "npm i";
+		return `${this.packageManager.name} ${this.packageManager.installCommand(false)}`;
 	}
 
 	private get color() {
@@ -383,7 +423,7 @@ async function queueExec<TItem, TResult>(
 }
 
 export class Packages {
-	public constructor(public readonly packages: Package[]) {}
+	public constructor(public readonly packages: IFluidBuildPackage[]) {}
 
 	public static loadDir(
 		dirFullPath: string,
@@ -396,7 +436,7 @@ export class Packages {
 			return [Package.load(packageJsonFileName, group, monoRepo)];
 		}
 
-		const packages: Package[] = [];
+		const packages: IFluidBuildPackage[] = [];
 		const files = readdirSync(dirFullPath, { withFileTypes: true });
 		files.map((dirent) => {
 			if (dirent.isDirectory() && dirent.name !== "node_modules") {
@@ -417,7 +457,7 @@ export class Packages {
 	}
 
 	public async forEachAsync<TResult>(
-		exec: (pkg: Package) => Promise<TResult>,
+		exec: (pkg: IFluidBuildPackage) => Promise<TResult>,
 		parallel: boolean,
 		message?: string,
 	) {
@@ -432,10 +472,10 @@ export class Packages {
 		return results;
 	}
 
-	public static async clean(packages: Package[], status: boolean) {
+	public static async clean(packages: IPackage[], status: boolean) {
 		const cleanP: Promise<ExecAsyncResult>[] = [];
 		let numDone = 0;
-		const execCleanScript = async (pkg: Package, cleanScript: string) => {
+		const execCleanScript = async (pkg: IPackage, cleanScript: string) => {
 			const startTime = Date.now();
 			const result = await execWithErrorAsync(
 				cleanScript,
@@ -473,17 +513,17 @@ export class Packages {
 	}
 
 	private async queueExecOnAllPackageCore<TResult>(
-		exec: (pkg: Package) => Promise<TResult>,
+		exec: (pkg: IFluidBuildPackage) => Promise<TResult>,
 		message?: string,
 	) {
 		const messageCallback = message
-			? (pkg: Package) => ` ${pkg.nameColored}: ${message}`
+			? (pkg: IFluidBuildPackage) => ` ${pkg.nameColored}: ${message}`
 			: undefined;
 		return queueExec(this.packages, exec, messageCallback);
 	}
 
 	private async queueExecOnAllPackage(
-		exec: (pkg: Package) => Promise<ExecAsyncResult>,
+		exec: (pkg: IFluidBuildPackage) => Promise<ExecAsyncResult>,
 		message?: string,
 	) {
 		const results = await this.queueExecOnAllPackageCore(exec, message);
