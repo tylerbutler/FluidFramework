@@ -8,7 +8,6 @@ Generate commands are used to create/update code, docs, readmes, etc.
 * [`flub generate bundleStats`](#flub-generate-bundlestats)
 * [`flub generate changelog`](#flub-generate-changelog)
 * [`flub generate changeset`](#flub-generate-changeset)
-* [`flub generate changeset-config`](#flub-generate-changeset-config)
 * [`flub generate changesetConfig`](#flub-generate-changesetconfig)
 * [`flub generate entrypoints`](#flub-generate-entrypoints)
 * [`flub generate packlist`](#flub-generate-packlist)
@@ -224,35 +223,6 @@ EXAMPLES
 ```
 
 _See code: [src/commands/generate/changeset.ts](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/generate/changeset.ts)_
-
-## `flub generate changeset-config`
-
-Generates a configuration file for changesets.
-
-```
-USAGE
-  $ flub generate changeset-config -w <value> [--json] [-v | --quiet] [-o <value>]
-
-FLAGS
-  -o, --outFile=<value>    [default: .changeset/config.json] Path to write the changeset config file to. The file will
-                           always be overwritten.
-  -w, --workspace=<value>  (required) Name of a workspace.
-
-LOGGING FLAGS
-  -v, --verbose  Enable verbose logging.
-      --quiet    Disable all logging.
-
-GLOBAL FLAGS
-  --json  Format output as json.
-
-DESCRIPTION
-  Generates a configuration file for changesets.
-
-  This command is used to dynamically create fixed and linked package groups in the changesets config. Existing settings
-  in the changeset config will be retained EXCEPT for fixed and linked groups. Those are always overwritten.
-```
-
-_See code: [src/commands/generate/changeset-config.ts](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/generate/changeset-config.ts)_
 
 ## `flub generate changesetConfig`
 
