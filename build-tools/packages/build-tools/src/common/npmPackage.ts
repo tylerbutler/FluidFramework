@@ -79,7 +79,7 @@ interface PackageDependency {
 	depClass: "prod" | "dev" | "peer";
 }
 
-interface IFluidBuildPackageJson extends PackageJson {
+export interface IFluidBuildPackageJson extends PackageJson {
 	fluidBuild?: IFluidBuildConfig;
 }
 
@@ -103,7 +103,7 @@ export interface IFluidBuildPackage extends IPackage<IFluidBuildPackageJson> {
 	group: string;
 }
 
-export class Package implements IFluidBuildPackage {
+export class PackageClass implements IFluidBuildPackage {
 	private static packageCount: number = 0;
 	private static readonly chalkColor = [
 		chalk.default.red,
@@ -124,7 +124,7 @@ export class Package implements IFluidBuildPackage {
 	];
 
 	private _packageJson: PackageJson;
-	private readonly packageId = Package.packageCount++;
+	private readonly packageId = PackageClass.packageCount++;
 	private _matched: boolean = false;
 
 	private _indent: string;
@@ -277,7 +277,7 @@ export class Package implements IFluidBuildPackage {
 	}
 
 	private get color() {
-		return Package.chalkColor[this.packageId % Package.chalkColor.length];
+		return PackageClass.chalkColor[this.packageId % PackageClass.chalkColor.length];
 	}
 
 	public getScript(name: string): string | undefined {
@@ -342,8 +342,10 @@ export class Package implements IFluidBuildPackage {
 	 * @param monoRepo - Set this if the package is part of a release group (monorepo).
 	 * @param additionalProperties - An object with additional properties that should be added to the class. This is
 	 * useful to augment the package class with additional properties.
+	 *
+	 * @deprecated Use of this function outside the build-tools package is deprecated.
 	 */
-	public static load<T extends typeof Package, TAddProps>(
+	public static load<T extends typeof PackageClass, TAddProps>(
 		this: T,
 		packageJsonFileName: string,
 		group: string,
@@ -368,15 +370,17 @@ export class Package implements IFluidBuildPackage {
 	 * useful to augment the package class with additional properties.
 	 * @typeParam TAddProps - The type of the additional properties object.
 	 * @returns a loaded Package. If additional properties are specifed, the returned type will be Package & TAddProps.
+	 *
+	 * @deprecated Use of this function outside the build-tools package is deprecated.
 	 */
-	public static loadDir<T extends typeof Package, TAddProps>(
+	public static loadDir<T extends typeof PackageClass, TAddProps>(
 		this: T,
 		packageDir: string,
 		group: string,
 		monoRepo?: MonoRepo,
 		additionalProperties?: TAddProps,
 	) {
-		return Package.load(
+		return PackageClass.load(
 			path.join(packageDir, "package.json"),
 			group,
 			monoRepo,
@@ -433,7 +437,7 @@ export class Packages {
 	) {
 		const packageJsonFileName = path.join(dirFullPath, "package.json");
 		if (existsSync(packageJsonFileName)) {
-			return [Package.load(packageJsonFileName, group, monoRepo)];
+			return [PackageClass.load(packageJsonFileName, group, monoRepo)];
 		}
 
 		const packages: IFluidBuildPackage[] = [];

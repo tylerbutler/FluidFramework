@@ -6,15 +6,16 @@
 import { type Stats, existsSync } from "node:fs";
 import { lstat, mkdir, realpath, rename, symlink, unlink, writeFile } from "node:fs/promises";
 import * as path from "node:path";
+
 import { type IPackage } from "@fluid-tools/build-infrastructure";
+import registerDebug from "debug";
 import * as semver from "semver";
 
 import { defaultLogger } from "../common/logging";
 import { MonoRepo } from "../common/monoRepo";
+import type { IFluidBuildPackage } from "../common/npmPackage";
 import { FluidRepoBuild } from "./fluidRepoBuild";
 
-import registerDebug from "debug";
-import type { IFluidBuildPackage } from "../common/npmPackage";
 const traceSymLink = registerDebug("fluid-build:symlink");
 
 const { warning } = defaultLogger;

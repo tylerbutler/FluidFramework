@@ -281,7 +281,10 @@ export const parsePackageFilterFlags = (flags: filterFlags): PackageFilterOption
 /**
  * Convenience type that extracts only the properties of a package that are needed for filtering.
  */
-// type FilterablePackage = Pick<IPackage, "name" | "private">;
+// interface FilterablePackage {
+// 	name: string;
+// 	private?: boolean;
+// }
 
 /**
  * Filters a list of packages by the filter criteria.

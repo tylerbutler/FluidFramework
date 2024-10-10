@@ -335,7 +335,7 @@ export function generateReleaseGitTagName(
 	if (releaseGroupOrPackage instanceof MonoRepo) {
 		const kindLowerCase = releaseGroupOrPackage.kind.toLowerCase();
 		tagName = `${kindLowerCase}_v${version ?? releaseGroupOrPackage.version}`;
-	} else if (releaseGroupOrPackage instanceof Package) {
+	} else if (typeof releaseGroupOrPackage === "object") {
 		tagName = `${PackageScope.getUnscopedName(releaseGroupOrPackage.name)}_v${
 			version ?? releaseGroupOrPackage.version
 		}`;
@@ -880,7 +880,7 @@ export function ensureDevDependencyExists(
  *
  * @see {@link getFullTarballName} for a version of this function that includes the package version and file extension.
  */
-export function getTarballName(pkg: PackageJson | string): string {
+export function getTarballName(pkg: Pick<PackageJson, "name"> | string): string {
 	const pkgName = typeof pkg === "string" ? pkg : pkg.name;
 	const name = pkgName.replaceAll("@", "").replaceAll("/", "-");
 	return name;

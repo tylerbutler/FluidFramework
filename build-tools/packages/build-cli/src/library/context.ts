@@ -102,7 +102,7 @@ export class Context {
 		releaseGroup: string | IFluidBuildPackage,
 	): IFluidBuildPackage[] {
 		const packages =
-			releaseGroup instanceof Package
+			typeof releaseGroup === "object"
 				? this.packages.filter((p) => p.name !== releaseGroup.name)
 				: this.packages.filter((pkg) => pkg.monoRepo?.kind !== releaseGroup);
 		return packages;

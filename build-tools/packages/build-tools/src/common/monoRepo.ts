@@ -11,7 +11,7 @@ import YAML from "yaml";
 
 import { IFluidBuildDir } from "../fluidBuild/fluidBuildConfig";
 import { Logger, defaultLogger } from "./logging";
-import { type IFluidBuildPackage, Package } from "./npmPackage";
+import { type IFluidBuildPackage, PackageClass } from "./npmPackage";
 import { execWithErrorAsync, rimrafWithErrorAsync } from "./utils";
 
 import { type IPackageManager, createPackageManager } from "@fluid-tools/build-infrastructure";
@@ -124,7 +124,7 @@ export class MonoRepo {
 			throw new Error(`ERROR: package.json not found in ${repoPath}`);
 		}
 
-		this.pkg = Package.load(packagePath, kind, this);
+		this.pkg = PackageClass.load(packagePath, kind, this);
 
 		if (this.packageManager.name !== this.pkg.packageManager.name) {
 			throw new Error(
@@ -134,7 +134,7 @@ export class MonoRepo {
 
 		for (const pkgDir of packageDirs) {
 			traceInit(`${kind}: Loading packages from ${pkgDir}`);
-			this.packages.push(Package.load(path.join(pkgDir, "package.json"), kind, this));
+			this.packages.push(PackageClass.load(path.join(pkgDir, "package.json"), kind, this));
 		}
 
 		if (packageManager.name === "pnpm") {

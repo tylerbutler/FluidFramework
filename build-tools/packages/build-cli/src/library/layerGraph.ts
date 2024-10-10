@@ -242,6 +242,7 @@ class PackageNode extends BaseNode {
 	public initializedDependencies(packageNodeMap: Map<string, PackageNode>): void {
 		for (const { name, depClass } of this.pkg.combinedDependencies) {
 			if (depClass !== "prod") {
+				// Skip non-prod dependencies
 				continue;
 			}
 			const depPackageNode = packageNodeMap.get(name);
@@ -561,7 +562,7 @@ But some packages in layer A depend on packages in layer B, and likewise some in
 				const dirRelativePath = `/${path
 					.relative(repoRoot, packageNode.pkg.directory)
 					.replace(/\\/g, "/")}`;
-				const ifPrivate = packageNode.pkg.private === true ? " (private)" : "";
+				const ifPrivate = packageNode.pkg.private ? " (private)" : "";
 				packagesInCell.push(`- [${packageNode.name}](${dirRelativePath})${ifPrivate}`);
 			}
 
