@@ -342,6 +342,8 @@ export class PackageClass implements IFluidBuildPackage {
 	 * @param monoRepo - Set this if the package is part of a release group (monorepo).
 	 * @param additionalProperties - An object with additional properties that should be added to the class. This is
 	 * useful to augment the package class with additional properties.
+	 *
+	 * @deprecated Use of this function outside the build-tools package is deprecated.
 	 */
 	public static load<T extends typeof PackageClass, TAddProps>(
 		this: T,
@@ -349,7 +351,7 @@ export class PackageClass implements IFluidBuildPackage {
 		group: string,
 		monoRepo?: MonoRepo,
 		additionalProperties?: TAddProps,
-	): IFluidBuildPackage {
+	) {
 		return new this(
 			packageJsonFileName,
 			group,
@@ -368,6 +370,8 @@ export class PackageClass implements IFluidBuildPackage {
 	 * useful to augment the package class with additional properties.
 	 * @typeParam TAddProps - The type of the additional properties object.
 	 * @returns a loaded Package. If additional properties are specifed, the returned type will be Package & TAddProps.
+	 *
+	 * @deprecated Use of this function outside the build-tools package is deprecated.
 	 */
 	public static loadDir<T extends typeof PackageClass, TAddProps>(
 		this: T,
@@ -375,7 +379,7 @@ export class PackageClass implements IFluidBuildPackage {
 		group: string,
 		monoRepo?: MonoRepo,
 		additionalProperties?: TAddProps,
-	): IFluidBuildPackage {
+	) {
 		return PackageClass.load(
 			path.join(packageDir, "package.json"),
 			group,

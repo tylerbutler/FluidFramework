@@ -12,6 +12,7 @@ export { MonoRepo } from "./common/monoRepo";
 export {
 	type IFluidBuildPackage as Package,
 	type IFluidBuildPackageJson as PackageJson,
+	PackageClass,
 	updatePackageJsonFile,
 	updatePackageJsonFileAsync,
 } from "./common/npmPackage";
