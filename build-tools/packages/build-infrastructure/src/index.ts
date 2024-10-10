@@ -22,6 +22,7 @@ export {
 	type PackageFilterOptions,
 } from "./filter.js";
 export { loadFluidRepo } from "./fluidRepo.js";
+export { getMergeBaseRemote, getRemote } from "./git.js";
 export type {
 	AdditionalPackageProps,
 	Installable,

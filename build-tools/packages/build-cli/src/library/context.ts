@@ -13,6 +13,7 @@ import {
 } from "@fluidframework/build-tools";
 import { PackageName as PackageScope } from "@rushstack/node-core-library";
 
+import type { IFluidRepo, IPackage, IReleaseGroup } from "@fluid-tools/build-infrastructure";
 import { type FlubConfig, getFlubConfig } from "../config.js";
 import { getVersionFromTag } from "./git.js";
 import type { VersionDetails } from "./release.js";
@@ -211,4 +212,18 @@ export class Context {
 		this._versions.set(releaseGroupOrPackage, toReturn);
 		return toReturn;
 	}
+}
+
+/**
+ * Returns all the packages not in the given release group. Note that release group root and workspace root packages
+ * will be included.
+ */
+export function packagesNotInReleaseGroup(
+	repo: IFluidRepo,
+	releaseGroup: IReleaseGroup,
+): IPackage[] {
+	const packages = [...repo.packages.values()].filter(
+		(p) => p.releaseGroup !== releaseGroup.name,
+	);
+	return packages;
 }

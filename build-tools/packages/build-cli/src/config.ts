@@ -5,16 +5,15 @@
 
 import { statSync } from "node:fs";
 import type { WrittenConfig } from "@changesets/types";
-import type { PackageName } from "@fluid-tools/build-infrastructure";
+import type { IPackage, IReleaseGroup, PackageName } from "@fluid-tools/build-infrastructure";
 import {
 	DEFAULT_INTERDEPENDENCY_RANGE,
 	InterdependencyRange,
 	VersionBumpType,
 } from "@fluid-tools/version-tools";
-import { MonoRepo } from "@fluidframework/build-tools";
+import { type IFluidBuildConfig } from "@fluidframework/build-tools";
 import { cosmiconfigSync } from "cosmiconfig";
 
-import { Context } from "./library/index.js";
 import type { ReleaseGroup } from "./releaseGroups.js";
 
 /**
@@ -413,15 +412,19 @@ export function getFlubConfig(configPath: string, noCache = false): FlubConfig {
  * back-compat, it will also load the relevant setting from the fluid-build config.
  */
 export function getDefaultInterdependencyRange(
-	releaseGroup: ReleaseGroup | MonoRepo,
-	context: Context,
+	releaseGroupOrPackage: IReleaseGroup | IPackage,
+	flubConfig: FlubConfig,
+	/**
+	 * @deprecated Will be removed in a future change
+	 */
+	fluidBuildConfig?: IFluidBuildConfig,
 ): InterdependencyRange {
-	const releaseGroupName = releaseGroup instanceof MonoRepo ? releaseGroup.name : releaseGroup;
+	const releaseName = releaseGroupOrPackage.name;
 
 	// Prefer to use the configuration in the flub config if available.
-	const flubConfigRanges = context.flubConfig.bump?.defaultInterdependencyRange;
+	const flubConfigRanges = flubConfig.bump?.defaultInterdependencyRange;
 	const interdependencyRangeFromFlubConfig: InterdependencyRange | undefined =
-		flubConfigRanges?.[releaseGroupName as ReleaseGroup];
+		flubConfigRanges?.[releaseName as ReleaseGroup];
 
 	// Return early if the flub config had a range configured - no need to check/load other configs.
 	if (interdependencyRangeFromFlubConfig !== undefined) {
@@ -430,7 +433,7 @@ export function getDefaultInterdependencyRange(
 
 	// For back-compat with earlier configs, try to load the default interdependency range from the fluid-build config.
 	// This can be removed once we are no longer supporting release branches older than release/client/2.4
-	const fbConfig = context.fluidBuildConfig.repoPackages?.[releaseGroupName];
+	const fbConfig = fluidBuildConfig?.repoPackages?.[releaseName];
 	const interdependencyRangeFromFluidBuildConfig =
 		fbConfig !== undefined && typeof fbConfig === "object" && !Array.isArray(fbConfig)
 			? fbConfig.defaultInterdependencyRange

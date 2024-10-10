@@ -3,13 +3,17 @@
  * Licensed under the MIT License.
  */
 
-import type { IPackage } from "@fluid-tools/build-infrastructure";
-import { MonoRepo } from "@fluidframework/build-tools";
-import execa from "execa";
+import {
+	type IFluidRepo,
+	type IReleaseGroup,
+	type PackageName,
+	getRemote,
+} from "@fluid-tools/build-infrastructure";
 import { ResetMode } from "simple-git";
 
-import type { Context } from "./context.js";
-import { Repository } from "./git.js";
+import { CheckPolicy } from "../commands/check/policy.js";
+import { TagAssertsCommand } from "../commands/generate/assertTags.js";
+import { isBranchUpToDate } from "./git.js";
 import { getPreReleaseDependencies } from "./package.js";
 
 /**
@@ -25,18 +29,14 @@ import { getPreReleaseDependencies } from "./package.js";
  */
 export type CheckFunction = (
 	/**
-	 * The repository context.
+	 * The repository.
 	 */
-	context: Context,
+	repo: IFluidRepo,
 
 	/**
-	 * The release group or package that is being checked.
-	 *
-	 * @privateRemarks
-	 * In this case the MonoRepo class represents a release group. This naming and conceptual conflict will be resolved in
-	 * future refactoring.
+	 * The release group that is being checked.
 	 */
-	releaseGroupOrPackage: MonoRepo | IPackage,
+	releaseGroup: IReleaseGroup,
 ) => Promise<CheckResult>;
 
 /**
@@ -74,10 +74,11 @@ type CheckResult = CheckResultFailure | undefined;
  * @returns a {@link CheckResultSuccess} if there are no local changes. Otherwise, returns a {@link CheckResultFailure}.
  */
 export const CheckNoLocalChanges: CheckFunction = async (
-	context: Context,
+	repo: IFluidRepo,
 ): Promise<CheckResult> => {
-	const status = await context.gitRepo.getStatus();
-	if (status !== "") {
+	const git = await repo.getGitRepository();
+	const status = await git.status();
+	if (!status.isClean()) {
 		return {
 			message:
 				"There are some local changes. The branch should be clean. Stopping further checks to ensure changes aren't lost. Stash your changes and try again.",
@@ -92,13 +93,10 @@ export const CheckNoLocalChanges: CheckFunction = async (
  * dependencies are missing.
  */
 export const CheckDependenciesInstalled: CheckFunction = async (
-	_context: Context,
-	releaseGroupOrPackage: MonoRepo | IPackage,
+	repo: IFluidRepo,
+	releaseGroup: IReleaseGroup,
 ): Promise<CheckResult> => {
-	const packagesToCheck =
-		releaseGroupOrPackage instanceof MonoRepo
-			? releaseGroupOrPackage.packages
-			: [releaseGroupOrPackage];
+	const packagesToCheck = releaseGroup.packages;
 
 	const installChecks = await Promise.all(
 		packagesToCheck.map(async (pkg) => pkg.checkInstall()),
@@ -119,9 +117,13 @@ export const CheckDependenciesInstalled: CheckFunction = async (
  * up-to-date.
  */
 export const CheckHasRemoteBranchUpToDate: CheckFunction = async (
-	context: Context,
+	repo: IFluidRepo,
 ): Promise<CheckResult> => {
-	const remote = await context.gitRepo.getRemote(context.originRemotePartialUrl);
+	if (repo.upstreamRemotePartialUrl === undefined) {
+		throw new Error("IFluidRepo has no upstreamRemotePartialUrl");
+	}
+	const git = await repo.getGitRepository();
+	const remote = await getRemote(git, repo.upstreamRemotePartialUrl);
 
 	if (remote === undefined) {
 		return {
@@ -131,7 +133,8 @@ export const CheckHasRemoteBranchUpToDate: CheckFunction = async (
 
 	let succeeded = false;
 	try {
-		succeeded = await context.gitRepo.isBranchUpToDate(context.originalBranchName, remote);
+		const branchSummary = await git.branch();
+		succeeded = await isBranchUpToDate(branchSummary.current, remote, git);
 	} catch (error) {
 		return {
 			message: `Error when checking remote branch. Does the remote branch exist? Full error message:\n${
@@ -156,29 +159,26 @@ export const CheckHasRemoteBranchUpToDate: CheckFunction = async (
  * result if prerelease dependencies are found.
  */
 export const CheckHasNoPrereleaseDependencies: CheckFunction = async (
-	context: Context,
-	releaseGroupOrPackage: MonoRepo | IPackage,
+	repo: IFluidRepo,
+	releaseGroup: IReleaseGroup,
 ): Promise<CheckResult> => {
-	const { releaseGroups, packages, isEmpty } = await getPreReleaseDependencies(
-		context,
-		releaseGroupOrPackage,
-	);
+	const { releaseGroups, isEmpty } = await getPreReleaseDependencies(repo, releaseGroup);
 
 	if (isEmpty) {
 		return;
 	}
 
-	const packagesToBump = new Set(packages.keys());
-	for (const releaseGroup of releaseGroups.keys()) {
-		for (const pkg of context.packagesInReleaseGroup(releaseGroup)) {
+	const packagesToBump = new Set<PackageName>();
+	for (const group of releaseGroups.keys()) {
+		for (const pkg of group.packages) {
 			packagesToBump.add(pkg.name);
 		}
 	}
 
 	return {
-		message: `Prerelease dependencies found. These release groups and packages must be released and integrated before a release can be done:\n\n${[
+		message: `Prerelease dependencies found. These release groups must be released and integrated before a release can be done:\n\n${[
 			...releaseGroups.keys(),
-		].join("\n")}\n${[...packages.keys()].join("\n")}`,
+		].join("\n")}`,
 		fixCommand: "pnpm flub bump deps <release group or package>",
 	};
 };
@@ -188,16 +188,11 @@ export const CheckHasNoPrereleaseDependencies: CheckFunction = async (
  * result.
  */
 export const CheckNoPolicyViolations: CheckFunction = async (
-	context: Context,
+	repo: IFluidRepo,
 ): Promise<CheckResult> => {
-	// policy-check is scoped to the path that it's run in. Since we have multiple folders at the root that represent
-	// the client release group, we can't easily scope it to just the client. Thus, we always run it at the root just
-	// like we do in CI.
-	const result = await execa("npm", ["run", "policy-check"], {
-		cwd: context.gitRepo.resolvedRoot,
-	});
-
-	if (result.exitCode !== 0) {
+	try {
+		await CheckPolicy.run([], { root: repo.root });
+	} catch {
 		return {
 			message: "Policy check failed. These failures must be fixed before release.",
 			fixCommand: "pnpm run policy-check:fix",
@@ -209,20 +204,16 @@ export const CheckNoPolicyViolations: CheckFunction = async (
  * Checks that all asserts are tagged. Any untagged asserts will return a failure result.
  */
 export const CheckNoUntaggedAsserts: CheckFunction = async (
-	context: Context,
+	repo: IFluidRepo,
 ): Promise<CheckResult> => {
-	// policy-check is scoped to the path that it's run in. Since we have multiple folders at the root that represent
-	// the client release group, we can't easily scope it to just the client. Thus, we always run it at the root just
-	// like we do in CI.
-	await execa("npm", ["run", "policy-check:asserts"], {
-		cwd: context.gitRepo.resolvedRoot,
-	});
+	const git = await repo.getGitRepository();
+
+	await TagAssertsCommand.run([], { root: repo.root });
 
 	// check for policy check violation
-	const afterPolicyCheckStatus = await context.gitRepo.getStatus();
-	if (afterPolicyCheckStatus !== "") {
-		const repo = new Repository({ baseDir: context.repo.resolvedRoot });
-		await repo.gitClient.reset(ResetMode.HARD);
+	const status = await git.status();
+	if (!status.isClean()) {
+		await git.reset(ResetMode.HARD);
 		return {
 			message: "Found some untagged asserts. These should be tagged before release.",
 			fixCommand: "pnpm run policy-check:asserts",

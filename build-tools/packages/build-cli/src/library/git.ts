@@ -445,3 +445,19 @@ export async function getFiles(directory: string, git: SimpleGit): Promise<strin
 	// Files are already repo root-relative
 	return [...allFiles];
 }
+
+export async function isBranchUpToDate(
+	branch: string,
+	remote: string,
+	git: SimpleGit,
+): Promise<boolean> {
+	await git.fetch(remote, branch);
+	const currentSha = await getShaForBranch(branch, git);
+	const remoteSha = await getShaForBranch(`${remote}/${branch}`, git);
+	return remoteSha === currentSha;
+}
+
+export async function getShaForBranch(branch: string, git: SimpleGit): Promise<string> {
+	const result = await git.revparse([branch]);
+	return result.trim();
+}

@@ -23,10 +23,13 @@ import {
 } from "../library/index.js";
 import { CommandLogger } from "../logging.js";
 import { MachineState } from "../machines/index.js";
+// eslint-disable-next-line import/no-internal-modules
+import {isBranchUpToDate, getShaForBranch} from "../library/git.js";
 import { ReleaseSource, isReleaseGroup } from "../releaseGroups.js";
 import { getRunPolicyCheckDefault } from "../repoConfig.js";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler.js";
 import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers.js";
+import { getRemote } from "@fluid-tools/build-infrastructure";
 
 /**
  * Checks that the current branch matches the expected branch for a release.
@@ -47,15 +50,17 @@ export const checkBranchName: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, bumpType, shouldCheckBranch } = data;
+	const { repo, bumpType, shouldCheckBranch } = data;
+	const git =await repo.getGitRepository();
+	const branchSummary = await git.branch();
 
 	if (shouldCheckBranch === true) {
 		switch (bumpType) {
 			case "patch": {
-				log.verbose(`Checking if ${context.originalBranchName} starts with release/`);
-				if (!context.originalBranchName.startsWith("release/")) {
+				log.verbose(`Checking if ${branchSummary.current} starts with release/`);
+				if (!branchSummary.current.startsWith("release/")) {
 					log.warning(
-						`Patch release should only be done on 'release/*' branches, but current branch is '${context.originalBranchName}'.\nYou can skip this check with --no-branchCheck.'`,
+						`Patch release should only be done on 'release/*' branches, but current branch is '${branchSummary.current}'.\nYou can skip this check with --no-branchCheck.'`,
 					);
 					BaseStateHandler.signalFailure(machine, state);
 				}
@@ -65,10 +70,10 @@ export const checkBranchName: StateHandlerFunction = async (
 
 			case "major":
 			case "minor": {
-				log.verbose(`Checking if ${context.originalBranchName} is 'main', 'next', or 'lts'.`);
-				if (!["main", "next", "lts"].includes(context.originalBranchName)) {
+				log.verbose(`Checking if ${branchSummary.current} is 'main', 'next', or 'lts'.`);
+				if (!["main", "next", "lts"].includes(branchSummary.current)) {
 					log.warning(
-						`Release prep should only be done on 'main', 'next', or 'lts' branches, but current branch is '${context.originalBranchName}'.`,
+						`Release prep should only be done on 'main', 'next', or 'lts' branches, but current branch is '${branchSummary.current}'.`,
 					);
 					BaseStateHandler.signalFailure(machine, state);
 					return true;
@@ -81,7 +86,7 @@ export const checkBranchName: StateHandlerFunction = async (
 		}
 	} else {
 		log.warning(
-			`Not checking if current branch is a release branch: ${context.originalBranchName}`,
+			`Not checking if current branch is a release branch: ${branchSummary.current}`,
 		);
 	}
 
@@ -108,19 +113,21 @@ export const checkBranchUpToDate: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, shouldCheckBranchUpdate } = data;
-
-	const remote = await context.gitRepo.getRemote(context.originRemotePartialUrl);
-	const isBranchUpToDate = await context.gitRepo.isBranchUpToDate(
-		context.originalBranchName,
+	const { repo, shouldCheckBranchUpdate } = data;
+	const git = await repo.getGitRepository();
+	const branchSummary = await git.branch();
+	const remote = await getRemote(git,repo.upstreamRemotePartialUrl);
+	const isUpToDate = await isBranchUpToDate(
+		branchSummary.current,
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		remote!,
+		git
 	);
 	if (shouldCheckBranchUpdate === true) {
-		if (!isBranchUpToDate) {
+		if (!isUpToDate) {
 			BaseStateHandler.signalFailure(machine, state);
 			log.errorLog(
-				`Local '${context.originalBranchName}' branch not up to date with remote. Please pull from '${remote}'.`,
+				`Local '${branchSummary.current}' branch not up to date with remote. Please pull from '${remote}'.`,
 			);
 		}
 
@@ -202,12 +209,13 @@ export const checkHasRemote: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context } = data;
+	const { repo } = data;
+	const git = await repo.getGitRepository();
 
-	const remote = await context.gitRepo.getRemote(context.originRemotePartialUrl);
+	const remote = await getRemote(git, repo.upstreamRemotePartialUrl);
 	if (remote === undefined) {
 		BaseStateHandler.signalFailure(machine, state);
-		log.errorLog(`Unable to find remote for '${context.originRemotePartialUrl}'`);
+		log.errorLog(`Unable to find remote for '${repo.upstreamRemotePartialUrl}'`);
 	}
 
 	BaseStateHandler.signalSuccess(machine, state);
@@ -233,14 +241,8 @@ export const checkDependenciesInstalled: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup } = data;
-
-	const packagesToCheck = isReleaseGroup(releaseGroup)
-		? context.packagesInReleaseGroup(releaseGroup)
-		: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			[context.fullPackageMap.get(releaseGroup)!];
-
-	const installed = await FluidRepo.ensureInstalled(packagesToCheck);
+	const { releaseGroup } = data;
+	const installed = await releaseGroup.workspace.checkInstall();
 
 	if (installed) {
 		BaseStateHandler.signalSuccess(machine, state);
@@ -271,13 +273,14 @@ export const checkMainNextIntegrated: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { bumpType, context, shouldCheckMainNextIntegrated } = data;
+	const { bumpType, repo, shouldCheckMainNextIntegrated } = data;
+	const git = await repo.getGitRepository();
 
 	if (bumpType === "major") {
 		if (shouldCheckMainNextIntegrated === true) {
 			const [main, next] = await Promise.all([
-				context.gitRepo.getShaForBranch("main"),
-				context.gitRepo.getShaForBranch("next"),
+				getShaForBranch("main", git),
+				getShaForBranch("next", git),
 			]);
 
 			if (main !== next) {
@@ -311,22 +314,14 @@ export const checkOnReleaseBranch: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, releaseVersion, shouldCheckBranch } = data;
-	assert(context !== undefined, "Context is undefined.");
-
-	const currentBranch = await context.gitRepo.getCurrentBranchName();
-	if (!isReleaseGroup(releaseGroup)) {
-		// must be a package
-		assert(
-			context.fullPackageMap.has(releaseGroup),
-			`Package ${releaseGroup} not found in context.`,
-		);
-	}
+	const { repo, releaseGroup, releaseVersion, shouldCheckBranch } = data;
+	const git = await repo.getGitRepository();
+	const branchSummary = await git.branch();
 
 	const releaseBranch = generateReleaseBranchName(releaseGroup, releaseVersion);
 
 	if (shouldCheckBranch) {
-		if (currentBranch === releaseBranch) {
+		if (branchSummary.current === releaseBranch) {
 			BaseStateHandler.signalSuccess(machine, state);
 		} else {
 			BaseStateHandler.signalFailure(machine, state);
@@ -379,13 +374,15 @@ export const checkPolicy: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, shouldCheckPolicy } = data;
+	const { repo, releaseGroup, shouldCheckPolicy } = data;
+	const git = await repo.getGitRepository();
+	const branchSummary = await git.branch();
 
 	log.info(`Checking policy`);
 	if (shouldCheckPolicy === true) {
-		if (!getRunPolicyCheckDefault(releaseGroup, context.originalBranchName)) {
+		if (!getRunPolicyCheckDefault(releaseGroup, branchSummary.current)) {
 			log.warning(
-				`Policy check fixes for ${releaseGroup} are not expected on the ${context.originalBranchName} branch! Make sure you know what you are doing.`,
+				`Policy check fixes for ${releaseGroup} are not expected on the ${branchSummary.current} branch! Make sure you know what you are doing.`,
 			);
 		}
 
@@ -393,12 +390,12 @@ export const checkPolicy: StateHandlerFunction = async (
 		// the client release group, we can't easily scope it to just the client. Thus, we always run it at the root just
 		// like we do in CI.
 		const result = await execa.command(`npm run policy-check`, {
-			cwd: context.gitRepo.resolvedRoot,
+			cwd: repo.gitRepo.resolvedRoot,
 		});
 		log.verbose(result.stdout);
 
 		// check for policy check violation
-		const afterPolicyCheckStatus = await context.gitRepo.getStatus();
+		const afterPolicyCheckStatus = await repo.gitRepo.getStatus();
 		if (afterPolicyCheckStatus !== "" && afterPolicyCheckStatus !== "") {
 			log.logHr();
 			log.errorLog(
@@ -407,9 +404,9 @@ export const checkPolicy: StateHandlerFunction = async (
 			BaseStateHandler.signalFailure(machine, state);
 			return false;
 		}
-	} else if (getRunPolicyCheckDefault(releaseGroup, context.originalBranchName) === false) {
+	} else if (getRunPolicyCheckDefault(releaseGroup, repo.originalBranchName) === false) {
 		log.verbose(
-			`Skipping policy check for ${releaseGroup} because it does not run on the ${context.originalBranchName} branch by default. Pass --policyCheck to force it to run.`,
+			`Skipping policy check for ${releaseGroup} because it does not run on the ${repo.originalBranchName} branch by default. Pass --policyCheck to force it to run.`,
 		);
 	} else {
 		log.warning("Skipping policy check.");

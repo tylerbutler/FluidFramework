@@ -29,6 +29,7 @@ import {
 	isReleaseGroup,
 } from "../releaseGroups.js";
 import { DependencyUpdateType } from "./bump.js";
+import type { IPackage, IReleaseGroup } from "@fluid-tools/build-infrastructure";
 
 /**
  * Creates an appropriate branch for a release group and bump type. Does not commit!
@@ -127,7 +128,7 @@ export function generateBumpDepsBranchName(
  * @internal
  */
 export function generateReleaseBranchName(
-	releaseGroup: ReleaseGroup | ReleasePackage,
+	releaseGroup: IReleaseGroup,
 	version: string,
 ): string {
 	// An array of all the sections of a "path" branch -- a branch with slashes in the name.
@@ -149,19 +150,15 @@ export function generateReleaseBranchName(
 		branchVersion = version;
 	}
 
-	if (isReleaseGroup(releaseGroup)) {
-		if (releaseGroup === "client" && schemeIsInternal) {
+		if (releaseGroup.name === "client" && schemeIsInternal) {
 			// Client versions using the internal version scheme
 			const prereleaseId = fromInternalScheme(version, true)[2];
 			// Checking the prerelease ID is necessary because we used "v2int" instead of "internal" in branch names. This
 			// was a bad decision in retrospect, but we're stuck with it for now.
-			branchPath.push(prereleaseId === DEFAULT_PRERELEASE_IDENTIFIER ? "v2int" : releaseGroup);
+			branchPath.push(prereleaseId === DEFAULT_PRERELEASE_IDENTIFIER ? "v2int" : releaseGroup.name);
 		} else {
-			branchPath.push(releaseGroup);
+			branchPath.push(releaseGroup.name);
 		}
-	} else {
-		branchPath.push(PackageName.getUnscopedName(releaseGroup));
-	}
 
 	let releaseBranchVersion: string;
 	if (schemeIsInternal) {
@@ -280,7 +277,7 @@ export function getDefaultBumpTypeForBranch(
  * @internal
  */
 export function getReleaseSourceForReleaseGroup(
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
+	releaseGroupOrPackage: IReleaseGroup|IPackage,
 ): ReleaseSource {
 	// All packages and release groups use release branches.
 	return "releaseBranches";

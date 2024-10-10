@@ -11,10 +11,10 @@ import { Context } from "../library/index.js";
 
 import { ReleaseVersion, VersionBumpType, VersionScheme } from "@fluid-tools/version-tools";
 
+import type { IFluidRepo, IReleaseGroup } from "@fluid-tools/build-infrastructure";
 import { InstructionalPromptWriter } from "../instructionalPromptWriter.js";
 import { CommandLogger } from "../logging.js";
 import { MachineState } from "../machines/index.js";
-import { ReleaseGroup, ReleasePackage } from "../releaseGroups.js";
 import { askForReleaseType } from "./askFunctions.js";
 import {
 	checkAssertTagging,
@@ -59,13 +59,23 @@ import { BaseStateHandler } from "./stateHandlers.js";
 export interface FluidReleaseStateHandlerData {
 	/**
 	 * The {@link Context}.
+	 *
+	 * @deprecated Update usage to IFluidRepo instead of Context.
 	 */
 	context: Context;
 
 	/**
+	 * The {@link IFluidRepo}.
+	 */
+	repo: IFluidRepo;
+
+	// git: SimpleGit;
+	// currentBranch: string;
+
+	/**
 	 * The release group or package that is being released.
 	 */
-	releaseGroup: ReleaseGroup | ReleasePackage;
+	releaseGroup: IReleaseGroup;
 
 	/**
 	 * The version scheme used by the release group or package being released.

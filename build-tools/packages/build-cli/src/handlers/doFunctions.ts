@@ -43,28 +43,25 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup } = data;
+	const { repo, releaseGroup } = data;
 
-	const { releaseGroups, packages, isEmpty } = await getPreReleaseDependencies(
-		context,
+	const { releaseGroups, isEmpty } = await getPreReleaseDependencies(
+		repo,
 		releaseGroup,
 	);
 
 	assert(!isEmpty, `No prereleases found in DoBumpReleasedDependencies state.`);
 
-	const preReleaseGroups = new Set(releaseGroups.keys());
-	const preReleasePackages = new Set(packages.keys());
-
-	const packagesToBump = new Set(packages.keys());
-	for (const rg of releaseGroups.keys()) {
-		for (const p of context.packagesInReleaseGroup(rg)) {
-			packagesToBump.add(p.name);
+	const packagesToBump = new Set<PackageName>();
+	for (const group of releaseGroups.keys()) {
+		for (const pkg of group.packages) {
+			packagesToBump.add(pkg.name);
 		}
 	}
 
 	// First, check if any prereleases have released versions on npm
 	let { updatedPackages, updatedDependencies } = await npmCheckUpdates(
-		context,
+		repo,
 		releaseGroup,
 		[...packagesToBump],
 		undefined,
@@ -88,7 +85,7 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 
 	const updatedDeps = new Set<string>();
 	for (const p of Object.keys(updatedDependencies)) {
-		const pkg = context.fullPackageMap.get(p);
+		const pkg = repo.fullPackageMap.get(p);
 		if (pkg === undefined) {
 			log.verbose(`Package not in context: ${p}`);
 			continue;
@@ -108,7 +105,7 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 		// This is the same command as run above, but this time we write the changes. There are more
 		// efficient ways to do this but this is simple.
 		({ updatedPackages, updatedDependencies } = await npmCheckUpdates(
-			context,
+			repo,
 			releaseGroup,
 			[...packagesToBump],
 			undefined,
@@ -123,13 +120,13 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 		log?.verbose(`Running install if needed.`);
 		await FluidRepo.ensureInstalled(
 			isReleaseGroup(releaseGroup)
-				? context.packagesInReleaseGroup(releaseGroup)
+				? repo.packagesInReleaseGroup(releaseGroup)
 				: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					[context.fullPackageMap.get(releaseGroup)!],
+					[repo.fullPackageMap.get(releaseGroup)!],
 		);
 		// There were updates, which is considered a failure.
 		BaseStateHandler.signalFailure(machine, state);
-		context.repo.reload();
+		repo.repo.reload();
 		return true;
 	}
 

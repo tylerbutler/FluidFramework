@@ -31,7 +31,7 @@ export {
 	BaseCommand,
 	GenerateEntrypointsCommand,
 } from "./commands/index.js";
-export { VersionDetails, isMonoRepoKind, MonoRepoKind } from "./context.js";
+export { isMonoRepoKind, MonoRepoKind } from "./context.js";
 export { Repository } from "./git.js";
 export {
 	ensureDevDependencyExists,

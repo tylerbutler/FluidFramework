@@ -32,6 +32,12 @@ export interface FluidPackageJsonFields {
 export const FLUIDREPO_CONFIG_VERSION = 1;
 
 // @public
+export function getMergeBaseRemote(git: SimpleGit, branch: string, remote: string, localRef?: string): Promise<string>;
+
+// @public
+export function getRemote(git: SimpleGit, partialUrl: string | undefined): Promise<string | undefined>;
+
+// @public
 export type GlobString = string;
 
 // @public @deprecated
