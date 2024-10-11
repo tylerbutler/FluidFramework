@@ -5,23 +5,24 @@
 
 /* eslint-disable prefer-object-has-own */
 
-import * as child_process from "node:child_process";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import { EOL as newline } from "node:os";
 import path from "node:path";
-import { writeJson } from "fs-extra/esm";
-import JSON5 from "json5";
-import replace from "replace-in-file";
-import sortPackageJson from "sort-package-json";
 
+import { findGitRootSync } from "@fluid-tools/build-infrastructure";
 import {
 	PackageJson,
 	getApiExtractorConfigFilePath,
 	updatePackageJsonFile,
 	updatePackageJsonFileAsync,
 } from "@fluidframework/build-tools";
-import { Repository } from "../git.js";
+import { writeJson } from "fs-extra/esm";
+import globby from "globby";
+import JSON5 from "json5";
+import replace from "replace-in-file";
+import sortPackageJson from "sort-package-json";
+
 import { queryTypesResolutionPathsFromPackageExports } from "../packageExports.js";
 import { Handler, readFile, writeFile } from "./common.js";
 
@@ -360,11 +361,11 @@ async function ensurePrivatePackagesComputed(): Promise<Set<string>> {
 	}
 
 	computedPrivatePackages = new Set();
-	const pathToGitRoot = child_process
-		.execSync("git rev-parse --show-cdup", { encoding: "utf8" })
-		.trim();
-	const repo = new Repository({ baseDir: pathToGitRoot });
-	const packageJsons = await repo.getFiles("**/package.json");
+	const pathToGitRoot = findGitRootSync();
+	const packageJsons = await globby("**/package.json", {
+		cwd: pathToGitRoot,
+		gitignore: true,
+	});
 
 	for (const filePath of packageJsons) {
 		const packageJson = JSON.parse(readFile(filePath)) as PackageJson;

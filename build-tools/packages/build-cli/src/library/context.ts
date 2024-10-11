@@ -7,8 +7,7 @@ import {
 	FluidRepo,
 	GitRepo,
 	type IFluidBuildConfig,
-	type IFluidBuildPackage,
-	Package,
+	type Package as IFluidBuildPackage,
 	getFluidBuildConfig,
 } from "@fluidframework/build-tools";
 import { PackageName as PackageScope } from "@rushstack/node-core-library";
@@ -48,6 +47,8 @@ export function isMonoRepoKind(str: string | undefined): str is MonoRepoKind {
 
 /**
  * Context provides access to data about the Fluid repo, and exposes methods to interrogate the repo state.
+ *
+ * @deprecated Use the IFluidRepo instead.
  */
 export class Context {
 	public readonly repo: FluidRepo;

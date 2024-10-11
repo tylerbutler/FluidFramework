@@ -5,22 +5,15 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { IPackage } from "@fluid-tools/build-infrastructure";
+import type { IPackage, ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import { fromInternalScheme, isInternalVersionScheme } from "@fluid-tools/version-tools";
-import { FluidRepo } from "@fluidframework/build-tools";
 import { ux } from "@oclif/core";
 import { command as execCommand } from "execa";
 import { inc } from "semver";
 import { CleanOptions } from "simple-git";
 
 import { checkFlags, releaseGroupFlag, semverFlag } from "../../flags.js";
-import {
-	BaseCommand,
-	DEFAULT_CHANGESET_PATH,
-	Repository,
-	loadChangesets,
-} from "../../library/index.js";
-import { isReleaseGroup } from "../../releaseGroups.js";
+import { BaseCommand, DEFAULT_CHANGESET_PATH, loadChangesets } from "../../library/index.js";
 
 async function replaceInFile(
 	search: string,
@@ -55,8 +48,6 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 			command: "<%= config.bin %> <%= command.id %> --releaseGroup client",
 		},
 	];
-
-	private repo?: Repository;
 
 	private async processPackage(pkg: IPackage): Promise<void> {
 		const { directory, version: pkgVersion } = pkg;
@@ -114,53 +105,54 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 	}
 
 	public async run(): Promise<void> {
-		const context = await this.getContext();
+		const repo = await this.getFluidRepo();
 
-		const gitRoot = context.gitRepo.resolvedRoot;
+		// const gitRoot = repo.gitRepo.resolvedRoot;
 
-		const { install, releaseGroup } = this.flags;
+		const { install, releaseGroup: releaseGroupFlagValue } = this.flags;
+		const git = await repo.getGitRepository();
 
-		if (releaseGroup === undefined) {
+		if (releaseGroupFlagValue === undefined) {
 			this.error("ReleaseGroup is possibly 'undefined'");
 		}
 
-		const monorepo =
-			releaseGroup === undefined ? undefined : context.repo.releaseGroups.get(releaseGroup);
-		if (monorepo === undefined) {
-			this.error(`Release group ${releaseGroup} not found in repo config`, { exit: 1 });
+		const releaseGroup =
+			releaseGroupFlagValue === undefined
+				? undefined
+				: repo.releaseGroups.get(releaseGroupFlagValue as ReleaseGroupName);
+		if (releaseGroup === undefined) {
+			this.error(`Release group ${releaseGroupFlagValue} not found in repo config`, {
+				exit: 1,
+			});
 		}
 
-		const releaseGroupRoot = monorepo?.directory ?? gitRoot;
+		const releaseGroupRootDir =
+			releaseGroup.rootPackage?.directory ?? releaseGroup.workspace.directory;
 
 		// Strips additional custom metadata from the source files before we call `changeset version`,
 		// because the changeset tools - like @changesets/cli - only work on canonical changesets.
-		await this.canonicalizeChangesets(releaseGroupRoot);
+		await this.canonicalizeChangesets(releaseGroupRootDir);
 
 		// The `changeset version` command applies the changesets to the changelogs
 		ux.action.start("Running `changeset version`");
-		await execCommand("pnpm exec changeset version", { cwd: releaseGroupRoot });
+		await execCommand("pnpm exec changeset version", { cwd: releaseGroupRootDir });
 		ux.action.stop();
 
-		const packagesToCheck = isReleaseGroup(releaseGroup)
-			? context.packagesInReleaseGroup(releaseGroup)
-			: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				[context.fullPackageMap.get(releaseGroup)!];
+		const packagesToCheck = releaseGroup.packages;
 
 		if (install) {
-			const installed = await FluidRepo.ensureInstalled(packagesToCheck);
+			const installed = await releaseGroup.workspace.install(false);
 
 			if (!installed) {
-				this.error(`Error installing dependencies for: ${releaseGroup}`);
+				this.error(`Error installing dependencies for: ${releaseGroupFlagValue}`);
 			}
 		}
 
-		this.repo = new Repository({ baseDir: gitRoot });
-
 		// git add the deleted changesets (`changeset version` deletes them)
-		await this.repo.gitClient.add(".changeset/**");
+		await git.add(".changeset/**");
 
 		// git restore the package.json files that were changed by `changeset version`
-		await this.repo.gitClient.raw("restore", "**package.json");
+		await git.raw("restore", "**package.json");
 
 		// Calls processPackage on all packages.
 		ux.action.start("Processing changelog updates");
@@ -180,13 +172,13 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 		}
 
 		// git add the changelog changes
-		await this.repo.gitClient.add("**CHANGELOG.md");
+		await git.add("**CHANGELOG.md");
 
 		// Cleanup: git restore any edits that aren't staged
-		await this.repo.gitClient.raw("restore", ".");
+		await git.raw("restore", ".");
 
 		// Cleanup: git clean any untracked files
-		await this.repo.gitClient.clean(CleanOptions.RECURSIVE + CleanOptions.FORCE);
+		await git.clean(CleanOptions.RECURSIVE + CleanOptions.FORCE);
 		ux.action.stop();
 
 		this.log("Commit and open a PR!");

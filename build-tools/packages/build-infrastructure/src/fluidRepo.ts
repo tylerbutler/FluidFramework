@@ -9,6 +9,7 @@ import { type SimpleGit, simpleGit } from "simple-git";
 
 import { getFluidRepoLayout } from "./config.js";
 import { NotInGitRepository } from "./errors.js";
+import { findGitRootSync } from "./git.js";
 import {
 	type IFluidRepo,
 	type IPackage,
@@ -18,7 +19,6 @@ import {
 	type ReleaseGroupName,
 	type WorkspaceName,
 } from "./types.js";
-import { findGitRootSync } from "./utils.js";
 import { Workspace } from "./workspace.js";
 import { loadWorkspacesFromLegacyConfig } from "./workspaceCompat.js";
 

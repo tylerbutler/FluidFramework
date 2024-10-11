@@ -22,6 +22,9 @@ export function createPackageManager(name: PackageManagerName): IPackageManager;
 export const EmptySelectionCriteria: PackageSelectionCriteria;
 
 // @public
+export function findGitRootSync(cwd?: string): string;
+
+// @public
 export interface FluidPackageJsonFields {
     pnpm?: {
         overrides?: Record<string, string>;
