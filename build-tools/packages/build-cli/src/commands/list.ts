@@ -5,12 +5,16 @@
 
 import { writeFileSync } from "node:fs";
 import path from "node:path";
-import type { PackageName } from "@fluid-tools/build-infrastructure";
+import {
+	AllPackagesSelectionCriteria,
+	type PackageName,
+	selectAndFilterPackages,
+} from "@fluid-tools/build-infrastructure";
 import { MonoRepo, Package } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import { mkdirpSync } from "fs-extra";
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../args.js";
-import { filterPackages, parsePackageFilterFlags } from "../filter.js";
+import { parsePackageFilterFlags } from "../filter.js";
 import { filterFlags, releaseGroupFlag } from "../flags.js";
 import { BaseCommand, getTarballName } from "../library/index.js";
 import {
@@ -85,18 +89,12 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 
 	public async run(): Promise<ListItem[]> {
 		const { feed, outFile, releaseGroup: releaseGroupName, tarball } = this.flags;
-		const context = await this.getContext();
+		const repo = await this.getFluidRepo();
 		const lookupName = releaseGroupName ?? this.args.package_or_release_group;
 		if (lookupName === undefined) {
 			this.error(`No release group or package flag found.`, { exit: 1 });
 		}
-		const rgOrPackage = findPackageOrReleaseGroup(lookupName, context);
-
-		// Handle single packages
-		if (rgOrPackage !== undefined && !(rgOrPackage instanceof MonoRepo)) {
-			const item = await this.outputSinglePackage(rgOrPackage);
-			return [item];
-		}
+		const rgOrPackage = findPackageOrReleaseGroup(lookupName, repo);
 
 		if (rgOrPackage === undefined || !(rgOrPackage instanceof MonoRepo)) {
 			this.error(`No release group or package found using name '${lookupName}'.`, { exit: 1 });
@@ -104,11 +102,15 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 
 		const filterOptions = parsePackageFilterFlags(this.flags);
 		const packageList: ListItem[] = await pnpmList(rgOrPackage.repoPath);
-		const filteredPackages = await filterPackages(packageList, filterOptions);
+		const { filtered: filteredPackages } = await selectAndFilterPackages(
+			repo,
+			AllPackagesSelectionCriteria,
+			filterOptions,
+		);
 		const filtered = filteredPackages
 			.reverse()
-			.filter((item): item is ListItem => {
-				const config = context.flubConfig?.policy?.packageNames;
+			.filter((item) => {
+				const config = repo.flubConfig?.policy?.packageNames;
 				if (config === undefined) {
 					// exits the process
 					this.error(`No package name policy config found.`);
@@ -123,7 +125,7 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 			})
 			.map((item) => {
 				// pnpm returns absolute paths, but repo relative is more useful
-				item.path = context.repo.relativeToRepo(item.path);
+				item.path = repo.repo.relativeToRepo(item.path);
 				item.tarball = getTarballName(item.name);
 
 				// Set the tarball name if the tarball flag is set

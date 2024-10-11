@@ -35,6 +35,15 @@ export interface FluidPackageJsonFields {
 export const FLUIDREPO_CONFIG_VERSION = 1;
 
 // @public
+export function getChangedSinceRef(fluidRepo: IFluidRepo, ref: string, remote: string): Promise<{
+    files: string[];
+    dirs: string[];
+    workspaces: IWorkspace[];
+    releaseGroups: IReleaseGroup[];
+    packages: IPackage[];
+}>;
+
+// @public
 export function getMergeBaseRemote(git: SimpleGit, branch: string, remote: string, localRef?: string): Promise<string>;
 
 // @public

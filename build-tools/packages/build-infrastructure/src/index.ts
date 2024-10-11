@@ -22,7 +22,7 @@ export {
 	type PackageFilterOptions,
 } from "./filter.js";
 export { loadFluidRepo } from "./fluidRepo.js";
-export { findGitRootSync, getMergeBaseRemote, getRemote } from "./git.js";
+export { findGitRootSync, getMergeBaseRemote, getRemote, getChangedSinceRef } from "./git.js";
 export type {
 	AdditionalPackageProps,
 	Installable,
