@@ -13,7 +13,7 @@ export {
 	FLUIDREPO_CONFIG_VERSION,
 } from "./config.js";
 export { NotInGitRepository } from "./errors.js";
-export { loadFluidRepo } from "./fluidRepo.js";
+export { loadFluidRepo, FluidRepo as FluidRepoBase } from "./fluidRepo.js";
 export type {
 	AdditionalPackageProps,
 	Installable,

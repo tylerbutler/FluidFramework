@@ -7,6 +7,7 @@ import { existsSync } from "node:fs";
 import * as path from "node:path";
 import chalk from "chalk";
 import registerDebug from "debug";
+import { FluidRepoBase, type IPackage } from "@fluid-tools/build-infrastructure";
 
 import { defaultLogger } from "../common/logging";
 import { MonoRepo } from "../common/monoRepo";
@@ -15,11 +16,11 @@ import { ExecAsyncResult, isSameFileOrDir, lookUpDirSync } from "../common/utils
 import type { BuildContext } from "./buildContext";
 import { BuildGraph } from "./buildGraph";
 import type { IFluidBuildDirs } from "./fluidBuildConfig";
-import { FluidRepo } from "./fluidRepo";
 import { getFluidBuildConfig } from "./fluidUtils";
 import { NpmDepChecker } from "./npmDepChecker";
-import { ISymlinkOptions, symlinkPackage } from "./symlinkUtils";
+import { ISymlinkOptions } from "./symlinkUtils";
 import { globFn } from "./tasks/taskUtils";
+import type { IWorkspace } from "../../../build-infrastructure/lib";
 
 const traceInit = registerDebug("fluid-build:init");
 
@@ -32,7 +33,7 @@ export interface IPackageMatchedOptions {
 	releaseGroups: string[];
 }
 
-export class FluidRepoBuild extends FluidRepo {
+export class FluidRepoBuild extends FluidRepoBase {
 	public static create(context: BuildContext) {
 		// Default to just resolveRoot if no config is found
 		const packageManifest = context.fluidBuildConfig ?? {
@@ -43,15 +44,33 @@ export class FluidRepoBuild extends FluidRepo {
 		return new FluidRepoBuild(context.repoRoot, context, packageManifest.repoPackages);
 	}
 	private constructor(
-		resolvedRoot: string,
+		searchPath: string,
 		protected context: BuildContext,
-		repoPackages?: IFluidBuildDirs,
+		public readonly upstreamRemotePartialUrl?: string,
 	) {
-		super(resolvedRoot, repoPackages);
+		super(searchPath, upstreamRemotePartialUrl);
 	}
 
 	public async clean() {
-		return Packages.clean(this.packages.packages, false);
+		return Packages.clean(this.packages, false);
+	}
+
+	public static async ensureInstalled(packages: IPackage[]) {
+		const installedWorkspaces = new Set<IWorkspace>();
+		const installPromises: Promise<ExecAsyncResult>[] = [];
+		for (const pkg of packages) {
+				if (!installedWorkspaces.has(pkg.workspace)) {
+					installedWorkspaces.add(pkg.monoRepo);
+					installPromises.push(pkg.monoRepo.install());
+				}
+			}
+		}
+		const rets = await Promise.all(installPromises);
+		return !rets.some((ret) => ret.error);
+	}
+
+	public async install() {
+		return FluidRepo.ensureInstalled(this.packages.packages);
 	}
 
 	public async uninstall() {
@@ -109,7 +128,7 @@ export class FluidRepoBuild extends FluidRepo {
 	 * @deprecated depcheck-related functionality will be removed in an upcoming release.
 	 */
 	public async depcheck(fix: boolean) {
-		for (const pkg of this.packages.packages) {
+		for (const pkg of this.packages) {
 			// Fluid specific
 			let checkFiles: string[];
 			if (pkg.packageJson.dependencies) {
@@ -134,17 +153,17 @@ export class FluidRepoBuild extends FluidRepo {
 	/**
 	 * @deprecated symlink-related functionality will be removed in an upcoming release.
 	 */
-	public async symlink(options: ISymlinkOptions) {
-		// Only do parallel if we are checking only
-		const result = await this.packages.forEachAsync(
-			(pkg) => symlinkPackage(this, pkg, this.createPackageMap(), options),
-			!options.symlink,
-		);
-		return Packages.clean(
-			result.filter((entry) => entry.count).map((entry) => entry.pkg),
-			true,
-		);
-	}
+	// public async symlink(options: ISymlinkOptions) {
+	// 	// Only do parallel if we are checking only
+	// 	const result = await this.packages.forEachAsync(
+	// 		(pkg) => symlinkPackage(this, pkg, this.createPackageMap(), options),
+	// 		!options.symlink,
+	// 	);
+	// 	return Packages.clean(
+	// 		result.filter((entry) => entry.count).map((entry) => entry.pkg),
+	// 		true,
+	// 	);
+	// }
 
 	public createBuildGraph(options: ISymlinkOptions, buildTargetNames: string[]) {
 		return new BuildGraph(

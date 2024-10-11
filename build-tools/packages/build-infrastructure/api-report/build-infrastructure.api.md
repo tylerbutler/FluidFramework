@@ -25,6 +25,29 @@ export interface FluidPackageJsonFields {
 // @public
 export const FLUIDREPO_CONFIG_VERSION = 1;
 
+// @public (undocumented)
+export class FluidRepoBase implements IFluidRepo {
+    constructor(searchPath: string, upstreamRemotePartialUrl?: string | undefined);
+    // (undocumented)
+    getGitRepository(): Promise<Readonly<SimpleGit>>;
+    // (undocumented)
+    getPackageReleaseGroup(pkg: Readonly<IPackage>): Readonly<IReleaseGroup>;
+    // (undocumented)
+    getPackageWorkspace(pkg: Readonly<IPackage>): Readonly<IWorkspace>;
+    // (undocumented)
+    get packages(): Map<PackageName, IPackage>;
+    relativeToRepo(p: string): string;
+    // (undocumented)
+    get releaseGroups(): Map<ReleaseGroupName, IReleaseGroup>;
+    // (undocumented)
+    reload(): void;
+    readonly root: string;
+    // (undocumented)
+    readonly upstreamRemotePartialUrl?: string | undefined;
+    // (undocumented)
+    get workspaces(): Map<WorkspaceName, IWorkspace>;
+}
+
 // @public @deprecated
 export interface IFluidBuildDir {
     directory: string;
