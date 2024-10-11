@@ -3,11 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { PackageName } from "@rushstack/node-core-library";
-import * as semver from "semver";
-
-import { Context } from "./context.js";
-
+import type { IPackage, IReleaseGroup } from "@fluid-tools/build-infrastructure";
 import {
 	DEFAULT_PRERELEASE_IDENTIFIER,
 	ReleaseVersion,
@@ -21,6 +17,8 @@ import {
 	isVersionBumpTypeExtended,
 	toVirtualPatchScheme,
 } from "@fluid-tools/version-tools";
+import { PackageName } from "@rushstack/node-core-library";
+import * as semver from "semver";
 
 import {
 	ReleaseGroup,
@@ -29,7 +27,7 @@ import {
 	isReleaseGroup,
 } from "../releaseGroups.js";
 import { DependencyUpdateType } from "./bump.js";
-import type { IPackage, IReleaseGroup } from "@fluid-tools/build-infrastructure";
+import { Context } from "./context.js";
 
 /**
  * Creates an appropriate branch for a release group and bump type. Does not commit!
@@ -150,15 +148,17 @@ export function generateReleaseBranchName(
 		branchVersion = version;
 	}
 
-		if (releaseGroup.name === "client" && schemeIsInternal) {
-			// Client versions using the internal version scheme
-			const prereleaseId = fromInternalScheme(version, true)[2];
-			// Checking the prerelease ID is necessary because we used "v2int" instead of "internal" in branch names. This
-			// was a bad decision in retrospect, but we're stuck with it for now.
-			branchPath.push(prereleaseId === DEFAULT_PRERELEASE_IDENTIFIER ? "v2int" : releaseGroup.name);
-		} else {
-			branchPath.push(releaseGroup.name);
-		}
+	if (releaseGroup.name === "client" && schemeIsInternal) {
+		// Client versions using the internal version scheme
+		const prereleaseId = fromInternalScheme(version, true)[2];
+		// Checking the prerelease ID is necessary because we used "v2int" instead of "internal" in branch names. This
+		// was a bad decision in retrospect, but we're stuck with it for now.
+		branchPath.push(
+			prereleaseId === DEFAULT_PRERELEASE_IDENTIFIER ? "v2int" : releaseGroup.name,
+		);
+	} else {
+		branchPath.push(releaseGroup.name);
+	}
 
 	let releaseBranchVersion: string;
 	if (schemeIsInternal) {
@@ -277,7 +277,7 @@ export function getDefaultBumpTypeForBranch(
  * @internal
  */
 export function getReleaseSourceForReleaseGroup(
-	releaseGroupOrPackage: IReleaseGroup|IPackage,
+	releaseGroupOrPackage: IReleaseGroup | IPackage,
 ): ReleaseSource {
 	// All packages and release groups use release branches.
 	return "releaseBranches";

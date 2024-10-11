@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { minimatch } from "minimatch";
 import type { IReleaseGroup } from "@fluid-tools/build-infrastructure";
+import { minimatch } from "minimatch";
 
 // Mapping of branch to a list of release groups/packages that should run policy by default.
 // TODO: This should be configured in the fluid-build config, like type test defaults are.

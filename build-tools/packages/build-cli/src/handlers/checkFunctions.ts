@@ -8,9 +8,12 @@ import execa from "execa";
 import inquirer from "inquirer";
 import { Machine } from "jssm";
 
+import { getRemote } from "@fluid-tools/build-infrastructure";
 import { bumpVersionScheme } from "@fluid-tools/version-tools";
 import { FluidRepo } from "@fluidframework/build-tools";
 
+// eslint-disable-next-line import/no-internal-modules
+import { getShaForBranch, isBranchUpToDate } from "../library/git.js";
 import {
 	generateBumpDepsBranchName,
 	generateBumpDepsCommitMessage,
@@ -23,13 +26,10 @@ import {
 } from "../library/index.js";
 import { CommandLogger } from "../logging.js";
 import { MachineState } from "../machines/index.js";
-// eslint-disable-next-line import/no-internal-modules
-import {isBranchUpToDate, getShaForBranch} from "../library/git.js";
 import { ReleaseSource, isReleaseGroup } from "../releaseGroups.js";
 import { getRunPolicyCheckDefault } from "../repoConfig.js";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler.js";
 import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers.js";
-import { getRemote } from "@fluid-tools/build-infrastructure";
 
 /**
  * Checks that the current branch matches the expected branch for a release.
@@ -51,7 +51,7 @@ export const checkBranchName: StateHandlerFunction = async (
 	if (testMode) return true;
 
 	const { repo, bumpType, shouldCheckBranch } = data;
-	const git =await repo.getGitRepository();
+	const git = await repo.getGitRepository();
 	const branchSummary = await git.branch();
 
 	if (shouldCheckBranch === true) {
@@ -116,12 +116,12 @@ export const checkBranchUpToDate: StateHandlerFunction = async (
 	const { repo, shouldCheckBranchUpdate } = data;
 	const git = await repo.getGitRepository();
 	const branchSummary = await git.branch();
-	const remote = await getRemote(git,repo.upstreamRemotePartialUrl);
+	const remote = await getRemote(git, repo.upstreamRemotePartialUrl);
 	const isUpToDate = await isBranchUpToDate(
 		branchSummary.current,
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		remote!,
-		git
+		git,
 	);
 	if (shouldCheckBranchUpdate === true) {
 		if (!isUpToDate) {

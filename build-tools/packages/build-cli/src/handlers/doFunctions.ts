@@ -45,10 +45,7 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 
 	const { repo, releaseGroup } = data;
 
-	const { releaseGroups, isEmpty } = await getPreReleaseDependencies(
-		repo,
-		releaseGroup,
-	);
+	const { releaseGroups, isEmpty } = await getPreReleaseDependencies(repo, releaseGroup);
 
 	assert(!isEmpty, `No prereleases found in DoBumpReleasedDependencies state.`);
 

@@ -104,7 +104,7 @@ export async function npmCheckUpdates(
 	const releaseGroupsToCheck =
 		releaseGroup === undefined // run on the whole repo
 			? [...repo.releaseGroups.keys()]
-			: [releaseGroup.name]
+			: [releaseGroup.name];
 
 	if (releaseGroupsToCheck !== undefined) {
 		for (const group of releaseGroupsToCheck) {

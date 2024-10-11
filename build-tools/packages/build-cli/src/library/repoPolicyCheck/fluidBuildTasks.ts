@@ -6,9 +6,10 @@
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import {
 	FluidRepo,
-	type IFluidBuildPackage,
 	PackageJson,
 	TscUtils,
 	getEsLintConfigFilePath,
@@ -21,6 +22,7 @@ import {
 import JSON5 from "json5";
 import * as semver from "semver";
 import { TsConfigJson } from "type-fest";
+
 import { getFlubConfig } from "../../config.js";
 import { Handler, readFile } from "./common.js";
 import { FluidBuildDatabase } from "./fluidBuildDatabase.js";
@@ -508,7 +510,7 @@ function getTscCommandDependencies(
 	json: Readonly<PackageJson>,
 	script: string,
 	command: string,
-	packageMap: ReadonlyMap<string, IFluidBuildPackage>,
+	packageMap: ReadonlyMap<string, IPackage>,
 ): (string | string[])[] {
 	// If the project has a referenced project, depend on that instead of the default
 	const parsedCommand = TscUtils.parseCommandLine(command);
