@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { GitRepo } from "../common/gitRepo";
+import type { SimpleGit } from "simple-git";
 import type { IFluidBuildConfig } from "./fluidBuildConfig";
 
 /**
@@ -17,12 +17,17 @@ export interface BuildContext {
 	readonly fluidBuildConfig: IFluidBuildConfig | undefined;
 
 	/**
-	 * The absolute path to the root of the repo.
+	 * The absolute path to the root of the Fluid repo.
 	 */
 	readonly repoRoot: string;
 
 	/**
 	 * A GitRepo object that can be used to call git operations.
 	 */
-	readonly gitRepo: GitRepo;
+	readonly gitRepo: SimpleGit;
+
+	/**
+	 * The path to the git repo root.
+	 */
+	readonly gitRoot: string;
 }

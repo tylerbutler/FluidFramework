@@ -30,6 +30,7 @@ export class BiomeTask extends LeafWithFileStatDoneFileTask {
 		if (this._configReader === undefined) {
 			this._configReader = await BiomeConfigReader.create(
 				this.node.pkg.directory,
+				this.context.gitRoot,
 				this.context.gitRepo,
 			);
 		}

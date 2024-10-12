@@ -16,6 +16,9 @@ export type AdditionalPackageProps = Record<string, string> | undefined;
 export function createPackageManager(name: PackageManagerName): IPackageManager;
 
 // @public
+export function findGitRootSync(cwd?: string): string;
+
+// @public
 export interface FluidPackageJsonFields {
     pnpm?: {
         overrides?: Record<string, string>;
@@ -28,6 +31,10 @@ export const FLUIDREPO_CONFIG_VERSION = 1;
 // @public (undocumented)
 export class FluidRepoBase implements IFluidRepo {
     constructor(searchPath: string, upstreamRemotePartialUrl?: string | undefined);
+    // (undocumented)
+    readonly configFile: string;
+    // (undocumented)
+    readonly configuration: IFluidRepoLayout;
     // (undocumented)
     getGitRepository(): Promise<Readonly<SimpleGit>>;
     // (undocumented)
@@ -48,6 +55,9 @@ export class FluidRepoBase implements IFluidRepo {
     get workspaces(): Map<WorkspaceName, IWorkspace>;
 }
 
+// @public
+export function getFiles(git: SimpleGit, directory: string): Promise<string[]>;
+
 // @public @deprecated
 export interface IFluidBuildDir {
     directory: string;
@@ -64,6 +74,8 @@ export interface IFluidBuildDirs {
 
 // @public
 export interface IFluidRepo extends Reloadable {
+    // (undocumented)
+    configuration: IFluidRepoLayout;
     getGitRepository(): Promise<Readonly<SimpleGit>>;
     getPackageReleaseGroup(pkg: Readonly<IPackage>): Readonly<IReleaseGroup>;
     getPackageWorkspace(pkg: Readonly<IPackage>): Readonly<IWorkspace>;
@@ -111,12 +123,15 @@ export interface IPackage<J extends PackageJson = PackageJson> extends Pick<Inst
     // (undocumented)
     toString(): string;
     readonly version: string;
+    readonly workspace: IWorkspace;
 }
 
 // @public
 export interface IPackageManager {
     // (undocumented)
     installCommand(updateLockfile: boolean): string;
+    // (undocumented)
+    readonly lockfileName: string;
     // (undocumented)
     readonly name: PackageManagerName;
 }
@@ -162,7 +177,7 @@ export class NotInGitRepository extends Error {
 
 // @public (undocumented)
 export abstract class PackageBase<TAddProps extends AdditionalPackageProps = undefined, J extends PackageJson = PackageJson> implements IPackage {
-    constructor(packageJsonFilePath: string, packageManager: IPackageManager, isWorkspaceRoot: boolean, releaseGroup: ReleaseGroupName, isReleaseGroupRoot: boolean, additionalProperties?: TAddProps);
+    constructor(packageJsonFilePath: string, packageManager: IPackageManager, workspace: IWorkspace, isWorkspaceRoot: boolean, releaseGroup: ReleaseGroupName, isReleaseGroupRoot: boolean, additionalProperties?: TAddProps);
     // (undocumented)
     checkInstall(print?: boolean): Promise<boolean>;
     // (undocumented)
@@ -195,6 +210,8 @@ export abstract class PackageBase<TAddProps extends AdditionalPackageProps = und
     toString(): string;
     // (undocumented)
     get version(): string;
+    // (undocumented)
+    readonly workspace: IWorkspace;
 }
 
 // @public

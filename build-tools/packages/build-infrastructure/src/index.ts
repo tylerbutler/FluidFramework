@@ -14,6 +14,7 @@ export {
 } from "./config.js";
 export { NotInGitRepository } from "./errors.js";
 export { loadFluidRepo, FluidRepo as FluidRepoBase } from "./fluidRepo.js";
+export { getFiles, findGitRootSync } from "./git.js";
 export type {
 	AdditionalPackageProps,
 	Installable,

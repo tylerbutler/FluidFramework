@@ -9,9 +9,9 @@ import * as semver from "semver";
 
 import * as assert from "assert";
 import registerDebug from "debug";
-import type { GitRepo } from "../common/gitRepo";
+import type { SimpleGit } from "simple-git";
 import { defaultLogger } from "../common/logging";
-import { type IFluidBuildPackage } from "../common/npmPackage";
+import { BuildPackage, type IFluidBuildPackage } from "../common/npmPackage";
 import { Timer } from "../common/timer";
 import type { BuildContext } from "./buildContext";
 import { FileHashCache } from "./fileHashCache";
@@ -69,7 +69,8 @@ class BuildGraphContext implements BuildContext {
 	public readonly failedTaskLines: string[] = [];
 	public readonly fluidBuildConfig: IFluidBuildConfig | undefined;
 	public readonly repoRoot: string;
-	public readonly gitRepo: GitRepo;
+	public readonly gitRepo: SimpleGit;
+	public readonly gitRoot: string;
 	constructor(
 		public readonly repoPackageMap: Map<string, IFluidBuildPackage>,
 		readonly buildContext: BuildContext,
@@ -78,16 +79,17 @@ class BuildGraphContext implements BuildContext {
 		this.fluidBuildConfig = buildContext.fluidBuildConfig;
 		this.repoRoot = buildContext.repoRoot;
 		this.gitRepo = buildContext.gitRepo;
+		this.gitRoot = buildContext.gitRoot;
 	}
 }
 
-export class BuildPackage {
+export class BuildGraphPackage {
 	private readonly tasks = new Map<string, Task>();
 
 	// track a script task without the lifecycle (pre/post) tasks
 	private readonly scriptTasks = new Map<string, Task>();
 
-	public readonly dependentPackages = new Array<BuildPackage>();
+	public readonly dependentPackages = new Array<BuildGraphPackage>();
 	public level: number = -1;
 	private buildP?: Promise<BuildResult>;
 
@@ -485,7 +487,7 @@ export class BuildPackage {
  */
 export class BuildGraph {
 	private matchedPackages = 0;
-	private readonly buildPackages = new Map<IFluidBuildPackage, BuildPackage>();
+	private readonly buildPackages = new Map<IFluidBuildPackage, BuildGraphPackage>();
 	private readonly context: BuildGraphContext;
 
 	public constructor(
@@ -604,12 +606,12 @@ export class BuildGraph {
 	private getBuildPackage(
 		pkg: IFluidBuildPackage,
 		globalTaskDefinitions: TaskDefinitions,
-		pendingInitDep: BuildPackage[],
-	): BuildPackage {
+		pendingInitDep: BuildGraphPackage[],
+	): BuildGraphPackage {
 		let buildPackage = this.buildPackages.get(pkg);
 		if (buildPackage === undefined) {
 			try {
-				buildPackage = new BuildPackage(this.context, pkg, globalTaskDefinitions);
+				buildPackage = new BuildGraphPackage(this.context, pkg, globalTaskDefinitions);
 			} catch (e: unknown) {
 				throw new Error(
 					`${pkg.nameColored}: Failed to load build package in ${pkg.directory}\n\t${
@@ -630,7 +632,7 @@ export class BuildGraph {
 		getDepFilter: (pkg: IFluidBuildPackage) => (dep: IFluidBuildPackage) => boolean,
 	) {
 		const globalTaskDefinitions = normalizeGlobalTaskDefinitions(globalTaskDefinitionsOnDisk);
-		const pendingInitDep: BuildPackage[] = [];
+		const pendingInitDep: BuildGraphPackage[] = [];
 		for (const pkg of packages.values()) {
 			// Start with only matched packages
 			if (pkg.matched) {
@@ -656,10 +658,11 @@ export class BuildGraph {
 			}
 			if (node.pkg.isReleaseGroupRoot) {
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				for (const dep of node.pkg.monoRepo!.packages) {
+				for (const dep of node.pkg.workspace.packages) {
+					const depBuildPkg = new BuildPackage(dep);
 					traceGraph(`Package dependency: ${node.pkg.nameColored} => ${dep.nameColored}`);
 					node.dependentPackages.push(
-						this.getBuildPackage(dep, globalTaskDefinitions, pendingInitDep),
+						this.getBuildPackage(depBuildPkg, globalTaskDefinitions, pendingInitDep),
 					);
 				}
 				continue;
@@ -694,7 +697,7 @@ export class BuildGraph {
 
 	private populateLevel() {
 		// level is not strictly necessary, except for circular reference.
-		const getLevel = (node: BuildPackage, parent?: BuildPackage) => {
+		const getLevel = (node: BuildGraphPackage, parent?: BuildGraphPackage) => {
 			if (node.level === -2) {
 				throw new Error(
 					`Circular Reference detected ${parent ? parent.pkg.nameColored : "<none>"} -> ${
