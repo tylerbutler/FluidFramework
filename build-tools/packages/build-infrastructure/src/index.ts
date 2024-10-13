@@ -4,13 +4,14 @@
  */
 
 export {
-	ReleaseGroupDefinition,
-	WorkspaceDefinition,
-	IFluidBuildDir,
-	IFluidBuildDirs,
-	IFluidBuildDirEntry,
-	IFluidRepoLayout,
+	type ReleaseGroupDefinition,
+	type WorkspaceDefinition,
+	type IFluidBuildDir,
+	type IFluidBuildDirs,
+	type IFluidBuildDirEntry,
+	type IFluidRepoLayout,
 	FLUIDREPO_CONFIG_VERSION,
+	getFluidRepoLayout,
 } from "./config.js";
 export { NotInGitRepository } from "./errors.js";
 export { loadFluidRepo, FluidRepo as FluidRepoBase } from "./fluidRepo.js";

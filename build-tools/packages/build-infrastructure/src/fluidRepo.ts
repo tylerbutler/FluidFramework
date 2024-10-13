@@ -30,7 +30,7 @@ export class FluidRepo implements IFluidRepo {
 
 	public readonly configuration: IFluidRepoLayout;
 
-	public readonly configFile: string;
+	public readonly configFilePath: string;
 
 	/**
 	 * @param searchPath - The path that should be searched for a repo layout config file.
@@ -41,10 +41,10 @@ export class FluidRepo implements IFluidRepo {
 		searchPath: string,
 		public readonly upstreamRemotePartialUrl?: string,
 	) {
-		const { config, configFile } = getFluidRepoLayout(searchPath);
-		this.root = path.resolve(path.dirname(configFile));
+		const { config, configFilePath } = getFluidRepoLayout(searchPath);
+		this.root = path.resolve(path.dirname(configFilePath));
 		this.configuration = config;
-		this.configFile = configFile;
+		this.configFilePath = configFilePath;
 
 		// Check for the repoLayout config first
 		if (config.repoLayout === undefined) {

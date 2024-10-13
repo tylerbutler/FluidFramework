@@ -8,10 +8,11 @@ import chalk from "chalk";
 import * as semver from "semver";
 
 import * as assert from "assert";
+import type { IFluidRepoLayout } from "@fluid-tools/build-infrastructure";
 import registerDebug from "debug";
 import type { SimpleGit } from "simple-git";
 import { defaultLogger } from "../common/logging";
-import { BuildPackage, type IFluidBuildPackage } from "../common/npmPackage";
+import { BuildPackage } from "../common/npmPackage";
 import { Timer } from "../common/timer";
 import type { BuildContext } from "./buildContext";
 import { FileHashCache } from "./fileHashCache";
@@ -68,15 +69,17 @@ class BuildGraphContext implements BuildContext {
 	public readonly taskStats = new TaskStats();
 	public readonly failedTaskLines: string[] = [];
 	public readonly fluidBuildConfig: IFluidBuildConfig | undefined;
+	public readonly fluidRepoLayout: IFluidRepoLayout;
 	public readonly repoRoot: string;
 	public readonly gitRepo: SimpleGit;
 	public readonly gitRoot: string;
 	constructor(
-		public readonly repoPackageMap: Map<string, IFluidBuildPackage>,
+		public readonly repoPackageMap: Map<string, BuildPackage>,
 		readonly buildContext: BuildContext,
 		public readonly workerPool?: WorkerPool,
 	) {
 		this.fluidBuildConfig = buildContext.fluidBuildConfig;
+		this.fluidRepoLayout = buildContext.fluidRepoLayout;
 		this.repoRoot = buildContext.repoRoot;
 		this.gitRepo = buildContext.gitRepo;
 		this.gitRoot = buildContext.gitRoot;
@@ -98,7 +101,7 @@ export class BuildGraphPackage {
 
 	constructor(
 		public readonly context: BuildGraphContext,
-		public readonly pkg: IFluidBuildPackage,
+		public readonly pkg: BuildPackage,
 		globalTaskDefinitions: TaskDefinitions,
 	) {
 		this._taskDefinitions = getTaskDefinitions(
@@ -487,16 +490,16 @@ export class BuildGraphPackage {
  */
 export class BuildGraph {
 	private matchedPackages = 0;
-	private readonly buildPackages = new Map<IFluidBuildPackage, BuildGraphPackage>();
+	private readonly buildPackages = new Map<BuildPackage, BuildGraphPackage>();
 	private readonly context: BuildGraphContext;
 
 	public constructor(
-		packages: Map<string, IFluidBuildPackage>,
-		releaseGroupPackages: IFluidBuildPackage[],
+		packages: Map<string, BuildPackage>,
+		releaseGroupPackages: BuildPackage[],
 		buildContext: BuildContext,
 		private readonly buildTaskNames: string[],
 		globalTaskDefinitions: TaskDefinitionsOnDisk | undefined,
-		getDepFilter: (pkg: IFluidBuildPackage) => (dep: IFluidBuildPackage) => boolean,
+		getDepFilter: (pkg: BuildPackage) => (dep: BuildPackage) => boolean,
 	) {
 		this.context = new BuildGraphContext(
 			packages,
@@ -603,8 +606,8 @@ export class BuildGraph {
 		return summaryLines.join("\n");
 	}
 
-	private getBuildPackage(
-		pkg: IFluidBuildPackage,
+	private getBuildGraphPackage(
+		pkg: BuildPackage,
 		globalTaskDefinitions: TaskDefinitions,
 		pendingInitDep: BuildGraphPackage[],
 	): BuildGraphPackage {
@@ -626,24 +629,24 @@ export class BuildGraph {
 	}
 
 	private initializePackages(
-		packages: Map<string, IFluidBuildPackage>,
-		releaseGroupPackages: IFluidBuildPackage[],
+		packages: Map<string, BuildPackage>,
+		releaseGroupPackages: BuildPackage[],
 		globalTaskDefinitionsOnDisk: TaskDefinitionsOnDisk | undefined,
-		getDepFilter: (pkg: IFluidBuildPackage) => (dep: IFluidBuildPackage) => boolean,
+		getDepFilter: (pkg: BuildPackage) => (dep: BuildPackage) => boolean,
 	) {
 		const globalTaskDefinitions = normalizeGlobalTaskDefinitions(globalTaskDefinitionsOnDisk);
 		const pendingInitDep: BuildGraphPackage[] = [];
 		for (const pkg of packages.values()) {
 			// Start with only matched packages
 			if (pkg.matched) {
-				this.getBuildPackage(pkg, globalTaskDefinitions, pendingInitDep);
+				this.getBuildGraphPackage(pkg, globalTaskDefinitions, pendingInitDep);
 			}
 		}
 
 		for (const releaseGroupPackage of releaseGroupPackages) {
 			// Start with only matched packages
 			if (releaseGroupPackage.matched) {
-				this.getBuildPackage(releaseGroupPackage, {}, pendingInitDep);
+				this.getBuildGraphPackage(releaseGroupPackage, {}, pendingInitDep);
 			}
 		}
 
@@ -662,7 +665,7 @@ export class BuildGraph {
 					const depBuildPkg = new BuildPackage(dep);
 					traceGraph(`Package dependency: ${node.pkg.nameColored} => ${dep.nameColored}`);
 					node.dependentPackages.push(
-						this.getBuildPackage(depBuildPkg, globalTaskDefinitions, pendingInitDep),
+						this.getBuildGraphPackage(depBuildPkg, globalTaskDefinitions, pendingInitDep),
 					);
 				}
 				continue;
@@ -677,7 +680,7 @@ export class BuildGraph {
 						if (depFilter(dep)) {
 							traceGraph(`Package dependency: ${node.pkg.nameColored} => ${dep.nameColored}`);
 							node.dependentPackages.push(
-								this.getBuildPackage(dep, globalTaskDefinitions, pendingInitDep),
+								this.getBuildGraphPackage(dep, globalTaskDefinitions, pendingInitDep),
 							);
 						} else {
 							traceGraph(

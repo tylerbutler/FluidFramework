@@ -32,7 +32,7 @@ export const FLUIDREPO_CONFIG_VERSION = 1;
 export class FluidRepoBase implements IFluidRepo {
     constructor(searchPath: string, upstreamRemotePartialUrl?: string | undefined);
     // (undocumented)
-    readonly configFile: string;
+    readonly configFilePath: string;
     // (undocumented)
     readonly configuration: IFluidRepoLayout;
     // (undocumented)
@@ -57,6 +57,12 @@ export class FluidRepoBase implements IFluidRepo {
 
 // @public
 export function getFiles(git: SimpleGit, directory: string): Promise<string[]>;
+
+// @public
+export function getFluidRepoLayout(searchPath: string, noCache?: boolean): {
+    config: IFluidRepoLayout;
+    configFilePath: string;
+};
 
 // @public @deprecated
 export interface IFluidBuildDir {
@@ -176,7 +182,7 @@ export class NotInGitRepository extends Error {
 }
 
 // @public (undocumented)
-export abstract class PackageBase<TAddProps extends AdditionalPackageProps = undefined, J extends PackageJson = PackageJson> implements IPackage {
+export abstract class PackageBase<J extends PackageJson = PackageJson, TAddProps extends AdditionalPackageProps = undefined> implements IPackage<J> {
     constructor(packageJsonFilePath: string, packageManager: IPackageManager, workspace: IWorkspace, isWorkspaceRoot: boolean, releaseGroup: ReleaseGroupName, isReleaseGroupRoot: boolean, additionalProperties?: TAddProps);
     // (undocumented)
     checkInstall(print?: boolean): Promise<boolean>;

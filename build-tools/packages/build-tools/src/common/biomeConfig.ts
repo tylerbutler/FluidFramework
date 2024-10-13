@@ -9,7 +9,7 @@ import path from "node:path";
 import ignore from "ignore";
 import * as JSON5 from "json5";
 import multimatch from "multimatch";
-import type { SimpleGit } from "simple-git";
+import { simpleGit } from "simple-git";
 import { merge } from "ts-deepmerge";
 // Note: in more recent versions of type-fest, this type has been replaced with "Tagged"
 // We are using version 2.x because of this issue: https://github.com/sindresorhus/type-fest/issues/547
@@ -147,7 +147,6 @@ export async function getClosestBiomeConfigPath(
 export async function getBiomeFormattedFilesFromDirectory(
 	directoryOrConfigFile: string,
 	gitRoot: string,
-	gitRepo: SimpleGit,
 ): Promise<string[]> {
 	/**
 	 * The repo root-relative path to the directory being used as the Biome working directory.
@@ -162,7 +161,7 @@ export async function getBiomeFormattedFilesFromDirectory(
 		directory = path.relative(gitRoot, directoryOrConfigFile);
 	}
 	const config = await loadBiomeConfig(configFile);
-	return getBiomeFormattedFiles(config, directory, gitRoot, gitRepo);
+	return getBiomeFormattedFiles(config, directory, gitRoot);
 }
 
 /**
@@ -177,7 +176,6 @@ export async function getBiomeFormattedFiles(
 	config: BiomeConfigResolved,
 	directory: string,
 	gitRoot: string,
-	gitRepo: SimpleGit,
 ): Promise<string[]> {
 	const [includeEntries, ignoreEntries] = await Promise.all([
 		getSettingValuesFromBiomeConfig(config, "formatter", "include"),
@@ -191,6 +189,7 @@ export async function getBiomeFormattedFiles(
 	// test/src/file.js. This is something we plan to fix in Biome v2.0.0."
 	const prefixedIncludes = [...includeEntries].map((glob) => `**/${glob}`);
 	const prefixedIgnores = [...ignoreEntries].map((glob) => `**/${glob}`);
+	const gitRepo = simpleGit(gitRoot);
 
 	/**
 	 * All files that could possibly be formatted before Biome include and ignore entries are applied. Paths are relative
@@ -213,8 +212,7 @@ export async function getBiomeFormattedFiles(
 	const filtered = ignoreObject.filter(includedPaths);
 
 	// Convert repo root-relative paths to absolute paths
-	const repoRoot = gitRoot;
-	return filtered.map((filePath) => path.resolve(repoRoot, filePath));
+	return filtered.map((filePath) => path.resolve(gitRoot, filePath));
 }
 
 /**
@@ -245,13 +243,13 @@ export class BiomeConfigReader {
 	) {
 		this.directory = path.dirname(configFile);
 	}
+
 	/**
 	 * Create a BiomeConfig instance rooted in the provided directory.
 	 */
 	public static async create(
 		directoryOrConfigFile: string,
 		gitRoot: string,
-		gitRepo: SimpleGit,
 	): Promise<BiomeConfigReader> {
 		/**
 		 * The repo root-relative path to the directory being used as the Biome working directory.
@@ -268,7 +266,7 @@ export class BiomeConfigReader {
 
 		const allConfigs = await getAllBiomeConfigPaths(configFile);
 		const mergedConfig = await loadBiomeConfigs(allConfigs);
-		const files = await getBiomeFormattedFiles(mergedConfig, directory, gitRoot, gitRepo);
+		const files = await getBiomeFormattedFiles(mergedConfig, directory, gitRoot);
 		return new BiomeConfigReader(configFile, allConfigs, mergedConfig, files);
 	}
 }

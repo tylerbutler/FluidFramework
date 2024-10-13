@@ -26,9 +26,9 @@ import type {
 import { lookUpDirSync } from "./utils.js";
 
 export abstract class PackageBase<
-	TAddProps extends AdditionalPackageProps = undefined,
 	J extends PackageJson = PackageJson,
-> implements IPackage
+	TAddProps extends AdditionalPackageProps = undefined,
+> implements IPackage<J>
 {
 	// eslint-disable-next-line @typescript-eslint/prefer-readonly -- false positive; this value is changed
 	private static packageCount: number = 0;
@@ -168,7 +168,7 @@ export abstract class PackageBase<
 export class Package<
 	TAddProps extends AdditionalPackageProps = undefined,
 	J extends PackageJson = PackageJson,
-> extends PackageBase<TAddProps, J> {
+> extends PackageBase<J, TAddProps> {
 	public static loadFromWorkspaceDefinition<
 		T extends typeof Package,
 		J extends PackageJson = PackageJson,

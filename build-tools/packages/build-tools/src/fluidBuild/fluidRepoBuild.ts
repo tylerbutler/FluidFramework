@@ -12,13 +12,14 @@ import {
 	type PackageName,
 	type ReleaseGroupName,
 	findGitRootSync,
+	getFluidRepoLayout,
 } from "@fluid-tools/build-infrastructure";
 import chalk from "chalk";
 import registerDebug from "debug";
 import { simpleGit } from "simple-git";
 
 import { defaultLogger } from "../common/logging";
-import { BuildPackage, type IFluidBuildPackage } from "../common/npmPackage";
+import { BuildPackage } from "../common/npmPackage";
 import {
 	ExecAsyncResult,
 	execWithErrorAsync,
@@ -27,7 +28,7 @@ import {
 } from "../common/utils";
 import type { BuildContext } from "./buildContext";
 import { BuildGraph } from "./buildGraph";
-import { getFluidBuildConfig } from "./fluidUtils";
+import { getFluidBuildConfig } from "./config";
 
 const traceInit = registerDebug("fluid-build:init");
 
@@ -53,24 +54,23 @@ export class FluidRepoBuild extends FluidRepoBase {
 
 	protected context: BuildContext;
 
-	public constructor(
-		searchPath: string,
-		// protected context: BuildContext,
-		// public readonly upstreamRemotePartialUrl?: string,
-	) {
+	public constructor(searchPath: string) {
 		super(searchPath);
-		const config = getFluidBuildConfig(searchPath);
+		const { config: fluidBuildConfig } = getFluidBuildConfig(searchPath);
+		const { config: fluidRepoLayout } = getFluidRepoLayout(searchPath);
+
 		const gitRoot = findGitRootSync(searchPath);
 		this.context = {
-			fluidBuildConfig: config,
+			fluidBuildConfig,
+			fluidRepoLayout,
 			repoRoot: this.root,
-			gitRepo: simpleGit(this.root),
+			gitRepo: simpleGit(gitRoot),
 			gitRoot,
 		};
 	}
 
-	public get packages(): Map<PackageName, IFluidBuildPackage> {
-		const pkgs: Map<PackageName, IFluidBuildPackage> = new Map();
+	public get packages(): Map<PackageName, BuildPackage> {
+		const pkgs: Map<PackageName, BuildPackage> = new Map();
 		for (const ws of this.workspaces.values()) {
 			for (const pkg of ws.packages) {
 				if (pkgs.has(pkg.name)) {
@@ -193,21 +193,22 @@ export class FluidRepoBuild extends FluidRepoBase {
 	}
 
 	public createBuildGraph(buildTargetNames: string[]) {
+		const { config } = getFluidBuildConfig(this.root);
 		return new BuildGraph(
 			this.packages,
 			[...this.packages.values()],
 			this.context,
 			buildTargetNames,
-			getFluidBuildConfig(this.root)?.tasks,
-			(pkg: IFluidBuildPackage) => {
-				return (dep: IFluidBuildPackage) => {
+			config.tasks,
+			(pkg: BuildPackage) => {
+				return (dep: BuildPackage) => {
 					return pkg.releaseGroup === dep.releaseGroup;
 				};
 			},
 		);
 	}
 
-	private matchWithFilter(callback: (pkg: IFluidBuildPackage) => boolean) {
+	private matchWithFilter(callback: (pkg: BuildPackage) => boolean) {
 		let matched = false;
 		[...this.packages.values()].forEach((pkg) => {
 			if (!pkg.matched && callback(pkg)) {
@@ -266,7 +267,7 @@ export class FluidRepoBuild extends FluidRepoBase {
 		this.setMatchedPackage(rootPkg);
 	}
 
-	private setMatchedPackage(pkg: IFluidBuildPackage) {
+	private setMatchedPackage(pkg: BuildPackage) {
 		traceInit(`${pkg.nameColored}: matched`);
 		pkg.matched = true;
 	}
