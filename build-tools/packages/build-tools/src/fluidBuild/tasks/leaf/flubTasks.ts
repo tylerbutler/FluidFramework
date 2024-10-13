@@ -8,7 +8,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { GitRepo } from "../../../common/gitRepo";
-import { getResolvedFluidRoot } from "../../../fluidBuild/fluidUtils";
+import { getFluidBuildConfig } from "../../../fluidBuild/config";
 import { sha256 } from "../../hash";
 import { LeafWithDoneFileTask, LeafWithFileStatDoneFileTask } from "./leafTask";
 
@@ -32,7 +32,7 @@ export class FlubListTask extends LeafWithDoneFileTask {
 			return undefined;
 		}
 		const packages = Array.from(this.node.context.repoPackageMap.values()).filter(
-			(pkg) => pkg.monoRepo?.kind === resourceGroup,
+			(pkg) => pkg.releaseGroup === resourceGroup,
 		);
 		if (packages.length === 0) {
 			return undefined;
@@ -85,25 +85,35 @@ export class FlubCheckPolicyTask extends LeafWithDoneFileTask {
 	}
 }
 
-export class FlubGenerateChangesetConfigTask extends LeafWithFileStatDoneFileTask {
-	private readonly changesetConfigPath = ".changeset/config.json";
-	private readonly fluidBuildConfig = "fluidBuild.config.cjs";
+const changesetConfigPath = ".changeset/config.json";
 
+export class FlubGenerateChangesetConfigTask extends LeafWithFileStatDoneFileTask {
 	/**
-	 * Only the fluidBuild config is used as input for this task.
+	 * All of these paths are assumed to be relative to the fluidBuild root - the directory in which the fluidBuild config
+	 * file is found.
 	 */
+	private readonly configFiles = [
+		changesetConfigPath,
+		"fluidBuild.config.cjs",
+		"flub.config.cjs",
+	];
+
 	protected async getInputFiles(): Promise<string[]> {
-		const repoRoot = await getResolvedFluidRoot(true);
-		const configPath = path.join(repoRoot, this.fluidBuildConfig);
-		return [configPath];
+		const { configFilePath } = getFluidBuildConfig(process.cwd());
+		const configDir = path.dirname(configFilePath);
+		const configPaths = this.configFiles.map((configPath) =>
+			path.resolve(configDir, configPath),
+		);
+		return configPaths;
 	}
 
 	/**
 	 * The only file that is output by this task is the changeset config.
 	 */
 	protected async getOutputFiles(): Promise<string[]> {
-		const repoRoot = await getResolvedFluidRoot(true);
-		const configPath = path.join(repoRoot, this.changesetConfigPath);
+		const { configFilePath } = getFluidBuildConfig(process.cwd());
+		const configDir = path.dirname(configFilePath);
+		const configPath = path.resolve(configDir, changesetConfigPath);
 		return [configPath];
 	}
 }

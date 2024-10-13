@@ -7,7 +7,7 @@ import path from "node:path";
 
 import { type SimpleGit, simpleGit } from "simple-git";
 
-import { getFluidRepoLayout } from "./config.js";
+import { type IFluidRepoLayout, getFluidRepoLayout } from "./config.js";
 import { NotInGitRepository } from "./errors.js";
 import { findGitRootSync } from "./git.js";
 import {
@@ -28,6 +28,10 @@ export class FluidRepo implements IFluidRepo {
 	 */
 	public readonly root: string;
 
+	public readonly configuration: IFluidRepoLayout;
+
+	public readonly configFilePath: string;
+
 	/**
 	 * @param searchPath - The path that should be searched for a repo layout config file.
 	 * @param gitRepository - A SimpleGit instance rooted in the root of the Git repository housing the FluidRepo. This
@@ -37,8 +41,10 @@ export class FluidRepo implements IFluidRepo {
 		searchPath: string,
 		public readonly upstreamRemotePartialUrl?: string,
 	) {
-		const { config, configFile } = getFluidRepoLayout(searchPath);
-		this.root = path.resolve(path.dirname(configFile));
+		const { config, configFilePath } = getFluidRepoLayout(searchPath);
+		this.root = path.resolve(path.dirname(configFilePath));
+		this.configuration = config;
+		this.configFilePath = configFilePath;
 
 		// Check for the repoLayout config first
 		if (config.repoLayout === undefined) {

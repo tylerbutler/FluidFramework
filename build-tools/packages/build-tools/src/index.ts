@@ -4,18 +4,9 @@
  */
 
 export { GitRepo } from "./common/gitRepo";
-export { FluidRepo } from "./fluidBuild/fluidRepo";
 export { type IFluidBuildConfig } from "./fluidBuild/fluidBuildConfig";
-export { getResolvedFluidRoot, getFluidBuildConfig } from "./fluidBuild/fluidUtils";
+export { getFluidBuildConfig } from "./fluidBuild/config";
 export type { Logger } from "./common/logging";
-export { MonoRepo } from "./common/monoRepo";
-export {
-	type IFluidBuildPackage as Package,
-	type IFluidBuildPackageJson as PackageJson,
-	PackageClass,
-	updatePackageJsonFile,
-	updatePackageJsonFileAsync,
-} from "./common/npmPackage";
 export { Timer } from "./common/timer";
 
 // For repo policy check

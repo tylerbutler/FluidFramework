@@ -578,6 +578,9 @@ importers:
       semver:
         specifier: ^7.5.4
         version: 7.5.4
+      simple-git:
+        specifier: ^3.19.1
+        version: 3.19.1
       sort-package-json:
         specifier: 1.57.0
         version: 1.57.0
@@ -1092,7 +1095,7 @@ packages:
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
       resolve-from: 5.0.0
-      ts-node: 10.9.1(@types/node@18.18.7)(typescript@5.4.5)
+      ts-node: 10.9.1(@types/node@18.18.6)(typescript@5.4.5)
       typescript: 5.4.5
     transitivePeerDependencies:
       - '@swc/core'
@@ -1877,6 +1880,16 @@ packages:
       - '@types/node'
     dev: true
 
+  /@microsoft/api-extractor-model@7.28.21:
+    resolution: {integrity: sha512-AZSdhK/vO4ddukfheXZmrkI5180XLeAqwzu/5pTsJHsXYSyNt3H3VJyynUYKMeNcveG9QLgljH3XRr/LqEfC0Q==}
+    dependencies:
+      '@microsoft/tsdoc': 0.14.2
+      '@microsoft/tsdoc-config': 0.16.2
+      '@rushstack/node-core-library': 5.3.0(@types/node@18.18.7)
+    transitivePeerDependencies:
+      - '@types/node'
+    dev: true
+
   /@microsoft/api-extractor-model@7.28.21(@types/node@18.18.6):
     resolution: {integrity: sha512-AZSdhK/vO4ddukfheXZmrkI5180XLeAqwzu/5pTsJHsXYSyNt3H3VJyynUYKMeNcveG9QLgljH3XRr/LqEfC0Q==}
     dependencies:
@@ -1900,12 +1913,12 @@ packages:
     resolution: {integrity: sha512-FZgcJxEmHA15gxTb1PpXHTforRcyIOLp6GKMqqk+ok8M58QJ0y54Bk+dcTcBC92nmanZppKn5/VRXPP4XvzB3Q==}
     hasBin: true
     dependencies:
-      '@microsoft/api-extractor-model': 7.28.21(@types/node@18.18.7)
+      '@microsoft/api-extractor-model': 7.28.21
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
       '@rushstack/node-core-library': 5.3.0(@types/node@18.18.7)
       '@rushstack/rig-package': 0.5.2
-      '@rushstack/terminal': 0.12.2(@types/node@18.18.7)
+      '@rushstack/terminal': 0.12.2
       '@rushstack/ts-command-line': 4.21.4
       lodash: 4.17.21
       minimatch: 3.0.8
@@ -2545,6 +2558,18 @@ packages:
       resolve: 1.22.8
       strip-json-comments: 3.1.1
 
+  /@rushstack/terminal@0.12.2:
+    resolution: {integrity: sha512-yaHKyD/l6Zg34pC5zzc/KdiRBHy8zAH7ZbL3umpDLnvTrZ0SP8MVYZu9xA2lRsGkKfGbv/6gQhyNq4/tRzXH4A==}
+    peerDependencies:
+      '@types/node': '*'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+    dependencies:
+      '@rushstack/node-core-library': 5.3.0(@types/node@18.18.7)
+      supports-color: 8.1.1
+    dev: true
+
   /@rushstack/terminal@0.12.2(@types/node@18.18.6):
     resolution: {integrity: sha512-yaHKyD/l6Zg34pC5zzc/KdiRBHy8zAH7ZbL3umpDLnvTrZ0SP8MVYZu9xA2lRsGkKfGbv/6gQhyNq4/tRzXH4A==}
     peerDependencies:
@@ -2586,7 +2611,7 @@ packages:
   /@rushstack/ts-command-line@4.21.4:
     resolution: {integrity: sha512-3ZjQ11kpQwk/lDQqbmxC8UuU6yD20Sy4uNTWIaBEJ5474hEFEE4cbDOS4F9R4zcyCkkaQYv674K2QTunDF5dsQ==}
     dependencies:
-      '@rushstack/terminal': 0.12.2(@types/node@18.18.7)
+      '@rushstack/terminal': 0.12.2
       '@types/argparse': 1.0.38
       argparse: 1.0.10
       string-argv: 0.3.1
@@ -3037,7 +3062,7 @@ packages:
       '@typescript-eslint/type-utils': 6.7.5(eslint@8.57.0)(typescript@5.4.5)
       '@typescript-eslint/utils': 6.7.5(eslint@8.57.0)(typescript@5.4.5)
       '@typescript-eslint/visitor-keys': 6.7.5
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.5(supports-color@8.1.1)
       eslint: 8.57.0
       graphemer: 1.4.0
       ignore: 5.2.4
@@ -3097,7 +3122,7 @@ packages:
       '@typescript-eslint/types': 6.7.5
       '@typescript-eslint/typescript-estree': 6.7.5(typescript@5.4.5)
       '@typescript-eslint/visitor-keys': 6.7.5
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.5(supports-color@8.1.1)
       eslint: 8.57.0
       typescript: 5.4.5
     transitivePeerDependencies:
@@ -4729,7 +4754,7 @@ packages:
     dependencies:
       '@types/node': 18.18.7
       cosmiconfig: 8.3.6(typescript@5.4.5)
-      ts-node: 10.9.1(@types/node@18.18.7)(typescript@5.4.5)
+      ts-node: 10.9.1(@types/node@18.18.6)(typescript@5.4.5)
       typescript: 5.4.5
     dev: true
 
@@ -5464,7 +5489,7 @@ packages:
       eslint: '*'
       eslint-plugin-import: '*'
     dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.5(supports-color@8.1.1)
       enhanced-resolve: 5.15.0
       eslint: 8.57.0
       eslint-module-utils: 2.8.0(@typescript-eslint/parser@6.21.0)(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
@@ -5487,7 +5512,7 @@ packages:
       eslint: '*'
       eslint-plugin-import: '*'
     dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.5(supports-color@8.1.1)
       enhanced-resolve: 5.15.0
       eslint: 8.57.0
       eslint-module-utils: 2.8.0(@typescript-eslint/parser@6.7.5)(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.6.1)(eslint@8.57.0)
@@ -5661,7 +5686,7 @@ packages:
       '@es-joy/jsdoccomment': 0.40.1
       are-docs-informative: 0.0.2
       comment-parser: 1.4.0
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.5(supports-color@8.1.1)
       escape-string-regexp: 4.0.0
       eslint: 8.57.0
       esquery: 1.5.0
@@ -10916,39 +10941,6 @@ packages:
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.3
       '@types/node': 18.18.6
-      acorn: 8.10.0
-      acorn-walk: 8.2.0
-      arg: 4.1.3
-      create-require: 1.1.1
-      diff: 4.0.2
-      make-error: 1.3.6
-      typescript: 5.4.5
-      v8-compile-cache-lib: 3.0.1
-      yn: 3.1.1
-    dev: true
-
-  /ts-node@10.9.1(@types/node@18.18.7)(typescript@5.4.5):
-    resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
-    hasBin: true
-    peerDependencies:
-      '@swc/core': '>=1.2.50'
-      '@swc/wasm': '>=1.2.50'
-      '@types/node': '*'
-      typescript: '>=2.7'
-    peerDependenciesMeta:
-      '@swc/core':
-        optional: true
-      '@swc/wasm':
-        optional: true
-      '@types/node':
-        optional: true
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      '@tsconfig/node10': 1.0.9
-      '@tsconfig/node12': 1.0.11
-      '@tsconfig/node14': 1.0.3
-      '@tsconfig/node16': 1.0.3
-      '@types/node': 18.18.7
       acorn: 8.10.0
       acorn-walk: 8.2.0
       arg: 4.1.3
