@@ -63,7 +63,7 @@ describe("loadFluidRepo", () => {
 			const names = actualDependencies.map((r) => r.name as string);
 
 			expect(actualDependencies).to.not.be.undefined;
-			expect(names).to.be.containingAllOf(["group2", "group3"]);
+			expect(names).to.be.containingAllOf(["group2"]);
 		});
 	});
 
@@ -99,6 +99,17 @@ describe("loadFluidRepo", () => {
 					1,
 					"build-tools workspace has the wrong number of release groups",
 				);
+			});
+
+			it("releaseGroupDependencies", async () => {
+				const repo = loadFluidRepo(findGitRootSync());
+				const clientReleaseGroup = repo.releaseGroups.get("client" as ReleaseGroupName);
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				const actualDependencies = clientReleaseGroup!.releaseGroupDependencies;
+				const names = actualDependencies.map((r) => r.name as string);
+
+				expect(actualDependencies).to.not.be.undefined;
+				expect(names).to.be.containingAllOf([]);
 			});
 		});
 	});

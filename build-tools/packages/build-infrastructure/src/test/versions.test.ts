@@ -25,7 +25,7 @@ assert(secondWorkspace !== undefined);
 describe("setVersion", () => {
 	afterEach(async () => {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		await setVersion(repo, [...repo.packages.values()], semver.parse("1.0.0")!);
+		await setVersion([...repo.packages.values()], semver.parse("1.0.0")!);
 		// await setVersion(
 		// 	repo,
 		// 	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -34,7 +34,6 @@ describe("setVersion", () => {
 		// 	semver.parse("2.0.0")!,
 		// );
 		await setVersion(
-			repo,
 			secondWorkspace.packages,
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			semver.parse("2.0.0")!,
@@ -43,7 +42,7 @@ describe("setVersion", () => {
 
 	it("release group", async () => {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		await setVersion(repo, main.packages, semver.parse("1.2.1")!);
+		await setVersion(main.packages, semver.parse("1.2.1")!);
 		const allCorrect = main.packages.every((pkg) => pkg.version === "1.2.1");
 		expect(main.version).to.equal("1.2.1");
 		expect(allCorrect).to.be.true;
@@ -51,7 +50,7 @@ describe("setVersion", () => {
 
 	it("workspace", async () => {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		await setVersion(repo, secondWorkspace.packages, semver.parse("2.2.1")!);
+		await setVersion(secondWorkspace.packages, semver.parse("2.2.1")!);
 		const allCorrect = secondWorkspace.packages.every((pkg) => pkg.version === "2.2.1");
 		expect(allCorrect).to.be.true;
 	});
@@ -59,7 +58,7 @@ describe("setVersion", () => {
 	it("repo", async () => {
 		const packages = [...repo.packages.values()];
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		await setVersion(repo, packages, semver.parse("1.2.1")!);
+		await setVersion(packages, semver.parse("1.2.1")!);
 		const allCorrect = packages.every((pkg) => pkg.version === "1.2.1");
 		expect(allCorrect).to.be.true;
 	});
