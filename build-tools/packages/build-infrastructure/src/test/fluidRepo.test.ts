@@ -54,6 +54,17 @@ describe("loadFluidRepo", () => {
 				"second workspace has the wrong number of release groups",
 			);
 		});
+
+		it("releaseGroupDependencies", async () => {
+			const repo = loadFluidRepo(path.join(testDataPath, "./testRepo"));
+			const mainReleaseGroup = repo.releaseGroups.get("main" as ReleaseGroupName);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			const actualDependencies = mainReleaseGroup!.releaseGroupDependencies;
+			const names = actualDependencies.map((r) => r.name as string);
+
+			expect(actualDependencies).to.not.be.undefined;
+			expect(names).to.be.containingAllOf(["group2", "group3"]);
+		});
 	});
 
 	describe("FluidFramework repo", () => {

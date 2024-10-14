@@ -170,6 +170,7 @@ export interface IReleaseGroup extends Reloadable {
     readonly adoPipelineUrl?: string;
     readonly name: ReleaseGroupName;
     readonly packages: IPackage[];
+    readonly releaseGroupDependencies: IReleaseGroup[];
     readonly rootPackage?: IPackage;
     // (undocumented)
     toString(): string;
