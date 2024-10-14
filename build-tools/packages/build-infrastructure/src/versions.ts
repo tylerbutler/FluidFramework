@@ -47,7 +47,7 @@ export async function setDependencyVersion(
 		typeof dependencyRange === "string" ? dependencyRange : dependencyRange.version;
 
 	const dependenciesToUpdate: ReadonlySet<string> = new Set(dependencyNames);
-
+	const savePromises: Promise<void>[] = [];
 	for (const pkg of packages) {
 		for (const { name, depClass } of pkg.combinedDependencies) {
 			if (!dependenciesToUpdate.has(name)) {
@@ -78,5 +78,8 @@ export async function setDependencyVersion(
 				}
 			}
 		}
+		savePromises.push(pkg.savePackageJson());
 	}
+
+	await Promise.all(savePromises);
 }
