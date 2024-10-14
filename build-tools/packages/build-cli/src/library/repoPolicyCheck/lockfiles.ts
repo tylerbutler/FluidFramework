@@ -48,8 +48,8 @@ export const handlers: Handler[] = [
 		name: "extraneous-lockfiles",
 		match: lockFilePattern,
 		handler: async (file: string, root: string): Promise<string | undefined> => {
-			const flubConfig = getFlubConfig(root);
-			const repoConfig = getFluidBuildConfig(root);
+			const { config: flubConfig } = getFlubConfig(root);
+			const { config: repoConfig } = getFluidBuildConfig(root);
 			const knownPaths: string[] = getKnownPaths(flubConfig, repoConfig);
 
 			if (
@@ -64,7 +64,7 @@ export const handlers: Handler[] = [
 		resolver: (file: string, root: string): { resolved: boolean; message?: string } => {
 			const flubConfig = getFlubConfig(root);
 			const repoConfig = getFluidBuildConfig(root);
-			const knownPaths: string[] = getKnownPaths(flubConfig, repoConfig);
+			const knownPaths: string[] = getKnownPaths(flubConfig.config, repoConfig.config);
 
 			if (
 				path.basename(file) === "package-lock.json" &&

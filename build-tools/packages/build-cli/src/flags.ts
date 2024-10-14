@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { WorkspaceName } from "@fluid-tools/build-infrastructure";
+import type { ReleaseGroupName, WorkspaceName } from "@fluid-tools/build-infrastructure";
 import {
 	VersionBumpType,
 	VersionScheme,
@@ -34,18 +34,14 @@ function* supportedMonoRepoValues(): IterableIterator<MonoRepoKind> {
 /**
  * A re-usable CLI flag to parse release groups.
  */
-export const releaseGroupFlag = Flags.custom<ReleaseGroup>({
+export const releaseGroupFlag = Flags.custom<ReleaseGroupName>({
 	char: "g",
 	description: "Name of a release group.",
 	aliases: ["releaseGroups"],
 	options: [...supportedMonoRepoValues()],
 	parse: async (str: string) => {
 		const group = str.toLowerCase();
-		if (!isReleaseGroup(group)) {
-			throw new TypeError(`Not a release group: ${str}`);
-		}
-
-		return group;
+		return group as ReleaseGroupName;
 	},
 });
 

@@ -61,18 +61,18 @@ export default class FilterCommand extends PackageCommand<typeof FilterCommand> 
 		assert(this.selectedPackages !== undefined, "selectedPackages is undefined");
 		assert(this.filteredPackages !== undefined, "filteredPackages is undefined");
 
-		const context = await this.getContext();
+		const fluidRepo = await this.getFluidRepo();
 		const pkgs = {
 			selected: this.selectedPackages.map((p) => {
 				return {
 					name: p.name,
-					directory: context.repo.relativeToRepo(p.directory),
+					directory: fluidRepo.relativeToRepo(p.directory),
 				};
 			}),
 			filtered: this.filteredPackages.map((p) => {
 				return {
 					name: p.name,
-					directory: context.repo.relativeToRepo(p.directory),
+					directory: fluidRepo.relativeToRepo(p.directory),
 				};
 			}),
 		};

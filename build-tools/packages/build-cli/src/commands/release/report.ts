@@ -12,7 +12,6 @@ import { writeJson } from "fs-extra/esm";
 import inquirer from "inquirer";
 import sortJson from "sort-json";
 import { table } from "table";
-
 import {
 	BaseCommand,
 	Context,
@@ -38,9 +37,13 @@ import {
 	isVersionBumpType,
 } from "@fluid-tools/version-tools";
 
+import {
+	type IPackage,
+	type IReleaseGroup,
+	isIReleaseGroup,
+} from "@fluid-tools/build-infrastructure";
 import { releaseGroupFlag } from "../../flags.js";
 import { CommandLogger } from "../../logging.js";
-import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../../releaseGroups.js";
 
 /**
  * Controls behavior when there is a list of releases and one needs to be selected.
@@ -94,10 +97,10 @@ export abstract class ReleaseReportBaseCommand<
 	 */
 	protected numberBusinessDaysToConsiderRecent: number | undefined;
 
-	/**
-	 * The release group or package that is being reported on.
-	 */
-	protected abstract releaseGroupName: ReleaseGroup | ReleasePackage | undefined;
+	// /**
+	//  * The release group or package that is being reported on.
+	//  */
+	// // protected abstract releaseGroupName: ReleaseGroup | undefined;
 
 	/**
 	 * Returns true if the `date` is within `days` days of the current date.
@@ -122,44 +125,44 @@ export abstract class ReleaseReportBaseCommand<
 	protected async collectReleaseData(
 		context: Context,
 		mode: ReleaseSelectionMode = this.defaultMode,
-		releaseGroupOrPackage?: ReleaseGroup | ReleasePackage,
+		releaseGroup?: IReleaseGroup,
 		includeDependencies = true,
 	): Promise<PackageReleaseData> {
 		const versionData: PackageReleaseData = {};
 
-		if (mode === "inRepo" && !isReleaseGroup(releaseGroupOrPackage)) {
+		if (mode === "inRepo" && releaseGroup === undefined) {
 			this.error(
 				`Release group must be provided unless --interactive, --highest, or --mostRecent are provided.`,
 			);
 		}
 
-		const rgs: ReleaseGroup[] = [];
-		const pkgs: ReleasePackage[] = [];
+		const rgs: IReleaseGroup[] = [];
+		const pkgs: IPackage[] = [];
 
 		let rgVerMap: PackageVersionMap | undefined;
 		let pkgVerMap: PackageVersionMap | undefined;
 
 		if (mode === "inRepo") {
 			// Get the release group versions and dependency versions from the repo
-			if (isReleaseGroup(releaseGroupOrPackage)) {
+			if (releaseGroup !== undefined) {
 				if (includeDependencies) {
-					[rgVerMap, pkgVerMap] = getFluidDependencies(context, releaseGroupOrPackage);
-					rgs.push(...(Object.keys(rgVerMap) as ReleaseGroup[]));
+					[rgVerMap, pkgVerMap] = getFluidDependencies(context, releaseGroup);
+					rgs.push(...Object.keys(rgVerMap));
 					pkgs.push(...Object.keys(pkgVerMap));
 				} else {
-					rgs.push(releaseGroupOrPackage);
+					rgs.push(releaseGroup);
 				}
 			}
-		} else if (isReleaseGroup(releaseGroupOrPackage)) {
+		} else if (isReleaseGroup(releaseGroup)) {
 			// Filter to only the specified release group
-			rgs.push(releaseGroupOrPackage);
-		} else if (releaseGroupOrPackage === undefined) {
+			rgs.push(releaseGroup);
+		} else if (releaseGroup === undefined) {
 			// No filter, so include all release groups and packages
 			rgs.push(...([...context.repo.releaseGroups.keys()] as ReleaseGroup[]));
 			pkgs.push(...context.independentPackages.map((p) => p.name));
 		} else {
 			// Filter to only the specified package
-			pkgs.push(releaseGroupOrPackage);
+			pkgs.push(releaseGroup);
 		}
 
 		// Only start/show the spinner in non-interactive mode.
@@ -545,7 +548,7 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 	}
 
 	private async generateReleaseReport(reportData: PackageReleaseData): Promise<ReleaseReport> {
-		const context = await this.getContext();
+		const fluidRepo = await this.getFluidRepo();
 		const report: ReleaseReport = {};
 
 		for (const [pkgName, verDetails] of Object.entries(reportData)) {
@@ -569,27 +572,14 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 			const scheme = detectVersionScheme(latestVer);
 			const ranges = getRanges(latestVer);
 
-			// Expand the release group to its constituent packages.
-			if (isReleaseGroup(pkgName)) {
-				for (const pkg of context.packagesInReleaseGroup(pkgName)) {
-					report[pkg.name] = {
-						version: latestVer,
-						versionScheme: scheme,
-						previousVersion: prevVer === DEFAULT_MIN_VERSION ? undefined : prevVer,
-						date: latestDate,
-						releaseType: bumpType,
-						releaseGroup: pkg.monoRepo?.releaseGroup,
-						isNewRelease,
-						ranges,
-					};
-				}
-			} else {
-				report[pkgName] = {
+			for (const pkg of packagesInReleaseGroup(pkgName)) {
+				report[pkg.name] = {
 					version: latestVer,
 					versionScheme: scheme,
 					previousVersion: prevVer === DEFAULT_MIN_VERSION ? undefined : prevVer,
 					date: latestDate,
 					releaseType: bumpType,
+					releaseGroup: pkg.monoRepo?.releaseGroup,
 					isNewRelease,
 					ranges,
 				};

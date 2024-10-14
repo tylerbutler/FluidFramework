@@ -41,7 +41,7 @@ export {
 	getTarballName,
 	isReleased,
 	npmCheckUpdates,
-	PackageVersionMap,
+	ReleaseGroupVersionMap as PackageVersionMap,
 	PreReleaseDependencies,
 	setVersion,
 	sortVersions,
@@ -52,10 +52,10 @@ export { getApiExports } from "./typescriptApi.js";
 export { createPullRequest, getCommitInfo, pullRequestExists } from "./github.js";
 export {
 	getRanges,
-	PackageVersionList,
 	ReleaseRanges,
 	ReleaseReport,
 	ReportKind,
+	VersionDetails,
 	toReportKind,
 } from "./release.js";
 export { LayerGraph } from "./layerGraph.js";

@@ -4,14 +4,13 @@
  */
 
 import { type IFluidRepo, loadFluidRepo } from "@fluid-tools/build-infrastructure";
-import { GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
 import { Command, Flags, Interfaces } from "@oclif/core";
 // eslint-disable-next-line import/no-internal-modules
 import type { PrettyPrintableError } from "@oclif/core/errors";
 import chalk from "chalk";
 
+import { type FlubConfig, getFlubConfig } from "../../config.js";
 import { CommandLogger } from "../../logging.js";
-import { Context } from "../context.js";
 import { indentString } from "../text.js";
 
 /**
@@ -89,9 +88,9 @@ export abstract class BaseCommand<T extends typeof Command>
 	 */
 	private suppressLogging: boolean = false;
 
-	private _context: Context | undefined;
 	private _logger: CommandLogger | undefined;
 	private _fluidRepo: IFluidRepo | undefined;
+	private _flubConfig: FlubConfig | undefined;
 
 	public async init(): Promise<void> {
 		await super.init();
@@ -141,24 +140,6 @@ export abstract class BaseCommand<T extends typeof Command>
 	}
 
 	/**
-	 * The repo {@link Context}. The context is retrieved and cached the first time this method is called. Subsequent
-	 * calls will return the cached context.
-	 *
-	 * @returns The repo {@link Context}.
-	 */
-	async getContext(): Promise<Context> {
-		if (this._context === undefined) {
-			const resolvedRoot = await getResolvedFluidRoot();
-			const gitRepo = new GitRepo(resolvedRoot);
-			const branch = await gitRepo.getCurrentBranchName();
-
-			this._context = new Context(gitRepo, "microsoft/FluidFramework", branch);
-		}
-
-		return this._context;
-	}
-
-	/**
 	 * The {@link IFluidRepo} closest to the working directory. The Fluid repo is loaded and cached the first time this
 	 * method is called. Subsequent calls will return the cached repo.
 	 *
@@ -170,6 +151,21 @@ export abstract class BaseCommand<T extends typeof Command>
 		}
 
 		return this._fluidRepo;
+	}
+
+	/**
+	 * The {@link IFluidRepo} closest to the working directory. The Fluid repo is loaded and cached the first time this
+	 * method is called. Subsequent calls will return the cached repo.
+	 *
+	 * @returns The {@link IFluidRepo}.
+	 */
+	protected getFlubConfig(): FlubConfig {
+		if (this._flubConfig === undefined) {
+			const { config } = getFlubConfig(process.cwd());
+			this._flubConfig = config;
+		}
+
+		return this._flubConfig;
 	}
 
 	/**

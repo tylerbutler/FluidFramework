@@ -39,7 +39,7 @@ export function getFluidBuildConfig(
 	const configResult = configExplorer.search(rootDir);
 	const config = configResult?.config as IFluidBuildConfig | undefined;
 
-	if (config === undefined || configResult === undefined || configResult === null) {
+	if (config === undefined || configResult === null) {
 		throw new Error("No fluidBuild configuration found.");
 	}
 

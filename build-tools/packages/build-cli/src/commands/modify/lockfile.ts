@@ -3,10 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import { updatePackageJsonFile } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import execa from "execa";
 
+import { updatePackageJsonFile } from "@fluid-tools/build-infrastructure";
 import { releaseGroupFlag } from "../../flags.js";
 import { BaseCommand } from "../../library/index.js";
 
@@ -46,8 +46,8 @@ export default class UpdateDependencyInLockfileCommand extends BaseCommand<
 	};
 
 	public async run(): Promise<void> {
-		const context = await this.getContext();
-		const releaseGroup = context.repo.releaseGroups.get(this.flags.releaseGroup);
+		const fluidRepo = await this.getFluidRepo();
+		const releaseGroup = fluidRepo.releaseGroups.get(this.flags.releaseGroup);
 
 		if (releaseGroup === undefined) {
 			// exits the process
@@ -58,7 +58,8 @@ export default class UpdateDependencyInLockfileCommand extends BaseCommand<
 		this.info(
 			`Adding pnpm override for ${this.flags.dependencyName}: ${this.flags.version} to package.json`,
 		);
-		updatePackageJsonFile(releaseGroup.directory, (json) => {
+		const directory = releaseGroup.rootPackage?.directory ?? releaseGroup.workspace.directory;
+		updatePackageJsonFile(directory, (json) => {
 			if (json.pnpm === undefined) {
 				json.pnpm = {};
 			}
@@ -79,20 +80,18 @@ export default class UpdateDependencyInLockfileCommand extends BaseCommand<
 
 		// Update lockfile
 		this.info(`Updating lockfile`);
-		await execa(`pnpm`, [`install`, `--no-frozen-lockfile`], {
-			cwd: releaseGroup.directory,
-		});
+		await releaseGroup.workspace.install(true);
 
 		// Remove override after install
 		this.info(`Restoring package.json to original state`);
 		await execa(`git`, [`restore`, `--source=HEAD`, `package.json`], {
-			cwd: releaseGroup.directory,
+			cwd: directory,
 		});
 
 		// Install again to remove the override from the lockfile
 		this.info(`Updating lockfile to remove override`);
 		await execa(`pnpm`, [`install`, `--no-frozen-lockfile`], {
-			cwd: releaseGroup.directory,
+			cwd: directory,
 		});
 	}
 }

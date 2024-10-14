@@ -9,7 +9,7 @@
 
 import path from "node:path";
 import type { IPackage } from "@fluid-tools/build-infrastructure";
-import { type Package, TscUtils } from "@fluidframework/build-tools";
+import { TscUtils } from "@fluidframework/build-tools";
 import type { TsConfigJson } from "type-fest";
 
 import { getGenerateEntrypointsOutput } from "../commands/index.js";
@@ -291,7 +291,7 @@ export class FluidBuildDatabase {
 	 * @returns Set of predecessor tasks
 	 */
 	public getPredecessorTasks(
-		packageGroup: ReadonlyMap<PackageName, Package>,
+		packageGroup: ReadonlyMap<PackageName, IPackage>,
 		packageName: PackageName,
 		requiredInputs: AbsoluteFilePath[],
 	): Set<BuildScript> {

@@ -9,7 +9,6 @@ import { table } from "table";
 
 import {
 	ReleaseReport,
-	VersionDetails,
 	getDisplayDate,
 	getDisplayDateRelative,
 	sortVersions,
@@ -17,9 +16,9 @@ import {
 
 import { detectBumpType } from "@fluid-tools/version-tools";
 
-import { findPackageOrReleaseGroup } from "../../args.js";
+import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import { packageSelectorFlag, releaseGroupFlag } from "../../flags.js";
-import { ReleaseGroup, ReleasePackage } from "../../releaseGroups.js";
+import type { VersionDetails } from "../../library/index.js";
 import { ReleaseReportBaseCommand, ReleaseSelectionMode } from "./report.js";
 
 const DEFAULT_MIN_VERSION = "0.0.0";
@@ -72,29 +71,29 @@ export default class ReleaseHistoryCommand extends ReleaseReportBaseCommand<
 	static readonly enableJsonFlag = true;
 
 	readonly defaultMode: ReleaseSelectionMode = "date";
-	releaseGroupName: ReleaseGroup | ReleasePackage | undefined;
+	// releaseGroupName: ReleaseGroupName;
 
 	public async run(): Promise<{ reports: ReleaseReport[] }> {
-		const context = await this.getContext();
+		const fluidRepo = await this.getFluidRepo();
 		const { defaultMode, flags } = this;
 
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		const releaseGroup = flags.releaseGroup ?? flags.package!;
-		this.releaseGroupName = findPackageOrReleaseGroup(releaseGroup, context)?.name;
-		if (this.releaseGroupName === undefined) {
-			this.error(`Can't find release group or package with name: ${releaseGroup}`, {
+		const releaseGroupName = (flags.releaseGroup ?? flags.package!) as ReleaseGroupName;
+		const releaseGroup = fluidRepo.releaseGroups.get(releaseGroupName);
+		if (releaseGroup === undefined) {
+			this.error(`Can't find release group or package with name: ${releaseGroupName}`, {
 				exit: 1,
 			});
 		}
 
 		this.releaseData = await this.collectReleaseData(
-			context,
+			fluidRepo,
 			defaultMode,
-			this.releaseGroupName,
+			releaseGroupName,
 			false,
 		);
 		if (this.releaseData === undefined) {
-			this.error(`No releases found for ${this.releaseGroupName}`);
+			this.error(`No releases found for ${releaseGroupName}`);
 		}
 
 		const reports: ReleaseReport[] = [];
@@ -118,7 +117,7 @@ export default class ReleaseHistoryCommand extends ReleaseReportBaseCommand<
 	 * Generates table data for all versions of a package/release group.
 	 */
 	private generateAllReleasesTable(
-		pkgOrReleaseGroup: ReleasePackage | ReleaseGroup,
+		releaseGroup: string,
 		versions: VersionDetails[],
 	): string[][] {
 		const tableData: string[][] = [];
@@ -141,7 +140,7 @@ export default class ReleaseHistoryCommand extends ReleaseReportBaseCommand<
 			);
 
 			tableData.push([
-				pkgOrReleaseGroup,
+				releaseGroup,
 				displayBumpType,
 				displayRelDate,
 				displayDate,

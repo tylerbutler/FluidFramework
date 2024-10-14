@@ -6,12 +6,8 @@
 import { realpathSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { IPackage } from "@fluid-tools/build-infrastructure";
-import {
-	type Logger,
-	type PackageJson,
-	getTypeTestPreviousPackageDetails,
-} from "@fluidframework/build-tools";
+import type { IPackage, PackageJson } from "@fluid-tools/build-infrastructure";
+import { type Logger, getTypeTestPreviousPackageDetails } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import { PackageName } from "@rushstack/node-core-library";
 import * as changeCase from "change-case";

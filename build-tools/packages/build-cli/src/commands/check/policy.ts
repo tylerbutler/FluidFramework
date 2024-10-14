@@ -161,8 +161,8 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 			this.info("Resolving errors if possible.");
 		}
 
-		const context = await this.getContext();
-		const { policy } = context.flubConfig;
+		const flubConfig = await this.getFlubConfig();
+		const { policy } = flubConfig;
 
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const rawExclusions: string[] =

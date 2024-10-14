@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { IPackage, IReleaseGroup } from "@fluid-tools/build-infrastructure";
+import type { IFluidRepo, IPackage, IReleaseGroup } from "@fluid-tools/build-infrastructure";
 import {
 	DEFAULT_PRERELEASE_IDENTIFIER,
 	ReleaseVersion,
@@ -27,13 +27,13 @@ import {
 	isReleaseGroup,
 } from "../releaseGroups.js";
 import { DependencyUpdateType } from "./bump.js";
-import { Context } from "./context.js";
+import { createBranch } from "./git.js";
 
 /**
  * Creates an appropriate branch for a release group and bump type. Does not commit!
  *
- * @param context - The {@link Context}.
- * @param releaseGroupOrPackage - The release group or independent package to create a branch for.
+ * @param fluidRepo - The {@link Context}.
+ * @param releaseGroup - The release group or independent package to create a branch for.
  * @param bumpType - The bump type.
  * @returns The name of the newly created branch.
  *
@@ -44,14 +44,15 @@ import { Context } from "./context.js";
  * @internal
  */
 export async function createBumpBranch(
-	context: Context,
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
+	fluidRepo: IFluidRepo,
+	releaseGroup: IReleaseGroup,
 	bumpType: VersionBumpType,
 ): Promise<string> {
-	const version = context.getVersion(releaseGroupOrPackage);
-	const name = generateBumpVersionBranchName(releaseGroupOrPackage, bumpType, version);
-	await context.createBranch(name);
-	return name;
+	const git = await fluidRepo.getGitRepository();
+	const { version, name } = releaseGroup;
+	const branchName = generateBumpVersionBranchName(name, bumpType, version);
+	await createBranch(name, git);
+	return branchName;
 }
 
 /**
@@ -70,7 +71,7 @@ export async function createBumpBranch(
  * @internal
  */
 export function generateBumpVersionBranchName(
-	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
+	releaseGroupOrPackage: string,
 	bumpType: VersionChangeTypeExtended,
 	version: ReleaseVersion,
 	scheme?: VersionScheme,

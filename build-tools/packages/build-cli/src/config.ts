@@ -380,7 +380,10 @@ const configExplorer = cosmiconfigSync(configName, {
  * @param noCache - If true, the config cache will be cleared and the config will be reloaded.
  * @returns The flub config
  */
-export function getFlubConfig(configPath: string, noCache = false): FlubConfig {
+export function getFlubConfig(
+	configPath: string,
+	noCache = false,
+): { config: FlubConfig; configFilePath: string } {
 	if (noCache === true) {
 		configExplorer.clearCaches();
 	}
@@ -393,7 +396,7 @@ export function getFlubConfig(configPath: string, noCache = false): FlubConfig {
 
 	const config = configResult?.config as FlubConfig | undefined;
 
-	if (config === undefined) {
+	if (config === undefined || configResult === null) {
 		throw new Error("No flub configuration found.");
 	}
 
@@ -404,7 +407,7 @@ export function getFlubConfig(configPath: string, noCache = false): FlubConfig {
 		);
 	}
 
-	return config;
+	return { config, configFilePath: configResult.filepath };
 }
 
 /**

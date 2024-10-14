@@ -53,8 +53,9 @@ export class TagAssertsCommand extends PackageCommand<typeof TagAssertsCommand> 
 	protected async selectAndFilterPackages(): Promise<void> {
 		await super.selectAndFilterPackages();
 
-		const context = await this.getContext();
-		const { assertTagging } = context.flubConfig;
+		const fluidRepo = await this.getFluidRepo();
+		const flubConfig = this.getFlubConfig();
+		const { assertTagging } = flubConfig;
 		const assertTaggingEnabledPaths = this.flags.disableConfig
 			? undefined
 			: assertTagging?.enabledPaths;
@@ -67,9 +68,7 @@ export class TagAssertsCommand extends PackageCommand<typeof TagAssertsCommand> 
 		// Further filter packages based on the path regex
 		const before = this.filteredPackages?.length ?? 0;
 		this.filteredPackages = this.filteredPackages?.filter((pkg) => {
-			const tsconfigPath = context.repo.relativeToRepo(
-				path.join(pkg.directory, "tsconfig.json"),
-			);
+			const tsconfigPath = fluidRepo.relativeToRepo(path.join(pkg.directory, "tsconfig.json"));
 
 			if (!fs.existsSync(tsconfigPath)) {
 				this.verbose(`Skipping '${pkg.name}' because '${tsconfigPath}' doesn't exist.`);
@@ -294,10 +293,8 @@ export class TagAssertsCommand extends PackageCommand<typeof TagAssertsCommand> 
 	}
 
 	private async getTsConfigPath(pkg: IPackage): Promise<string> {
-		const context = await this.getContext();
-		const tsconfigPath = context.repo.relativeToRepo(
-			path.join(pkg.directory, "tsconfig.json"),
-		);
+		const fluidRepo = await this.getFluidRepo();
+		const tsconfigPath = fluidRepo.relativeToRepo(path.join(pkg.directory, "tsconfig.json"));
 		return tsconfigPath;
 	}
 }

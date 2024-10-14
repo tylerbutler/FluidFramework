@@ -4,7 +4,7 @@
  */
 
 import type { IPackage } from "@fluid-tools/build-infrastructure";
-import { updatePackageJsonFile } from "@fluidframework/build-tools";
+import { updatePackageJsonFile } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 
 import { PackageCommand } from "../BasePackageCommand.js";

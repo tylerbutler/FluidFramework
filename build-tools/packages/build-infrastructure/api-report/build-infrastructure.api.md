@@ -303,6 +303,9 @@ export function selectAndFilterPackages(fluidRepo: IFluidRepo, selection: Packag
     filtered: IPackage[];
 }>;
 
+// @internal
+export function updatePackageJsonFile<J extends PackageJson = PackageJson>(packagePath: string, packageTransformer: (json: J) => void): void;
+
 // @public (undocumented)
 export interface WorkspaceDefinition {
     // (undocumented)

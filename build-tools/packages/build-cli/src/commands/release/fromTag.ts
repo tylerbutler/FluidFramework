@@ -3,16 +3,18 @@
  * Licensed under the MIT License.
  */
 
+import {
+	type IReleaseGroup,
+	type ReleaseGroupName,
+	isIReleaseGroup,
+} from "@fluid-tools/build-infrastructure";
 import { ReleaseVersion, VersionBumpType, detectBumpType } from "@fluid-tools/version-tools";
-import { MonoRepo, Package } from "@fluidframework/build-tools";
 import { Args } from "@oclif/core";
 import semver from "semver";
 import { sortPackageJson as sortJson } from "sort-package-json";
 
 import { findPackageOrReleaseGroup } from "../../args.js";
-// eslint-disable-next-line import/no-deprecated
-import { MonoRepoKind, sortVersions } from "../../library/index.js";
-import { ReleaseGroup, ReleasePackage } from "../../releaseGroups.js";
+import { sortVersions } from "../../library/index.js";
 import { ReleaseReportBaseCommand, ReleaseSelectionMode } from "./report.js";
 
 const tagRefPrefix = "refs/tags/";
@@ -38,7 +40,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 	} as const;
 
 	defaultMode: ReleaseSelectionMode = "inRepo";
-	releaseGroupName: ReleaseGroup | undefined;
+	// releaseGroupName: ReleaseGroupName | undefined;
 
 	static readonly examples = [
 		{
@@ -52,7 +54,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 	];
 
 	async run(): Promise<{
-		packageOrReleaseGroup: ReleaseGroup | ReleasePackage;
+		packageOrReleaseGroup: ReleaseGroupName;
 		title: string;
 		tag: string;
 		date?: Date;
@@ -62,19 +64,19 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 		previousTag?: string;
 	}> {
 		const tagInput = this.args.tag;
-		const context = await this.getContext();
+		const fluidRepo = await this.getFluidRepo();
 
 		const [releaseGroup, version, tag] = await this.parseTag(tagInput);
-		this.releaseGroupName = releaseGroup.name as ReleaseGroup;
+		const releaseGroupName = releaseGroup.name;
 
 		this.releaseData = await this.collectReleaseData(
-			context,
+			fluidRepo,
 			this.defaultMode,
-			this.releaseGroupName,
+			releaseGroupName,
 			false,
 		);
 
-		const release = this.releaseData[this.releaseGroupName];
+		const release = this.releaseData[releaseGroupName];
 		const versions = sortVersions([...release.versions], "version");
 		const taggedReleaseIndex = versions.findIndex((v) => v.version === version.version);
 		if (taggedReleaseIndex === -1) {
@@ -96,12 +98,12 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 			);
 		}
 
-		this.log(`${this.releaseGroupName} v${version.version} (${releaseType})`);
+		this.log(`${releaseGroupName} v${version.version} (${releaseType})`);
 
 		// When the --json flag is passed, the command will return the raw data as JSON.
 		return sortJson({
-			packageOrReleaseGroup: this.releaseGroupName,
-			title: getReleaseTitle(this.releaseGroupName, version, releaseType),
+			packageOrReleaseGroup: releaseGroupName,
+			title: getReleaseTitle(releaseGroupName, version, releaseType),
 			tag,
 			date: taggedVersion.date,
 			releaseType,
@@ -110,7 +112,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 			previousTag:
 				prevVersionDetails === undefined
 					? undefined
-					: `${this.releaseGroupName}_v${previousVersion}`,
+					: `${releaseGroupName}_v${previousVersion}`,
 		});
 	}
 
@@ -119,7 +121,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 	 * @param input - A git tag as a string.
 	 * @returns A 3-tuple of the release group, the semver version, and the original tag.
 	 */
-	private async parseTag(input: string): Promise<[MonoRepo | Package, semver.SemVer, string]> {
+	private async parseTag(input: string): Promise<[IReleaseGroup, semver.SemVer, string]> {
 		const tag = input.startsWith(tagRefPrefix) ? input.slice(tagRefPrefix.length) : input;
 		const [rg, ver] = tag.split("_v");
 
@@ -128,15 +130,15 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 			throw new Error(`Invalid version parsed from tag: ${ver}`);
 		}
 
-		const context = await this.getContext();
-		const releaseGroupOrPackage = findPackageOrReleaseGroup(rg, context);
-		if (releaseGroupOrPackage === undefined) {
+		const fluidRepo = await this.getFluidRepo();
+		const releaseGroup = findPackageOrReleaseGroup(rg, fluidRepo);
+		if (releaseGroup === undefined) {
 			this.error(`Can't find release group or package with name: ${rg}`, {
 				exit: 1,
 			});
 		}
 
-		if (!(releaseGroupOrPackage instanceof MonoRepo)) {
+		if (!isIReleaseGroup(releaseGroup)) {
 			this.error(
 				`"${rg}" is a package, not a release group. Only release groups are supported.`,
 				{
@@ -145,17 +147,16 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 			);
 		}
 
-		return [releaseGroupOrPackage, version, tag];
+		return [releaseGroup, version, tag];
 	}
 }
 
 const getReleaseTitle = (
-	releaseGroup: ReleaseGroup,
+	releaseGroupName: ReleaseGroupName,
 	version: semver.SemVer,
 	releaseType: VersionBumpType,
 ): string => {
-	// eslint-disable-next-line import/no-deprecated
-	const name = releaseGroup === MonoRepoKind.Client ? "Fluid Framework" : releaseGroup;
+	const name = releaseGroupName === "client" ? "Fluid Framework" : releaseGroupName;
 	// e.g. Fluid Framework v2.0.0-internal.4.1.0 (minor)
 	return `${name} v${version.version} (${releaseType})`;
 };

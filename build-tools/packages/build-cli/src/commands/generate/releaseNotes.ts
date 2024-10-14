@@ -99,15 +99,15 @@ export default class GenerateReleaseNotesCommand extends BaseCommand<
 	];
 
 	public async run(): Promise<string> {
-		const context = await this.getContext();
+		const fluidRepo = await this.getFluidRepo();
 		const { flags, logger } = this;
 
-		const releaseGroup = context.repo.releaseGroups.get(flags.releaseGroup);
+		const releaseGroup = fluidRepo.releaseGroups.get(flags.releaseGroup);
 		if (releaseGroup === undefined) {
 			this.error(`Unknown release group: ${flags.releaseGroup}`, { exit: 2 });
 		}
 
-		const { releaseNotes: releaseNotesConfig } = context.flubConfig;
+		const { releaseNotes: releaseNotesConfig } = this.getFlubConfig();
 		if (releaseNotesConfig === undefined) {
 			this.error(
 				`No release notes config found. Make sure the 'releaseNotes' section of the build config exists.`,
@@ -115,7 +115,7 @@ export default class GenerateReleaseNotesCommand extends BaseCommand<
 			);
 		}
 
-		const changesetDir = path.join(releaseGroup.directory, DEFAULT_CHANGESET_PATH);
+		const changesetDir = path.join(releaseGroup.workspace.directory, DEFAULT_CHANGESET_PATH);
 		const changesets = await loadChangesets(changesetDir, logger);
 
 		const { version } = releaseGroup;
@@ -241,7 +241,7 @@ export default class GenerateReleaseNotesCommand extends BaseCommand<
 			await processor.process(`${header}\n\n${intro}\n\n${body.toString()}\n\n${footer}`),
 		);
 
-		const outputPath = path.join(context.repo.resolvedRoot, flags.outFile);
+		const outputPath = path.join(fluidRepo.root, flags.outFile);
 		this.info(`Writing output file: ${outputPath}`);
 		await writeFile(
 			outputPath,

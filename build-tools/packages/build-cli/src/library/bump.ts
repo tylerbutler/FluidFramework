@@ -11,9 +11,9 @@ import {
 	bumpVersionScheme,
 	isVersionBumpType,
 } from "@fluid-tools/version-tools";
-import { Logger, MonoRepo, Package } from "@fluidframework/build-tools";
-import { Context } from "./context.js";
+import { Logger } from "@fluidframework/build-tools";
 
+import type { IFluidRepo, IReleaseGroup } from "@fluid-tools/build-infrastructure";
 import { setVersion } from "./package.js";
 
 /**
@@ -48,19 +48,17 @@ export function isDependencyUpdateType(str: string | undefined): str is Dependen
 /**
  * Bumps a release group or standalone package by the bumpType.
  *
- * @param context - The {@link Context}.
- * @param releaseGroupOrPackage - A release group repo or package to bump.
+ * @param fluidRepo - The {@link IFluidRepo}.
+ * @param releaseGroupOrPackage - A release group to bump.
  * @param bumpType - The bump type. Can be a SemVer object to set an exact version.
  * @param scheme - The version scheme to use.
  * @param interdependencyRange - The type of dependency to use on packages within the release group.
  * @param log - A logger to use.
- *
- * @internal
  */
 // eslint-disable-next-line max-params
 export async function bumpReleaseGroup(
-	context: Context,
-	releaseGroupOrPackage: MonoRepo | Package,
+	fluidRepo: IFluidRepo,
+	releaseGroupOrPackage: IReleaseGroup,
 	bumpType: VersionChangeType,
 	scheme?: VersionScheme,
 	interdependencyRange: InterdependencyRange = DEFAULT_INTERDEPENDENCY_RANGE,
@@ -71,7 +69,7 @@ export async function bumpReleaseGroup(
 		: bumpType;
 
 	await setVersion(
-		context,
+		fluidRepo,
 		releaseGroupOrPackage,
 		translatedVersion,
 		interdependencyRange,

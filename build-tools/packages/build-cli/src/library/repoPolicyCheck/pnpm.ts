@@ -5,7 +5,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { PackageJson } from "@fluidframework/build-tools";
+import { type PackageJson } from "@fluid-tools/build-infrastructure";
 import { getFlubConfig } from "../../config.js";
 import { Handler, readFile } from "./common.js";
 
@@ -18,7 +18,7 @@ export const handlers: Handler[] = [
 		handler: async (file: string, root: string): Promise<string | undefined> => {
 			const dirname = path.dirname(file);
 			const packageJsonFile = path.join(dirname, "package.json");
-			const manifest = getFlubConfig(root);
+			const { config } = getFlubConfig(root);
 
 			let json: PackageJson;
 			try {
@@ -29,7 +29,7 @@ export const handlers: Handler[] = [
 
 			// Ignore any paths in the policy configuration.
 			// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-			if (manifest.policy?.pnpmSinglePackageWorkspace?.includes(json.name)) {
+			if (config.policy?.pnpmSinglePackageWorkspace?.includes(json.name)) {
 				return undefined;
 			}
 

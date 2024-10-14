@@ -5,8 +5,11 @@
 
 import { strict as assert } from "node:assert";
 import path from "node:path";
-import type { IPackage } from "@fluid-tools/build-infrastructure";
-import { PackageJson, updatePackageJsonFile } from "@fluidframework/build-tools";
+import {
+	type IPackage,
+	type PackageJson,
+	updatePackageJsonFile,
+} from "@fluid-tools/build-infrastructure";
 import { ExtractorConfig } from "@microsoft/api-extractor";
 import { Flags } from "@oclif/core";
 

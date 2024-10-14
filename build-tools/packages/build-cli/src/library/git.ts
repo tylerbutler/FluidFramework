@@ -3,7 +3,6 @@
  * Licensed under the MIT License.
  */
 
-import path from "node:path";
 import {
 	type IFluidRepo,
 	type IPackage,
@@ -14,23 +13,19 @@ import {
 } from "@fluid-tools/build-infrastructure";
 import { PackageName as PackageScope } from "@rushstack/node-core-library";
 import { parseISO } from "date-fns";
-import readPkgUp from "read-pkg-up";
 import * as semver from "semver";
-import { SimpleGit, SimpleGitOptions, simpleGit } from "simple-git";
-import type { SetRequired } from "type-fest";
+import { SimpleGit } from "simple-git";
 
-import { CommandLogger } from "../logging.js";
-import { ReleaseGroup } from "../releaseGroups.js";
-import { Context } from "./context.js";
 import type { VersionDetails } from "./release.js";
+
 /**
  * Default options passed to the git client.
  */
-const defaultGitOptions: Partial<SimpleGitOptions> = {
-	binary: "git",
-	maxConcurrentProcesses: 6,
-	trimmed: true,
-};
+// const defaultGitOptions: Partial<SimpleGitOptions> = {
+// 	binary: "git",
+// 	maxConcurrentProcesses: 6,
+// 	trimmed: true,
+// };
 
 // /**
 //  * A small wrapper around a git repo to provide API access to it.
@@ -343,7 +338,7 @@ async function getTagsForReleaseGroup(
 		return cacheEntry;
 	}
 
-	const tagList = await getAllTags(git, `${prefix}_v*`);
+	const tagList = await getTags(git, `${prefix}_v*`);
 	return tagList;
 }
 
@@ -353,7 +348,7 @@ async function getTagsForReleaseGroup(
  * @param git - A SimpleGit instance to use to retrieve git tags.
  * @param pattern - Pattern of tags to get.
  */
-async function getAllTags(git: SimpleGit, pattern?: string): Promise<string[]> {
+export async function getTags(git: SimpleGit, pattern?: string): Promise<string[]> {
 	const results =
 		pattern === undefined || pattern.length === 0
 			? await git.raw(`tag -l --sort=-committerdate`)
@@ -511,4 +506,20 @@ export async function canMergeWithoutConflicts(
 	}
 
 	return mergeResult.result === "success";
+}
+
+/**
+ * Create a branch with name.
+ *
+ * @throws An error if the branch already exists.
+ */
+export async function createBranch(branchName: string, git: SimpleGit): Promise<void> {
+	return git
+		.branch()
+		.then((branches) => {
+			if (branches.all.includes(branchName)) {
+				throw new Error(`Branch ${branchName} already exists.`);
+			}
+		})
+		.then(async () => git.checkoutLocalBranch(branchName));
 }

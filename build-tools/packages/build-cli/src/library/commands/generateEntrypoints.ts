@@ -6,7 +6,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import type { PackageJson } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import type { ExportSpecifierStructure, Node } from "ts-morph";
 import { ModuleKind, Project, ScriptKind } from "ts-morph";
@@ -20,6 +19,7 @@ import type { ExportData, Node10CompatExportData } from "../packageExports.js";
 import { queryTypesResolutionPathsFromPackageExports } from "../packageExports.js";
 import { getApiExports, getPackageDocumentationText } from "../typescriptApi.js";
 
+import type { PackageJson } from "@fluid-tools/build-infrastructure";
 import { unscopedPackageNameString } from "./constants.js";
 
 const optionDefaults = {

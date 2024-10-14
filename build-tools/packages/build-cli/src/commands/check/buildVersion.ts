@@ -4,8 +4,7 @@
  */
 
 import path from "node:path";
-import type { IPackage } from "@fluid-tools/build-infrastructure";
-import { type PackageJson } from "@fluidframework/build-tools";
+import type { IPackage, PackageJson } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import { readJson } from "fs-extra/esm";
 
