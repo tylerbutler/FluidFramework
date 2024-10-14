@@ -89,11 +89,11 @@ export default class ReleaseHistoryCommand extends ReleaseReportBaseCommand<
 		this.releaseData = await this.collectReleaseData(
 			fluidRepo,
 			defaultMode,
-			releaseGroupName,
+			releaseGroup,
 			false,
 		);
 		if (this.releaseData === undefined) {
-			this.error(`No releases found for ${releaseGroupName}`);
+			this.error(`No releases found for ${releaseGroup.name}`);
 		}
 
 		const reports: ReleaseReport[] = [];

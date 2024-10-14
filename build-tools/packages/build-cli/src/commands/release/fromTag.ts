@@ -67,16 +67,15 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 		const fluidRepo = await this.getFluidRepo();
 
 		const [releaseGroup, version, tag] = await this.parseTag(tagInput);
-		const releaseGroupName = releaseGroup.name;
 
 		this.releaseData = await this.collectReleaseData(
 			fluidRepo,
 			this.defaultMode,
-			releaseGroupName,
+			releaseGroup,
 			false,
 		);
 
-		const release = this.releaseData[releaseGroupName];
+		const release = this.releaseData[releaseGroup.name];
 		const versions = sortVersions([...release.versions], "version");
 		const taggedReleaseIndex = versions.findIndex((v) => v.version === version.version);
 		if (taggedReleaseIndex === -1) {
@@ -98,12 +97,12 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 			);
 		}
 
-		this.log(`${releaseGroupName} v${version.version} (${releaseType})`);
+		this.log(`${releaseGroup.name} v${version.version} (${releaseType})`);
 
 		// When the --json flag is passed, the command will return the raw data as JSON.
 		return sortJson({
-			packageOrReleaseGroup: releaseGroupName,
-			title: getReleaseTitle(releaseGroupName, version, releaseType),
+			packageOrReleaseGroup: releaseGroup.name,
+			title: getReleaseTitle(releaseGroup.name, version, releaseType),
 			tag,
 			date: taggedVersion.date,
 			releaseType,
@@ -112,7 +111,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 			previousTag:
 				prevVersionDetails === undefined
 					? undefined
-					: `${releaseGroupName}_v${previousVersion}`,
+					: `${releaseGroup.name}_v${previousVersion}`,
 		});
 	}
 

@@ -40,7 +40,6 @@ export {
 	getPreReleaseDependencies,
 	getTarballName,
 	isReleased,
-	npmCheckUpdates,
 	ReleaseGroupVersionMap as PackageVersionMap,
 	PreReleaseDependencies,
 	setVersion,

@@ -62,7 +62,7 @@ export interface FluidReleaseStateHandlerData {
 	 *
 	 * @deprecated Update usage to IFluidRepo instead of Context.
 	 */
-	context: Context;
+	// context: Context;
 
 	/**
 	 * The {@link IFluidRepo}.
