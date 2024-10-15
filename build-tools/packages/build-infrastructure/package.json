@@ -25,6 +25,9 @@
 		}
 	},
 	"main": "lib/index.js",
+	"bin": {
+		"repo-layout-list": "./lib/commands/list.js"
+	},
 	"scripts": {
 		"build": "fluid-build . --task build",
 		"build:commonjs": "npm run tsc && npm run build:test",
@@ -49,8 +52,10 @@
 		"tsc": "fluid-tsc commonjs --project ./tsconfig.cjs.json && copyfiles -f ../../../common/build/build-common/src/cjs/package.json ./dist"
 	},
 	"dependencies": {
+		"@commander-js/extra-typings": "^12.1.0",
 		"@fluid-tools/version-tools": "workspace:^",
 		"@manypkg/get-packages": "^2.2.0",
+		"commander": "^12.1.0",
 		"cosmiconfig": "^8.3.6",
 		"detect-indent": "^6.1.0",
 		"execa": "^5.1.1",
