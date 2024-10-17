@@ -34,7 +34,7 @@ export type AdditionalPackageProps = Record<string, string> | undefined;
  *
  * See {@link IWorkspace} and {@link IReleaseGroup} for more details.
  */
-export interface IFluidRepo extends Reloadable {
+export interface IFluidRepo<P extends IPackage> extends Reloadable {
 	/**
 	 * The absolute path to the root of the IFluidRepo. This is the path where the config file is located.
 	 */
@@ -53,7 +53,7 @@ export interface IFluidRepo extends Reloadable {
 	/**
 	 * A map of all packages in the Fluid repo.
 	 */
-	packages: Map<PackageName, IPackage>;
+	packages: Map<PackageName, P>;
 
 	/**
 	 * A partial URL to the upstream (remote) repo. This can be set to the name of the repo on GitHub. For example,
@@ -61,6 +61,9 @@ export interface IFluidRepo extends Reloadable {
 	 */
 	upstreamRemotePartialUrl?: string;
 
+	/**
+	 * The layout configuration for the repo.
+	 */
 	configuration: IFluidRepoLayout;
 
 	/**
@@ -83,12 +86,12 @@ export interface IFluidRepo extends Reloadable {
 	/**
 	 * Returns the {@link IReleaseGroup} associated with a package.
 	 */
-	getPackageReleaseGroup(pkg: Readonly<IPackage>): Readonly<IReleaseGroup>;
+	getPackageReleaseGroup(pkg: Readonly<P>): Readonly<IReleaseGroup>;
 
 	/**
 	 * Returns the {@link IWorkspace} associated with a package.
 	 */
-	getPackageWorkspace(pkg: Readonly<IPackage>): Readonly<IWorkspace>;
+	getPackageWorkspace(pkg: Readonly<P>): Readonly<IWorkspace>;
 }
 
 /**
@@ -272,7 +275,7 @@ export type PackageName = Opaque<string, "PackageName">;
  * when the package.json has custom keys/values.
  */
 export interface IPackage<J extends PackageJson = PackageJson>
-	extends Pick<Installable, "checkInstall">,
+	extends Installable,
 		Reloadable {
 	/**
 	 * The name of the package

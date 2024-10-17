@@ -9,7 +9,6 @@ import {
 	FluidRepoBase,
 	type IPackage,
 	type IWorkspace,
-	type PackageName,
 	type ReleaseGroupName,
 	findGitRootSync,
 	getFluidRepoLayout,
@@ -41,17 +40,7 @@ export interface IPackageMatchedOptions {
 	releaseGroups: string[];
 }
 
-export class FluidRepoBuild extends FluidRepoBase {
-	// public static create(context: BuildContext) {
-	// 	// Default to just resolveRoot if no config is found
-	// 	// const packageManifest = context.fluidBuildConfig ?? {
-	// 	// 	repoPackages: {
-	// 	// 		root: "",
-	// 	// 	},
-	// 	// };
-	// 	return new FluidRepoBuild(context.repoRoot, context);
-	// }
-
+export class FluidRepoBuild extends FluidRepoBase<BuildPackage> {
 	protected context: BuildContext;
 
 	public constructor(searchPath: string) {
@@ -69,21 +58,21 @@ export class FluidRepoBuild extends FluidRepoBase {
 		};
 	}
 
-	public get packages(): Map<PackageName, BuildPackage> {
-		const pkgs: Map<PackageName, BuildPackage> = new Map();
-		for (const ws of this.workspaces.values()) {
-			for (const pkg of ws.packages) {
-				if (pkgs.has(pkg.name)) {
-					throw new Error(`Duplicate package: ${pkg.name}`);
-				}
+	// public get packages(): Map<PackageName, BuildPackage> {
+	// 	const pkgs: Map<PackageName, BuildPackage> = new Map();
+	// 	for (const ws of this.workspaces.values()) {
+	// 		for (const pkg of ws.packages) {
+	// 			if (pkgs.has(pkg.name)) {
+	// 				throw new Error(`Duplicate package: ${pkg.name}`);
+	// 			}
 
-				const buildPackage = new BuildPackage(pkg);
-				pkgs.set(pkg.name, buildPackage);
-			}
-		}
+	// 			const buildPackage = new BuildPackage(pkg);
+	// 			pkgs.set(pkg.name, buildPackage);
+	// 		}
+	// 	}
 
-		return pkgs;
-	}
+	// 	return pkgs;
+	// }
 
 	public async clean(packages: IPackage[], status: boolean) {
 		const cleanP: Promise<ExecAsyncResult>[] = [];

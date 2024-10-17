@@ -98,7 +98,7 @@ export default class InfoCommand extends BaseCommand<typeof InfoCommand> {
 		let packages =
 			flags.releaseGroup === undefined
 				? [...repo.packages.values()]
-				: repo.releaseGroups.get(flags.releaseGroup as ReleaseGroupName)?.packages ?? [];
+				: (repo.releaseGroups.get(flags.releaseGroup as ReleaseGroupName)?.packages ?? []);
 
 		// Sort by packages by name (invariant sort by codepoints).
 		// (See https://stackoverflow.com/a/40355107)

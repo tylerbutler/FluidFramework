@@ -639,6 +639,13 @@ module.exports = {
 		},
 	},
 
+		// This setting influence `flub release report` behavior. This defines the legacy compat range for release group or independent packages.
+		releaseReport: {
+			legacyCompatInterval: {
+				"client": 10,
+			},
+		},
+
 	// This defines the branch release types for type tests. It applies only to the client release group. Settings for
 	// other release groups is in their root fluid-build config.
 	branchReleaseTypes: {

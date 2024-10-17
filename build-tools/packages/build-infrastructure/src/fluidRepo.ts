@@ -22,7 +22,7 @@ import {
 import { Workspace } from "./workspace.js";
 import { loadWorkspacesFromLegacyConfig } from "./workspaceCompat.js";
 
-export class FluidRepo implements IFluidRepo {
+export class FluidRepo<P extends IPackage> implements IFluidRepo<P> {
 	/**
 	 * The absolute path to the root of the FluidRepo. This is the path where the config file is located.
 	 */
@@ -90,15 +90,15 @@ export class FluidRepo implements IFluidRepo {
 		return this._releaseGroups;
 	}
 
-	public get packages(): Map<PackageName, IPackage> {
-		const pkgs: Map<PackageName, IPackage> = new Map();
+	public get packages(): Map<PackageName, P> {
+		const pkgs: Map<PackageName, P> = new Map();
 		for (const ws of this.workspaces.values()) {
 			for (const pkg of ws.packages) {
 				if (pkgs.has(pkg.name)) {
 					throw new Error(`Duplicate package: ${pkg.name}`);
 				}
 
-				pkgs.set(pkg.name, pkg);
+				pkgs.set(pkg.name, pkg as P);
 			}
 		}
 
@@ -142,7 +142,7 @@ export class FluidRepo implements IFluidRepo {
 		throw new NotInGitRepository(this.root);
 	}
 
-	public getPackageReleaseGroup(pkg: Readonly<IPackage>): Readonly<IReleaseGroup> {
+	public getPackageReleaseGroup(pkg: Readonly<P>): Readonly<IReleaseGroup> {
 		const found = this.releaseGroups.get(pkg.releaseGroup);
 		if (found === undefined) {
 			throw new Error(`Cannot find release group for package: ${pkg}`);
@@ -151,7 +151,7 @@ export class FluidRepo implements IFluidRepo {
 		return found;
 	}
 
-	public getPackageWorkspace(pkg: Readonly<IPackage>): Readonly<IWorkspace> {
+	public getPackageWorkspace(pkg: Readonly<P>): Readonly<IWorkspace> {
 		const releaseGroup = this.getPackageReleaseGroup(pkg);
 		const found = releaseGroup.workspace;
 		return found;
@@ -166,10 +166,10 @@ export class FluidRepo implements IFluidRepo {
  * corresponds to the upstream repo.
  * @returns The loaded Fluid repo.
  */
-export function loadFluidRepo(
+export function loadFluidRepo<P extends IPackage>(
 	searchPath: string,
 	upstreamRemotePartialUrl?: string,
-): IFluidRepo {
-	const repo: IFluidRepo = new FluidRepo(searchPath, upstreamRemotePartialUrl);
+): IFluidRepo<P> {
+	const repo: IFluidRepo<P> = new FluidRepo<P>(searchPath, upstreamRemotePartialUrl);
 	return repo;
 }
