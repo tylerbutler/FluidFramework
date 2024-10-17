@@ -19,12 +19,9 @@ export const AllPackagesSelectionCriteria: PackageSelectionCriteria;
 export function createPackageManager(name: PackageManagerName): IPackageManager;
 
 // @public
-<<<<<<< HEAD
-=======
 export const EmptySelectionCriteria: PackageSelectionCriteria;
 
 // @public
->>>>>>> bt-build-infra-package
 export function findGitRootSync(cwd?: string): string;
 
 // @public
@@ -65,8 +62,6 @@ export class FluidRepoBase implements IFluidRepo {
 }
 
 // @public
-<<<<<<< HEAD
-=======
 export function getChangedSinceRef(fluidRepo: IFluidRepo, ref: string, remote: string): Promise<{
     files: string[];
     dirs: string[];
@@ -76,7 +71,6 @@ export function getChangedSinceRef(fluidRepo: IFluidRepo, ref: string, remote: s
 }>;
 
 // @public
->>>>>>> bt-build-infra-package
 export function getFiles(git: SimpleGit, directory: string): Promise<string[]>;
 
 // @public
@@ -85,8 +79,6 @@ export function getFluidRepoLayout(searchPath: string, noCache?: boolean): {
     configFilePath: string;
 };
 
-<<<<<<< HEAD
-=======
 // @public
 export function getMergeBaseRemote(git: SimpleGit, branch: string, remote: string, localRef?: string): Promise<string>;
 
@@ -96,7 +88,6 @@ export function getRemote(git: SimpleGit, partialUrl: string | undefined): Promi
 // @public
 export type GlobString = string;
 
->>>>>>> bt-build-infra-package
 // @public @deprecated
 export interface IFluidBuildDir {
     directory: string;
@@ -113,10 +104,6 @@ export interface IFluidBuildDirs {
 
 // @public
 export interface IFluidRepo extends Reloadable {
-<<<<<<< HEAD
-    // (undocumented)
-=======
->>>>>>> bt-build-infra-package
     configuration: IFluidRepoLayout;
     getGitRepository(): Promise<Readonly<SimpleGit>>;
     getPackageReleaseGroup(pkg: Readonly<IPackage>): Readonly<IReleaseGroup>;

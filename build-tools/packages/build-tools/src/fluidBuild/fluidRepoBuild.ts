@@ -28,7 +28,7 @@ import {
 } from "../common/utils";
 import type { BuildContext } from "./buildContext";
 import { BuildGraph } from "./buildGraph";
-import { getFluidBuildConfig } from "./fluidUtils";
+import { getFluidBuildConfig } from "./config";
 
 const traceInit = registerDebug("fluid-build:init");
 
