@@ -14,8 +14,22 @@ export {
 	getFluidRepoLayout,
 } from "./config.js";
 export { NotInGitRepository } from "./errors.js";
+export {
+	selectAndFilterPackages,
+	type GlobString,
+	AllPackagesSelectionCriteria,
+	EmptySelectionCriteria,
+	type PackageSelectionCriteria,
+	type PackageFilterOptions,
+} from "./filter.js";
 export { loadFluidRepo, FluidRepo as FluidRepoBase } from "./fluidRepo.js";
-export { getFiles, findGitRootSync } from "./git.js";
+export {
+	getFiles,
+	findGitRootSync,
+	getMergeBaseRemote,
+	getRemote,
+	getChangedSinceRef,
+} from "./git.js";
 export type {
 	AdditionalPackageProps,
 	Installable,
@@ -35,4 +49,5 @@ export type {
 } from "./types.js";
 export { isIPackage, isIReleaseGroup } from "./types.js";
 export { PackageBase } from "./package.js";
+export { updatePackageJsonFile } from "./packageJsonUtils.js";
 export { createPackageManager } from "./packageManagers.js";

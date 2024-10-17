@@ -204,7 +204,19 @@ export class BuildPackage extends PackageBase<FluidBuildPackageJson> {
 	}
 
 	public get installCommand(): string {
-		return `${this.packageManager.name} ${this.packageManager.installCommand(false)}`;
+		return this.packageManager === "pnpm"
+			? "pnpm i --no-frozen-lockfile"
+			: this.packageManager === "yarn"
+				? "npm run install-strict"
+				: "npm i";
+	}
+
+	private get color() {
+		return Package.chalkColor[this.packageId % Package.chalkColor.length];
+	}
+
+	public getScript(name: string): string | undefined {
+		return this.packageJson.scripts ? this.packageJson.scripts[name] : undefined;
 	}
 
 	public async cleanNodeModules() {

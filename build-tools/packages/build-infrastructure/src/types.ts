@@ -64,6 +64,11 @@ export interface IFluidRepo extends Reloadable {
 	configuration: IFluidRepoLayout;
 
 	/**
+	 * The layout configuration for the repo.
+	 */
+	configuration: IFluidRepoLayout;
+
+	/**
 	 * Transforms an absolute path to a path relative to the FluidRepo root.
 	 *
 	 * @param p - The path to make relative to the FluidRepo root.

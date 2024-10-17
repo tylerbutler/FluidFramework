@@ -13,9 +13,18 @@ import { SimpleGit } from 'simple-git';
 export type AdditionalPackageProps = Record<string, string> | undefined;
 
 // @public
+export const AllPackagesSelectionCriteria: PackageSelectionCriteria;
+
+// @public
 export function createPackageManager(name: PackageManagerName): IPackageManager;
 
 // @public
+<<<<<<< HEAD
+=======
+export const EmptySelectionCriteria: PackageSelectionCriteria;
+
+// @public
+>>>>>>> bt-build-infra-package
 export function findGitRootSync(cwd?: string): string;
 
 // @public
@@ -56,6 +65,18 @@ export class FluidRepoBase implements IFluidRepo {
 }
 
 // @public
+<<<<<<< HEAD
+=======
+export function getChangedSinceRef(fluidRepo: IFluidRepo, ref: string, remote: string): Promise<{
+    files: string[];
+    dirs: string[];
+    workspaces: IWorkspace[];
+    releaseGroups: IReleaseGroup[];
+    packages: IPackage[];
+}>;
+
+// @public
+>>>>>>> bt-build-infra-package
 export function getFiles(git: SimpleGit, directory: string): Promise<string[]>;
 
 // @public
@@ -64,6 +85,18 @@ export function getFluidRepoLayout(searchPath: string, noCache?: boolean): {
     configFilePath: string;
 };
 
+<<<<<<< HEAD
+=======
+// @public
+export function getMergeBaseRemote(git: SimpleGit, branch: string, remote: string, localRef?: string): Promise<string>;
+
+// @public
+export function getRemote(git: SimpleGit, partialUrl: string | undefined): Promise<string | undefined>;
+
+// @public
+export type GlobString = string;
+
+>>>>>>> bt-build-infra-package
 // @public @deprecated
 export interface IFluidBuildDir {
     directory: string;
@@ -80,7 +113,10 @@ export interface IFluidBuildDirs {
 
 // @public
 export interface IFluidRepo extends Reloadable {
+<<<<<<< HEAD
     // (undocumented)
+=======
+>>>>>>> bt-build-infra-package
     configuration: IFluidRepoLayout;
     getGitRepository(): Promise<Readonly<SimpleGit>>;
     getPackageReleaseGroup(pkg: Readonly<IPackage>): Readonly<IReleaseGroup>;
@@ -230,6 +266,13 @@ export interface PackageDependency {
     version: string;
 }
 
+// @public
+export interface PackageFilterOptions {
+    private: boolean | undefined;
+    scope?: string[] | undefined;
+    skipScope?: string[] | undefined;
+}
+
 // @public (undocumented)
 export type PackageJson = SetRequired<PackageJson_2 & FluidPackageJsonFields, "name" | "scripts" | "version">;
 
@@ -238,6 +281,16 @@ export type PackageManagerName = "npm" | "pnpm" | "yarn";
 
 // @public
 export type PackageName = Opaque<string, "PackageName">;
+
+// @public
+export interface PackageSelectionCriteria {
+    changedSinceBranch?: string | undefined;
+    directory?: string | undefined;
+    releaseGroupRoots: (GlobString | string)[];
+    releaseGroups: (GlobString | string)[];
+    workspaceRoots: (GlobString | string)[];
+    workspaces: (GlobString | string)[];
+}
 
 // @public (undocumented)
 export interface ReleaseGroupDefinition {
@@ -255,6 +308,15 @@ export interface Reloadable {
     // (undocumented)
     reload(): void;
 }
+
+// @public
+export function selectAndFilterPackages(fluidRepo: IFluidRepo, selection: PackageSelectionCriteria, filter?: PackageFilterOptions): Promise<{
+    selected: IPackage[];
+    filtered: IPackage[];
+}>;
+
+// @internal
+export function updatePackageJsonFile<J extends PackageJson = PackageJson>(packagePath: string, packageTransformer: (json: J) => void): void;
 
 // @public (undocumented)
 export interface WorkspaceDefinition {

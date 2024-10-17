@@ -15,7 +15,7 @@ export interface BuildContext {
 	/**
 	 * The fluid-build configuration for the repo.
 	 */
-	readonly fluidBuildConfig: IFluidBuildConfig | undefined;
+	readonly fluidBuildConfig: IFluidBuildConfig;
 
 	readonly fluidRepoLayout: IFluidRepoLayout;
 
