@@ -6,6 +6,7 @@
 
 import type { Opaque } from 'type-fest';
 import type { PackageJson as PackageJson_2 } from 'type-fest';
+import * as semver from 'semver';
 import type { SetRequired } from 'type-fest';
 import { SimpleGit } from 'simple-git';
 
@@ -103,7 +104,7 @@ export interface IFluidBuildDirs {
 }
 
 // @public
-export interface IFluidRepo<P extends IPackage> extends Reloadable {
+export interface IFluidRepo<P extends IPackage = IPackage> extends Reloadable {
     configuration: IFluidRepoLayout;
     getGitRepository(): Promise<Readonly<SimpleGit>>;
     getPackageReleaseGroup(pkg: Readonly<P>): Readonly<IReleaseGroup>;
@@ -303,8 +304,16 @@ export function selectAndFilterPackages<P extends IPackage>(fluidRepo: IFluidRep
     filtered: P[];
 }>;
 
+// @public
+export function setVersion<P extends IPackage>(fluidRepo: IFluidRepo<P>, items: {
+    directory: string;
+}[], version: semver.SemVer): Promise<void>;
+
 // @internal
 export function updatePackageJsonFile<J extends PackageJson = PackageJson>(packagePath: string, packageTransformer: (json: J) => void): void;
+
+// @public
+export function updatePackageJsonFileAsync<J extends PackageJson = PackageJson>(packagePath: string, packageTransformer: (json: J) => Promise<void>): Promise<void>;
 
 // @public (undocumented)
 export interface WorkspaceDefinition {

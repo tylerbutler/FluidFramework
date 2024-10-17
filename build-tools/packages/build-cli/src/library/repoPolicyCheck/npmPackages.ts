@@ -10,13 +10,12 @@ import { createRequire } from "node:module";
 import { EOL as newline } from "node:os";
 import path from "node:path";
 
-import { findGitRootSync } from "@fluid-tools/build-infrastructure";
 import {
-	PackageJson,
-	getApiExtractorConfigFilePath,
+	type PackageJson,
+	findGitRootSync,
 	updatePackageJsonFile,
 	updatePackageJsonFileAsync,
-} from "@fluidframework/build-tools";
+} from "@fluid-tools/build-infrastructure";
 import { writeJson } from "fs-extra/esm";
 import globby from "globby";
 import JSON5 from "json5";
@@ -26,6 +25,7 @@ import sortPackageJson from "sort-package-json";
 import { queryTypesResolutionPathsFromPackageExports } from "../packageExports.js";
 import { Handler, readFile, writeFile } from "./common.js";
 
+import { getApiExtractorConfigFilePath } from "@fluidframework/build-tools";
 import { PackageNamePolicyConfig, ScriptRequirement, getFlubConfig } from "../../config.js";
 
 const require = createRequire(import.meta.url);
@@ -156,7 +156,8 @@ export function packageMayChooseToPublishToInternalFeedOnly(
  * private to prevent publishing.
  */
 export function packageMustBePrivate(name: string, root: string): boolean {
-	const config = getFlubConfig(root).policy?.packageNames;
+	const { config: flubConfig } = getFlubConfig(root);
+	const config = flubConfig.policy?.packageNames;
 
 	if (config === undefined) {
 		// Unless configured, all packages must be private
@@ -175,7 +176,8 @@ export function packageMustBePrivate(name: string, root: string): boolean {
  * If we know a package needs to publish somewhere, then it must not be marked private to allow publishing.
  */
 export function packageMustNotBePrivate(name: string, root: string): boolean {
-	const config = getFlubConfig(root).policy?.packageNames;
+	const { config: flubConfig } = getFlubConfig(root);
+	const config = flubConfig.policy?.packageNames;
 
 	if (config === undefined) {
 		// Unless configured, all packages must be private
@@ -191,7 +193,8 @@ export function packageMustNotBePrivate(name: string, root: string): boolean {
  * Whether the package either belongs to a known Fluid package scope or is a known unscoped package.
  */
 function packageIsFluidPackage(name: string, root: string): boolean {
-	const config = getFlubConfig(root).policy?.packageNames;
+	const { config: flubConfig } = getFlubConfig(root);
+	const config = flubConfig.policy?.packageNames;
 
 	if (config === undefined) {
 		// Unless configured, all packages are considered Fluid packages
@@ -1202,7 +1205,7 @@ export const handlers: Handler[] = [
 		name: "npm-package-json-script-dep",
 		match,
 		handler: async (file: string, root: string): Promise<string | undefined> => {
-			const manifest = getFlubConfig(root);
+			const { config: manifest } = getFlubConfig(root);
 			const commandPackages = manifest.policy?.dependencies?.commandPackages;
 			if (commandPackages === undefined) {
 				return;
@@ -1775,9 +1778,7 @@ export const handlers: Handler[] = [
 			const pathToRoot = path.relative(dir, root);
 			// <projectFolder> is used in path to allow config file to be located anywhere
 			// within project (projectFolder = package.json directory).
-			const commonApiLintConfig = `<projectFolder>/${path
-				.join(pathToRoot, "common/build/build-common/api-extractor-lint.entrypoint.json")
-				.replaceAll("\\", "/")}`;
+			const commonApiLintConfig = `<projectFolder>/${path.join(pathToRoot, "common/build/build-common/api-extractor-lint.entrypoint.json").replaceAll("\\", "/")}`;
 			await updatePackageJsonFileAsync(dir, async (packageJson) => {
 				try {
 					const missingElements = await getApiLintElementsMissing(packageJson, dir);
@@ -1868,7 +1869,8 @@ export const handlers: Handler[] = [
 				return;
 			}
 
-			const requirements = getFlubConfig(rootDirectoryPath).policy?.publicPackageRequirements;
+			const { config: flubConfig } = getFlubConfig(rootDirectoryPath);
+			const requirements = flubConfig.policy?.publicPackageRequirements;
 			if (requirements === undefined) {
 				// If no requirements have been specified, we have nothing to validate.
 				return;
@@ -1924,8 +1926,8 @@ export const handlers: Handler[] = [
 					return result;
 				}
 
-				const requirements =
-					getFlubConfig(rootDirectoryPath).policy?.publicPackageRequirements;
+				const { config: flubConfig } = getFlubConfig(rootDirectoryPath);
+				const requirements = flubConfig.policy?.publicPackageRequirements;
 				if (requirements === undefined) {
 					// If no requirements have been specified, we have nothing to validate.
 					return;

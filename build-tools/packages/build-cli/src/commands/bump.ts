@@ -3,21 +3,19 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "node:assert";
 import {
 	type IPackage,
 	type IReleaseGroup,
+	setVersion,
 	isIPackage,
 } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import * as semver from "semver";
-
 import {
 	InterdependencyRange,
 	RangeOperators,
-	ReleaseVersion,
 	VersionChangeType,
 	VersionScheme,
 	WorkspaceRanges,
@@ -33,7 +31,6 @@ import {
 	BaseCommand,
 	generateBumpVersionBranchName,
 	generateBumpVersionCommitMessage,
-	setVersion,
 } from "../library/index.js";
 
 export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
@@ -158,7 +155,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 			this.error(`One of the following must be provided: --bumpType, --exact`);
 		}
 
-		let packageOrReleaseGroup: IReleaseGroup;
+		// let foundReleaseGroup: IReleaseGroup;
 		let scheme: VersionScheme | undefined;
 		const exactVersion: semver.SemVer | null = semver.parse(flags.exact);
 		const updatedPackages: IPackage[] = [];
@@ -226,14 +223,12 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		this.log(`Updating version...`);
 		await setVersion(
 			fluidRepo,
-			packageOrReleaseGroup,
+			releaseGroup.packages,
 			newVersion,
-			interdependencyRange,
-			this.logger,
 		);
 
 		if (shouldInstall) {
-			if (!(await FluidRepo.ensureInstalled(updatedPackages))) {
+			if (!(await releaseGroup.workspace.install(false))) {
 				this.error("Install failed.");
 			}
 		} else {

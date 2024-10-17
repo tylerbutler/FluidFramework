@@ -389,7 +389,9 @@ const configExplorer = cosmiconfigSync(configName, {
  * @param configPath - The path to start searching for the config file. If a path to a file is provided, the file will
  * be loaded directly. Otherwise it will search upwards looking for config files until it finds one.
  * @param noCache - If true, the config cache will be cleared and the config will be reloaded.
- * @returns The flub config
+ * @returns The flub config.
+ *
+ * @throws If the config is not found.
  */
 export function getFlubConfig(
 	configPath: string,

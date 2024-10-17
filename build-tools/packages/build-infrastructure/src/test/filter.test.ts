@@ -31,7 +31,7 @@ const EmptyFilter: PackageFilterOptions = {
 	skipScope: undefined,
 };
 
-async function getFluidRepo(): Promise<IFluidRepo<IPackage>> {
+async function getFluidRepo(): Promise<IFluidRepo> {
 	const fluidRepo = loadFluidRepo(
 		path.join(testDataPath, "./testRepo"),
 		"microsoft/FluidFramework",

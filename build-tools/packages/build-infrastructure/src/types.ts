@@ -34,7 +34,7 @@ export type AdditionalPackageProps = Record<string, string> | undefined;
  *
  * See {@link IWorkspace} and {@link IReleaseGroup} for more details.
  */
-export interface IFluidRepo<P extends IPackage> extends Reloadable {
+export interface IFluidRepo<P extends IPackage = IPackage> extends Reloadable {
 	/**
 	 * The absolute path to the root of the IFluidRepo. This is the path where the config file is located.
 	 */

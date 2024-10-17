@@ -9,7 +9,6 @@ import path from "node:path";
 
 import type { IPackage } from "@fluid-tools/build-infrastructure";
 import {
-	FluidRepo,
 	PackageJson,
 	TscUtils,
 	getEsLintConfigFilePath,
@@ -38,7 +37,8 @@ const getFluidBuildTasksTscIgnore = (root: string): Set<string> => {
 	const rootDir = path.resolve(root);
 	let ignore = fluidBuildTasksTscIgnoreTasksCache.get(rootDir);
 	if (ignore === undefined) {
-		const ignoreArray = getFlubConfig(rootDir)?.policy?.fluidBuildTasks?.tsc?.ignoreTasks;
+		const { config: flubConfig } = getFlubConfig(rootDir);
+		const ignoreArray = flubConfig.policy?.fluidBuildTasks?.tsc?.ignoreTasks;
 		ignore = ignoreArray ? new Set(ignoreArray) : new Set();
 		fluidBuildTasksTscIgnoreTasksCache.set(rootDir, ignore);
 	}
@@ -341,7 +341,7 @@ function hasTaskDependency(
 	taskName: string,
 	searchDeps: readonly string[],
 ): boolean {
-	const rootConfig = getFluidBuildConfig(root);
+	const { config: rootConfig } = getFluidBuildConfig(root);
 	const globalTaskDefinitions = normalizeGlobalTaskDefinitions(rootConfig?.tasks);
 	const taskDefinitions = getTaskDefinitions(json, globalTaskDefinitions, false);
 	// Searched deps that are package specific (e.g. <packageName>#<taskName>)

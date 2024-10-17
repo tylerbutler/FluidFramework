@@ -102,5 +102,12 @@ module.exports = {
 				"import/no-internal-modules": "off",
 			},
 		},
+		{
+			// This file uses several deprecated imports because it is doing similar work to fluid-build.
+			files: ["src/library/repoPolicyCheck/fluidBuildTasks.ts"],
+			rules: {
+				"import/no-deprecated": "off",
+			},
+		},
 	],
 };

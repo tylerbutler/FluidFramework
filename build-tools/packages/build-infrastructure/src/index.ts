@@ -49,5 +49,6 @@ export type {
 } from "./types.js";
 export { isIPackage, isIReleaseGroup } from "./types.js";
 export { PackageBase } from "./package.js";
-export { updatePackageJsonFile } from "./packageJsonUtils.js";
+export { updatePackageJsonFile, updatePackageJsonFileAsync } from "./packageJsonUtils.js";
 export { createPackageManager } from "./packageManagers.js";
+export { setVersion } from "./versions.js";

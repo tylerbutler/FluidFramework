@@ -16,7 +16,7 @@ import type { IFluidRepo, IPackage, PackageJson } from "./types.js";
  * @param version - The version to set.
  * @param log - A logger to use.
  */
-export async function setVersion<P extends IPackage>(
+export async function setVersion<P extends IPackage=IPackage>(
 	fluidRepo: IFluidRepo<P>,
 	items: { directory: string }[],
 	version: semver.SemVer,
