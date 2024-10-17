@@ -62,11 +62,7 @@ export class FluidRepoBase<P extends IPackage> implements IFluidRepo<P> {
 }
 
 // @public
-<<<<<<< HEAD
-export function getChangedSinceRef(fluidRepo: IFluidRepo, ref: string, remote: string): Promise<{
-=======
 export function getChangedSinceRef<P extends IPackage>(fluidRepo: IFluidRepo<P>, ref: string, remote: string): Promise<{
->>>>>>> bt-build-infra-build-tools
     files: string[];
     dirs: string[];
     workspaces: IWorkspace[];
@@ -302,15 +298,9 @@ export interface Reloadable {
 }
 
 // @public
-<<<<<<< HEAD
-export function selectAndFilterPackages(fluidRepo: IFluidRepo, selection: PackageSelectionCriteria, filter?: PackageFilterOptions): Promise<{
-    selected: IPackage[];
-    filtered: IPackage[];
-=======
 export function selectAndFilterPackages<P extends IPackage>(fluidRepo: IFluidRepo<P>, selection: PackageSelectionCriteria, filter?: PackageFilterOptions): Promise<{
     selected: P[];
     filtered: P[];
->>>>>>> bt-build-infra-build-tools
 }>;
 
 // @internal

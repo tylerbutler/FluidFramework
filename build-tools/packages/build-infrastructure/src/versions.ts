@@ -6,7 +6,7 @@
 import * as semver from "semver";
 
 import { updatePackageJsonFile } from "./packageJsonUtils.js";
-import type { IFluidRepo, PackageJson } from "./types.js";
+import type { IFluidRepo, IPackage, PackageJson } from "./types.js";
 
 /**
  * Sets the version of a release group or standalone package.
@@ -16,8 +16,8 @@ import type { IFluidRepo, PackageJson } from "./types.js";
  * @param version - The version to set.
  * @param log - A logger to use.
  */
-export async function setVersion(
-	fluidRepo: IFluidRepo,
+export async function setVersion<P extends IPackage>(
+	fluidRepo: IFluidRepo<P>,
 	items: { directory: string }[],
 	version: semver.SemVer,
 ): Promise<void> {
