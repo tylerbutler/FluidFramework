@@ -61,8 +61,6 @@ export interface IFluidRepo extends Reloadable {
 	 */
 	upstreamRemotePartialUrl?: string;
 
-	configuration: IFluidRepoLayout;
-
 	/**
 	 * The layout configuration for the repo.
 	 */
