@@ -124,11 +124,11 @@ export interface PackageFilterOptions {
  * @param selection - The selection criteria to use to select packages.
  * @returns A `Set` containing the selected packages.
  */
-const selectPackagesFromRepo = async (
-	fluidRepo: IFluidRepo,
+const selectPackagesFromRepo = async <P extends IPackage>(
+	fluidRepo: IFluidRepo<P>,
 	selection: PackageSelectionCriteria,
-): Promise<Set<IPackage>> => {
-	const selected: Set<IPackage> = new Set();
+): Promise<Set<P>> => {
+	const selected: Set<P> = new Set();
 
 	if (selection.changedSinceBranch !== undefined) {
 		const git = await fluidRepo.getGitRepository();
@@ -214,13 +214,13 @@ const selectPackagesFromRepo = async (
  * @param filter - An optional filter criteria to filter selected packages by.
  * @returns An object containing the selected packages and the filtered packages.
  */
-export async function selectAndFilterPackages(
-	fluidRepo: IFluidRepo,
+export async function selectAndFilterPackages<P extends IPackage>(
+	fluidRepo: IFluidRepo<P>,
 	selection: PackageSelectionCriteria,
 	filter?: PackageFilterOptions,
-): Promise<{ selected: IPackage[]; filtered: IPackage[] }> {
+): Promise<{ selected: P[]; filtered: P[] }> {
 	// Select the packages from the repo
-	const selected = [...(await selectPackagesFromRepo(fluidRepo, selection))];
+	const selected = [...(await selectPackagesFromRepo<P>(fluidRepo, selection))];
 
 	// Filter resulting list if needed
 	const filtered = filter === undefined ? selected : await filterPackages(selected, filter);
