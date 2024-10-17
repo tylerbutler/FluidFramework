@@ -216,6 +216,13 @@ export interface IReleaseGroup extends Reloadable {
 	readonly workspace: IWorkspace;
 
 	/**
+	 * An array of all the release groups that the release group depends on. If any package in a release group has any
+	 * dependency on a package in another release group within the same workspace, then the first release group depends
+	 * on the second.
+	 */
+	readonly releaseGroupDependencies: IReleaseGroup[];
+
+	/**
 	 * An optional ADO pipeline URL for the CI pipeline that builds the release group.
 	 */
 	readonly adoPipelineUrl?: string;

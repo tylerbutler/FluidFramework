@@ -6,13 +6,9 @@
 import {
 	type IPackage,
 	type IReleaseGroup,
-	setVersion,
 	isIPackage,
+	setVersion,
 } from "@fluid-tools/build-infrastructure";
-import { Flags } from "@oclif/core";
-import chalk from "chalk";
-import inquirer from "inquirer";
-import * as semver from "semver";
 import {
 	InterdependencyRange,
 	RangeOperators,
@@ -23,6 +19,10 @@ import {
 	detectVersionScheme,
 	isInterdependencyRange,
 } from "@fluid-tools/version-tools";
+import { Flags } from "@oclif/core";
+import chalk from "chalk";
+import inquirer from "inquirer";
+import * as semver from "semver";
 
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../args.js";
 import { getDefaultInterdependencyRange } from "../config.js";
@@ -221,11 +221,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		}
 
 		this.log(`Updating version...`);
-		await setVersion(
-			fluidRepo,
-			releaseGroup.packages,
-			newVersion,
-		);
+		await setVersion(fluidRepo, releaseGroup.packages, newVersion);
 
 		if (shouldInstall) {
 			if (!(await releaseGroup.workspace.install(false))) {

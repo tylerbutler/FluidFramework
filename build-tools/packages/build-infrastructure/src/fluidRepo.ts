@@ -173,3 +173,36 @@ export function loadFluidRepo<P extends IPackage>(
 	const repo: IFluidRepo<P> = new FluidRepo<P>(searchPath, upstreamRemotePartialUrl);
 	return repo;
 }
+
+export function getAllDependenciesInRepo(
+	repo: IFluidRepo,
+	packages: IPackage[],
+): { packages: IPackage[]; releaseGroups: IReleaseGroup[]; workspaces: IWorkspace[] } {
+	const dependencyPackages: Set<IPackage> = new Set();
+	const releaseGroups: Set<IReleaseGroup> = new Set();
+	const workspaces: Set<IWorkspace> = new Set();
+
+	for (const pkg of packages) {
+		for (const { name } of pkg.combinedDependencies) {
+			const depPackage = repo.packages.get(name);
+			if (depPackage === undefined) {
+				continue;
+			}
+
+			if (pkg.releaseGroup !== depPackage.releaseGroup) {
+				dependencyPackages.add(depPackage);
+				releaseGroups.add(repo.getPackageReleaseGroup(depPackage));
+
+				if (pkg.workspace !== depPackage.workspace) {
+					workspaces.add(depPackage.workspace);
+				}
+			}
+		}
+	}
+
+	return {
+		packages: [...dependencyPackages],
+		releaseGroups: [...releaseGroups],
+		workspaces: [...workspaces],
+	};
+}
