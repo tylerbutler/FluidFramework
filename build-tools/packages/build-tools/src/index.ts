@@ -4,9 +4,16 @@
  */
 
 export { GitRepo } from "./common/gitRepo";
-export { type IFluidBuildConfig } from "./fluidBuild/fluidBuildConfig";
 export { getFluidBuildConfig } from "./fluidBuild/config";
+export { type IFluidBuildConfig } from "./fluidBuild/fluidBuildConfig";
+export { FluidRepoBuild } from "./fluidBuild/fluidRepoBuild";
 export type { Logger } from "./common/logging";
+export {
+	BuildPackage,
+	type PackageJson,
+	updatePackageJsonFileAsync,
+	updatePackageJsonFile,
+} from "./common/npmPackage";
 export { Timer } from "./common/timer";
 
 // For repo policy check
