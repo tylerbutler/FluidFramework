@@ -349,11 +349,20 @@ async function getTagsForReleaseGroup(
  * @param pattern - Pattern of tags to get.
  */
 export async function getTags(git: SimpleGit, pattern?: string): Promise<string[]> {
+	// eslint-disable-next-line unicorn/no-null
+	// let test = await git.tags({ "--list": null, "--sort": "-committerdate" });
+	// test= await git.tags(["--list", "--sort=-committerdate", `"${pattern}"`]);
+	// test= await git.tags(["--list", "--sort=-committerdate", pattern??""]);
+	// console.log(test);
 	const results =
 		pattern === undefined || pattern.length === 0
-			? await git.raw(`tag -l --sort=-committerdate`)
-			: await git.raw(`tag -l "${pattern}" --sort=-committerdate`);
-	const tags = results.split("\n").filter(
+			? // ? await git.raw(["tag", "-l", "--sort=-committerdate"])
+				// : await git.raw(["tag", "-l", `"${pattern}"`, "--sort=-committerdate"]);
+				// ? await git.tag(["-l", "--sort=-committerdate"])
+				// : await git.tag(["-l", `"${pattern}"`, "--sort=-committerdate"]);
+				await git.tags(["--list", "--sort=-committerdate"])
+			: await git.tags(["--list", "--sort=-committerdate", pattern]);
+	const tags = results.all.filter(
 		// Remove any empty entries
 		(t) => t !== undefined && t !== "" && t !== null,
 	);
@@ -368,7 +377,9 @@ export async function getTags(git: SimpleGit, pattern?: string): Promise<string[
  * @returns The commit date of the ref.
  */
 async function getCommitDate(git: SimpleGit, gitRef: string): Promise<Date> {
-	const result = await git.raw(`show -s --format=%cI "${gitRef}"`);
+	const args = ["show", "--no-patch", "--format=%cI", gitRef];
+	// const test = await git.log
+	const result = await git.raw(args);
 	const date = parseISO(result);
 	return date;
 }
