@@ -269,8 +269,8 @@ const _versions: Map<ReleaseGroupName | PackageName, VersionDetails[]> = new Map
  * @returns An array of {@link ReleaseDetails} containing the version and date for each version.
  */
 export async function getAllVersions(
-	releaseGroupOrPackageName: ReleaseGroupName | PackageName,
 	repo: IFluidRepo,
+	releaseGroupOrPackageName: ReleaseGroupName | PackageName,
 ): Promise<VersionDetails[] | undefined> {
 	// Try to get the git repo immediately so that if we're outside a repo, we throw immediately.
 	const gitRepo = await repo.getGitRepository();
@@ -293,7 +293,7 @@ export async function getAllVersions(
 	 * A map of version strings to the date that version was released.
 	 */
 	const versions = new Map<string, Date>();
-	const tags = await getTagsForReleaseGroup(releaseGroupOrPackage, gitRepo);
+	const tags = await getTagsForReleaseGroup(gitRepo, releaseGroupOrPackage);
 
 	for (const tag of tags) {
 		const ver = getVersionFromTag(tag);
@@ -326,8 +326,8 @@ const _tags: Map<string, string[]> = new Map();
  * @returns An array of all all the tags for the release group or package.
  */
 async function getTagsForReleaseGroup(
-	releaseGroupOrPackage: IReleaseGroup | IPackage,
 	git: SimpleGit,
+	releaseGroupOrPackage: IReleaseGroup | IPackage,
 ): Promise<string[]> {
 	const prefix = isIReleaseGroup(releaseGroupOrPackage)
 		? releaseGroupOrPackage.name.toLowerCase()
@@ -406,7 +406,7 @@ export function getVersionFromTag(tag: string): string | undefined {
  * @param directory - A directory to filter the results by. Only files under this directory will be returned. To
  * return all files in the repo use the value `"."`.
  */
-export async function getFiles(directory: string, git: SimpleGit): Promise<string[]> {
+export async function getFiles(git: SimpleGit, directory: string): Promise<string[]> {
 	// Note that `--deduplicate` is not used here because it is not available until git version 2.31.0.
 	const results = await git.raw(
 		"ls-files",
@@ -441,17 +441,17 @@ export async function getFiles(directory: string, git: SimpleGit): Promise<strin
 }
 
 export async function isBranchUpToDate(
+	git: SimpleGit,
 	branch: string,
 	remote: string,
-	git: SimpleGit,
 ): Promise<boolean> {
 	await git.fetch(remote, branch);
-	const currentSha = await getShaForBranch(branch, git);
-	const remoteSha = await getShaForBranch(`${remote}/${branch}`, git);
+	const currentSha = await getShaForBranch(git, branch);
+	const remoteSha = await getShaForBranch(git, `${remote}/${branch}`);
 	return remoteSha === currentSha;
 }
 
-export async function getShaForBranch(branch: string, git: SimpleGit): Promise<string> {
+export async function getShaForBranch(git: SimpleGit, branch: string): Promise<string> {
 	const result = await git.revparse([branch]);
 	return result.trim();
 }
@@ -464,9 +464,9 @@ export async function getShaForBranch(branch: string, git: SimpleGit): Promise<s
  * @returns The ref of the merge base between the two refs.
  */
 export async function getMergeBase(
+	git: SimpleGit,
 	ref1: string,
 	ref2: string,
-	git: SimpleGit,
 ): Promise<string> {
 	const base = await git.raw("merge-base", `${ref1}`, ref2);
 	return base;
@@ -480,9 +480,9 @@ export async function getMergeBase(
  * @returns An array of all commits between the base and head commits.
  */
 export async function revList(
+	git: SimpleGit,
 	baseCommit: string,
 	headCommit: string = "HEAD",
-	git: SimpleGit,
 ): Promise<string[]> {
 	const result = await git.raw("rev-list", `${baseCommit}..${headCommit}`, "--reverse");
 	return result
@@ -491,8 +491,8 @@ export async function revList(
 }
 
 export async function canMergeWithoutConflicts(
-	commit: string,
 	git: SimpleGit,
+	commit: string,
 ): Promise<boolean> {
 	let mergeResult;
 	try {
@@ -513,7 +513,7 @@ export async function canMergeWithoutConflicts(
  *
  * @throws An error if the branch already exists.
  */
-export async function createBranch(branchName: string, git: SimpleGit): Promise<void> {
+export async function createBranch(git: SimpleGit, branchName: string): Promise<void> {
 	return git
 		.branch()
 		.then((branches) => {

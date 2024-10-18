@@ -7,6 +7,7 @@ import { assert } from "chai";
 
 import { MonoRepoKind } from "../../library/index.js";
 
+import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import {
 	generateBumpDepsBranchName,
 	generateBumpVersionBranchName,
@@ -100,49 +101,52 @@ describe("generateBumpDepsBranchName", () => {
 
 describe("generateReleaseBranchName", () => {
 	it("semver", () => {
-		const actual = generateReleaseBranchName(MonoRepoKind.Azure, "1.2.3");
+		const actual = generateReleaseBranchName("azure" as ReleaseGroupName, "1.2.3");
 		const expected = "release/azure/1.2";
 		assert.equal(actual, expected);
 	});
 
 	it("virtualPatch version scheme", () => {
-		const actual = generateReleaseBranchName(MonoRepoKind.BuildTools, "0.4.2000");
+		const actual = generateReleaseBranchName("build-tools" as ReleaseGroupName, "0.4.2000");
 		const expected = "release/build-tools/0.4.2000";
 		assert.equal(actual, expected);
 	});
 
 	it("virtualPatch patch", () => {
-		const actual = generateReleaseBranchName(MonoRepoKind.BuildTools, "0.4.2002");
+		const actual = generateReleaseBranchName("build-tools" as ReleaseGroupName, "0.4.2002");
 		const expected = "release/build-tools/0.4.2000";
 		assert.equal(actual, expected);
 	});
 
 	it("client using semver < 2.0.0", () => {
-		const actual = generateReleaseBranchName(MonoRepoKind.Client, "1.2.3");
+		const actual = generateReleaseBranchName("client" as ReleaseGroupName, "1.2.3");
 		const expected = "release/client/1.2";
 		assert.equal(actual, expected);
 	});
 
 	it("client using semver >= 2.0.0", () => {
-		const actual = generateReleaseBranchName(MonoRepoKind.Client, "2.0.0");
+		const actual = generateReleaseBranchName("client" as ReleaseGroupName, "2.0.0");
 		const expected = "release/client/2.0";
 		assert.equal(actual, expected);
 	});
 
 	it("Fluid internal version scheme", () => {
-		const actual = generateReleaseBranchName(MonoRepoKind.Client, "2.0.0-internal.1.0.0");
+		const actual = generateReleaseBranchName(
+			"client" as ReleaseGroupName,
+			"2.0.0-internal.1.0.0",
+		);
 		const expected = "release/v2int/1.0";
 		assert.equal(actual, expected);
 	});
 
 	it("Fluid RC version scheme", () => {
-		const actual = generateReleaseBranchName(MonoRepoKind.Client, "2.0.0-rc.1.0.0");
+		const actual = generateReleaseBranchName("client" as ReleaseGroupName, "2.0.0-rc.1.0.0");
 		const expected = "release/client/2.0.0-rc.1.0";
 		assert.equal(actual, expected);
 	});
 
 	it("Independent package with standard semver", () => {
-		const actual = generateReleaseBranchName("@fluidframework/build-common", "1.2.1");
+		const actual = generateReleaseBranchName("build-common" as ReleaseGroupName, "1.2.1");
 		const expected = "release/build-common/1.2";
 		assert.equal(actual, expected);
 	});

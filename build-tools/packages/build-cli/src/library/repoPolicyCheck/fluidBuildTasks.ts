@@ -7,8 +7,9 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import type { IPackage } from "@fluid-tools/build-infrastructure";
+import type { IFluidRepo, IPackage } from "@fluid-tools/build-infrastructure";
 import {
+	FluidRepoBuild,
 	PackageJson,
 	TscUtils,
 	getEsLintConfigFilePath,
@@ -48,17 +49,13 @@ const getFluidBuildTasksTscIgnore = (root: string): Set<string> => {
 /**
  * Cache the FluidRepo object, so we don't have to load it repeatedly
  */
-const repoCache = new Map<
-	string,
-	{ repo: FluidRepo; packageMap: Map<string, IFluidBuildPackage> }
->();
-function getFluidPackageMap(root: string): Map<string, IFluidBuildPackage> {
+const repoCache = new Map<string, { repo: IFluidRepo; packageMap: Map<string, IPackage> }>();
+function getFluidPackageMap(root: string): Map<string, IPackage> {
 	const rootDir = path.resolve(root);
 	let record = repoCache.get(rootDir);
 	if (record === undefined) {
-		const fluidBuildConfig = getFluidBuildConfig(rootDir);
-		const repo = new FluidRepo(rootDir, fluidBuildConfig.repoPackages);
-		const packageMap = repo.createPackageMap();
+		const repo = new FluidRepoBuild(rootDir);
+		const packageMap = repo.packages;
 		record = { repo, packageMap };
 		repoCache.set(rootDir, record);
 	}
@@ -560,7 +557,7 @@ function getTscCommandDependencies(
 		}
 	}
 
-	const curPkgRepoGroup = packageMap.get(json.name)?.monoRepo?.kind;
+	const curPkgRepoGroup = packageMap.get(json.name)?.releaseGroup;
 	const tscPredecessors = fluidBuildDatabaseCache.getPossiblePredecessorTasks(
 		packageMap,
 		json.name,
@@ -585,7 +582,7 @@ function getTscCommandDependencies(
 				// Not known to repo, can be ignored.
 				return true;
 			}
-			if (depPackage.monoRepo?.kind !== curPkgRepoGroup) {
+			if (depPackage.releaseGroup !== curPkgRepoGroup) {
 				return true;
 			}
 			const satisfied = semver.satisfies(depPackage.version, depSpec.version);
@@ -606,7 +603,7 @@ interface BuildDepsCallbackContext {
 	json: PackageJson;
 	script: string;
 	command: string;
-	packageMap: ReadonlyMap<string, IFluidBuildPackage>;
+	packageMap: ReadonlyMap<string, IPackage>;
 	root: string;
 }
 

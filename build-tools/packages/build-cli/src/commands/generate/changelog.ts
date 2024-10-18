@@ -6,7 +6,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import type { IPackage, ReleaseGroupName } from "@fluid-tools/build-infrastructure";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import {
 	type VersionBumpType,
 	bumpVersionScheme,
@@ -139,7 +139,7 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 		const releaseGroup =
 			releaseGroupFlagValue === undefined
 				? undefined
-				: repo.releaseGroups.get(releaseGroupFlagValue as ReleaseGroupName);
+				: repo.releaseGroups.get(releaseGroupFlagValue);
 		if (releaseGroup === undefined) {
 			this.error(`Release group ${releaseGroupFlagValue} not found in repo config`, {
 				exit: 1,

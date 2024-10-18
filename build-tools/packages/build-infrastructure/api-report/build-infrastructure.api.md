@@ -23,6 +23,17 @@ export function createPackageManager(name: PackageManagerName): IPackageManager;
 export const EmptySelectionCriteria: PackageSelectionCriteria;
 
 // @public
+export interface FilterablePackage {
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    private?: boolean | undefined;
+}
+
+// @public
+export function filterPackages<T extends FilterablePackage>(packages: T[], filters: PackageFilterOptions): Promise<T[]>;
+
+// @public
 export function findGitRootSync(cwd?: string): string;
 
 // @public
@@ -61,6 +72,13 @@ export class FluidRepoBase<P extends IPackage> implements IFluidRepo<P> {
     // (undocumented)
     get workspaces(): Map<WorkspaceName, IWorkspace>;
 }
+
+// @public (undocumented)
+export function getAllDependenciesInRepo(repo: IFluidRepo, packages: IPackage[]): {
+    packages: IPackage[];
+    releaseGroups: IReleaseGroup[];
+    workspaces: IWorkspace[];
+};
 
 // @public
 export function getChangedSinceRef<P extends IPackage>(fluidRepo: IFluidRepo<P>, ref: string, remote: string): Promise<{
@@ -306,9 +324,7 @@ export function selectAndFilterPackages<P extends IPackage>(fluidRepo: IFluidRep
 }>;
 
 // @public
-export function setVersion<P extends IPackage>(fluidRepo: IFluidRepo<P>, items: {
-    directory: string;
-}[], version: semver.SemVer): Promise<void>;
+export function setVersion<J extends PackageJson>(packages: IPackage[], version: semver.SemVer): Promise<void>;
 
 // @internal
 export function updatePackageJsonFile<J extends PackageJson = PackageJson>(packagePath: string, packageTransformer: (json: J) => void): void;

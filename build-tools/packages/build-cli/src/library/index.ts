@@ -16,7 +16,7 @@ export {
 	generateReleaseBranchName,
 } from "./branches.js";
 export { getDisplayDate, getDisplayDateRelative } from "./dates.js";
-export { bumpReleaseGroup, DependencyUpdateType, isDependencyUpdateType } from "./bump.js";
+export { DependencyUpdateType, isDependencyUpdateType } from "./bump.js";
 export {
 	DEFAULT_CHANGESET_PATH,
 	fluidCustomChangeSetMetadataDefaults,
@@ -36,13 +36,12 @@ export {
 	ensureDevDependencyExists,
 	filterVersionsOlderThan,
 	generateReleaseGitTagName,
-	getFluidDependencies,
 	getPreReleaseDependencies,
 	getTarballName,
 	isReleased,
-	ReleaseGroupVersionMap as PackageVersionMap,
+	PackageVersionMap,
 	PreReleaseDependencies,
-	setVersion,
+	// setVersion,
 	sortVersions,
 } from "./package.js";
 export { difference } from "./sets.js";

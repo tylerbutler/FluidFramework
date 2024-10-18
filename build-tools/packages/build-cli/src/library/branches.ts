@@ -3,7 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import type { IFluidRepo, IPackage, IReleaseGroup } from "@fluid-tools/build-infrastructure";
+import type {
+	IFluidRepo,
+	IPackage,
+	IReleaseGroup,
+	ReleaseGroupName,
+} from "@fluid-tools/build-infrastructure";
 import {
 	DEFAULT_PRERELEASE_IDENTIFIER,
 	ReleaseVersion,
@@ -51,7 +56,7 @@ export async function createBumpBranch(
 	const git = await fluidRepo.getGitRepository();
 	const { version, name } = releaseGroup;
 	const branchName = generateBumpVersionBranchName(name, bumpType, version);
-	await createBranch(name, git);
+	await createBranch(git, name);
 	return branchName;
 }
 
@@ -103,9 +108,9 @@ export function generateBumpVersionBranchName(
  * @internal
  */
 export function generateBumpDepsBranchName(
-	bumpedDep: ReleaseGroup | ReleasePackage,
+	bumpedDep: string,
 	bumpType: DependencyUpdateType | VersionBumpType,
-	releaseGroup?: ReleaseGroup,
+	releaseGroup?: ReleaseGroupName,
 ): string {
 	const releaseGroupSegment = releaseGroup === undefined ? "" : `_${releaseGroup}`;
 	const branchName = `bump_deps_${bumpedDep.toLowerCase()}_${bumpType}${releaseGroupSegment}`;
@@ -115,7 +120,7 @@ export function generateBumpDepsBranchName(
 /**
  * Generates the correct branch name for the release branch of a given release group and branch.
  *
- * @param releaseGroup - The release group or package for which to generate a branch name.
+ * @param releaseGroupName - The release group or package for which to generate a branch name.
  * @param version - The version for the release branch. Typically this is a major.minor version, but for release groups
  * using the Fluid internal or virtualPatch version schemes the versions may differ.
  * @returns The generated branch name.
@@ -127,7 +132,7 @@ export function generateBumpDepsBranchName(
  * @internal
  */
 export function generateReleaseBranchName(
-	releaseGroup: IReleaseGroup,
+	releaseGroupName: ReleaseGroupName,
 	version: string,
 ): string {
 	// An array of all the sections of a "path" branch -- a branch with slashes in the name.
@@ -149,16 +154,16 @@ export function generateReleaseBranchName(
 		branchVersion = version;
 	}
 
-	if (releaseGroup.name === "client" && schemeIsInternal) {
+	if (releaseGroupName === "client" && schemeIsInternal) {
 		// Client versions using the internal version scheme
 		const prereleaseId = fromInternalScheme(version, true)[2];
 		// Checking the prerelease ID is necessary because we used "v2int" instead of "internal" in branch names. This
 		// was a bad decision in retrospect, but we're stuck with it for now.
 		branchPath.push(
-			prereleaseId === DEFAULT_PRERELEASE_IDENTIFIER ? "v2int" : releaseGroup.name,
+			prereleaseId === DEFAULT_PRERELEASE_IDENTIFIER ? "v2int" : releaseGroupName,
 		);
 	} else {
-		branchPath.push(releaseGroup.name);
+		branchPath.push(releaseGroupName);
 	}
 
 	let releaseBranchVersion: string;
@@ -226,7 +231,7 @@ export function generateBumpVersionCommitMessage(
 export function generateBumpDepsCommitMessage(
 	bumpedDep: ReleaseGroup | ReleasePackage | "prerelease",
 	bumpType: DependencyUpdateType | VersionBumpType,
-	releaseGroup?: ReleaseGroup,
+	releaseGroup?: string,
 ): string {
 	const name =
 		bumpedDep === "prerelease"
@@ -253,7 +258,7 @@ export function generateBumpDepsCommitMessage(
  */
 export function getDefaultBumpTypeForBranch(
 	branchName: string,
-	releaseGroup: ReleaseGroup = "client",
+	releaseGroup: ReleaseGroupName = "client" as ReleaseGroupName,
 ): VersionBumpType | undefined {
 	if (releaseGroup === "server") {
 		return "major";

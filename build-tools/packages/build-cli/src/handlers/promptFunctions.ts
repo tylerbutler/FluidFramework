@@ -6,7 +6,9 @@
 import chalk from "chalk";
 import { Machine } from "jssm";
 
-import { type InstructionalPrompt, mapADOLinks } from "../instructionalPromptWriter.js";
+import { type InstructionalPrompt } from "../instructionalPromptWriter.js";
+// eslint-disable-next-line import/no-internal-modules
+import { getShaForBranch } from "../library/git.js";
 import {
 	difference,
 	generateReleaseBranchName,
@@ -14,7 +16,6 @@ import {
 } from "../library/index.js";
 import { CommandLogger } from "../logging.js";
 import { MachineState } from "../machines/index.js";
-import { isReleaseGroup } from "../releaseGroups.js";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler.js";
 import { StateHandlerFunction } from "./stateHandlers.js";
 
@@ -37,14 +38,14 @@ export const promptToCommitChanges: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, context, promptWriter } = data;
+	const { command, originalBranch, promptWriter } = data;
 
 	const prompt: InstructionalPrompt = {
 		title: "NEED TO COMMIT LOCAL CHANGES",
 		sections: [
 			{
 				title: "FIRST",
-				message: `Commit the local changes and create a PR targeting the ${context.originalBranchName} branch.`,
+				message: `Commit the local changes and create a PR targeting the ${originalBranch} branch.`,
 			},
 			{
 				title: "NEXT",
@@ -78,35 +79,33 @@ export const promptToCreateReleaseBranch: StateHandlerFunction = async (
 
 	const { command, promptWriter, releaseGroup, releaseVersion } = data;
 
-	if (isReleaseGroup(releaseGroup)) {
-		const releaseBranch = generateReleaseBranchName(releaseGroup, releaseVersion);
+	const releaseBranch = generateReleaseBranchName(releaseGroup.name, releaseVersion);
 
-		const prompt: InstructionalPrompt = {
-			title: "CREATE A RELEASE BRANCH",
-			sections: [
-				{
-					title: "FIRST: find the right commit",
-					message: `The release branch should be created at the commit BEFORE the release group was bumped. Take a moment to find that commit.`,
-				},
-				{
-					title: "NEXT: create the release branch",
-					message: `Create the release branch using the following command, replacing <COMMIT> with the commit you found before:`,
-					cmd: `git branch ${releaseBranch} <COMMIT>`,
-				},
-				{
-					title: "NEXT: push the release branch",
-					message: `Push the release branch to the upstream microsoft/FluidFramework repo.`,
-					cmd: `git branch ${releaseBranch} <COMMIT>`,
-				},
-				{
-					title: "FINALLY: run the release command again",
-					message: `After the release branch is pushed, switch to it and run the following command to continue the release:`,
-					cmd: `${command?.config.bin} ${command?.id} ${command?.argv?.join(" ")}`,
-				},
-			],
-		};
-		await promptWriter?.writePrompt(prompt);
-	}
+	const prompt: InstructionalPrompt = {
+		title: "CREATE A RELEASE BRANCH",
+		sections: [
+			{
+				title: "FIRST: find the right commit",
+				message: `The release branch should be created at the commit BEFORE the release group was bumped. Take a moment to find that commit.`,
+			},
+			{
+				title: "NEXT: create the release branch",
+				message: `Create the release branch using the following command, replacing <COMMIT> with the commit you found before:`,
+				cmd: `git branch ${releaseBranch} <COMMIT>`,
+			},
+			{
+				title: "NEXT: push the release branch",
+				message: `Push the release branch to the upstream microsoft/FluidFramework repo.`,
+				cmd: `git branch ${releaseBranch} <COMMIT>`,
+			},
+			{
+				title: "FINALLY: run the release command again",
+				message: `After the release branch is pushed, switch to it and run the following command to continue the release:`,
+				cmd: `${command?.config.bin} ${command?.id} ${command?.argv?.join(" ")}`,
+			},
+		],
+	};
+	await promptWriter?.writePrompt(prompt);
 
 	return true;
 };
@@ -130,18 +129,18 @@ export const promptToIntegrateNext: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, promptWriter } = data;
+	const { originalBranch, promptWriter } = data;
 
 	const prompt: InstructionalPrompt = {
 		title: "NEED TO INTEGRATE MAIN AND NEXT BRANCHES",
 		sections: [
 			{
 				title: "DETAILS",
-				message: `The 'next' branch has not been integrated into the '${context.originalBranchName}' branch.`,
+				message: `The 'next' branch has not been integrated into the '${originalBranch}' branch.`,
 			},
 			{
 				title: "NEXT",
-				message: `Merge 'next' into the '${context.originalBranchName}' branch, then run the release command again:`,
+				message: `Merge 'next' into the '${originalBranch}' branch, then run the release command again:`,
 			},
 		],
 	};
@@ -169,32 +168,30 @@ export const promptToPRBump: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, context, promptWriter, releaseGroup, releaseVersion } = data;
+	const { command, originalBranch, promptWriter, releaseGroup, releaseVersion, git } = data;
 
-	const bumpBranch = await context.gitRepo.getCurrentBranchName();
+	const branchSummary = await git.branch();
+	const bumpBranch = branchSummary.current;
 	const prompt: InstructionalPrompt = {
 		title: "NEED TO BUMP TO THE NEXT VERSION",
 		sections: [
 			{
 				title: "FIRST",
-				message: `Push and create a PR for branch ${bumpBranch} targeting the ${context.originalBranchName} branch.`,
+				message: `Push and create a PR for branch ${bumpBranch} targeting the ${originalBranch} branch.`,
 			},
 		],
 	};
 
-	if (isReleaseGroup(releaseGroup)) {
-		const releaseBranch = generateReleaseBranchName(releaseGroup, releaseVersion);
+	const releaseBranch = generateReleaseBranchName(releaseGroup.name, releaseVersion);
 
-		const releaseBranchExists =
-			(await context.gitRepo.getShaForBranch(releaseBranch)) !== undefined;
+	const releaseBranchExists = (await getShaForBranch(git, releaseBranch)) !== undefined;
 
-		if (!releaseBranchExists) {
-			prompt.sections.push({
-				title: "NEXT",
-				message: `After PR is merged, switch to the '${releaseBranch}' branch and and use the following command to release the ${releaseGroup} release group:`,
-				cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup}`,
-			});
-		}
+	if (!releaseBranchExists) {
+		prompt.sections.push({
+			title: "NEXT",
+			message: `After PR is merged, switch to the '${releaseBranch}' branch and and use the following command to release the ${releaseGroup} release group:`,
+			cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup}`,
+		});
 	}
 
 	await promptWriter?.writePrompt(prompt);
@@ -220,15 +217,18 @@ export const promptToPRDeps: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, context, promptWriter, releaseGroup } = data;
+	const { command, git, originalBranch, promptWriter, releaseGroup } = data;
+
+	const branchSummary = await git.branch();
+	const bumpBranch = branchSummary.current;
 
 	await promptWriter?.writePrompt({
 		title: "NEED TO UPDATE DEPENDENCIES",
 		sections: [
 			{
 				title: "FIRST",
-				message: `Push and create a PR for branch ${await context.gitRepo.getCurrentBranchName()} targeting the ${
-					context.originalBranchName
+				message: `Push and create a PR for branch ${bumpBranch} targeting the ${
+					originalBranch
 				} branch.`,
 			},
 			{
@@ -260,9 +260,9 @@ export const promptToRelease: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, context, releaseGroup, releaseVersion, promptWriter } = data;
+	const { command, releaseGroup, releaseVersion, originalBranch, promptWriter } = data;
 
-	const flag = isReleaseGroup(releaseGroup) ? "-g" : "-p";
+	const flag = "-g";
 
 	const prompt: InstructionalPrompt = {
 		title: `READY TO RELEASE version ${chalk.bold(releaseVersion)}!`,
@@ -272,8 +272,8 @@ export const promptToRelease: StateHandlerFunction = async (
 				message: `Queue a ${chalk.green(
 					chalk.bold("release"),
 				)} build for the following release group in ADO for branch ${chalk.blue(
-					chalk.bold(context.originalBranchName),
-				)}:\n\n    ${chalk.green(chalk.bold(releaseGroup))}: ${mapADOLinks(releaseGroup)}`,
+					chalk.bold(originalBranch),
+				)}:\n\n    ${chalk.green(chalk.bold(releaseGroup))}: ${releaseGroup.adoPipelineUrl}`,
 			},
 			{
 				title: "NEXT",
@@ -306,9 +306,9 @@ export const promptToReleaseDeps: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, context, promptWriter, releaseGroup } = data;
+	const { command, repo, promptWriter, releaseGroup } = data;
 
-	const prereleaseDepNames = await getPreReleaseDependencies(context, releaseGroup);
+	const prereleaseDepNames = await getPreReleaseDependencies(repo, releaseGroup);
 
 	const prompt: InstructionalPrompt = {
 		title: "NEED TO RELEASE DEPENDENCIES",
@@ -316,35 +316,21 @@ export const promptToReleaseDeps: StateHandlerFunction = async (
 			{
 				title: "DETAILS",
 				message: chalk.red(
-					`Can't release the ${releaseGroup} release group because some of its dependencies need to be released first.`,
+					`Can't release the ${releaseGroup.name} release group because some of its dependencies need to be released first.`,
 				),
 			},
 		],
 	};
 
-	if (prereleaseDepNames.releaseGroups.size > 0 || prereleaseDepNames.packages.size > 0) {
-		if (prereleaseDepNames.packages.size > 0) {
-			let packageSection = "";
-			for (const [pkg, depVersion] of prereleaseDepNames.packages.entries()) {
-				packageSection = `${pkg} = ${depVersion}`;
-				prompt.sections.push({
-					title: "RELEASE PACKAGE",
-					message: `Release this package first:\n\n${chalk.blue(packageSection)}`,
-					cmd: `${command?.config.bin} release -p ${pkg}`,
-				});
-			}
-		}
-
-		if (prereleaseDepNames.releaseGroups.size > 0) {
-			let packageSection = "";
-			for (const [rg, depVersion] of prereleaseDepNames.releaseGroups.entries()) {
-				packageSection = `${rg} = ${depVersion}`;
-				prompt.sections.push({
-					title: "RELEASE RELEASE GROUP",
-					message: `Release this release group:\n\n${chalk.blue(packageSection)}`,
-					cmd: `${command?.config.bin} release -g ${rg}`,
-				});
-			}
+	if (prereleaseDepNames.releaseGroups.size > 0) {
+		let packageSection = "";
+		for (const [rg, depVersion] of prereleaseDepNames.releaseGroups.entries()) {
+			packageSection = `${rg} = ${depVersion}`;
+			prompt.sections.push({
+				title: "RELEASE RELEASE GROUP",
+				message: `Release this release group:\n\n${chalk.blue(packageSection)}`,
+				cmd: `${command?.config.bin} release -g ${rg.name}`,
+			});
 		}
 	}
 
@@ -372,7 +358,7 @@ export const promptToRunMinorReleaseCommand: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { command, context, promptWriter, releaseGroup } = data;
+	const { command, originalBranch, promptWriter, releaseGroup } = data;
 
 	const prompt: InstructionalPrompt = {
 		title: "NEED TO DO A MINOR RELEASE",
@@ -400,15 +386,15 @@ export const promptToRunMinorReleaseCommand: StateHandlerFunction = async (
 	prompt.sections.push(
 		{
 			title: "FIRST: do a minor release",
-			message: `A minor release needs to be run in order to continue with the major release. To continue with the release, run the following command on the ${context.originalBranchName} branch:`,
+			message: `A minor release needs to be run in order to continue with the major release. To continue with the release, run the following command on the ${originalBranch} branch:`,
 			cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup} -t minor ${chalk.gray(
 				uniqueArgs.join(" "),
 			)}`,
 		},
 		{
 			title: "NEXT: run the major release again",
-			message: `Once the minor release is fully complete, run the following command on the ${context.originalBranchName} branch to continue the major release.`,
-			cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup} -t major ${chalk.gray(
+			message: `Once the minor release is fully complete, run the following command on the ${originalBranch} branch to continue the major release.`,
+			cmd: `${command?.config.bin} ${command?.id} -g ${releaseGroup.name} -t major ${chalk.gray(
 				uniqueArgs.join(" "),
 			)}`,
 		},

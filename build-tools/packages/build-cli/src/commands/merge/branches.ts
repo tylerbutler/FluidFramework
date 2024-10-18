@@ -150,12 +150,12 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 		// check out local versions of the branches yet.
 		const remoteSourceBranch = `refs/remotes/${this.remote}/${flags.source}`;
 		const remoteTargetBranch = `refs/remotes/${this.remote}/${flags.target}`;
-		const lastMergedCommit = await getMergeBase(remoteSourceBranch, remoteTargetBranch, git);
+		const lastMergedCommit = await getMergeBase(git, remoteSourceBranch, remoteTargetBranch);
 		this.log(
 			`${lastMergedCommit} is the last merged commit id between ${flags.source} and ${flags.target}`,
 		);
 
-		const unmergedCommitList: string[] = await revList(lastMergedCommit, flags.source, git);
+		const unmergedCommitList: string[] = await revList(git, lastMergedCommit, flags.source);
 
 		if (unmergedCommitList.length === 0) {
 			this.log(
@@ -421,7 +421,7 @@ async function hasConflicts(
 ): Promise<[boolean, number]> {
 	for (const [i, commit] of commitIds.entries()) {
 		// eslint-disable-next-line no-await-in-loop
-		const mergesClean = await canMergeWithoutConflicts(commit, gitRepo);
+		const mergesClean = await canMergeWithoutConflicts(gitRepo, commit);
 		log?.verbose(`Can merge without conflicts ${commit}: ${mergesClean}`);
 		if (mergesClean === false) {
 			return [true, i];

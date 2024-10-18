@@ -52,7 +52,6 @@ export class ReleaseGroup implements IReleaseGroup {
 		return this.packages[0]!.version;
 	}
 
-	// private _releaseGroupDependencies: IReleaseGroup[] = [];
 	public get releaseGroupDependencies(): IReleaseGroup[] {
 		const dependentReleaseGroups = new Set<IReleaseGroup>();
 		const ignoredDependencies = new Set<PackageName>();

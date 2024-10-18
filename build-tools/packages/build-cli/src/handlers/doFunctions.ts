@@ -4,23 +4,21 @@
  */
 
 import { strict as assert } from "node:assert";
+
+import {
+	type IReleaseGroup,
+	type PackageName,
+	setVersion,
+} from "@fluid-tools/build-infrastructure";
+import { bumpVersionScheme, detectVersionScheme } from "@fluid-tools/version-tools";
 import chalk from "chalk";
 import { Machine } from "jssm";
 
-import { FluidRepo, MonoRepo } from "@fluidframework/build-tools";
-
-import { bumpVersionScheme, detectVersionScheme } from "@fluid-tools/version-tools";
-
-import { getDefaultInterdependencyRange } from "../config.js";
-import {
-	difference,
-	getPreReleaseDependencies,
-	npmCheckUpdates,
-	setVersion,
-} from "../library/index.js";
+import { getPreReleaseDependencies } from "../library/index.js";
+// eslint-disable-next-line import/no-internal-modules
+import { npmCheckUpdatesHomegrown } from "../library/package.js";
 import { CommandLogger } from "../logging.js";
 import { MachineState } from "../machines/index.js";
-import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../releaseGroups.js";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler.js";
 import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers.js";
 
@@ -57,73 +55,50 @@ export const doBumpReleasedDependencies: StateHandlerFunction = async (
 	}
 
 	// First, check if any prereleases have released versions on npm
-	let { updatedPackages, updatedDependencies } = await npmCheckUpdates(
+	let { updatedPackages, updatedDependencies } = await npmCheckUpdatesHomegrown(
 		repo,
-		releaseGroup,
+		releaseGroup.name,
 		[...packagesToBump],
 		undefined,
-		"latest",
+		// "latest",
 		/* prerelease */ true,
 		/* writeChanges */ false,
 		log,
 	);
 
-	// Divide the updated packages into individual packages and release groups
-	const updatedReleaseGroups = new Set<ReleaseGroup>();
-	const updatedPkgs = new Set<ReleasePackage>();
+	const updatedReleaseGroups = new Set<IReleaseGroup>();
 
-	for (const pkg of updatedPackages) {
-		if (pkg.monoRepo === undefined) {
-			updatedPkgs.add(pkg.name);
-		} else {
-			updatedReleaseGroups.add(pkg.monoRepo.releaseGroup);
-		}
-	}
-
-	const updatedDeps = new Set<string>();
 	for (const p of Object.keys(updatedDependencies)) {
-		const pkg = repo.fullPackageMap.get(p);
+		const pkg = repo.packages.get(p as PackageName);
 		if (pkg === undefined) {
 			log.verbose(`Package not in context: ${p}`);
 			continue;
 		}
 
-		if (pkg.monoRepo === undefined) {
-			updatedDeps.add(pkg.name);
-		} else {
-			updatedDeps.add(pkg.monoRepo.kind);
-		}
+		updatedReleaseGroups.add(repo.getPackageReleaseGroup(pkg));
 	}
 
-	const remainingReleaseGroupsToBump = difference(preReleaseGroups, updatedDeps);
-	const remainingPackagesToBump = difference(preReleasePackages, updatedPkgs);
-
-	if (remainingReleaseGroupsToBump.size === 0 && remainingPackagesToBump.size === 0) {
+	if (updatedReleaseGroups.size === 0) {
 		// This is the same command as run above, but this time we write the changes. There are more
 		// efficient ways to do this but this is simple.
-		({ updatedPackages, updatedDependencies } = await npmCheckUpdates(
+		({ updatedPackages, updatedDependencies } = await npmCheckUpdatesHomegrown(
 			repo,
-			releaseGroup,
+			releaseGroup.name,
 			[...packagesToBump],
 			undefined,
-			"latest",
+			// "latest",
 			/* prerelease */ true,
-			/* writeChanges */ true,
+			/* writeChanges */ false,
 			/* no logger */
 		));
 	}
 
 	if (updatedPackages.length > 0) {
 		log?.verbose(`Running install if needed.`);
-		await FluidRepo.ensureInstalled(
-			isReleaseGroup(releaseGroup)
-				? repo.packagesInReleaseGroup(releaseGroup)
-				: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-					[repo.fullPackageMap.get(releaseGroup)!],
-		);
+		await updatedPackages[0].workspace.install(true);
 		// There were updates, which is considered a failure.
 		BaseStateHandler.signalFailure(machine, state);
-		repo.repo.reload();
+		repo.reload();
 		return true;
 	}
 
@@ -150,17 +125,11 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { bumpType, context, releaseGroup, releaseVersion, shouldInstall } = data;
-
-	const rgRepo = isReleaseGroup(releaseGroup)
-		? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			context.repo.releaseGroups.get(releaseGroup)!
-		: // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			context.fullPackageMap.get(releaseGroup)!;
+	const { bumpType, repo, releaseGroup, releaseVersion, shouldInstall } = data;
 
 	const scheme = detectVersionScheme(releaseVersion);
 	const newVersion = bumpVersionScheme(releaseVersion, bumpType, scheme);
-	const packages = rgRepo instanceof MonoRepo ? rgRepo.packages : [rgRepo];
+	const { packages } = releaseGroup;
 
 	log.info(
 		`Bumping ${releaseGroup} from ${releaseVersion} to ${newVersion.version} (${chalk.blue(
@@ -168,15 +137,9 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 		)} bump)!`,
 	);
 
-	await setVersion(
-		context,
-		rgRepo,
-		newVersion,
-		rgRepo instanceof MonoRepo ? getDefaultInterdependencyRange(rgRepo, context) : undefined,
-		log,
-	);
+	await setVersion(packages, newVersion);
 
-	if (shouldInstall === true && !(await FluidRepo.ensureInstalled(packages))) {
+	if (shouldInstall === true && !(await releaseGroup.workspace.install(false))) {
 		log.errorLog("Install failed.");
 		BaseStateHandler.signalFailure(machine, state);
 		return true;

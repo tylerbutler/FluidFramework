@@ -3,17 +3,14 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "node:assert";
+import { getRemote, isIReleaseGroup } from "@fluid-tools/build-infrastructure";
+import { bumpVersionScheme } from "@fluid-tools/version-tools";
 import execa from "execa";
 import inquirer from "inquirer";
 import { Machine } from "jssm";
 
-import { getRemote } from "@fluid-tools/build-infrastructure";
-import { bumpVersionScheme } from "@fluid-tools/version-tools";
-import { FluidRepo } from "@fluidframework/build-tools";
-
 // eslint-disable-next-line import/no-internal-modules
-import { getShaForBranch, isBranchUpToDate } from "../library/git.js";
+import { createBranch, getShaForBranch, isBranchUpToDate } from "../library/git.js";
 import {
 	generateBumpDepsBranchName,
 	generateBumpDepsCommitMessage,
@@ -26,7 +23,7 @@ import {
 } from "../library/index.js";
 import { CommandLogger } from "../logging.js";
 import { MachineState } from "../machines/index.js";
-import { ReleaseSource, isReleaseGroup } from "../releaseGroups.js";
+import { ReleaseSource } from "../releaseGroups.js";
 import { getRunPolicyCheckDefault } from "../repoConfig.js";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler.js";
 import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers.js";
@@ -118,10 +115,10 @@ export const checkBranchUpToDate: StateHandlerFunction = async (
 	const branchSummary = await git.branch();
 	const remote = await getRemote(git, repo.upstreamRemotePartialUrl);
 	const isUpToDate = await isBranchUpToDate(
+		git,
 		branchSummary.current,
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		remote!,
-		git,
 	);
 	if (shouldCheckBranchUpdate === true) {
 		if (!isUpToDate) {
@@ -279,8 +276,8 @@ export const checkMainNextIntegrated: StateHandlerFunction = async (
 	if (bumpType === "major") {
 		if (shouldCheckMainNextIntegrated === true) {
 			const [main, next] = await Promise.all([
-				getShaForBranch("main", git),
-				getShaForBranch("next", git),
+				getShaForBranch(git, "main"),
+				getShaForBranch(git, "next"),
 			]);
 
 			if (main !== next) {
@@ -318,7 +315,7 @@ export const checkOnReleaseBranch: StateHandlerFunction = async (
 	const git = await repo.getGitRepository();
 	const branchSummary = await git.branch();
 
-	const releaseBranch = generateReleaseBranchName(releaseGroup, releaseVersion);
+	const releaseBranch = generateReleaseBranchName(releaseGroup.name, releaseVersion);
 
 	if (shouldCheckBranch) {
 		if (branchSummary.current === releaseBranch) {
@@ -342,9 +339,9 @@ export const checkNoPrereleaseDependencies: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup } = data;
+	const { repo, releaseGroup } = data;
 
-	const { isEmpty } = await getPreReleaseDependencies(context, releaseGroup);
+	const { isEmpty } = await getPreReleaseDependencies(repo, releaseGroup);
 
 	if (isEmpty) {
 		BaseStateHandler.signalSuccess(machine, state);
@@ -374,10 +371,9 @@ export const checkPolicy: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { repo, releaseGroup, shouldCheckPolicy } = data;
-	const git = await repo.getGitRepository();
-	const branchSummary = await git.branch();
+	const { repo, git, releaseGroup, shouldCheckPolicy, originalBranch } = data;
 
+	const branchSummary = await git.branch();
 	log.info(`Checking policy`);
 	if (shouldCheckPolicy === true) {
 		if (!getRunPolicyCheckDefault(releaseGroup, branchSummary.current)) {
@@ -390,23 +386,23 @@ export const checkPolicy: StateHandlerFunction = async (
 		// the client release group, we can't easily scope it to just the client. Thus, we always run it at the root just
 		// like we do in CI.
 		const result = await execa.command(`npm run policy-check`, {
-			cwd: repo.gitRepo.resolvedRoot,
+			cwd: repo.root,
 		});
 		log.verbose(result.stdout);
 
 		// check for policy check violation
-		const afterPolicyCheckStatus = await repo.gitRepo.getStatus();
-		if (afterPolicyCheckStatus !== "" && afterPolicyCheckStatus !== "") {
+		const afterPolicyCheckStatus = await git.status();
+		if (!afterPolicyCheckStatus.isClean()) {
 			log.logHr();
 			log.errorLog(
-				`Policy check needed to make modifications. Please create a PR for the changes and merge before retrying.\n${afterPolicyCheckStatus}`,
+				`Policy check needed to make modifications. Please create a PR for the changes and merge before retrying.\n${afterPolicyCheckStatus.files}`,
 			);
 			BaseStateHandler.signalFailure(machine, state);
 			return false;
 		}
-	} else if (getRunPolicyCheckDefault(releaseGroup, repo.originalBranchName) === false) {
+	} else if (getRunPolicyCheckDefault(releaseGroup, originalBranch) === false) {
 		log.verbose(
-			`Skipping policy check for ${releaseGroup} because it does not run on the ${repo.originalBranchName} branch by default. Pass --policyCheck to force it to run.`,
+			`Skipping policy check for ${releaseGroup.name} because it does not run on the ${originalBranch} branch by default. Pass --policyCheck to force it to run.`,
 		);
 	} else {
 		log.warning("Skipping policy check.");
@@ -435,12 +431,12 @@ export const checkAssertTagging: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, shouldCheckPolicy } = data;
+	const { git, originalBranch, repo, releaseGroup, shouldCheckPolicy } = data;
 
 	if (shouldCheckPolicy === true) {
-		if (!getRunPolicyCheckDefault(releaseGroup, context.originalBranchName)) {
+		if (!getRunPolicyCheckDefault(releaseGroup, originalBranch)) {
 			log.warning(
-				`Assert tagging for ${releaseGroup} is not expected on the ${context.originalBranchName} branch! Make sure you know what you are doing.`,
+				`Assert tagging for ${releaseGroup} is not expected on the ${originalBranch} branch! Make sure you know what you are doing.`,
 			);
 		}
 
@@ -448,23 +444,23 @@ export const checkAssertTagging: StateHandlerFunction = async (
 		// the client release group, we can't easily scope it to just the client. Thus, we always run it at the root just
 		// like we do in CI.
 		const result = await execa.command(`npm run policy-check:asserts`, {
-			cwd: context.gitRepo.resolvedRoot,
+			cwd: repo.root,
 		});
 		log.verbose(result.stdout);
 
 		// check for policy check violation
-		const afterPolicyCheckStatus = await context.gitRepo.getStatus();
-		if (afterPolicyCheckStatus !== "" && afterPolicyCheckStatus !== "") {
+		const afterPolicyCheckStatus = await git.status();
+		if (!afterPolicyCheckStatus.isClean()) {
 			log.logHr();
 			log.errorLog(
-				`Asserts were tagged. Please create a PR for the changes and merge before retrying.\n${afterPolicyCheckStatus}`,
+				`Asserts were tagged. Please create a PR for the changes and merge before retrying.\n${afterPolicyCheckStatus.files}`,
 			);
 			BaseStateHandler.signalFailure(machine, state);
 			return false;
 		}
-	} else if (getRunPolicyCheckDefault(releaseGroup, context.originalBranchName) === false) {
+	} else if (getRunPolicyCheckDefault(releaseGroup, originalBranch) === false) {
 		log.verbose(
-			`Skipping assert tagging for ${releaseGroup} because it does not run on the ${context.originalBranchName} branch by default. Pass --policyCheck to force it to run.`,
+			`Skipping assert tagging for ${releaseGroup} because it does not run on the ${originalBranch} branch by default. Pass --policyCheck to force it to run.`,
 		);
 	} else {
 		log.warning("Skipping assert tagging.");
@@ -493,11 +489,10 @@ export const checkReleaseBranchExists: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, releaseVersion } = data;
-	assert(isReleaseGroup(releaseGroup), `Not a release group: ${releaseGroup}`);
-	const releaseBranch = generateReleaseBranchName(releaseGroup, releaseVersion);
+	const { git, releaseGroup, releaseVersion } = data;
+	const releaseBranch = generateReleaseBranchName(releaseGroup.name, releaseVersion);
 
-	const commit = await context.gitRepo.getShaForBranch(releaseBranch);
+	const commit = await getShaForBranch(git, releaseBranch);
 	if (commit === undefined) {
 		log.errorLog(`Can't find the '${releaseBranch}' branch.`);
 		BaseStateHandler.signalFailure(machine, state);
@@ -526,10 +521,10 @@ export const checkReleaseGroupIsBumped: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, releaseVersion, bumpType } = data;
+	const { repo, releaseGroup, releaseVersion, bumpType } = data;
 
-	context.repo.reload();
-	const repoVersion = context.getVersion(releaseGroup);
+	repo.reload();
+	const repoVersion = releaseGroup.version;
 	const targetVersion = bumpVersionScheme(releaseVersion, bumpType).version;
 
 	if (repoVersion !== targetVersion) {
@@ -561,9 +556,9 @@ export const checkReleaseIsDone: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, releaseVersion } = data;
+	const { repo, releaseGroup, releaseVersion } = data;
 
-	const wasReleased = await isReleased(context, releaseGroup, releaseVersion);
+	const wasReleased = await isReleased(repo, releaseGroup, releaseVersion);
 	if (wasReleased) {
 		BaseStateHandler.signalSuccess(machine, state);
 	} else {
@@ -592,20 +587,28 @@ export const checkShouldCommit: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { bumpType, context, shouldCommit, releaseGroup, releaseVersion } = data;
+	const { bumpType, git, shouldCommit, releaseGroup, releaseVersion } = data;
 
 	if (shouldCommit !== true) {
 		BaseStateHandler.signalFailure(machine, state);
 		return true;
 	}
 
-	const branchName = generateBumpVersionBranchName(releaseGroup, bumpType, releaseVersion);
-	const commitMsg = generateBumpVersionCommitMessage(releaseGroup, bumpType, releaseVersion);
+	const branchName = generateBumpVersionBranchName(
+		releaseGroup.name,
+		bumpType,
+		releaseVersion,
+	);
+	const commitMsg = generateBumpVersionCommitMessage(
+		releaseGroup.name,
+		bumpType,
+		releaseVersion,
+	);
 
-	await context.createBranch(branchName);
+	await createBranch(git, branchName);
 	log.verbose(`Created bump branch: ${branchName}`);
 
-	await context.gitRepo.commit(commitMsg, `Error committing to ${branchName}`);
+	await git.commit(commitMsg, `Error committing to ${branchName}`);
 	BaseStateHandler.signalSuccess(machine, state);
 	return true;
 };
@@ -629,21 +632,20 @@ export const checkShouldCommitReleasedDepsBump: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup, shouldCommit } = data;
+	const { git, releaseGroup, shouldCommit } = data;
 
 	if (shouldCommit !== true) {
 		BaseStateHandler.signalSuccess(machine, state);
 	}
 
-	assert(isReleaseGroup(releaseGroup), `Not a release group: ${releaseGroup}`);
-	const branchName = generateBumpDepsBranchName(releaseGroup, "latest");
-	await context.gitRepo.createBranch(branchName);
+	const branchName = generateBumpDepsBranchName(releaseGroup.name, "latest");
+	await createBranch(git, branchName);
 
 	log.verbose(`Created bump branch: ${branchName}`);
 	log.info(`${releaseGroup}: Bumped prerelease dependencies to release versions.`);
 
-	const commitMsg = generateBumpDepsCommitMessage("prerelease", "latest", releaseGroup);
-	await context.gitRepo.commit(commitMsg, `Error committing to ${branchName}`);
+	const commitMsg = generateBumpDepsCommitMessage("prerelease", "latest", releaseGroup.name);
+	await git.commit(commitMsg, `Error committing to ${branchName}`);
 	BaseStateHandler.signalSuccess(machine, state);
 	return true;
 };
@@ -695,12 +697,12 @@ export const checkTypeTestGenerate: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context } = data;
+	const { originalBranch } = data;
 
 	const genQuestion: inquirer.ConfirmQuestion = {
 		type: "confirm",
 		name: "typetestsGen",
-		message: `Have you run typetests:gen on the ${context.originalBranchName} branch?`,
+		message: `Have you run typetests:gen on the ${originalBranch} branch?`,
 	};
 
 	const answer = await inquirer.prompt(genQuestion);
@@ -732,12 +734,12 @@ export const checkTypeTestPrepare: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context } = data;
+	const { originalBranch } = data;
 
 	const prepQuestion: inquirer.ConfirmQuestion = {
 		type: "confirm",
 		name: "typetestsPrep",
-		message: `Have you run typetests:prepare on the ${context.originalBranchName} branch?`,
+		message: `Have you run typetests:prepare on the ${originalBranch} branch?`,
 	};
 
 	const answer = await inquirer.prompt(prepQuestion);
@@ -769,12 +771,9 @@ export const checkValidReleaseGroup: StateHandlerFunction = async (
 ): Promise<boolean> => {
 	if (testMode) return true;
 
-	const { context, releaseGroup } = data;
+	const { releaseGroup } = data;
 
-	if (isReleaseGroup(releaseGroup)) {
-		BaseStateHandler.signalSuccess(machine, state);
-		// eslint-disable-next-line unicorn/no-negated-condition
-	} else if (context.fullPackageMap.get(releaseGroup) !== undefined) {
+	if (isIReleaseGroup(releaseGroup)) {
 		BaseStateHandler.signalSuccess(machine, state);
 	} else {
 		BaseStateHandler.signalFailure(machine, state);

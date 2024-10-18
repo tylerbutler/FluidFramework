@@ -5,7 +5,7 @@
 
 import {
 	type IPackage,
-	type IReleaseGroup,
+	// type IReleaseGroup,
 	isIPackage,
 	setVersion,
 } from "@fluid-tools/build-infrastructure";
@@ -27,6 +27,8 @@ import * as semver from "semver";
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../args.js";
 import { getDefaultInterdependencyRange } from "../config.js";
 import { bumpTypeFlag, checkFlags, skipCheckFlag, versionSchemeFlag } from "../flags.js";
+// eslint-disable-next-line import/no-internal-modules
+import { createBranch } from "../library/git.js";
 import {
 	BaseCommand,
 	generateBumpVersionBranchName,
@@ -134,6 +136,9 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 			: undefined;
 
 		const fluidRepo = await this.getFluidRepo();
+
+		// Try to get the git repo early so that if we're outside a repo, we throw quickly.
+		const git = await fluidRepo.getGitRepository();
 		const { bumpType } = flags;
 		const workspaceProtocol =
 			typeof interdependencyRange === "string"
@@ -221,7 +226,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		}
 
 		this.log(`Updating version...`);
-		await setVersion(fluidRepo, releaseGroup.packages, newVersion);
+		await setVersion(releaseGroup.packages, newVersion);
 
 		if (shouldInstall) {
 			if (!(await releaseGroup.workspace.install(false))) {
@@ -245,11 +250,13 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 				repoVersion,
 				scheme,
 			);
+			const branchSummary = await git.branch();
+			const originalBranch = branchSummary.current;
 			this.log(`Creating branch ${bumpBranch}`);
-			await fluidRepo.createBranch(bumpBranch);
-			await fluidRepo.gitRepo.commit(commitMessage, "Error committing");
+			await createBranch(git, bumpBranch);
+			await git.commit(commitMessage, "Error committing");
 			this.finalMessages.push(
-				`You can now create a PR for branch ${bumpBranch} targeting ${fluidRepo.originalBranchName}`,
+				`You can now create a PR for branch ${bumpBranch} targeting ${originalBranch}`,
 			);
 		} else {
 			this.warning(`Skipping commit. You'll need to manually commit changes.`);

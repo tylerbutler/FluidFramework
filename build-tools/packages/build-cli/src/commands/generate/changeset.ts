@@ -5,7 +5,12 @@
 
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { IPackage } from "@fluid-tools/build-infrastructure";
+import {
+	type IPackage,
+	type ReleaseGroupName,
+	getChangedSinceRef,
+	getRemote,
+} from "@fluid-tools/build-infrastructure";
 import { VersionBumpType } from "@fluid-tools/version-tools";
 import { Flags, ux } from "@oclif/core";
 import { PackageName } from "@rushstack/node-core-library";
@@ -17,7 +22,6 @@ import { releaseGroupFlag } from "../../flags.js";
 import {
 	BaseCommand,
 	type FluidCustomChangesetMetadata,
-	Repository,
 	getDefaultBumpTypeForBranch,
 } from "../../library/index.js";
 
@@ -64,7 +68,7 @@ export default class GenerateChangesetCommand extends BaseCommand<
 	static readonly enableJsonFlag = true;
 
 	static readonly flags = {
-		releaseGroup: releaseGroupFlag({ default: "client" }),
+		releaseGroup: releaseGroupFlag({ default: "client" as ReleaseGroupName }),
 		branch: Flags.string({
 			char: "b",
 			description: `The branch to compare the current changes against. The current changes will be compared with this branch to populate the list of changed packages. ${chalk.bold(
@@ -113,23 +117,22 @@ export default class GenerateChangesetCommand extends BaseCommand<
 		selectedPackages: string[];
 		changesetPath?: string;
 	}> {
-		const context = await this.getContext();
-		const { all, empty, releaseGroup, uiMode } = this.flags;
+		const repo = await this.getFluidRepo();
+		const { all, empty, releaseGroup: releaseGroupName, uiMode } = this.flags;
 		let { branch } = this.flags;
 
-		const monorepo =
-			releaseGroup === undefined ? undefined : context.repo.releaseGroups.get(releaseGroup);
-		if (monorepo === undefined) {
+		const releaseGroup = repo.releaseGroups.get(releaseGroupName);
+		if (releaseGroup === undefined) {
 			this.error(`Release group ${releaseGroup} not found in repo config`, { exit: 1 });
 		}
 
 		if (empty) {
 			const emptyFile = await createChangesetFile(
-				monorepo.directory ?? context.gitRepo.resolvedRoot,
+				releaseGroup.rootPackage?.directory ?? releaseGroup.workspace.directory,
 				new Map(),
 			);
 			// eslint-disable-next-line @typescript-eslint/no-shadow
-			const changesetPath = path.relative(context.gitRepo.resolvedRoot, emptyFile);
+			const changesetPath = repo.relativeToRepo(emptyFile);
 			this.logHr();
 			this.log(`Created empty changeset: ${chalk.green(changesetPath)}`);
 			return {
@@ -139,21 +142,22 @@ export default class GenerateChangesetCommand extends BaseCommand<
 			};
 		}
 
-		const repo = new Repository({ baseDir: context.gitRepo.resolvedRoot });
+		const git = await repo.getGitRepository();
+		const { upstreamRemotePartialUrl } = repo;
 		// context.originRemotePartialUrl is 'microsoft/FluidFramework'; see BaseCommand.getContext().
-		const remote = await repo.getRemote(context.originRemotePartialUrl);
+		const remote = await getRemote(git, upstreamRemotePartialUrl);
 
 		if (remote === undefined) {
-			this.error(`Can't find a remote with ${context.originRemotePartialUrl}`, { exit: 1 });
+			this.error(`Can't find a remote with ${upstreamRemotePartialUrl}`, { exit: 1 });
 		}
-		this.log(`Remote for ${context.originRemotePartialUrl} is: ${chalk.bold(remote)}`);
+		this.log(`Remote for ${upstreamRemotePartialUrl} is: ${chalk.bold(remote)}`);
 
 		ux.action.start(`Comparing local changes to remote for branch ${branch}`);
 		let {
 			packages: initialBranchChangedPackages,
 			files: changedFiles,
 			releaseGroups: changedReleaseGroups,
-		} = await repo.getChangedSinceRef(branch, remote, context);
+		} = await getChangedSinceRef(repo, branch, remote);
 		ux.action.stop();
 
 		// Separate definition to address no-atomic-updates lint rule
@@ -184,7 +188,7 @@ export default class GenerateChangesetCommand extends BaseCommand<
 				ux.action.start(
 					`Branch changed. Comparing local changes to remote for branch ${branch}`,
 				);
-				const newChanges = await repo.getChangedSinceRef(branch, remote, context);
+				const newChanges = await getChangedSinceRef(repo, branch, remote);
 				ux.action.stop();
 
 				changedPackages = newChanges.packages;
@@ -198,10 +202,10 @@ export default class GenerateChangesetCommand extends BaseCommand<
 		this.verbose(`files: ${changedFiles.join(", ")}`);
 
 		changedPackages = changedPackages.filter((pkg) => {
-			const inReleaseGroup = pkg.releaseGroup === releaseGroup;
+			const inReleaseGroup = pkg.releaseGroup === releaseGroup.name;
 			if (!inReleaseGroup) {
 				this.warning(
-					`${pkg.name}: Ignoring changed package because it is not in the ${releaseGroup} release group.`,
+					`${pkg.name}: Ignoring changed package because it is not in the ${releaseGroup.name} release group.`,
 				);
 			}
 			return inReleaseGroup;
@@ -229,8 +233,8 @@ export default class GenerateChangesetCommand extends BaseCommand<
 
 		// Handle the selected release group first so it shows up in the list first.
 		packageChoices.push(
-			{ title: `${chalk.bold(monorepo.name)}`, heading: true, disabled: true },
-			...monorepo.packages
+			{ title: `${chalk.bold(releaseGroup.name)}`, heading: true, disabled: true },
+			...releaseGroup.packages
 				.filter((pkg) => all || noChanges || isIncludedByDefault(pkg))
 				.sort((a, b) => packageComparer(a, b, changedPackages))
 				.map((pkg) => {
@@ -245,23 +249,11 @@ export default class GenerateChangesetCommand extends BaseCommand<
 			{ title: chalk.bold("Independent Packages"), heading: true, disabled: true },
 		);
 
-		for (const pkg of context.independentPackages) {
-			if (!all && !isIncludedByDefault(pkg)) {
-				continue;
-			}
-			const changed = changedPackages.some((cp) => cp.name === pkg.name);
-			packageChoices.push({
-				title: changed ? `${pkg.name} ${chalk.red.bold("(changed)")}` : pkg.name,
-				value: pkg,
-				selected: changed,
-			});
-		}
-
 		// Finally list the remaining (unchanged) release groups and their packages
-		for (const rg of context.repo.releaseGroups.values()) {
-			if (rg.name !== releaseGroup) {
+		for (const rg of repo.releaseGroups.values()) {
+			if (rg.name !== releaseGroup.name) {
 				packageChoices.push(
-					{ title: `${chalk.bold(rg.kind)}`, heading: true, disabled: true },
+					{ title: `${chalk.bold(rg.name)}`, heading: true, disabled: true },
 					...rg.packages
 						.filter((pkg) => (all ? true : isIncludedByDefault(pkg)))
 						.sort((a, b) => packageComparer(a, b, changedPackages))
@@ -276,18 +268,17 @@ export default class GenerateChangesetCommand extends BaseCommand<
 			}
 		}
 
+		const releaseNotesSettings = this.getFlubConfig().releaseNotes;
 		const sectionChoices: Choice[] =
-			context.flubConfig.releaseNotes?.sections === undefined
+			releaseNotesSettings?.sections === undefined
 				? []
-				: Object.entries(context.flubConfig.releaseNotes.sections).map(
-						([name, { heading }]) => {
-							const choice: Choice = {
-								title: heading,
-								value: name,
-							};
-							return choice;
-						},
-					);
+				: Object.entries(releaseNotesSettings.sections).map(([name, { heading }]) => {
+						const choice: Choice = {
+							title: heading,
+							value: name,
+						};
+						return choice;
+					});
 
 		/**
 		 * The prompts typing for the `onState` function doesn't include the shape of the `state` object, so this interface
@@ -345,7 +336,7 @@ export default class GenerateChangesetCommand extends BaseCommand<
 				name: "section",
 				// This question should only be asked if the releaseNotes config is available.
 				// falsy values for "type" will cause the question to be skipped.
-				type: context.flubConfig.releaseNotes === undefined ? false : "select",
+				type: releaseNotesSettings === undefined ? false : "select",
 				choices: sectionChoices,
 				instructions: INSTRUCTIONS,
 				message: "What section of the release notes should this change be in?",
@@ -382,15 +373,15 @@ export default class GenerateChangesetCommand extends BaseCommand<
 		// The response.selectedPackages value will be undefined if the question was skipped, so default to an empty array
 		// in that case.
 		const selectedPackages: IPackage[] = (response.selectedPackages ?? []) as IPackage[];
-		const bumpType = getDefaultBumpTypeForBranch(branch, releaseGroup) ?? "minor";
+		const bumpType = getDefaultBumpTypeForBranch(branch, releaseGroup.name) ?? "minor";
 
 		const newFile = await createChangesetFile(
-			monorepo.directory ?? context.gitRepo.resolvedRoot,
+			releaseGroup.rootPackage?.directory ?? releaseGroup.workspace.directory,
 			new Map(selectedPackages.map((p) => [p, bumpType])),
 			`${(response.summary as string).trim()}\n\n${response.description}`,
 			{ section: response.section as string },
 		);
-		const changesetPath = path.relative(context.gitRepo.resolvedRoot, newFile);
+		const changesetPath = repo.relativeToRepo(newFile);
 
 		this.logHr();
 		this.log(`Created new changeset: ${chalk.green(changesetPath)}`);

@@ -134,7 +134,7 @@ export const CheckHasRemoteBranchUpToDate: CheckFunction = async (
 	let succeeded = false;
 	try {
 		const branchSummary = await git.branch();
-		succeeded = await isBranchUpToDate(branchSummary.current, remote, git);
+		succeeded = await isBranchUpToDate(git, branchSummary.current, remote);
 	} catch (error) {
 		return {
 			message: `Error when checking remote branch. Does the remote branch exist? Full error message:\n${

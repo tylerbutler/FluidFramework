@@ -231,7 +231,7 @@ export async function selectAndFilterPackages<P extends IPackage>(
 /**
  * Convenience type that contains only the properties of a package that are needed for filtering.
  */
-interface FilterablePackage {
+export interface FilterablePackage {
 	name: string;
 	private?: boolean | undefined;
 }

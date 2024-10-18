@@ -7,11 +7,10 @@ import { Command } from "@oclif/core";
 import chalk from "chalk";
 import { Machine } from "jssm";
 
-import { Context } from "../library/index.js";
-
 import { ReleaseVersion, VersionBumpType, VersionScheme } from "@fluid-tools/version-tools";
 
 import type { IFluidRepo, IReleaseGroup } from "@fluid-tools/build-infrastructure";
+import type { SimpleGit } from "simple-git";
 import { InstructionalPromptWriter } from "../instructionalPromptWriter.js";
 import { CommandLogger } from "../logging.js";
 import { MachineState } from "../machines/index.js";
@@ -57,11 +56,11 @@ import { BaseStateHandler } from "./stateHandlers.js";
  * used only within the {@link FluidReleaseStateHandler}.
  */
 export interface FluidReleaseStateHandlerData {
-	/**
-	 * The {@link Context}.
-	 *
-	 * @deprecated Update usage to IFluidRepo instead of Context.
-	 */
+	// /**
+	//  * The {@link Context}.
+	//  *
+	//  * @deprecated Update usage to IFluidRepo instead of Context.
+	//  */
 	// context: Context;
 
 	/**
@@ -69,7 +68,7 @@ export interface FluidReleaseStateHandlerData {
 	 */
 	repo: IFluidRepo;
 
-	// git: SimpleGit;
+	git: SimpleGit;
 	// currentBranch: string;
 
 	/**
@@ -96,6 +95,11 @@ export interface FluidReleaseStateHandlerData {
 	 * The version being released.
 	 */
 	releaseVersion: ReleaseVersion;
+
+	/**
+	 * The branch name when the release command was invoked.
+	 */
+	originalBranch: string;
 
 	/**
 	 * True if all optional checks should be skipped.

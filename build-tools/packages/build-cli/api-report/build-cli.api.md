@@ -41,7 +41,6 @@ export interface FlubConfig {
         [name: string]: VersionBumpType | PreviousVersionStyle;
     };
     bump?: BumpConfig;
-    changesetConfig?: ChangesetConfig;
     policy?: PolicyConfig;
     releaseNotes?: ReleaseNotesConfig;
     releaseReport?: ReleaseReportConfig;

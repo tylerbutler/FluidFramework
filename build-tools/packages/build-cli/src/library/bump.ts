@@ -3,18 +3,18 @@
  * Licensed under the MIT License.
  */
 
-import {
-	DEFAULT_INTERDEPENDENCY_RANGE,
-	InterdependencyRange,
-	VersionChangeType,
-	VersionScheme,
-	bumpVersionScheme,
-	isVersionBumpType,
-} from "@fluid-tools/version-tools";
-import { Logger } from "@fluidframework/build-tools";
+// import {
+// 	DEFAULT_INTERDEPENDENCY_RANGE,
+// 	InterdependencyRange,
+// 	VersionChangeType,
+// 	VersionScheme,
+// 	bumpVersionScheme,
+// 	isVersionBumpType,
+// } from "@fluid-tools/version-tools";
+// import { Logger } from "@fluidframework/build-tools";
 
-import type { IFluidRepo, IReleaseGroup } from "@fluid-tools/build-infrastructure";
-import { setVersion } from "./package.js";
+// import type { IFluidRepo, IReleaseGroup } from "@fluid-tools/build-infrastructure";
+// import { setVersion } from "./package.js";
 
 /**
  * A type representing the types of dependency updates that can be done. This type is intended to match the type
@@ -45,34 +45,34 @@ export function isDependencyUpdateType(str: string | undefined): str is Dependen
 	return str.startsWith("@");
 }
 
-/**
- * Bumps a release group or standalone package by the bumpType.
- *
- * @param fluidRepo - The {@link IFluidRepo}.
- * @param releaseGroupOrPackage - A release group to bump.
- * @param bumpType - The bump type. Can be a SemVer object to set an exact version.
- * @param scheme - The version scheme to use.
- * @param interdependencyRange - The type of dependency to use on packages within the release group.
- * @param log - A logger to use.
- */
-// eslint-disable-next-line max-params
-export async function bumpReleaseGroup(
-	fluidRepo: IFluidRepo,
-	releaseGroupOrPackage: IReleaseGroup,
-	bumpType: VersionChangeType,
-	scheme?: VersionScheme,
-	interdependencyRange: InterdependencyRange = DEFAULT_INTERDEPENDENCY_RANGE,
-	log?: Logger,
-): Promise<void> {
-	const translatedVersion = isVersionBumpType(bumpType)
-		? bumpVersionScheme(releaseGroupOrPackage.version, bumpType, scheme)
-		: bumpType;
+// /**
+//  * Bumps a release group or standalone package by the bumpType.
+//  *
+//  * @param fluidRepo - The {@link IFluidRepo}.
+//  * @param releaseGroupOrPackage - A release group to bump.
+//  * @param bumpType - The bump type. Can be a SemVer object to set an exact version.
+//  * @param scheme - The version scheme to use.
+//  * @param interdependencyRange - The type of dependency to use on packages within the release group.
+//  * @param log - A logger to use.
+//  */
+// // eslint-disable-next-line max-params
+// export async function bumpReleaseGroup(
+// 	fluidRepo: IFluidRepo,
+// 	releaseGroupOrPackage: IReleaseGroup,
+// 	bumpType: VersionChangeType,
+// 	scheme?: VersionScheme,
+// 	interdependencyRange: InterdependencyRange = DEFAULT_INTERDEPENDENCY_RANGE,
+// 	log?: Logger,
+// ): Promise<void> {
+// 	const translatedVersion = isVersionBumpType(bumpType)
+// 		? bumpVersionScheme(releaseGroupOrPackage.version, bumpType, scheme)
+// 		: bumpType;
 
-	await setVersion(
-		fluidRepo,
-		releaseGroupOrPackage,
-		translatedVersion,
-		interdependencyRange,
-		log,
-	);
-}
+// 	await setVersion(
+// 		fluidRepo,
+// 		releaseGroupOrPackage,
+// 		translatedVersion,
+// 		interdependencyRange,
+// 		log,
+// 	);
+// }

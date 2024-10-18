@@ -6,11 +6,10 @@
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 import {
-	AllPackagesSelectionCriteria,
 	type PackageName,
-	selectAndFilterPackages,
+	filterPackages,
+	isIReleaseGroup,
 } from "@fluid-tools/build-infrastructure";
-import { MonoRepo, Package } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import { mkdirpSync } from "fs-extra";
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../args.js";
@@ -96,21 +95,21 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 		}
 		const rgOrPackage = findPackageOrReleaseGroup(lookupName, repo);
 
-		if (rgOrPackage === undefined || !(rgOrPackage instanceof MonoRepo)) {
+		if (rgOrPackage === undefined) {
 			this.error(`No release group or package found using name '${lookupName}'.`, { exit: 1 });
 		}
 
+		const releaseGroup = isIReleaseGroup(rgOrPackage)
+			? rgOrPackage
+			: repo.getPackageReleaseGroup(rgOrPackage);
 		const filterOptions = parsePackageFilterFlags(this.flags);
-		const packageList: ListItem[] = await pnpmList(rgOrPackage.repoPath);
-		const { filtered: filteredPackages } = await selectAndFilterPackages(
-			repo,
-			AllPackagesSelectionCriteria,
-			filterOptions,
-		);
+		const packageList: ListItem[] = await pnpmList(releaseGroup.workspace.directory);
+
+		const filteredPackages = await filterPackages(packageList, filterOptions);
 		const filtered = filteredPackages
 			.reverse()
-			.filter((item) => {
-				const config = repo.flubConfig?.policy?.packageNames;
+			.filter((item): item is ListItem => {
+				const config = this.getFlubConfig().policy?.packageNames;
 				if (config === undefined) {
 					// exits the process
 					this.error(`No package name policy config found.`);
@@ -125,7 +124,7 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 			})
 			.map((item) => {
 				// pnpm returns absolute paths, but repo relative is more useful
-				item.path = repo.repo.relativeToRepo(item.path);
+				item.path = repo.relativeToRepo(item.path);
 				item.tarball = getTarballName(item.name);
 
 				// Set the tarball name if the tarball flag is set
@@ -140,20 +139,6 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 
 		// For JSON output
 		return filtered;
-	}
-
-	private async outputSinglePackage(pkg: Package): Promise<ListItem> {
-		const output = this.flags.tarball ? getTarballName(pkg.name) : pkg.name;
-
-		await this.writeOutput(output, this.flags.outFile);
-		const item: ListItem = {
-			name: pkg.name,
-			version: pkg.version,
-			path: pkg.directory,
-			private: pkg.private,
-			tarball: getTarballName(pkg.packageJson),
-		};
-		return item;
 	}
 
 	private async writeOutput(output: string, outFile?: string): Promise<void> {

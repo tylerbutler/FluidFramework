@@ -161,7 +161,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 			this.info("Resolving errors if possible.");
 		}
 
-		const flubConfig = await this.getFlubConfig();
+		const flubConfig = this.getFlubConfig();
 		const { policy } = flubConfig;
 
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -192,7 +192,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 		} else {
 			const git = await repo.getGitRepository();
 			// const repo = new Repository({ baseDir: gitRoot });
-			const gitFiles = await getFiles(".", git);
+			const gitFiles = await getFiles(git, ".");
 			filePathsToCheck.push(...gitFiles);
 		}
 

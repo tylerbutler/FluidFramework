@@ -3,12 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import type { IPackage } from "@fluid-tools/build-infrastructure";
-import { GitRepo, getResolvedFluidRoot } from "@fluidframework/build-tools";
+import { type IPackage, loadFluidRepo } from "@fluid-tools/build-infrastructure";
 import { expect } from "chai";
 
-import { type PackageNamePolicyConfig } from "../../config.js";
-import { Context } from "../../library/index.js";
+import { type PackageNamePolicyConfig, getFlubConfig } from "../../config.js";
 import {
 	type Feed,
 	feeds,
@@ -45,16 +43,15 @@ function feedsForPackages(
 
 describe("feeds", () => {
 	it("dev and build feed are mutually exclusive", async () => {
-		const resolvedRoot = await getResolvedFluidRoot();
-		const gitRepo = new GitRepo(resolvedRoot);
-		const branch = await gitRepo.getCurrentBranchName();
+		const cwd = process.cwd();
+		const repo = loadFluidRepo(cwd, "microsoft/FluidFramework");
+		const { config: flubConfig } = getFlubConfig(cwd);
 
-		const context = new Context(gitRepo, "microsoft/FluidFramework", branch);
-		const config = context.flubConfig.policy?.packageNames;
+		const config = flubConfig.policy?.packageNames;
 		if (config === undefined || config === null) {
 			throw new Error(`config is undefined or null`);
 		}
-		const packages = feedsForPackages(context.packages, config);
+		const packages = feedsForPackages([...repo.packages.values()], config);
 
 		const dev = packages.get("internal-dev")?.map((p) => p.name);
 		const build = packages.get("internal-build")?.map((p) => p.name);

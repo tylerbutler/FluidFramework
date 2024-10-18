@@ -12,6 +12,7 @@ import {
 } from "@fluid-tools/version-tools";
 import * as semver from "semver";
 
+import type { IReleaseGroup } from "@fluid-tools/build-infrastructure";
 import type { ReleaseReportConfig } from "../config.js";
 import { ReleaseGroup } from "../releaseGroups.js";
 
@@ -47,7 +48,7 @@ export interface ReleaseDetails {
 	date?: Date;
 	releaseType: VersionBumpType;
 	isNewRelease: boolean;
-	releaseGroup?: ReleaseGroup;
+	releaseGroup: IReleaseGroup;
 	ranges: ReleaseRanges;
 }
 

@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { IPackage, ReleaseGroupName } from "@fluid-tools/build-infrastructure";
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import * as changeCase from "change-case";
 import { type ColumnUserConfig, table } from "table";
@@ -98,7 +98,7 @@ export default class InfoCommand extends BaseCommand<typeof InfoCommand> {
 		let packages =
 			flags.releaseGroup === undefined
 				? [...repo.packages.values()]
-				: (repo.releaseGroups.get(flags.releaseGroup as ReleaseGroupName)?.packages ?? []);
+				: (repo.releaseGroups.get(flags.releaseGroup)?.packages ?? []);
 
 		// Sort by packages by name (invariant sort by codepoints).
 		// (See https://stackoverflow.com/a/40355107)

@@ -114,9 +114,11 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 			releaseGroup,
 			releaseVersion: releaseGroup.version,
 			repo: fluidRepo,
+			git,
 			promptWriter: new PromptWriter(logger),
 			bumpType: flags.bumpType as VersionBumpType,
 			versionScheme: detectVersionScheme(releaseGroup.version),
+			originalBranch: branchSummary.current,
 			shouldSkipChecks: flags.skipChecks,
 			shouldCheckPolicy:
 				userPolicyCheckChoice ?? (branchPolicyCheckDefault && !flags.skipChecks),
