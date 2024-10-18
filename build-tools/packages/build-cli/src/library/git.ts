@@ -378,9 +378,11 @@ export async function getTags(git: SimpleGit, pattern?: string): Promise<string[
  */
 async function getCommitDate(git: SimpleGit, gitRef: string): Promise<Date> {
 	const args = ["show", "--no-patch", "--format=%cI", gitRef];
-	// const test = await git.log
 	const result = await git.raw(args);
-	const date = parseISO(result);
+	const date = parseISO(
+		// The result might have a trailing newline
+		result.trim(),
+	);
 	return date;
 }
 
