@@ -47,6 +47,7 @@ export type {
 	IPackageManager,
 } from "./types.js";
 export { isIPackage, isIReleaseGroup } from "./types.js";
+export { setVersion } from "./versions.js";
 
 // export {
 // 	filterPackages,
@@ -66,4 +67,3 @@ export { isIPackage, isIReleaseGroup } from "./types.js";
 // 	getChangedSinceRef,
 // } from "./git.js";
 // export { updatePackageJsonFile, updatePackageJsonFileAsync } from "./packageJsonUtils.js";
-// export { setVersion } from "./versions.js";

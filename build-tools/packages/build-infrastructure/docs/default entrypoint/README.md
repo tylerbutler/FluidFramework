@@ -55,3 +55,4 @@ build-infrastructure package comment.
 - [isIPackage](functions/isIPackage.md)
 - [isIReleaseGroup](functions/isIReleaseGroup.md)
 - [loadFluidRepo](functions/loadFluidRepo.md)
+- [setVersion](functions/setVersion.md)
