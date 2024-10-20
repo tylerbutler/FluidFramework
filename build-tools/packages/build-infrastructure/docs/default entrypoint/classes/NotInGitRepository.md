@@ -38,6 +38,22 @@ new NotInGitRepository(path): NotInGitRepository
 
 ## Properties
 
+### cause?
+
+```ts
+optional cause: unknown;
+```
+
+#### Inherited from
+
+`Error.cause`
+
+#### Defined in
+
+node\_modules/.pnpm/typescript@5.4.5/node\_modules/typescript/lib/lib.es2022.error.d.ts:24
+
+***
+
 ### message
 
 ```ts

@@ -23,6 +23,7 @@ package groups.
 
 ### Interfaces
 
+- [FilterablePackage](interfaces/FilterablePackage.md)
 - [FluidPackageJsonFields](interfaces/FluidPackageJsonFields.md)
 - [IFluidBuildDir](interfaces/IFluidBuildDir.md)
 - [IFluidBuildDirs](interfaces/IFluidBuildDirs.md)
@@ -34,6 +35,8 @@ package groups.
 - [IReleaseGroup](interfaces/IReleaseGroup.md)
 - [IWorkspace](interfaces/IWorkspace.md)
 - [PackageDependency](interfaces/PackageDependency.md)
+- [PackageFilterOptions](interfaces/PackageFilterOptions.md)
+- [PackageSelectionCriteria](interfaces/PackageSelectionCriteria.md)
 - [ReleaseGroupDefinition](interfaces/ReleaseGroupDefinition.md)
 - [Reloadable](interfaces/Reloadable.md)
 - [WorkspaceDefinition](interfaces/WorkspaceDefinition.md)
@@ -41,6 +44,7 @@ package groups.
 ### Type Aliases
 
 - [AdditionalPackageProps](type-aliases/AdditionalPackageProps.md)
+- [GlobString](type-aliases/GlobString.md)
 - [IFluidBuildDirEntry](type-aliases/IFluidBuildDirEntry.md)
 - [PackageJson](type-aliases/PackageJson.md)
 - [PackageManagerName](type-aliases/PackageManagerName.md)
@@ -50,13 +54,17 @@ package groups.
 
 ### Variables
 
+- [AllPackagesSelectionCriteria](variables/AllPackagesSelectionCriteria.md)
+- [EmptySelectionCriteria](variables/EmptySelectionCriteria.md)
 - [FLUIDREPO\_CONFIG\_VERSION](variables/FLUIDREPO_CONFIG_VERSION.md)
 
 ### Functions
 
 - [createPackageManager](functions/createPackageManager.md)
+- [filterPackages](functions/filterPackages.md)
 - [getAllDependenciesInRepo](functions/getAllDependenciesInRepo.md)
 - [getFluidRepoLayout](functions/getFluidRepoLayout.md)
 - [isIPackage](functions/isIPackage.md)
 - [isIReleaseGroup](functions/isIReleaseGroup.md)
 - [loadFluidRepo](functions/loadFluidRepo.md)
+- [selectAndFilterPackages](functions/selectAndFilterPackages.md)
