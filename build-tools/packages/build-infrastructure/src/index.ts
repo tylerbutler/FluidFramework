@@ -60,6 +60,7 @@ export {
 	type PackageSelectionCriteria,
 	type PackageFilterOptions,
 } from "./filter.js";
+export { setVersion } from "./versions.js";
 
 // export {
 // 	getFiles,
@@ -69,4 +70,3 @@ export {
 // 	getChangedSinceRef,
 // } from "./git.js";
 // export { updatePackageJsonFile, updatePackageJsonFileAsync } from "./packageJsonUtils.js";
-// export { setVersion } from "./versions.js";

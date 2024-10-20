@@ -68,3 +68,4 @@ package groups.
 - [isIReleaseGroup](functions/isIReleaseGroup.md)
 - [loadFluidRepo](functions/loadFluidRepo.md)
 - [selectAndFilterPackages](functions/selectAndFilterPackages.md)
+- [setVersion](functions/setVersion.md)
