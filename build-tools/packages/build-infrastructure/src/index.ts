@@ -68,3 +68,4 @@ export {
 	type PackageSelectionCriteria,
 	type PackageFilterOptions,
 } from "./filter.js";
+export { setVersion } from "./versions.js";
