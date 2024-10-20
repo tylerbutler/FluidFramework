@@ -47,17 +47,17 @@ export type {
 	IPackageManager,
 } from "./types.js";
 export { isIPackage, isIReleaseGroup } from "./types.js";
+export {
+	filterPackages,
+	type FilterablePackage,
+	selectAndFilterPackages,
+	type GlobString,
+	AllPackagesSelectionCriteria,
+	EmptySelectionCriteria,
+	type PackageSelectionCriteria,
+	type PackageFilterOptions,
+} from "./filter.js";
 
-// export {
-// 	filterPackages,
-// 	type FilterablePackage,
-// 	selectAndFilterPackages,
-// 	type GlobString,
-// 	AllPackagesSelectionCriteria,
-// 	EmptySelectionCriteria,
-// 	type PackageSelectionCriteria,
-// 	type PackageFilterOptions,
-// } from "./filter.js";
 // export {
 // 	getFiles,
 // 	findGitRootSync,
