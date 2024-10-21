@@ -294,14 +294,13 @@ export interface Reloadable {
 }
 
 // @public
-<<<<<<< HEAD
 export function selectAndFilterPackages<P extends IPackage>(fluidRepo: IFluidRepo<P>, selection: PackageSelectionCriteria, filter?: PackageFilterOptions): Promise<{
     selected: P[];
     filtered: P[];
 }>;
-=======
+
+// @public
 export function setVersion<J extends PackageJson>(packages: IPackage[], version: semver.SemVer): Promise<void>;
->>>>>>> 174bb819b6 (add version APIs)
 
 // @public
 export function updatePackageJsonFile<J extends PackageJson = PackageJson>(packagePath: string, packageTransformer: (json: J) => void): void;
