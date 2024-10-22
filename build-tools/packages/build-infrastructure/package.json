@@ -26,16 +26,24 @@
 	},
 	"main": "lib/index.js",
 	"bin": {
-		"repo-layout": "./bin/run.js"
+		"repo-layout": "./bin/run.mjs"
 	},
+	"files": [
+		"/bin",
+		"/dist",
+		"!dist/test",
+		"/lib",
+		"!lib/test",
+		"/oclif.manifest.json"
+	],
 	"scripts": {
 		"build": "fluid-build . --task build",
 		"build:commonjs": "npm run tsc && npm run build:test",
 		"build:compile": "npm run build:commonjs",
-		"build:docs": "api-extractor run --local",
+		"build:docs": "api-extractor run --local && typedoc",
 		"build:esnext": "tsc --project ./tsconfig.json",
 		"build:manifest": "oclif manifest",
-		"build:readme": "oclif readme --version 0.0.0 --no-aliases --readme-path docs/cli.md",
+		"build:readme": "oclif readme --version 0.0.0 --no-aliases --readme-path src/docs/cli.md",
 		"build:test": "npm run build:test:esm && npm run build:test:cjs",
 		"build:test:cjs": "fluid-tsc commonjs --project ./src/test/tsconfig.cjs.json",
 		"build:test:esm": "tsc --project ./src/test/tsconfig.json",
@@ -50,6 +58,7 @@
 		"lint": "npm run eslint",
 		"lint:fix": "npm run eslint:fix",
 		"test": "npm run test:mocha",
+		"test:coverage": "c8 npm run test",
 		"test:mocha": "mocha --recursive lib/test",
 		"tsc": "fluid-tsc commonjs --project ./tsconfig.cjs.json && copyfiles -f ../../../common/build/build-common/src/cjs/package.json ./dist"
 	},
@@ -74,6 +83,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "~1.9.3",
+		"@fluid-tools/api-markdown-documenter": "^0.17.1",
 		"@fluidframework/build-common": "^2.0.3",
 		"@fluidframework/build-tools-bin": "npm:@fluidframework/build-tools@~0.44.0",
 		"@fluidframework/eslint-config-fluid": "^5.3.0",
@@ -91,18 +101,14 @@
 		"copyfiles": "^2.4.1",
 		"eslint": "~8.57.0",
 		"eslint-plugin-chai-friendly": "~1.0.1",
+		"memfs": "^4.14.0",
 		"mocha": "^10.2.0",
 		"rimraf": "^4.4.1",
-		"ts-node": "^10.9.1"
+		"ts-node": "^10.9.1",
+		"typedoc": "^0.26.10",
+		"typedoc-plugin-markdown": "^4.2.9",
+		"unionfs": "^4.5.4"
 	},
-	"files": [
-		"/bin",
-		"/dist",
-		"!dist/test",
-		"/lib",
-		"!lib/test",
-		"/oclif.manifest.json"
-	],
 	"oclif": {
 		"bin": "repo-layout",
 		"dirname": "repo-layout",

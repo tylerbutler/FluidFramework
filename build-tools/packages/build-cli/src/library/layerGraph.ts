@@ -240,8 +240,8 @@ class PackageNode extends BaseNode {
 	}
 
 	public initializedDependencies(packageNodeMap: Map<string, PackageNode>): void {
-		for (const { name, depClass } of this.pkg.combinedDependencies) {
-			if (depClass !== "prod") {
+		for (const { name, depKind } of this.pkg.combinedDependencies) {
+			if (depKind !== "prod") {
 				// Skip non-prod dependencies
 				continue;
 			}

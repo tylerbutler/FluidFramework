@@ -9,12 +9,13 @@ import path from "node:path";
 import { expect } from "chai";
 import { afterEach, describe, it } from "mocha";
 import * as semver from "semver";
+import { simpleGit } from "simple-git";
 
 import { loadFluidRepo } from "../fluidRepo.js";
 import type { ReleaseGroupName, WorkspaceName } from "../types.js";
 import { setDependencyVersion, setVersion } from "../versions.js";
 
-import { testDataPath } from "./init.js";
+import { testDataPath, testRepoRoot } from "./init.js";
 
 const repo = loadFluidRepo(path.join(testDataPath, "./testRepo"));
 const main = repo.releaseGroups.get("main" as ReleaseGroupName);
@@ -23,25 +24,20 @@ assert(main !== undefined);
 const group2 = repo.releaseGroups.get("group2" as ReleaseGroupName);
 assert(group2 !== undefined);
 
+const group3 = repo.releaseGroups.get("group3" as ReleaseGroupName);
+assert(group3 !== undefined);
+
 const secondWorkspace = repo.workspaces.get("second" as WorkspaceName);
 assert(secondWorkspace !== undefined);
 
+/**
+ * A git client rooted in the test repo. Used for resetting tests.
+ */
+const git = simpleGit(testRepoRoot);
+
 describe("setVersion", () => {
 	afterEach(async () => {
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		await setVersion([...repo.packages.values()], semver.parse("1.0.0")!);
-		// await setVersion(
-		// 	repo,
-		// 	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		// 	repo.releaseGroups.get("group2" as ReleaseGroupName)!.packages,
-		// 	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		// 	semver.parse("2.0.0")!,
-		// );
-		await setVersion(
-			secondWorkspace.packages,
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			semver.parse("2.0.0")!,
-		);
+		await git.checkout(["HEAD", "--", testRepoRoot]);
 		repo.reload();
 	});
 
@@ -76,15 +72,10 @@ describe("setVersion", () => {
 });
 
 describe("setDependencyVersion", () => {
-	// afterEach(async () => {
-	// 	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	// 	await setVersion([...repo.packages.values()], semver.parse("1.0.0")!);
-	// 	await setVersion(
-	// 		secondWorkspace.packages,
-	// 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	// 		semver.parse("2.0.0")!,
-	// 	);
-	// });
+	afterEach(async () => {
+		await git.checkout(["HEAD", "--", testRepoRoot]);
+		repo.reload();
+	});
 
 	it("update release group deps", async () => {
 		await setDependencyVersion(
@@ -102,6 +93,7 @@ describe("setDependencyVersion", () => {
 				}
 				const matches = version === "workspace:~";
 				if (matches === false) {
+					console.error(`${name} has incorrect version/range: ${version}`);
 					return false;
 				}
 			}

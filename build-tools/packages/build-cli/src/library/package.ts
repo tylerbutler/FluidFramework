@@ -604,12 +604,12 @@ async function setPackageDependencies(
 ): Promise<boolean> {
 	let changed = false;
 	let newRangeString: string;
-	for (const { name, depClass } of pkg.combinedDependencies) {
+	for (const { name, depKind } of pkg.combinedDependencies) {
 		const dep = dependencyVersionMap.get(name);
 		if (dep !== undefined) {
 			const isSameReleaseGroup = dep.pkg.releaseGroup === pkg.releaseGroup;
 			if (!isSameReleaseGroup || (updateWithinSameReleaseGroup && isSameReleaseGroup)) {
-				const dependencies = getDependenciesRecord(pkg.packageJson, depClass);
+				const dependencies = getDependenciesRecord(pkg.packageJson, depKind);
 				if (dependencies === undefined) {
 					continue;
 				}
