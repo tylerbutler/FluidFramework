@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { PackageJson } from "@fluidframework/build-tools";
+import type { PackageJson } from "@fluid-tools/build-infrastructure";
 
 /**
  * Metadata about known-broken types.

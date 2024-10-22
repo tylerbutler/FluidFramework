@@ -5,7 +5,8 @@
 
 import path from "node:path";
 
-import type { Logger, PackageJson } from "@fluidframework/build-tools";
+import type { PackageJson } from "@fluid-tools/build-infrastructure";
+import type { Logger } from "@fluidframework/build-tools";
 
 /**
  * Properties for an "exports" leaf entry block in package.json.

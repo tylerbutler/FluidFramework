@@ -5,11 +5,15 @@
 
 import { writeFileSync } from "node:fs";
 import path from "node:path";
-import { MonoRepo, Package } from "@fluidframework/build-tools";
+import {
+	type PackageName,
+	filterPackages,
+	isIReleaseGroup,
+} from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import { mkdirpSync } from "fs-extra";
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../args.js";
-import { filterPackages, parsePackageFilterFlags } from "../filter.js";
+import { parsePackageFilterFlags } from "../filter.js";
 import { filterFlags, releaseGroupFlag } from "../flags.js";
 import { BaseCommand, getTarballName } from "../library/index.js";
 import {
@@ -84,30 +88,28 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 
 	public async run(): Promise<ListItem[]> {
 		const { feed, outFile, releaseGroup: releaseGroupName, tarball } = this.flags;
-		const context = await this.getContext();
+		const repo = await this.getFluidRepo();
 		const lookupName = releaseGroupName ?? this.args.package_or_release_group;
 		if (lookupName === undefined) {
 			this.error(`No release group or package flag found.`, { exit: 1 });
 		}
-		const rgOrPackage = findPackageOrReleaseGroup(lookupName, context);
+		const rgOrPackage = findPackageOrReleaseGroup(lookupName, repo);
 
-		// Handle single packages
-		if (rgOrPackage instanceof Package) {
-			const item = await this.outputSinglePackage(rgOrPackage);
-			return [item];
-		}
-
-		if (rgOrPackage === undefined || !(rgOrPackage instanceof MonoRepo)) {
+		if (rgOrPackage === undefined) {
 			this.error(`No release group or package found using name '${lookupName}'.`, { exit: 1 });
 		}
 
+		const releaseGroup = isIReleaseGroup(rgOrPackage)
+			? rgOrPackage
+			: repo.getPackageReleaseGroup(rgOrPackage);
 		const filterOptions = parsePackageFilterFlags(this.flags);
-		const packageList = await pnpmList(rgOrPackage.repoPath);
+		const packageList: ListItem[] = await pnpmList(releaseGroup.workspace.directory);
+
 		const filteredPackages = await filterPackages(packageList, filterOptions);
 		const filtered = filteredPackages
 			.reverse()
 			.filter((item): item is ListItem => {
-				const config = context.flubConfig?.policy?.packageNames;
+				const config = this.getFlubConfig().policy?.packageNames;
 				if (config === undefined) {
 					// exits the process
 					this.error(`No package name policy config found.`);
@@ -122,12 +124,12 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 			})
 			.map((item) => {
 				// pnpm returns absolute paths, but repo relative is more useful
-				item.path = context.repo.relativeToRepo(item.path);
+				item.path = repo.relativeToRepo(item.path);
 				item.tarball = getTarballName(item.name);
 
 				// Set the tarball name if the tarball flag is set
 				if (tarball === true) {
-					item.name = item.tarball;
+					item.name = item.tarball as PackageName;
 				}
 				return item;
 			});
@@ -137,20 +139,6 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 
 		// For JSON output
 		return filtered;
-	}
-
-	private async outputSinglePackage(pkg: Package): Promise<ListItem> {
-		const output = this.flags.tarball ? getTarballName(pkg.name) : pkg.name;
-
-		await this.writeOutput(output, this.flags.outFile);
-		const item: ListItem = {
-			name: pkg.name,
-			version: pkg.version,
-			path: pkg.directory,
-			private: pkg.private,
-			tarball: getTarballName(pkg.packageJson),
-		};
-		return item;
 	}
 
 	private async writeOutput(output: string, outFile?: string): Promise<void> {

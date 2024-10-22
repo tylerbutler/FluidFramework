@@ -16,7 +16,7 @@ export {
 	generateReleaseBranchName,
 } from "./branches.js";
 export { getDisplayDate, getDisplayDateRelative } from "./dates.js";
-export { bumpReleaseGroup, DependencyUpdateType, isDependencyUpdateType } from "./bump.js";
+export { DependencyUpdateType, isDependencyUpdateType } from "./bump.js";
 export {
 	DEFAULT_CHANGESET_PATH,
 	fluidCustomChangeSetMetadataDefaults,
@@ -31,20 +31,17 @@ export {
 	BaseCommand,
 	GenerateEntrypointsCommand,
 } from "./commands/index.js";
-export { Context, VersionDetails, isMonoRepoKind, MonoRepoKind } from "./context.js";
-export { Repository } from "./git.js";
+export { isMonoRepoKind, MonoRepoKind } from "./context.js";
 export {
 	ensureDevDependencyExists,
 	filterVersionsOlderThan,
 	generateReleaseGitTagName,
-	getFluidDependencies,
 	getPreReleaseDependencies,
 	getTarballName,
 	isReleased,
-	npmCheckUpdates,
 	PackageVersionMap,
 	PreReleaseDependencies,
-	setVersion,
+	// setVersion,
 	sortVersions,
 } from "./package.js";
 export { difference } from "./sets.js";
@@ -56,7 +53,10 @@ export {
 	ReleaseRanges,
 	ReleaseReport,
 	ReportKind,
+	VersionDetails,
 	toReportKind,
 } from "./release.js";
 export { LayerGraph } from "./layerGraph.js";
 export { type Handler, policyHandlers } from "./repoPolicyCheck/index.js";
+
+export { IFluidRepo as Context } from "@fluid-tools/build-infrastructure";

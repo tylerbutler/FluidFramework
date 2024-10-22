@@ -9,6 +9,7 @@ import { parseJSON } from "date-fns";
 
 import { VersionDetails } from "../../library/index.js";
 
+import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import type { PackageJson } from "@fluidframework/build-tools";
 import {
 	ensureDevDependencyExists,
@@ -42,19 +43,22 @@ describe("VersionDetails sorting", () => {
 
 describe("generateReleaseGitTagName", () => {
 	it("semver", () => {
-		const actual = generateReleaseGitTagName("release-group", "1.2.3");
+		const actual = generateReleaseGitTagName("release-group" as ReleaseGroupName, "1.2.3");
 		const expected = "release-group_v1.2.3";
 		assert.equal(actual, expected);
 	});
 
 	it("virtualPatch version scheme", () => {
-		const actual = generateReleaseGitTagName("build-tools", "0.4.2000");
+		const actual = generateReleaseGitTagName("build-tools" as ReleaseGroupName, "0.4.2000");
 		const expected = "build-tools_v0.4.2000";
 		assert.equal(actual, expected);
 	});
 
 	it("Fluid internal version scheme", () => {
-		const actual = generateReleaseGitTagName("client", "2.0.0-internal.1.0.0");
+		const actual = generateReleaseGitTagName(
+			"client" as ReleaseGroupName,
+			"2.0.0-internal.1.0.0",
+		);
 		const expected = "client_v2.0.0-internal.1.0.0";
 		assert.equal(actual, expected);
 	});

@@ -3,11 +3,21 @@
  * Licensed under the MIT License.
  */
 
+import type { ReleaseGroupName, WorkspaceName } from "@fluid-tools/build-infrastructure";
+import {
+	VersionBumpType,
+	VersionScheme,
+	isVersionBumpType,
+	isVersionBumpTypeExtended,
+	isVersionScheme,
+} from "@fluid-tools/version-tools";
 import { Flags } from "@oclif/core";
 import * as semver from "semver";
 
+import type { DependencyUpdateType } from "./library/index.js";
 // eslint-disable-next-line import/no-deprecated
 import { MonoRepoKind } from "./library/index.js";
+import { ReleaseGroup, isReleaseGroup } from "./releaseGroups.js";
 
 /**
  * An iterator that returns only the Enum values of MonoRepoKind.
@@ -21,32 +31,29 @@ function* supportedMonoRepoValues(): IterableIterator<MonoRepoKind> {
 	}
 }
 
-import {
-	VersionBumpType,
-	VersionScheme,
-	isVersionBumpType,
-	isVersionBumpTypeExtended,
-	isVersionScheme,
-} from "@fluid-tools/version-tools";
-
-import type { DependencyUpdateType } from "./library/index.js";
-import { ReleaseGroup, isReleaseGroup } from "./releaseGroups.js";
-
 /**
  * A re-usable CLI flag to parse release groups.
  */
-export const releaseGroupFlag = Flags.custom<ReleaseGroup>({
+export const releaseGroupFlag = Flags.custom<ReleaseGroupName>({
 	char: "g",
 	description: "Name of a release group.",
 	aliases: ["releaseGroups"],
 	options: [...supportedMonoRepoValues()],
 	parse: async (str: string) => {
 		const group = str.toLowerCase();
-		if (!isReleaseGroup(group)) {
-			throw new TypeError(`Not a release group: ${str}`);
-		}
+		return group as ReleaseGroupName;
+	},
+});
 
-		return group;
+/**
+ * A re-usable CLI flag to parse workspace names. This should only be used in commands that are using the IFluidRepo
+ * common infrastructure.
+ */
+export const workspaceNameFlag = Flags.custom<WorkspaceName>({
+	char: "w",
+	description: "Name of a workspace.",
+	parse: async (str: string) => {
+		return str as WorkspaceName;
 	},
 });
 

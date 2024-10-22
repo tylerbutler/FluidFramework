@@ -3,18 +3,15 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "node:assert";
-import { Flags } from "@oclif/core";
-import chalk from "chalk";
-import inquirer from "inquirer";
-import * as semver from "semver";
-
-import { FluidRepo, MonoRepo, Package } from "@fluidframework/build-tools";
-
+import {
+	type IPackage,
+	// type IReleaseGroup,
+	isIPackage,
+	setVersion,
+} from "@fluid-tools/build-infrastructure";
 import {
 	InterdependencyRange,
 	RangeOperators,
-	ReleaseVersion,
 	VersionChangeType,
 	VersionScheme,
 	WorkspaceRanges,
@@ -22,15 +19,20 @@ import {
 	detectVersionScheme,
 	isInterdependencyRange,
 } from "@fluid-tools/version-tools";
+import { Flags } from "@oclif/core";
+import chalk from "chalk";
+import inquirer from "inquirer";
+import * as semver from "semver";
 
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../args.js";
 import { getDefaultInterdependencyRange } from "../config.js";
 import { bumpTypeFlag, checkFlags, skipCheckFlag, versionSchemeFlag } from "../flags.js";
+// eslint-disable-next-line import/no-internal-modules
+import { createBranch } from "../library/git.js";
 import {
 	BaseCommand,
 	generateBumpVersionBranchName,
 	generateBumpVersionCommitMessage,
-	setVersion,
 } from "../library/index.js";
 
 export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
@@ -133,7 +135,10 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 			? interdepRangeFlag
 			: undefined;
 
-		const context = await this.getContext();
+		const fluidRepo = await this.getFluidRepo();
+
+		// Try to get the git repo early so that if we're outside a repo, we throw quickly.
+		const git = await fluidRepo.getGitRepository();
 		const { bumpType } = flags;
 		const workspaceProtocol =
 			typeof interdependencyRange === "string"
@@ -146,55 +151,31 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 			this.error("No dependency provided.");
 		}
 
-		const rgOrPackage = findPackageOrReleaseGroup(args.package_or_release_group, context);
-		if (rgOrPackage === undefined) {
-			this.error(`Package not found: ${args.package_or_release_group}`);
+		const releaseGroup = findPackageOrReleaseGroup(args.package_or_release_group, fluidRepo);
+		if (releaseGroup === undefined || isIPackage(releaseGroup)) {
+			this.error(`Release group not found: ${args.package_or_release_group}`);
 		}
 
 		if (bumpType === undefined && flags.exact === undefined) {
 			this.error(`One of the following must be provided: --bumpType, --exact`);
 		}
 
-		let repoVersion: ReleaseVersion;
-		let packageOrReleaseGroup: Package | MonoRepo;
+		// let foundReleaseGroup: IReleaseGroup;
 		let scheme: VersionScheme | undefined;
 		const exactVersion: semver.SemVer | null = semver.parse(flags.exact);
-		const updatedPackages: Package[] = [];
+		const updatedPackages: IPackage[] = [];
 
 		if (bumpType === undefined && exactVersion === null) {
 			this.error(`--exact value invalid: ${flags.exact}`);
 		}
 
-		if (rgOrPackage instanceof MonoRepo) {
-			const releaseRepo = rgOrPackage;
-			assert(releaseRepo !== undefined, `Release repo not found for ${rgOrPackage.name}`);
-
-			repoVersion = releaseRepo.version;
-			scheme = flags.scheme ?? detectVersionScheme(repoVersion);
-			// Update the interdependency range to the configured default if the one provided isn't valid
-			interdependencyRange =
-				interdependencyRange ?? getDefaultInterdependencyRange(releaseRepo, context);
-			updatedPackages.push(...releaseRepo.packages);
-			packageOrReleaseGroup = releaseRepo;
-		} else {
-			const releasePackage = rgOrPackage;
-
-			if (releasePackage.monoRepo !== undefined) {
-				const rg = releasePackage.monoRepo.kind;
-				this.errorLog(`${releasePackage.name} is part of the ${rg} release group.`);
-				this.errorLog(
-					`If you want to bump that package, run the following command to bump the whole release group:\n\n    ${
-						this.config.bin
-					} ${this.id} ${rg} ${this.argv.slice(1).join(" ")}`,
-				);
-				this.exit(1);
-			}
-
-			repoVersion = releasePackage.version;
-			scheme = flags.scheme ?? detectVersionScheme(repoVersion);
-			updatedPackages.push(releasePackage);
-			packageOrReleaseGroup = releasePackage;
-		}
+		const repoVersion = releaseGroup.version;
+		scheme = flags.scheme ?? detectVersionScheme(repoVersion);
+		// Update the interdependency range to the configured default if the one provided isn't valid
+		interdependencyRange =
+			interdependencyRange ??
+			getDefaultInterdependencyRange(releaseGroup, this.getFlubConfig());
+		updatedPackages.push(...releaseGroup.packages);
 
 		const newVersion =
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -215,12 +196,13 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		scheme = flags.scheme ?? detectVersionScheme(newVersion);
 
 		this.logHr();
-		this.log(`Release group/package: ${chalk.blueBright(rgOrPackage.name)}`);
+		this.log(`Release group/package: ${chalk.blueBright(releaseGroup.name)}`);
 		this.log(`Bump type: ${chalk.blue(bumpType ?? "exact")}`);
 		this.log(`Scheme: ${chalk.cyan(scheme)}`);
 		this.log(`Workspace protocol: ${workspaceProtocol === true ? chalk.green("yes") : "no"}`);
 		this.log(`Versions: ${newVersion.version} <== ${repoVersion}`);
 		this.log(
+			// eslint-disable-next-line @typescript-eslint/no-base-to-string
 			`Interdependency range: ${interdependencyRange === "" ? "exact" : interdependencyRange}`,
 		);
 		this.log(`Install: ${shouldInstall ? chalk.green("yes") : "no"}`);
@@ -244,16 +226,10 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		}
 
 		this.log(`Updating version...`);
-		await setVersion(
-			context,
-			packageOrReleaseGroup,
-			newVersion,
-			interdependencyRange,
-			this.logger,
-		);
+		await setVersion(releaseGroup.packages, newVersion);
 
 		if (shouldInstall) {
-			if (!(await FluidRepo.ensureInstalled(updatedPackages))) {
+			if (!(await releaseGroup.workspace.install(false))) {
 				this.error("Install failed.");
 			}
 		} else {
@@ -262,23 +238,25 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 
 		if (shouldCommit) {
 			const commitMessage = generateBumpVersionCommitMessage(
-				rgOrPackage.name,
+				releaseGroup.name,
 				bumpArg,
 				repoVersion,
 				scheme,
 			);
 
 			const bumpBranch = generateBumpVersionBranchName(
-				rgOrPackage.name,
+				releaseGroup.name,
 				bumpArg,
 				repoVersion,
 				scheme,
 			);
+			const branchSummary = await git.branch();
+			const originalBranch = branchSummary.current;
 			this.log(`Creating branch ${bumpBranch}`);
-			await context.createBranch(bumpBranch);
-			await context.gitRepo.commit(commitMessage, "Error committing");
+			await createBranch(git, bumpBranch);
+			await git.commit(commitMessage, "Error committing");
 			this.finalMessages.push(
-				`You can now create a PR for branch ${bumpBranch} targeting ${context.originalBranchName}`,
+				`You can now create a PR for branch ${bumpBranch} targeting ${originalBranch}`,
 			);
 		} else {
 			this.warning(`Skipping commit. You'll need to manually commit changes.`);

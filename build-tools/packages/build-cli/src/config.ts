@@ -4,14 +4,16 @@
  */
 
 import { statSync } from "node:fs";
+import type { WrittenConfig } from "@changesets/types";
+import type { IPackage, IReleaseGroup, PackageName } from "@fluid-tools/build-infrastructure";
 import {
 	DEFAULT_INTERDEPENDENCY_RANGE,
 	InterdependencyRange,
 	VersionBumpType,
 } from "@fluid-tools/version-tools";
-import { MonoRepo } from "@fluidframework/build-tools";
+import { type IFluidBuildConfig } from "@fluidframework/build-tools";
 import { cosmiconfigSync } from "cosmiconfig";
-import { Context } from "./library/index.js";
+
 import type { ReleaseGroup } from "./releaseGroups.js";
 
 /**
@@ -81,6 +83,45 @@ export interface ReleaseReportConfig {
 	 */
 	legacyCompatInterval: Record<ReleaseGroup | string, number>;
 }
+
+/**
+ * A type representing an npm package scope. It is any string that begins with an `@` symbol.
+ */
+export type PackageScope = `${"@"}${string}`;
+
+/**
+ * A type guard used to determine if a string is a valid {@link PackageScope}.
+ *
+ * @param value - the value to check
+ * @returns - `true` if the string is a valid {@link PackageScope}; `false` otherwise.
+ */
+export function isPackageScope(value: string): value is PackageScope {
+	return value.startsWith("@") && !value.includes("/");
+}
+
+/**
+ * A type representing a package scope or name.
+ */
+export type PackageNameOrScope = PackageName | PackageScope;
+
+/**
+ * A type that corresponds to the written changeset config in .changeset/config.json. This type merely extends the type
+ * from the changesets package itself, adding the optional schema field.
+ */
+export interface ChangesetConfigWritten extends WrittenConfig {
+	$schema?: string;
+}
+
+/**
+ * A type mapping a string to a package name or scope string. This type is useful for configuration fields that are used
+ * for selecting packages. Such fields can be used to select packages based on scope or name.
+ */
+export type PackageScopeSelectors = Record<string, PackageNameOrScope[]>;
+
+/**
+ * The changeset configuration used in the fluid-build config file.
+ */
+export type ChangesetConfig = Omit<ChangesetConfigWritten, "fixed" | "linked">;
 
 /**
  * A type representing the different version constraint styles we use when determining the previous version for type
@@ -348,9 +389,14 @@ const configExplorer = cosmiconfigSync(configName, {
  * @param configPath - The path to start searching for the config file. If a path to a file is provided, the file will
  * be loaded directly. Otherwise it will search upwards looking for config files until it finds one.
  * @param noCache - If true, the config cache will be cleared and the config will be reloaded.
- * @returns The flub config
+ * @returns The flub config.
+ *
+ * @throws If the config is not found.
  */
-export function getFlubConfig(configPath: string, noCache = false): FlubConfig {
+export function getFlubConfig(
+	configPath: string,
+	noCache = false,
+): { config: FlubConfig; configFilePath: string } {
 	if (noCache === true) {
 		configExplorer.clearCaches();
 	}
@@ -363,7 +409,7 @@ export function getFlubConfig(configPath: string, noCache = false): FlubConfig {
 
 	const config = configResult?.config as FlubConfig | undefined;
 
-	if (config === undefined) {
+	if (config === undefined || configResult === null) {
 		throw new Error("No flub configuration found.");
 	}
 
@@ -374,7 +420,7 @@ export function getFlubConfig(configPath: string, noCache = false): FlubConfig {
 		);
 	}
 
-	return config;
+	return { config, configFilePath: configResult.filepath };
 }
 
 /**
@@ -382,15 +428,19 @@ export function getFlubConfig(configPath: string, noCache = false): FlubConfig {
  * back-compat, it will also load the relevant setting from the fluid-build config.
  */
 export function getDefaultInterdependencyRange(
-	releaseGroup: ReleaseGroup | MonoRepo,
-	context: Context,
+	releaseGroupOrPackage: IReleaseGroup | IPackage,
+	flubConfig: FlubConfig,
+	/**
+	 * @deprecated Will be removed in a future change
+	 */
+	fluidBuildConfig?: IFluidBuildConfig,
 ): InterdependencyRange {
-	const releaseGroupName = releaseGroup instanceof MonoRepo ? releaseGroup.name : releaseGroup;
+	const releaseName = releaseGroupOrPackage.name;
 
 	// Prefer to use the configuration in the flub config if available.
-	const flubConfigRanges = context.flubConfig.bump?.defaultInterdependencyRange;
+	const flubConfigRanges = flubConfig.bump?.defaultInterdependencyRange;
 	const interdependencyRangeFromFlubConfig: InterdependencyRange | undefined =
-		flubConfigRanges?.[releaseGroupName as ReleaseGroup];
+		flubConfigRanges?.[releaseName as ReleaseGroup];
 
 	// Return early if the flub config had a range configured - no need to check/load other configs.
 	if (interdependencyRangeFromFlubConfig !== undefined) {
@@ -399,7 +449,7 @@ export function getDefaultInterdependencyRange(
 
 	// For back-compat with earlier configs, try to load the default interdependency range from the fluid-build config.
 	// This can be removed once we are no longer supporting release branches older than release/client/2.4
-	const fbConfig = context.fluidBuildConfig.repoPackages?.[releaseGroupName];
+	const fbConfig = fluidBuildConfig?.repoPackages?.[releaseName];
 	const interdependencyRangeFromFluidBuildConfig =
 		fbConfig !== undefined && typeof fbConfig === "object" && !Array.isArray(fbConfig)
 			? fbConfig.defaultInterdependencyRange

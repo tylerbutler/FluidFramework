@@ -6,12 +6,8 @@
 import { realpathSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import {
-	type Logger,
-	type Package,
-	type PackageJson,
-	getTypeTestPreviousPackageDetails,
-} from "@fluidframework/build-tools";
+import type { IPackage, PackageJson } from "@fluid-tools/build-infrastructure";
+import { type Logger, getTypeTestPreviousPackageDetails } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
 import { PackageName } from "@rushstack/node-core-library";
 import * as changeCase from "change-case";
@@ -81,7 +77,7 @@ export default class GenerateTypetestsCommand extends PackageCommand<
 
 	protected defaultSelection = "dir" as PackageSelectionDefault;
 
-	protected async processPackage(pkg: Package): Promise<void> {
+	protected async processPackage(pkg: IPackage): Promise<void> {
 		const { entrypoint: entrypointFlag, outDir, outFile } = this.flags;
 		const pkgJson: PackageWithTypeTestSettings = pkg.packageJson;
 		const entrypoint: ApiLevel =
@@ -315,7 +311,7 @@ export function getTypesPathFromPackage(
  *
  * @returns The path to write generated files to.
  */
-function getTypeTestFilePath(pkg: Package, outDir: string, outFile: string): string {
+function getTypeTestFilePath(pkg: IPackage, outDir: string, outFile: string): string {
 	return path.join(
 		pkg.directory,
 		outDir,

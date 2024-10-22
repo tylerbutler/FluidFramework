@@ -9,6 +9,33 @@
 
 const tscDependsOn = ["^tsc", "^api", "build:genver", "ts2esm"];
 
+const fluidScopes = [
+	"@fluidframework",
+	"@fluid-example",
+	"@fluid-experimental",
+	"@fluid-internal",
+	"@fluid-private",
+	"@fluid-tools",
+];
+
+/**
+ * Known allowed npm scopes. Used to enforce package name policies.
+ */
+const allowedScopes = [
+	"@fluidframework",
+	"@fluid-example",
+	"@fluid-experimental",
+	"@fluid-internal",
+	"@fluid-private",
+	"@fluid-tools",
+];
+
+/**
+ * Known unscoped packages. Used to enforce package name policies and other places where we need to know the unscoped
+ * package names in the repo.
+ */
+const unscopedPackages = ["fluid-framework", "fluidframework-docs", "tinylicious"];
+
 /**
  * The settings in this file configure the Fluid build tools, such as fluid-build and flub. Some settings apply to the
  * whole repo, while others apply only to the client release group.
@@ -477,16 +504,9 @@ module.exports = {
 		},
 		packageNames: {
 			// The allowed package scopes for the repo.
-			allowedScopes: [
-				"@fluidframework",
-				"@fluid-example",
-				"@fluid-experimental",
-				"@fluid-internal",
-				"@fluid-private",
-				"@fluid-tools",
-			],
+			allowedScopes,
 			// These packages are known unscoped packages.
-			unscopedPackages: ["fluid-framework", "fluidframework-docs", "tinylicious"],
+			unscopedPackages,
 
 			mustPublish: {
 				// These packages will always be published to npm. This is called the "public" feed.
@@ -616,6 +636,13 @@ module.exports = {
 		},
 	},
 
+		// This setting influence `flub release report` behavior. This defines the legacy compat range for release group or independent packages.
+		releaseReport: {
+			legacyCompatInterval: {
+				"client": 10,
+			},
+		},
+
 	// This defines the branch release types for type tests. It applies only to the client release group. Settings for
 	// other release groups is in their root fluid-build config.
 	branchReleaseTypes: {
@@ -635,10 +662,216 @@ module.exports = {
 		},
 	},
 
-	// This setting influence `flub release report` behavior. This defines the legacy compat range for release group or independent packages.
-	releaseReport: {
-		legacyCompatInterval: {
-			"client": 10,
+	// repoLayout: {
+	// 	workspaces: {
+	// 		"client": {
+	// 			directory: ".",
+	// 			// independentPackages: ["common", "tools"],
+	// 			releaseGroups: {
+	// 				client: {
+	// 					include: [...fluidScopes, "fluid-framework", "@types/jest-environment-puppeteer"],
+	// 					rootPackageName: "client-release-group-root",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 				},
+	// 				examples: {
+	// 					include: ["@fluid-example"],
+	// 					// rootPackageName: "examples-release-group-root",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 				},
+	// 				// "build-tools": {
+	// 				// 	include: [
+	// 				// 		"@fluid-private/readme-command",
+	// 				// 		"@fluid-tools/build-cli",
+	// 				// 		"@fluid-tools/version-tools",
+	// 				// 		"@fluidframework/build--tools",
+	// 				// 		"@fluidframework/bundle-size-tools",
+	// 				// 	],
+	// 				// 	defaultInterdependencyRange: "workspace:~",
+	// 				// },
+	// 			},
+	// 		},
+	// 		"build-tools": {
+	// 			directory: "./build-tools",
+	// 			releaseGroups: {
+	// 				"build-tools": {
+	// 					include: [...fluidScopes],
+	// 					rootPackageName: "build-tools-release-group-root",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=14",
+	// 				},
+	// 			},
+	// 		},
+	// 		"server": {
+	// 			directory: "./server/routerlicious",
+	// 			releaseGroups: {
+	// 				"server": {
+	// 					include: [...fluidScopes, "tinylicious"],
+	// 					rootPackageName: "server-release-group-root",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=30",
+	// 				},
+	// 			},
+	// 		},
+	// 		"gitrest": {
+	// 			directory: "server/gitrest",
+	// 			releaseGroups: {
+	// 				"gitrest": {
+	// 					include: [
+	// 						"@fluidframework",
+	// 						"@fluid-experimental",
+	// 						"@fluid-internal",
+	// 						"@fluid-private",
+	// 						"@fluid-tools",
+	// 					],
+	// 					rootPackageName: "gitrest-release-group-root",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=26",
+	// 				},
+	// 			},
+	// 		},
+	// 		"historian": {
+	// 			directory: "server/historian",
+	// 			releaseGroups: {
+	// 				"historian": {
+	// 					include: [...fluidScopes],
+	// 					rootPackageName: "historian-release-group-root",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=25",
+	// 				},
+	// 			},
+	// 		},
+
+	// 		// legacy independent packages are all in their own workspaces, and are single-package release groups
+	// 		"@fluid-tools/api-markdown-documenter": {
+	// 			directory: "tools/api-markdown-documenter",
+	// 			releaseGroups: {
+	// 				"api-markdown-documenter": {
+	// 					include: ["@fluid-tools/api-markdown-documenter"],
+	// 					rootPackageName: "@fluid-tools/api-markdown-documenter",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=97",
+	// 				},
+	// 			},
+	// 		},
+	// 		"@fluid-tools/benchmark": {
+	// 			directory: "tools/benchmark",
+	// 			releaseGroups: {
+	// 				"benchmark": {
+	// 					include: ["@fluid-tools/benchmark"],
+	// 					rootPackageName: "@fluid-tools/benchmark",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=62",
+	// 				},
+	// 			},
+	// 		},
+	// 		"@fluidframework/build-common": {
+	// 			directory: "common/build/build-common",
+	// 			releaseGroups: {
+	// 				"build-common": {
+	// 					include: ["@fluidframework/build-common"],
+	// 					rootPackageName: "@fluidframework/build-common",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=3",
+	// 				},
+	// 			},
+	// 		},
+	// 		"@fluidframework/common-utils": {
+	// 			directory: "common/lib/common-utils",
+	// 			releaseGroups: {
+	// 				"common-utils": {
+	// 					include: ["@fluidframework/common-utils"],
+	// 					rootPackageName: "@fluidframework/common-utils",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=10",
+	// 				},
+	// 			},
+	// 		},
+	// 		"@fluidframework/eslint-config-fluid": {
+	// 			directory: "common/build/eslint-config-fluid",
+	// 			releaseGroups: {
+	// 				"eslint-config-fluid": {
+	// 					include: ["@fluidframework/eslint-config-fluid"],
+	// 					rootPackageName: "@fluidframework/eslint-config-fluid",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=7",
+	// 				},
+	// 			},
+	// 		},
+	// 		"@fluid-internal/eslint-plugin-fluid": {
+	// 			directory: "common/build/eslint-plugin-fluid",
+	// 			releaseGroups: {
+	// 				"eslint-plugin-fluid": {
+	// 					include: ["@fluid-internal/eslint-plugin-fluid"],
+	// 					rootPackageName: "@fluid-internal/eslint-plugin-fluid",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=135",
+	// 				},
+	// 			},
+	// 		},
+	// 		"@fluid-internal/getkeys": {
+	// 			directory: "tools/getkeys",
+	// 			releaseGroups: {
+	// 				"getkeys": {
+	// 					include: ["@fluid-internal/getkeys"],
+	// 					rootPackageName: "@fluid-internal/getkeys",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 				},
+	// 			},
+	// 		},
+	// 		"@fluidframework/protocol-definitions": {
+	// 			directory: "common/lib/protocol-definitions",
+	// 			releaseGroups: {
+	// 				"protocol-definitions": {
+	// 					include: ["@fluidframework/protocol-definitions"],
+	// 					rootPackageName: "@fluidframework/protocol-definitions",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=67",
+	// 				},
+	// 			},
+	// 		},
+	// 		"@fluidframework/test-tools": {
+	// 			directory: "tools/test-tools",
+	// 			releaseGroups: {
+	// 				"test-tools": {
+	// 					include: ["@fluidframework/test-tools"],
+	// 					rootPackageName: "@fluidframework/test-tools",
+	// 					defaultInterdependencyRange: "workspace:~",
+	// 					adoPipelineUrl:
+	// 						"https://dev.azure.com/fluidframework/internal/_build?definitionId=13",
+	// 				},
+	// 			},
+	// 		},
+	// 	},
+	// },
+
+	// The configuration used by the `flub generate changeset-config` command.
+	changesetConfig: {
+		changelog: [
+			"@fluid-private/changelog-generator-wrapper",
+			{
+				repoBaseUrl: "https://github.com/microsoft/FluidFramework",
+				issueTemplate: " ([#$issue]($repoBaseUrl/pull/$issue))",
+				commitTemplate: " [$abbrevHash]($repoBaseUrl/commit/$hash)",
+			},
+		],
+		commit: false,
+		fixed: {
+			// This will include all packages in whatever release group is selected in `flub generate changeset-config`.
+			"default": [...allowedScopes, ...unscopedPackages],
 		},
+		access: "public",
+		baseBranch: "main",
+		updateInternalDependencies: "patch",
 	},
 };

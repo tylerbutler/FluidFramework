@@ -355,6 +355,8 @@ importers:
         specifier: ~5.4.5
         version: 5.4.5
 
+  examples: {}
+
   examples/apps/ai-collab:
     devDependencies:
       '@azure/identity':
