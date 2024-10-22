@@ -13,6 +13,7 @@ import { rawlist } from "@inquirer/prompts";
 import { Config } from "@oclif/core";
 import chalk from "chalk";
 
+import { isIPackage } from "@fluid-tools/build-infrastructure";
 import { findPackageOrReleaseGroup } from "../args.js";
 import {
 	bumpTypeFlag,
@@ -27,8 +28,6 @@ import {
 	StateHandler,
 } from "../handlers/index.js";
 import { PromptWriter } from "../instructionalPromptWriter.js";
-// eslint-disable-next-line import/no-deprecated
-import { MonoRepoKind, getDefaultBumpTypeForBranch } from "../library/index.js";
 import { FluidReleaseMachine } from "../machines/index.js";
 import { getRunPolicyCheckDefault } from "../repoConfig.js";
 import { StateMachineCommand } from "../stateMachineCommand.js";
@@ -76,7 +75,8 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 	async init(): Promise<void> {
 		await super.init();
 
-		const [context] = await Promise.all([this.getContext(), this.initMachineHooks()]);
+		const [fluidRepo] = await Promise.all([this.getFluidRepo(), this.initMachineHooks()]);
+		const git = await fluidRepo.getGitRepository();
 		const { argv, flags, logger, machine } = this;
 
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -86,22 +86,19 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 			"Either release group and package flags must be provided.",
 		);
 
-		const packageOrReleaseGroup = findPackageOrReleaseGroup(rgOrPackageName, context);
-		if (packageOrReleaseGroup === undefined) {
-			this.error(`Could not find release group or package: ${rgOrPackageName}`, {
+		const releaseGroup = findPackageOrReleaseGroup(rgOrPackageName, fluidRepo);
+		if (releaseGroup === undefined || isIPackage(releaseGroup)) {
+			this.error(`Could not find release group: ${rgOrPackageName}`, {
 				exit: 1,
 			});
 		}
-		const releaseGroup = packageOrReleaseGroup.name;
-		const releaseVersion = packageOrReleaseGroup.version;
 
 		const currentBranch = await context.gitRepo.getCurrentBranchName();
 		const bumpType = await getBumpType(flags.bumpType, currentBranch, releaseVersion);
 
 		// eslint-disable-next-line no-warning-comments
 		// TODO: can be removed once server team owns server releases
-		// eslint-disable-next-line import/no-deprecated
-		if (flags.releaseGroup === MonoRepoKind.Server && bumpType === "minor") {
+		if (flags.releaseGroup === "server" && flags.bumpType === "minor") {
 			this.error(`Server release are always a ${chalk.bold("MAJOR")} release`);
 		}
 
@@ -113,20 +110,23 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 				? false
 				: undefined;
 
+		const branchSummary = await git.branch();
 		const branchPolicyCheckDefault = getRunPolicyCheckDefault(
 			releaseGroup,
-			context.originalBranchName,
+			branchSummary.current,
 		);
 
 		this.handler = new FluidReleaseStateHandler(machine, logger);
 
 		this.data = {
 			releaseGroup,
-			releaseVersion,
-			context,
+			releaseVersion: releaseGroup.version,
+			repo: fluidRepo,
+			git,
 			promptWriter: new PromptWriter(logger),
 			bumpType,
-			versionScheme: detectVersionScheme(releaseVersion),
+			versionScheme: detectVersionScheme(releaseGroup.version),
+			originalBranch: branchSummary.current,
 			shouldSkipChecks: flags.skipChecks,
 			shouldCheckPolicy:
 				userPolicyCheckChoice ?? (branchPolicyCheckDefault && !flags.skipChecks),

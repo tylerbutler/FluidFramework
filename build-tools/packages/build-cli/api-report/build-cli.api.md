@@ -5,8 +5,10 @@
 ```ts
 
 import { InterdependencyRange } from '@fluid-tools/version-tools';
+import type { PackageName } from '@fluid-tools/build-infrastructure';
 import { run } from '@oclif/core';
 import { VersionBumpType } from '@fluid-tools/version-tools';
+import type { WrittenConfig } from '@changesets/types';
 
 // @public (undocumented)
 export interface AssertTaggingConfig {
@@ -20,6 +22,15 @@ export interface AssertTaggingConfig {
 // @public
 export interface BumpConfig {
     defaultInterdependencyRange?: Record<ReleaseGroup, InterdependencyRange>;
+}
+
+// @public
+export type ChangesetConfig = Omit<ChangesetConfigWritten, "fixed" | "linked">;
+
+// @public
+export interface ChangesetConfigWritten extends WrittenConfig {
+    // (undocumented)
+    $schema?: string;
 }
 
 // @public
@@ -40,6 +51,9 @@ export interface FlubConfig {
 export const knownReleaseGroups: readonly ["build-tools", "client", "server", "gitrest", "historian"];
 
 // @public
+export type PackageNameOrScope = PackageName | PackageScope;
+
+// @public
 export interface PackageNamePolicyConfig {
     allowedScopes?: string[];
     mayPublish: {
@@ -58,6 +72,12 @@ export interface PackageRequirements {
     requiredDevDependencies?: string[];
     requiredScripts?: ScriptRequirement[];
 }
+
+// @public
+export type PackageScope = `${"@"}${string}`;
+
+// @public
+export type PackageScopeSelectors = Record<string, PackageNameOrScope[]>;
 
 // @public
 export interface PolicyConfig {

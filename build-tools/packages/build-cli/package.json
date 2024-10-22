@@ -80,6 +80,7 @@
 	},
 	"dependencies": {
 		"@andrewbranch/untar.js": "^1.0.3",
+		"@fluid-tools/build-infrastructure": "workspace:~",
 		"@fluid-tools/version-tools": "workspace:~",
 		"@fluidframework/build-tools": "workspace:~",
 		"@fluidframework/bundle-size-tools": "workspace:~",
@@ -133,6 +134,7 @@
 		"semver-utils": "^1.1.4",
 		"simple-git": "^3.27.0",
 		"sort-json": "^2.0.1",
+		"sort-object-keys": "^1.1.3",
 		"sort-package-json": "1.57.0",
 		"strip-ansi": "^6.0.1",
 		"table": "^6.8.2",
@@ -143,6 +145,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "~1.9.3",
+		"@changesets/types": "^6.0.0",
 		"@fluidframework/build-common": "^2.0.3",
 		"@fluidframework/eslint-config-fluid": "^5.4.0",
 		"@oclif/test": "^4.1.0",
@@ -160,6 +163,7 @@
 		"@types/semver": "^7.5.8",
 		"@types/semver-utils": "^1.1.3",
 		"@types/sort-json": "^2.0.3",
+		"@types/sort-object-keys": "^1.1.3",
 		"@types/unist": "^3.0.3",
 		"@types/xml2js": "^0.4.14",
 		"c8": "^7.14.0",

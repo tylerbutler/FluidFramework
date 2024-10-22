@@ -9,6 +9,8 @@ import { Flags } from "@oclif/core";
 import { getIsLatest, getSimpleVersion } from "@fluid-tools/version-tools";
 
 import { semverFlag } from "../../flags.js";
+// eslint-disable-next-line import/no-internal-modules
+import { getTags } from "../../library/git.js";
 import { BaseCommand } from "../../library/index.js";
 
 /**
@@ -101,8 +103,9 @@ export default class GenerateBuildVersionCommand extends BaseCommand<
 			this.error("Test build shouldn't be released");
 		}
 
-		const context = await this.getContext();
-		const tags = flags.tags ?? (await context.gitRepo.getAllTags());
+		const repo = await this.getFluidRepo();
+		const git = await repo.getGitRepository();
+		const tags = flags.tags ?? (await getTags(git));
 
 		if (!useSimplePatchVersion && flags.tag !== undefined) {
 			const tagName = `${flags.tag}_v${fileVersion}`;

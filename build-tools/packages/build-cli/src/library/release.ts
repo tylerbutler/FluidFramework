@@ -12,8 +12,24 @@ import {
 } from "@fluid-tools/version-tools";
 import * as semver from "semver";
 
+import type { IReleaseGroup } from "@fluid-tools/build-infrastructure";
 import type { ReleaseReportConfig } from "../config.js";
 import { ReleaseGroup } from "../releaseGroups.js";
+
+/**
+ * Represents a release version and its release date, if applicable.
+ */
+export interface VersionDetails {
+	/**
+	 * The version of the release.
+	 */
+	version: ReleaseVersion;
+
+	/**
+	 * The date the version was released, if applicable.
+	 */
+	date?: Date;
+}
 
 /**
  * A map of package names to full release reports. This is the format of the "full" release report.
@@ -32,7 +48,7 @@ export interface ReleaseDetails {
 	date?: Date;
 	releaseType: VersionBumpType;
 	isNewRelease: boolean;
-	releaseGroup?: ReleaseGroup;
+	releaseGroup: IReleaseGroup;
 	ranges: ReleaseRanges;
 }
 

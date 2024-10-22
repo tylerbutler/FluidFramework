@@ -6,9 +6,10 @@
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+
+import type { IFluidRepo, IPackage } from "@fluid-tools/build-infrastructure";
 import {
-	FluidRepo,
-	Package,
+	FluidRepoBuild,
 	PackageJson,
 	TscUtils,
 	getEsLintConfigFilePath,
@@ -21,6 +22,7 @@ import {
 import JSON5 from "json5";
 import * as semver from "semver";
 import { TsConfigJson } from "type-fest";
+
 import { getFlubConfig } from "../../config.js";
 import { Handler, readFile } from "./common.js";
 import { FluidBuildDatabase } from "./fluidBuildDatabase.js";
@@ -36,7 +38,8 @@ const getFluidBuildTasksTscIgnore = (root: string): Set<string> => {
 	const rootDir = path.resolve(root);
 	let ignore = fluidBuildTasksTscIgnoreTasksCache.get(rootDir);
 	if (ignore === undefined) {
-		const ignoreArray = getFlubConfig(rootDir)?.policy?.fluidBuildTasks?.tsc?.ignoreTasks;
+		const { config: flubConfig } = getFlubConfig(rootDir);
+		const ignoreArray = flubConfig.policy?.fluidBuildTasks?.tsc?.ignoreTasks;
 		ignore = ignoreArray ? new Set(ignoreArray) : new Set();
 		fluidBuildTasksTscIgnoreTasksCache.set(rootDir, ignore);
 	}
@@ -46,14 +49,13 @@ const getFluidBuildTasksTscIgnore = (root: string): Set<string> => {
 /**
  * Cache the FluidRepo object, so we don't have to load it repeatedly
  */
-const repoCache = new Map<string, { repo: FluidRepo; packageMap: Map<string, Package> }>();
-function getFluidPackageMap(root: string): Map<string, Package> {
+const repoCache = new Map<string, { repo: IFluidRepo; packageMap: Map<string, IPackage> }>();
+function getFluidPackageMap(root: string): Map<string, IPackage> {
 	const rootDir = path.resolve(root);
 	let record = repoCache.get(rootDir);
 	if (record === undefined) {
-		const fluidBuildConfig = getFluidBuildConfig(rootDir);
-		const repo = new FluidRepo(rootDir, fluidBuildConfig.repoPackages);
-		const packageMap = repo.createPackageMap();
+		const repo = new FluidRepoBuild(rootDir);
+		const packageMap = repo.packages;
 		record = { repo, packageMap };
 		repoCache.set(rootDir, record);
 	}
@@ -312,7 +314,7 @@ function hasTaskDependency(
 	taskName: string,
 	searchDeps: readonly string[],
 ): boolean {
-	const rootConfig = getFluidBuildConfig(root);
+	const { config: rootConfig } = getFluidBuildConfig(root);
 	const globalTaskDefinitions = normalizeGlobalTaskDefinitions(rootConfig?.tasks);
 	const taskDefinitions = getTaskDefinitions(json, globalTaskDefinitions, false);
 	// Searched deps that are package specific (e.g. <packageName>#<taskName>)
@@ -481,7 +483,7 @@ function getTscCommandDependencies(
 	json: Readonly<PackageJson>,
 	script: string,
 	command: string,
-	packageMap: ReadonlyMap<string, Package>,
+	packageMap: ReadonlyMap<string, IPackage>,
 ): (string | string[])[] {
 	// If the project has a referenced project, depend on that instead of the default
 	const parsedCommand = TscUtils.parseCommandLine(command);
@@ -531,7 +533,7 @@ function getTscCommandDependencies(
 		}
 	}
 
-	const curPkgRepoGroup = packageMap.get(json.name)?.group;
+	const curPkgRepoGroup = packageMap.get(json.name)?.releaseGroup;
 	const tscPredecessors = fluidBuildDatabaseCache.getPossiblePredecessorTasks(
 		packageMap,
 		json.name,
@@ -556,7 +558,7 @@ function getTscCommandDependencies(
 				// Not known to repo, can be ignored.
 				return true;
 			}
-			if (depPackage.group !== curPkgRepoGroup) {
+			if (depPackage.releaseGroup !== curPkgRepoGroup) {
 				return true;
 			}
 			const satisfied = semver.satisfies(depPackage.version, depSpec.version);
@@ -577,7 +579,7 @@ interface BuildDepsCallbackContext {
 	json: PackageJson;
 	script: string;
 	command: string;
-	packageMap: ReadonlyMap<string, Package>;
+	packageMap: ReadonlyMap<string, IPackage>;
 	root: string;
 }
 

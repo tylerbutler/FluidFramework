@@ -3,13 +3,14 @@
  * Licensed under the MIT License.
  */
 
+import type { PackageName } from "@fluid-tools/build-infrastructure";
 import execa from "execa";
 
 /**
  * The output of `pnpm -r list` is an array of objects of this shape.
  */
 export interface PnpmListEntry {
-	name: string;
+	name: PackageName;
 	version: string;
 	path: string;
 	private: boolean;

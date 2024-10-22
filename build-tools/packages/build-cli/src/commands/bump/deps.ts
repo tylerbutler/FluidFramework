@@ -3,12 +3,15 @@
  * Licensed under the MIT License.
  */
 
+import {
+	type PackageName,
+	type ReleaseGroupName,
+	isIPackage,
+} from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import chalk from "chalk";
 import prompts from "prompts";
 import stripAnsi from "strip-ansi";
-
-import { FluidRepo, MonoRepo } from "@fluidframework/build-tools";
 
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../../args.js";
 import {
@@ -19,19 +22,17 @@ import {
 	skipCheckFlag,
 	testModeFlag,
 } from "../../flags.js";
+// eslint-disable-next-line import/no-internal-modules
+import { createBranch } from "../../library/git.js";
 import {
 	BaseCommand,
-	// eslint-disable-next-line import/no-deprecated
-	MonoRepoKind,
 	generateBumpDepsBranchName,
 	generateBumpDepsCommitMessage,
 	indentString,
 	isDependencyUpdateType,
-	npmCheckUpdates,
 } from "../../library/index.js";
 // eslint-disable-next-line import/no-internal-modules
 import { npmCheckUpdatesHomegrown } from "../../library/package.js";
-import { ReleaseGroup } from "../../releaseGroups.js";
 
 /**
  * Update the dependency version of a specified package or release group. That is, if one or more packages in the repo
@@ -120,7 +121,8 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 	public async run(): Promise<void> {
 		const { args, flags } = this;
 
-		const context = await this.getContext();
+		const repo = await this.getFluidRepo();
+		const git = await repo.getGitRepository();
 		const shouldInstall = flags.install && !flags.skipChecks;
 		const shouldCommit = flags.commit && !flags.skipChecks;
 
@@ -132,15 +134,19 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 			this.log(chalk.yellowBright(`Running in test mode. No changes will be made.`));
 		}
 
-		const rgOrPackage = findPackageOrReleaseGroup(args.package_or_release_group, context);
+		const rgOrPackage = findPackageOrReleaseGroup(args.package_or_release_group, repo);
 		if (rgOrPackage === undefined) {
-			this.error(`Package not found: ${args.package_or_release_group}`);
+			this.error(`Release group/package not found: ${args.package_or_release_group}`);
 		}
 
-		const branchName = await context.gitRepo.getCurrentBranchName();
+		const branchSummary = await git.branch();
+		const branchName = branchSummary.current;
 
-		// eslint-disable-next-line import/no-deprecated
-		if (args.package_or_release_group === MonoRepoKind.Server && branchName !== "next") {
+		const releaseGroup = isIPackage(rgOrPackage)
+			? repo.getPackageReleaseGroup(rgOrPackage)
+			: rgOrPackage;
+
+		if (args.package_or_release_group === "server" && branchName !== "next") {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const { confirmed } = await prompts({
 				type: "confirm",
@@ -167,37 +173,13 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 		/**
 		 * A list of package names on which to update dependencies.
 		 */
-		const depsToUpdate: string[] = [];
+		const depsToUpdate: PackageName[] = [];
 
-		if (rgOrPackage instanceof MonoRepo) {
-			depsToUpdate.push(
-				...rgOrPackage.packages
-					.filter((pkg) => pkg.packageJson.private !== true)
-					.map((pkg) => pkg.name),
-			);
-		} else {
-			if (rgOrPackage.packageJson.private === true) {
-				this.error(`${rgOrPackage.name} is a private package; ignoring.`, { exit: 1 });
-			}
-			depsToUpdate.push(rgOrPackage.name);
-
-			// Check that the package can be found in the context.
-			const pkg = context.fullPackageMap.get(rgOrPackage.name);
-			if (pkg === undefined) {
-				this.error(`Package not found: ${rgOrPackage.name}`);
-			}
-
-			if (pkg.monoRepo !== undefined) {
-				const rg = pkg.monoRepo.kind;
-				this.errorLog(`${pkg.name} is part of the ${rg} release group.`);
-				this.errorLog(
-					`If you want to update dependencies on that package, run the following command:\n\n    ${
-						this.config.bin
-					} ${this.id} ${rg} ${this.argv.slice(1).join(" ")}`,
-				);
-				this.exit(1);
-			}
-		}
+		depsToUpdate.push(
+			...releaseGroup.packages
+				.filter((pkg) => pkg.packageJson.private !== true)
+				.map((pkg) => pkg.name),
+		);
 
 		this.logHr();
 		this.log(`Dependencies: ${chalk.blue(rgOrPackage.name)}`);
@@ -213,61 +195,38 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 			this.error(`Unknown dependency update type: ${flags.updateType}`);
 		}
 
-		const { updatedPackages, updatedDependencies } =
-			flags.updateChecker === "homegrown"
-				? await npmCheckUpdatesHomegrown(
-						context,
-						flags.releaseGroup ?? flags.package, // if undefined the whole repo will be checked
-						depsToUpdate,
-						rgOrPackage instanceof MonoRepo ? rgOrPackage.releaseGroup : undefined,
-						/* prerelease */ flags.prerelease,
-						/* writeChanges */ !flags.testMode,
-						this.logger,
-					)
-				: await npmCheckUpdates(
-						context,
-						flags.releaseGroup ?? flags.package, // if undefined the whole repo will be checked
-						depsToUpdate,
-						rgOrPackage instanceof MonoRepo ? rgOrPackage.releaseGroup : undefined,
-						flags.updateType,
-						/* prerelease */ flags.prerelease,
-						/* writeChanges */ !flags.testMode,
-						this.logger,
-					);
+		const { updatedPackages, updatedDependencies } = await npmCheckUpdatesHomegrown(
+			repo,
+			rgOrPackage.name, // if undefined the whole repo will be checked
+			depsToUpdate,
+			releaseGroup.name,
+			/* prerelease */ flags.prerelease,
+			/* writeChanges */ !flags.testMode,
+			this.logger,
+		);
 
 		if (updatedPackages.length > 0) {
 			if (shouldInstall) {
-				if (!(await FluidRepo.ensureInstalled(updatedPackages))) {
+				if (!(await releaseGroup.workspace.install(true))) {
 					this.error("Install failed.");
 				}
 			} else {
 				this.warning(`Skipping installation. Lockfiles might be outdated.`);
 			}
 
-			const updatedReleaseGroups: ReleaseGroup[] = [
-				...new Set(
-					updatedPackages
-						.filter((p) => p.monoRepo !== undefined)
-						// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-						.map((p) => p.monoRepo!.releaseGroup),
-				),
+			const updatedReleaseGroups: ReleaseGroupName[] = [
+				...new Set(updatedPackages.map((p) => p.releaseGroup)),
 			];
 
 			const changedVersionsString = [`Updated the following:`, ""];
 
 			for (const rg of updatedReleaseGroups) {
-				changedVersionsString.push(indentString(`${rg} (release group)`));
-			}
-
-			for (const pkg of updatedPackages) {
-				if (pkg.monoRepo === undefined) {
-					changedVersionsString.push(indentString(`${pkg.name}`));
-				}
+				changedVersionsString.push(indentString(rg.toString()));
 			}
 
 			changedVersionsString.push(
 				"",
-				`Dependencies on ${chalk.blue(rgOrPackage.name)} updated:`,
+				`Dependencies on ${chalk.blue(releaseGroup.name)} updated:`,
 				"",
 			);
 
@@ -290,11 +249,12 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 					flags.updateType,
 					flags.releaseGroup,
 				);
+
 				this.log(`Creating branch ${bumpBranch}`);
-				await context.createBranch(bumpBranch);
-				await context.gitRepo.commit(commitMessage, "Error committing");
+				await createBranch(git, bumpBranch);
+				await git.commit(commitMessage, "Error committing");
 				this.finalMessages.push(
-					`You can now create a PR for branch ${bumpBranch} targeting ${context.originalBranchName}`,
+					`You can now create a PR for branch ${bumpBranch} targeting ${branchName}`,
 				);
 			} else {
 				this.warning(`Skipping commit. You'll need to manually commit changes.`);

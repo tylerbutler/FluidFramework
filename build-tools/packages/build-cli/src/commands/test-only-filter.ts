@@ -4,14 +4,15 @@
  */
 
 import { strict as assert } from "node:assert";
-import { Package } from "@fluidframework/build-tools";
+
+import type { IPackage } from "@fluid-tools/build-infrastructure";
+
 import { PackageCommand } from "../BasePackageCommand.js";
-import { PackageWithKind } from "../filter.js";
 import type { PackageSelectionDefault } from "../flags.js";
 
 interface FilterCommandResult {
-	selected: Pick<Package, "name" | "directory">[];
-	filtered: Pick<Package, "name" | "directory">[];
+	selected: Pick<IPackage, "name" | "directory">[];
+	filtered: Pick<IPackage, "name" | "directory">[];
 }
 
 /**
@@ -43,11 +44,11 @@ export default class FilterCommand extends PackageCommand<typeof FilterCommand> 
 	static readonly enableJsonFlag = true;
 	protected defaultSelection = "dir" as PackageSelectionDefault;
 
-	protected async processPackage(pkg: Package): Promise<void> {
+	protected async processPackage(pkg: IPackage): Promise<void> {
 		// do nothing
 	}
 
-	protected async processPackages(packages: PackageWithKind[]): Promise<string[]> {
+	protected async processPackages(packages: IPackage[]): Promise<string[]> {
 		// do nothing
 		return [];
 	}
@@ -60,18 +61,18 @@ export default class FilterCommand extends PackageCommand<typeof FilterCommand> 
 		assert(this.selectedPackages !== undefined, "selectedPackages is undefined");
 		assert(this.filteredPackages !== undefined, "filteredPackages is undefined");
 
-		const context = await this.getContext();
+		const fluidRepo = await this.getFluidRepo();
 		const pkgs = {
 			selected: this.selectedPackages.map((p) => {
 				return {
 					name: p.name,
-					directory: context.repo.relativeToRepo(p.directory),
+					directory: fluidRepo.relativeToRepo(p.directory),
 				};
 			}),
 			filtered: this.filteredPackages.map((p) => {
 				return {
 					name: p.name,
-					directory: context.repo.relativeToRepo(p.directory),
+					directory: fluidRepo.relativeToRepo(p.directory),
 				};
 			}),
 		};

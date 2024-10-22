@@ -5,6 +5,7 @@
 
 import chalk from "chalk";
 
+import { isIReleaseGroup } from "@fluid-tools/build-infrastructure";
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../../args.js";
 import { BaseCommand } from "../../library/index.js";
 import {
@@ -57,19 +58,19 @@ export class ReleasePrepareCommand extends BaseCommand<typeof ReleasePrepareComm
 	} as const;
 
 	public async run(): Promise<void> {
-		const context = await this.getContext();
+		const fluidRepo = await this.getFluidRepo();
 
 		const rgArg = this.args.package_or_release_group;
-		const pkgOrReleaseGroup = findPackageOrReleaseGroup(rgArg, context);
-		if (pkgOrReleaseGroup === undefined) {
-			this.error(`Can't find package or release group "${rgArg}"`, { exit: 1 });
+		const releaseGroup = findPackageOrReleaseGroup(rgArg, fluidRepo);
+		if (!isIReleaseGroup(releaseGroup)) {
+			this.error(`Can't find release group "${rgArg}"`, { exit: 1 });
 		}
-		this.verbose(`Release group or package found: ${pkgOrReleaseGroup.name}`);
+		this.verbose(`Release group found: ${releaseGroup.name}`);
 
 		this.logHr();
 		for (const [name, check] of allChecks) {
 			// eslint-disable-next-line no-await-in-loop -- the checks are supposed to run serially
-			const checkResult = await check(context, pkgOrReleaseGroup);
+			const checkResult = await check(fluidRepo, releaseGroup);
 			const checkPassed = checkResult === undefined;
 			const icon = checkPassed ? chalk.bgGreen.black(" ✔︎ ") : chalk.bgRed.white(" ✖︎ ");
 

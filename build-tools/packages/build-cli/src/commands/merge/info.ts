@@ -6,7 +6,8 @@
 import { Flags } from "@oclif/core";
 import chalk from "chalk";
 
-import { BaseCommand, Repository } from "../../library/index.js";
+import { getMergeBaseRemote, getRemote } from "@fluid-tools/build-infrastructure";
+import { BaseCommand } from "../../library/index.js";
 
 /**
  * An object containing merge status between two branches.
@@ -78,25 +79,23 @@ export default class MergeInfoCommand extends BaseCommand<typeof MergeInfoComman
 			);
 		}
 
-		const context = await this.getContext();
-		const repo = new Repository({ baseDir: context.gitRepo.resolvedRoot });
-		const remote = await repo.getRemote(context.originRemotePartialUrl);
+		const repo = await this.getFluidRepo();
+		const git = await repo.getGitRepository();
+		const remote = await getRemote(git, repo.upstreamRemotePartialUrl);
 
 		if (remote === undefined) {
-			this.error(`Can't find a remote with ${context.originRemotePartialUrl}`);
+			this.error(`Can't find a remote with ${repo.upstreamRemotePartialUrl}`);
 		}
 		this.verbose(`Remote is: ${remote}`);
 
 		// get merge base
-		const base = await repo.getMergeBaseRemote(
+		const base = await getMergeBaseRemote(
+			git,
 			branch1,
 			remote,
 			`refs/remotes/${remote}/${branch2}`,
 		);
-		const rawRevs = await repo.gitClient.raw(
-			"rev-list",
-			`${base}..refs/remotes/${remote}/${branch1}`,
-		);
+		const rawRevs = await git.raw("rev-list", `${base}..refs/remotes/${remote}/${branch1}`);
 
 		const revs = rawRevs.split(/\r?\n/);
 

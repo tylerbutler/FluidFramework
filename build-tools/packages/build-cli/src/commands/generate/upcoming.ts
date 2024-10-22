@@ -63,16 +63,16 @@ export default class GenerateUpcomingCommand extends BaseCommand<
 	];
 
 	public async run(): Promise<string> {
-		const context = await this.getContext();
+		const fluidRepo = await this.getFluidRepo();
 		const { flags, logger } = this;
 
-		const releaseGroup = context.repo.releaseGroups.get(flags.releaseGroup);
+		const releaseGroup = fluidRepo.releaseGroups.get(flags.releaseGroup);
 		if (releaseGroup === undefined) {
 			this.errorLog(`Unknown release group: ${flags.releaseGroup}`);
 			this.exit(2);
 		}
 
-		const changesetDir = path.join(releaseGroup.directory, DEFAULT_CHANGESET_PATH);
+		const changesetDir = path.join(releaseGroup.workspace.directory, DEFAULT_CHANGESET_PATH);
 		const changes = await loadChangesets(changesetDir, logger);
 
 		const { version } = releaseGroup;
@@ -96,7 +96,7 @@ export default class GenerateUpcomingCommand extends BaseCommand<
 		}
 
 		const contents = `${header}\n\n${intro}\n\n${body}`;
-		const outputPath = path.join(context.repo.resolvedRoot, flags.out);
+		const outputPath = path.join(fluidRepo.root, flags.out);
 		this.info(`Writing output file: ${outputPath}`);
 		await writeFile(
 			outputPath,

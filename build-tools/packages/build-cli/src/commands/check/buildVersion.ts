@@ -4,8 +4,9 @@
  */
 
 import path from "node:path";
-import { Package } from "@fluidframework/build-tools";
+import type { IPackage, PackageJson } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
+import { readJson } from "fs-extra/esm";
 
 import { PackageCommand } from "../../BasePackageCommand.js";
 import { semverFlag } from "../../flags.js";
@@ -44,15 +45,15 @@ export default class CheckBuildVersionCommand extends PackageCommand<
 			if (this.flags.path === undefined) {
 				this.error("Either version or path must be specified.");
 			}
-			const pkg = new Package(path.join(this.flags.path, "package.json"), "none");
+			const pkg = (await readJson(path.join(this.flags.path, "package.json"))) as PackageJson;
 			this.versionToCheck = pkg.version;
 		} else {
 			this.versionToCheck = this.flags.version.version;
 		}
 	}
 
-	private readonly invalidVersions: Package[] = [];
-	protected async processPackage(pkg: Package): Promise<void> {
+	private readonly invalidVersions: IPackage[] = [];
+	protected async processPackage(pkg: IPackage): Promise<void> {
 		if (pkg.version !== this.versionToCheck) {
 			this.invalidVersions.push(pkg);
 		}
