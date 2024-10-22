@@ -1,2 +1,11 @@
-dist
-lib
+*-debug.log
+*-error.log
+/.nyc_output
+/coverage
+/dist
+/lib
+!/src/lib
+!/test/lib
+/tmp
+node_modules
+oclif.manifest.json

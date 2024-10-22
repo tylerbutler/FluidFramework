@@ -145,15 +145,17 @@ const selectPackagesFromRepo = async <P extends IPackage>(
 	}
 
 	if (selection.directory !== undefined) {
-		const repoRelativePath = path.join(
-			selection.directory === "." ? process.cwd() : selection.directory,
+		const selectedAbsolutePath = path.join(
+			selection.directory === "."
+				? process.cwd()
+				: path.resolve(fluidRepo.root, selection.directory),
 		);
 
 		const dirPackage = [...fluidRepo.packages.values()].find(
-			(p) => fluidRepo.relativeToRepo(p.directory) === repoRelativePath,
+			(p) => p.directory === selectedAbsolutePath,
 		);
 		if (dirPackage === undefined) {
-			throw new Error(`Cannot find package with directory: ${repoRelativePath}`);
+			throw new Error(`Cannot find package with directory: ${selectedAbsolutePath}`);
 		}
 		selected.add(dirPackage);
 		return selected;
@@ -231,7 +233,7 @@ export async function selectAndFilterPackages<P extends IPackage>(
 /**
  * Convenience type that contains only the properties of a package that are needed for filtering.
  */
-interface FilterablePackage {
+export interface FilterablePackage {
 	name: string;
 	private?: boolean | undefined;
 }

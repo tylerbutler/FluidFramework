@@ -4,21 +4,23 @@
  */
 
 import { strict as assert } from "node:assert";
-import path from "node:path";
 
-import { expect } from "chai";
+import chai, { expect } from "chai";
+import assertArrays from "chai-arrays";
 import { describe, it } from "mocha";
 
 import { loadFluidRepo } from "../fluidRepo.js";
 import { findGitRootSync } from "../git.js";
 import type { ReleaseGroupName, WorkspaceName } from "../types.js";
 
-import { testDataPath } from "./init.js";
+import { testRepoRoot } from "./init.js";
+
+chai.use(assertArrays);
 
 describe("loadFluidRepo", () => {
 	describe("testRepo", () => {
 		it("loads correctly", () => {
-			const repo = loadFluidRepo(path.join(testDataPath, "./testRepo"));
+			const repo = loadFluidRepo(testRepoRoot);
 			assert.strictEqual(
 				repo.workspaces.size,
 				2,
@@ -54,6 +56,17 @@ describe("loadFluidRepo", () => {
 				"second workspace has the wrong number of release groups",
 			);
 		});
+
+		it("releaseGroupDependencies", async () => {
+			const repo = loadFluidRepo(testRepoRoot);
+			const mainReleaseGroup = repo.releaseGroups.get("main" as ReleaseGroupName);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			const actualDependencies = mainReleaseGroup!.releaseGroupDependencies;
+			const names = actualDependencies.map((r) => r.name as string);
+
+			expect(actualDependencies).to.not.be.undefined;
+			expect(names).to.be.containingAllOf(["group2"]);
+		});
 	});
 
 	describe("FluidFramework repo", () => {
@@ -88,6 +101,17 @@ describe("loadFluidRepo", () => {
 					1,
 					"build-tools workspace has the wrong number of release groups",
 				);
+			});
+
+			it("releaseGroupDependencies", async () => {
+				const repo = loadFluidRepo(findGitRootSync());
+				const clientReleaseGroup = repo.releaseGroups.get("client" as ReleaseGroupName);
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				const actualDependencies = clientReleaseGroup!.releaseGroupDependencies;
+				const names = actualDependencies.map((r) => r.name as string);
+
+				expect(actualDependencies).to.not.be.undefined;
+				expect(names).to.be.containingAllOf([]);
 			});
 		});
 	});

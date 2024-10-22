@@ -6,10 +6,11 @@
 
 import type { Opaque } from 'type-fest';
 import type { PackageJson as PackageJson_2 } from 'type-fest';
+import * as semver from 'semver';
 import type { SetRequired } from 'type-fest';
 import { SimpleGit } from 'simple-git';
 
-// @public (undocumented)
+// @public
 export type AdditionalPackageProps = Record<string, string> | undefined;
 
 // @public
@@ -20,6 +21,17 @@ export function createPackageManager(name: PackageManagerName): IPackageManager;
 
 // @public
 export const EmptySelectionCriteria: PackageSelectionCriteria;
+
+// @public
+export interface FilterablePackage {
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    private?: boolean | undefined;
+}
+
+// @public
+export function filterPackages<T extends FilterablePackage>(packages: T[], filters: PackageFilterOptions): Promise<T[]>;
 
 // @public
 export function findGitRootSync(cwd?: string): string;
@@ -61,8 +73,15 @@ export class FluidRepoBase<P extends IPackage> implements IFluidRepo<P> {
     get workspaces(): Map<WorkspaceName, IWorkspace>;
 }
 
+// @public (undocumented)
+export function getAllDependenciesInRepo(repo: IFluidRepo, packages: IPackage[]): {
+    packages: IPackage[];
+    releaseGroups: IReleaseGroup[];
+    workspaces: IWorkspace[];
+};
+
 // @public
-export function getChangedSinceRef<P extends IPackage>(fluidRepo: IFluidRepo<P>, ref: string, remote: string): Promise<{
+export function getChangedSinceRef<P extends IPackage>(fluidRepo: IFluidRepo<P>, ref: string, remote?: string): Promise<{
     files: string[];
     dirs: string[];
     workspaces: IWorkspace[];
@@ -80,7 +99,7 @@ export function getFluidRepoLayout(searchPath: string, noCache?: boolean): {
 };
 
 // @public
-export function getMergeBaseRemote(git: SimpleGit, branch: string, remote: string, localRef?: string): Promise<string>;
+export function getMergeBaseRemote(git: SimpleGit, branch: string, remote?: string, localRef?: string): Promise<string>;
 
 // @public
 export function getRemote(git: SimpleGit, partialUrl: string | undefined): Promise<string | undefined>;
@@ -91,6 +110,8 @@ export type GlobString = string;
 // @public @deprecated
 export interface IFluidBuildDir {
     directory: string;
+    // @deprecated
+    ignoredDirs?: string[];
 }
 
 // @public @deprecated (undocumented)
@@ -103,7 +124,7 @@ export interface IFluidBuildDirs {
 }
 
 // @public
-export interface IFluidRepo<P extends IPackage> extends Reloadable {
+export interface IFluidRepo<P extends IPackage = IPackage> extends Reloadable {
     configuration: IFluidRepoLayout;
     getGitRepository(): Promise<Readonly<SimpleGit>>;
     getPackageReleaseGroup(pkg: Readonly<P>): Readonly<IReleaseGroup>;
@@ -157,11 +178,8 @@ export interface IPackage<J extends PackageJson = PackageJson> extends Installab
 
 // @public
 export interface IPackageManager {
-    // (undocumented)
     installCommand(updateLockfile: boolean): string;
-    // (undocumented)
     readonly lockfileName: string;
-    // (undocumented)
     readonly name: PackageManagerName;
 }
 
@@ -170,6 +188,7 @@ export interface IReleaseGroup extends Reloadable {
     readonly adoPipelineUrl?: string;
     readonly name: ReleaseGroupName;
     readonly packages: IPackage[];
+    readonly releaseGroupDependencies: IReleaseGroup[];
     readonly rootPackage?: IPackage;
     // (undocumented)
     toString(): string;
@@ -246,11 +265,8 @@ export abstract class PackageBase<J extends PackageJson = PackageJson, TAddProps
 
 // @public
 export interface PackageDependency {
-    // (undocumented)
-    depClass: "prod" | "dev" | "peer";
-    // (undocumented)
+    depKind: "prod" | "dev" | "peer";
     name: PackageName;
-    // (undocumented)
     version: string;
 }
 
@@ -261,7 +277,7 @@ export interface PackageFilterOptions {
     skipScope?: string[] | undefined;
 }
 
-// @public (undocumented)
+// @public
 export type PackageJson = SetRequired<PackageJson_2 & FluidPackageJsonFields, "name" | "scripts" | "version">;
 
 // @public
@@ -280,7 +296,7 @@ export interface PackageSelectionCriteria {
     workspaces: (GlobString | string)[];
 }
 
-// @public (undocumented)
+// @public
 export interface ReleaseGroupDefinition {
     adoPipelineUrl?: string;
     exclude?: string[];
@@ -303,14 +319,18 @@ export function selectAndFilterPackages<P extends IPackage>(fluidRepo: IFluidRep
     filtered: P[];
 }>;
 
-// @internal
+// @public
+export function setVersion<J extends PackageJson>(packages: IPackage[], version: semver.SemVer): Promise<void>;
+
+// @public
 export function updatePackageJsonFile<J extends PackageJson = PackageJson>(packagePath: string, packageTransformer: (json: J) => void): void;
 
-// @public (undocumented)
+// @public
+export function updatePackageJsonFileAsync<J extends PackageJson = PackageJson>(packagePath: string, packageTransformer: (json: J) => Promise<void>): Promise<void>;
+
+// @public
 export interface WorkspaceDefinition {
-    // (undocumented)
     directory: string;
-    // (undocumented)
     releaseGroups: {
         [name: string]: ReleaseGroupDefinition;
     };
