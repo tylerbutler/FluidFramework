@@ -49,12 +49,12 @@ export async function setDependencyVersion(
 	const dependenciesToUpdate: ReadonlySet<string> = new Set(dependencyNames);
 	const savePromises: Promise<void>[] = [];
 	for (const pkg of packages) {
-		for (const { name, depClass } of pkg.combinedDependencies) {
+		for (const { name, depKind } of pkg.combinedDependencies) {
 			if (!dependenciesToUpdate.has(name)) {
 				continue;
 			}
 
-			switch (depClass) {
+			switch (depKind) {
 				case "dev": {
 					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 					pkg.packageJson.devDependencies![name] = depRangeToSet;
@@ -74,7 +74,7 @@ export async function setDependencyVersion(
 				}
 
 				default: {
-					throw new Error(`Unknown dependency type: ${depClass}`);
+					throw new Error(`Unknown dependency type: ${depKind}`);
 				}
 			}
 		}
