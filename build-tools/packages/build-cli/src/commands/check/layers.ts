@@ -43,20 +43,31 @@ export class CheckLayers extends BaseCommand<typeof CheckLayers> {
 		const timer = new Timer(flags.timer);
 
 		const fluidRepo = await this.getFluidRepo();
-		const { packages, root } = fluidRepo;
 
 		timer.time("Package scan completed");
 
-		const layerGraph = LayerGraph.load(
-			fluidRepo.root,
-			[...fluidRepo.packages.values()],
-			flags.info,
-		);
+		const packages = [...fluidRepo.packages.values()].filter((pkg) => {
+			return (
+				// Filter out workspace and release group roots.
+				(!pkg.isReleaseGroupRoot && !pkg.isWorkspaceRoot) ||
+				// ...unless they're single-package workspaces, which should be included.
+				pkg.workspace.packages.length === 1
+			);
+		});
+
+		const layerGraph = LayerGraph.load(fluidRepo.root, packages, flags.info);
 
 		// Write human-readable package list organized by layer
 		if (flags.md !== undefined) {
-			const packagesMdFilePath: string = path.join(root, flags.md, packagesMdFileName);
-			await writeFile(packagesMdFilePath, layerGraph.generatePackageLayersMarkdown(root));
+			const packagesMdFilePath: string = path.join(
+				fluidRepo.root,
+				flags.md,
+				packagesMdFileName,
+			);
+			await writeFile(
+				packagesMdFilePath,
+				layerGraph.generatePackageLayersMarkdown(fluidRepo.root),
+			);
 		}
 
 		// Write machine-readable dot file used to render a dependency graph
@@ -71,6 +82,6 @@ export class CheckLayers extends BaseCommand<typeof CheckLayers> {
 			this.error("Layer check not succesful");
 		}
 
-		this.log(`Layer check passed (${packages.size} packages)`);
+		this.log(`Layer check passed (${packages.length} packages)`);
 	}
 }
