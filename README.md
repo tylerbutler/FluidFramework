@@ -1,7 +1,9 @@
-<div style="display: flex; align-items: center;">
-    <img src="https://storage.fluidframework.com/static/logos/ic_fluent_fluid_framework_48_color.svg" alt="Fluid Framework logo" style="margin-right: 10px;">
-    <h1>Fluid Framework</h1>
-</div>
+<img align="left" width="48" height="48"
+    alt="Fluid Framework logo"
+    style="margin-right: 10px;
+    "src="https://storage.fluidframework.com/static/logos/ic_fluent_fluid_framework_48_color.svg">
+
+# Fluid Framework
 
 The Fluid Framework is a library for building distributed, real-time collaborative web
 applications using JavaScript or TypeScript.
