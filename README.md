@@ -1,4 +1,4 @@
-![Fluid Framework logo](./docs/static/images/fluidframework-logo.svg)
+![Fluid Framework logo](https://storage.fluidframework.com/static/logos/ic_fluent_fluid_framework_48_color.svg)
 
 # Fluid Framework
 
