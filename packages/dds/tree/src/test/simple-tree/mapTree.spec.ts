@@ -29,6 +29,7 @@ import {
 } from "../../core/index.js";
 import {
 	booleanSchema,
+	cursorFromInsertable,
 	handleSchema,
 	nullSchema,
 	numberSchema,
@@ -36,8 +37,6 @@ import {
 	stringSchema,
 	type TreeNodeSchema,
 } from "../../simple-tree/index.js";
-// eslint-disable-next-line import/no-internal-modules
-import type { InsertableContent } from "../../simple-tree/proxies.js";
 import {
 	type ContextualFieldProvider,
 	type ConstantFieldProvider,
@@ -52,6 +51,7 @@ import {
 	addDefaultsToMapTree,
 	getPossibleTypes,
 	mapTreeFromNodeData,
+	type InsertableContent,
 	// eslint-disable-next-line import/no-internal-modules
 } from "../../simple-tree/toMapTree.js";
 import { brand } from "../../util/index.js";
@@ -60,7 +60,7 @@ import {
 	MockNodeKeyManager,
 	type NodeKeyManager,
 } from "../../feature-libraries/index.js";
-import { cursorFromInsertableTreeField, validateUsageError } from "../utils.js";
+import { validateUsageError } from "../utils.js";
 
 /**
  * Helper for building {@link TreeFieldStoredSchema}.
@@ -1327,7 +1327,7 @@ describe("toMapTree", () => {
 					mapTreeFromNodeData(
 						content,
 						[schemaFactory.string],
-						undefined,
+						new MockNodeKeyManager(),
 						schemaValidationPolicy,
 					);
 				});
@@ -1340,7 +1340,7 @@ describe("toMapTree", () => {
 							mapTreeFromNodeData(
 								content,
 								[schemaFactory.string],
-								undefined,
+								new MockNodeKeyManager(),
 								schemaValidationPolicy,
 							),
 						outOfSchemaExpectedError,
@@ -1382,7 +1382,7 @@ describe("toMapTree", () => {
 					mapTreeFromNodeData(
 						content,
 						[myObjectSchema, schemaFactory.string],
-						undefined,
+						new MockNodeKeyManager(),
 						schemaValidationPolicy,
 					);
 				});
@@ -1394,7 +1394,7 @@ describe("toMapTree", () => {
 							mapTreeFromNodeData(
 								content,
 								[myObjectSchema, schemaFactory.string],
-								undefined,
+								new MockNodeKeyManager(),
 								schemaValidationPolicy,
 							),
 						outOfSchemaExpectedError,
@@ -1429,7 +1429,7 @@ describe("toMapTree", () => {
 					mapTreeFromNodeData(
 						content,
 						[myMapSchema, schemaFactory.string],
-						undefined,
+						new MockNodeKeyManager(),
 						schemaValidationPolicy,
 					);
 				});
@@ -1441,7 +1441,7 @@ describe("toMapTree", () => {
 							mapTreeFromNodeData(
 								content,
 								[myMapSchema, schemaFactory.string],
-								undefined,
+								new MockNodeKeyManager(),
 								schemaValidationPolicy,
 							),
 						outOfSchemaExpectedError,
@@ -1476,7 +1476,7 @@ describe("toMapTree", () => {
 					mapTreeFromNodeData(
 						content,
 						[myArrayNodeSchema, schemaFactory.string],
-						undefined,
+						new MockNodeKeyManager(),
 						schemaValidationPolicy,
 					);
 				});
@@ -1488,7 +1488,7 @@ describe("toMapTree", () => {
 							mapTreeFromNodeData(
 								content,
 								[myArrayNodeSchema, schemaFactory.string],
-								undefined,
+								new MockNodeKeyManager(),
 								schemaValidationPolicy,
 							),
 						outOfSchemaExpectedError,
@@ -1514,15 +1514,16 @@ describe("toMapTree", () => {
 			new Map(),
 		);
 
-		describe("cursorFromInsertableTreeField", () => {
+		describe("cursorFromInsertable", () => {
 			it("Success", () => {
-				cursorFromInsertableTreeField(schemaFactory.string, "Hello world", nodeKeyManager);
+				cursorFromInsertable(schemaFactory.string, "Hello world", nodeKeyManager);
 			});
 
 			it("Failure", () => {
 				assert.throws(
 					() =>
-						cursorFromInsertableTreeField(schemaFactory.number, "Hello world", nodeKeyManager),
+						// @ts-expect-error invalid data for schema
+						cursorFromInsertable(schemaFactory.number, "Hello world", nodeKeyManager),
 					validateUsageError(/incompatible/),
 				);
 			});
@@ -1556,6 +1557,53 @@ describe("toMapTree", () => {
 				assert.deepEqual(getPossibleTypes(new Set([mapSchema]), []), [mapSchema]);
 				// Map makes array
 				assert.deepEqual(getPossibleTypes(new Set([arraySchema]), new Map()), [arraySchema]);
+			});
+
+			it("inherited properties types", () => {
+				const f = new SchemaFactory("test");
+				class Optional extends f.object("x", {
+					constructor: f.optional(f.number),
+				}) {}
+				class Required extends f.object("x", {
+					constructor: f.number,
+				}) {}
+				class Other extends f.object("y", {
+					other: f.number,
+				}) {}
+				// Ignore inherited constructor field
+				assert.deepEqual(getPossibleTypes(new Set([Optional, Required, Other]), {}), [
+					Optional,
+				]);
+				// Allow overridden field
+				assert.deepEqual(
+					getPossibleTypes(new Set([Optional, Required, Other]), { constructor: 5 }),
+					[Optional, Required],
+				);
+				// Allow overridden undefined
+				assert.deepEqual(
+					getPossibleTypes(new Set([Optional, Required, Other]), { constructor: undefined }),
+					[Optional],
+				);
+				// Multiple Fields
+				assert.deepEqual(
+					getPossibleTypes(new Set([Optional, Required, Other]), {
+						constructor: undefined,
+						other: 6,
+					}),
+					[Optional, Other],
+				);
+				assert.deepEqual(
+					getPossibleTypes(new Set([Optional, Required, Other]), {
+						constructor: 5,
+						other: 6,
+					}),
+					[Optional, Required, Other],
+				);
+				// No properties
+				assert.deepEqual(
+					getPossibleTypes(new Set([Optional, Required, Other]), Object.create(null)),
+					[Optional],
+				);
 			});
 		});
 
