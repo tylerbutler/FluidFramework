@@ -7,10 +7,10 @@
 
 # Fluid Framework
 
-<p style="margin-left: 68px">
+<span style="margin-left: 68px">
 The Fluid Framework is a library for building distributed, real-time collaborative web
 applications using JavaScript or TypeScript.
-</p>
+</span>
 
 ## Getting started using the Fluid Framework
 
