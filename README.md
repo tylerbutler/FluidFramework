@@ -1,4 +1,4 @@
-<img align="left" width="48" height="68"
+<img align="left" width="48" height="95"
     alt="Fluid Framework logo"
     src="https://storage.fluidframework.com/static/logos/ic_fluent_fluid_framework_48_color.svg">
 
