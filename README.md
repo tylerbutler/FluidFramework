@@ -1,6 +1,6 @@
 <img align="left" width="48" height="48"
     alt="Fluid Framework logo"
-    style="margin-right: 10px;"
+    style="margin-right: 10px; padding-top: 28px;"
     src="https://storage.fluidframework.com/static/logos/ic_fluent_fluid_framework_48_color.svg">
 
 # Fluid Framework
