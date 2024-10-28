@@ -118,7 +118,7 @@
 		"mdast-util-to-string": "^4.0.0",
 		"minimatch": "^7.4.6",
 		"node-fetch": "^3.3.2",
-		"npm-check-updates": "^16.14.20",
+		"npm-check-updates": "^17.1.6",
 		"oclif": "^4.15.12",
 		"prettier": "~3.2.4",
 		"prompts": "^2.4.2",
