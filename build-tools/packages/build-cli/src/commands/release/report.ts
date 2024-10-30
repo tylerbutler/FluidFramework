@@ -7,6 +7,13 @@ import { strict as assert } from "node:assert";
 import path from "node:path";
 
 import {
+	type IFluidRepo,
+	type IReleaseGroup,
+	type PackageName,
+	type ReleaseGroupName,
+	getAllDependenciesInRepo,
+} from "@fluid-tools/build-infrastructure";
+import {
 	ReleaseVersion,
 	VersionBumpType,
 	detectBumpType,
@@ -23,17 +30,15 @@ import sortJson from "sort-json";
 import { table } from "table";
 
 import { releaseGroupFlag } from "../../flags.js";
+import { getAllVersions } from "../../library/git.js";
 import {
 	BaseCommand,
-	Context,
-	PackageVersionMap,
 	ReleaseReport,
 	ReportKind,
 	VersionDetails,
 	filterVersionsOlderThan,
 	getDisplayDate,
 	getDisplayDateRelative,
-	getFluidDependencies,
 	getRanges,
 	sortVersions,
 	toReportKind,

@@ -4,6 +4,7 @@
  */
 
 import { strict as assert } from "node:assert";
+import { isIPackage } from "@fluid-tools/build-infrastructure";
 import {
 	VersionBumpType,
 	bumpVersionScheme,
@@ -13,7 +14,6 @@ import { rawlist } from "@inquirer/prompts";
 import { Config } from "@oclif/core";
 import chalk from "chalk";
 
-import { isIPackage } from "@fluid-tools/build-infrastructure";
 import { findPackageOrReleaseGroup } from "../args.js";
 import {
 	bumpTypeFlag,
@@ -93,12 +93,14 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 			});
 		}
 
-		const currentBranch = await context.gitRepo.getCurrentBranchName();
+		const branchSummary = await git.branch();
+		const currentBranch = branchSummary.current;
+
 		const bumpType = await getBumpType(flags.bumpType, currentBranch, releaseVersion);
 
 		// eslint-disable-next-line no-warning-comments
 		// TODO: can be removed once server team owns server releases
-		if (flags.releaseGroup === "server" && flags.bumpType === "minor") {
+		if (releaseGroup.name === "server" && bumpType === "minor") {
 			this.error(`Server release are always a ${chalk.bold("MAJOR")} release`);
 		}
 
@@ -110,7 +112,6 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 				? false
 				: undefined;
 
-		const branchSummary = await git.branch();
 		const branchPolicyCheckDefault = getRunPolicyCheckDefault(
 			releaseGroup,
 			branchSummary.current,

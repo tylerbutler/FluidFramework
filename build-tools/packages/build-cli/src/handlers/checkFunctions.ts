@@ -3,12 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "node:assert";
 import { existsSync } from "node:fs";
 
-import { confirm, rawlist } from "@inquirer/prompts";
 import { getRemote, isIReleaseGroup } from "@fluid-tools/build-infrastructure";
 import { bumpVersionScheme } from "@fluid-tools/version-tools";
+import { confirm, rawlist } from "@inquirer/prompts";
 import execa from "execa";
 import { Machine } from "jssm";
 

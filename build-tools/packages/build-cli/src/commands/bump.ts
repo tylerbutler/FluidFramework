@@ -19,6 +19,7 @@ import {
 	detectVersionScheme,
 	isInterdependencyRange,
 } from "@fluid-tools/version-tools";
+import { confirm } from "@inquirer/prompts";
 import { Flags } from "@oclif/core";
 import chalk from "chalk";
 import * as semver from "semver";
