@@ -244,7 +244,7 @@ export const checkDependenciesInstalled: StateHandlerFunction = async (
 	const { releaseGroup } = data;
 	const installed = await releaseGroup.workspace.checkInstall();
 
-	if (installed) {
+	if (installed === true) {
 		BaseStateHandler.signalSuccess(machine, state);
 	} else {
 		log.errorLog(`Error installing dependencies for: ${releaseGroup}`);
@@ -505,7 +505,7 @@ export const checkReleaseNotes: StateHandlerFunction = async (
 
 	if (
 		// Only some release groups use changeset-based change-tracking.
-		releaseGroupsUsingChangesets.has(releaseGroup) &&
+		releaseGroupsUsingChangesets.has(releaseGroup.name) &&
 		// This check should only be run for minor/major releases. Patch releases do not use changesets or generate release
 		// notes so there is no need to check them.
 		bumpType !== "patch"
@@ -560,7 +560,7 @@ export const checkChangelogs: StateHandlerFunction = async (
 
 	if (
 		// Only some release groups use changeset-based change-tracking.
-		releaseGroupsUsingChangesets.has(releaseGroup) &&
+		releaseGroupsUsingChangesets.has(releaseGroup.name) &&
 		// This check should only be run for minor/major releases. Patch releases do not use changesets or generate
 		// per-package changelogs so there is no need to check them.
 		bumpType !== "patch"
@@ -845,7 +845,7 @@ export const checkTypeTestPrepare: StateHandlerFunction = async (
 	const { originalBranch } = data;
 
 	const typetestsPrep = await confirm({
-		message: `Have you run typetests:prepare on the ${context.originalBranchName} branch?`,
+		message: `Have you run typetests:prepare on the ${originalBranch} branch?`,
 	});
 	if (typetestsPrep === false) {
 		BaseStateHandler.signalFailure(machine, state);

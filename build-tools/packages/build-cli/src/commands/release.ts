@@ -28,6 +28,8 @@ import {
 	StateHandler,
 } from "../handlers/index.js";
 import { PromptWriter } from "../instructionalPromptWriter.js";
+// eslint-disable-next-line import/no-internal-modules
+import { getDefaultBumpTypeForBranch } from "../library/branches.js";
 import { FluidReleaseMachine } from "../machines/index.js";
 import { getRunPolicyCheckDefault } from "../repoConfig.js";
 import { StateMachineCommand } from "../stateMachineCommand.js";
@@ -96,7 +98,7 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 		const branchSummary = await git.branch();
 		const currentBranch = branchSummary.current;
 
-		const bumpType = await getBumpType(flags.bumpType, currentBranch, releaseVersion);
+		const bumpType = await getBumpType(flags.bumpType, currentBranch, releaseGroup.version);
 
 		// eslint-disable-next-line no-warning-comments
 		// TODO: can be removed once server team owns server releases

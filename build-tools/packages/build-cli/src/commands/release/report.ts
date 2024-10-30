@@ -30,6 +30,7 @@ import sortJson from "sort-json";
 import { table } from "table";
 
 import { releaseGroupFlag } from "../../flags.js";
+// eslint-disable-next-line import/no-internal-modules
 import { getAllVersions } from "../../library/git.js";
 import {
 	BaseCommand,
@@ -223,7 +224,7 @@ export abstract class ReleaseReportBaseCommand<
 					latestReleasedVersion = recentReleases[0];
 				} else if (recentReleases.length > 1) {
 					const answer = await rawlist({
-						message: `Multiple versions of ${releaseGroupOrPackage} have been released. Select the one you want to include in the release report.`,
+						message: `Multiple versions of ${releaseGroup.name} have been released. Select the one you want to include in the release report.`,
 						choices: recentReleases.map((v) => {
 							return {
 								name: `${v.version} (${formatDistanceToNow(v.date ?? 0)} ago)`,
