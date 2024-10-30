@@ -121,8 +121,10 @@ function filePathsToDirectories(files: string[]): string[] {
  * Returned paths are relative to the Fluid repo root.
  *
  * @param fluidRepo - The Fluid repo.
- * @param ref - The ref to compare against.
- * @param remote - The remote to compare against.
+ * @param ref - The ref to compare against. This is assumed to be a local ref unless `remote` is also provided. In that
+ * case, then `ref` is assumed to be a remote branch name.
+ * @param remote - The remote to compare against. If this is provided, `ref` is expected to be a branch name on this
+ * remote.
  * @returns An object containing the changed files, directories, release groups, workspaces, and packages. Note that a
  * package may appear in multiple groups. That is, if a single package in a release group is changed, the releaseGroups
  * value will contain that group, and the packages value will contain only the single package. Also, if two packages are
