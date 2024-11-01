@@ -168,6 +168,7 @@
 		"concurrently": "^8.2.2",
 		"copyfiles": "^2.4.1",
 		"eslint": "~8.57.0",
+		"eslint-config-biome": "~1.9.3",
 		"eslint-config-oclif": "^5.2.1",
 		"eslint-config-oclif-typescript": "^3.1.12",
 		"eslint-config-prettier": "~9.1.0",

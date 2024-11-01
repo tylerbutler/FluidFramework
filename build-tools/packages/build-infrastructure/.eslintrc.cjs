@@ -9,6 +9,7 @@ module.exports = {
 		// eslint-disable-next-line node/no-extraneous-require
 		require.resolve("@fluidframework/eslint-config-fluid/recommended"),
 		"prettier",
+		"biome",
 	],
 	parserOptions: {
 		project: ["./tsconfig.json", "./src/test/tsconfig.json"],

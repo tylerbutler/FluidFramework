@@ -350,6 +350,9 @@ importers:
       eslint:
         specifier: ~8.57.0
         version: 8.57.0
+      eslint-config-biome:
+        specifier: ~1.9.3
+        version: 1.9.3
       eslint-config-oclif:
         specifier: ^5.2.1
         version: 5.2.1(eslint@8.57.0)
@@ -495,6 +498,9 @@ importers:
       eslint:
         specifier: ~8.57.0
         version: 8.57.0
+      eslint-config-biome:
+        specifier: ~1.9.3
+        version: 1.9.3
       eslint-plugin-chai-friendly:
         specifier: ~1.0.1
         version: 1.0.1(eslint@8.57.0)
@@ -649,6 +655,9 @@ importers:
       eslint:
         specifier: ~8.57.0
         version: 8.57.0
+      eslint-config-biome:
+        specifier: ~1.9.3
+        version: 1.9.3
       json-schema-to-typescript:
         specifier: ^15.0.2
         version: 15.0.2
@@ -710,6 +719,9 @@ importers:
       eslint:
         specifier: ~8.57.0
         version: 8.57.0
+      eslint-config-biome:
+        specifier: ~1.9.3
+        version: 1.9.3
       rimraf:
         specifier: ^4.4.1
         version: 4.4.1
@@ -783,6 +795,9 @@ importers:
       eslint:
         specifier: ~8.57.0
         version: 8.57.0
+      eslint-config-biome:
+        specifier: ~1.9.3
+        version: 1.9.3
       eslint-config-oclif:
         specifier: ^5.2.1
         version: 5.2.1(eslint@8.57.0)
@@ -5850,6 +5865,10 @@ packages:
   /escape-string-regexp@5.0.0:
     resolution: {integrity: sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==}
     engines: {node: '>=12'}
+
+  /eslint-config-biome@1.9.3:
+    resolution: {integrity: sha512-Zrz6Z+Gtv1jqnfHsqvpwCSqclktvQF1OnyDAfDOvjzzck2c5Nw3crEHI2KLuH+LnNBttiPAb7Y7e8sF158sOgQ==}
+    dev: true
 
   /eslint-config-oclif-typescript@3.1.12(eslint@8.57.0)(typescript@5.4.5):
     resolution: {integrity: sha512-hEXU/PEJyjeLiTrCmgcmx0+FHwVpqipkKSykesdMsk2v43Mqh5bq2j3cyxHXZBCOxpTACVlM6KG7d4LFaWoVHQ==}

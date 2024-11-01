@@ -83,6 +83,7 @@
 		"@types/shelljs": "^0.8.15",
 		"concurrently": "^8.2.2",
 		"eslint": "~8.57.0",
+		"eslint-config-biome": "~1.9.3",
 		"json-schema-to-typescript": "^15.0.2",
 		"mocha": "^10.7.3"
 	},
