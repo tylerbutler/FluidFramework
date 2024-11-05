@@ -25,7 +25,7 @@ import type {
 /**
  * {@inheritDoc IWorkspace}
  */
-export class Workspace implements IWorkspace {
+export class Workspace<P extends IPackage> implements IWorkspace<P> {
 	/**
 	 * {@inheritDoc IWorkspace.name}
 	 */
@@ -34,17 +34,17 @@ export class Workspace implements IWorkspace {
 	/**
 	 * {@inheritDoc IWorkspace.releaseGroups}
 	 */
-	public readonly releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
+	public readonly releaseGroups: Map<ReleaseGroupName, IReleaseGroup<P>>;
 
 	/**
 	 * {@inheritDoc IWorkspace.rootPackage}
 	 */
-	public readonly rootPackage: IPackage;
+	public readonly rootPackage: P;
 
 	/**
 	 * {@inheritDoc IWorkspace.packages}
 	 */
-	public readonly packages: IPackage[];
+	public readonly packages: P[];
 
 	/**
 	 * {@inheritDoc IWorkspace.directory}
@@ -219,12 +219,12 @@ export class Workspace implements IWorkspace {
 	 * @param buildProject - The build project that the workspace belongs to.
 	 * @returns A loaded {@link IWorkspace}.
 	 */
-	public static load(
+	public static load<P extends IPackage>(
 		name: string,
 		definition: WorkspaceDefinition,
 		root: string,
 		buildProject: IBuildProject,
-	): IWorkspace {
+	): IWorkspace<P> {
 		const workspace = new Workspace(name, definition, root, buildProject);
 		return workspace;
 	}

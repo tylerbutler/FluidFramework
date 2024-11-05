@@ -15,7 +15,7 @@ import type {
 /**
  * {@inheritDoc IReleaseGroup}
  */
-export class ReleaseGroup implements IReleaseGroup {
+export class ReleaseGroup<P extends IPackage> implements IReleaseGroup<P> {
 	/**
 	 * {@inheritDoc IReleaseGroup.name}
 	 */
@@ -33,12 +33,12 @@ export class ReleaseGroup implements IReleaseGroup {
 		/**
 		 * {@inheritDoc IReleaseGroup.workspace}
 		 */
-		public workspace: IWorkspace,
+		public workspace: IWorkspace<P>,
 
 		/**
 		 * {@inheritDoc IReleaseGroup.rootPackage}
 		 */
-		public readonly rootPackage?: IPackage,
+		public readonly rootPackage?: P,
 	) {
 		this.name = name as ReleaseGroupName;
 		this.adoPipelineUrl = releaseGroupDefinition.adoPipelineUrl;
@@ -67,7 +67,7 @@ export class ReleaseGroup implements IReleaseGroup {
 	/**
 	 * {@inheritDoc IReleaseGroup.packages}
 	 */
-	public readonly packages: IPackage[];
+	public readonly packages: P[];
 
 	/**
 	 * {@inheritDoc IReleaseGroup.version}
@@ -80,8 +80,8 @@ export class ReleaseGroup implements IReleaseGroup {
 	/**
 	 * {@inheritDoc IReleaseGroup.releaseGroupDependencies}
 	 */
-	public get releaseGroupDependencies(): IReleaseGroup[] {
-		const dependentReleaseGroups = new Set<IReleaseGroup>();
+	public get releaseGroupDependencies(): IReleaseGroup<P>[] {
+		const dependentReleaseGroups = new Set<IReleaseGroup<P>>();
 		const ignoredDependencies = new Set<PackageName>();
 		const buildProject = this.workspace.buildProject;
 		for (const pkg of this.packages) {

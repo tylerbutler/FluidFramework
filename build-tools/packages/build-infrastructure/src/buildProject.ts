@@ -71,11 +71,11 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 				this._workspaces = loadWorkspacesFromLegacyConfig(config.repoPackages, this);
 			}
 		} else {
-			this._workspaces = new Map<WorkspaceName, IWorkspace>(
+			this._workspaces = new Map<WorkspaceName, IWorkspace<P>>(
 				Object.entries(config.buildProject.workspaces).map((entry) => {
 					const name = entry[0] as WorkspaceName;
 					const definition = entry[1];
-					const ws = Workspace.load(name, definition, this.root, this);
+					const ws = Workspace.load<P>(name, definition, this.root, this);
 					return [name, ws];
 				}),
 			);
@@ -201,13 +201,13 @@ export function loadBuildProject<P extends IPackage>(
 
 /**
  * Returns an object containing all the packages, release groups, and workspaces that a given set of packages depends
- * on. This function only considers packages in the BuildProject repo.
+ * on. This function only considers packages in the BuildProject.
  */
-export function getAllDependencies(
-	repo: IBuildProject,
-	packages: IPackage[],
-): { packages: IPackage[]; releaseGroups: IReleaseGroup[]; workspaces: IWorkspace[] } {
-	const dependencyPackages: Set<IPackage> = new Set();
+export function getAllDependencies<P extends IPackage>(
+	repo: IBuildProject<P>,
+	packages: P[],
+): { packages: P[]; releaseGroups: IReleaseGroup[]; workspaces: IWorkspace[] } {
+	const dependencyPackages: Set<P> = new Set();
 	const releaseGroups: Set<IReleaseGroup> = new Set();
 	const workspaces: Set<IWorkspace> = new Set();
 

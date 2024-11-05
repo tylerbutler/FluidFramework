@@ -58,12 +58,12 @@ export interface IBuildProject<P extends IPackage = IPackage> extends Reloadable
 	/**
 	 * A map of all workspaces in the BuildProject.
 	 */
-	workspaces: Map<WorkspaceName, IWorkspace>;
+	workspaces: Map<WorkspaceName, IWorkspace<P>>;
 
 	/**
 	 * A map of all release groups in the BuildProject.
 	 */
-	releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
+	releaseGroups: Map<ReleaseGroupName, IReleaseGroup<P>>;
 
 	/**
 	 * A map of all packages in the BuildProject.
@@ -101,7 +101,7 @@ export interface IBuildProject<P extends IPackage = IPackage> extends Reloadable
 	/**
 	 * Returns the {@link IReleaseGroup} associated with a package.
 	 */
-	getPackageReleaseGroup(pkg: Readonly<P>): Readonly<IReleaseGroup>;
+	getPackageReleaseGroup(pkg: Readonly<P>): Readonly<IReleaseGroup<P>>;
 }
 
 /**
@@ -161,7 +161,7 @@ export type WorkspaceName = Opaque<string, "WorkspaceName">;
  * Release groups, on the other hand, are used to group packages into releasable groups. See {@link IReleaseGroup} for
  * more information.
  */
-export interface IWorkspace extends Installable, Reloadable {
+export interface IWorkspace<P extends IPackage> extends Installable, Reloadable {
 	/**
 	 * The name of the workspace.
 	 */
@@ -175,12 +175,12 @@ export interface IWorkspace extends Installable, Reloadable {
 	/**
 	 * The root package of the workspace.
 	 */
-	rootPackage: IPackage;
+	rootPackage: P;
 
 	/**
 	 * A map of all the release groups in the workspace.
 	 */
-	releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
+	releaseGroups: Map<ReleaseGroupName, IReleaseGroup<P>>;
 
 	/**
 	 * The build project that the workspace belongs to.
@@ -191,14 +191,14 @@ export interface IWorkspace extends Installable, Reloadable {
 	 * An array of all the packages in the workspace. This includes the workspace root and any release group roots and
 	 * constituent packages as well.
 	 */
-	packages: IPackage[];
+	packages: P[];
 	toString(): string;
 }
 
 /**
  * A tagged type representing release group names.
  */
-export type ReleaseGroupName = Opaque<string, IReleaseGroup>;
+export type ReleaseGroupName = Opaque<string, "IReleaseGroup">;
 
 /**
  * A release group is a collection of packages that are versioned and released together. All packages within a release
@@ -208,7 +208,7 @@ export type ReleaseGroupName = Opaque<string, IReleaseGroup>;
  * Workspaces, on the other hand, are used to manage dependencies and interdependencies. See {@link IWorkspace} for more
  * information.
  */
-export interface IReleaseGroup extends Reloadable {
+export interface IReleaseGroup<P extends IPackage> extends Reloadable {
 	/**
 	 * The name of the release group. All release groups must have unique names.
 	 */
@@ -222,24 +222,24 @@ export interface IReleaseGroup extends Reloadable {
 	/**
 	 * The package that is the release group root, if one exists.
 	 */
-	readonly rootPackage?: IPackage;
+	readonly rootPackage?: P;
 
 	/**
 	 * An array of all packages in the release group.
 	 */
-	readonly packages: IPackage[];
+	readonly packages: P[];
 
 	/**
 	 * The workspace that the release group belongs to.
 	 */
-	readonly workspace: IWorkspace;
+	readonly workspace: IWorkspace<P>;
 
 	/**
 	 * An array of all the release groups that the release group depends on. If any package in a release group has any
 	 * dependency on a package in another release group within the same workspace, then the first release group depends
 	 * on the second.
 	 */
-	readonly releaseGroupDependencies: IReleaseGroup[];
+	readonly releaseGroupDependencies: IReleaseGroup<P>[];
 
 	/**
 	 * An optional ADO pipeline URL for the CI pipeline that builds the release group.
@@ -252,10 +252,10 @@ export interface IReleaseGroup extends Reloadable {
 /**
  * A type guard that returns `true` if the checked item is an {@link IReleaseGroup}.
  */
-export function isIReleaseGroup(
+export function isIReleaseGroup<P extends IPackage>(
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	toCheck: Exclude<any, string | number | ReleaseGroupName | PackageName>,
-): toCheck is IReleaseGroup {
+): toCheck is IReleaseGroup<P> {
 	if (!("name" in toCheck)) {
 		return false;
 	}
@@ -391,7 +391,7 @@ export interface IPackage<J extends PackageJson = PackageJson>
 	/**
 	 * The workspace that this package belongs to.
 	 */
-	readonly workspace: IWorkspace;
+	readonly workspace: IWorkspace<this>;
 
 	/**
 	 * Whether the package is a workspace root package or not. A workspace will only have one root package.

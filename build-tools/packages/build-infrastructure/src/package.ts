@@ -91,7 +91,7 @@ export abstract class PackageBase<
 		/**
 		 * {@inheritDoc IPackage.workspace}
 		 */
-		public readonly workspace: IWorkspace,
+		public readonly workspace: IWorkspace<this>,
 
 		/**
 		 * {@inheritDoc IPackage.isWorkspaceRoot}
@@ -247,18 +247,18 @@ class Package<
 	 * @returns A loaded {@link IPackage} instance.
 	 */
 	public static loadFromWorkspaceDefinition<
-		T extends typeof Package,
+		P extends IPackage,
 		J extends PackageJson = PackageJson,
 		TAddProps extends AdditionalPackageProps = undefined,
 	>(
-		this: T,
+		this: P,
 		packageJsonFilePath: string,
 		packageManager: IPackageManager,
 		isWorkspaceRoot: boolean,
 		workspaceDefinition: WorkspaceDefinition,
-		workspace: IWorkspace,
+		workspace: IWorkspace<P>,
 		additionalProperties?: TAddProps,
-	): IPackage {
+	): IPackage<J> {
 		const packageName: PackageName = (readJsonSync(packageJsonFilePath) as J)
 			.name as PackageName;
 		const releaseGroupName = findReleaseGroupForPackage(
@@ -305,13 +305,13 @@ class Package<
  * @param workspace - The workspace that this package belongs to.
  * @returns A loaded {@link IPackage} instance.
  */
-export function loadPackageFromWorkspaceDefinition(
+export function loadPackageFromWorkspaceDefinition<P extends IPackage>(
 	packageJsonFilePath: string,
 	packageManager: IPackageManager,
 	isWorkspaceRoot: boolean,
 	workspaceDefinition: WorkspaceDefinition,
-	workspace: IWorkspace,
-): IPackage {
+	workspace: IWorkspace<P>,
+): P {
 	return Package.loadFromWorkspaceDefinition(
 		packageJsonFilePath,
 		packageManager,
