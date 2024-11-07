@@ -68,6 +68,8 @@ export abstract class PackageBase<
 		return Package.colorFunction[this.packageId % Package.colorFunction.length]!;
 	}
 
+	public readonly workspace: IWorkspace<this>;
+
 	/**
 	 * Create a new package from a package.json file. **Prefer the .load method to calling the contructor directly.**
 	 *
@@ -88,10 +90,7 @@ export abstract class PackageBase<
 		 */
 		public readonly packageManager: IPackageManager,
 
-		/**
-		 * {@inheritDoc IPackage.workspace}
-		 */
-		public readonly workspace: IWorkspace<this>,
+		workspace: IWorkspace<this>,
 
 		/**
 		 * {@inheritDoc IPackage.isWorkspaceRoot}
@@ -110,6 +109,7 @@ export abstract class PackageBase<
 		additionalProperties?: TAddProps,
 	) {
 		[this._packageJson, this._indent] = readPackageJsonAndIndent(packageJsonFilePath);
+		this.workspace = workspace;
 		if (additionalProperties !== undefined) {
 			Object.assign(this, additionalProperties);
 		}
@@ -251,7 +251,7 @@ class Package<
 		J extends PackageJson = PackageJson,
 		TAddProps extends AdditionalPackageProps = undefined,
 	>(
-		this: P,
+		this: Package,
 		packageJsonFilePath: string,
 		packageManager: IPackageManager,
 		isWorkspaceRoot: boolean,
@@ -281,7 +281,7 @@ class Package<
 		const isReleaseGroupRoot =
 			rootPackageName === undefined ? false : packageName === rootPackageName;
 
-		const pkg = new this(
+		const pkg = new Package<J>(
 			packageJsonFilePath,
 			packageManager,
 			workspace,

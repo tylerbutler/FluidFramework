@@ -223,9 +223,9 @@ export class Workspace<P extends IPackage> implements IWorkspace<P> {
 		name: string,
 		definition: WorkspaceDefinition,
 		root: string,
-		buildProject: IBuildProject,
+		buildProject: IBuildProject<P>,
 	): IWorkspace<P> {
-		const workspace = new Workspace(name, definition, root, buildProject);
+		const workspace = new Workspace<P>(name, definition, root, buildProject);
 		return workspace;
 	}
 }

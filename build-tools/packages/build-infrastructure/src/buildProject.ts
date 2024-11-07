@@ -81,7 +81,7 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 			);
 		}
 
-		const releaseGroups = new Map<ReleaseGroupName, IReleaseGroup>();
+		const releaseGroups = new Map<ReleaseGroupName, IReleaseGroup<P>>();
 		for (const ws of this.workspaces.values()) {
 			for (const [rgName, rg] of ws.releaseGroups) {
 				if (releaseGroups.has(rgName)) {
@@ -93,16 +93,16 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 		this._releaseGroups = releaseGroups;
 	}
 
-	private readonly _workspaces: Map<WorkspaceName, IWorkspace>;
+	private readonly _workspaces: Map<WorkspaceName, IWorkspace<P>>;
 
 	/**
 	 * {@inheritDoc IBuildProject.workspaces}
 	 */
-	public get workspaces(): Map<WorkspaceName, IWorkspace> {
+	public get workspaces(): Map<WorkspaceName, IWorkspace<P>> {
 		return this._workspaces;
 	}
 
-	private readonly _releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
+	private readonly _releaseGroups: Map<ReleaseGroupName, IReleaseGroup<P>>;
 
 	/**
 	 * {@inheritDoc IBuildProject.releaseGroups}

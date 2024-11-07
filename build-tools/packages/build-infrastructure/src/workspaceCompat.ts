@@ -16,7 +16,7 @@ import type {
 	ReleaseGroupDefinition,
 	WorkspaceDefinition,
 } from "./config.js";
-import type { IBuildProject, IWorkspace, WorkspaceName } from "./types.js";
+import type { IBuildProject, IPackage, IWorkspace, WorkspaceName } from "./types.js";
 import { Workspace } from "./workspace.js";
 
 /**
@@ -27,16 +27,16 @@ import { Workspace } from "./workspace.js";
  * @param entry - The config entry.
  * @param buildProject - The BuildProject the workspace belongs to.
  */
-export function loadWorkspacesFromLegacyConfig(
+export function loadWorkspacesFromLegacyConfig<P extends IPackage>(
 	// eslint-disable-next-line import/no-deprecated -- back-compat code
 	config: IFluidBuildDirs,
 	buildProject: IBuildProject,
-): Map<WorkspaceName, IWorkspace> {
-	const workspaces: Map<WorkspaceName, IWorkspace> = new Map();
+): Map<WorkspaceName, IWorkspace<P>> {
+	const workspaces: Map<WorkspaceName, IWorkspace<P>> = new Map();
 
 	// Iterate over the entries and create synthetic workspace definitions for them, then load the workspaces.
 	for (const [name, entry] of Object.entries(config)) {
-		const loadedWorkspaces: IWorkspace[] = [];
+		const loadedWorkspaces: IWorkspace<P>[] = [];
 		if (Array.isArray(entry)) {
 			for (const item of entry) {
 				loadedWorkspaces.push(...loadWorkspacesFromLegacyConfigEntry(item, buildProject));
@@ -73,7 +73,7 @@ function loadWorkspacesFromLegacyConfigEntry(
 	entry: string | IFluidBuildDir,
 	buildProject: IBuildProject,
 	name?: string,
-): IWorkspace[] {
+): IWorkspace<P>[] {
 	const directory = typeof entry === "string" ? entry : entry.directory;
 	const rgName = name ?? path.basename(directory);
 	const workspaceName = rgName;
