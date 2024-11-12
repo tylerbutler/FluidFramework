@@ -8,6 +8,7 @@ import {
 	type ISessionClient,
 	Latest,
 	type LatestValueManager,
+	Notifications,
 	type PresenceStates,
 } from "@fluid-experimental/presence";
 import { TypedEventEmitter } from "@fluid-internal/client-utils";
@@ -16,6 +17,7 @@ import type { IEvent } from "@fluidframework/core-interfaces";
 
 export interface IMouseTrackerEvents extends IEvent {
 	(event: "mousePositionChanged", listener: () => void): void;
+	(event: "mouseClicked", listener: () => void): void;
 }
 
 export interface IMousePosition {
@@ -39,10 +41,13 @@ export class MouseTracker extends TypedEventEmitter<IMouseTrackerEvents> {
 		public readonly presence: IPresence,
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		statesWorkspace: PresenceStates<{}>,
+		// eslint-disable-next-line @typescript-eslint/ban-types
+		// notificationsWorkspace: PresenceNotifications<{}>,
 		public readonly audience: IAzureAudience,
 	) {
 		super();
 
+		// Wire up the cursor tracking
 		statesWorkspace.add("cursor", Latest({ x: 0, y: 0 }));
 		this.cursor = statesWorkspace.props.cursor;
 
@@ -62,6 +67,43 @@ export class MouseTracker extends TypedEventEmitter<IMouseTrackerEvents> {
 				x: e.clientX,
 				y: e.clientY,
 			};
+		});
+
+		// Wire up the mouse click notifications
+		const notificationsWorkspace = presence.getNotifications("name:appNotifications", {
+			mouseEvents: Notifications<{
+				// Below explicit generic specification should not be required.
+				click: (button: "left" | "middle" | "right", position: IMousePosition) => void;
+			}>({
+				click: (
+					client: ISessionClient,
+					button: "left" | "middle" | "right",
+					position: IMousePosition,
+				) => {
+					// Send a reaction
+					console.log(
+						`Client ${client.sessionId} clicked the ${button} mouse button at x=${position.x}, y=${position.y}.`,
+					);
+				},
+			}),
+		});
+
+		// Workaround ts(2775): Assertions require every name in the call target to be declared with an explicit type annotation.
+		const appNotifications: typeof notificationsWorkspace = notificationsWorkspace;
+
+		const { mouseEvents } = appNotifications.props;
+
+		window.addEventListener("click", (e) => {
+			const button =
+				e.button === 0
+					? "left"
+					: e.button === 1
+						? "middle"
+						: e.button === 2
+							? "right"
+							: "unknown";
+			const position: IMousePosition = { x: e.clientX, y: e.clientY };
+			mouseEvents.emit.broadcast("click", button, position);
 		});
 	}
 
