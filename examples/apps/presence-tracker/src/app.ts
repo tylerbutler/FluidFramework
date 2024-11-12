@@ -83,6 +83,7 @@ async function start() {
 
 	const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
 	const appPresence = presence.getStates("name:trackerData", {});
+	const appNotifications = presence.g
 
 	// update the browser URL and the window title with the actual container ID
 	location.hash = id;
