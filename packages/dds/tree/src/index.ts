@@ -29,15 +29,17 @@ export {
 	MapNodeStoredSchema,
 	LeafNodeStoredSchema,
 	type RevertibleFactory,
+	type RevertibleAlphaFactory,
+	type RevertibleAlpha,
 } from "./core/index.js";
 export { type Brand } from "./util/index.js";
 
-export {
-	type Listeners,
-	type IsListener,
-	type Listenable,
-	type Off,
-} from "./events/index.js";
+export type {
+	Listeners,
+	IsListener,
+	Listenable,
+	Off,
+} from "@fluidframework/core-interfaces";
 
 export {
 	TreeStatus,
@@ -58,8 +60,12 @@ export {
 	rollback,
 	type ForestOptions,
 	getBranch,
-	type TreeBranch,
+	type BranchableTree,
 	type TreeBranchFork,
+	independentInitializedView,
+	type ViewContent,
+	TreeAlpha,
+	independentView,
 } from "./shared-tree/index.js";
 
 export {
@@ -142,8 +148,13 @@ export {
 	// Beta APIs
 	TreeBeta,
 	type TreeChangeEventsBeta,
+	type VerboseTreeNode,
+	type EncodeOptions,
+	type ParseOptions,
+	type VerboseTree,
 	extractPersistedSchema,
 	comparePersistedSchema,
+	type ConciseTree,
 	// Back to normal types
 	type JsonTreeSchema,
 	type JsonSchemaId,
@@ -161,19 +172,38 @@ export {
 	getJsonSchema,
 	type LazyItem,
 	type Unenforced,
+	type SimpleNodeSchemaBase,
+	type SimpleTreeSchema,
+	type SimpleNodeSchema,
+	type SimpleFieldSchema,
+	type SimpleLeafNodeSchema,
+	type SimpleMapNodeSchema,
+	type SimpleArrayNodeSchema,
+	type SimpleObjectNodeSchema,
+	normalizeAllowedTypes,
+	getSimpleSchema,
+	numberSchema,
+	stringSchema,
+	booleanSchema,
+	handleSchema,
+	nullSchema,
 	type ReadonlyArrayNode,
 	type InsertableTreeNodeFromAllowedTypes,
 	type Input,
+	type TreeBranch,
+	type TreeBranchEvents,
+	asTreeViewAlpha,
 } from "./simple-tree/index.js";
 export {
 	SharedTree,
 	configuredSharedTree,
 } from "./treeFactory.js";
 
-export type {
-	ICodecOptions,
-	JsonValidator,
-	SchemaValidationFunction,
+export {
+	type ICodecOptions,
+	type JsonValidator,
+	type SchemaValidationFunction,
+	FluidClientVersion,
 } from "./codec/index.js";
 export { noopValidator } from "./codec/index.js";
 export { typeboxValidator } from "./external-utilities/index.js";
