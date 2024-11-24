@@ -3,10 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
 import { getPackagesSync } from "@manypkg/get-packages";
-import { readFileSync, readJsonSync } from "fs-extra";
+import { readJsonSync } from "fs-extra/esm";
 import YAML from "yaml";
 
 import { IFluidBuildDir } from "../fluidBuild/fluidBuildConfig.js";

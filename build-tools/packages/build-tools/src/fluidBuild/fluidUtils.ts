@@ -10,7 +10,7 @@ import * as path from "node:path";
 import { getPackages } from "@manypkg/get-packages";
 import { cosmiconfigSync } from "cosmiconfig";
 import registerDebug from "debug";
-import { readJson } from "fs-extra";
+import { readJson } from "fs-extra/esm";
 
 import { defaultLogger } from "../common/logging.js";
 import { commonOptions } from "./commonOptions.js";
