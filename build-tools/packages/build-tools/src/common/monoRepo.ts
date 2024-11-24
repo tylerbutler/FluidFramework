@@ -9,10 +9,10 @@ import { getPackagesSync } from "@manypkg/get-packages";
 import { readFileSync, readJsonSync } from "fs-extra";
 import YAML from "yaml";
 
-import { IFluidBuildDir } from "../fluidBuild/fluidBuildConfig";
-import { Logger, defaultLogger } from "./logging";
-import { Package } from "./npmPackage";
-import { execWithErrorAsync, rimrafWithErrorAsync } from "./utils";
+import { IFluidBuildDir } from "../fluidBuild/fluidBuildConfig.js";
+import { Logger, defaultLogger } from "./logging.js";
+import { Package } from "./npmPackage.js";
+import { execWithErrorAsync, rimrafWithErrorAsync } from "./utils.js";
 
 import registerDebug from "debug";
 const traceInit = registerDebug("fluid-build:init");

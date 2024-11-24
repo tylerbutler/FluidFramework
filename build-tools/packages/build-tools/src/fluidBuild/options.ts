@@ -7,11 +7,11 @@ import { existsSync } from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import { defaultLogger } from "../common/logging";
-import { commonOptionString, parseOption } from "./commonOptions";
-import { IPackageMatchedOptions } from "./fluidRepoBuild";
-import { defaultBuildTaskName, defaultCleanTaskName } from "./fluidTaskDefinitions";
-import { ISymlinkOptions } from "./symlinkUtils";
+import { defaultLogger } from "../common/logging.js";
+import { commonOptionString, parseOption } from "./commonOptions.js";
+import { IPackageMatchedOptions } from "./fluidRepoBuild.js";
+import { defaultBuildTaskName, defaultCleanTaskName } from "./fluidTaskDefinitions.js";
+import { ISymlinkOptions } from "./symlinkUtils.js";
 
 const { log, warning, errorLog } = defaultLogger;
 

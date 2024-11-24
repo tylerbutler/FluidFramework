@@ -5,15 +5,15 @@
 
 import globby from "globby";
 
-import type { BuildContext } from "../../buildContext";
-import type { BuildPackage } from "../../buildGraph";
+import type { BuildContext } from "../../buildContext.js";
+import type { BuildPackage } from "../../buildGraph.js";
 import {
 	type DeclarativeTask,
 	type GitIgnoreSettingValue,
 	gitignoreDefaultValue,
-} from "../../fluidBuildConfig";
-import type { TaskHandlerFunction } from "../taskHandlers";
-import { LeafTask, LeafWithFileStatDoneFileTask } from "./leafTask";
+} from "../../fluidBuildConfig.js";
+import type { TaskHandlerFunction } from "../taskHandlers.js";
+import { LeafTask, LeafWithFileStatDoneFileTask } from "./leafTask.js";
 
 class DeclarativeTaskHandler extends LeafWithFileStatDoneFileTask {
 	constructor(

@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { BiomeConfigReader } from "../../../common/biomeConfig";
-import { LeafWithFileStatDoneFileTask } from "./leafTask";
+import { BiomeConfigReader } from "../../../common/biomeConfig.js";
+import { LeafWithFileStatDoneFileTask } from "./leafTask.js";
 
 /**
  * This task enables incremental build support for Biome formatting tasks. It reads Biome configuration files to load

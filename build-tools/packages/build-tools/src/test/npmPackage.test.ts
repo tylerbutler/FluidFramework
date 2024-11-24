@@ -10,8 +10,8 @@ import {
 	PackageJson,
 	readPackageJsonAndIndent,
 	updatePackageJsonFile,
-} from "../common/npmPackage";
-import { testDataPath } from "./init";
+} from "../common/npmPackage.js";
+import { testDataPath } from "./init.js";
 
 /**
  * A transformer function that does nothing.

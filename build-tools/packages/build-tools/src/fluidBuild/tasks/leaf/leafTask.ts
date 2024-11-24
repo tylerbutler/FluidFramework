@@ -12,12 +12,16 @@ import chalk from "picocolors";
 
 import { existsSync } from "node:fs";
 import { readFile, stat, unlink, writeFile } from "node:fs/promises";
-import { defaultLogger } from "../../../common/logging";
-import { ExecAsyncResult, execAsync, getExecutableFromCommand } from "../../../common/utils";
-import type { BuildContext } from "../../buildContext";
-import { BuildPackage, BuildResult, summarizeBuildResult } from "../../buildGraph";
-import { options } from "../../options";
-import { Task, TaskExec } from "../task";
+import { defaultLogger } from "../../../common/logging.js";
+import {
+	ExecAsyncResult,
+	execAsync,
+	getExecutableFromCommand,
+} from "../../../common/utils.js";
+import type { BuildContext } from "../../buildContext.js";
+import { BuildPackage, BuildResult, summarizeBuildResult } from "../../buildGraph.js";
+import { options } from "../../options.js";
+import { Task, TaskExec } from "../task.js";
 
 const { log } = defaultLogger;
 const traceTaskTrigger = registerDebug("fluid-build:task:trigger");

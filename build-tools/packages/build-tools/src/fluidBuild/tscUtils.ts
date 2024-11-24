@@ -6,7 +6,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
-import { sha256 } from "./hash";
+import { sha256 } from "./hash.js";
 
 const defaultTscUtil = createTscUtil(ts);
 export const parseCommandLine = defaultTscUtil.parseCommandLine;

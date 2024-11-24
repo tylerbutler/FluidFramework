@@ -5,8 +5,8 @@
 
 import { parentPort } from "worker_threads";
 
-import { lint } from "./eslintWorker";
-import { compile, fluidCompile } from "./tscWorker";
+import { lint } from "./eslintWorker.js";
+import { compile, fluidCompile } from "./tscWorker.js";
 
 export interface WorkerMessage {
 	workerName: string;

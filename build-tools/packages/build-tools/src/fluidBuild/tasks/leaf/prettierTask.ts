@@ -8,10 +8,10 @@ import { readFile, stat } from "node:fs/promises";
 import * as path from "node:path";
 import ignore from "ignore";
 
-import type { BuildContext } from "../../buildContext";
-import { BuildPackage } from "../../buildGraph";
-import { getInstalledPackageVersion, getRecursiveFiles, globFn } from "../taskUtils";
-import { LeafWithDoneFileTask } from "./leafTask";
+import type { BuildContext } from "../../buildContext.js";
+import { BuildPackage } from "../../buildGraph.js";
+import { getInstalledPackageVersion, getRecursiveFiles, globFn } from "../taskUtils.js";
+import { LeafWithDoneFileTask } from "./leafTask.js";
 
 export class PrettierTask extends LeafWithDoneFileTask {
 	private parsed: boolean = false;
@@ -81,7 +81,7 @@ export class PrettierTask extends LeafWithDoneFileTask {
 		// filter some of the extension the prettier doesn't care about as well
 		ignoreEntries.push("**/*.log", "**/*.tsbuildinfo");
 
-		const ignoreObject = ignore().add(ignoreEntries);
+		const ignoreObject = ignore.default().add(ignoreEntries);
 		let files: string[] = [];
 		try {
 			for (let i = 0; i < this.entries.length; i++) {

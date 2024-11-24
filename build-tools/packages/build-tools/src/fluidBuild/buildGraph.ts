@@ -9,13 +9,13 @@ import * as semver from "semver";
 
 import * as assert from "assert";
 import registerDebug from "debug";
-import type { GitRepo } from "../common/gitRepo";
-import { defaultLogger } from "../common/logging";
-import { Package } from "../common/npmPackage";
-import { Timer } from "../common/timer";
-import type { BuildContext } from "./buildContext";
-import { FileHashCache } from "./fileHashCache";
-import type { IFluidBuildConfig } from "./fluidBuildConfig";
+import type { GitRepo } from "../common/gitRepo.js";
+import { defaultLogger } from "../common/logging.js";
+import { Package } from "../common/npmPackage.js";
+import { Timer } from "../common/timer.js";
+import type { BuildContext } from "./buildContext.js";
+import { FileHashCache } from "./fileHashCache.js";
+import type { IFluidBuildConfig } from "./fluidBuildConfig.js";
 import {
 	TaskDefinition,
 	TaskDefinitions,
@@ -23,11 +23,11 @@ import {
 	getDefaultTaskDefinition,
 	getTaskDefinitions,
 	normalizeGlobalTaskDefinitions,
-} from "./fluidTaskDefinitions";
-import { options } from "./options";
-import { Task, TaskExec } from "./tasks/task";
-import { TaskFactory } from "./tasks/taskFactory";
-import { WorkerPool } from "./tasks/workers/workerPool";
+} from "./fluidTaskDefinitions.js";
+import { options } from "./options.js";
+import { Task, TaskExec } from "./tasks/task.js";
+import { TaskFactory } from "./tasks/taskFactory.js";
+import { WorkerPool } from "./tasks/workers/workerPool.js";
 
 const traceTaskDef = registerDebug("fluid-build:task:definition");
 const traceTaskDepTask = registerDebug("fluid-build:task:init:dep:task");

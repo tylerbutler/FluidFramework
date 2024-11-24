@@ -5,14 +5,14 @@
 
 import chalk from "picocolors";
 
-import { GitRepo } from "../common/gitRepo";
-import { defaultLogger } from "../common/logging";
-import { Timer } from "../common/timer";
-import { BuildGraph, BuildResult } from "./buildGraph";
-import { commonOptions } from "./commonOptions";
-import { FluidRepoBuild } from "./fluidRepoBuild";
-import { getFluidBuildConfig, getResolvedFluidRoot } from "./fluidUtils";
-import { options, parseOptions } from "./options";
+import { GitRepo } from "../common/gitRepo.js";
+import { defaultLogger } from "../common/logging.js";
+import { Timer } from "../common/timer.js";
+import { BuildGraph, BuildResult } from "./buildGraph.js";
+import { commonOptions } from "./commonOptions.js";
+import { FluidRepoBuild } from "./fluidRepoBuild.js";
+import { getFluidBuildConfig, getResolvedFluidRoot } from "./fluidUtils.js";
+import { options, parseOptions } from "./options.js";
 
 const { log, errorLog: error, warning: warn } = defaultLogger;
 

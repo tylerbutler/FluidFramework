@@ -15,11 +15,11 @@ import {
 	getBiomeFormattedFilesFromDirectory,
 	getSettingValuesFromBiomeConfig,
 	loadBiomeConfig,
-} from "../common/biomeConfig";
+} from "../common/biomeConfig.js";
 import type { Configuration as BiomeConfigOnDisk } from "../common/biomeConfigTypes";
-import { GitRepo } from "../common/gitRepo";
-import { getResolvedFluidRoot } from "../fluidBuild/fluidUtils";
-import { testDataPath } from "./init";
+import { GitRepo } from "../common/gitRepo.js";
+import { getResolvedFluidRoot } from "../fluidBuild/fluidUtils.js";
+import { testDataPath } from "./init.js";
 
 describe("Biome config loading", () => {
 	describe("BiomeConfigReader class", () => {

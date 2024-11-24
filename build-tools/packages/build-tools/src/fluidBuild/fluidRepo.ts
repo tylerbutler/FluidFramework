@@ -5,14 +5,14 @@
 
 import * as path from "path";
 
-import { MonoRepo } from "../common/monoRepo";
-import { Package, Packages } from "../common/npmPackage";
-import { ExecAsyncResult } from "../common/utils";
+import { MonoRepo } from "../common/monoRepo.js";
+import { Package, Packages } from "../common/npmPackage.js";
+import { ExecAsyncResult } from "../common/utils.js";
 import {
 	type IFluidBuildDir,
 	type IFluidBuildDirEntry,
 	type IFluidBuildDirs,
-} from "./fluidBuildConfig";
+} from "./fluidBuildConfig.js";
 
 export class FluidRepo {
 	private readonly _releaseGroups = new Map<string, MonoRepo>();

@@ -7,10 +7,10 @@ import { AsyncPriorityQueue, priorityQueue } from "async";
 
 import * as assert from "assert";
 import registerDebug from "debug";
-import type { BuildContext } from "../buildContext";
-import { BuildPackage, BuildResult } from "../buildGraph";
-import { options } from "../options";
-import { LeafTask } from "./leaf/leafTask";
+import type { BuildContext } from "../buildContext.js";
+import { BuildPackage, BuildResult } from "../buildGraph.js";
+import { options } from "../options.js";
+import { LeafTask } from "./leaf/leafTask.js";
 
 const traceTaskInit = registerDebug("fluid-build:task:init");
 const traceTaskExec = registerDebug("fluid-build:task:exec");

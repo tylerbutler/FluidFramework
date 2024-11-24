@@ -14,8 +14,8 @@ import { merge } from "ts-deepmerge";
 // We are using version 2.x because of this issue: https://github.com/sindresorhus/type-fest/issues/547
 import type { Opaque } from "type-fest";
 
-import type { Configuration as BiomeConfigRaw } from "./biomeConfigTypes";
-import type { GitRepo } from "./gitRepo";
+import type { Configuration as BiomeConfigRaw } from "./biomeConfigTypes.js";
+import type { GitRepo } from "./gitRepo.js";
 
 // switch to regular import once building ESM
 const findUp = import("find-up");
@@ -205,7 +205,7 @@ export async function getBiomeFormattedFiles(
 			: // No Biome includes were provided, so we include everything git enumerated
 				[...gitLsFiles];
 
-	const ignoreObject = ignore().add(prefixedIgnores);
+	const ignoreObject = ignore.default().add(prefixedIgnores);
 	// Note that ignoreObject.filter expects the paths to be relative to the repo root.
 	const filtered = ignoreObject.filter(includedPaths);
 

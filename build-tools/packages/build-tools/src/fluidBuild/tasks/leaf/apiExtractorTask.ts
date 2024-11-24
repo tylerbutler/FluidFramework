@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { getApiExtractorConfigFilePath, getInstalledPackageVersion } from "../taskUtils";
-import { TscDependentTask } from "./tscTask";
+import { getApiExtractorConfigFilePath, getInstalledPackageVersion } from "../taskUtils.js";
+import { TscDependentTask } from "./tscTask.js";
 
 export class ApiExtractorTask extends TscDependentTask {
 	protected get configFileFullPaths() {

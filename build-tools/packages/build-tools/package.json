@@ -3,6 +3,7 @@
 	"version": "0.52.0",
 	"description": "Fluid Build tools",
 	"homepage": "https://fluidframework.com",
+	"type": "module",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/microsoft/FluidFramework.git",
@@ -13,9 +14,9 @@
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"bin": {
-		"fluid-build": "bin/fluid-build",
-		"fluid-doc-stats": "bin/fluid-doc-stats",
-		"fluid-tsc": "bin/fluid-tsc"
+		"fluid-build": "bin/fluid-build.mjs",
+		"fluid-doc-stats": "bin/fluid-doc-stats.mjs",
+		"fluid-tsc": "bin/fluid-tsc.mjs"
 	},
 	"scripts": {
 		"build": "fluid-build --task build",
@@ -50,7 +51,7 @@
 		"fs-extra": "^11.2.0",
 		"glob": "^7.2.3",
 		"globby": "^11.1.0",
-		"ignore": "^5.3.2",
+		"ignore": "^6.0.2",
 		"json5": "^2.2.3",
 		"lodash": "^4.17.21",
 		"lodash.isequal": "^4.5.0",
@@ -72,6 +73,7 @@
 		"@fluidframework/build-tools-bin": "npm:@fluidframework/build-tools@~0.49.0",
 		"@fluidframework/eslint-config-fluid": "^5.4.0",
 		"@types/async": "^3.2.24",
+		"@types/debug": "^4.1.12",
 		"@types/fs-extra": "^11.0.4",
 		"@types/glob": "^7.2.0",
 		"@types/lodash": "^4.17.12",

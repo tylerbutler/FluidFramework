@@ -8,10 +8,10 @@ import { lstat, mkdir, realpath, rename, symlink, unlink, writeFile } from "node
 import * as path from "node:path";
 import * as semver from "semver";
 
-import { defaultLogger } from "../common/logging";
-import { MonoRepo } from "../common/monoRepo";
-import { Package } from "../common/npmPackage";
-import { FluidRepoBuild } from "./fluidRepoBuild";
+import { defaultLogger } from "../common/logging.js";
+import { MonoRepo } from "../common/monoRepo.js";
+import { Package } from "../common/npmPackage.js";
+import { FluidRepoBuild } from "./fluidRepoBuild.js";
 
 import registerDebug from "debug";
 const traceSymLink = registerDebug("fluid-build:symlink");

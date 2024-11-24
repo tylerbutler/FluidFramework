@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { getEsLintConfigFilePath, getInstalledPackageVersion } from "../taskUtils";
-import { TscDependentTask } from "./tscTask";
+import { getEsLintConfigFilePath, getInstalledPackageVersion } from "../taskUtils.js";
+import { TscDependentTask } from "./tscTask.js";
 
 export class TsLintTask extends TscDependentTask {
 	protected get configFileFullPaths() {

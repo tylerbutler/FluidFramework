@@ -13,17 +13,17 @@ import sortPackageJson from "sort-package-json";
 
 import type { SetRequired, PackageJson as StandardPackageJson } from "type-fest";
 
-import { type IFluidBuildConfig } from "../fluidBuild/fluidBuildConfig";
-import { options } from "../fluidBuild/options";
-import { defaultLogger } from "./logging";
-import { MonoRepo, PackageManager } from "./monoRepo";
+import { type IFluidBuildConfig } from "../fluidBuild/fluidBuildConfig.js";
+import { options } from "../fluidBuild/options.js";
+import { defaultLogger } from "./logging.js";
+import { MonoRepo, PackageManager } from "./monoRepo.js";
 import {
 	ExecAsyncResult,
 	execWithErrorAsync,
 	isSameFileOrDir,
 	lookUpDirSync,
 	rimrafWithErrorAsync,
-} from "./utils";
+} from "./utils.js";
 
 import { readFile } from "node:fs/promises";
 import registerDebug from "debug";

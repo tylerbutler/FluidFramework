@@ -10,9 +10,9 @@ import path from "node:path";
 import isEqual from "lodash.isequal";
 import * as tsTypes from "typescript";
 
-import { TscUtil, getTscUtils } from "../../tscUtils";
-import { getInstalledPackageVersion } from "../taskUtils";
-import { LeafTask, LeafWithDoneFileTask } from "./leafTask";
+import { TscUtil, getTscUtils } from "../../tscUtils.js";
+import { getInstalledPackageVersion } from "../taskUtils.js";
+import { LeafTask, LeafWithDoneFileTask } from "./leafTask.js";
 
 interface ITsBuildInfo {
 	program: {

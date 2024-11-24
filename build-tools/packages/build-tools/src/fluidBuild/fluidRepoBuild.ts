@@ -8,17 +8,17 @@ import * as path from "node:path";
 import registerDebug from "debug";
 import chalk from "picocolors";
 
-import { defaultLogger } from "../common/logging";
-import { MonoRepo } from "../common/monoRepo";
-import { Package, Packages } from "../common/npmPackage";
-import { ExecAsyncResult, isSameFileOrDir, lookUpDirSync } from "../common/utils";
-import type { BuildContext } from "./buildContext";
-import { BuildGraph } from "./buildGraph";
-import { FluidRepo } from "./fluidRepo";
-import { getFluidBuildConfig } from "./fluidUtils";
-import { NpmDepChecker } from "./npmDepChecker";
-import { ISymlinkOptions, symlinkPackage } from "./symlinkUtils";
-import { globFn } from "./tasks/taskUtils";
+import { defaultLogger } from "../common/logging.js";
+import { MonoRepo } from "../common/monoRepo.js";
+import { Package, Packages } from "../common/npmPackage.js";
+import { ExecAsyncResult, isSameFileOrDir, lookUpDirSync } from "../common/utils.js";
+import type { BuildContext } from "./buildContext.js";
+import { BuildGraph } from "./buildGraph.js";
+import { FluidRepo } from "./fluidRepo.js";
+import { getFluidBuildConfig } from "./fluidUtils.js";
+import { NpmDepChecker } from "./npmDepChecker.js";
+import { ISymlinkOptions, symlinkPackage } from "./symlinkUtils.js";
+import { globFn } from "./tasks/taskUtils.js";
 
 const traceInit = registerDebug("fluid-build:init");
 
