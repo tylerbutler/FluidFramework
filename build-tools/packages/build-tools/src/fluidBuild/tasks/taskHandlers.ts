@@ -4,14 +4,14 @@
  */
 
 import type { BuildContext } from "../buildContext";
-import type { BuildGraphPackage } from "../buildGraph";
+import type { BuildPackage } from "../buildGraph";
 import type { LeafTask } from "./leaf/leafTask";
 
 /**
  * The definition of a free function that returns a LeafTask subclass.
  */
 export type TaskHandlerFunction = (
-	node: BuildGraphPackage,
+	node: BuildPackage,
 	command: string,
 	context: BuildContext,
 	taskName?: string,
@@ -21,7 +21,7 @@ export type TaskHandlerFunction = (
  * The definition of a constructor function that returns a LeafTask subclass.
  */
 export type TaskHandlerConstructor = new (
-	node: BuildGraphPackage,
+	node: BuildPackage,
 	command: string,
 	context: BuildContext,
 	taskName?: string,

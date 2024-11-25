@@ -6,11 +6,9 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-
 import { GitRepo } from "../../../common/gitRepo";
-import { getFluidBuildConfig } from "../../../fluidBuild/config";
 import { sha256 } from "../../hash";
-import { LeafWithDoneFileTask, LeafWithFileStatDoneFileTask } from "./leafTask";
+import { LeafWithDoneFileTask } from "./leafTask";
 
 export class FlubListTask extends LeafWithDoneFileTask {
 	private getReleaseGroup() {
@@ -32,7 +30,7 @@ export class FlubListTask extends LeafWithDoneFileTask {
 			return undefined;
 		}
 		const packages = Array.from(this.node.context.repoPackageMap.values()).filter(
-			(pkg) => pkg.releaseGroup === resourceGroup,
+			(pkg) => pkg.monoRepo?.kind === resourceGroup,
 		);
 		if (packages.length === 0) {
 			return undefined;
@@ -82,38 +80,5 @@ export class FlubCheckPolicyTask extends LeafWithDoneFileTask {
 			commit: await gitRepo.getCurrentSha(),
 			modifications: modificationHash,
 		});
-	}
-}
-
-const changesetConfigPath = ".changeset/config.json";
-
-export class FlubGenerateChangesetConfigTask extends LeafWithFileStatDoneFileTask {
-	/**
-	 * All of these paths are assumed to be relative to the fluidBuild root - the directory in which the fluidBuild config
-	 * file is found.
-	 */
-	private readonly configFiles = [
-		changesetConfigPath,
-		"fluidBuild.config.cjs",
-		"flub.config.cjs",
-	];
-
-	protected async getInputFiles(): Promise<string[]> {
-		const { configFilePath } = getFluidBuildConfig(process.cwd());
-		const configDir = path.dirname(configFilePath);
-		const configPaths = this.configFiles.map((configPath) =>
-			path.resolve(configDir, configPath),
-		);
-		return configPaths;
-	}
-
-	/**
-	 * The only file that is output by this task is the changeset config.
-	 */
-	protected async getOutputFiles(): Promise<string[]> {
-		const { configFilePath } = getFluidBuildConfig(process.cwd());
-		const configDir = path.dirname(configFilePath);
-		const configPath = path.resolve(configDir, changesetConfigPath);
-		return [configPath];
 	}
 }

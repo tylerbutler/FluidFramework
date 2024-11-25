@@ -11,10 +11,11 @@ import { defaultLogger } from "../common/logging";
 import { commonOptionString, parseOption } from "./commonOptions";
 import { IPackageMatchedOptions } from "./fluidRepoBuild";
 import { defaultBuildTaskName, defaultCleanTaskName } from "./fluidTaskDefinitions";
+import { ISymlinkOptions } from "./symlinkUtils";
 
 const { log, warning, errorLog } = defaultLogger;
 
-interface FastBuildOptions extends IPackageMatchedOptions {
+interface FastBuildOptions extends IPackageMatchedOptions, ISymlinkOptions {
 	nolint: boolean;
 	lintonly: boolean;
 	showExec: boolean;

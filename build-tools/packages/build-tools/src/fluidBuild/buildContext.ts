@@ -3,8 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { IFluidRepoLayout } from "@fluid-tools/build-infrastructure";
-import type { SimpleGit } from "simple-git";
+import type { GitRepo } from "../common/gitRepo";
 import type { IFluidBuildConfig } from "./fluidBuildConfig";
 
 /**
@@ -17,22 +16,13 @@ export interface BuildContext {
 	 */
 	readonly fluidBuildConfig: IFluidBuildConfig;
 
-	readonly fluidRepoLayout: IFluidRepoLayout;
-
 	/**
-	 * The absolute path to the root of the Fluid repo.
-	 *
-	 * @deprecated Use fluidRepoLayout.root instead.
+	 * The absolute path to the root of the repo.
 	 */
 	readonly repoRoot: string;
 
 	/**
-	 * A GitRepo object that can be used to call git operations. It is rooted at `gitRoot`.
+	 * A GitRepo object that can be used to call git operations.
 	 */
-	readonly gitRepo: SimpleGit;
-
-	/**
-	 * The path to the git repo root.
-	 */
-	readonly gitRoot: string;
+	readonly gitRepo: GitRepo;
 }

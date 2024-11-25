@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { FluidBuildPackageJson } from "../common/npmPackage";
+import { PackageJson } from "../common/npmPackage";
 
 /**
  * Task definitions (type `TaskDefinitions`) is an object describing build tasks for fluid-build.
@@ -208,7 +208,7 @@ function expandDotDotDot(config: string[], inherited: string[]) {
  * @returns full task definitions for the package.
  */
 export function getTaskDefinitions(
-	json: FluidBuildPackageJson,
+	json: PackageJson,
 	globalTaskDefinitions: TaskDefinitions,
 	isReleaseGroupRoot: boolean,
 ) {

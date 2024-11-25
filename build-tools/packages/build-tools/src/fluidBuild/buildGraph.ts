@@ -8,11 +8,10 @@ import chalk from "picocolors";
 import * as semver from "semver";
 
 import * as assert from "assert";
-import type { IFluidRepoLayout } from "@fluid-tools/build-infrastructure";
 import registerDebug from "debug";
-import type { SimpleGit } from "simple-git";
+import type { GitRepo } from "../common/gitRepo";
 import { defaultLogger } from "../common/logging";
-import { BuildPackage } from "../common/npmPackage";
+import { Package } from "../common/npmPackage";
 import { Timer } from "../common/timer";
 import type { BuildContext } from "./buildContext";
 import { FileHashCache } from "./fileHashCache";
@@ -69,30 +68,26 @@ class BuildGraphContext implements BuildContext {
 	public readonly taskStats = new TaskStats();
 	public readonly failedTaskLines: string[] = [];
 	public readonly fluidBuildConfig: IFluidBuildConfig;
-	public readonly fluidRepoLayout: IFluidRepoLayout;
 	public readonly repoRoot: string;
-	public readonly gitRepo: SimpleGit;
-	public readonly gitRoot: string;
+	public readonly gitRepo: GitRepo;
 	constructor(
-		public readonly repoPackageMap: Map<string, BuildPackage>,
+		public readonly repoPackageMap: Map<string, Package>,
 		readonly buildContext: BuildContext,
 		public readonly workerPool?: WorkerPool,
 	) {
 		this.fluidBuildConfig = buildContext.fluidBuildConfig;
-		this.fluidRepoLayout = buildContext.fluidRepoLayout;
 		this.repoRoot = buildContext.repoRoot;
 		this.gitRepo = buildContext.gitRepo;
-		this.gitRoot = buildContext.gitRoot;
 	}
 }
 
-export class BuildGraphPackage {
+export class BuildPackage {
 	private readonly tasks = new Map<string, Task>();
 
 	// track a script task without the lifecycle (pre/post) tasks
 	private readonly scriptTasks = new Map<string, Task>();
 
-	public readonly dependentPackages = new Array<BuildGraphPackage>();
+	public readonly dependentPackages = new Array<BuildPackage>();
 	public level: number = -1;
 	private buildP?: Promise<BuildResult>;
 
@@ -101,7 +96,7 @@ export class BuildGraphPackage {
 
 	constructor(
 		public readonly context: BuildGraphContext,
-		public readonly pkg: BuildPackage,
+		public readonly pkg: Package,
 		globalTaskDefinitions: TaskDefinitions,
 	) {
 		this._taskDefinitions = getTaskDefinitions(
@@ -490,16 +485,16 @@ export class BuildGraphPackage {
  */
 export class BuildGraph {
 	private matchedPackages = 0;
-	private readonly buildPackages = new Map<BuildPackage, BuildGraphPackage>();
+	private readonly buildPackages = new Map<Package, BuildPackage>();
 	private readonly context: BuildGraphContext;
 
 	public constructor(
-		packages: Map<string, BuildPackage>,
-		releaseGroupPackages: BuildPackage[],
+		packages: Map<string, Package>,
+		releaseGroupPackages: Package[],
 		buildContext: BuildContext,
 		private readonly buildTaskNames: string[],
 		globalTaskDefinitions: TaskDefinitionsOnDisk | undefined,
-		getDepFilter: (pkg: BuildPackage) => (dep: BuildPackage) => boolean,
+		getDepFilter: (pkg: Package) => (dep: Package) => boolean,
 	) {
 		this.context = new BuildGraphContext(
 			packages,
@@ -606,15 +601,15 @@ export class BuildGraph {
 		return summaryLines.join("\n");
 	}
 
-	private getBuildGraphPackage(
-		pkg: BuildPackage,
+	private getBuildPackage(
+		pkg: Package,
 		globalTaskDefinitions: TaskDefinitions,
-		pendingInitDep: BuildGraphPackage[],
-	): BuildGraphPackage {
+		pendingInitDep: BuildPackage[],
+	) {
 		let buildPackage = this.buildPackages.get(pkg);
 		if (buildPackage === undefined) {
 			try {
-				buildPackage = new BuildGraphPackage(this.context, pkg, globalTaskDefinitions);
+				buildPackage = new BuildPackage(this.context, pkg, globalTaskDefinitions);
 			} catch (e: unknown) {
 				throw new Error(
 					`${pkg.nameColored}: Failed to load build package in ${pkg.directory}\n\t${
@@ -629,24 +624,24 @@ export class BuildGraph {
 	}
 
 	private initializePackages(
-		packages: Map<string, BuildPackage>,
-		releaseGroupPackages: BuildPackage[],
+		packages: Map<string, Package>,
+		releaseGroupPackages: Package[],
 		globalTaskDefinitionsOnDisk: TaskDefinitionsOnDisk | undefined,
-		getDepFilter: (pkg: BuildPackage) => (dep: BuildPackage) => boolean,
+		getDepFilter: (pkg: Package) => (dep: Package) => boolean,
 	) {
 		const globalTaskDefinitions = normalizeGlobalTaskDefinitions(globalTaskDefinitionsOnDisk);
-		const pendingInitDep: BuildGraphPackage[] = [];
+		const pendingInitDep: BuildPackage[] = [];
 		for (const pkg of packages.values()) {
 			// Start with only matched packages
 			if (pkg.matched) {
-				this.getBuildGraphPackage(pkg, globalTaskDefinitions, pendingInitDep);
+				this.getBuildPackage(pkg, globalTaskDefinitions, pendingInitDep);
 			}
 		}
 
 		for (const releaseGroupPackage of releaseGroupPackages) {
 			// Start with only matched packages
 			if (releaseGroupPackage.matched) {
-				this.getBuildGraphPackage(releaseGroupPackage, {}, pendingInitDep);
+				this.getBuildPackage(releaseGroupPackage, {}, pendingInitDep);
 			}
 		}
 
@@ -661,11 +656,10 @@ export class BuildGraph {
 			}
 			if (node.pkg.isReleaseGroupRoot) {
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				for (const dep of node.pkg.workspace.packages) {
-					const depBuildPkg = new BuildPackage(dep);
+				for (const dep of node.pkg.monoRepo!.packages) {
 					traceGraph(`Package dependency: ${node.pkg.nameColored} => ${dep.nameColored}`);
 					node.dependentPackages.push(
-						this.getBuildGraphPackage(depBuildPkg, globalTaskDefinitions, pendingInitDep),
+						this.getBuildPackage(dep, globalTaskDefinitions, pendingInitDep),
 					);
 				}
 				continue;
@@ -680,7 +674,7 @@ export class BuildGraph {
 						if (depFilter(dep)) {
 							traceGraph(`Package dependency: ${node.pkg.nameColored} => ${dep.nameColored}`);
 							node.dependentPackages.push(
-								this.getBuildGraphPackage(dep, globalTaskDefinitions, pendingInitDep),
+								this.getBuildPackage(dep, globalTaskDefinitions, pendingInitDep),
 							);
 						} else {
 							traceGraph(
@@ -700,7 +694,7 @@ export class BuildGraph {
 
 	private populateLevel() {
 		// level is not strictly necessary, except for circular reference.
-		const getLevel = (node: BuildGraphPackage, parent?: BuildGraphPackage) => {
+		const getLevel = (node: BuildPackage, parent?: BuildPackage) => {
 			if (node.level === -2) {
 				throw new Error(
 					`Circular Reference detected ${parent ? parent.pkg.nameColored : "<none>"} -> ${

@@ -9,7 +9,6 @@
 
 import assert from "node:assert/strict";
 import path from "node:path";
-import { findGitRootSync } from "@fluid-tools/build-infrastructure";
 import {
 	BiomeConfigReader,
 	type BiomeConfigResolved,
@@ -18,6 +17,8 @@ import {
 	loadBiomeConfig,
 } from "../common/biomeConfig";
 import type { Configuration as BiomeConfigOnDisk } from "../common/biomeConfigTypes";
+import { GitRepo } from "../common/gitRepo";
+import { getResolvedFluidRoot } from "../fluidBuild/fluidUtils";
 import { testDataPath } from "./init";
 
 describe("Biome config loading", () => {
@@ -25,15 +26,19 @@ describe("Biome config loading", () => {
 		// These variables need to be initialized once for all the tests in this describe block. Defining them outside
 		// of the before block causes the tests to be skipped.
 		const testDir = path.resolve(testDataPath, "biome/pkg-b");
-		const gitRoot = findGitRootSync();
+		let gitRepo: GitRepo;
+		before(async () => {
+			const repoRoot = await getResolvedFluidRoot(true);
+			gitRepo = new GitRepo(repoRoot);
+		});
 
 		it("loads", async () => {
-			const config = await BiomeConfigReader.create(testDir, gitRoot);
+			const config = await BiomeConfigReader.create(testDir, gitRepo);
 			assert(config !== undefined);
 		});
 
 		it("has correct formatted files list", async () => {
-			const config = await BiomeConfigReader.create(testDir, gitRoot);
+			const config = await BiomeConfigReader.create(testDir, gitRepo);
 			const expected = [
 				path.resolve(
 					testDataPath,
@@ -59,7 +64,7 @@ describe("Biome config loading", () => {
 		it("returns only files matching files.includes", async () => {
 			const config = await BiomeConfigReader.create(
 				path.resolve(testDataPath, "biome/pkg-b/include-md-only.jsonc"),
-				gitRoot,
+				gitRepo,
 			);
 			const expected = [
 				path.resolve(
@@ -245,7 +250,11 @@ describe("Biome config loading", () => {
 			// These variables need to be initialized once for all the tests in this describe block. Defining them outside
 			// of the before block causes the tests to be skipped.
 			const testPath = path.resolve(testDataPath, "biome/pkg-a/");
-			const gitRoot = findGitRootSync();
+			let gitRepo: GitRepo;
+			before(async () => {
+				const repoRoot = await getResolvedFluidRoot(true);
+				gitRepo = new GitRepo(repoRoot);
+			});
 
 			it("returns correct file set", async () => {
 				const expected = [
@@ -257,7 +266,7 @@ describe("Biome config loading", () => {
 					path.resolve(testDataPath, "biome/pkg-a/pkg-a-include/include-linter/linter.ts"),
 					path.resolve(testDataPath, "biome/pkg-a/include-formatter/formatter.ts"),
 				];
-				const formattedFiles = await getBiomeFormattedFilesFromDirectory(testPath, gitRoot);
+				const formattedFiles = await getBiomeFormattedFilesFromDirectory(testPath, gitRepo);
 				for (const actual of formattedFiles) {
 					assert(expected.includes(actual));
 				}
@@ -272,7 +281,11 @@ describe("Biome config loading", () => {
 			// These variables need to be initialized once for all the tests in this describe block. Defining them outside
 			// of the before block causes the tests to be skipped.
 			const testPath = path.resolve(testDataPath, "biome/pkg-a/extended.jsonc");
-			const gitRoot = findGitRootSync();
+			let gitRepo: GitRepo;
+			before(async () => {
+				const repoRoot = await getResolvedFluidRoot(true);
+				gitRepo = new GitRepo(repoRoot);
+			});
 
 			it("returns correct file set", async () => {
 				const expected = [
@@ -285,7 +298,7 @@ describe("Biome config loading", () => {
 					path.resolve(testDataPath, "biome/pkg-a/pkg-a-include/pkg-a-ignore/ignoredFile.ts"),
 					path.resolve(testDataPath, "biome/pkg-a/include-formatter/formatter.ts"),
 				];
-				const formattedFiles = await getBiomeFormattedFilesFromDirectory(testPath, gitRoot);
+				const formattedFiles = await getBiomeFormattedFilesFromDirectory(testPath, gitRepo);
 				for (const actual of formattedFiles) {
 					assert(expected.includes(actual));
 				}

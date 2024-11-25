@@ -4,15 +4,16 @@
  */
 
 export { GitRepo } from "./common/gitRepo";
-export { getFluidBuildConfig } from "./fluidBuild/config";
+export { FluidRepo } from "./fluidBuild/fluidRepo";
 export { type IFluidBuildConfig } from "./fluidBuild/fluidBuildConfig";
-export { FluidRepoBuild } from "./fluidBuild/fluidRepoBuild";
+export { getResolvedFluidRoot, getFluidBuildConfig } from "./fluidBuild/fluidUtils";
 export type { Logger } from "./common/logging";
+export { MonoRepo } from "./common/monoRepo";
 export {
-	BuildPackage,
+	Package,
 	type PackageJson,
-	updatePackageJsonFileAsync,
 	updatePackageJsonFile,
+	updatePackageJsonFileAsync,
 } from "./common/npmPackage";
 export { Timer } from "./common/timer";
 

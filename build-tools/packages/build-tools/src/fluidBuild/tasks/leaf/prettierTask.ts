@@ -9,7 +9,7 @@ import * as path from "node:path";
 import ignore from "ignore";
 
 import type { BuildContext } from "../../buildContext";
-import { BuildGraphPackage } from "../../buildGraph";
+import { BuildPackage } from "../../buildGraph";
 import { getInstalledPackageVersion, getRecursiveFiles, globFn } from "../taskUtils";
 import { LeafWithDoneFileTask } from "./leafTask";
 
@@ -18,7 +18,7 @@ export class PrettierTask extends LeafWithDoneFileTask {
 	private entries: string[] = [];
 	private ignorePath: string | undefined;
 	constructor(
-		node: BuildGraphPackage,
+		node: BuildPackage,
 		command: string,
 		context: BuildContext,
 		taskName: string | undefined,
