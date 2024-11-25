@@ -76,8 +76,8 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 	async init(): Promise<void> {
 		await super.init();
 
-		const [fluidRepo] = await Promise.all([this.getBuildProject(), this.initMachineHooks()]);
-		const git = await fluidRepo.getGitRepository();
+		const [buildProject] = await Promise.all([this.getBuildProject(), this.initMachineHooks()]);
+		const git = await buildProject.getGitRepository();
 		const { argv, flags, logger, machine } = this;
 
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -87,14 +87,14 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 			"Either release group and package flags must be provided.",
 		);
 
-		const releaseGroup = findPackageOrReleaseGroup(rgOrPackageName, fluidRepo);
+		const releaseGroup = findPackageOrReleaseGroup(rgOrPackageName, buildProject);
 		if (releaseGroup === undefined || isIPackage(releaseGroup)) {
 			this.error(`Could not find release group: ${rgOrPackageName}`, {
 				exit: 1,
 			});
 		}
 
-		const currentBranch = await context.gitRepo.getCurrentBranchName();
+		const currentBranch = await git.getCurrentBranchName();
 		const bumpType = await getBumpType(flags.bumpType, currentBranch, releaseVersion);
 
 		// eslint-disable-next-line no-warning-comments
@@ -122,7 +122,7 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 		this.data = {
 			releaseGroup,
 			releaseVersion: releaseGroup.version,
-			repo: fluidRepo,
+			repo: buildProject,
 			git,
 			promptWriter: new PromptWriter(logger),
 			bumpType: flags.bumpType as VersionBumpType,
