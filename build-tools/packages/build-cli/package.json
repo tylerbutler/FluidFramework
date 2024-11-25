@@ -82,7 +82,6 @@
 		"@andrewbranch/untar.js": "^1.0.3",
 		"@fluid-tools/build-infrastructure": "workspace:~",
 		"@fluid-tools/version-tools": "workspace:~",
-		"@fluidframework/build-tools": "workspace:~",
 		"@fluidframework/bundle-size-tools": "workspace:~",
 		"@inquirer/prompts": "^7.0.1",
 		"@microsoft/api-extractor": "^7.47.11",
