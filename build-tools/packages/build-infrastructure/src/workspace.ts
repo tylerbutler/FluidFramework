@@ -13,6 +13,7 @@ import { loadPackageFromWorkspaceDefinition } from "./package.js";
 import { createPackageManager } from "./packageManagers.js";
 import { ReleaseGroup } from "./releaseGroup.js";
 import type {
+	IBuildProject,
 	IPackage,
 	IPackageManager,
 	IReleaseGroup,
@@ -21,26 +22,55 @@ import type {
 	WorkspaceName,
 } from "./types.js";
 
+/**
+ * {@inheritDoc IWorkspace}
+ */
 export class Workspace implements IWorkspace {
+	/**
+	 * {@inheritDoc IWorkspace.name}
+	 */
 	public readonly name: WorkspaceName;
+
+	/**
+	 * {@inheritDoc IWorkspace.releaseGroups}
+	 */
 	public readonly releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
+
+	/**
+	 * {@inheritDoc IWorkspace.rootPackage}
+	 */
 	public readonly rootPackage: IPackage;
+
+	/**
+	 * {@inheritDoc IWorkspace.packages}
+	 */
 	public readonly packages: IPackage[];
 
 	/**
-	 * Absolute path to the root of the workspace.
+	 * {@inheritDoc IWorkspace.directory}
 	 */
 	public readonly directory: string;
 
 	private readonly packageManager: IPackageManager;
 
+	/**
+	 * Construct a new workspace object.
+	 *
+	 * @param name - The name of the workspace.
+	 * @param definition - The definition of the workspace.
+	 * @param root - The path to the root of the workspace.
+	 */
 	private constructor(
 		name: string,
 		definition: WorkspaceDefinition,
-		public readonly root: string,
+		root: string,
+
+		/**
+		 * {@inheritDoc IWorkspace.buildProject}
+		 */
+		public readonly buildProject: IBuildProject,
 	) {
 		this.name = name as WorkspaceName;
-		// const repoRoot = findGitRoot();
 		this.directory = path.resolve(root, definition.directory);
 
 		const {
@@ -51,7 +81,7 @@ export class Workspace implements IWorkspace {
 		} = getPackagesSync(this.directory);
 		if (foundRoot !== this.directory) {
 			// This is a sanity check. directory is the path passed in when creating the Workspace object, while rootDir is
-			// the dir that manypkg found. They should be the same.
+			// the dir that `getPackagesSync` found. They should be the same.
 			throw new Error(
 				`The root dir found by manypkg, '${foundRoot}', does not match the configured directory '${this.directory}'`,
 			);
@@ -69,7 +99,7 @@ export class Workspace implements IWorkspace {
 				break;
 			}
 			default: {
-				throw new Error(`Unknown package manager ${tool.type}`);
+				throw new Error(`Unknown package manager '${tool.type}'`);
 			}
 		}
 
@@ -133,32 +163,43 @@ export class Workspace implements IWorkspace {
 		}
 	}
 
-	public async checkInstall(): Promise<boolean> {
-		let succeeded = true;
+	/**
+	 * {@inheritDoc Installable.checkInstall}
+	 */
+	public async checkInstall(): Promise<true | string[]> {
+		const errors: string[] = [];
 		for (const buildPackage of this.packages) {
-			if (!(await buildPackage.checkInstall())) {
-				succeeded = false;
+			const installed = await buildPackage.checkInstall();
+			if (installed !== true) {
+				errors.push(...installed);
 			}
 		}
-		return succeeded;
-	}
 
-	public async install(updateLockfile: boolean): Promise<boolean> {
-		const command = this.packageManager.installCommand(updateLockfile);
-
-		try {
-			const output = await execa(this.packageManager.name, command.split(" "), {
-				cwd: this.directory,
-			});
-			console.debug(output);
-		} catch (error) {
-			console.error(`Error during install: ${(error as Error).message}`);
-			return false;
+		if (errors.length > 0) {
+			return errors;
 		}
-
 		return true;
 	}
 
+	/**
+	 * {@inheritDoc Installable.install}
+	 */
+	public async install(updateLockfile: boolean): Promise<boolean> {
+		const commandArgs = this.packageManager.getInstallCommandWithArgs(updateLockfile);
+
+		const output = await execa(this.packageManager.name, commandArgs, {
+			cwd: this.directory,
+		});
+
+		if (output.exitCode !== 0) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Synchronously reload all of the packages in the workspace.
+	 */
 	public reload(): void {
 		for (const pkg of this.packages) {
 			pkg.reload();
@@ -169,8 +210,22 @@ export class Workspace implements IWorkspace {
 		return `${this.name} (WORKSPACE)`;
 	}
 
-	public static load(name: string, definition: WorkspaceDefinition, root: string): IWorkspace {
-		const workspace = new Workspace(name, definition, root);
+	/**
+	 * Load a workspace from a {@link WorkspaceDefinition}.
+	 *
+	 * @param name - The name of the workspace.
+	 * @param definition - The definition for the workspace.
+	 * @param root - The path to the root of the workspace.
+	 * @param buildProject - The build project that the workspace belongs to.
+	 * @returns A loaded {@link IWorkspace}.
+	 */
+	public static load(
+		name: string,
+		definition: WorkspaceDefinition,
+		root: string,
+		buildProject: IBuildProject,
+	): IWorkspace {
+		const workspace = new Workspace(name, definition, root, buildProject);
 		return workspace;
 	}
 }

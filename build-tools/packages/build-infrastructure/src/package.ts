@@ -25,6 +25,14 @@ import type {
 } from "./types.js";
 import { lookUpDirSync } from "./utils.js";
 
+/**
+ * A base class for npm packages. A custom type can be used for the package.json schema, which is useful
+ * when the package.json has custom keys/values.
+ *
+ * @typeParam J - The package.json type to use. This type must extend the {@link PackageJson} type defined in this
+ * package.
+ * @typeParam TAddProps - Additional typed props that will be added to the package object.
+ */
 export abstract class PackageBase<
 	J extends PackageJson = PackageJson,
 	TAddProps extends AdditionalPackageProps = undefined,
@@ -70,59 +78,102 @@ export abstract class PackageBase<
 	 * useful to augment the package class with additional properties.
 	 */
 	public constructor(
+		/**
+		 * {@inheritDoc IPackage.packageJsonFilePath}
+		 */
 		public readonly packageJsonFilePath: string,
+
+		/**
+		 * {@inheritDoc IPackage.packageManager}
+		 */
 		public readonly packageManager: IPackageManager,
+
+		/**
+		 * {@inheritDoc IPackage.workspace}
+		 */
 		public readonly workspace: IWorkspace,
+
+		/**
+		 * {@inheritDoc IPackage.isWorkspaceRoot}
+		 */
 		public readonly isWorkspaceRoot: boolean,
+
+		/**
+		 * {@inheritDoc IPackage.releaseGroup}
+		 */
 		public readonly releaseGroup: ReleaseGroupName,
+
+		/**
+		 * {@inheritDoc IPackage.isReleaseGroupRoot}
+		 */
 		public isReleaseGroupRoot: boolean,
 		additionalProperties?: TAddProps,
 	) {
 		[this._packageJson, this._indent] = readPackageJsonAndIndent(packageJsonFilePath);
-		// this.reload();
 		if (additionalProperties !== undefined) {
 			Object.assign(this, additionalProperties);
 		}
 	}
 
+	/**
+	 * {@inheritDoc IPackage.combinedDependencies}
+	 */
 	public get combinedDependencies(): Generator<PackageDependency, void> {
 		return iterateDependencies(this.packageJson);
 	}
 
+	/**
+	 * {@inheritDoc IPackage.directory}
+	 */
 	public get directory(): string {
 		return path.dirname(this.packageJsonFilePath);
 	}
 
 	/**
-	 * The name of the package including the scope.
+	 * {@inheritDoc IPackage.name}
 	 */
 	public get name(): PackageName {
 		return this.packageJson.name as PackageName;
 	}
 
 	/**
-	 * The name of the package with a color for terminal output.
+	 * {@inheritDoc IPackage.nameColored}
 	 */
 	public get nameColored(): string {
 		return this.color(this.name);
 	}
 
+	/**
+	 * {@inheritDoc IPackage.packageJson}
+	 */
 	public get packageJson(): J {
 		return this._packageJson;
 	}
 
+	/**
+	 * {@inheritDoc IPackage.private}
+	 */
 	public get private(): boolean {
 		return this.packageJson.private ?? false;
 	}
 
+	/**
+	 * {@inheritDoc IPackage.version}
+	 */
 	public get version(): string {
 		return this.packageJson.version;
 	}
 
+	/**
+	 * {@inheritDoc IPackage.savePackageJson}
+	 */
 	public async savePackageJson(): Promise<void> {
 		writePackageJson(this.packageJsonFilePath, this.packageJson, this._indent);
 	}
 
+	/**
+	 * Reload the package from the on-disk package.json.
+	 */
 	public reload(): void {
 		this._packageJson = readJsonSync(this.packageJsonFilePath) as J;
 	}
@@ -131,23 +182,27 @@ export abstract class PackageBase<
 		return `${this.name} (${this.directory})`;
 	}
 
+	/**
+	 * {@inheritDoc IPackage.getScript}
+	 */
 	public getScript(name: string): string | undefined {
 		return this.packageJson.scripts === undefined ? undefined : this.packageJson.scripts[name];
 	}
 
-	public async checkInstall(print: boolean = true): Promise<boolean> {
+	/**
+	 * {@inheritDoc Installable.checkInstall}
+	 */
+	public async checkInstall(): Promise<true | string[]> {
 		if (this.combinedDependencies.next().done === true) {
 			// No dependencies
 			return true;
 		}
 
 		if (!existsSync(path.join(this.directory, "node_modules"))) {
-			if (print) {
-				console.error(`${this.nameColored}: node_modules not installed in ${this.directory}`);
-			}
-			return false;
+			return [`${this.nameColored}: node_modules not installed in ${this.directory}`];
 		}
-		let succeeded = true;
+
+		const errors: string[] = [];
 		for (const dep of this.combinedDependencies) {
 			const found = lookUpDirSync(this.directory, (currentDir) => {
 				// TODO: check semver as well
@@ -155,13 +210,10 @@ export abstract class PackageBase<
 			});
 
 			if (found === undefined) {
-				succeeded = false;
-				if (print) {
-					console.error(`${this.nameColored}: dependency ${dep.name} not found`);
-				}
+				errors.push(`${this.nameColored}: dependency ${dep.name} not found`);
 			}
 		}
-		return succeeded;
+		return errors.length === 0 ? true : errors;
 	}
 
 	/**
@@ -172,10 +224,28 @@ export abstract class PackageBase<
 	}
 }
 
-export class Package<
-	TAddProps extends AdditionalPackageProps = undefined,
+/**
+ * A concrete class that is used internally within build-infrastructure as the concrete {@link IPackage} implementation.
+ *
+ * @typeParam J - The package.json type to use. This type must extend the {@link PackageJson} type defined in this
+ * package.
+ * @typeParam TAddProps - Additional typed props that will be added to the package object.
+ */
+class Package<
 	J extends PackageJson = PackageJson,
+	TAddProps extends AdditionalPackageProps = undefined,
 > extends PackageBase<J, TAddProps> {
+	/**
+	 * Loads an {@link IPackage} from a {@link WorkspaceDefinition}.
+	 *
+	 * @param packageJsonFilePath - The path to the package.json for the package being loaded.
+	 * @param packageManager - The package manager to use.
+	 * @param isWorkspaceRoot - Set to `true` if the package is a workspace root package.
+	 * @param workspaceDefinition - The workspace definition.
+	 * @param workspace - The workspace that this package belongs to.
+	 * @param additionalProperties - Additional properties that will be added to the package object.
+	 * @returns A loaded {@link IPackage} instance.
+	 */
 	public static loadFromWorkspaceDefinition<
 		T extends typeof Package,
 		J extends PackageJson = PackageJson,
@@ -225,6 +295,16 @@ export class Package<
 	}
 }
 
+/**
+ * Loads an {@link IPackage} from a {@link WorkspaceDefinition}.
+ *
+ * @param packageJsonFilePath - The path to the package.json for the package being loaded.
+ * @param packageManager - The package manager to use.
+ * @param isWorkspaceRoot - Set to `true` if the package is a workspace root package.
+ * @param workspaceDefinition - The workspace definition.
+ * @param workspace - The workspace that this package belongs to.
+ * @returns A loaded {@link IPackage} instance.
+ */
 export function loadPackageFromWorkspaceDefinition(
 	packageJsonFilePath: string,
 	packageManager: IPackageManager,
@@ -241,6 +321,11 @@ export function loadPackageFromWorkspaceDefinition(
 	);
 }
 
+/**
+ * A generator function that returns all production, dev, and peer dependencies in package.json.
+ *
+ * @param packageJson - The package.json whose dependencies should be iterated.
+ */
 function* iterateDependencies<T extends PackageJson>(
 	packageJson: T,
 ): Generator<PackageDependency, void> {

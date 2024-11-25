@@ -9,7 +9,7 @@ import {
 	isIPackage,
 } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
-import chalk from "chalk";
+import chalk from "picocolors";
 import prompts from "prompts";
 import stripAnsi from "strip-ansi";
 

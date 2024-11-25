@@ -5,6 +5,7 @@
 
 import { type IPackage, loadFluidRepo } from "@fluid-tools/build-infrastructure";
 import { expect } from "chai";
+import { describe, it } from "mocha";
 
 import { type PackageNamePolicyConfig, getFlubConfig } from "../../config.js";
 import {

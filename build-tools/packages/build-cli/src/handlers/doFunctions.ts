@@ -11,8 +11,8 @@ import {
 	setVersion,
 } from "@fluid-tools/build-infrastructure";
 import { bumpVersionScheme, detectVersionScheme } from "@fluid-tools/version-tools";
-import chalk from "chalk";
 import { Machine } from "jssm";
+import chalk from "picocolors";
 
 import { getPreReleaseDependencies } from "../library/index.js";
 // eslint-disable-next-line import/no-internal-modules

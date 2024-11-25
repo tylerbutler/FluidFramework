@@ -409,8 +409,8 @@ export function getFlubConfig(
 
 	const config = configResult?.config as FlubConfig | undefined;
 
-	if (config === undefined || configResult === null) {
-		throw new Error("No flub configuration found.");
+	if (config === undefined) {
+		throw new Error(`No flub configuration found (configPath='${configPath}').`);
 	}
 
 	// Only version 1 of the config is supported. If any other value is provided, throw an error.

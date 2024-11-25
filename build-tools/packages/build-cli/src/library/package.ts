@@ -22,10 +22,20 @@ import {
 } from "@fluid-tools/version-tools";
 import { Logger } from "@fluidframework/build-tools";
 import { compareDesc, differenceInBusinessDays } from "date-fns";
+import JSON5 from "json5";
 import latestVersion from "latest-version";
 import * as semver from "semver";
 
+import type { TsConfigJson } from "type-fest";
+import {
+	AllPackagesSelectionCriteria,
+	PackageSelectionCriteria,
+	PackageWithKind,
+	selectAndFilterPackages,
+} from "../filter.js";
 import { ReleasePackage, isReleaseGroup } from "../releaseGroups.js";
+import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../releaseGroups.js";
+import { DependencyUpdateType } from "./bump.js";
 import { zip } from "./collections.js";
 import { packagesNotInReleaseGroup } from "./context.js";
 import { getTags } from "./git.js";
@@ -844,4 +854,19 @@ export function getTarballName(pkg: Pick<PackageJson, "name"> | string): string 
  */
 export function getFullTarballName(pkg: PackageJson): string {
 	return `${getTarballName(pkg)}-${pkg?.version ?? 0}.tgz`;
+}
+
+/**
+ * Reads and parses the `package.json` file in the current directory.
+ * Use this function if you prefer the CLI command not to be implemented as `PackageCommand`command.
+ */
+export async function readPackageJson(): Promise<PackageJson> {
+	const packageJson = await readFile("./package.json", { encoding: "utf8" });
+	return JSON.parse(packageJson) as PackageJson;
+}
+
+// Reads and parses the `tsconfig.json` file in the current directory.
+export async function readTsConfig(): Promise<TsConfigJson> {
+	const tsConfigContent = await readFile("./tsconfig.json", { encoding: "utf8" });
+	return JSON5.parse(tsConfigContent);
 }

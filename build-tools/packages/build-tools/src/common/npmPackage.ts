@@ -14,7 +14,8 @@ import {
 import registerDebug from "debug";
 import detectIndent from "detect-indent";
 import { writeJson, writeJsonSync } from "fs-extra";
-import { sortPackageJson } from "sort-package-json";
+import sortPackageJson from "sort-package-json";
+
 import type { SetRequired, PackageJson as StandardPackageJson } from "type-fest";
 
 import { type IFluidBuildConfig } from "../fluidBuild/fluidBuildConfig";

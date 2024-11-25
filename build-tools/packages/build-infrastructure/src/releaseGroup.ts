@@ -12,13 +12,32 @@ import type {
 	ReleaseGroupName,
 } from "./types.js";
 
+/**
+ * {@inheritDoc IReleaseGroup}
+ */
 export class ReleaseGroup implements IReleaseGroup {
+	/**
+	 * {@inheritDoc IReleaseGroup.name}
+	 */
 	public readonly name: ReleaseGroupName;
+
+	/**
+	 * {@inheritDoc IReleaseGroup.adoPipelineUrl}
+	 */
 	public readonly adoPipelineUrl: string | undefined;
+
 	public constructor(
 		name: string,
 		releaseGroupDefinition: ReleaseGroupDefinition,
+
+		/**
+		 * {@inheritDoc IReleaseGroup.workspace}
+		 */
 		public workspace: IWorkspace,
+
+		/**
+		 * {@inheritDoc IReleaseGroup.rootPackage}
+		 */
 		public readonly rootPackage?: IPackage,
 	) {
 		this.name = name as ReleaseGroupName;
@@ -45,28 +64,38 @@ export class ReleaseGroup implements IReleaseGroup {
 		}
 	}
 
+	/**
+	 * {@inheritDoc IReleaseGroup.packages}
+	 */
 	public readonly packages: IPackage[];
 
+	/**
+	 * {@inheritDoc IReleaseGroup.version}
+	 */
 	public get version(): string {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		return this.packages[0]!.version;
 	}
 
+	/**
+	 * {@inheritDoc IReleaseGroup.releaseGroupDependencies}
+	 */
 	public get releaseGroupDependencies(): IReleaseGroup[] {
 		const dependentReleaseGroups = new Set<IReleaseGroup>();
 		const ignoredDependencies = new Set<PackageName>();
+		const buildProject = this.workspace.buildProject;
 		for (const pkg of this.packages) {
 			for (const { name } of pkg.combinedDependencies) {
 				if (ignoredDependencies.has(name)) {
 					continue;
 				}
-				const depPackage = this.workspace.packages.find((p) => p.name === name);
+				const depPackage = buildProject.packages.get(name);
 				if (depPackage === undefined || depPackage.releaseGroup === this.name) {
 					ignoredDependencies.add(name);
 					continue;
 				}
 
-				const releaseGroup = this.workspace.releaseGroups.get(depPackage.releaseGroup);
+				const releaseGroup = buildProject.releaseGroups.get(depPackage.releaseGroup);
 				if (releaseGroup === undefined) {
 					throw new Error(
 						`Cannot find release group "${depPackage.releaseGroup}" in workspace "${this.workspace}"`,
@@ -79,14 +108,13 @@ export class ReleaseGroup implements IReleaseGroup {
 		return [...dependentReleaseGroups];
 	}
 
-	public get rgPackages(): IPackage[] {
-		return this.packages;
-	}
-
 	public toString(): string {
 		return `${this.name} (RELEASE GROUP)`;
 	}
 
+	/**
+	 * Synchronously reload all of the packages in the release group.
+	 */
 	public reload(): void {
 		for (const pkg of this.packages) {
 			pkg.reload();

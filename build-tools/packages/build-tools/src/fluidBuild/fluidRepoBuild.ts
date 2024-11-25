@@ -6,15 +6,13 @@
 import { existsSync } from "node:fs";
 import * as path from "node:path";
 import {
-	FluidRepoBase,
 	type IPackage,
 	type IWorkspace,
 	type ReleaseGroupName,
 	findGitRootSync,
-	getFluidRepoLayout,
 } from "@fluid-tools/build-infrastructure";
-import chalk from "chalk";
 import registerDebug from "debug";
+import chalk from "picocolors";
 import { simpleGit } from "simple-git";
 
 import { defaultLogger } from "../common/logging";
