@@ -38,6 +38,9 @@ export function createPackageManager(name: PackageManagerName): IPackageManager;
 export const EmptySelectionCriteria: PackageSelectionCriteria;
 
 // @public
+export type ErrorLoggingFunction = (msg: string | Error | undefined, ...args: any[]) => void;
+
+// @public
 export interface FilterablePackage {
     // (undocumented)
     name: string;
@@ -188,6 +191,18 @@ export interface IWorkspace extends Installable, Reloadable {
 
 // @public
 export function loadBuildProject<P extends IPackage>(searchPath: string, upstreamRemotePartialUrl?: string): IBuildProject<P>;
+
+// @public
+export interface Logger {
+    errorLog: ErrorLoggingFunction;
+    info: ErrorLoggingFunction;
+    log: LoggingFunction;
+    verbose: ErrorLoggingFunction;
+    warning: ErrorLoggingFunction;
+}
+
+// @public
+export type LoggingFunction = (message?: string, ...args: any[]) => void;
 
 // @public
 export class NotInGitRepository extends Error {

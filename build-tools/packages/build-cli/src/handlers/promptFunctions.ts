@@ -274,7 +274,7 @@ export const promptToRelease: StateHandlerFunction = async (
 					chalk.bold("release"),
 				)} build for the following release group in ADO for branch ${chalk.blue(
 					chalk.bold(originalBranch),
-				)}:\n\n    ${chalk.green(chalk.bold(releaseGroup))}: ${releaseGroup.adoPipelineUrl}`,
+				)}:\n\n    ${chalk.green(chalk.bold(releaseGroup.name))}: ${releaseGroup.adoPipelineUrl}`,
 			},
 			{
 				title: "NEXT",

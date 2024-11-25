@@ -420,7 +420,8 @@ export function getFlubConfig(
 		);
 	}
 
-	return { config, configFilePath: configResult.filepath };
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- asserted configResult.config earlier
+	return { config, configFilePath: configResult!.filepath };
 }
 
 /**

@@ -9,6 +9,7 @@ import {
 	type IBuildProject,
 	type IPackage,
 	type IReleaseGroup,
+	type Logger,
 	type PackageJson,
 	type PackageName,
 	type PackageSelectionCriteria,
@@ -26,6 +27,7 @@ import latestVersion from "latest-version";
 import * as semver from "semver";
 import type { TsConfigJson } from "type-fest";
 
+import { readFile } from "node:fs/promises";
 import { ReleasePackage, isReleaseGroup } from "../releaseGroups.js";
 import { zip } from "./collections.js";
 import { packagesNotInReleaseGroup } from "./context.js";

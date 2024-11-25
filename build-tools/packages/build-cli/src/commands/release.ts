@@ -14,7 +14,6 @@ import { rawlist } from "@inquirer/prompts";
 import { Config } from "@oclif/core";
 import chalk from "picocolors";
 
-import { isIPackage } from "@fluid-tools/build-infrastructure";
 import { findPackageOrReleaseGroup } from "../args.js";
 import {
 	bumpTypeFlag,
@@ -29,6 +28,7 @@ import {
 	StateHandler,
 } from "../handlers/index.js";
 import { PromptWriter } from "../instructionalPromptWriter.js";
+import { getDefaultBumpTypeForBranch } from "../library/index.js";
 import { FluidReleaseMachine } from "../machines/index.js";
 import { getRunPolicyCheckDefault } from "../repoConfig.js";
 import { StateMachineCommand } from "../stateMachineCommand.js";
@@ -77,7 +77,10 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 	async init(): Promise<void> {
 		await super.init();
 
-		const [buildProject] = await Promise.all([this.getBuildProject(), this.initMachineHooks()]);
+		const [buildProject] = await Promise.all([
+			this.getBuildProject(),
+			this.initMachineHooks(),
+		]);
 		const git = await buildProject.getGitRepository();
 		const { argv, flags, logger, machine } = this;
 
@@ -95,8 +98,12 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 			});
 		}
 
-		const currentBranch = await git.getCurrentBranchName();
-		const bumpType = await getBumpType(flags.bumpType, currentBranch, releaseVersion);
+		const branchSummary = await git.branch();
+		const bumpType = await getBumpType(
+			flags.bumpType,
+			branchSummary.current,
+			releaseGroup.version,
+		);
 
 		// eslint-disable-next-line no-warning-comments
 		// TODO: can be removed once server team owns server releases
@@ -112,7 +119,6 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 				? false
 				: undefined;
 
-		const branchSummary = await git.branch();
 		const branchPolicyCheckDefault = getRunPolicyCheckDefault(
 			releaseGroup,
 			branchSummary.current,

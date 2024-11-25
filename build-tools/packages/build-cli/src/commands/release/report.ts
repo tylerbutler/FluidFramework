@@ -7,11 +7,11 @@ import { strict as assert } from "node:assert";
 import path from "node:path";
 
 import {
-	type IFluidRepo,
+	type IBuildProject,
 	type IReleaseGroup,
 	type PackageName,
 	type ReleaseGroupName,
-	getAllDependenciesInRepo,
+	getAllDependencies,
 } from "@fluid-tools/build-infrastructure";
 import {
 	ReleaseVersion,
@@ -29,15 +29,7 @@ import chalk from "picocolors";
 import sortJson from "sort-json";
 import { table } from "table";
 
-import {
-	type IBuildProject,
-	type IReleaseGroup,
-	type PackageName,
-	type ReleaseGroupName,
-	getAllDependenciesInRepo,
-} from "@fluid-tools/build-infrastructure";
 import { releaseGroupFlag } from "../../flags.js";
-
 // eslint-disable-next-line import/no-internal-modules
 import { getAllVersions } from "../../library/git.js";
 import {
@@ -151,7 +143,7 @@ export abstract class ReleaseReportBaseCommand<
 			// Get the release group versions and dependency versions from the repo
 			if (releaseGroup !== undefined) {
 				if (includeDependencies) {
-					const { releaseGroups } = getAllDependenciesInRepo(repo, releaseGroup.packages);
+					const { releaseGroups } = getAllDependencies(repo, releaseGroup.packages);
 					selectedReleaseGroups.push(...releaseGroups);
 				} else {
 					selectedReleaseGroups.push(releaseGroup);
@@ -253,7 +245,7 @@ export abstract class ReleaseReportBaseCommand<
 				if (latestReleasedVersion === undefined) {
 					const [, previousMinor] = getPreviousVersions(repoVersion);
 					this.info(
-						`The in-repo version of ${chalk.blue(releaseGroup)} is ${chalk.yellow(
+						`The in-repo version of ${chalk.blue(releaseGroup.name)} is ${chalk.yellow(
 							repoVersion,
 						)}, but there's no release for that version. Picked previous minor version instead: ${chalk.green(
 							previousMinor ?? "undefined",
@@ -597,8 +589,8 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 			if (releaseGroup !== undefined) {
 				displayName =
 					releaseGroup.name === initialReleaseGroup?.name
-						? chalk.blue(chalk.bold(releaseGroup))
-						: chalk.bold(releaseGroup);
+						? chalk.blue(chalk.bold(releaseGroup.name))
+						: chalk.bold(releaseGroup.name);
 			}
 
 			const displayDate = getDisplayDate(latestDate);
