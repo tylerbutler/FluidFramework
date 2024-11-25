@@ -205,6 +205,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 			repo,
 		};
 
+		this.verbose(`Checking ${filePathsToCheck.length} files.`);
 		await this.executePolicy(filePathsToCheck, commandContext);
 	}
 
@@ -214,6 +215,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 	): Promise<void> {
 		try {
 			for (const pathToCheck of pathsToCheck) {
+				this.verbose(`Routing file: ${pathToCheck}`);
 				// eslint-disable-next-line no-await-in-loop
 				await this.checkOrExcludeFile(pathToCheck, commandContext);
 			}
@@ -247,12 +249,13 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 					// doing exclusion per handler
 					const exclusions = handlerExclusions[handler.name];
 					if (exclusions !== undefined && !exclusions.every((regex) => !regex.test(relPath))) {
-						this.verbose(`Excluded ${handler.name} handler: ${relPath}`);
+						this.verbose(`\tExcluded ${handler.name} handler: ${relPath}`);
 						return false;
 					}
 					return true;
 				})
 				.map(async (handler): Promise<{ handler: Handler; result: string | undefined }> => {
+					this.verbose(`\tRunning ${handler.name} handler on ${relPath}`);
 					const result = await runWithPerf(handler.name, "handle", async () =>
 						handler.handler(relPath, repo.root),
 					);
@@ -321,6 +324,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 		const filePath = path.join(repo.root, inputPath).trim().replace(/\\/g, "/");
 
 		if (!pathRegex.test(inputPath) || !fs.existsSync(filePath)) {
+			this.verbose(`Excluded path: ${inputPath}`);
 			return;
 		}
 

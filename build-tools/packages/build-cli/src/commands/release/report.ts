@@ -7,6 +7,13 @@ import { strict as assert } from "node:assert";
 import path from "node:path";
 
 import {
+	type IFluidRepo,
+	type IReleaseGroup,
+	type PackageName,
+	type ReleaseGroupName,
+	getAllDependenciesInRepo,
+} from "@fluid-tools/build-infrastructure";
+import {
 	ReleaseVersion,
 	VersionBumpType,
 	detectBumpType,
@@ -41,7 +48,6 @@ import {
 	filterVersionsOlderThan,
 	getDisplayDate,
 	getDisplayDateRelative,
-	getFluidDependencies,
 	getRanges,
 	sortVersions,
 	toReportKind,
@@ -226,7 +232,7 @@ export abstract class ReleaseReportBaseCommand<
 					latestReleasedVersion = recentReleases[0];
 				} else if (recentReleases.length > 1) {
 					const answer = await rawlist({
-						message: `Multiple versions of ${releaseGroupOrPackage} have been released. Select the one you want to include in the release report.`,
+						message: `Multiple versions of ${releaseGroup.name} have been released. Select the one you want to include in the release report.`,
 						choices: recentReleases.map((v) => {
 							return {
 								name: `${v.version} (${formatDistanceToNow(v.date ?? 0)} ago)`,

@@ -4,6 +4,7 @@
  */
 
 import { strict as assert } from "node:assert";
+import { isIPackage } from "@fluid-tools/build-infrastructure";
 import {
 	VersionBumpType,
 	bumpVersionScheme,

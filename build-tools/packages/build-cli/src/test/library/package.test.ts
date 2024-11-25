@@ -11,6 +11,9 @@ import { parseJSON } from "date-fns";
 import { describe, it } from "mocha";
 
 import { VersionDetails } from "../../library/index.js";
+
+import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
+import type { PackageJson } from "@fluidframework/build-tools";
 import {
 	ensureDevDependencyExists,
 	generateReleaseGitTagName,

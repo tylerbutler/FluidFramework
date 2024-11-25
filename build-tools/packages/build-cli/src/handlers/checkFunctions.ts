@@ -504,7 +504,7 @@ export const checkReleaseNotes: StateHandlerFunction = async (
 
 	if (
 		// Only some release groups use changeset-based change-tracking.
-		releaseGroupsUsingChangesets.has(releaseGroup) &&
+		releaseGroupsUsingChangesets.has(releaseGroup.name) &&
 		// This check should only be run for minor/major releases. Patch releases do not use changesets or generate release
 		// notes so there is no need to check them.
 		bumpType !== "patch"
@@ -559,7 +559,7 @@ export const checkChangelogs: StateHandlerFunction = async (
 
 	if (
 		// Only some release groups use changeset-based change-tracking.
-		releaseGroupsUsingChangesets.has(releaseGroup) &&
+		releaseGroupsUsingChangesets.has(releaseGroup.name) &&
 		// This check should only be run for minor/major releases. Patch releases do not use changesets or generate
 		// per-package changelogs so there is no need to check them.
 		bumpType !== "patch"
