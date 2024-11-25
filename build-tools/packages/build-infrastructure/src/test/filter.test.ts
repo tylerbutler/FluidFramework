@@ -3,8 +3,6 @@
  * Licensed under the MIT License.
  */
 
-import path from "node:path";
-
 import chai, { assert, expect } from "chai";
 import assertArrays from "chai-arrays";
 
@@ -17,10 +15,9 @@ import {
 	filterPackages,
 	selectAndFilterPackages,
 } from "../filter.js";
-import { loadFluidRepo } from "../fluidRepo.js";
-import type { IFluidRepo, IPackage, WorkspaceName } from "../types.js";
+import type { IBuildProject, IPackage, WorkspaceName } from "../types.js";
 
-import { testDataPath } from "./init.js";
+import { testRepoRoot } from "./init.js";
 
 // const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
