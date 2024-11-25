@@ -117,7 +117,7 @@ export default class GenerateChangesetCommand extends BaseCommand<
 		selectedPackages: string[];
 		changesetPath?: string;
 	}> {
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 		const { all, empty, releaseGroup: releaseGroupName, uiMode } = this.flags;
 		let { branch } = this.flags;
 

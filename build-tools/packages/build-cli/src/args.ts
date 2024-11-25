@@ -4,7 +4,7 @@
  */
 
 import {
-	type IFluidRepo,
+	type IBuildProject,
 	type IPackage,
 	type IReleaseGroup,
 	type PackageName,
@@ -30,7 +30,7 @@ export const packageOrReleaseGroupArg = Args.custom({
  */
 export const findPackageOrReleaseGroup = (
 	name: string,
-	repo: IFluidRepo,
+	repo: IBuildProject,
 ): IPackage | IReleaseGroup | undefined => {
 	const releaseGroup = repo.releaseGroups.get(name as ReleaseGroupName);
 	if (releaseGroup !== undefined) {

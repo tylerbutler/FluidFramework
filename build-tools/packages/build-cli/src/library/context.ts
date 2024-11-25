@@ -3,7 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import type { IFluidRepo, IPackage, IReleaseGroup } from "@fluid-tools/build-infrastructure";
+import type {
+	IBuildProject,
+	IPackage,
+	IReleaseGroup,
+} from "@fluid-tools/build-infrastructure";
 
 /**
  * Represents the different types of release groups supported by the build tools. Each of these groups should be defined
@@ -36,7 +40,7 @@ export function isMonoRepoKind(str: string | undefined): str is MonoRepoKind {
 // /**
 //  * Context provides access to data about the Fluid repo, and exposes methods to interrogate the repo state.
 //  *
-//  * @deprecated Use the IFluidRepo instead.
+//  * @deprecated Use the IBuildProject instead.
 //  */
 // export class Context {
 // 	public readonly repo: FluidRepo;
@@ -208,7 +212,7 @@ export function isMonoRepoKind(str: string | undefined): str is MonoRepoKind {
  * will be included.
  */
 export function packagesNotInReleaseGroup(
-	repo: IFluidRepo,
+	repo: IBuildProject,
 	releaseGroup: IReleaseGroup,
 ): IPackage[] {
 	const packages = [...repo.packages.values()].filter(

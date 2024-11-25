@@ -19,9 +19,9 @@ import {
 	detectVersionScheme,
 	isInterdependencyRange,
 } from "@fluid-tools/version-tools";
+import { confirm } from "@inquirer/prompts";
 import { Flags } from "@oclif/core";
-import chalk from "chalk";
-import inquirer from "inquirer";
+import chalk from "picocolors";
 import * as semver from "semver";
 
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../args.js";
@@ -135,7 +135,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 			? interdepRangeFlag
 			: undefined;
 
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 
 		// Try to get the git repo early so that if we're outside a repo, we throw quickly.
 		const git = await fluidRepo.getGitRepository();

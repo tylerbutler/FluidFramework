@@ -93,7 +93,7 @@ export default class InfoCommand extends BaseCommand<typeof InfoCommand> {
 
 	async run(): Promise<Record<string, unknown>[]> {
 		const { flags } = this;
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 
 		let packages =
 			flags.releaseGroup === undefined

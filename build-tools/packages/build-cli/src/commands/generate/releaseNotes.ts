@@ -99,7 +99,7 @@ export default class GenerateReleaseNotesCommand extends BaseCommand<
 	];
 
 	public async run(): Promise<string> {
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 		const { flags, logger } = this;
 
 		const releaseGroup = fluidRepo.releaseGroups.get(flags.releaseGroup);

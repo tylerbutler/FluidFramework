@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { type IFluidRepo, loadFluidRepo } from "@fluid-tools/build-infrastructure";
+import { type IBuildProject, loadBuildProject } from "@fluid-tools/build-infrastructure";
 import { Command, Flags, Interfaces } from "@oclif/core";
 // eslint-disable-next-line import/no-internal-modules
 import type { PrettyPrintableError } from "@oclif/core/errors";
@@ -89,7 +89,7 @@ export abstract class BaseCommand<T extends typeof Command>
 	private suppressLogging: boolean = false;
 
 	private _logger: CommandLogger | undefined;
-	private _fluidRepo: IFluidRepo | undefined;
+	private _fluidRepo: IBuildProject | undefined;
 	private _flubConfig: FlubConfig | undefined;
 
 	public async init(): Promise<void> {
@@ -140,25 +140,19 @@ export abstract class BaseCommand<T extends typeof Command>
 	}
 
 	/**
-	 * The {@link IFluidRepo} closest to the working directory. The Fluid repo is loaded and cached the first time this
+	 * The {@link IBuildProject} closest to the working directory. The Fluid repo is loaded and cached the first time this
 	 * method is called. Subsequent calls will return the cached repo.
 	 *
-	 * @returns The {@link IFluidRepo}.
+	 * @returns The {@link IBuildProject}.
 	 */
-	protected async getFluidRepo(): Promise<IFluidRepo> {
+	protected async getBuildProject(): Promise<IBuildProject> {
 		if (this._fluidRepo === undefined) {
-			this._fluidRepo = loadFluidRepo(process.cwd(), "microsoft/FluidFramework");
+			this._fluidRepo = loadBuildProject(process.cwd(), "microsoft/FluidFramework");
 		}
 
 		return this._fluidRepo;
 	}
 
-	/**
-	 * The {@link IFluidRepo} closest to the working directory. The Fluid repo is loaded and cached the first time this
-	 * method is called. Subsequent calls will return the cached repo.
-	 *
-	 * @returns The {@link IFluidRepo}.
-	 */
 	protected getFlubConfig(): FlubConfig {
 		if (this._flubConfig === undefined) {
 			const { config } = getFlubConfig(process.cwd());

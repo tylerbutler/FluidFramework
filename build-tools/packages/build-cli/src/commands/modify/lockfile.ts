@@ -46,7 +46,7 @@ export default class UpdateDependencyInLockfileCommand extends BaseCommand<
 	};
 
 	public async run(): Promise<void> {
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 		const releaseGroup = fluidRepo.releaseGroups.get(this.flags.releaseGroup);
 
 		if (releaseGroup === undefined) {

@@ -76,7 +76,7 @@ export abstract class PackageCommand<
 			throw new Error(`No packages selected.`);
 		}
 
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 		const { selected, filtered } = await selectAndFilterPackages(
 			fluidRepo,
 			this.selectionOptions,

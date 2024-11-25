@@ -4,7 +4,7 @@
  */
 
 import type {
-	IFluidRepo,
+	IBuildProject,
 	IPackage,
 	IReleaseGroup,
 	ReleaseGroupName,
@@ -49,7 +49,7 @@ import { createBranch } from "./git.js";
  * @internal
  */
 export async function createBumpBranch(
-	fluidRepo: IFluidRepo,
+	fluidRepo: IBuildProject,
 	releaseGroup: IReleaseGroup,
 	bumpType: VersionBumpType,
 ): Promise<string> {

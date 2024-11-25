@@ -5,15 +5,17 @@
 
 import { unlinkSync } from "node:fs";
 import path from "node:path";
-import type { IFluidBuildConfig } from "@fluidframework/build-tools";
-import { getFluidBuildConfig } from "@fluidframework/build-tools";
+import {
+	type BuildProjectLayout,
+	getBuildProjectConfig,
+} from "@fluid-tools/build-infrastructure";
 import { FlubConfig, getFlubConfig } from "../../config.js";
 import { Handler } from "./common.js";
 
 const lockFilePattern = /.*?package-lock\.json$/i;
 let _knownPaths: string[] | undefined;
 
-const getKnownPaths = (config: FlubConfig, repoConfig: IFluidBuildConfig): string[] => {
+const getKnownPaths = (config: FlubConfig, repoConfig: BuildProjectLayout): string[] => {
 	if (_knownPaths === undefined) {
 		// Add the root path (.) because a lockfile is expected there
 		_knownPaths = ["."];
@@ -49,7 +51,7 @@ export const handlers: Handler[] = [
 		match: lockFilePattern,
 		handler: async (file: string, root: string): Promise<string | undefined> => {
 			const { config: flubConfig } = getFlubConfig(root);
-			const { config: repoConfig } = getFluidBuildConfig(root);
+			const { config: repoConfig } = getBuildProjectConfig(root);
 			const knownPaths: string[] = getKnownPaths(flubConfig, repoConfig);
 
 			if (
@@ -63,7 +65,7 @@ export const handlers: Handler[] = [
 		},
 		resolver: (file: string, root: string): { resolved: boolean; message?: string } => {
 			const flubConfig = getFlubConfig(root);
-			const repoConfig = getFluidBuildConfig(root);
+			const repoConfig = getBuildProjectConfig(root);
 			const knownPaths: string[] = getKnownPaths(flubConfig.config, repoConfig.config);
 
 			if (

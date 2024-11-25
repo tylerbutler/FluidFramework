@@ -106,7 +106,7 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 		const { flags } = this;
 
 		const prTitle: string = `Automation: ${flags.source}-${flags.target} integrate`;
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 		const git = await repo.getGitRepository();
 		if (repo.upstreamRemotePartialUrl === undefined) {
 			this.error("upstreamRemotePartialUrl is undefined", { exit: 1 });
@@ -358,7 +358,7 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 	protected override async catch(
 		err: Error & { exitCode?: number | undefined },
 	): Promise<unknown> {
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 		const git = await repo.getGitRepository();
 
 		if (this.flags.cleanup === true && err.exitCode !== undefined && err.exitCode !== 0) {

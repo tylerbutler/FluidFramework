@@ -49,7 +49,7 @@ export default class GenerateChangesetConfigCommand extends BaseCommand<
 
 	public async run(): Promise<ChangesetConfigWritten> {
 		const { workspace: workspaceName, outFile } = this.flags;
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 		const workspace = repo.workspaces.get(workspaceName);
 
 		if (workspace === undefined) {

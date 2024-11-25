@@ -6,8 +6,7 @@
 import { realpathSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { IPackage, PackageJson } from "@fluid-tools/build-infrastructure";
-import { type Logger, getTypeTestPreviousPackageDetails } from "@fluidframework/build-tools";
+import type { IPackage, PackageJson, Logger } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import { PackageName } from "@rushstack/node-core-library";
 import * as changeCase from "change-case";
@@ -46,6 +45,7 @@ import {
 	// AB#8118 tracks removing the barrel files and importing directly from the submodules, including disabling this rule.
 	// eslint-disable-next-line import/no-internal-modules
 } from "../../typeValidator/typeValidatorConfig.js";
+import { getTypeTestPreviousPackageDetails } from "@fluidframework/build-tools";
 
 export default class GenerateTypetestsCommand extends PackageCommand<
 	typeof GenerateTypetestsCommand

@@ -6,7 +6,7 @@
 import {
 	AllPackagesSelectionCriteria,
 	EmptySelectionCriteria,
-	type IFluidRepo,
+	type IBuildProject,
 	type IPackage,
 	type IReleaseGroup,
 	type PackageJson,
@@ -20,22 +20,13 @@ import {
 	ReleaseVersion,
 	isPrereleaseVersion,
 } from "@fluid-tools/version-tools";
-import { Logger } from "@fluidframework/build-tools";
 import { compareDesc, differenceInBusinessDays } from "date-fns";
 import JSON5 from "json5";
 import latestVersion from "latest-version";
 import * as semver from "semver";
-
 import type { TsConfigJson } from "type-fest";
-import {
-	AllPackagesSelectionCriteria,
-	PackageSelectionCriteria,
-	PackageWithKind,
-	selectAndFilterPackages,
-} from "../filter.js";
+
 import { ReleasePackage, isReleaseGroup } from "../releaseGroups.js";
-import { ReleaseGroup, ReleasePackage, isReleaseGroup } from "../releaseGroups.js";
-import { DependencyUpdateType } from "./bump.js";
 import { zip } from "./collections.js";
 import { packagesNotInReleaseGroup } from "./context.js";
 import { getTags } from "./git.js";
@@ -63,7 +54,7 @@ export type PackageVersionMap = Map<PackageName, ReleaseVersion>;
 //  */
 // // eslint-disable-next-line max-params
 // export async function npmCheckUpdates(
-// 	repo: IFluidRepo,
+// 	repo: IBuildProject,
 // 	releaseGroup: IReleaseGroup | undefined,
 // 	depsToUpdate: PackageName[] | RegExp[],
 // 	releaseGroupFilter: ReleaseGroupName | undefined,
@@ -223,7 +214,7 @@ export interface PreReleaseDependencies {
  * @returns A {@link PreReleaseDependencies} object containing the pre-release dependency names and versions.
  */
 export async function getPreReleaseDependencies(
-	repo: IFluidRepo,
+	repo: IBuildProject,
 	releaseGroup: IReleaseGroup,
 ): Promise<PreReleaseDependencies> {
 	const prereleasePackages = new Map<IPackage, string>();
@@ -287,7 +278,7 @@ export async function getPreReleaseDependencies(
  * This function exclusively uses the tags in the repo to determine whether a release has bee done or not.
  */
 export async function isReleased(
-	fluidRepo: IFluidRepo,
+	fluidRepo: IBuildProject,
 	releaseGroup: IReleaseGroup,
 	version: string,
 	log?: Logger,
@@ -377,7 +368,7 @@ export function filterVersionsOlderThan(
 //  * depends, and the other contains independent packages on which the package depends.
 //  */
 // export function getFluidDependencies(
-// 	fluidRepo: IFluidRepo,
+// 	fluidRepo: IBuildProject,
 // 	releaseGroup: IReleaseGroup,
 // ): [releaseGroups: PackageVersionMap] {
 // 	const releaseGroups: PackageVersionMap = new Map();
@@ -703,7 +694,7 @@ async function findDepUpdates(
  */
 // eslint-disable-next-line max-params
 export async function npmCheckUpdatesHomegrown(
-	repo: IFluidRepo,
+	repo: IBuildProject,
 	releaseGroup: ReleaseGroupName | PackageName | undefined,
 	depsToUpdate: PackageName[],
 	releaseGroupFilter: ReleaseGroupName | undefined,

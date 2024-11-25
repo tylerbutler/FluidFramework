@@ -88,7 +88,7 @@ export default class ListCommand extends BaseCommand<typeof ListCommand> {
 
 	public async run(): Promise<ListItem[]> {
 		const { feed, outFile, releaseGroup: releaseGroupName, tarball } = this.flags;
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 		const lookupName = releaseGroupName ?? this.args.package_or_release_group;
 		if (lookupName === undefined) {
 			this.error(`No release group or package flag found.`, { exit: 1 });

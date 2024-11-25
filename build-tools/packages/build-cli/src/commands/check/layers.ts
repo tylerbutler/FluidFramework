@@ -42,7 +42,7 @@ export class CheckLayers extends BaseCommand<typeof CheckLayers> {
 		const { flags } = this;
 		const timer = new Timer(flags.timer);
 
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 		const { packages, root } = fluidRepo;
 
 		timer.time("Package scan completed");

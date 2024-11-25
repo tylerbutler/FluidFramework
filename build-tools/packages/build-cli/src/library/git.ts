@@ -4,7 +4,7 @@
  */
 
 import {
-	type IFluidRepo,
+	type IBuildProject,
 	type IPackage,
 	type IReleaseGroup,
 	type PackageName,
@@ -269,7 +269,7 @@ const _versions: Map<ReleaseGroupName | PackageName, VersionDetails[]> = new Map
  * @returns An array of {@link ReleaseDetails} containing the version and date for each version.
  */
 export async function getAllVersions(
-	repo: IFluidRepo,
+	repo: IBuildProject,
 	releaseGroupOrPackageName: ReleaseGroupName | PackageName,
 ): Promise<VersionDetails[] | undefined> {
 	// Try to get the git repo immediately so that if we're outside a repo, we throw immediately.

@@ -7,18 +7,12 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import type { IFluidRepo, IPackage } from "@fluid-tools/build-infrastructure";
-import {
-	FluidRepoBuild,
-	PackageJson,
-	TscUtils,
-	getEsLintConfigFilePath,
-	getFluidBuildConfig,
-	getTaskDefinitions,
-	normalizeGlobalTaskDefinitions,
-	updatePackageJsonFile,
-	updatePackageJsonFileAsync,
-} from "@fluidframework/build-tools";
+import type {
+	BuildProjectLayout,
+	IBuildProject,
+	IPackage,
+	getBuildProjectConfig,
+} from "@fluid-tools/build-infrastructure";
 import JSON5 from "json5";
 import * as semver from "semver";
 import { TsConfigJson } from "type-fest";
@@ -49,7 +43,10 @@ const getFluidBuildTasksTscIgnore = (root: string): Set<string> => {
 /**
  * Cache the FluidRepo object, so we don't have to load it repeatedly
  */
-const repoCache = new Map<string, { repo: IFluidRepo; packageMap: Map<string, IPackage> }>();
+const repoCache = new Map<
+	string,
+	{ repo: BuildProjectLayout; packageMap: Map<string, IPackage> }
+>();
 function getFluidPackageMap(root: string): Map<string, IPackage> {
 	const rootDir = path.resolve(root);
 	let record = repoCache.get(rootDir);
@@ -314,7 +311,7 @@ function hasTaskDependency(
 	taskName: string,
 	searchDeps: readonly string[],
 ): boolean {
-	const { config: rootConfig } = getFluidBuildConfig(root);
+	const { config: rootConfig } = getBuildProjectConfig(root);
 	const globalTaskDefinitions = normalizeGlobalTaskDefinitions(rootConfig?.tasks);
 	const taskDefinitions = getTaskDefinitions(json, globalTaskDefinitions, false);
 	// Searched deps that are package specific (e.g. <packageName>#<taskName>)

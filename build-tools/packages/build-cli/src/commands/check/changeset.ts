@@ -41,7 +41,7 @@ export default class CheckChangesetCommand extends BaseCommand<typeof CheckChang
 		branch: string;
 		changesetPath?: string;
 	}> {
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 		const git = await repo.getGitRepository();
 		const remote = await getRemote(git, repo.upstreamRemotePartialUrl);
 		const { branch } = this.flags;

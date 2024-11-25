@@ -76,7 +76,7 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 	async init(): Promise<void> {
 		await super.init();
 
-		const [fluidRepo] = await Promise.all([this.getFluidRepo(), this.initMachineHooks()]);
+		const [fluidRepo] = await Promise.all([this.getBuildProject(), this.initMachineHooks()]);
 		const git = await fluidRepo.getGitRepository();
 		const { argv, flags, logger, machine } = this;
 

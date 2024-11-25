@@ -79,7 +79,7 @@ export default class MergeInfoCommand extends BaseCommand<typeof MergeInfoComman
 			);
 		}
 
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 		const git = await repo.getGitRepository();
 		const remote = await getRemote(git, repo.upstreamRemotePartialUrl);
 

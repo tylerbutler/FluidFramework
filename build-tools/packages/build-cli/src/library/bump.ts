@@ -13,7 +13,7 @@
 // } from "@fluid-tools/version-tools";
 // import { Logger } from "@fluidframework/build-tools";
 
-// import type { IFluidRepo, IReleaseGroup } from "@fluid-tools/build-infrastructure";
+// import type { IBuildProject, IReleaseGroup } from "@fluid-tools/build-infrastructure";
 // import { setVersion } from "./package.js";
 
 /**
@@ -48,7 +48,7 @@ export function isDependencyUpdateType(str: string | undefined): str is Dependen
 // /**
 //  * Bumps a release group or standalone package by the bumpType.
 //  *
-//  * @param fluidRepo - The {@link IFluidRepo}.
+//  * @param fluidRepo - The {@link IBuildProject}.
 //  * @param releaseGroupOrPackage - A release group to bump.
 //  * @param bumpType - The bump type. Can be a SemVer object to set an exact version.
 //  * @param scheme - The version scheme to use.
@@ -57,7 +57,7 @@ export function isDependencyUpdateType(str: string | undefined): str is Dependen
 //  */
 // // eslint-disable-next-line max-params
 // export async function bumpReleaseGroup(
-// 	fluidRepo: IFluidRepo,
+// 	fluidRepo: IBuildProject,
 // 	releaseGroupOrPackage: IReleaseGroup,
 // 	bumpType: VersionChangeType,
 // 	scheme?: VersionScheme,

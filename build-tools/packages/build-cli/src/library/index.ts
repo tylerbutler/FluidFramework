@@ -59,4 +59,4 @@ export {
 export { LayerGraph } from "./layerGraph.js";
 export { type Handler, policyHandlers } from "./repoPolicyCheck/index.js";
 
-export { IFluidRepo as Context } from "@fluid-tools/build-infrastructure";
+export { IBuildProject as Context } from "@fluid-tools/build-infrastructure";

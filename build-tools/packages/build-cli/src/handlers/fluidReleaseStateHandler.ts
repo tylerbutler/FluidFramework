@@ -9,7 +9,7 @@ import chalk from "picocolors";
 
 import { ReleaseVersion, VersionBumpType, VersionScheme } from "@fluid-tools/version-tools";
 
-import type { IFluidRepo, IReleaseGroup } from "@fluid-tools/build-infrastructure";
+import type { IBuildProject, IReleaseGroup } from "@fluid-tools/build-infrastructure";
 import type { SimpleGit } from "simple-git";
 import { InstructionalPromptWriter } from "../instructionalPromptWriter.js";
 import { CommandLogger } from "../logging.js";
@@ -60,17 +60,10 @@ import { BaseStateHandler, type StateHandlerFunction } from "./stateHandlers.js"
  * used only within the {@link FluidReleaseStateHandler}.
  */
 export interface FluidReleaseStateHandlerData {
-	// /**
-	//  * The {@link Context}.
-	//  *
-	//  * @deprecated Update usage to IFluidRepo instead of Context.
-	//  */
-	// context: Context;
-
 	/**
-	 * The {@link IFluidRepo}.
+	 * The {@link IBuildProject}.
 	 */
-	repo: IFluidRepo;
+	repo: IBuildProject;
 
 	git: SimpleGit;
 	// currentBranch: string;

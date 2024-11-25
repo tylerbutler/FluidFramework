@@ -46,7 +46,7 @@ export const releaseGroupFlag = Flags.custom<ReleaseGroupName>({
 });
 
 /**
- * A re-usable CLI flag to parse workspace names. This should only be used in commands that are using the IFluidRepo
+ * A re-usable CLI flag to parse workspace names. This should only be used in commands that are using the IBuildProject
  * common infrastructure.
  */
 export const workspaceNameFlag = Flags.custom<WorkspaceName>({

@@ -4,7 +4,7 @@
  */
 
 import {
-	type IFluidRepo,
+	type IBuildProject,
 	type IReleaseGroup,
 	type PackageName,
 	getRemote,
@@ -31,7 +31,7 @@ export type CheckFunction = (
 	/**
 	 * The repository.
 	 */
-	repo: IFluidRepo,
+	repo: IBuildProject,
 
 	/**
 	 * The release group that is being checked.
@@ -74,7 +74,7 @@ type CheckResult = CheckResultFailure | undefined;
  * @returns a {@link CheckResultSuccess} if there are no local changes. Otherwise, returns a {@link CheckResultFailure}.
  */
 export const CheckNoLocalChanges: CheckFunction = async (
-	repo: IFluidRepo,
+	repo: IBuildProject,
 ): Promise<CheckResult> => {
 	const git = await repo.getGitRepository();
 	const status = await git.status();
@@ -93,7 +93,7 @@ export const CheckNoLocalChanges: CheckFunction = async (
  * dependencies are missing.
  */
 export const CheckDependenciesInstalled: CheckFunction = async (
-	repo: IFluidRepo,
+	repo: IBuildProject,
 	releaseGroup: IReleaseGroup,
 ): Promise<CheckResult> => {
 	const packagesToCheck = releaseGroup.packages;
@@ -117,10 +117,10 @@ export const CheckDependenciesInstalled: CheckFunction = async (
  * up-to-date.
  */
 export const CheckHasRemoteBranchUpToDate: CheckFunction = async (
-	repo: IFluidRepo,
+	repo: IBuildProject,
 ): Promise<CheckResult> => {
 	if (repo.upstreamRemotePartialUrl === undefined) {
-		throw new Error("IFluidRepo has no upstreamRemotePartialUrl");
+		throw new Error("IBuildProject has no upstreamRemotePartialUrl");
 	}
 	const git = await repo.getGitRepository();
 	const remote = await getRemote(git, repo.upstreamRemotePartialUrl);
@@ -159,7 +159,7 @@ export const CheckHasRemoteBranchUpToDate: CheckFunction = async (
  * result if prerelease dependencies are found.
  */
 export const CheckHasNoPrereleaseDependencies: CheckFunction = async (
-	repo: IFluidRepo,
+	repo: IBuildProject,
 	releaseGroup: IReleaseGroup,
 ): Promise<CheckResult> => {
 	const { releaseGroups, isEmpty } = await getPreReleaseDependencies(repo, releaseGroup);
@@ -188,7 +188,7 @@ export const CheckHasNoPrereleaseDependencies: CheckFunction = async (
  * result.
  */
 export const CheckNoPolicyViolations: CheckFunction = async (
-	repo: IFluidRepo,
+	repo: IBuildProject,
 ): Promise<CheckResult> => {
 	try {
 		await CheckPolicy.run([], { root: repo.root });
@@ -204,7 +204,7 @@ export const CheckNoPolicyViolations: CheckFunction = async (
  * Checks that all asserts are tagged. Any untagged asserts will return a failure result.
  */
 export const CheckNoUntaggedAsserts: CheckFunction = async (
-	repo: IFluidRepo,
+	repo: IBuildProject,
 ): Promise<CheckResult> => {
 	const git = await repo.getGitRepository();
 

@@ -64,7 +64,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 		previousTag?: string;
 	}> {
 		const tagInput = this.args.tag;
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 
 		const [releaseGroup, version, tag] = await this.parseTag(tagInput);
 
@@ -129,7 +129,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 			throw new Error(`Invalid version parsed from tag: ${ver}`);
 		}
 
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 		const releaseGroup = findPackageOrReleaseGroup(rg, fluidRepo);
 		if (releaseGroup === undefined) {
 			this.error(`Can't find release group or package with name: ${rg}`, {

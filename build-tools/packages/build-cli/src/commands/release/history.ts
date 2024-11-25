@@ -75,7 +75,7 @@ export default class ReleaseHistoryCommand extends ReleaseReportBaseCommand<
 	// releaseGroupName: ReleaseGroupName;
 
 	public async run(): Promise<{ reports: ReleaseReport[] }> {
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 		const { defaultMode, flags } = this;
 
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion

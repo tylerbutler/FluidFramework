@@ -30,7 +30,7 @@ export default class LatestVersionsCommand extends BaseCommand<typeof LatestVers
 
 	public async run(): Promise<void> {
 		const { args } = this;
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 		const versionInput = this.args.version;
 
 		const rgOrPackage = findPackageOrReleaseGroup(args.package_or_release_group, repo);

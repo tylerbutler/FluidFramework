@@ -23,7 +23,7 @@ import sortJson from "sort-json";
 import { table } from "table";
 
 import {
-	type IFluidRepo,
+	type IBuildProject,
 	type IReleaseGroup,
 	type PackageName,
 	type ReleaseGroupName,
@@ -126,7 +126,7 @@ export abstract class ReleaseReportBaseCommand<
 	 * @param includeDependencies - If true, the release data will include the Fluid dependencies of the release group.
 	 */
 	protected async collectReleaseData(
-		repo: IFluidRepo,
+		repo: IBuildProject,
 		mode: ReleaseSelectionMode = this.defaultMode,
 		releaseGroup?: IReleaseGroup,
 		includeDependencies = true,
@@ -177,14 +177,14 @@ export abstract class ReleaseReportBaseCommand<
 	/**
 	 * Collects the releases of a given release group or package.
 	 *
-	 * @param repo - The {@link IFluidRepo}.
+	 * @param repo - The {@link IBuildProject}.
 	 * @param releaseGroup - The release group or package to collect release data for.
 	 * @param repoVersion - The version of the release group or package in the repo.
 	 * @param latestReleaseChooseMode - Controls which release is considered the latest.
 	 * @returns The collected release data.
 	 */
 	private async collectRawReleaseData(
-		repo: IFluidRepo,
+		repo: IBuildProject,
 		releaseGroup: IReleaseGroup,
 		repoVersion: string,
 		latestReleaseChooseMode?: ReleaseSelectionMode,
@@ -381,7 +381,7 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 						: this.defaultMode;
 		assert(mode !== undefined, `mode is undefined`);
 
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 		this.releaseGroup = repo.releaseGroups.get(flags.releaseGroup as ReleaseGroupName);
 
 		if (this.releaseGroup === undefined) {
@@ -521,7 +521,7 @@ export default class ReleaseReportCommand extends ReleaseReportBaseCommand<
 	}
 
 	private async generateReleaseReport(reportData: PackageReleaseData): Promise<ReleaseReport> {
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 		const report: ReleaseReport = {};
 
 		for (const [pkgName, verDetails] of Object.entries(reportData)) {

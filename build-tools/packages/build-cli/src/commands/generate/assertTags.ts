@@ -53,7 +53,7 @@ export class TagAssertsCommand extends PackageCommand<typeof TagAssertsCommand> 
 	protected async selectAndFilterPackages(): Promise<void> {
 		await super.selectAndFilterPackages();
 
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 		const flubConfig = this.getFlubConfig();
 		const { assertTagging } = flubConfig;
 		const assertTaggingEnabledPaths = this.flags.disableConfig
@@ -293,7 +293,7 @@ export class TagAssertsCommand extends PackageCommand<typeof TagAssertsCommand> 
 	}
 
 	private async getTsConfigPath(pkg: IPackage): Promise<string> {
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 		const tsconfigPath = fluidRepo.relativeToRepo(path.join(pkg.directory, "tsconfig.json"));
 		return tsconfigPath;
 	}

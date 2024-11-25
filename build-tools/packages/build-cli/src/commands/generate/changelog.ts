@@ -125,7 +125,7 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 	}
 
 	public async run(): Promise<void> {
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 
 		// const gitRoot = repo.gitRepo.resolvedRoot;
 

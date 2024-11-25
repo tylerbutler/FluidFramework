@@ -6,7 +6,7 @@
 import * as fs from "node:fs";
 import { EOL as newline } from "node:os";
 import * as path from "node:path";
-import type { IFluidRepo } from "@fluid-tools/build-infrastructure";
+import type { IBuildProject } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import { readJson } from "fs-extra/esm";
 
@@ -52,7 +52,7 @@ interface CheckPolicyCommandContext {
 	/**
 	 * The repo context.
 	 */
-	repo: IFluidRepo;
+	repo: IBuildProject;
 }
 
 /**
@@ -181,7 +181,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 		}
 
 		const filePathsToCheck: string[] = [];
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 
 		if (this.flags.stdin) {
 			const stdInput = await readStdin();

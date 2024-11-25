@@ -121,7 +121,7 @@ export default class DepsCommand extends BaseCommand<typeof DepsCommand> {
 	public async run(): Promise<void> {
 		const { args, flags } = this;
 
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 		const git = await repo.getGitRepository();
 		const shouldInstall = flags.install && !flags.skipChecks;
 		const shouldCommit = flags.commit && !flags.skipChecks;

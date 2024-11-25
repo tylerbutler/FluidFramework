@@ -58,7 +58,7 @@ export class ReleasePrepareCommand extends BaseCommand<typeof ReleasePrepareComm
 	} as const;
 
 	public async run(): Promise<void> {
-		const fluidRepo = await this.getFluidRepo();
+		const fluidRepo = await this.getBuildProject();
 
 		const rgArg = this.args.package_or_release_group;
 		const releaseGroup = findPackageOrReleaseGroup(rgArg, fluidRepo);

@@ -103,7 +103,7 @@ export default class GenerateBuildVersionCommand extends BaseCommand<
 			this.error("Test build shouldn't be released");
 		}
 
-		const repo = await this.getFluidRepo();
+		const repo = await this.getBuildProject();
 		const git = await repo.getGitRepository();
 		const tags = flags.tags ?? (await getTags(git));
 

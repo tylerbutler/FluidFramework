@@ -30,12 +30,23 @@ export {
 } from "./config.js";
 export { NotInGitRepository } from "./errors.js";
 export {
+	type PackageFilterOptions,
+	type PackageSelectionCriteria,
+	filterPackages,
+	FilterablePackage,
+	selectAndFilterPackages,
+	EmptySelectionCriteria,
+	AllPackagesSelectionCriteria,
+	GlobString,
+} from "./filter.js";
+export {
 	getFiles,
 	findGitRootSync,
 	getMergeBaseRemote,
 	getRemote,
 	getChangedSinceRef,
 } from "./git.js";
+export { type Logger, type LoggingFunction, type ErrorLoggingFunction } from "./logging.js";
 export { PackageBase } from "./package.js";
 export { updatePackageJsonFile, updatePackageJsonFileAsync } from "./packageJsonUtils.js";
 export { createPackageManager } from "./packageManagers.js";
