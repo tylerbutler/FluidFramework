@@ -6,8 +6,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { untar } from "@andrewbranch/untar.js";
-import type { PackageJson } from "@fluid-tools/build-infrastructure";
-import { type Logger } from "@fluidframework/build-tools";
+import type { Logger, PackageJson } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import execa from "execa";
 import { Gunzip } from "fflate";

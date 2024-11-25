@@ -5,7 +5,8 @@
 
 import fs from "node:fs/promises";
 
-import type { PackageJson } from "@fluidframework/build-tools";
+import type { PackageJson } from "@fluid-tools/build-infrastructure";
+
 import { ApiLevel, BaseCommand, knownApiLevels } from "../../library/index.js";
 // AB#8118 tracks removing the barrel files and importing directly from the submodules, including disabling this rule.
 // eslint-disable-next-line import/no-internal-modules

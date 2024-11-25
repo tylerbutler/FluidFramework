@@ -97,6 +97,9 @@ importers:
       '@fluid-tools/version-tools':
         specifier: workspace:~
         version: link:../version-tools
+      '@fluidframework/build-tools':
+        specifier: workspace:~
+        version: link:../build-tools
       '@fluidframework/bundle-size-tools':
         specifier: workspace:~
         version: link:../bundle-size-tools
@@ -531,6 +534,9 @@ importers:
 
   packages/build-tools:
     dependencies:
+      '@fluid-tools/build-infrastructure':
+        specifier: workspace:~
+        version: link:../build-infrastructure
       '@fluid-tools/version-tools':
         specifier: workspace:~
         version: link:../version-tools

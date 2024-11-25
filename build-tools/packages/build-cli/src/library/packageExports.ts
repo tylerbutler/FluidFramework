@@ -5,8 +5,7 @@
 
 import path from "node:path";
 
-import type { PackageJson } from "@fluid-tools/build-infrastructure";
-import type { Logger } from "@fluidframework/build-tools";
+import type { Logger, PackageJson } from "@fluid-tools/build-infrastructure";
 import * as resolve from "resolve.exports";
 import { ApiLevel } from "./apiLevel.js";
 

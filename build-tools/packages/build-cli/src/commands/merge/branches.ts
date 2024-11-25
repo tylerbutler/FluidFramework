@@ -3,11 +3,9 @@
  * Licensed under the MIT License.
  */
 
-import { Logger } from "@fluidframework/build-tools";
+import { type Logger, getRemote } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 import chalk from "picocolors";
-
-import { getRemote } from "@fluid-tools/build-infrastructure";
 import type { SimpleGit } from "simple-git";
 
 // eslint-disable-next-line import/no-internal-modules

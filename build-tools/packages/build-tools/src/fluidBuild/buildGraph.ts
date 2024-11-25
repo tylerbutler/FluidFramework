@@ -8,11 +8,11 @@ import chalk from "picocolors";
 import * as semver from "semver";
 
 import * as assert from "assert";
+import type { Stopwatch } from "@fluid-tools/build-infrastructure";
 import registerDebug from "debug";
 import type { GitRepo } from "../common/gitRepo";
 import { defaultLogger } from "../common/logging";
 import { Package } from "../common/npmPackage";
-import { Timer } from "../common/timer";
 import type { BuildContext } from "./buildContext";
 import { FileHashCache } from "./fileHashCache";
 import type { IFluidBuildConfig } from "./fluidBuildConfig";
@@ -532,11 +532,11 @@ export class BuildGraph {
 		return succeeded;
 	}
 
-	public async build(timer?: Timer): Promise<BuildResult> {
+	public async build(timer?: Stopwatch): Promise<BuildResult> {
 		// This function must only be called once here at the beginning of the build.
 		// It checks the up-to-date state at this moment and will not be changed for the duration of the build.
 		const isUpToDate = await this.isUpToDate();
-		if (timer) timer.time(`Check up to date completed`);
+		if (timer) timer.log(`Check up to date completed`);
 
 		log(
 			`Start tasks '${chalk.cyanBright(this.buildTaskNames.join("', '"))}' in ${

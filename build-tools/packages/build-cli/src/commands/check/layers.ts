@@ -6,7 +6,7 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { Timer } from "@fluidframework/build-tools";
+import { Stopwatch } from "@fluid-tools/build-infrastructure";
 import { Flags } from "@oclif/core";
 
 import { BaseCommand, LayerGraph } from "../../library/index.js";
@@ -40,12 +40,12 @@ export class CheckLayers extends BaseCommand<typeof CheckLayers> {
 
 	async run(): Promise<void> {
 		const { flags } = this;
-		const timer = new Timer(flags.timer);
+		const timer = new Stopwatch(flags.timer);
 
 		const fluidRepo = await this.getBuildProject();
 		const { packages, root } = fluidRepo;
 
-		timer.time("Package scan completed");
+		timer.log("Package scan completed");
 
 		const layerGraph = LayerGraph.load(
 			fluidRepo.root,
@@ -65,7 +65,7 @@ export class CheckLayers extends BaseCommand<typeof CheckLayers> {
 		}
 
 		const success: boolean = layerGraph.verify();
-		timer.time("Layer check completed");
+		timer.log("Layer check completed");
 
 		if (!success) {
 			this.error("Layer check not succesful");

@@ -50,8 +50,8 @@ describe("flub test-only-filter", () => {
 		);
 		const output: jsonOutput = JSON.parse(stdout) as jsonOutput;
 		const { selected, filtered } = output;
-		expect(selected.length).to.equal(5);
-		expect(filtered.length).to.equal(5);
+		expect(selected.length).to.equal(6);
+		expect(filtered.length).to.equal(6);
 	});
 
 	it(`--private filter`, async () => {

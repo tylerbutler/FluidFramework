@@ -5,9 +5,9 @@
 
 import chalk from "picocolors";
 
+import { Stopwatch } from "@fluid-tools/build-infrastructure";
 import { GitRepo } from "../common/gitRepo";
 import { defaultLogger } from "../common/logging";
-import { Timer } from "../common/timer";
 import { BuildGraph, BuildResult } from "./buildGraph";
 import { commonOptions } from "./commonOptions";
 import { FluidRepoBuild } from "./fluidRepoBuild";
@@ -19,7 +19,7 @@ const { log, errorLog: error, warning: warn } = defaultLogger;
 parseOptions(process.argv);
 
 async function main() {
-	const timer = new Timer(commonOptions.timer);
+	const timer = new Stopwatch(commonOptions.timer);
 	const resolvedRoot = await getResolvedFluidRoot(true);
 
 	log(`Build Root: ${resolvedRoot}`);
@@ -30,7 +30,7 @@ async function main() {
 		gitRepo: new GitRepo(resolvedRoot),
 		fluidBuildConfig: getFluidBuildConfig(resolvedRoot),
 	});
-	timer.time("Package scan completed");
+	timer.log("Package scan completed");
 
 	// Set matched package based on options filter
 	const matched = repo.setMatched(options);
@@ -42,7 +42,7 @@ async function main() {
 	// Dependency checks
 	if (options.depcheck) {
 		await repo.depcheck(false);
-		timer.time("Dependencies check completed", true);
+		timer.log("Dependencies check completed", true);
 	}
 
 	// Uninstall
@@ -51,7 +51,7 @@ async function main() {
 			error(`uninstall failed`);
 			process.exit(-8);
 		}
-		timer.time("Uninstall completed", true);
+		timer.log("Uninstall completed", true);
 
 		if (!options.install) {
 			let errorStep: string | undefined = undefined;
@@ -76,13 +76,13 @@ async function main() {
 			error(`Install failed`);
 			process.exit(-5);
 		}
-		timer.time("Install completed", true);
+		timer.log("Install completed", true);
 	}
 
 	// Symlink check
 	const symlinkTaskName = options.symlink ? "Symlink" : "Symlink check";
 	await repo.symlink(options);
-	timer.time(`${symlinkTaskName} completed`, options.symlink);
+	timer.log(`${symlinkTaskName} completed`, options.symlink);
 
 	let failureSummary = "";
 	let exitCode = 0;
@@ -105,19 +105,19 @@ async function main() {
 			error((e as Error).message);
 			process.exit(-11);
 		}
-		timer.time("Build graph creation completed");
+		timer.log("Build graph creation completed");
 
 		// Check install
 		if (!(await buildGraph.checkInstall())) {
 			error("Dependency not installed. Use --install to fix.");
 			process.exit(-10);
 		}
-		timer.time("Check install completed");
+		timer.log("Check install completed");
 
 		// Run the build
 		const buildResult = await buildGraph.build(timer);
 		const buildStatus = buildResultString(buildResult);
-		const elapsedTime = timer.time();
+		const elapsedTime = timer.log();
 		if (commonOptions.timer) {
 			const totalElapsedTime = buildGraph.totalElapsedTime;
 			const concurrency = buildGraph.totalElapsedTime / elapsedTime;

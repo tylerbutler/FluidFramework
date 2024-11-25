@@ -5,7 +5,7 @@
 
 /* eslint-disable max-nested-callbacks */
 
-import type { Logger, PackageJson } from "@fluidframework/build-tools";
+import { type Logger, type PackageJson } from "@fluid-tools/build-infrastructure";
 
 import { assert } from "chai";
 import { describe, it } from "mocha";

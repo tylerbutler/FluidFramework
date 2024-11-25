@@ -50,6 +50,7 @@ export { type Logger, type LoggingFunction, type ErrorLoggingFunction } from "./
 export { PackageBase } from "./package.js";
 export { updatePackageJsonFile, updatePackageJsonFileAsync } from "./packageJsonUtils.js";
 export { createPackageManager } from "./packageManagers.js";
+export { Stopwatch } from "./stopwatch.js";
 export type {
 	AdditionalPackageProps,
 	Installable,

@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { type IPackage, loadFluidRepo } from "@fluid-tools/build-infrastructure";
+import { type IPackage, loadBuildProject } from "@fluid-tools/build-infrastructure";
 import { expect } from "chai";
 import { describe, it } from "mocha";
 
@@ -45,7 +45,7 @@ function feedsForPackages(
 describe("feeds", () => {
 	it("dev and build feed are mutually exclusive", async () => {
 		const cwd = process.cwd();
-		const repo = loadFluidRepo(cwd, "microsoft/FluidFramework");
+		const repo = loadBuildProject(cwd, "microsoft/FluidFramework");
 		const { config: flubConfig } = getFlubConfig(cwd);
 
 		const config = flubConfig.policy?.packageNames;

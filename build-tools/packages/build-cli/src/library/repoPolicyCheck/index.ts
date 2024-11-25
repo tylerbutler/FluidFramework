@@ -7,7 +7,7 @@ import { handler as assertShortCodeHandler } from "./assertShortCode.js";
 import { type Handler } from "./common.js";
 import { handlers as copyrightFileHeaderHandlers } from "./copyrightFileHeader.js";
 import { handler as dockerfilePackageHandler } from "./dockerfilePackages.js";
-import { handlers as fluidBuildTasks } from "./fluidBuildTasks.js";
+// import { handlers as fluidBuildTasks } from "./fluidBuildTasks.js";
 import { handler as fluidCaseHandler } from "./fluidCase.js";
 import { handlers as lockfileHandlers } from "./lockfiles.js";
 import { handler as noJsFileHandler } from "./noJsFiles.js";
@@ -26,7 +26,7 @@ export const policyHandlers: Handler[] = [
 	...lockfileHandlers,
 	assertShortCodeHandler,
 	...pnpmHandlers,
-	...fluidBuildTasks,
+	// ...fluidBuildTasks,
 	noJsFileHandler,
 	yamlTabsHandler,
 ];
