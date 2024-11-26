@@ -714,6 +714,139 @@ importers:
         specifier: ^4.4.1
         version: 4.4.1
 
+  packages/fluid-build:
+    dependencies:
+      '@fluid-tools/version-tools':
+        specifier: workspace:~
+        version: link:../version-tools
+      '@manypkg/get-packages':
+        specifier: ^2.2.2
+        version: 2.2.2
+      async:
+        specifier: ^3.2.6
+        version: 3.2.6
+      cosmiconfig:
+        specifier: ^8.3.6
+        version: 8.3.6(typescript@5.4.5)
+      date-fns:
+        specifier: ^2.30.0
+        version: 2.30.0
+      debug:
+        specifier: ^4.3.7
+        version: 4.3.7(supports-color@8.1.1)
+      detect-indent:
+        specifier: ^6.1.0
+        version: 6.1.0
+      find-up:
+        specifier: ^7.0.0
+        version: 7.0.0
+      fs-extra:
+        specifier: ^11.2.0
+        version: 11.2.0
+      glob:
+        specifier: ^7.2.3
+        version: 7.2.3
+      globby:
+        specifier: ^11.1.0
+        version: 11.1.0
+      ignore:
+        specifier: ^5.3.2
+        version: 5.3.2
+      json5:
+        specifier: ^2.2.3
+        version: 2.2.3
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      lodash.isequal:
+        specifier: ^4.5.0
+        version: 4.5.0
+      multimatch:
+        specifier: ^5.0.0
+        version: 5.0.0
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
+      picomatch:
+        specifier: ^2.3.1
+        version: 2.3.1
+      rimraf:
+        specifier: ^4.4.1
+        version: 4.4.1
+      semver:
+        specifier: ^7.6.3
+        version: 7.6.3
+      sort-package-json:
+        specifier: 1.57.0
+        version: 1.57.0
+      ts-deepmerge:
+        specifier: ^7.0.1
+        version: 7.0.1
+      ts-morph:
+        specifier: ^22.0.0
+        version: 22.0.0
+      type-fest:
+        specifier: ^2.19.0
+        version: 2.19.0
+      typescript:
+        specifier: ~5.4.5
+        version: 5.4.5
+      yaml:
+        specifier: ^2.6.0
+        version: 2.6.0
+    devDependencies:
+      '@biomejs/biome':
+        specifier: ~1.9.3
+        version: 1.9.4
+      '@fluidframework/build-common':
+        specifier: ^2.0.3
+        version: 2.0.3
+      '@fluidframework/eslint-config-fluid':
+        specifier: ^5.4.0
+        version: 5.4.0(eslint@8.57.0)(typescript@5.4.5)
+      '@types/async':
+        specifier: ^3.2.24
+        version: 3.2.24
+      '@types/fs-extra':
+        specifier: ^11.0.4
+        version: 11.0.4
+      '@types/glob':
+        specifier: ^7.2.0
+        version: 7.2.0
+      '@types/lodash':
+        specifier: ^4.17.12
+        version: 4.17.12
+      '@types/lodash.isequal':
+        specifier: ^4.5.8
+        version: 4.5.8
+      '@types/mocha':
+        specifier: ^10.0.9
+        version: 10.0.9
+      '@types/node':
+        specifier: ^18.19.59
+        version: 18.19.60
+      '@types/rimraf':
+        specifier: ^2.0.5
+        version: 2.0.5
+      '@types/semver':
+        specifier: ^7.5.8
+        version: 7.5.8
+      '@types/shelljs':
+        specifier: ^0.8.15
+        version: 0.8.15
+      concurrently:
+        specifier: ^8.2.2
+        version: 8.2.2
+      eslint:
+        specifier: ~8.57.0
+        version: 8.57.0
+      json-schema-to-typescript:
+        specifier: ^15.0.2
+        version: 15.0.2
+      mocha:
+        specifier: ^10.7.3
+        version: 10.7.3
+
   packages/version-tools:
     dependencies:
       '@oclif/core':

@@ -14,7 +14,7 @@ import { merge } from "ts-deepmerge";
 // We are using version 2.x because of this issue: https://github.com/sindresorhus/type-fest/issues/547
 import type { Opaque } from "type-fest";
 
-import type { Configuration as BiomeConfigRaw } from "./biomeConfigTypes";
+import type { Configuration as BiomeConfigRaw } from "../../../build-tools/src/common/biomeConfigTypes";
 import type { GitRepo } from "./gitRepo";
 
 // switch to regular import once building ESM

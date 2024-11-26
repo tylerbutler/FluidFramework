@@ -8,6 +8,33 @@ import * as fs from "fs";
 import * as path from "path";
 import isEqual from "lodash.isequal";
 
+/**
+ *	An array of commands that are known to have subcommands and should be parsed as such. These will be combined with
+ *	any additional commands provided in the Fluid build config.
+ */
+const defaultMultiCommandExecutables = ["flub", "biome"] as const;
+
+export function getExecutableFromCommand(command: string, multiCommandExecutables: string[]) {
+	let toReturn: string;
+	const commands = command.split(" ");
+	const multiExecutables: Set<string> = new Set([
+		...defaultMultiCommandExecutables,
+		...multiCommandExecutables,
+	]);
+	if (multiExecutables.has(commands[0])) {
+		// For multi-commands (e.g., "flub bump ...") our heuristic is to scan for the first argument that cannot
+		// be the name of a sub-command, such as '.' or an argument that starts with '-'.
+		//
+		// This assumes that subcommand names always precede flags and that non-command arguments
+		// match one of the patterns we look for below.
+		const nonCommandIndex = commands.findIndex((c) => c.startsWith("-") || c === ".");
+		toReturn = nonCommandIndex !== -1 ? commands.slice(0, nonCommandIndex).join(" ") : command;
+	} else {
+		toReturn = commands[0];
+	}
+	return toReturn;
+}
+
 export interface ExecAsyncResult {
 	error: child_process.ExecException | null;
 	stdout: string;
