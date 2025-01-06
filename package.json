@@ -158,7 +158,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "~1.9.3",
-		"@changesets/cli": "^2.27.8",
+		"@changesets/cli": "2.27.11",
 		"@fluid-private/changelog-generator-wrapper": "workspace:~",
 		"@fluid-tools/build-cli": "^0.51.0",
 		"@fluid-tools/markdown-magic": "workspace:~",

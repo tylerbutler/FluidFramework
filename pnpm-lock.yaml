@@ -31,8 +31,8 @@ importers:
         specifier: ~1.9.3
         version: 1.9.4
       '@changesets/cli':
-        specifier: ^2.27.8
-        version: 2.27.10
+        specifier: 2.27.11
+        version: 2.27.11
       '@fluid-private/changelog-generator-wrapper':
         specifier: workspace:~
         version: link:packages/tools/changelog-generator-wrapper
@@ -71,7 +71,7 @@ importers:
         version: 8.0.1
       changesets-format-with-issue-links:
         specifier: ^0.3.0
-        version: 0.3.0(@changesets/cli@2.27.10)
+        version: 0.3.0(@changesets/cli@2.27.11)
       concurrently:
         specifier: ^8.2.1
         version: 8.2.2
@@ -209,142 +209,6 @@ importers:
       eslint-config-prettier:
         specifier: ~9.0.0
         version: 9.0.0(eslint@8.55.0)
-      prettier:
-        specifier: ~3.0.3
-        version: 3.0.3
-      rimraf:
-        specifier: ^4.4.0
-        version: 4.4.1
-      typescript:
-        specifier: ~5.4.5
-        version: 5.4.5
-
-  azure/packages/test/scenario-runner:
-    dependencies:
-      '@fluid-internal/client-utils':
-        specifier: workspace:~
-        version: link:../../../../packages/common/client-utils
-      '@fluid-internal/test-driver-definitions':
-        specifier: workspace:~
-        version: link:../../../../packages/test/test-driver-definitions
-      '@fluidframework/aqueduct':
-        specifier: workspace:~
-        version: link:../../../../packages/framework/aqueduct
-      '@fluidframework/azure-client':
-        specifier: workspace:~
-        version: link:../../../../packages/service-clients/azure-client
-      '@fluidframework/container-definitions':
-        specifier: workspace:~
-        version: link:../../../../packages/common/container-definitions
-      '@fluidframework/container-loader':
-        specifier: workspace:~
-        version: link:../../../../packages/loader/container-loader
-      '@fluidframework/core-interfaces':
-        specifier: workspace:~
-        version: link:../../../../packages/common/core-interfaces
-      '@fluidframework/core-utils':
-        specifier: workspace:~
-        version: link:../../../../packages/common/core-utils
-      '@fluidframework/counter':
-        specifier: workspace:~
-        version: link:../../../../packages/dds/counter
-      '@fluidframework/fluid-static':
-        specifier: workspace:~
-        version: link:../../../../packages/framework/fluid-static
-      '@fluidframework/map':
-        specifier: workspace:~
-        version: link:../../../../packages/dds/map
-      '@fluidframework/matrix':
-        specifier: workspace:~
-        version: link:../../../../packages/dds/matrix
-      '@fluidframework/routerlicious-driver':
-        specifier: workspace:~
-        version: link:../../../../packages/drivers/routerlicious-driver
-      '@fluidframework/sequence':
-        specifier: workspace:~
-        version: link:../../../../packages/dds/sequence
-      '@fluidframework/telemetry-utils':
-        specifier: workspace:~
-        version: link:../../../../packages/utils/telemetry-utils
-      '@fluidframework/test-runtime-utils':
-        specifier: workspace:~
-        version: link:../../../../packages/runtime/test-runtime-utils
-      '@fluidframework/test-utils':
-        specifier: workspace:~
-        version: link:../../../../packages/test/test-utils
-      axios:
-        specifier: ^1.7.7
-        version: 1.7.9(debug@4.4.0)
-      commander:
-        specifier: ^5.1.0
-        version: 5.1.0
-      cross-env:
-        specifier: ^7.0.3
-        version: 7.0.3
-      js-yaml:
-        specifier: ^4.1.0
-        version: 4.1.0
-      mocha:
-        specifier: ^10.2.0
-        version: 10.8.2
-      sinon:
-        specifier: ^18.0.1
-        version: 18.0.1
-      start-server-and-test:
-        specifier: ^2.0.3
-        version: 2.0.8
-      tinylicious:
-        specifier: ^5.0.0
-        version: 5.0.0
-      uuid:
-        specifier: ^9.0.0
-        version: 9.0.1
-    devDependencies:
-      '@biomejs/biome':
-        specifier: ~1.9.3
-        version: 1.9.4
-      '@fluid-tools/build-cli':
-        specifier: ^0.51.0
-        version: 0.51.0(@types/node@18.19.67)(typescript@5.4.5)(webpack-cli@5.1.4)
-      '@fluidframework/build-common':
-        specifier: ^2.0.3
-        version: 2.0.3
-      '@fluidframework/build-tools':
-        specifier: ^0.51.0
-        version: 0.51.0(@types/node@18.19.67)
-      '@fluidframework/eslint-config-fluid':
-        specifier: ^5.6.0
-        version: 5.6.0(eslint@8.55.0)(typescript@5.4.5)
-      '@types/js-yaml':
-        specifier: ^4.0.5
-        version: 4.0.9
-      '@types/mocha':
-        specifier: ^10.0.10
-        version: 10.0.10
-      '@types/nock':
-        specifier: ^9.3.0
-        version: 9.3.1
-      '@types/node':
-        specifier: ^18.19.0
-        version: 18.19.67
-      '@types/sinon':
-        specifier: ^17.0.3
-        version: 17.0.3
-      '@types/uuid':
-        specifier: ^9.0.2
-        version: 9.0.8
-      c8:
-        specifier: ^8.0.1
-        version: 8.0.1
-      copyfiles:
-        specifier: ^2.4.1
-        version: 2.4.1
-      eslint:
-        specifier: ~8.55.0
-        version: 8.55.0
-      nock:
-        specifier: ^13.3.3
-        version: 13.5.6
       prettier:
         specifier: ~3.0.3
         version: 3.0.3
@@ -14885,14 +14749,14 @@ importers:
   packages/tools/changelog-generator-wrapper:
     dependencies:
       '@changesets/cli':
-        specifier: ^2.27.8
-        version: 2.27.10
+        specifier: 2.27.11
+        version: 2.27.11
       '@changesets/types':
         specifier: ^6.0.0
         version: 6.0.0
       changesets-format-with-issue-links:
         specifier: ^0.3.0
-        version: 0.3.0(@changesets/cli@2.27.10)
+        version: 0.3.0(@changesets/cli@2.27.11)
       typescript:
         specifier: ~5.4.5
         version: 5.4.5
@@ -16992,10 +16856,10 @@ packages:
       webpack: 5.97.1(webpack-cli@5.1.4)
     dev: true
 
-  /@changesets/apply-release-plan@7.0.6:
-    resolution: {integrity: sha512-TKhVLtiwtQOgMAC0fCJfmv93faiViKSDqr8oMEqrnNs99gtSC1sZh/aEMS9a+dseU1ESZRCK+ofLgGY7o0fw/Q==}
+  /@changesets/apply-release-plan@7.0.7:
+    resolution: {integrity: sha512-qnPOcmmmnD0MfMg9DjU1/onORFyRpDXkMMl2IJg9mECY6RnxL3wN0TCCc92b2sXt1jt8DgjAUUsZYGUGTdYIXA==}
     dependencies:
-      '@changesets/config': 3.0.4
+      '@changesets/config': 3.0.5
       '@changesets/get-version-range-type': 0.4.0
       '@changesets/git': 3.0.2
       '@changesets/should-skip-package': 0.1.1
@@ -17024,17 +16888,17 @@ packages:
     dependencies:
       '@changesets/types': 6.0.0
 
-  /@changesets/cli@2.27.10:
-    resolution: {integrity: sha512-PfeXjvs9OfQJV8QSFFHjwHX3QnUL9elPEQ47SgkiwzLgtKGyuikWjrdM+lO9MXzOE22FO9jEGkcs4b+B6D6X0Q==}
+  /@changesets/cli@2.27.11:
+    resolution: {integrity: sha512-1QislpE+nvJgSZZo9+Lj3Lno5pKBgN46dAV8IVxKJy9wX8AOrs9nn5pYVZuDpoxWJJCALmbfOsHkyxujgetQSg==}
     hasBin: true
     dependencies:
-      '@changesets/apply-release-plan': 7.0.6
+      '@changesets/apply-release-plan': 7.0.7
       '@changesets/assemble-release-plan': 6.0.5
       '@changesets/changelog-git': 0.2.0
-      '@changesets/config': 3.0.4
+      '@changesets/config': 3.0.5
       '@changesets/errors': 0.2.0
       '@changesets/get-dependents-graph': 2.1.2
-      '@changesets/get-release-plan': 4.0.5
+      '@changesets/get-release-plan': 4.0.6
       '@changesets/git': 3.0.2
       '@changesets/logger': 0.1.1
       '@changesets/pre': 2.0.1
@@ -17057,8 +16921,8 @@ packages:
       spawndamnit: 3.0.1
       term-size: 2.2.1
 
-  /@changesets/config@3.0.4:
-    resolution: {integrity: sha512-+DiIwtEBpvvv1z30f8bbOsUQGuccnZl9KRKMM/LxUHuDu5oEjmN+bJQ1RIBKNJjfYMQn8RZzoPiX0UgPaLQyXw==}
+  /@changesets/config@3.0.5:
+    resolution: {integrity: sha512-QyXLSSd10GquX7hY0Mt4yQFMEeqnO5z/XLpbIr4PAkNNoQNKwDyiSrx4yd749WddusH1v3OSiA0NRAYmH/APpQ==}
     dependencies:
       '@changesets/errors': 0.2.0
       '@changesets/get-dependents-graph': 2.1.2
@@ -17081,11 +16945,11 @@ packages:
       picocolors: 1.1.1
       semver: 7.6.3
 
-  /@changesets/get-release-plan@4.0.5:
-    resolution: {integrity: sha512-E6wW7JoSMcctdVakut0UB76FrrN3KIeJSXvB+DHMFo99CnC3ZVnNYDCVNClMlqAhYGmLmAj77QfApaI3ca4Fkw==}
+  /@changesets/get-release-plan@4.0.6:
+    resolution: {integrity: sha512-FHRwBkY7Eili04Y5YMOZb0ezQzKikTka4wL753vfUA5COSebt7KThqiuCN9BewE4/qFGgF/5t3AuzXx1/UAY4w==}
     dependencies:
       '@changesets/assemble-release-plan': 6.0.5
-      '@changesets/config': 3.0.4
+      '@changesets/config': 3.0.5
       '@changesets/pre': 2.0.1
       '@changesets/read': 0.6.2
       '@changesets/types': 6.0.0
@@ -24537,10 +24401,6 @@ packages:
       pretty-format: 29.7.0
     dev: true
 
-  /@types/js-yaml@4.0.9:
-    resolution: {integrity: sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==}
-    dev: true
-
   /@types/jsdom-global@3.0.7:
     resolution: {integrity: sha512-WgKCapVD0zcH6rbKTZ4wpIl1CKP2YGksNtZH5Oc37kTNRh83kPheaq6ChbpuywCCDjVGdBO+Us8C14Z2jRfXwQ==}
     dependencies:
@@ -26767,12 +26627,12 @@ packages:
   /change-case@5.4.4:
     resolution: {integrity: sha512-HRQyTk2/YPEkt9TnUPbOpr64Uw3KOicFWPVBb+xiHvd6eBx/qPr9xqfBFDT8P2vWsvvz4jbEkfDe71W3VyNu2w==}
 
-  /changesets-format-with-issue-links@0.3.0(@changesets/cli@2.27.10):
+  /changesets-format-with-issue-links@0.3.0(@changesets/cli@2.27.11):
     resolution: {integrity: sha512-+GmelydJ+bYPVQyapFIELe/bM2+98cBIG7gb9raBxzx5MiBY0cDZnj4ii7xkrgpQLx96PWH3O9VA7Mhag0gs3w==}
     peerDependencies:
       '@changesets/cli': ^2.0.0
     dependencies:
-      '@changesets/cli': 2.27.10
+      '@changesets/cli': 2.27.11
       gitlog: 4.0.8
       lodash: 4.17.21
     transitivePeerDependencies:

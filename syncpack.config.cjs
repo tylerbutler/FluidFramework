@@ -92,6 +92,8 @@ module.exports = {
 		{
 			label: "Must use exact dependency ranges",
 			dependencies: [
+				// We use experimental settings that may change in patch versions, so we pin to an exact version.
+				"@changesets/cli",
 				"@tiny-calc/*",
 				"@graphql-codegen/cli",
 				"@graphql-codegen/typescript",
