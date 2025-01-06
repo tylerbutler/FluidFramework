@@ -4,7 +4,7 @@
  */
 
 const chalk = require("chalk");
-const markdownMagic = require("@tylerbu/markdown-magic");
+const { markdownMagic } = require("markdown-magic");
 const path = require("path");
 const process = require("process");
 const yargs = require("yargs/yargs");
@@ -34,7 +34,7 @@ const argv = yargs(hideBin(process.argv))
 	.help("h")
 	.alias("h", "--help").argv;
 
-const matchPattern = argv.files ?? defaultMatchPattern;
+const matchPattern = argv.files ?? [defaultMatchPattern];
 
 let workingDirectory = process.cwd();
 if (argv.workingDirectory) {
@@ -46,7 +46,7 @@ console.log(
 	`Searching for files matching pattern(s) "${matchPattern}" under "${workingDirectory}"...`,
 );
 
-markdownMagic(matchPattern, config).then(
+markdownMagic({...config, files: matchPattern }).then(
 	() => {
 		console.log(chalk.green("SUCCESS: Documentation updated!"));
 		process.exit(0);
