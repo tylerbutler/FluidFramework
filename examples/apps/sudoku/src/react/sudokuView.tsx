@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) Microsoft Corporation. All rights reserved.
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
 
@@ -49,12 +49,7 @@ export function SudokuView(props: ISudokuViewProps): JSX.Element {
 				<div className="sudoku-buttons">
 					<span className="sudoku-theme-select">
 						<label htmlFor="theme-select">Theme: </label>
-						<select
-							value={theme}
-							onChange={onThemeChange}
-							id="theme-select"
-							name="theme"
-						>
+						<select value={theme} onChange={onThemeChange} id="theme-select" name="theme">
 							<option aria-selected={theme === "default"} value="default">
 								Default Theme{" "}
 							</option>
