@@ -2,17 +2,20 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import { AsyncPriorityQueue, priorityQueue } from "async";
 
+import * as assert from "assert";
+import registerDebug from "debug";
+import type { BuildContext } from "../buildContext";
 import { BuildPackage, BuildResult } from "../buildGraph";
 import { options } from "../options";
 import { LeafTask } from "./leaf/leafTask";
-import * as assert from "assert";
-import registerDebug from "debug";
 
 const traceTaskInit = registerDebug("fluid-build:task:init");
 const traceTaskExec = registerDebug("fluid-build:task:exec");
 const traceTaskExecWait = registerDebug("fluid-build:task:exec:wait");
+const traceTaskDepTask = registerDebug("fluid-build:task:init:dep:task");
 
 export interface TaskExec {
 	task: LeafTask;
@@ -21,13 +24,13 @@ export interface TaskExec {
 }
 
 export abstract class Task {
-	public dependentTasks?: Task[];
-	private _transitiveDependentLeafTasks?: LeafTask[];
+	private dependentTasks?: Task[];
+	private _transitiveDependentLeafTasks: LeafTask[] | undefined | null;
 	public static createTaskQueue(): AsyncPriorityQueue<TaskExec> {
 		return priorityQueue(async (taskExec: TaskExec) => {
 			const waitTime = (Date.now() - taskExec.queueTime) / 1000;
 			const task = taskExec.task;
-			task.node.buildContext.taskStats.leafQueueWaitTimeTotal += waitTime;
+			task.node.context.taskStats.leafQueueWaitTimeTotal += waitTime;
 			traceTaskExecWait(`${task.nameColored}: waited in queue ${waitTime}s`);
 			taskExec.resolve(await task.exec());
 			// wait one more turn so that we can queue up dependents we just freed up
@@ -45,12 +48,18 @@ export abstract class Task {
 	public get nameColored() {
 		return `${this.node.pkg.nameColored}#${this.taskName ?? `<${this.command}>`}`;
 	}
+
 	protected constructor(
 		protected readonly node: BuildPackage,
 		public readonly command: string,
+		protected readonly context: BuildContext,
 		public readonly taskName: string | undefined,
 	) {
 		traceTaskInit(`${this.nameColored}`);
+		if (this.taskName === undefined) {
+			// initializeDependentTasks won't be called for unnamed tasks
+			this.dependentTasks = [];
+		}
 	}
 
 	public get package() {
@@ -64,25 +73,60 @@ export abstract class Task {
 		assert.strictEqual(this.dependentTasks, undefined);
 		// This function should only be called by task with task names
 		assert.notStrictEqual(this.taskName, undefined);
-		this.dependentTasks = this.node.getDependentTasks(this, this.taskName!, pendingInitDep);
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		this.dependentTasks = this.node.getDependsOnTasks(this, this.taskName!, pendingInitDep);
+	}
+
+	// Add dependent task. For group tasks, propagate to unnamed subtask only if it's a default dependency
+	public addDependentTasks(dependentTasks: Task[], isDefault?: boolean) {
+		if (traceTaskDepTask.enabled) {
+			dependentTasks.forEach((dependentTask) => {
+				traceTaskDepTask(
+					`${this.nameColored} -> ${dependentTask.nameColored}${
+						isDefault === true ? " (default)" : ""
+					}`,
+				);
+			});
+		}
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		this.dependentTasks!.push(...dependentTasks);
 	}
 
 	protected get transitiveDependentLeafTask() {
-		if (this._transitiveDependentLeafTasks === undefined) {
-			const dependentTasks = this.dependentTasks;
-			if (dependentTasks) {
+		if (this._transitiveDependentLeafTasks === null) {
+			// Circular dependency, start unrolling
+			throw [this];
+		}
+		try {
+			if (this._transitiveDependentLeafTasks === undefined) {
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				const dependentTasks = this.dependentTasks!;
+				assert.notStrictEqual(dependentTasks, undefined);
+				this._transitiveDependentLeafTasks = null;
+
 				const s = new Set<LeafTask>();
 				for (const dependentTask of dependentTasks) {
 					dependentTask.transitiveDependentLeafTask.forEach((t) => s.add(t));
 					dependentTask.collectLeafTasks(s);
 				}
 				this._transitiveDependentLeafTasks = [...s.values()];
-			} else {
-				this._transitiveDependentLeafTasks = [];
-				assert.strictEqual(this.taskName, undefined);
 			}
+			return this._transitiveDependentLeafTasks;
+		} catch (e) {
+			if (Array.isArray(e)) {
+				// Add to the dependency chain
+				e.push(this);
+				if (e[0] === this) {
+					// detected a cycle, convert into a message
+					throw new Error(
+						`Circular dependency in dependent tasks: ${e
+							.map((v) => v.nameColored)
+							.join("->")}`,
+					);
+				}
+			}
+			throw e;
 		}
-		return this._transitiveDependentLeafTasks;
 	}
 
 	public async run(q: AsyncPriorityQueue<TaskExec>): Promise<BuildResult> {

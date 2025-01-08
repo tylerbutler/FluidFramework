@@ -2,13 +2,19 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
+import { strict as assert } from "node:assert";
 import { Logger } from "@fluidframework/build-tools";
 import { Flags } from "@oclif/core";
-import chalk from "chalk";
-import { strict as assert } from "node:assert";
+import chalk from "picocolors";
 
-import { BaseCommand } from "../../base";
-import { Repository, createPullRequest, getCommitInfo, pullRequestExists } from "../../lib";
+import {
+	BaseCommand,
+	Repository,
+	createPullRequest,
+	getCommitInfo,
+	pullRequestExists,
+} from "../../library/index.js";
 
 interface CleanupBranch {
 	branch: string;
@@ -22,9 +28,12 @@ interface CleanupBranch {
  * Later, it creates a pull request based on the batch size passed.
  */
 export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
-	static description = "Sync branches depending on the batch size passed";
+	static readonly description = "Sync branches depending on the batch size passed";
 
-	static flags = {
+	// This command is deprecated and should no longer be used.
+	static readonly state = "deprecated";
+
+	static readonly flags = {
 		pat: Flags.string({
 			description:
 				"GitHub Personal Access Token. This parameter should be passed using the GITHUB_PAT environment variable for security purposes.",
@@ -77,7 +86,7 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 			allowNo: true,
 		}),
 		...BaseCommand.flags,
-	};
+	} as const;
 
 	/**
 	 * The branch that the command was run from. This is used to checkout the branch in the case of a failure, so the user
@@ -91,28 +100,26 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 	 */
 	private readonly branchesToCleanup: CleanupBranch[] = [];
 
-	private gitRepo: Repository | undefined;
 	private remote: string | undefined;
 
 	public async run(): Promise<void> {
-		const flags = this.flags;
+		const { flags } = this;
 
 		const prTitle: string = `Automation: ${flags.source}-${flags.target} integrate`;
 		const context = await this.getContext();
-		this.gitRepo ??= new Repository({ baseDir: context.gitRepo.resolvedRoot });
-		if (this.gitRepo === undefined) {
-			this.errorLog(`gitRepo undefined: ${JSON.stringify(this.gitRepo)}`);
+		const gitRepo = await context.getGitRepository();
+		if (gitRepo === undefined) {
+			this.errorLog(`Apparently not inside a git repo`);
 			this.error("gitRepo is undefined", { exit: 1 });
 		}
 
-		const [owner, repo] = context.originRemotePartialUrl.split("/");
+		const [owner, repo] = gitRepo.upstreamRemotePartialUrl.split("/");
 		this.verbose(`owner: ${owner} and repo: ${repo}`);
 
 		// eslint-disable-next-line unicorn/no-await-expression-member
-		this.initialBranch = (await this.gitRepo.gitClient.status()).current ?? "main";
+		this.initialBranch = (await gitRepo.gitClient.status()).current ?? "main";
 
-		this.remote =
-			flags.remote ?? (await this.gitRepo.getRemote(context.originRemotePartialUrl));
+		this.remote = flags.remote ?? (await gitRepo.getRemote(gitRepo.upstreamRemotePartialUrl));
 		if (this.remote === undefined) {
 			this.error("Remote for upstream repo not found", { exit: 1 });
 		}
@@ -138,7 +145,7 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 		// check out local versions of the branches yet.
 		const remoteSourceBranch = `refs/remotes/${this.remote}/${flags.source}`;
 		const remoteTargetBranch = `refs/remotes/${this.remote}/${flags.target}`;
-		const lastMergedCommit = await this.gitRepo.getMergeBase(
+		const lastMergedCommit = await gitRepo.getMergeBase(
 			remoteSourceBranch,
 			remoteTargetBranch,
 		);
@@ -146,10 +153,7 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 			`${lastMergedCommit} is the last merged commit id between ${flags.source} and ${flags.target}`,
 		);
 
-		const unmergedCommitList: string[] = await this.gitRepo.revList(
-			lastMergedCommit,
-			flags.source,
-		);
+		const unmergedCommitList: string[] = await gitRepo.revList(lastMergedCommit, flags.source);
 
 		if (unmergedCommitList.length === 0) {
 			this.log(
@@ -192,12 +196,12 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 		);
 
 		// Check out a new temp branch at the same commit as the target branch.
-		await this.gitRepo.gitClient.checkoutBranch(tempBranchToCheckConflicts, remoteTargetBranch);
+		await gitRepo.gitClient.checkoutBranch(tempBranchToCheckConflicts, remoteTargetBranch);
 
 		const commitBatchSize = Math.min(flags.batchSize, unmergedCommitList.length);
 		const [commitListHasConflicts, conflictingCommitIndex] = await hasConflicts(
 			unmergedCommitList.slice(0, commitBatchSize),
-			this.gitRepo,
+			gitRepo,
 			this.logger,
 		);
 		this.verbose(
@@ -239,14 +243,14 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 				prHeadCommit,
 			)}`,
 		);
-		await this.gitRepo.gitClient.checkoutBranch(mergeBranch, prHeadCommit);
+		await gitRepo.gitClient.checkoutBranch(mergeBranch, prHeadCommit);
 		// Clean up the local mergeBranch in case of a failure.
 		this.branchesToCleanup.push({ branch: mergeBranch, local: true, remote: false });
 
 		// Delete the temp branch we created earlier. It's safe to delete the branch now because we checked out a new branch
 		// in the previous step.
 		this.verbose(`Deleting temp branch: ${tempBranchToCheckConflicts}`);
-		await this.gitRepo.gitClient.branch(["--delete", tempBranchToCheckConflicts, "--force"]);
+		await gitRepo.gitClient.branch(["--delete", tempBranchToCheckConflicts, "--force"]);
 
 		// If we determined that the PR won't conflict, check out the target branch (with a temp branch) and merge that with
 		// mergeBranch, which is the source branch we want to merge. We will create the PR at the new merge commit; in other
@@ -257,7 +261,7 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 		// changes IN from the source branch (main) makes the history a lot cleaner. See
 		// <https://stackoverflow.com/a/45973607/551579> for more details.
 		if (prWillConflict === false) {
-			await this.gitRepo.gitClient
+			await gitRepo.gitClient
 				// Fetch the latest remote refs
 				.fetch(this.remote)
 				// create tempTargetBranch locally so we have a merge base
@@ -294,6 +298,7 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 
 		// To determine who to assign the PR to, we look up the commit details on GitHub.
 		// TODO: Can't we get the author info from the local commit?
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const commitInfo = flags.createPr
 			? await getCommitInfo(flags.pat, owner, repo, prHeadCommit, this.logger)
 			: undefined;
@@ -302,7 +307,8 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 				`Couldn't determine who to assign the PR to, so it must be manually assigned.`,
 			);
 		}
-		const assignee = commitInfo?.data.author.login;
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+		const assignee: string = commitInfo?.data.author.login;
 
 		this.info(`Creating PR for commit id ${prHeadCommit} assigned to ${assignee}`);
 		const prObject = {
@@ -322,10 +328,10 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 		if (flags.createPr) {
 			// We're about to create the PR, so we need to push mergeBranch upstream
 			// Also push the local branch to the remote and set its upstream.
-			await this.gitRepo.gitClient
+			await gitRepo.gitClient
 				.push(this.remote, mergeBranch)
 				.branch(["--set-upstream-to", `${this.remote}/${mergeBranch}`]);
-			let prNumber = "";
+			let prNumber: number;
 			try {
 				prNumber = await createPullRequest(prObject, this.logger);
 			} catch (error: unknown) {
@@ -347,8 +353,11 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 	 * possible, this code cleans up the temporary branches that were created. It cleans up both local and remote
 	 * branches.
 	 */
-	protected override async catch(err: Error & { exitCode?: number | undefined }): Promise<any> {
-		if (this.gitRepo === undefined) {
+	protected override async catch(
+		err: Error & { exitCode?: number | undefined },
+	): Promise<unknown> {
+		const context = await this.getContext();
+		if ((await context.getGitRepository()) === undefined) {
 			throw err;
 		}
 
@@ -360,11 +369,13 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 	}
 
 	private async doCleanup(): Promise<void> {
-		assert(this.gitRepo !== undefined);
+		const context = await this.getContext();
+		const gitRepo = await context.getGitRepository();
+		assert(gitRepo !== undefined);
 
 		// Check out the initial branch
 		this.warning(`CLEANUP: Checking out initial branch ${this.initialBranch}`);
-		await this.gitRepo.gitClient.checkout(this.initialBranch);
+		await gitRepo.gitClient.checkout(this.initialBranch);
 
 		// Delete the branches we created
 		if (this.branchesToCleanup.length > 0) {
@@ -373,7 +384,7 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 					.map((b) => b.branch)
 					.join(", ")}`,
 			);
-			await this.gitRepo.gitClient.deleteLocalBranches(
+			await gitRepo.gitClient.deleteLocalBranches(
 				this.branchesToCleanup.filter((b) => b.local).map((b) => b.branch),
 				true /* forceDelete */,
 			);
@@ -381,11 +392,10 @@ export default class MergeBranch extends BaseCommand<typeof MergeBranch> {
 
 		// Delete any remote branches we created
 		const promises: Promise<unknown>[] = [];
-		// eslint-disable-next-line unicorn/consistent-function-scoping
-		const deleteFunc = async (branch: string) => {
+		const deleteFunc = async (branch: string): Promise<void> => {
 			this.warning(`CLEANUP: Deleting remote branch ${this.remote}/${branch}`);
 			try {
-				await this.gitRepo?.gitClient.push(this.remote, branch, ["--delete"]);
+				await gitRepo?.gitClient.push(this.remote, branch, ["--delete"]);
 			} catch {
 				this.verbose(`CLEANUP: FAILED to delete remote branch ${this.remote}/${branch}`);
 			}

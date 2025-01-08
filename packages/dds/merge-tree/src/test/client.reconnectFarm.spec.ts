@@ -2,25 +2,30 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { IRandom, makeRandom, describeFuzz } from "@fluid-internal/stochastic-test-utils";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { IMergeTreeOp } from "../ops";
-import { SegmentGroup } from "../mergeTreeNodes";
+import { strict as assert } from "node:assert";
+
+import { IRandom, describeFuzz, makeRandom } from "@fluid-private/stochastic-test-utils";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+
+import { SegmentGroup } from "../mergeTreeNodes.js";
+import { IMergeTreeOp } from "../ops.js";
+
 import {
-	generateClientNames,
-	doOverRange,
-	runMergeTreeOperationRunner,
-	annotateRange,
-	removeRange,
-	applyMessages,
-	IMergeTreeOperationRunnerConfig,
 	IConfigRange,
+	IMergeTreeOperationRunnerConfig,
+	annotateRange,
+	applyMessages,
+	doOverRange,
+	generateClientNames,
 	insert,
-} from "./mergeTreeOperationRunner";
-import { TestClient } from "./testClient";
-import { TestClientLogger } from "./testClientLogger";
+	removeRange,
+	runMergeTreeOperationRunner,
+} from "./mergeTreeOperationRunner.js";
+import { TestClient } from "./testClient.js";
+import { TestClientLogger } from "./testClientLogger.js";
 
 function applyMessagesWithReconnect(
 	startingSeq: number,
@@ -28,7 +33,7 @@ function applyMessagesWithReconnect(
 	clients: readonly TestClient[],
 	logger: TestClientLogger,
 	random: IRandom,
-) {
+): number {
 	let seq = startingSeq;
 	const reconnectingClientIds =
 		clients.length > 2 && random.bool()
@@ -40,29 +45,26 @@ function applyMessagesWithReconnect(
 	// log and apply all the ops created in the round
 	while (messageDatas.length > 0) {
 		const [message, sg] = messageDatas.shift()!;
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-		if (reconnectingClientIds.includes(message.clientId as string)) {
-			reconnectClientMsgs
-				// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-				.get(message.clientId as string)!
-				.push([message.contents as IMergeTreeOp, sg]);
+		assert(message.clientId, "expected clientId to be defined");
+		if (reconnectingClientIds.includes(message.clientId)) {
+			reconnectClientMsgs.get(message.clientId)!.push([message.contents as IMergeTreeOp, sg]);
 		} else {
 			message.sequenceNumber = ++seq;
-			clients.forEach((c) => c.applyMsg(message));
+			for (const c of clients) c.applyMsg(message);
 			minSeq = message.minimumSequenceNumber;
 		}
 	}
 
 	const reconnectMsgs: [ISequencedDocumentMessage, SegmentGroup | SegmentGroup[]][] = [];
-	reconnectClientMsgs.forEach((messageData, clientId) => {
+	for (const [clientId, messageData] of reconnectClientMsgs.entries()) {
 		const client = clients.find(({ longClientId }) => longClientId === clientId)!;
-		messageData.forEach(([op, segmentGroup]) => {
+		for (const [op, segmentGroup] of messageData) {
 			const newMsg = client.makeOpMessage(client.regeneratePendingOp(op, segmentGroup));
 			newMsg.minimumSequenceNumber = minSeq;
 			// apply message doesn't use the segment group, so just pass undefined
-			reconnectMsgs.push([newMsg, undefined as any]);
-		});
-	});
+			reconnectMsgs.push([newMsg, undefined as never]);
+		}
+	}
 
 	return applyMessages(seq, reconnectMsgs, clients, logger);
 }
@@ -94,11 +96,11 @@ function runReconnectFarmTests(opts: IReconnectFarmConfig, extraSeed?: number): 
 				testOpts.resultsFilePostfix += extraSeed;
 			}
 
-			const clients: TestClient[] = [new TestClient()];
-			clients.forEach((c, i) => c.startOrUpdateCollaboration(clientNames[i]));
+			const clients: TestClient[] = [new TestClient({ mergeTreeEnableAnnotateAdjust: true })];
+			for (const [i, c] of clients.entries()) c.startOrUpdateCollaboration(clientNames[i]);
 
 			let seq = 0;
-			clients.forEach((c) => c.updateMinSeq(seq));
+			for (const c of clients) c.updateMinSeq(seq);
 
 			// Add double the number of clients each iteration
 			const targetClients = Math.max(opts.clients.min, clientCount);

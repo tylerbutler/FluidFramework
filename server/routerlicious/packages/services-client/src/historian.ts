@@ -19,26 +19,34 @@ function endsWith(value: string, endings: string[]): boolean {
 	return false;
 }
 
+/**
+ * @internal
+ */
 export interface ICredentials {
 	user: string;
 	password: string;
 }
 
+/**
+ * @internal
+ */
 export const getAuthorizationTokenFromCredentials = (credentials: ICredentials): string =>
 	`Basic ${fromUtf8ToBase64(`${credentials.user}:${credentials.password}`)}`;
 
 /**
  * Implementation of the IHistorian interface that calls out to a REST interface
+ * @internal
  */
 export class Historian implements IHistorian {
-	private readonly defaultQueryString: Record<string, unknown> = {};
+	private readonly defaultQueryString: Record<string, string | number | boolean> = {};
 	private readonly cacheBust: boolean;
+	private readonly restWrapper: RestWrapper;
 
 	constructor(
 		public endpoint: string,
 		private readonly historianApi: boolean,
 		disableCache: boolean,
-		private readonly restWrapper?: RestWrapper,
+		restWrapper?: RestWrapper,
 	) {
 		if (disableCache && this.historianApi) {
 			this.defaultQueryString.disableCache = disableCache;
@@ -47,9 +55,7 @@ export class Historian implements IHistorian {
 			this.cacheBust = disableCache;
 		}
 
-		if (this.restWrapper === undefined) {
-			this.restWrapper = new BasicRestWrapper(this.endpoint);
-		}
+		this.restWrapper = restWrapper ?? new BasicRestWrapper(this.endpoint);
 	}
 
 	public async getHeader(sha: string): Promise<any> {
@@ -84,7 +90,7 @@ export class Historian implements IHistorian {
 	public async getCommits(sha: string, count: number): Promise<git.ICommitDetails[]> {
 		return this.restWrapper
 			.get<git.ICommitDetails[]>(`/commits`, this.getQueryString({ count, sha }))
-			.catch((error) =>
+			.catch(async (error) =>
 				error === 400 || error === 404
 					? ([] as git.ICommitDetails[])
 					: Promise.reject<git.ICommitDetails[]>(error),
@@ -181,7 +187,9 @@ export class Historian implements IHistorian {
 		};
 	}
 
-	private getQueryString(queryString?: Record<string, unknown>): Record<string, unknown> {
+	private getQueryString(
+		queryString?: Record<string, string | number | boolean>,
+	): Record<string, string | number | boolean> {
 		if (this.cacheBust) {
 			return {
 				cacheBust: Date.now(),

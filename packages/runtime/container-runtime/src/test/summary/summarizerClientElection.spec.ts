@@ -4,25 +4,31 @@
  */
 
 import { strict as assert } from "assert";
-import { Deferred } from "@fluidframework/core-utils";
+
 import { TypedEventEmitter } from "@fluid-internal/client-utils";
-import { ISequencedClient, MessageType } from "@fluidframework/protocol-definitions";
-import { MockLogger } from "@fluidframework/telemetry-utils";
-import {
-	ISerializedElection,
-	OrderedClientCollection,
-	OrderedClientElection,
-	ISummaryCollectionOpEvents,
-	SummarizerClientElection,
-	summarizerClientType,
-	IConnectedEvents,
-	IConnectedState,
-	SummaryManager,
-	ISummarizer,
+import type {
 	ISummarizerEvents,
 	SummarizerStopReason,
-} from "../../summary";
-import { TestQuorumClients } from "./testQuorumClients";
+} from "@fluidframework/container-runtime-definitions/internal";
+import { Deferred } from "@fluidframework/core-utils/internal";
+import { ISequencedClient } from "@fluidframework/driver-definitions";
+import { MessageType } from "@fluidframework/driver-definitions/internal";
+import { MockLogger } from "@fluidframework/telemetry-utils/internal";
+
+import {
+	IConnectedEvents,
+	IConnectedState,
+	ISerializedElection,
+	ISummarizer,
+	ISummaryCollectionOpEvents,
+	OrderedClientCollection,
+	OrderedClientElection,
+	SummarizerClientElection,
+	SummaryManager,
+	summarizerClientType,
+} from "../../summary/index.js";
+
+import { TestQuorumClients } from "./testQuorumClients.js";
 
 describe("Summarizer Client Election", () => {
 	const maxOps = 1000;
@@ -229,7 +235,7 @@ describe("Summarizer Client Election", () => {
 	}
 
 	afterEach(() => {
-		mockLogger.events = [];
+		mockLogger.clear();
 		testQuorum.reset();
 		summaryCollectionEmitter.removeAllListeners();
 		summarizer.removeAllListeners();
@@ -350,12 +356,7 @@ describe("Summarizer Client Election", () => {
 			// Add more clients, no effect
 			addClient("s2", 19, false);
 			addClient("b", 41, true);
-			assertState(
-				"a-summarizer",
-				"a",
-				17,
-				"additional younger clients should have no effect",
-			);
+			assertState("a-summarizer", "a", 17, "additional younger clients should have no effect");
 
 			// Remove elected client, should reelect
 			removeClient("a", 400);

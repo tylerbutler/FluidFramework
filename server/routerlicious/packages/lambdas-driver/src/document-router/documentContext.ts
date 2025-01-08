@@ -12,7 +12,11 @@ import {
 	IContextErrorData,
 	IRoutingKey,
 } from "@fluidframework/server-services-core";
+import { Lumberjack } from "@fluidframework/server-services-telemetry";
 
+/**
+ * @internal
+ */
 export class DocumentContext extends EventEmitter implements IContext {
 	// We track two offsets - head and tail. Head represents the largest offset related to this document we
 	// have seen. Tail represents the last checkpointed offset. When head and tail match we have fully checkpointed
@@ -22,6 +26,8 @@ export class DocumentContext extends EventEmitter implements IContext {
 
 	private closed = false;
 	private contextError = undefined;
+
+	public headUpdatedAfterResume = false; // used to track whether the head has been updated after a resume event, so that we allow moving out of order only once during resume.
 
 	constructor(
 		private readonly routingKey: IRoutingKey,
@@ -55,12 +61,33 @@ export class DocumentContext extends EventEmitter implements IContext {
 	/**
 	 * Updates the head offset for the context.
 	 */
-	public setHead(head: IQueuedMessage) {
+	public setHead(head: IQueuedMessage, resumeBackToOffset?: number | undefined) {
 		assert(
-			head.offset > this.head.offset,
-			`${head.offset} > ${this.head.offset} ` +
-				`(${head.topic}, ${head.partition}, ${this.routingKey.tenantId}/${this.routingKey.documentId})`,
+			head.offset > this.head.offset ||
+				(head.offset === resumeBackToOffset && !this.headUpdatedAfterResume),
+			`Head offset ${head.offset} must be greater than the current head offset ${this.head.offset} or equal to the resume offset ${resumeBackToOffset} if not yet resumed (headUpdatedAfterResume: ${this.headUpdatedAfterResume}). Topic ${head.topic}, partition ${head.partition}, tenantId ${this.routingKey.tenantId}, documentId ${this.routingKey.documentId}.`,
 		);
+
+		// If head is moving backwards
+		if (head.offset <= this.head.offset) {
+			if (head.offset <= this.tailInternal.offset) {
+				Lumberjack.info(
+					"Not updating documentContext head since new head's offset is <= last checkpoint offset (tailInternal), returning early",
+					{
+						newHeadOffset: head.offset,
+						currentHeadOffset: this.head.offset,
+						tailInternalOffset: this.tailInternal.offset,
+						documentId: this.routingKey.documentId,
+					},
+				);
+				return false;
+			}
+			Lumberjack.info("Allowing the document context head to move to the specified offset", {
+				resumeBackToOffset,
+				currentHeadOffset: this.head.offset,
+				documentId: this.routingKey.documentId,
+			});
+		}
 
 		// When moving back to a state where head and tail differ we set the tail to be the old head, as in the
 		// constructor, to make tail represent the inclusive top end of the checkpoint range.
@@ -68,7 +95,17 @@ export class DocumentContext extends EventEmitter implements IContext {
 			this.tailInternal = this.getLatestTail();
 		}
 
+		if (!this.headUpdatedAfterResume && resumeBackToOffset !== undefined) {
+			Lumberjack.info("Setting headUpdatedAfterResume to true", {
+				resumeBackToOffset,
+				currentHeadOffset: this.head.offset,
+				documentId: this.routingKey.documentId,
+			});
+			this.headUpdatedAfterResume = true;
+		}
+
 		this.headInternal = head;
+		return true;
 	}
 
 	public checkpoint(message: IQueuedMessage, restartOnCheckpointFailure?: boolean) {
@@ -81,8 +118,7 @@ export class DocumentContext extends EventEmitter implements IContext {
 
 		assert(
 			offset > this.tail.offset && offset <= this.head.offset,
-			`${offset} > ${this.tail.offset} && ${offset} <= ${this.head.offset} ` +
-				`(${message.topic}, ${message.partition}, ${this.routingKey.tenantId}/${this.routingKey.documentId})`,
+			`Checkpoint offset ${offset} must be greater than the current tail offset ${this.tail.offset} and less than or equal to the head offset ${this.head.offset}. Topic ${message.topic}, partition ${message.partition}, tenantId ${this.routingKey.tenantId}, documentId ${this.routingKey.documentId}.`,
 		);
 
 		// Update the tail and broadcast the checkpoint
@@ -92,6 +128,7 @@ export class DocumentContext extends EventEmitter implements IContext {
 
 	public error(error: any, errorData: IContextErrorData) {
 		this.contextError = error;
+		Lumberjack.verbose("Emitting error from documentContext");
 		this.emit("error", error, errorData);
 	}
 
@@ -103,5 +140,14 @@ export class DocumentContext extends EventEmitter implements IContext {
 
 	public getContextError() {
 		return this.contextError;
+	}
+
+	public pause(offset: number, reason?: any) {
+		this.headUpdatedAfterResume = false; // reset this flag when we pause
+		this.emit("pause", offset, reason);
+	}
+
+	public resume() {
+		this.emit("resume");
 	}
 }

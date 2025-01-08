@@ -4,103 +4,173 @@
  */
 
 /**
- * The **fluid-framework** package bundles a collection of Fluid Framework client libraries for easy use
- * when paired with a corresponding service client library (for example,
- * `\@fluidframework/azure-client` or `\@fluidframework/tinylicious-client`).
+ * Bundles a collection of Fluid Framework client libraries for easy use when paired with a corresponding service client
+ * package (e.g. `@fluidframework/azure-client`, `@fluidframework/tinylicious-client`, or `@fluidframework/odsp-client (BETA)`).
  *
  * @packageDocumentation
  */
 
-export type { ICriticalContainerError } from "@fluidframework/container-definitions";
-export { AttachState, ContainerErrorType } from "@fluidframework/container-definitions";
-export { DriverErrorType } from "@fluidframework/driver-definitions";
+// ===============================================================
+// #region Public, Beta and Alpha (non-legacy) exports
+// #region Basic re-exports
+
+export type {
+	ConnectionState as ConnectionStateType, // TODO: deduplicate ConnectionState types
+	ICriticalContainerError,
+} from "@fluidframework/container-definitions";
+export { AttachState } from "@fluidframework/container-definitions";
 export { ConnectionState } from "@fluidframework/container-loader";
 export type {
+	ContainerAttachProps,
 	ContainerSchema,
-	DataObjectClass,
 	IConnection,
 	IFluidContainer,
 	IFluidContainerEvents,
 	IMember,
-	IRootDataObject,
+	InitialObjects,
 	IServiceAudience,
 	IServiceAudienceEvents,
-	LoadableObjectClass,
-	LoadableObjectClassRecord,
-	LoadableObjectCtor,
-	LoadableObjectRecord,
 	MemberChangedListener,
-	SharedObjectClass,
+	Myself,
 } from "@fluidframework/fluid-static";
-export {
-	DOProviderContainerRuntimeFactory,
-	FluidContainer,
-	ServiceAudience,
-} from "@fluidframework/fluid-static";
+export type { SharedObjectKind } from "@fluidframework/shared-object-base";
+export type {
+	IErrorBase,
+	IEventProvider,
+	IDisposable,
+	IEvent,
+	IEventThisPlaceHolder,
+	IErrorEvent,
+	ErasedType,
+	IFluidHandle,
+	IFluidLoadable,
+	ITelemetryBaseProperties,
+	IEventTransformer,
+	IProvideFluidLoadable,
+	IFluidHandleErased,
+	TransformedEvent,
+	TelemetryBaseEventPropertyType,
+	Tagged,
+	ReplaceIEventThisPlaceHolder,
+	FluidObject, // Linked in doc comment
+	FluidObjectProviderKeys, // Used by FluidObject
+} from "@fluidframework/core-interfaces";
+
+export type { isFluidHandle } from "@fluidframework/runtime-utils";
+
+// Let the tree package manage its own API surface.
+// Note: this only surfaces the `@public, @beta and @alpha` API items from the tree package.
+// eslint-disable-next-line no-restricted-syntax, import/no-internal-modules
+export * from "@fluidframework/tree/alpha";
+
+// End of basic public+beta+alpha exports - nothing above this line should
+// depend on an /internal path.
+// #endregion Basic re-exports
+// ---------------------------------------------------------------
+// #region Custom re-exports
+
+import type { SharedObjectKind } from "@fluidframework/shared-object-base";
+import type { ITree } from "@fluidframework/tree";
+import {
+	SharedTree as OriginalSharedTree,
+	configuredSharedTree as originalConfiguredSharedTree,
+	type SharedTreeOptions,
+} from "@fluidframework/tree/internal";
+
+/**
+ * A hierarchical data structure for collaboratively editing strongly typed JSON-like trees
+ * of objects, arrays, and other data types.
+ * @privateRemarks
+ * Here we reexport SharedTree, but with the `@alpha` types (`ISharedObjectKind`) removed, just keeping the `SharedObjectKind`.
+ * Doing this requires creating this new typed export rather than relying on a reexport directly from the tree package.
+ * The tree package itself does not do this because it's API needs to be usable from the encapsulated API which requires `ISharedObjectKind`.
+ * This package however is not intended for use by users of the encapsulated API, and therefor it can discard that interface.
+ * @public
+ */
+export const SharedTree: SharedObjectKind<ITree> = OriginalSharedTree;
+
+/**
+ * {@link SharedTree} but allowing a non-default configuration.
+ * @remarks
+ * This is useful for debugging and testing to opt into extra validation or see if opting out of some optimizations fixes an issue.
+ * @example
+ * ```typescript
+ * import {
+ * 	ForestType,
+ * 	TreeCompressionStrategy,
+ * 	configuredSharedTree,
+ * 	typeboxValidator,
+ * } from "@fluid-framework/alpha";
+ * const SharedTree = configuredSharedTree({
+ * 	forest: ForestType.Reference,
+ * 	jsonValidator: typeboxValidator,
+ * 	treeEncodeType: TreeCompressionStrategy.Uncompressed,
+ * });
+ * ```
+ * @alpha
+ */
+export function configuredSharedTree(options: SharedTreeOptions): SharedObjectKind<ITree> {
+	return originalConfiguredSharedTree(options);
+}
+
+// #endregion Custom re-exports
+// #endregion
+
+// ===============================================================
+// #region Legacy exports
+
 export type {
 	IDirectory,
-	IDirectoryClearOperation,
-	IDirectoryCreateSubDirectoryOperation,
-	IDirectoryDataObject,
-	IDirectoryDeleteOperation,
-	IDirectoryDeleteSubDirectoryOperation,
 	IDirectoryEvents,
-	IDirectoryKeyOperation,
-	IDirectoryNewStorageFormat,
-	IDirectoryOperation,
-	IDirectorySetOperation,
-	IDirectoryStorageOperation,
-	IDirectorySubDirectoryOperation,
 	IDirectoryValueChanged,
-	ILocalValue,
-	ISerializableValue,
-	ISerializedValue,
 	ISharedDirectory,
 	ISharedDirectoryEvents,
 	ISharedMap,
 	ISharedMapEvents,
 	IValueChanged,
-} from "@fluidframework/map";
-export {
-	DirectoryFactory,
-	LocalValueMaker,
-	MapFactory,
-	SharedDirectory,
-	SharedMap,
-} from "@fluidframework/map";
+} from "@fluidframework/map/internal";
+
+export { SharedDirectory, SharedMap } from "@fluidframework/map/internal";
+
 export type {
 	DeserializeCallback,
+	InteriorSequencePlace,
 	IInterval,
 	IIntervalCollectionEvent,
-	IIntervalHelpers,
-	IJSONRunSegment,
-	IMapMessageLocalMetadata,
 	IIntervalCollection,
-	IntervalLocator,
+	IntervalIndex,
+	IntervalStickiness,
 	ISequenceDeltaRange,
 	ISerializableInterval,
 	ISerializedInterval,
 	ISharedIntervalCollection,
 	ISharedSegmentSequenceEvents,
 	ISharedString,
-	IValueOpEmitter,
-	SerializedIntervalDelta,
+	SequencePlace,
 	SharedStringSegment,
-} from "@fluidframework/sequence";
-export {
-	getTextAndMarkers,
-	Interval,
-	intervalLocatorFromEndpoint,
+	Side,
+	ISharedSegmentSequence,
+} from "@fluidframework/sequence/internal";
+
+export type {
 	IntervalType,
 	SequenceDeltaEvent,
 	SequenceEvent,
 	SequenceInterval,
 	SequenceMaintenanceEvent,
-	SharedIntervalCollection,
-	SharedIntervalCollectionFactory,
-	SharedSegmentSequence,
-	SharedSequence,
-	SharedString,
-	SharedStringFactory,
-	SubSequence,
-} from "@fluidframework/sequence";
+} from "@fluidframework/sequence/internal";
+
+export { SharedString } from "@fluidframework/sequence/internal";
+
+export type {
+	ISharedObject,
+	ISharedObjectEvents,
+} from "@fluidframework/shared-object-base/internal";
+
+export type {
+	ISequencedDocumentMessage, // Leaked via ISharedObjectEvents
+	IBranchOrigin, // Required for ISequencedDocumentMessage
+	ITrace, // Required for ISequencedDocumentMessage
+} from "@fluidframework/driver-definitions/internal";
+
+// #endregion Legacy exports

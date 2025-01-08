@@ -4,20 +4,20 @@
  */
 
 export {
-	ApiItemTransformationConfiguration,
+	type ApiItemTransformationConfiguration,
+	type ApiItemTransformationConfigurationBase,
+	type ApiItemTransformationOptions,
 	getApiItemTransformationConfigurationWithDefaults,
-} from "./Configuration";
-export {
+} from "./Configuration.js";
+export type {
 	// Consumers should not use this, it exists externally for documentation purposes only.
-	type DefaultDocumentationSuiteOptions,
+	DefaultDocumentationSuiteOptions,
 	DocumentBoundaries,
-	DocumentationSuiteOptions,
-	getDocumentationSuiteOptionsWithDefaults,
+	DocumentationSuiteConfiguration,
 	HierarchyBoundaries,
-} from "./DocumentationSuiteOptions";
-export {
-	ApiItemTransformationOptions,
-	getApiItemTransformationOptionsWithDefaults,
+} from "./DocumentationSuite.js";
+export type {
+	ApiItemTransformations,
 	TransformApiItemWithChildren,
 	TransformApiItemWithoutChildren,
-} from "./TransformationOptions";
+} from "./Transformations.js";

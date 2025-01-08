@@ -10,6 +10,7 @@ export enum Constants {
 	StorageRoutingIdHeader = "Storage-Routing-Id",
 	StorageNameHeader = "Storage-Name",
 	IsEphemeralContainer = "Is-Ephemeral-Container",
+	SimplifiedCustomDataHeader = "Simplified-Custom-Data",
 }
 
 export interface IStorageDirectoryConfig {
@@ -56,18 +57,28 @@ export interface IRepositoryManager {
  * Subset of Node.js `fs/promises` API.
  */
 export interface IFileSystemPromises {
-	readFile: typeof fsPromises.readFile;
-	writeFile: typeof fsPromises.writeFile;
-	unlink: typeof fsPromises.unlink;
-	readdir: typeof fsPromises.readdir;
-	mkdir: typeof fsPromises.mkdir;
-	rmdir: typeof fsPromises.rmdir;
-	stat: typeof fsPromises.stat;
-	lstat: typeof fsPromises.lstat;
-	readlink: typeof fsPromises.readlink;
-	symlink: typeof fsPromises.symlink;
-	chmod: typeof fsPromises.chmod;
-	rm: typeof fsPromises.rm;
+	readFile: (
+		...args: Parameters<typeof fsPromises.readFile>
+	) => ReturnType<typeof fsPromises.readFile>;
+	writeFile: (
+		...args: Parameters<typeof fsPromises.writeFile>
+	) => ReturnType<typeof fsPromises.writeFile>;
+	unlink: (...args: Parameters<typeof fsPromises.unlink>) => ReturnType<typeof fsPromises.unlink>;
+	readdir: (
+		...args: Parameters<typeof fsPromises.readdir>
+	) => ReturnType<typeof fsPromises.readdir>;
+	mkdir: (...args: Parameters<typeof fsPromises.mkdir>) => ReturnType<typeof fsPromises.mkdir>;
+	rmdir: (...args: Parameters<typeof fsPromises.rmdir>) => ReturnType<typeof fsPromises.rmdir>;
+	stat: (...args: Parameters<typeof fsPromises.stat>) => ReturnType<typeof fsPromises.stat>;
+	lstat: (...args: Parameters<typeof fsPromises.lstat>) => ReturnType<typeof fsPromises.lstat>;
+	readlink: (
+		...args: Parameters<typeof fsPromises.readlink>
+	) => ReturnType<typeof fsPromises.readlink>;
+	symlink: (
+		...args: Parameters<typeof fsPromises.symlink>
+	) => ReturnType<typeof fsPromises.symlink>;
+	chmod: (...args: Parameters<typeof fsPromises.chmod>) => ReturnType<typeof fsPromises.chmod>;
+	rm: (...args: Parameters<typeof fsPromises.rm>) => ReturnType<typeof fsPromises.rm>;
 }
 
 /**
@@ -79,10 +90,13 @@ export interface IFileSystemManager {
 
 export interface IFileSystemManagerParams {
 	storageName?: string;
+	rootDir?: string;
+	simplifiedCustomData?: string;
 }
 
 export interface IFileSystemManagerFactory {
 	create(fileSystemManagerParams?: IFileSystemManagerParams): IFileSystemManager;
+	dispose?(): Promise<void>;
 }
 
 export interface IFileSystemManagerFactories {
@@ -93,6 +107,17 @@ export interface IFileSystemManagerFactories {
 export interface IStorageRoutingId {
 	tenantId: string;
 	documentId: string;
+}
+
+export function isIStorageRoutingId(routingId: unknown): routingId is IStorageRoutingId {
+	return (
+		typeof routingId === "object" &&
+		routingId !== null &&
+		"tenantId" in routingId &&
+		typeof routingId.tenantId === "string" &&
+		"documentId" in routingId &&
+		typeof routingId.documentId === "string"
+	);
 }
 
 export interface IRepoManagerParams {

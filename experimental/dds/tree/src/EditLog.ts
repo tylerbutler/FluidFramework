@@ -3,22 +3,23 @@
  * Licensed under the MIT License.
  */
 
-import BTree from 'sorted-btree';
 import { TypedEventEmitter } from '@fluid-internal/client-utils';
-import { assert, compareArrays } from '@fluidframework/core-utils';
 import type { IEvent } from '@fluidframework/core-interfaces';
-import { ITelemetryLoggerExt } from '@fluidframework/telemetry-utils';
-import { fail } from './Common';
-import type { EditId } from './Identifiers';
-import type { StringInterner } from './StringInterner';
-import { Edit, EditLogSummary, EditWithoutId, FluidEditHandle } from './persisted-types';
-import type { ChangeCompressor } from './ChangeCompression';
+import { assert, compareArrays } from '@fluidframework/core-utils/internal';
+import { ITelemetryLoggerExt } from '@fluidframework/telemetry-utils/internal';
+import { BTree } from '@tylerbu/sorted-btree-es6';
+
+import type { ChangeCompressor } from './ChangeCompression.js';
+import { fail } from './Common.js';
+import type { EditId } from './Identifiers.js';
+import type { StringInterner } from './StringInterner.js';
+import { Edit, EditLogSummary, EditWithoutId, FluidEditHandle } from './persisted-types/index.js';
 
 /**
  * An ordered set of Edits associated with a SharedTree.
  * Supports fast lookup of edits by ID and enforces idempotence.
- * @public
  * @sealed
+ * @alpha
  */
 export interface OrderedEditSet<TChange = unknown> {
 	/**
@@ -147,7 +148,7 @@ export interface EditChunk<TChange> {
  * EditHandles are used to load edit chunks stored outside of the EditLog.
  * This is typically implemented by a wrapper around an IFluidHandle<ArrayBufferLike>.
  * @deprecated Edit virtualization is no longer supported.
- * @public
+ * @internal
  */
 export interface EditHandle<TChange> {
 	readonly get: () => Promise<EditWithoutId<TChange>[]>;
@@ -200,7 +201,7 @@ export type EditEvictionHandler = (editsToEvict: number) => void;
 
 /**
  * Events which may be emitted by {@link EditLog}
- * @public
+ * @alpha
  */
 export interface IEditLogEvents extends IEvent {
 	(event: 'unexpectedHistoryChunk', listener: () => void);
@@ -212,6 +213,7 @@ export interface IEditLogEvents extends IEvent {
  * Ordered first by locality (acked or local), then by time of insertion.
  * May not contain more than one edit with the same ID.
  * @sealed
+ * @alpha
  */
 export class EditLog<TChange = unknown> extends TypedEventEmitter<IEditLogEvents> implements OrderedEditSet<TChange> {
 	private localEditSequence = 0;
@@ -524,7 +526,10 @@ export class EditLog<TChange = unknown> extends TypedEventEmitter<IEditLogEvents
 	 */
 	public addLocalEdit(edit: Edit<TChange>): void {
 		this.localEdits.push(edit);
-		const localEditId: LocalOrderedEditId = { localSequence: this.localEditSequence++, isLocal: true };
+		const localEditId: LocalOrderedEditId = {
+			localSequence: this.localEditSequence++,
+			isLocal: true,
+		};
 		this.allEditIds.set(edit.id, localEditId);
 		this.emitAdd(edit, true, false);
 	}
@@ -578,13 +583,12 @@ export class EditLog<TChange = unknown> extends TypedEventEmitter<IEditLogEvents
 
 	/**
 	 * @returns the summary of this `OrderedEditSet` that can be used to reconstruct the edit set.
-	 * @internal
 	 */
 	public getEditLogSummary(): EditLogSummary<TChange, FluidEditHandle>;
+
 	/**
 	 * @param compressEdit - a function which compresses edits
 	 * @returns the summary of this `OrderedEditSet` that can be used to reconstruct the edit set.
-	 * @internal
 	 */
 	public getEditLogSummary<TCompressedChange>(
 		compressEdit: (edit: Pick<Edit<TChange>, 'changes'>) => Pick<Edit<TCompressedChange>, 'changes'>
@@ -604,9 +608,9 @@ export class EditLog<TChange = unknown> extends TypedEventEmitter<IEditLogEvents
 										startRevision: 0,
 										chunk: this.sequencedEdits.map((edit) => compressEdit(edit)),
 									},
-							  ],
+								],
 					editIds,
-			  }
+				}
 			: {
 					editChunks:
 						this.sequencedEdits.length === 0
@@ -617,9 +621,9 @@ export class EditLog<TChange = unknown> extends TypedEventEmitter<IEditLogEvents
 										startRevision: 0,
 										chunk: this.sequencedEdits.map(({ changes }) => ({ changes })),
 									},
-							  ],
+								],
 					editIds,
-			  };
+				};
 	}
 
 	// APIS DEPRECATED DUE TO HISTORY'S PEACEFUL DEATH

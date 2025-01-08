@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { shortCodeMap } from "./assertionShortCodesMap";
+import { shortCodeMap } from "./assertionShortCodesMap.js";
 
 /**
  * Validates that an error thrown by our assert() function has the expected message, or a
@@ -21,8 +21,12 @@ import { shortCodeMap } from "./assertionShortCodesMap";
  * or because it contains a short code which maps to that message).
  * @returns `true` if the message in the error object that was passed in matches the expected
  * message. Otherwise it throws an error.
+ * @internal
  */
-export function validateAssertionError(error: Error, expectedErrorMsg: string | RegExp): boolean {
+export function validateAssertionError(
+	error: Error,
+	expectedErrorMsg: string | RegExp,
+): boolean {
 	const mappedMsg = (shortCodeMap[error.message] as string) ?? error.message;
 	if (
 		typeof expectedErrorMsg === "string"
@@ -31,7 +35,11 @@ export function validateAssertionError(error: Error, expectedErrorMsg: string | 
 	) {
 		// This throws an Error instead of an AssertionError because AssertionError would require a dependency on the
 		// node assert library, which we don't want to do for this library because it's used in the browser.
-		throw new Error(`Unexpected assertion thrown: ${error.message} ('${mappedMsg}')`);
+		const message =
+			shortCodeMap[error.message] === undefined
+				? `Unexpected assertion thrown\nActual: ${error.message}\nExpected: ${expectedErrorMsg}`
+				: `Unexpected assertion thrown\nActual: ${error.message} ('${mappedMsg}')\nExpected: ${expectedErrorMsg}`;
+		throw new Error(message);
 	}
 	return true;
 }

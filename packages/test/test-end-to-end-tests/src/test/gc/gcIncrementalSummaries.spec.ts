@@ -4,24 +4,25 @@
  */
 
 import { strict as assert } from "assert";
-import { IContainer } from "@fluidframework/container-definitions";
-import { ContainerRuntime, ISummarizer } from "@fluidframework/container-runtime";
-import { ISummaryTree, SummaryType } from "@fluidframework/protocol-definitions";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import { MockLogger } from "@fluidframework/telemetry-utils";
+
+import {
+	ITestDataObject,
+	TestDataObjectType,
+	describeCompat,
+	itExpects,
+} from "@fluid-private/test-version-utils";
+import { IContainer } from "@fluidframework/container-definitions/internal";
+import { ContainerRuntime, ISummarizer } from "@fluidframework/container-runtime/internal";
+import { ISummaryTree, SummaryType } from "@fluidframework/driver-definitions";
+import { channelsTreeName } from "@fluidframework/runtime-definitions/internal";
+import { MockLogger } from "@fluidframework/telemetry-utils/internal";
 import {
 	ITestObjectProvider,
 	createSummarizer,
 	summarizeNow,
 	waitForContainerConnection,
-} from "@fluidframework/test-utils";
-import {
-	describeNoCompat,
-	ITestDataObject,
-	itExpects,
-	TestDataObjectType,
-} from "@fluid-internal/test-version-utils";
-import { channelsTreeName } from "@fluidframework/runtime-definitions";
+} from "@fluidframework/test-utils/internal";
+
 import { defaultGCConfig } from "./gcTestConfigs.js";
 
 /**
@@ -31,7 +32,7 @@ import { defaultGCConfig } from "./gcTestConfigs.js";
  * - It received an op.
  * - Its reference state changed, i.e., it was referenced and became unreferenced or vice-versa.
  */
-describeNoCompat("GC incremental summaries", (getTestObjectProvider) => {
+describeCompat("GC incremental summaries", "NoCompat", (getTestObjectProvider) => {
 	let provider: ITestObjectProvider;
 	let mainContainer: IContainer;
 	let dataStoreA: ITestDataObject;
@@ -60,27 +61,35 @@ describeNoCompat("GC incremental summaries", (getTestObjectProvider) => {
 		return summaryResult.summaryVersion;
 	}
 
-	beforeEach(async () => {
+	beforeEach("setup", async () => {
 		provider = getTestObjectProvider({ syncSummarizer: true });
 		mainContainer = await provider.makeTestContainer(defaultGCConfig);
-		dataStoreA = await requestFluidObject<ITestDataObject>(mainContainer, "default");
+		dataStoreA = (await mainContainer.getEntryPoint()) as ITestDataObject;
 		await waitForContainerConnection(mainContainer);
 	});
+
+	beforeEach("skip-r11s", async function () {
+		// Skip these tests for standalone r11s.  Summaries can take upwards of 20 seconds which times out the test.
+		// These tests are covering client logic and the coverage from other drivers/endpoints is sufficient.
+		if (provider.driver.type === "r11s" && provider.driver.endpointName !== "frs") {
+			this.skip();
+		}
+	});
+
+	async function createNewDataStore() {
+		const newDataStore =
+			await dataStoreA._context.containerRuntime.createDataStore(TestDataObjectType);
+		return (await newDataStore.entryPoint.get()) as ITestDataObject;
+	}
 
 	it("only summarizes changed data stores", async () => {
 		const dataStoreSummaryTypesMap: Map<string, SummaryType> = new Map();
 		const { summarizer: summarizer1 } = await createSummarizer(provider, mainContainer);
 
 		// Create data stores B and C, and mark them as referenced.
-		const dataStoreB = await requestFluidObject<ITestDataObject>(
-			await dataStoreA._context.containerRuntime.createDataStore(TestDataObjectType),
-			"",
-		);
+		const dataStoreB = await createNewDataStore();
 		dataStoreA._root.set("dataStoreB", dataStoreB.handle);
-		const dataStoreC = await requestFluidObject<ITestDataObject>(
-			await dataStoreA._context.containerRuntime.createDataStore(TestDataObjectType),
-			"",
-		);
+		const dataStoreC = await createNewDataStore();
 		dataStoreA._root.set("dataStoreC", dataStoreC.handle);
 
 		// Summarize and validate that all data store entries are trees since this is the first summary.
@@ -107,15 +116,9 @@ describeNoCompat("GC incremental summaries", (getTestObjectProvider) => {
 		const { summarizer: summarizer1 } = await createSummarizer(provider, mainContainer);
 
 		// Create data stores B and C, and mark them as referenced.
-		const dataStoreB = await requestFluidObject<ITestDataObject>(
-			await dataStoreA._context.containerRuntime.createDataStore(TestDataObjectType),
-			"",
-		);
+		const dataStoreB = await createNewDataStore();
 		dataStoreA._root.set("dataStoreB", dataStoreB.handle);
-		const dataStoreC = await requestFluidObject<ITestDataObject>(
-			await dataStoreA._context.containerRuntime.createDataStore(TestDataObjectType),
-			"",
-		);
+		const dataStoreC = await createNewDataStore();
 		dataStoreA._root.set("dataStoreC", dataStoreC.handle);
 
 		// Validate that all data store entries are trees since this is the first summary.
@@ -166,15 +169,9 @@ describeNoCompat("GC incremental summaries", (getTestObjectProvider) => {
 		const { summarizer: summarizer1 } = await createSummarizer(provider, mainContainer);
 
 		// Create data stores B and C, and mark them as referenced.
-		const dataStoreB = await requestFluidObject<ITestDataObject>(
-			await dataStoreA._context.containerRuntime.createDataStore(TestDataObjectType),
-			"",
-		);
+		const dataStoreB = await createNewDataStore();
 		dataStoreA._root.set("dataStoreB", dataStoreB.handle);
-		const dataStoreC = await requestFluidObject<ITestDataObject>(
-			await dataStoreA._context.containerRuntime.createDataStore(TestDataObjectType),
-			"",
-		);
+		const dataStoreC = await createNewDataStore();
 		dataStoreA._root.set("dataStoreC", dataStoreC.handle);
 
 		// Summarize and validate that all data store entries are trees since this is the first summary.
@@ -237,6 +234,10 @@ describeNoCompat("GC incremental summaries", (getTestObjectProvider) => {
 				eventName: "fluid:telemetry:Summarizer:Running:Summarize_cancel",
 				error: "Upload summary failed in test",
 			},
+			{
+				eventName: "fluid:telemetry:Summarizer:Running:SummarizeFailed",
+				error: "Upload summary failed in test",
+			},
 		],
 		async () => {
 			const mockLogger = new MockLogger();
@@ -249,18 +250,12 @@ describeNoCompat("GC incremental summaries", (getTestObjectProvider) => {
 			);
 
 			// Create data stores B and mark it as referenced.
-			const dataStoreB = await requestFluidObject<ITestDataObject>(
-				await dataStoreA._context.containerRuntime.createDataStore(TestDataObjectType),
-				"",
-			);
+			const dataStoreB = await createNewDataStore();
 			dataStoreA._root.set("dataStoreB", dataStoreB.handle);
 
 			// Create 10 data stores and mark them referenced by adding their handle to dataStoreB.
 			for (let i = 1; i <= 10; i++) {
-				const newDataStore = await requestFluidObject<ITestDataObject>(
-					await dataStoreA._context.containerRuntime.createDataStore(TestDataObjectType),
-					"",
-				);
+				const newDataStore = await createNewDataStore();
 				dataStoreB._root.set(`dataStoreB-${i}`, newDataStore.handle);
 			}
 			await provider.ensureSynchronized();
@@ -273,12 +268,12 @@ describeNoCompat("GC incremental summaries", (getTestObjectProvider) => {
 			await provider.ensureSynchronized();
 
 			// The next summary should fail - Override the "uploadSummaryWithContext" function so that that step fails.
-			const containerRuntime = (summarizer1 as any).runtime as ContainerRuntime;
-			const uploadSummaryWithContextFunc = containerRuntime.storage.uploadSummaryWithContext;
+			const containerRuntime1 = (summarizer1 as any).runtime as ContainerRuntime;
+			const uploadSummaryWithContextFunc = containerRuntime1.storage.uploadSummaryWithContext;
 			const uploadSummaryWithContextOverride = async () => {
 				throw new Error("Upload summary failed in test");
 			};
-			containerRuntime.storage.uploadSummaryWithContext = uploadSummaryWithContextOverride;
+			containerRuntime1.storage.uploadSummaryWithContext = uploadSummaryWithContextOverride;
 
 			// Summarize and validate that it fails.
 			const errorFn = (error: Error): boolean => {
@@ -289,16 +284,12 @@ describeNoCompat("GC incremental summaries", (getTestObjectProvider) => {
 				);
 				return true;
 			};
-			await assert.rejects(
-				summarizeNow(summarizer1),
-				errorFn,
-				"Summarize should have failed",
-			);
+			await assert.rejects(summarizeNow(summarizer1), errorFn, "Summarize should have failed");
 			// There should not be any IncrementalSummaryViolation errors.
 			mockLogger.assertMatchNone([{ eventName: "IncrementalSummaryViolation" }]);
 
 			// Revert the "uploadSummaryWithContext" function so that summary will now succeed.
-			containerRuntime.storage.uploadSummaryWithContext = uploadSummaryWithContextFunc;
+			containerRuntime1.storage.uploadSummaryWithContext = uploadSummaryWithContextFunc;
 
 			// Summarize and validate that it succeeds.
 			await assert.doesNotReject(summarizeNow(summarizer1), "Summarize should have passed");

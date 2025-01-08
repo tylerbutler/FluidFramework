@@ -3,23 +3,25 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/core-utils";
-import { type ISequencedDocumentMessage, MessageType } from "@fluidframework/protocol-definitions";
+import { assert } from "@fluidframework/core-utils/internal";
+import type {
+	IChannelAttributes,
+	IFluidDataStoreRuntime,
+	IChannelStorageService,
+} from "@fluidframework/datastore-definitions/internal";
 import {
-	type IFluidDataStoreRuntime,
-	type IChannelStorageService,
-	type IChannelFactory,
-	type IChannelAttributes,
-} from "@fluidframework/datastore-definitions";
-import { readAndParse } from "@fluidframework/driver-utils";
-import { type ISummaryTreeWithStats } from "@fluidframework/runtime-definitions";
+	MessageType,
+	type ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import { readAndParse } from "@fluidframework/driver-utils/internal";
+import type { ISummaryTreeWithStats } from "@fluidframework/runtime-definitions/internal";
+import type { IFluidSerializer } from "@fluidframework/shared-object-base/internal";
 import {
-	createSingleBlobSummary,
-	type IFluidSerializer,
 	SharedObject,
-} from "@fluidframework/shared-object-base";
-import { CounterFactory } from "./counterFactory";
-import { type ISharedCounter, type ISharedCounterEvents } from "./interfaces";
+	createSingleBlobSummary,
+} from "@fluidframework/shared-object-base/internal";
+
+import type { ISharedCounter, ISharedCounterEvents } from "./interfaces.js";
 
 /**
  * Describes the operation (op) format for incrementing the {@link SharedCounter}.
@@ -42,73 +44,20 @@ interface ICounterSnapshotFormat {
 const snapshotFileName = "header";
 
 /**
- * A shared object that holds a number that can be incremented or decremented.
- *
- * @remarks Note that `SharedCounter` only operates on integer values. This is validated at runtime.
- *
- * @example Creating a `SharedCounter`
- *
- * First, get the factory and call {@link @fluidframework/datastore-definitions#IChannelFactory.create}
- * with a runtime and string ID:
- *
- * ```typescript
- * const factory = SharedCounter.getFactory();
- * const counter = factory.create(this.runtime, id) as SharedCounter;
- * ```
- *
- * The initial value of a new `SharedCounter` is 0.
- * If you wish to initialize the counter to a different value, you may call {@link SharedCounter.increment} before
- * attaching the Container, or before inserting it into an existing shared object.
- *
- * @example Using the `SharedCounter`
- *
- * Once created, you can call {@link SharedCounter.increment} to modify the value with either a positive or
- * negative number:
- *
- * ```typescript
- * counter.increment(10); // add 10 to the counter value
- * counter.increment(-5); // subtract 5 from the counter value
- * ```
- *
- * To observe changes to the value (including those from remote clients), register for the
- * {@link ISharedCounterEvents | incremented} event:
- *
- * ```typescript
- * counter.on("incremented", (incrementAmount, newValue) => {
- *     console.log(`The counter incremented by ${incrementAmount} and now has a value of ${newValue}`);
- * });
- * ```
- *
- * @public
+ * {@inheritDoc ISharedCounter}
+ * @legacy
+ * @alpha
  */
-export class SharedCounter extends SharedObject<ISharedCounterEvents> implements ISharedCounter {
-	/**
-	 * Create a new {@link SharedCounter}.
-	 *
-	 * @param runtime - The data store runtime to which the new `SharedCounter` will belong.
-	 * @param id - Optional name of the `SharedCounter`. If not provided, one will be generated.
-	 *
-	 * @returns newly create shared counter (but not attached yet)
-	 */
-	public static create(runtime: IFluidDataStoreRuntime, id?: string): SharedCounter {
-		return runtime.createChannel(id, CounterFactory.Type) as SharedCounter;
-	}
-
+export class SharedCounter
+	extends SharedObject<ISharedCounterEvents>
+	implements ISharedCounter
+{
 	public constructor(
 		id: string,
 		runtime: IFluidDataStoreRuntime,
 		attributes: IChannelAttributes,
 	) {
 		super(id, runtime, attributes, "fluid_counter_");
-	}
-
-	/**
-	 * Get a factory for {@link SharedCounter} to register with the data store.
-	 *
-	 * @returns a factory that creates and load SharedCounter
-	 */
-	public static getFactory(): IChannelFactory {
-		return new CounterFactory();
 	}
 
 	private _value: number = 0;
@@ -148,8 +97,6 @@ export class SharedCounter extends SharedObject<ISharedCounterEvents> implements
 	 * Create a summary for the counter.
 	 *
 	 * @returns The summary of the current state of the counter.
-	 *
-	 * @internal
 	 */
 	protected summarizeCore(serializer: IFluidSerializer): ISummaryTreeWithStats {
 		// Get a serializable form of data
@@ -163,8 +110,6 @@ export class SharedCounter extends SharedObject<ISharedCounterEvents> implements
 
 	/**
 	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.loadCore}
-	 *
-	 * @internal
 	 */
 	protected async loadCore(storage: IChannelStorageService): Promise<void> {
 		const content = await readAndParse<ICounterSnapshotFormat>(storage, snapshotFileName);
@@ -174,8 +119,6 @@ export class SharedCounter extends SharedObject<ISharedCounterEvents> implements
 
 	/**
 	 * Called when the object has disconnected from the delta stream.
-	 *
-	 * @internal
 	 */
 	protected onDisconnect(): void {}
 
@@ -186,8 +129,6 @@ export class SharedCounter extends SharedObject<ISharedCounterEvents> implements
 	 * @param local - Whether or not the message was sent by the local client.
 	 * @param localOpMetadata - For local client messages, this is the metadata that was submitted with the message.
 	 * For messages from a remote client, this will be `undefined`.
-	 *
-	 * @internal
 	 */
 	protected processCore(
 		message: ISequencedDocumentMessage,
@@ -213,16 +154,14 @@ export class SharedCounter extends SharedObject<ISharedCounterEvents> implements
 
 	/**
 	 * {@inheritdoc @fluidframework/shared-object-base#SharedObjectCore.applyStashedOp}
-	 * @internal
 	 */
 	protected applyStashedOp(op: unknown): void {
 		const counterOp = op as IIncrementOperation;
 
 		// TODO: Clean up error code linter violations repo-wide.
 
-		// eslint-disable-next-line unicorn/numeric-separators-style
 		assert(counterOp.type === "increment", 0x3ec /* Op type is not increment */);
 
-		this.incrementCore(counterOp.incrementAmount);
+		this.increment(counterOp.incrementAmount);
 	}
 }

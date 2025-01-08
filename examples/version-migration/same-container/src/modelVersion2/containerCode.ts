@@ -7,15 +7,15 @@ import type { ISameContainerMigrationTool } from "@fluid-example/example-utils";
 import {
 	ModelContainerRuntimeFactory,
 	SameContainerMigrationToolInstantiationFactory,
+	getDataStoreEntryPoint,
 } from "@fluid-example/example-utils";
-import type { IContainer } from "@fluidframework/container-definitions";
-import type { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
-// eslint-disable-next-line import/no-deprecated
-import { requestFluidObject } from "@fluidframework/runtime-utils";
+import type { IContainer } from "@fluidframework/container-definitions/legacy";
+import type { IContainerRuntime } from "@fluidframework/container-runtime-definitions/legacy";
 
-import type { IInventoryList, IInventoryListAppModel } from "../modelInterfaces";
-import { InventoryListAppModel } from "./appModel";
-import { InventoryListInstantiationFactory } from "./inventoryList";
+import type { IInventoryList, IInventoryListAppModel } from "../modelInterfaces.js";
+
+import { InventoryListAppModel } from "./appModel.js";
+import { InventoryListInstantiationFactory } from "./inventoryList.js";
 
 export const inventoryListId = "default-inventory-list";
 export const migrationToolId = "migration-tool";
@@ -48,7 +48,9 @@ export class InventoryListContainerRuntimeFactory extends ModelContainerRuntimeF
 	 * {@inheritDoc ModelContainerRuntimeFactory.containerInitializingFirstTime}
 	 */
 	protected async containerInitializingFirstTime(runtime: IContainerRuntime) {
-		const inventoryList = await runtime.createDataStore(InventoryListInstantiationFactory.type);
+		const inventoryList = await runtime.createDataStore(
+			InventoryListInstantiationFactory.type,
+		);
 		await inventoryList.trySetAlias(inventoryListId);
 		const migrationTool = await runtime.createDataStore(
 			SameContainerMigrationToolInstantiationFactory.type,
@@ -64,8 +66,7 @@ export class InventoryListContainerRuntimeFactory extends ModelContainerRuntimeF
 		// Force the MigrationTool to instantiate in all cases.  The Quorum it uses must be loaded and running in
 		// order to respond with accept ops, and without this call the MigrationTool won't be instantiated on the
 		// summarizer client.
-		// eslint-disable-next-line import/no-deprecated
-		await requestFluidObject(await runtime.getRootDataStore(migrationToolId), "");
+		await getDataStoreEntryPoint(runtime, migrationToolId);
 	}
 
 	/**
@@ -76,16 +77,11 @@ export class InventoryListContainerRuntimeFactory extends ModelContainerRuntimeF
 		// eslint-disable-next-line @typescript-eslint/dot-notation
 		window["interactiveContainer"] ??= container;
 
-		// eslint-disable-next-line import/no-deprecated
-		const inventoryList = await requestFluidObject<IInventoryList>(
-			await runtime.getRootDataStore(inventoryListId),
-			"",
+		return new InventoryListAppModel(
+			await getDataStoreEntryPoint<IInventoryList>(runtime, inventoryListId),
+			await getDataStoreEntryPoint<ISameContainerMigrationTool>(runtime, migrationToolId),
+			container,
+			runtime,
 		);
-		// eslint-disable-next-line import/no-deprecated
-		const migrationTool = await requestFluidObject<ISameContainerMigrationTool>(
-			await runtime.getRootDataStore(migrationToolId),
-			"",
-		);
-		return new InventoryListAppModel(inventoryList, migrationTool, container, runtime);
 	}
 }

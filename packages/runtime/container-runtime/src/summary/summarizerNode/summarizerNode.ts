@@ -3,45 +3,43 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryBaseLogger, ITelemetryErrorEvent } from "@fluidframework/core-interfaces";
+import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
+import { assert, unreachableCase } from "@fluidframework/core-utils/internal";
+import { SummaryType } from "@fluidframework/driver-definitions";
 import {
-	ISummarizerNode,
-	ISummarizerNodeConfig,
-	ISummarizeResult,
-	ISummaryTreeWithStats,
+	ISnapshotTree,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import {
+	IExperimentalIncrementalSummaryContext,
+	ITelemetryContext,
 	CreateChildSummarizerNodeParam,
 	CreateSummarizerNodeSource,
+	ISummarizeResult,
+	ISummarizerNode,
+	ISummarizerNodeConfig,
 	SummarizeInternalFn,
-	ITelemetryContext,
-	IExperimentalIncrementalSummaryContext,
-} from "@fluidframework/runtime-definitions";
-import {
-	ISequencedDocumentMessage,
-	SummaryType,
-	ISnapshotTree,
-	SummaryObject,
-} from "@fluidframework/protocol-definitions";
+} from "@fluidframework/runtime-definitions/internal";
+import { mergeStats } from "@fluidframework/runtime-utils/internal";
+import { type ITelemetryErrorEventExt } from "@fluidframework/telemetry-utils/internal";
 import {
 	ITelemetryLoggerExt,
-	createChildLogger,
 	LoggingError,
 	PerformanceEvent,
 	TelemetryDataTag,
+	createChildLogger,
 	tagCodeArtifacts,
-} from "@fluidframework/telemetry-utils";
-import { assert, unreachableCase } from "@fluidframework/core-utils";
-import { convertToSummaryTree, calculateStats, mergeStats } from "@fluidframework/runtime-utils";
+} from "@fluidframework/telemetry-utils/internal";
+
 import {
 	EscapedPath,
 	ICreateChildDetails,
-	IInitialSummary,
 	IRefreshSummaryResult,
+	IStartSummaryResult,
 	ISummarizerNodeRootContract,
-	parseSummaryForSubtrees,
-	parseSummaryTreeForSubtrees,
-	SummaryNode,
 	ValidateSummaryResult,
-} from "./summarizerNodeUtils";
+	PendingSummaryInfo,
+} from "./summarizerNodeUtils.js";
 
 export interface IRootSummarizerNode extends ISummarizerNode, ISummarizerNodeRootContract {}
 
@@ -64,13 +62,30 @@ export class SummarizerNode implements IRootSummarizerNode {
 	 * Returns 0 if there is not yet an acked summary.
 	 */
 	public get referenceSequenceNumber() {
-		return this._latestSummary?.referenceSequenceNumber ?? 0;
+		return this._lastSummaryReferenceSequenceNumber ?? 0;
+	}
+
+	/**
+	 * returns the handle of the last successful summary of this summarizerNode in string format
+	 * (this getter is primarily only used in the test code)
+	 */
+	public get summaryHandleId(): string {
+		return this._summaryHandleId.toString();
 	}
 
 	protected readonly children = new Map<string, SummarizerNode>();
-	protected readonly pendingSummaries = new Map<string, SummaryNode>();
+	/**
+	 * Key value pair of summaries submitted by this client which are not yet acked.
+	 * Key is the proposalHandle and value is the summary op's referece sequence number.
+	 */
+	protected readonly pendingSummaries = new Map<string, PendingSummaryInfo>();
 	protected wipReferenceSequenceNumber: number | undefined;
-	private wipLocalPaths: { localPath: EscapedPath; additionalPath?: EscapedPath } | undefined;
+	/**
+	 * True if the current node was summarized during the current summary process
+	 * This flag is used to identify scenarios where summarize was not called on a node.
+	 * For example, this node was created after its parent was already summarized due to out-of-order realization via application code.
+	 */
+	private wipSummarizeCalled: boolean = false;
 	private wipSkipRecursion = false;
 
 	protected readonly logger: ITelemetryLoggerExt;
@@ -83,10 +98,11 @@ export class SummarizerNode implements IRootSummarizerNode {
 		baseLogger: ITelemetryBaseLogger,
 		private readonly summarizeInternalFn: SummarizeInternalFn,
 		config: ISummarizerNodeConfig,
+		/** Encoded handle or path to the node */
+		private readonly _summaryHandleId: EscapedPath,
 		private _changeSequenceNumber: number,
-		/** Undefined means created without summary */
-		private _latestSummary?: SummaryNode,
-		private readonly initialSummary?: IInitialSummary,
+		/** Summary reference sequence number, i.e. last sequence number seen when last successful summary was created */
+		private _lastSummaryReferenceSequenceNumber?: number,
 		protected wipSummaryLogger?: ITelemetryBaseLogger,
 		/** A unique id of this node to be logged when sending telemetry. */
 		protected telemetryNodeId?: string,
@@ -101,7 +117,22 @@ export class SummarizerNode implements IRootSummarizerNode {
 		});
 	}
 
-	public startSummary(referenceSequenceNumber: number, summaryLogger: ITelemetryBaseLogger) {
+	/**
+	 * In order to produce a summary with a summarizer node, the summarizer node system must be notified a summary has
+	 * started. This is done by calling startSummary. This will track the reference sequence number of the summary and
+	 * run some validation checks to ensure the summary is correct.
+	 * @param referenceSequenceNumber - the number of ops processed up to this point
+	 * @param summaryLogger - the logger to use for the summary
+	 * @param latestSummaryRefSeqNum - the reference sequence number of the latest summary. Another way to think about
+	 * it is the reference sequence number of the previous summary.
+	 * @returns the number of nodes in the tree, the number of nodes that are invalid, and the different types of
+	 * sequence number mismatches
+	 */
+	public startSummary(
+		referenceSequenceNumber: number,
+		summaryLogger: ITelemetryBaseLogger,
+		latestSummaryRefSeqNum: number,
+	): IStartSummaryResult {
 		assert(
 			this.wipSummaryLogger === undefined,
 			0x19f /* "wipSummaryLogger should not be set yet in startSummary" */,
@@ -111,12 +142,40 @@ export class SummarizerNode implements IRootSummarizerNode {
 			0x1a0 /* "Already tracking a summary" */,
 		);
 
+		let nodes = 1; // number of summarizerNodes at the start of the summary
+		let invalidNodes = 0;
+		const sequenceNumberMismatchKeySet = new Set<string>();
+		const nodeLatestSummaryRefSeqNum = this._lastSummaryReferenceSequenceNumber;
+		if (
+			nodeLatestSummaryRefSeqNum !== undefined &&
+			latestSummaryRefSeqNum !== nodeLatestSummaryRefSeqNum
+		) {
+			invalidNodes++;
+			sequenceNumberMismatchKeySet.add(
+				`${latestSummaryRefSeqNum}-${nodeLatestSummaryRefSeqNum}`,
+			);
+		}
+
 		this.wipSummaryLogger = summaryLogger;
 
 		for (const child of this.children.values()) {
-			child.startSummary(referenceSequenceNumber, this.wipSummaryLogger);
+			const childStartSummaryResult = child.startSummary(
+				referenceSequenceNumber,
+				this.wipSummaryLogger,
+				latestSummaryRefSeqNum,
+			);
+			nodes += childStartSummaryResult.nodes;
+			invalidNodes += childStartSummaryResult.invalidNodes;
+			for (const invalidSequenceNumber of childStartSummaryResult.mismatchNumbers) {
+				sequenceNumberMismatchKeySet.add(invalidSequenceNumber);
+			}
 		}
 		this.wipReferenceSequenceNumber = referenceSequenceNumber;
+		return {
+			nodes,
+			invalidNodes,
+			mismatchNumbers: sequenceNumberMismatchKeySet,
+		};
 	}
 
 	public async summarize(
@@ -124,30 +183,24 @@ export class SummarizerNode implements IRootSummarizerNode {
 		trackState: boolean = true,
 		telemetryContext?: ITelemetryContext,
 	): Promise<ISummarizeResult> {
-		assert(
-			this.isSummaryInProgress(),
-			0x1a1 /* "summarize should not be called when not tracking the summary" */,
-		);
-		assert(
-			this.wipSummaryLogger !== undefined,
-			0x1a2 /* "wipSummaryLogger should have been set in startSummary or ctor" */,
-		);
+		// If trackState is false, call summarize internal directly and don't track any state.
+		if (!trackState) {
+			return this.summarizeInternalFn(fullTree, trackState, telemetryContext);
+		}
+
+		// Set to wipSummarizeCalled true to represent that current node was included in the summary process.
+		this.wipSummarizeCalled = true;
 
 		// Try to reuse the tree if unchanged
 		if (this.canReuseHandle && !fullTree && !this.hasChanged()) {
-			const latestSummary = this._latestSummary;
-			if (latestSummary !== undefined) {
-				this.wipLocalPaths = {
-					localPath: latestSummary.localPath,
-					additionalPath: latestSummary.additionalPath,
-				};
+			if (this._lastSummaryReferenceSequenceNumber !== undefined) {
 				this.wipSkipRecursion = true;
 				const stats = mergeStats();
 				stats.handleNodeCount++;
 				return {
 					summary: {
 						type: SummaryType.Handle,
-						handle: latestSummary.fullPath.path,
+						handle: this.summaryHandleId,
 						handleType: SummaryType.Tree,
 					},
 					stats,
@@ -155,34 +208,30 @@ export class SummarizerNode implements IRootSummarizerNode {
 			}
 		}
 
-		// This assert is the same the other 0a1x1 assert `isSummaryInProgress`, the only difference is that typescript
-		// complains if this assert isn't done this way
-		assert(
-			this.wipReferenceSequenceNumber !== undefined,
-			0x5df /* Summarize should not be called when not tracking the summary */,
-		);
-		const incrementalSummaryContext: IExperimentalIncrementalSummaryContext | undefined =
-			this._latestSummary !== undefined
-				? {
-						summarySequenceNumber: this.wipReferenceSequenceNumber,
-						latestSummarySequenceNumber: this._latestSummary.referenceSequenceNumber,
-						// TODO: remove summaryPath
-						summaryPath: this._latestSummary.fullPath.path,
-				  }
-				: undefined;
+		let incrementalSummaryContext: IExperimentalIncrementalSummaryContext | undefined;
+		if (!fullTree) {
+			assert(
+				this.wipReferenceSequenceNumber !== undefined,
+				0x5df /* Summarize should not be called when not tracking the summary */,
+			);
+			incrementalSummaryContext =
+				this._lastSummaryReferenceSequenceNumber !== undefined
+					? {
+							summarySequenceNumber: this.wipReferenceSequenceNumber,
+							latestSummarySequenceNumber: this._lastSummaryReferenceSequenceNumber,
+							// TODO: remove summaryPath.
+							summaryPath: this.summaryHandleId,
+						}
+					: undefined;
+		}
 
 		const result = await this.summarizeInternalFn(
 			fullTree,
-			true,
+			trackState,
 			telemetryContext,
 			incrementalSummaryContext,
 		);
-		this.wipLocalPaths = { localPath: EscapedPath.create(result.id) };
-		if (result.pathPartsForChildren !== undefined) {
-			this.wipLocalPaths.additionalPath = EscapedPath.createAndConcat(
-				result.pathPartsForChildren,
-			);
-		}
+
 		return { summary: result.summary, stats: result.stats };
 	}
 
@@ -242,8 +291,8 @@ export class SummarizerNode implements IRootSummarizerNode {
 
 		// If the parent node skipped recursion, it did not call summarize on this node. So, summarize was not missed
 		// but was intentionally not called.
-		// Otherwise, summarize should have been called on this node and wipLocalPaths must be set.
-		if (parentSkipRecursion || this.wipLocalPaths !== undefined) {
+		// Otherwise, summarize should have been called on this node and wipSummarizeCalled must be set.
+		if (parentSkipRecursion || this.wipSummarizeCalled) {
 			return false;
 		}
 
@@ -268,13 +317,8 @@ export class SummarizerNode implements IRootSummarizerNode {
 	 * queue. We track this until we get an ack from the server for this summary.
 	 * @param proposalHandle - The handle of the summary that was uploaded to the server.
 	 */
-	public completeSummary(proposalHandle: string, validate: boolean) {
-		this.completeSummaryCore(
-			proposalHandle,
-			undefined /* parentPath */,
-			false /* parentSkipRecursion */,
-			validate,
-		);
+	public completeSummary(proposalHandle: string) {
+		this.completeSummaryCore(proposalHandle, false /* parentSkipRecursion */);
 	}
 
 	/**
@@ -285,36 +329,13 @@ export class SummarizerNode implements IRootSummarizerNode {
 	 * In that case, the children will not have work-in-progress state.
 	 * @param validate - true to validate that the in-progress summary is correct for all nodes.
 	 */
-	protected completeSummaryCore(
-		proposalHandle: string,
-		parentPath: EscapedPath | undefined,
-		parentSkipRecursion: boolean,
-		validate: boolean,
-	) {
-		if (validate && this.wasSummarizeMissed(parentSkipRecursion)) {
-			this.throwUnexpectedError({
-				eventName: "NodeDidNotSummarize",
-				proposalHandle,
-			});
-		}
-
-		assert(this.wipReferenceSequenceNumber !== undefined, 0x1a4 /* "Not tracking a summary" */);
-		let localPathsToUse = this.wipLocalPaths;
-
+	protected completeSummaryCore(proposalHandle: string, parentSkipRecursion: boolean) {
+		assert(
+			this.wipReferenceSequenceNumber !== undefined,
+			0x1a4 /* "Not tracking a summary" */,
+		);
 		if (parentSkipRecursion) {
-			const latestSummary = this._latestSummary;
-			if (latestSummary !== undefined) {
-				// This case the parent node created a failure summary or was reused.
-				// This node and all children should only try to reference their path
-				// by its last known good state in the actual summary tree.
-				// If parent fails or is reused, the child summarize is not called so
-				// it did not get a chance to change its paths.
-				// In this case, essentially only propagate the new summary ref seq num.
-				localPathsToUse = {
-					localPath: latestSummary.localPath,
-					additionalPath: latestSummary.additionalPath,
-				};
-			} else {
+			if (this._lastSummaryReferenceSequenceNumber === undefined) {
 				// This case the child is added after the latest non-failure summary.
 				// This node and all children should consider themselves as still not
 				// having a successful summary yet.
@@ -326,22 +347,8 @@ export class SummarizerNode implements IRootSummarizerNode {
 			}
 		}
 
-		// If localPathsToUse is undefined, it means summarize didn't run for this node and in that case the validate
-		// step should have failed.
-		assert(localPathsToUse !== undefined, 0x6fe /* summarize didn't run for node */);
-		const summary = new SummaryNode({
-			...localPathsToUse,
-			referenceSequenceNumber: this.wipReferenceSequenceNumber,
-			basePath: parentPath,
-		});
-		const fullPathForChildren = summary.fullPathForChildren;
 		for (const child of this.children.values()) {
-			child.completeSummaryCore(
-				proposalHandle,
-				fullPathForChildren,
-				this.wipSkipRecursion || parentSkipRecursion,
-				validate,
-			);
+			child.completeSummaryCore(proposalHandle, this.wipSkipRecursion || parentSkipRecursion);
 		}
 		// Note that this overwrites existing pending summary with
 		// the same proposalHandle. If proposalHandle is something like
@@ -349,13 +356,15 @@ export class SummarizerNode implements IRootSummarizerNode {
 		// can return the same proposalHandle for a different summary,
 		// this should still be okay, because we should be proposing the
 		// newer one later which would have to overwrite the previous one.
-		this.pendingSummaries.set(proposalHandle, summary);
+		this.pendingSummaries.set(proposalHandle, {
+			referenceSequenceNumber: this.wipReferenceSequenceNumber,
+		});
 		this.clearSummary();
 	}
 
 	public clearSummary() {
 		this.wipReferenceSequenceNumber = undefined;
-		this.wipLocalPaths = undefined;
+		this.wipSummarizeCalled = false;
 		this.wipSkipRecursion = false;
 		this.wipSummaryLogger = undefined;
 		for (const child of this.children.values()) {
@@ -367,7 +376,8 @@ export class SummarizerNode implements IRootSummarizerNode {
 	 * Refreshes the latest summary tracked by this node. If we have a pending summary for the given proposal handle,
 	 * it becomes the latest summary. If the current summary is already ahead, we skip the update.
 	 * If the current summary is behind, then we do not refresh.
-	 *
+	 * @param proposalHandle - Handle of the generated / uploaded summary.
+	 * @param summaryRefSeq - Reference sequence of the acked summary
 	 * @returns true if the summary is tracked by this node, false otherwise.
 	 */
 	public async refreshLatestSummary(
@@ -406,13 +416,17 @@ export class SummarizerNode implements IRootSummarizerNode {
 				if (summaryRefSeq > this.referenceSequenceNumber) {
 					isSummaryNewer = true;
 				}
-				const maybeSummaryNode = this.pendingSummaries.get(proposalHandle);
-				if (maybeSummaryNode !== undefined) {
+
+				// If the acked summary is found in the pendingSummaries, it means the summary was created and tracked by the current client
+				// so set the isSummaryTracked to true.
+				const pendingSummary = this.pendingSummaries.get(proposalHandle);
+				if (pendingSummary?.referenceSequenceNumber !== undefined) {
+					isSummaryTracked = true;
+					// update the pendingSummariesMap for the root and all child summarizerNodes
 					this.refreshLatestSummaryFromPending(
 						proposalHandle,
-						maybeSummaryNode.referenceSequenceNumber,
+						pendingSummary.referenceSequenceNumber,
 					);
-					isSummaryTracked = true;
 				}
 				event.end({ ...eventProps, isSummaryNewer, pendingSummaryFound: isSummaryTracked });
 				return { isSummaryTracked, isSummaryNewer };
@@ -430,17 +444,17 @@ export class SummarizerNode implements IRootSummarizerNode {
 		proposalHandle: string,
 		referenceSequenceNumber: number,
 	): void {
-		const summaryNode = this.pendingSummaries.get(proposalHandle);
-		if (summaryNode === undefined) {
+		const pendingSummary = this.pendingSummaries.get(proposalHandle);
+		if (pendingSummary === undefined) {
 			// This should only happen if parent skipped recursion AND no prior summary existed.
 			assert(
-				this._latestSummary === undefined,
+				this._lastSummaryReferenceSequenceNumber === undefined,
 				0x1a6 /* "Not found pending summary, but this node has previously completed a summary" */,
 			);
 			return;
 		} else {
 			assert(
-				referenceSequenceNumber === summaryNode.referenceSequenceNumber,
+				referenceSequenceNumber === pendingSummary.referenceSequenceNumber,
 				0x1a7 /* Pending summary reference sequence number should be consistent */,
 			);
 
@@ -448,30 +462,22 @@ export class SummarizerNode implements IRootSummarizerNode {
 			this.pendingSummaries.delete(proposalHandle);
 		}
 
-		this.refreshLatestSummaryCore(referenceSequenceNumber);
-
-		this._latestSummary = summaryNode;
+		// Delete all summaries whose reference sequence number is smaller than the one just acked.
+		for (const [key, summary] of this.pendingSummaries) {
+			if (summary.referenceSequenceNumber < referenceSequenceNumber) {
+				this.pendingSummaries.delete(key);
+			}
+		}
+		// Update the latest successful summary reference number
+		this._lastSummaryReferenceSequenceNumber = pendingSummary.referenceSequenceNumber;
 		// Propagate update to all child nodes
 		for (const child of this.children.values()) {
 			child.refreshLatestSummaryFromPending(proposalHandle, referenceSequenceNumber);
 		}
 	}
 
-	private refreshLatestSummaryCore(referenceSequenceNumber: number): void {
-		for (const [key, value] of this.pendingSummaries) {
-			if (value.referenceSequenceNumber < referenceSequenceNumber) {
-				this.pendingSummaries.delete(key);
-			}
-		}
-	}
-
 	public updateBaseSummaryState(snapshot: ISnapshotTree) {
-		// Check base summary to see if it has any additional path parts
-		// separating child SummarizerNodes. Checks for .channels subtrees.
-		const { childrenPathPart } = parseSummaryForSubtrees(snapshot);
-		if (childrenPathPart !== undefined && this._latestSummary !== undefined) {
-			this._latestSummary.additionalPath = EscapedPath.create(childrenPathPart);
-		}
+		// Function deprecated. Empty declaration is kept around to compat failures.
 	}
 
 	public recordChange(op: ISequencedDocumentMessage): void {
@@ -491,10 +497,6 @@ export class SummarizerNode implements IRootSummarizerNode {
 	 */
 	protected hasChanged(): boolean {
 		return this._changeSequenceNumber > this.referenceSequenceNumber;
-	}
-
-	public get latestSummary(): Readonly<SummaryNode> | undefined {
-		return this._latestSummary;
 	}
 
 	protected readonly canReuseHandle: boolean;
@@ -519,9 +521,9 @@ export class SummarizerNode implements IRootSummarizerNode {
 			this.logger,
 			summarizeInternalFn,
 			config,
+			createDetails.summaryHandleId,
 			createDetails.changeSequenceNumber,
-			createDetails.latestSummary,
-			createDetails.initialSummary,
+			createDetails.lastSummaryReferenceSequenceNumber,
 			this.wipSummaryLogger,
 			createDetails.telemetryNodeId,
 		);
@@ -549,78 +551,26 @@ export class SummarizerNode implements IRootSummarizerNode {
 		id: string,
 		createParam: CreateChildSummarizerNodeParam,
 	): ICreateChildDetails {
-		let initialSummary: IInitialSummary | undefined;
-		let latestSummary: SummaryNode | undefined;
+		let childLastSummaryReferenceSequenceNumber: number | undefined;
 		let changeSequenceNumber: number;
 
-		const parentLatestSummary = this._latestSummary;
+		const parentLastSummaryReferenceSequenceNumber = this._lastSummaryReferenceSequenceNumber;
 		switch (createParam.type) {
 			case CreateSummarizerNodeSource.FromAttach: {
 				if (
-					parentLatestSummary !== undefined &&
-					createParam.sequenceNumber <= parentLatestSummary.referenceSequenceNumber
+					parentLastSummaryReferenceSequenceNumber !== undefined &&
+					createParam.sequenceNumber <= parentLastSummaryReferenceSequenceNumber
 				) {
 					// Prioritize latest summary if it was after this node was attached.
-					latestSummary = parentLatestSummary.createForChild(id);
-				} else {
-					const summary = convertToSummaryTree(
-						createParam.snapshot,
-					) as ISummaryTreeWithStats;
-					initialSummary = {
-						sequenceNumber: createParam.sequenceNumber,
-						id,
-						summary,
-					};
+					childLastSummaryReferenceSequenceNumber = parentLastSummaryReferenceSequenceNumber;
 				}
 				changeSequenceNumber = createParam.sequenceNumber;
 				break;
 			}
-			case CreateSummarizerNodeSource.FromSummary: {
-				if (this.initialSummary === undefined) {
-					assert(
-						!!parentLatestSummary,
-						0x1ac /* "Cannot create child from summary if parent does not have latest summary" */,
-					);
-				}
-				// fallthrough to local
-			}
+			case CreateSummarizerNodeSource.FromSummary:
 			case CreateSummarizerNodeSource.Local: {
-				const parentInitialSummary = this.initialSummary;
-				if (parentInitialSummary !== undefined) {
-					let childSummary: SummaryObject | undefined;
-					if (parentInitialSummary.summary !== undefined) {
-						const { childrenTree } = parseSummaryTreeForSubtrees(
-							parentInitialSummary.summary.summary,
-						);
-						assert(
-							childrenTree.type === SummaryType.Tree,
-							0x1d6 /* "Parent summary object is not a tree" */,
-						);
-						childSummary = childrenTree.tree[id];
-					}
-					if (createParam.type === CreateSummarizerNodeSource.FromSummary) {
-						// Locally created would not have differential subtree.
-						assert(!!childSummary, 0x1ad /* "Missing child summary tree" */);
-					}
-					let childSummaryWithStats: ISummaryTreeWithStats | undefined;
-					if (childSummary !== undefined) {
-						assert(
-							childSummary.type === SummaryType.Tree,
-							0x1ae /* "Child summary object is not a tree" */,
-						);
-						childSummaryWithStats = {
-							summary: childSummary,
-							stats: calculateStats(childSummary),
-						};
-					}
-					initialSummary = {
-						sequenceNumber: parentInitialSummary.sequenceNumber,
-						id,
-						summary: childSummaryWithStats,
-					};
-				}
-				latestSummary = parentLatestSummary?.createForChild(id);
-				changeSequenceNumber = parentLatestSummary?.referenceSequenceNumber ?? -1;
+				childLastSummaryReferenceSequenceNumber = parentLastSummaryReferenceSequenceNumber;
+				changeSequenceNumber = parentLastSummaryReferenceSequenceNumber ?? -1;
 				break;
 			}
 			default: {
@@ -629,13 +579,14 @@ export class SummarizerNode implements IRootSummarizerNode {
 			}
 		}
 
-		const childtelemetryNodeId = `${this.telemetryNodeId ?? ""}/${id}`;
+		const childTelemetryNodeId = `${this.telemetryNodeId ?? ""}/${id}`;
+		const childSummaryHandleId = this._summaryHandleId.createChildPath(EscapedPath.create(id));
 
 		return {
-			initialSummary,
-			latestSummary,
 			changeSequenceNumber,
-			telemetryNodeId: childtelemetryNodeId,
+			telemetryNodeId: childTelemetryNodeId,
+			summaryHandleId: childSummaryHandleId,
+			lastSummaryReferenceSequenceNumber: childLastSummaryReferenceSequenceNumber,
 		};
 	}
 
@@ -655,21 +606,15 @@ export class SummarizerNode implements IRootSummarizerNode {
 			child.wipReferenceSequenceNumber = this.wipReferenceSequenceNumber;
 		}
 		// In case we have pending summaries on the parent, let's initialize it on the child.
-		if (child._latestSummary !== undefined) {
-			for (const [key, value] of this.pendingSummaries.entries()) {
-				const newLatestSummaryNode = new SummaryNode({
-					referenceSequenceNumber: value.referenceSequenceNumber,
-					basePath: child._latestSummary.basePath,
-					localPath: child._latestSummary.localPath,
-				});
-
-				child.addPendingSummary(key, newLatestSummaryNode);
-			}
+		if (child._lastSummaryReferenceSequenceNumber !== undefined) {
+			this.pendingSummaries.forEach((pendingSummaryInfo, proposedHandle) => {
+				child.addPendingSummary(proposedHandle, pendingSummaryInfo);
+			});
 		}
 	}
 
-	protected addPendingSummary(key: string, summary: SummaryNode) {
-		this.pendingSummaries.set(key, summary);
+	protected addPendingSummary(key: string, pendingSummaryInfo: PendingSummaryInfo) {
+		this.pendingSummaries.set(key, pendingSummaryInfo);
 	}
 
 	/**
@@ -682,7 +627,7 @@ export class SummarizerNode implements IRootSummarizerNode {
 	/**
 	 * Creates and throws an error due to unexpected conditions.
 	 */
-	protected throwUnexpectedError(eventProps: ITelemetryErrorEvent): never {
+	protected throwUnexpectedError(eventProps: ITelemetryErrorEventExt): never {
 		const error = new LoggingError(eventProps.eventName, {
 			...eventProps,
 			referenceSequenceNumber: this.wipReferenceSequenceNumber,
@@ -715,11 +660,9 @@ export const createRootSummarizerNode = (
 		logger,
 		summarizeInternalFn,
 		config,
+		EscapedPath.create("") /* summaryHandleId */,
 		changeSequenceNumber,
-		referenceSequenceNumber === undefined
-			? undefined
-			: SummaryNode.createForRoot(referenceSequenceNumber),
-		undefined /* initialSummary */,
+		referenceSequenceNumber,
 		undefined /* wipSummaryLogger */,
 		"" /* telemetryNodeId */,
 	);

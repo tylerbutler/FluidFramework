@@ -2,6 +2,8 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
+import { unreachableCase } from "@fluidframework/common-utils";
 import * as git from "@fluidframework/gitresources";
 import {
 	FileMode,
@@ -9,13 +11,13 @@ import {
 	SummaryType,
 	SummaryObject,
 } from "@fluidframework/protocol-definitions";
-import { unreachableCase } from "@fluidframework/common-utils";
 
 /**
  * Take a summary object and returns its git mode.
  *
  * @param value - summary object
  * @returns the git mode of summary object
+ * @internal
  */
 export function getGitMode(value: SummaryObject): string {
 	const type = value.type === SummaryType.Handle ? value.handleType : value.type;
@@ -35,6 +37,7 @@ export function getGitMode(value: SummaryObject): string {
  *
  * @param value - summary object
  * @returns the type of summary object
+ * @internal
  */
 export function getGitType(value: SummaryObject): "blob" | "tree" {
 	const type = value.type === SummaryType.Handle ? value.handleType : value.type;
@@ -58,6 +61,7 @@ export function getGitType(value: SummaryObject): "blob" | "tree" {
  * @param blobsShaToPathCache - Map with blobs sha as keys and values as path of the blob.
  * @param removeAppTreePrefix - Remove `.app/` from beginning of paths when present
  * @returns the hierarchical tree
+ * @internal
  */
 export function buildGitTreeHierarchy(
 	flatTree: git.ITree,

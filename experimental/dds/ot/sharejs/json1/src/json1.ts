@@ -3,24 +3,28 @@
  * Licensed under the MIT License.
  */
 
+import { SharedOT } from "@fluid-experimental/ot";
 import {
 	IChannelAttributes,
 	IFluidDataStoreRuntime,
 	Serializable,
-} from "@fluidframework/datastore-definitions";
-import { SharedOT } from "@fluid-experimental/ot";
+} from "@fluidframework/datastore-definitions/internal";
 import {
 	Doc,
-	type as Json1OTType,
 	JSONOp,
-	replaceOp,
+	type as Json1OTType,
+	Path,
 	insertOp,
 	moveOp,
 	removeOp,
-	Path,
+	replaceOp,
 } from "ot-json1";
-import { Json1Factory } from "./factory";
 
+import { Json1Factory } from "./factory.js";
+
+/**
+ * @internal
+ */
 export class SharedJson1 extends SharedOT<Doc, JSONOp> {
 	public static create(runtime: IFluidDataStoreRuntime, id?: string): SharedJson1 {
 		return runtime.createChannel(id, Json1Factory.Type) as SharedJson1;
@@ -51,7 +55,7 @@ export class SharedJson1 extends SharedOT<Doc, JSONOp> {
 		return Json1OTType.apply(state, op) as Doc;
 	}
 
-	public insert(path: Path, value: Serializable) {
+	public insert<T>(path: Path, value: Serializable<T>) {
 		this.apply(insertOp(path, value as Doc));
 	}
 
@@ -63,7 +67,7 @@ export class SharedJson1 extends SharedOT<Doc, JSONOp> {
 		this.apply(removeOp(path, value));
 	}
 
-	public replace(path: Path, oldValue: Serializable, newValue: Serializable) {
+	public replace<T, U>(path: Path, oldValue: Serializable<T>, newValue: Serializable<U>) {
 		this.apply(replaceOp(path, oldValue as Doc, newValue as Doc));
 	}
 }

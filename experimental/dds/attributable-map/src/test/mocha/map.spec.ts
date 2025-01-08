@@ -4,25 +4,28 @@
  */
 
 import { strict as assert } from "assert";
-import { IFluidHandle } from "@fluidframework/core-interfaces";
-import { ISummaryBlob } from "@fluidframework/protocol-definitions";
+
+import { AttachState } from "@fluidframework/container-definitions";
+import type { IFluidHandleInternal } from "@fluidframework/core-interfaces/internal";
+import { ISummaryBlob } from "@fluidframework/driver-definitions";
 import {
-	MockFluidDataStoreRuntime,
 	MockContainerRuntimeFactory,
+	MockFluidDataStoreRuntime,
 	MockSharedObjectServices,
 	MockStorage,
-} from "@fluidframework/test-runtime-utils";
-import { ISerializableValue, IValueChanged } from "../../interfaces";
+} from "@fluidframework/test-runtime-utils/internal";
+
+import { ISerializableValue, IValueChanged } from "../../interfaces.js";
 import {
-	IMapSetOperation,
-	IMapDeleteOperation,
-	IMapClearOperation,
-	IMapKeyEditLocalOpMetadata,
 	IMapClearLocalOpMetadata,
+	IMapClearOperation,
+	IMapDeleteOperation,
+	IMapKeyEditLocalOpMetadata,
+	IMapSetOperation,
 	MapLocalOpMetadata,
-} from "../../internalInterfaces";
-import { MapFactory, AttributableMap } from "../../map";
-import { IMapOperation } from "../../mapKernel";
+} from "../../internalInterfaces.js";
+import { AttributableMapClass, MapFactory } from "../../map.js";
+import { IMapOperation } from "../../mapKernel.js";
 
 function createConnectedMap(id: string, runtimeFactory: MockContainerRuntimeFactory): TestMap {
 	const dataStoreRuntime = new MockFluidDataStoreRuntime();
@@ -44,9 +47,17 @@ function createDetachedMap(id: string): TestMap {
 	return map;
 }
 
-class TestMap extends AttributableMap {
-	public testApplyStashedOp(content: IMapOperation): MapLocalOpMetadata {
-		return this.applyStashedOp(content) as MapLocalOpMetadata;
+class TestMap extends AttributableMapClass {
+	private lastMetadata?: MapLocalOpMetadata;
+	public testApplyStashedOp(content: IMapOperation): MapLocalOpMetadata | undefined {
+		this.lastMetadata = undefined;
+		this.applyStashedOp(content);
+		return this.lastMetadata;
+	}
+
+	public submitLocalMessage(op: IMapOperation, localOpMetadata: unknown): void {
+		this.lastMetadata = localOpMetadata as MapLocalOpMetadata;
+		super.submitLocalMessage(op, localOpMetadata);
 	}
 }
 
@@ -91,21 +102,13 @@ describe("Map", () => {
 						true,
 						"local should be true for local action for valueChanged event",
 					);
-					assert.equal(
-						target,
-						dummyMap,
-						"target should be the map for valueChanged event",
-					);
+					assert.equal(target, dummyMap, "target should be the map for valueChanged event");
 				});
 				dummyMap.on("clear", (local, target) => {
 					assert.equal(clearExpected, true, "clear event not expected");
 					clearExpected = false;
 
-					assert.equal(
-						local,
-						true,
-						"local should be true for local action  for clear event",
-					);
+					assert.equal(local, true, "local should be true for local action  for clear event");
 					assert.equal(target, dummyMap, "target should be the map for clear event");
 				});
 				dummyMap.on("error", (error) => {
@@ -143,7 +146,6 @@ describe("Map", () => {
 					map.set(undefined as unknown as string, "one");
 				}, "Should throw for key of undefined");
 				assert.throws(() => {
-					// eslint-disable-next-line unicorn/no-null
 					map.set(null as unknown as string, "two");
 				}, "Should throw for key of null");
 			});
@@ -268,9 +270,9 @@ describe("Map", () => {
 			it("new serialization format for big maps", async () => {
 				map.set("key", "value");
 
-				// 40K char string
+				// 160K char string
 				let longString = "01234567890";
-				for (let i = 0; i < 12; i++) {
+				for (let i = 0; i < 14; i++) {
 					longString = longString + longString;
 				}
 				map.set("longValue", longString);
@@ -360,7 +362,9 @@ describe("Map", () => {
 			 * when it gets a remote op with the same key, it ignores it as it has a pending set with the same key.
 			 */
 			it("should correctly process a set operation sent in local state", async () => {
-				const dataStoreRuntime1 = new MockFluidDataStoreRuntime();
+				const dataStoreRuntime1 = new MockFluidDataStoreRuntime({
+					attachState: AttachState.Detached,
+				});
 				const map1 = new TestMap("testMap1", dataStoreRuntime1, MapFactory.Attributes);
 
 				// Set a key in local state.
@@ -371,8 +375,7 @@ describe("Map", () => {
 				// Load a new SharedMap in connected state from the snapshot of the first one.
 				const containerRuntimeFactory = new MockContainerRuntimeFactory();
 				const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
-				const containerRuntime2 =
-					containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
+				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
 				const services2 = MockSharedObjectServices.createFromSummary(
 					map1.getAttachSummary().summary,
 				);
@@ -382,9 +385,8 @@ describe("Map", () => {
 				await map2.load(services2);
 
 				// Now connect the first SharedMap
-				dataStoreRuntime1.local = false;
-				const containerRuntime1 =
-					containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
+				dataStoreRuntime1.setAttachState(AttachState.Attached);
+				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
 				const services1 = {
 					deltaConnection: dataStoreRuntime1.createDeltaConnection(),
 					objectStorage: new MockStorage(undefined),
@@ -412,8 +414,14 @@ describe("Map", () => {
 				const dataStoreRuntime1 = new MockFluidDataStoreRuntime();
 				const op: IMapSetOperation = { type: "set", key: "key", value: serializable };
 				const map1 = new TestMap("testMap1", dataStoreRuntime1, MapFactory.Attributes);
+				const containerRuntimeFactory = new MockContainerRuntimeFactory();
+				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
+				map1.connect({
+					deltaConnection: dataStoreRuntime1.createDeltaConnection(),
+					objectStorage: new MockStorage(undefined),
+				});
 				let metadata = map1.testApplyStashedOp(op);
-				assert.equal(metadata.type, "add");
+				assert.equal(metadata?.type, "add");
 				assert.equal(metadata.pendingMessageId, 0);
 				const editmetadata = map1.testApplyStashedOp(op) as IMapKeyEditLocalOpMetadata;
 				assert.equal(editmetadata.type, "edit");
@@ -422,7 +430,7 @@ describe("Map", () => {
 				const serializable2: ISerializableValue = { type: "Plain", value: "value2" };
 				const op2: IMapSetOperation = { type: "set", key: "key2", value: serializable2 };
 				metadata = map1.testApplyStashedOp(op2);
-				assert.equal(metadata.type, "add");
+				assert.equal(metadata?.type, "add");
 				assert.equal(metadata.pendingMessageId, 2);
 				const op3: IMapDeleteOperation = { type: "delete", key: "key2" };
 				metadata = map1.testApplyStashedOp(op3) as IMapKeyEditLocalOpMetadata;
@@ -506,11 +514,7 @@ describe("Map", () => {
 					assert.equal(map1.get("test"), value, "could not retrieve key");
 
 					// Verify the remote SharedMap
-					assert.equal(
-						map2.get("test"),
-						value,
-						"could not retrieve key from the remote map",
-					);
+					assert.equal(map2.get("test"), value, "could not retrieve key from the remote map");
 				});
 			});
 
@@ -532,11 +536,7 @@ describe("Map", () => {
 					assert.equal(map1.has("inSet"), true, "could not find the key");
 
 					// Verify the remote SharedMap
-					assert.equal(
-						map2.has("inSet"),
-						true,
-						"could not find the key in the remote map",
-					);
+					assert.equal(map2.has("inSet"), true, "could not find the key in the remote map");
 				});
 			});
 
@@ -552,16 +552,8 @@ describe("Map", () => {
 					assert.equal(map1.get("test"), value, "could not get the set key");
 
 					// Verify the remote SharedMap
-					assert.equal(
-						map2.has("test"),
-						true,
-						"could not find the set key in remote map",
-					);
-					assert.equal(
-						map2.get("test"),
-						value,
-						"could not get the set key from remote map",
-					);
+					assert.equal(map2.has("test"), true, "could not find the set key in remote map");
+					assert.equal(map2.get("test"), value, "could not get the set key from remote map");
 				});
 
 				it("Should be able to set a shared object handle as a key", () => {
@@ -571,7 +563,7 @@ describe("Map", () => {
 					containerRuntimeFactory.processAllMessages();
 
 					// Verify the local SharedMap
-					const localSubMap = map1.get<IFluidHandle>("test");
+					const localSubMap = map1.get<IFluidHandleInternal>("test");
 					assert(localSubMap);
 					assert.equal(
 						localSubMap.absolutePath,
@@ -580,7 +572,7 @@ describe("Map", () => {
 					);
 
 					// Verify the remote SharedMap
-					const remoteSubMap = map2.get<IFluidHandle>("test");
+					const remoteSubMap = map2.get<IFluidHandleInternal>("test");
 					assert(remoteSubMap);
 					assert.equal(
 						remoteSubMap.absolutePath,
@@ -602,15 +594,11 @@ describe("Map", () => {
 
 					containerRuntimeFactory.processAllMessages();
 
-					/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
-
 					const retrieved = map1.get("object");
 					const retrievedSubMap: unknown = await retrieved.subMapHandle.get();
 					assert.equal(retrievedSubMap, subMap, "could not get nested map 1");
 					const retrievedSubMap2: unknown = await retrieved.nestedObj.subMap2Handle.get();
 					assert.equal(retrievedSubMap2, subMap2, "could not get nested map 2");
-
-					/* eslint-enable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
 				});
 
 				it("Shouldn't clear value if there is pending set", () => {
@@ -664,11 +652,7 @@ describe("Map", () => {
 					assert.equal(map1.get("test"), value1, "could not get the set key");
 
 					// Verify the SharedMap with 2 pending messages
-					assert.equal(
-						map2.has("test"),
-						true,
-						"could not find the set key in pending map",
-					);
+					assert.equal(map2.has("test"), true, "could not find the set key in pending map");
 					assert.equal(
 						map2.get("test"),
 						pending2,
@@ -682,11 +666,7 @@ describe("Map", () => {
 					assert.equal(map1.get("test"), pending1, "could not get the set key");
 
 					// Verify the SharedMap with 1 pending message
-					assert.equal(
-						map2.has("test"),
-						true,
-						"could not find the set key in pending map",
-					);
+					assert.equal(map2.has("test"), true, "could not find the set key in pending map");
 					assert.equal(
 						map2.get("test"),
 						pending2,
@@ -810,15 +790,8 @@ describe("Map", () => {
 
 					// Verify the remote SharedMap
 					for (const [key, value] of map2.entries()) {
-						assert.ok(
-							set.has(key),
-							"the key in remote map should be present in the set",
-						);
-						assert.equal(
-							key,
-							value,
-							"the value should match the set value in the remote map",
-						);
+						assert.ok(set.has(key), "the key in remote map should be present in the set");
+						assert.equal(key, value, "the value should match the set value in the remote map");
 						assert.equal(map2.get(key), value, "could not get key in the remote map");
 						set.delete(key);
 					}

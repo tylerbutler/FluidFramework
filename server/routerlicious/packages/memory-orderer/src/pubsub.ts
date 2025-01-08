@@ -6,12 +6,18 @@
 import assert from "assert";
 import { IWebSocket } from "@fluidframework/server-services-core";
 
+/**
+ * @internal
+ */
 export interface ISubscriber {
 	id: string;
 	readonly webSocket?: IWebSocket;
 	send(topic: string, event: string, ...args: any[]): void;
 }
 
+/**
+ * @internal
+ */
 export class WebSocketSubscriber implements ISubscriber {
 	public get id(): string {
 		return this.webSocket.id;
@@ -24,6 +30,9 @@ export class WebSocketSubscriber implements ISubscriber {
 	}
 }
 
+/**
+ * @internal
+ */
 export interface IPubSub {
 	// Registers a subscriber for the given message
 	subscribe(topic: string, subscriber: ISubscriber): void;
@@ -35,6 +44,9 @@ export interface IPubSub {
 	publish(topic: string, event: string, ...args: any[]): void;
 }
 
+/**
+ * @internal
+ */
 export class PubSub implements IPubSub {
 	private readonly topics = new Map<
 		string,
@@ -58,25 +70,28 @@ export class PubSub implements IPubSub {
 		}
 
 		const subscriptions = this.topics.get(topic);
-		if (!subscriptions.has(subscriber.id)) {
-			subscriptions.set(subscriber.id, { subscriber, count: 0 });
+		if (!subscriptions?.has(subscriber.id)) {
+			subscriptions?.set(subscriber.id, { subscriber, count: 0 });
 		}
-
-		subscriptions.get(subscriber.id).count++;
+		const subscription = subscriptions?.get(subscriber.id);
+		if (subscription) {
+			subscription.count++;
+		}
 	}
 
 	public unsubscribe(topic: string, subscriber: ISubscriber): void {
 		assert(this.topics.has(topic));
 		const subscriptions = this.topics.get(topic);
 
-		assert(subscriptions.has(subscriber.id));
-		const details = subscriptions.get(subscriber.id);
-		details.count--;
-		if (details.count === 0) {
-			subscriptions.delete(subscriber.id);
+		assert(subscriptions?.has(subscriber.id));
+		const details = subscriptions?.get(subscriber.id);
+		if (details !== undefined) {
+			details.count--;
+			if (details.count === 0) {
+				subscriptions?.delete(subscriber.id);
+			}
 		}
-
-		if (subscriptions.size === 0) {
+		if (subscriptions?.size === 0) {
 			this.topics.delete(topic);
 		}
 	}

@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import chalk from "chalk";
 
 /**
@@ -44,6 +45,8 @@ export interface Logger {
 	verbose: LoggingFunction;
 }
 
+function noop(): void {}
+
 /**
  * Default logger, configured to log to the console.
  *
@@ -54,9 +57,7 @@ export const defaultConsoleLogger: Logger = {
 	warning: logWarningToConsole,
 	error: logErrorToConsole,
 	success: logSuccessToConsole,
-	verbose: () => {
-		/* no-op */
-	},
+	verbose: noop,
 };
 
 /**

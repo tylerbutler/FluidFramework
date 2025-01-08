@@ -3,23 +3,45 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "assert";
-import fs from "fs";
-import { IMergeBlock, ISegment, Marker } from "../mergeTreeNodes";
-import { IMergeTreeDeltaOpArgs } from "../mergeTreeDeltaCallback";
-import { TextSegment } from "../textSegment";
-import { ReferenceType } from "../ops";
-import { PropertySet } from "../properties";
-import { MergeTree } from "../mergeTree";
-import { walkAllChildSegments } from "../mergeTreeNodeWalk";
-import { loadText } from "./text";
+import { strict as assert } from "node:assert";
+import fs from "node:fs";
 
-export function loadTextFromFile(filename: string, mergeTree: MergeTree, segLimit = 0) {
+import { UnassignedSequenceNumber } from "../constants.js";
+import { LocalReferenceCollection } from "../localReference.js";
+import { MergeTree } from "../mergeTree.js";
+import {
+	IMergeTreeDeltaOpArgs,
+	type IMergeTreeDeltaCallbackArgs,
+	type IMergeTreeMaintenanceCallbackArgs,
+} from "../mergeTreeDeltaCallback.js";
+import { walkAllChildSegments } from "../mergeTreeNodeWalk.js";
+import { MergeBlock, ISegmentPrivate, Marker } from "../mergeTreeNodes.js";
+import { ReferenceType } from "../ops.js";
+import {
+	PartialSequenceLengths,
+	verifyExpectedPartialLengths,
+	verifyPartialLengths,
+} from "../partialLengths.js";
+import { PropertySet } from "../properties.js";
+import * as info from "../segmentInfos.js";
+import { TextSegment } from "../textSegment.js";
+
+import { loadText } from "./text.js";
+
+export function loadTextFromFile(
+	filename: string,
+	mergeTree: MergeTree,
+	segLimit = 0,
+): MergeTree {
 	const content = fs.readFileSync(filename, "utf8");
 	return loadText(content, mergeTree, segLimit);
 }
 
-export function loadTextFromFileWithMarkers(filename: string, mergeTree: MergeTree, segLimit = 0) {
+export function loadTextFromFileWithMarkers(
+	filename: string,
+	mergeTree: MergeTree,
+	segLimit = 0,
+): MergeTree {
 	const content = fs.readFileSync(filename, "utf8");
 	return loadText(content, mergeTree, segLimit, true);
 }
@@ -44,8 +66,15 @@ export function insertMarker({
 	behaviors,
 	props,
 	opArgs,
-}: InsertMarkerArgs) {
-	mergeTree.insertSegments(pos, [Marker.make(behaviors, props)], refSeq, clientId, seq, opArgs);
+}: InsertMarkerArgs): void {
+	mergeTree.insertSegments(
+		pos,
+		[Marker.make(behaviors, props)],
+		refSeq,
+		clientId,
+		seq,
+		opArgs,
+	);
 }
 
 interface InsertTextArgs {
@@ -68,14 +97,21 @@ export function insertText({
 	text,
 	props,
 	opArgs,
-}: InsertTextArgs) {
-	mergeTree.insertSegments(pos, [TextSegment.make(text, props)], refSeq, clientId, seq, opArgs);
+}: InsertTextArgs): void {
+	mergeTree.insertSegments(
+		pos,
+		[TextSegment.make(text, props)],
+		refSeq,
+		clientId,
+		seq,
+		opArgs,
+	);
 }
 
 interface InsertSegmentsArgs {
 	mergeTree: MergeTree;
 	pos: number;
-	segments: ISegment[];
+	segments: ISegmentPrivate[];
 	refSeq: number;
 	clientId: number;
 	seq: number;
@@ -112,13 +148,32 @@ export function markRangeRemoved({
 	refSeq,
 	clientId,
 	seq,
-	overwrite = false,
 	opArgs,
 }: MarkRangeRemovedArgs): void {
-	mergeTree.markRangeRemoved(start, end, refSeq, clientId, seq, overwrite, opArgs);
+	mergeTree.markRangeRemoved(start, end, refSeq, clientId, seq, opArgs);
 }
 
-export function nodeOrdinalsHaveIntegrity(block: IMergeBlock): boolean {
+export function obliterateRange({
+	mergeTree,
+	start,
+	end,
+	refSeq,
+	clientId,
+	seq,
+	opArgs,
+}: {
+	mergeTree: MergeTree;
+	start: number;
+	end: number;
+	refSeq: number;
+	clientId: number;
+	seq: number;
+	opArgs: IMergeTreeDeltaOpArgs;
+}): void {
+	mergeTree.obliterateRange(start, end, refSeq, clientId, seq, opArgs);
+}
+
+export function nodeOrdinalsHaveIntegrity(block: MergeBlock): boolean {
 	const olen = block.ordinal.length;
 	for (let i = 0; i < block.childCount; i++) {
 		if (block.children[i].ordinal) {
@@ -126,14 +181,12 @@ export function nodeOrdinalsHaveIntegrity(block: IMergeBlock): boolean {
 				console.log("node integrity issue");
 				return false;
 			}
-			if (i > 0) {
-				if (block.children[i].ordinal <= block.children[i - 1].ordinal) {
-					console.log("node sib integrity issue");
-					return false;
-				}
+			if (i > 0 && block.children[i].ordinal <= block.children[i - 1].ordinal) {
+				console.log("node sib integrity issue");
+				return false;
 			}
 			if (!block.children[i].isLeaf()) {
-				return nodeOrdinalsHaveIntegrity(block.children[i] as IMergeBlock);
+				return nodeOrdinalsHaveIntegrity(block.children[i] as MergeBlock);
 			}
 		} else {
 			console.log(`node child ordinal not set ${i}`);
@@ -147,18 +200,20 @@ export function nodeOrdinalsHaveIntegrity(block: IMergeBlock): boolean {
  * Returns an object that tallies each delta and maintenance operation observed
  * for the given 'mergeTree'.
  */
-export function countOperations(mergeTree: MergeTree) {
+export function countOperations(mergeTree: MergeTree): object {
 	const counts = {};
 
 	assert.strictEqual(mergeTree.mergeTreeDeltaCallback, undefined);
 	assert.strictEqual(mergeTree.mergeTreeMaintenanceCallback, undefined);
 
-	const fn = (deltaArgs) => {
+	const fn = (
+		deltaArgs: IMergeTreeDeltaCallbackArgs | IMergeTreeMaintenanceCallbackArgs,
+	): void => {
 		const previous = counts[deltaArgs.operation] as undefined | number;
 		counts[deltaArgs.operation] = previous === undefined ? 1 : previous + 1;
 	};
 
-	mergeTree.mergeTreeDeltaCallback = (opArgs, deltaArgs) => {
+	mergeTree.mergeTreeDeltaCallback = (opArgs, deltaArgs): void => {
 		fn(deltaArgs);
 	};
 	mergeTree.mergeTreeMaintenanceCallback = fn;
@@ -171,30 +226,41 @@ function getPartialLengths(
 	seq: number,
 	mergeTree: MergeTree,
 	localSeq?: number,
-	mergeBlock: IMergeBlock = mergeTree.root,
-) {
+	mergeBlock: MergeBlock = mergeTree.root,
+): {
+	partialLen: number | undefined;
+	actualLen: number;
+} {
 	const partialLen = mergeBlock.partialLengths?.getPartialLength(seq, clientId, localSeq);
 
 	let actualLen = 0;
 
-	const isInserted = (segment: ISegment) =>
-		segment.seq === undefined ||
-		(segment.seq !== -1 && segment.seq <= seq) ||
-		(localSeq !== undefined &&
-			segment.seq === -1 &&
-			segment.localSeq !== undefined &&
-			segment.localSeq <= localSeq);
+	const isInserted = (segment: ISegmentPrivate): boolean =>
+		info.isInserted(segment) &&
+		((segment.seq !== UnassignedSequenceNumber && segment.seq <= seq) ||
+			(localSeq !== undefined &&
+				segment.seq === UnassignedSequenceNumber &&
+				segment.localSeq !== undefined &&
+				segment.localSeq <= localSeq));
 
-	const isRemoved = (segment: ISegment) =>
-		segment.removedSeq !== undefined &&
+	const isRemoved = (segment: ISegmentPrivate): boolean =>
+		info.isRemoved(segment) &&
 		((localSeq !== undefined &&
-			segment.removedSeq === -1 &&
+			segment.removedSeq === UnassignedSequenceNumber &&
 			segment.localRemovedSeq !== undefined &&
 			segment.localRemovedSeq <= localSeq) ||
-			(segment.removedSeq !== -1 && segment.removedSeq <= seq));
+			(segment.removedSeq !== UnassignedSequenceNumber && segment.removedSeq <= seq));
+
+	const isMoved = (segment: ISegmentPrivate): boolean =>
+		info.isMoved(segment) &&
+		((localSeq !== undefined &&
+			segment.movedSeq === UnassignedSequenceNumber &&
+			segment.localMovedSeq !== undefined &&
+			segment.localMovedSeq <= localSeq) ||
+			(segment.movedSeq !== UnassignedSequenceNumber && segment.movedSeq <= seq));
 
 	walkAllChildSegments(mergeBlock, (segment) => {
-		if (isInserted(segment) && !isRemoved(segment)) {
+		if (isInserted(segment) && !isRemoved(segment) && !isMoved(segment)) {
 			actualLen += segment.cachedLength;
 		}
 		return true;
@@ -211,10 +277,14 @@ export function validatePartialLengths(
 	mergeTree: MergeTree,
 	expectedValues?: { seq: number; len: number; localSeq?: number }[],
 	localSeq?: number,
-	mergeBlock: IMergeBlock = mergeTree.root,
+	mergeBlock: MergeBlock = mergeTree.root,
 ): void {
 	mergeTree.computeLocalPartials(0);
-	for (let i = mergeTree.collabWindow.minSeq + 1; i <= mergeTree.collabWindow.currentSeq; i++) {
+	for (
+		let i = mergeTree.collabWindow.minSeq + 1;
+		i <= mergeTree.collabWindow.currentSeq;
+		i++
+	) {
 		const { partialLen, actualLen } = getPartialLengths(
 			clientId,
 			i,
@@ -245,4 +315,34 @@ export function validatePartialLengths(
 		assert.equal(partialLen, len);
 		assert.equal(actualLen, len);
 	}
+}
+
+export function validateRefCount(collection?: LocalReferenceCollection): void {
+	if (!collection) {
+		return;
+	}
+
+	const expectedLength = [...collection].length;
+
+	// eslint-disable-next-line @typescript-eslint/dot-notation
+	assert.equal(collection["refCount"], expectedLength);
+}
+
+/**
+ * Enable stricter partial length assertions inside tests
+ *
+ * Note that these assertions can be expensive, and so should not be enabled in
+ * production code or tests that run through thousands of ops (e.g. the SharedString
+ * fuzz tests).
+ */
+export function useStrictPartialLengthChecks(): void {
+	beforeEach(() => {
+		PartialSequenceLengths.options.verifier = verifyPartialLengths;
+		PartialSequenceLengths.options.verifyExpected = verifyExpectedPartialLengths;
+	});
+
+	afterEach(() => {
+		PartialSequenceLengths.options.verifier = undefined;
+		PartialSequenceLengths.options.verifyExpected = undefined;
+	});
 }

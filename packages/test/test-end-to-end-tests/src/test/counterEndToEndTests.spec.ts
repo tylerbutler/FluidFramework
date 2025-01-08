@@ -4,58 +4,81 @@
  */
 
 import { strict as assert } from "assert";
-import { ISharedCounter, SharedCounter } from "@fluidframework/counter";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import {
-	ITestObjectProvider,
-	ITestContainerConfig,
-	DataObjectFactoryType,
-	ChannelFactoryRegistry,
-	ITestFluidObject,
-} from "@fluidframework/test-utils";
-import {
-	describeFullCompat,
-	describeNoCompat,
-	itExpects,
-} from "@fluid-internal/test-version-utils";
-import { ContainerErrorType, IContainer } from "@fluidframework/container-definitions";
 
-import { ConfigTypes, IConfigProviderBase } from "@fluidframework/telemetry-utils";
-import { ContainerRuntime } from "@fluidframework/container-runtime";
+import { describeCompat, itExpects } from "@fluid-private/test-version-utils";
+import {
+	ContainerErrorTypes,
+	IContainer,
+} from "@fluidframework/container-definitions/internal";
+import { IContainerRuntime } from "@fluidframework/container-runtime-definitions/internal";
+import { ConfigTypes, IConfigProviderBase } from "@fluidframework/core-interfaces";
+import type { ISharedCounter, SharedCounter } from "@fluidframework/counter/internal";
+import {
+	ChannelFactoryRegistry,
+	DataObjectFactoryType,
+	ITestContainerConfig,
+	ITestFluidObject,
+	ITestObjectProvider,
+	getContainerEntryPointBackCompat,
+} from "@fluidframework/test-utils/internal";
 
 const counterId = "counterKey";
-const registry: ChannelFactoryRegistry = [[counterId, SharedCounter.getFactory()]];
-const testContainerConfig: ITestContainerConfig = {
-	fluidDataObjectType: DataObjectFactoryType.Test,
-	registry,
-};
 
-describeFullCompat("SharedCounter", (getTestObjectProvider) => {
+describeCompat("SharedCounter", "FullCompat", (getTestObjectProvider, apis) => {
+	const { SharedCounter } = apis.dds;
+
+	const registry: ChannelFactoryRegistry = [[counterId, SharedCounter.getFactory()]];
+	const testContainerConfig: ITestContainerConfig = {
+		fluidDataObjectType: DataObjectFactoryType.Test,
+		registry,
+	};
+
 	let provider: ITestObjectProvider;
-	beforeEach(() => {
+	beforeEach("getTestObjectProvider", () => {
 		provider = getTestObjectProvider();
 	});
+	let container1: IContainer;
+	let container2: IContainer;
+	let container3: IContainer;
 	let dataStore1: ITestFluidObject;
+	let dataStore2: ITestFluidObject;
+	let dataStore3: ITestFluidObject;
 	let sharedCounter1: ISharedCounter;
 	let sharedCounter2: ISharedCounter;
 	let sharedCounter3: ISharedCounter;
 
-	beforeEach(async () => {
-		// Create a Container for the first client.
-		const container1 = await provider.makeTestContainer(testContainerConfig);
-		dataStore1 = await requestFluidObject<ITestFluidObject>(container1, "default");
+	// To help narrow down test flakiness, the beforeEach is broken into tiny phases.  These phase names will
+	// show up in error logs to help identify where timeouts are occurring.
+	// Note that their execution order matters.  Mocha runs them in the order they are defined:
+	// https://mochajs.org/#hooks
+
+	// Create a container representing the first client
+	beforeEach("Create container", async () => {
+		container1 = await provider.makeTestContainer(testContainerConfig);
+	});
+
+	// Load the container that was created by the first client
+	beforeEach("Load containers", async () => {
+		container2 = await provider.loadTestContainer(testContainerConfig);
+		container3 = await provider.loadTestContainer(testContainerConfig);
+	});
+
+	// Get all three data stores
+	beforeEach("Get data stores", async () => {
+		dataStore1 = await getContainerEntryPointBackCompat<ITestFluidObject>(container1);
+		dataStore2 = await getContainerEntryPointBackCompat<ITestFluidObject>(container2);
+		dataStore3 = await getContainerEntryPointBackCompat<ITestFluidObject>(container3);
+	});
+
+	// Get all three counters
+	beforeEach("Get counters", async () => {
 		sharedCounter1 = await dataStore1.getSharedObject<SharedCounter>(counterId);
-
-		// Load the Container that was created by the first client.
-		const container2 = await provider.loadTestContainer(testContainerConfig);
-		const dataStore2 = await requestFluidObject<ITestFluidObject>(container2, "default");
 		sharedCounter2 = await dataStore2.getSharedObject<SharedCounter>(counterId);
-
-		// Load the Container that was created by the first client.
-		const container3 = await provider.loadTestContainer(testContainerConfig);
-		const dataStore3 = await requestFluidObject<ITestFluidObject>(container3, "default");
 		sharedCounter3 = await dataStore3.getSharedObject<SharedCounter>(counterId);
+	});
 
+	// Ensure the clients are synchronized
+	beforeEach("Ensure synchronized", async () => {
 		await provider.ensureSynchronized();
 	});
 
@@ -167,62 +190,74 @@ describeFullCompat("SharedCounter", (getTestObjectProvider) => {
 	});
 });
 
-describeNoCompat("SharedCounter orderSequentially", (getTestObjectProvider) => {
-	let provider: ITestObjectProvider;
-	beforeEach(() => {
-		provider = getTestObjectProvider();
-	});
+describeCompat(
+	"SharedCounter orderSequentially",
+	"NoCompat",
+	(getTestObjectProvider, apis) => {
+		const { SharedCounter } = apis.dds;
 
-	let container: IContainer;
-	let dataObject: ITestFluidObject;
-	let dataStore: ITestFluidObject;
-	let sharedCounter: SharedCounter;
-	let containerRuntime: ContainerRuntime;
-
-	const configProvider = (settings: Record<string, ConfigTypes>): IConfigProviderBase => ({
-		getRawConfig: (name: string): ConfigTypes => settings[name],
-	});
-	const errorMessage = "callback failure";
-
-	beforeEach(async () => {
-		const configWithFeatureGates = {
-			...testContainerConfig,
-			loaderProps: {
-				configProvider: configProvider({
-					"Fluid.ContainerRuntime.EnableRollback": true,
-				}),
-			},
+		const registry: ChannelFactoryRegistry = [[counterId, SharedCounter.getFactory()]];
+		const testContainerConfig: ITestContainerConfig = {
+			fluidDataObjectType: DataObjectFactoryType.Test,
+			registry,
 		};
-		container = await provider.makeTestContainer(configWithFeatureGates);
-		dataObject = await requestFluidObject<ITestFluidObject>(container, "default");
-		dataStore = await requestFluidObject<ITestFluidObject>(container, "default");
-		sharedCounter = await dataStore.getSharedObject<SharedCounter>(counterId);
-		containerRuntime = dataObject.context.containerRuntime as ContainerRuntime;
-	});
 
-	itExpects(
-		"Closes container when rollback fails",
-		[
-			{
-				eventName: "fluid:telemetry:Container:ContainerClose",
-				error: "RollbackError: rollback not supported",
-				errorType: ContainerErrorType.dataProcessingError,
+		let provider: ITestObjectProvider;
+		beforeEach("getTestObjectProvider", () => {
+			provider = getTestObjectProvider();
+		});
+
+		let container: IContainer;
+		let dataObject: ITestFluidObject;
+		let dataStore: ITestFluidObject;
+		let sharedCounter: SharedCounter;
+		let containerRuntime: IContainerRuntime;
+
+		const configProvider = (settings: Record<string, ConfigTypes>): IConfigProviderBase => ({
+			getRawConfig: (name: string): ConfigTypes => settings[name],
+		});
+		const errorMessage = "callback failure";
+
+		beforeEach("setup", async () => {
+			const configWithFeatureGates = {
+				...testContainerConfig,
+				loaderProps: {
+					configProvider: configProvider({
+						"Fluid.ContainerRuntime.EnableRollback": true,
+					}),
+				},
+			};
+			container = await provider.makeTestContainer(configWithFeatureGates);
+			dataObject = await getContainerEntryPointBackCompat<ITestFluidObject>(container);
+			dataStore = await getContainerEntryPointBackCompat<ITestFluidObject>(container);
+			sharedCounter = await dataStore.getSharedObject<SharedCounter>(counterId);
+			containerRuntime = dataObject.context.containerRuntime as IContainerRuntime;
+		});
+
+		itExpects(
+			"Closes container when rollback fails",
+			[
+				{
+					eventName: "fluid:telemetry:Container:ContainerClose",
+					error: "RollbackError: rollback not supported",
+					errorType: ContainerErrorTypes.dataProcessingError,
+				},
+			],
+			async () => {
+				let error: Error | undefined;
+				try {
+					containerRuntime.orderSequentially(() => {
+						sharedCounter.increment(1);
+						throw new Error(errorMessage);
+					});
+				} catch (err) {
+					error = err as Error;
+				}
+
+				assert.notEqual(error, undefined, "No error");
+				assert.ok(error?.message.startsWith("RollbackError:"), "Unexpected error message");
+				assert.equal(container.closed, true);
 			},
-		],
-		async () => {
-			let error: Error | undefined;
-			try {
-				containerRuntime.orderSequentially(() => {
-					sharedCounter.increment(1);
-					throw new Error(errorMessage);
-				});
-			} catch (err) {
-				error = err as Error;
-			}
-
-			assert.notEqual(error, undefined, "No error");
-			assert.ok(error?.message.startsWith("RollbackError:"), "Unexpected error message");
-			assert.equal(container.closed, true);
-		},
-	);
-});
+		);
+	},
+);

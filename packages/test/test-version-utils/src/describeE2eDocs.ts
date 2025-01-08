@@ -4,18 +4,26 @@
  */
 
 import fs from "fs";
-import { createChildLogger } from "@fluidframework/telemetry-utils";
-import { TestDriverTypes } from "@fluidframework/test-driver-definitions";
+
+import { TestDriverTypes } from "@fluid-internal/test-driver-definitions";
+import { createChildLogger } from "@fluidframework/telemetry-utils/internal";
 import {
 	getUnexpectedLogErrorException,
 	ITestObjectProvider,
 	TestObjectProvider,
-} from "@fluidframework/test-utils";
-import { CompatKind, driver, r11sEndpointName, tenantIndex } from "../compatOptions.cjs";
-import { configList } from "./compatConfig.js";
+} from "@fluidframework/test-utils/internal";
+
 import { testBaseVersion } from "./baseVersion.js";
-import { ITestObjectProviderOptions } from "./describeCompat.js";
+import { configList } from "./compatConfig.js";
+import {
+	CompatKind,
+	driver,
+	odspEndpointName,
+	r11sEndpointName,
+	tenantIndex,
+} from "./compatOptions.js";
 import { getVersionedTestObjectProviderFromApis } from "./compatUtils.js";
+import { ITestObjectProviderOptions } from "./describeCompat.js";
 import {
 	getDataRuntimeApi,
 	getLoaderApi,
@@ -23,9 +31,11 @@ import {
 	getDriverApi,
 	CompatApis,
 } from "./testApi.js";
+import { getRequestedVersion } from "./versionUtils.js";
 
-/*
+/**
  * Types of documents to be used during the performance runs.
+ * @internal
  */
 export type DocumentType =
 	/** Document with a SharedMap */
@@ -37,22 +47,34 @@ export type DocumentType =
 	/** Document with a SharedMatrix and plain objects */
 	| "DocumentMatrixPlain";
 
+/**
+ * @internal
+ */
 export interface DocumentMapInfo {
 	numberOfItems: number;
 	itemSizeMb: number;
 }
 
+/**
+ * @internal
+ */
 export interface DocumentMultipleDataStoresInfo {
 	numberDataStores: number;
 	numberDataStoresPerIteration: number;
 }
 
+/**
+ * @internal
+ */
 export interface DocumentMatrixInfo {
 	rowSize: number;
 	columnSize: number;
 	stringSize: number;
 }
 
+/**
+ * @internal
+ */
 export interface DocumentMatrixPlainInfo {
 	// Actual matrix size.
 	rowSize: number;
@@ -66,12 +88,18 @@ export interface DocumentMatrixPlainInfo {
 	stringSize: number;
 }
 
+/**
+ * @internal
+ */
 export type DocumentTypeInfo =
 	| DocumentMapInfo
 	| DocumentMultipleDataStoresInfo
 	| DocumentMatrixInfo
 	| DocumentMatrixPlainInfo;
 
+/**
+ * @internal
+ */
 export interface IE2EDocsConfig {
 	documents: DescribeE2EDocInfo[];
 }
@@ -137,9 +165,18 @@ const E2EDefaultDocumentTypes: DescribeE2EDocInfo[] = [
 	},
 ];
 
+/**
+ * @internal
+ */
 export type BenchmarkType = "ExecutionTime" | "MemoryUsage";
+/**
+ * @internal
+ */
 export type BenchmarkTypeDescription = "Runtime benchmarks" | "Memory benchmarks";
 
+/**
+ * @internal
+ */
 export interface DescribeE2EDocInfo {
 	testTitle: string;
 	documentType: DocumentType;
@@ -151,23 +188,41 @@ export interface DescribeE2EDocInfo {
 	minSampleCount?: number;
 }
 
+/**
+ * @internal
+ */
 export function isDocumentMapInfo(info: DocumentTypeInfo): info is DocumentMapInfo {
 	return (info as DocumentMapInfo).numberOfItems !== undefined;
 }
 
+/**
+ * @internal
+ */
 export function isDocumentMultipleDataStoresInfo(
 	info: DocumentTypeInfo,
 ): info is DocumentMultipleDataStoresInfo {
 	return (info as DocumentMultipleDataStoresInfo).numberDataStores !== undefined;
 }
 
+/**
+ * @internal
+ */
 export function isDocumentMatrixInfo(info: DocumentTypeInfo): info is DocumentMatrixInfo {
 	return (info as DocumentMatrixInfo).rowSize !== undefined;
 }
-export function isDocumentMatrixPlainInfo(info: DocumentTypeInfo): info is DocumentMatrixPlainInfo {
+
+/**
+ * @internal
+ */
+export function isDocumentMatrixPlainInfo(
+	info: DocumentTypeInfo,
+): info is DocumentMatrixPlainInfo {
 	return (info as DocumentMatrixPlainInfo).rowSize !== undefined;
 }
 
+/**
+ * @internal
+ */
 export function assertDocumentTypeInfo(
 	info: DocumentTypeInfo,
 	type: DocumentType,
@@ -200,10 +255,16 @@ export function assertDocumentTypeInfo(
 	}
 }
 
+/**
+ * @internal
+ */
 export interface DescribeE2EDocInfoWithBenchmarkType extends DescribeE2EDocInfo {
 	benchmarkType: BenchmarkType;
 }
 
+/**
+ * @internal
+ */
 export type DescribeE2EDocSuite = (
 	title: string,
 	tests: (
@@ -254,7 +315,9 @@ function createE2EDocsDescribe(docTypes?: DescribeE2EDocInfo[]): DescribeE2EDocS
 	return d;
 }
 
-function createE2EDocsDescribeWithType(testType: BenchmarkTypeDescription): DescribeE2EDocSuite {
+function createE2EDocsDescribeWithType(
+	testType: BenchmarkTypeDescription,
+): DescribeE2EDocSuite {
 	const config = getE2EConfigFile();
 
 	const d: DescribeE2EDocSuite = (title, tests, docTypes) => {
@@ -291,18 +354,23 @@ function createE2EDocCompatSuite(
 					let provider: TestObjectProvider;
 					let resetAfterEach: boolean;
 					const dataRuntimeApi = getDataRuntimeApi(
-						testBaseVersion(config.dataRuntime),
-						config.dataRuntime,
+						getRequestedVersion(testBaseVersion(config.dataRuntime), config.dataRuntime),
 					);
 					const apis: CompatApis = {
 						containerRuntime: getContainerRuntimeApi(
-							testBaseVersion(config.containerRuntime),
-							config.containerRuntime,
+							getRequestedVersion(
+								testBaseVersion(config.containerRuntime),
+								config.containerRuntime,
+							),
 						),
 						dataRuntime: dataRuntimeApi,
 						dds: dataRuntimeApi.dds,
-						driver: getDriverApi(testBaseVersion(config.driver), config.driver),
-						loader: getLoaderApi(testBaseVersion(config.loader), config.loader),
+						driver: getDriverApi(
+							getRequestedVersion(testBaseVersion(config.driver), config.driver),
+						),
+						loader: getLoaderApi(
+							getRequestedVersion(testBaseVersion(config.loader), config.loader),
+						),
 					};
 
 					before(async function () {
@@ -311,7 +379,7 @@ function createE2EDocCompatSuite(
 								type: driver,
 								config: {
 									r11s: { r11sEndpointName },
-									odsp: { tenantIndex },
+									odsp: { tenantIndex, odspEndpointName },
 								},
 							});
 						} catch (error) {
@@ -335,9 +403,7 @@ function createE2EDocCompatSuite(
 						(options?: ITestObjectProviderOptions) => {
 							resetAfterEach = options?.resetAfterEach ?? true;
 							if (options?.syncSummarizer === true) {
-								provider.resetLoaderContainerTracker(
-									true /* syncSummarizerClients */,
-								);
+								provider.resetLoaderContainerTracker(true /* syncSummarizerClients */);
 							}
 							return provider;
 						},
@@ -351,7 +417,7 @@ function createE2EDocCompatSuite(
 						// then we don't need to check errors
 						// and fail the after each as well
 						if (this.currentTest?.state === "passed") {
-							const logErrors = getUnexpectedLogErrorException(provider.logger);
+							const logErrors = getUnexpectedLogErrorException(provider.tracker);
 							done(logErrors);
 						} else {
 							done();
@@ -366,14 +432,26 @@ function createE2EDocCompatSuite(
 	};
 }
 
+/**
+ * @internal
+ */
 export const describeE2EDocs: DescribeE2EDocSuite = createE2EDocsDescribe();
 
+/**
+ * @internal
+ */
 export const describeE2EDocsRuntime: DescribeE2EDocSuite =
 	createE2EDocsDescribeWithType("Runtime benchmarks");
 
+/**
+ * @internal
+ */
 export const describeE2EDocsMemory: DescribeE2EDocSuite =
 	createE2EDocsDescribeWithType("Memory benchmarks");
 
+/**
+ * @internal
+ */
 export function isMemoryTest(): boolean {
 	let isMemoryUsageTest: boolean = false;
 	const childArgs = [...process.execArgv, ...process.argv.slice(1)];
@@ -385,11 +463,18 @@ export function isMemoryTest(): boolean {
 		}
 	}
 	const isMemTest: boolean =
-		process.env.FLUID_E2E_MEMORY !== undefined ? true : isMemoryUsageTest ?? false;
+		process.env.FLUID_E2E_MEMORY !== undefined ? true : (isMemoryUsageTest ?? false);
 	return isMemTest;
 }
 
+/**
+ * @internal
+ */
 export const describeE2EDocRun: DescribeE2EDocSuite = createE2EDocsDescribeRun();
+
+/**
+ * @internal
+ */
 export const getCurrentBenchmarkType = (currentType: DescribeE2EDocSuite): BenchmarkType => {
 	return currentType === describeE2EDocsMemory ? "MemoryUsage" : "ExecutionTime";
 };

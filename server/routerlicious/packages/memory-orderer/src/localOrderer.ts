@@ -51,11 +51,19 @@ const DefaultScribe: IScribe = {
 	lastClientSummaryHead: undefined,
 	logOffset: -1,
 	minimumSequenceNumber: -1,
-	protocolState: undefined,
+	protocolState: {
+		members: [],
+		minimumSequenceNumber: 0,
+		proposals: [],
+		sequenceNumber: 0,
+		values: [],
+	},
 	sequenceNumber: -1,
 	lastSummarySequenceNumber: 0,
 	validParentSummaries: undefined,
 	isCorrupt: false,
+	protocolHead: undefined,
+	checkpointTimestamp: Date.now(),
 };
 
 const DefaultDeli: IDeliState = {
@@ -67,7 +75,6 @@ const DefaultDeli: IDeliState = {
 	signalClientConnectionNumber: 0,
 	lastSentMSN: 0,
 	nackMessages: undefined,
-	successfullyStartedLambdas: [],
 	checkpointTimestamp: undefined,
 };
 
@@ -89,6 +96,7 @@ class LocalSocketPublisher implements IPublisher {
 
 /**
  * Performs local ordering of messages based on an in-memory stream of operations.
+ * @internal
  */
 export class LocalOrderer implements IOrderer {
 	public static async load(
@@ -141,8 +149,8 @@ export class LocalOrderer implements IOrderer {
 		);
 	}
 
-	public rawDeltasKafka: LocalKafka;
-	public deltasKafka: LocalKafka;
+	public rawDeltasKafka!: LocalKafka;
+	public deltasKafka!: LocalKafka;
 
 	public scriptoriumLambda: LocalLambdaController | undefined;
 	public moiraLambda: LocalLambdaController | undefined;
@@ -239,7 +247,9 @@ export class LocalOrderer implements IOrderer {
 			this.scriptoriumContext,
 			async (lambdaSetup, context) => {
 				const deltasCollection = await lambdaSetup.deltaCollectionP();
-				return new ScriptoriumLambda(deltasCollection, context, undefined);
+				return new ScriptoriumLambda(deltasCollection, context, undefined, async () =>
+					Promise.resolve(),
+				);
 			},
 		);
 
@@ -289,7 +299,6 @@ export class LocalOrderer implements IOrderer {
 					undefined,
 					this.rawDeltasKafka,
 					this.serviceConfiguration,
-					undefined,
 					undefined,
 					checkpointService,
 				);
@@ -342,18 +351,23 @@ export class LocalOrderer implements IOrderer {
 			() => -1,
 		);
 
+		if (!this.gitManager) {
+			throw new Error("Git manager is required to start scribe lambda.");
+		}
+
 		const summaryReader = new SummaryReader(
 			this.tenantId,
 			this.documentId,
 			this.gitManager,
 			false,
+			this.details.value.isEphemeralContainer,
 		);
 		const latestSummary = await summaryReader.readLastSummary();
 		const summaryWriter = new SummaryWriter(
 			this.tenantId,
 			this.documentId,
 			this.gitManager,
-			null /* deltaService */,
+			undefined /* deltaService */,
 			scribeMessagesCollection,
 			false /* enableWholeSummaryUpload */,
 			latestSummary.messages,
@@ -372,11 +386,13 @@ export class LocalOrderer implements IOrderer {
 			this.documentId,
 			documentRepository,
 			scribeMessagesCollection,
-			null /* deltaService */,
+			undefined /* deltaService */,
 			false /* getDeltasViaAlfred */,
 			false /* verifyLastOpPersistence */,
 			checkpointService,
 		);
+
+		const maxPendingCheckpointMessagesLength = 2000;
 
 		return new ScribeLambda(
 			context,
@@ -396,7 +412,9 @@ export class LocalOrderer implements IOrderer {
 			true,
 			true,
 			true,
-			this.details.value.isEphemeralContainer,
+			this.details.value.isEphemeralContainer ?? false,
+			checkpointService.getLocalCheckpointEnabled(),
+			maxPendingCheckpointMessagesLength,
 		);
 	}
 

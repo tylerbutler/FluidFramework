@@ -3,13 +3,20 @@
  * Licensed under the MIT License.
  */
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface ISnapshotOptions {
 	blobs?: number;
 	deltas?: number;
 	channels?: number;
-	/*
+
+	/**
 	 * Maximum Data size (in bytes)
-	 * If specified, SPO will fail snapshot request with 413 error (see OdspErrorType.snapshotTooBig)
+	 *
+	 * @remarks
+	 * If specified, SPO will fail snapshot request with 413 error (see {@link @fluidframework/odsp-driver-definitions#(OdspErrorTypes:variable).snapshotTooBig})
 	 * if snapshot is bigger in size than specified limit.
 	 */
 	mds?: number;
@@ -22,6 +29,10 @@ export interface ISnapshotOptions {
 	timeout?: number;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface IOpsCachingPolicy {
 	/**
 	 * Batch size. Controls how many ops are grouped together as single cache entry
@@ -50,14 +61,18 @@ export interface IOpsCachingPolicy {
 	totalOpsToCache?: number;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface ICollabSessionOptions {
 	/**
 	 * Value indicating the display name for session that admits unauthenticated user.
 	 * This name will be used in attribution associated with edits made by such user.
+	 * @deprecated starting in 2.0-RC3. No longer needed.
 	 */
 	unauthenticatedUserDisplayName?: string;
 	/**
-	 * @deprecated Due to security reasons we will be passing the token via Authorization header only.
 	 * Value indicating session preference to always pass access token via Authorization header.
 	 * Default behavior is to pass access token via query parameter unless overall href string
 	 * length exceeds 2048 characters. Using query param is performance optimization which results
@@ -65,10 +80,15 @@ export interface ICollabSessionOptions {
 	 * validate CORS. However, not all ODSP implementations understand this optimization.
 	 * For instance, auth layer on Converged stack will fail request with access token passed via
 	 * query param.
+	 * @deprecated Due to security reasons we will be passing the token via Authorization header only.
 	 */
 	forceAccessTokenViaAuthorizationHeader?: boolean;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface HostStoragePolicy {
 	snapshotOptions?: ISnapshotOptions;
 

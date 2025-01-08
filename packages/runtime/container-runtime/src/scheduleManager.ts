@@ -2,22 +2,27 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { EventEmitter } from "events";
-import { IDeltaManager } from "@fluidframework/container-definitions";
-import { IDocumentMessage, ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
+
+import type { EventEmitter } from "@fluid-internal/client-utils";
+import { performance } from "@fluid-internal/client-utils";
+import { IDeltaManagerFull } from "@fluidframework/container-definitions/internal";
+import { assert } from "@fluidframework/core-utils/internal";
 import {
-	createChildLogger,
+	IDocumentMessage,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import { isRuntimeMessage } from "@fluidframework/driver-utils/internal";
+import {
+	ITelemetryLoggerExt,
 	DataCorruptionError,
 	DataProcessingError,
+	createChildLogger,
 	extractSafePropertiesFromMessage,
-	ITelemetryLoggerExt,
-} from "@fluidframework/telemetry-utils";
-import { assert } from "@fluidframework/core-utils";
-import { performance } from "@fluid-internal/client-utils";
-import { isRuntimeMessage } from "@fluidframework/driver-utils";
-import { DeltaScheduler } from "./deltaScheduler";
-import { pkgVersion } from "./packageVersion";
-import { IBatchMetadata } from "./metadata";
+} from "@fluidframework/telemetry-utils/internal";
+
+import { DeltaScheduler } from "./deltaScheduler.js";
+import { IBatchMetadata } from "./metadata.js";
+import { pkgVersion } from "./packageVersion.js";
 
 type IRuntimeMessageMetadata =
 	| undefined
@@ -36,11 +41,9 @@ type IRuntimeMessageMetadata =
  */
 export class ScheduleManager {
 	private readonly deltaScheduler: DeltaScheduler;
-	private batchClientId: string | undefined;
-	private hitError = false;
 
 	constructor(
-		private readonly deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>,
+		private readonly deltaManager: IDeltaManagerFull,
 		private readonly emitter: EventEmitter,
 		readonly getClientId: () => string | undefined,
 		private readonly logger: ITelemetryLoggerExt,
@@ -52,47 +55,14 @@ export class ScheduleManager {
 		void new ScheduleManagerCore(deltaManager, getClientId, logger);
 	}
 
-	public beforeOpProcessing(message: ISequencedDocumentMessage) {
-		if (this.batchClientId !== message.clientId) {
-			assert(
-				this.batchClientId === undefined,
-				0x2a2 /* "Batch is interrupted by other client op. Should be caught by trackPending()" */,
-			);
-
-			// This could be the beginning of a new batch or an individual message.
-			this.emitter.emit("batchBegin", message);
-			this.deltaScheduler.batchBegin(message);
-
-			const batch = (message?.metadata as IRuntimeMessageMetadata)?.batch;
-			// TODO: Verify whether this should be able to handle server-generated ops (with null clientId)
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-			this.batchClientId = batch ? (message.clientId as string) : undefined;
-		}
+	public batchBegin(message: ISequencedDocumentMessage) {
+		this.emitter.emit("batchBegin", message);
+		this.deltaScheduler.batchBegin(message);
 	}
 
-	public afterOpProcessing(error: any | undefined, message: ISequencedDocumentMessage) {
-		// If this is no longer true, we need to revisit what we do where we set this.hitError.
-		assert(!this.hitError, 0x2a3 /* "container should be closed on any error" */);
-
-		if (error) {
-			// We assume here that loader will close container and stop processing all future ops.
-			// This is implicit dependency. If this flow changes, this code might no longer be correct.
-			this.hitError = true;
-			this.batchClientId = undefined;
-			this.emitter.emit("batchEnd", error, message);
-			this.deltaScheduler.batchEnd(message);
-			return;
-		}
-
-		const batch = (message?.metadata as IRuntimeMessageMetadata)?.batch;
-		// If no batchClientId has been set then we're in an individual batch. Else, if we get
-		// batch end metadata, this is end of the current batch.
-		if (this.batchClientId === undefined || batch === false) {
-			this.batchClientId = undefined;
-			this.emitter.emit("batchEnd", undefined, message);
-			this.deltaScheduler.batchEnd(message);
-			return;
-		}
+	public batchEnd(error: any | undefined, message: ISequencedDocumentMessage) {
+		this.emitter.emit("batchEnd", error, message);
+		this.deltaScheduler.batchEnd(message);
 	}
 }
 
@@ -108,7 +78,7 @@ class ScheduleManagerCore {
 	private batchCount = 0;
 
 	constructor(
-		private readonly deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>,
+		private readonly deltaManager: IDeltaManagerFull,
 		private readonly getClientId: () => string | undefined,
 		private readonly logger: ITelemetryLoggerExt,
 	) {
@@ -133,7 +103,7 @@ class ScheduleManagerCore {
 			// Set the batch flag to false on the last message to indicate the end of the send batch
 			const lastMessage = messages[messages.length - 1];
 			// TODO: It's not clear if this shallow clone is required, as opposed to just setting "batch" to false.
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
 			lastMessage.metadata = { ...(lastMessage.metadata as any), batch: false };
 		});
 
@@ -333,7 +303,7 @@ class ScheduleManagerCore {
 			);
 			this.pauseSequenceNumber = message.sequenceNumber;
 			// TODO: Verify whether this should be able to handle server-generated ops (with null clientId)
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
 			this.currentBatchClientId = message.clientId as string;
 			// Start of the batch
 			// Only pause processing if queue has no other ops!

@@ -9,80 +9,72 @@
  * @packageDocumentation
  */
 
-export { IAudience, IAudienceOwner } from "./audience";
-export {
+export type { IAudience, IAudienceOwner, IAudienceEvents, ISelf } from "./audience.js";
+export type {
 	IFluidBrowserPackage,
 	IFluidBrowserPackageEnvironment,
-	isFluidBrowserPackage,
-} from "./browserPackage";
-export {
+} from "./browserPackage.js";
+export { isFluidBrowserPackage } from "./browserPackage.js";
+export type {
 	IConnectionDetails,
 	IDeltaManager,
 	IDeltaManagerEvents,
+	IDeltaManagerFull,
 	IDeltaQueue,
 	IDeltaQueueEvents,
 	IDeltaSender,
 	ReadOnlyInfo,
-} from "./deltas";
-export {
-	ContainerErrorTypes,
-	ContainerErrorType,
-	ContainerWarning,
-	ICriticalContainerError,
-} from "./error";
-export {
+} from "./deltas.js";
+export { isIDeltaManagerFull } from "./deltas.js";
+export type { ContainerWarning, ICriticalContainerError } from "./error.js";
+export { ContainerErrorTypes } from "./error.js";
+export type {
 	ConnectionState,
 	ICodeDetailsLoader,
 	IContainer,
 	IContainerEvents,
 	IContainerLoadMode,
+	IContainerPolicies,
 	IFluidCodeResolver,
 	IFluidModuleWithDetails,
 	IHostLoader,
 	ILoader,
 	ILoaderHeader,
 	ILoaderOptions,
-	IPendingLocalState,
 	IProvideLoader,
 	IResolvedFluidCodeDetails,
 	ISnapshotTreeWithBlobContents,
-	LoaderHeader,
-} from "./loader";
-export { IFluidModule } from "./fluidModule";
-export {
+} from "./loader.js";
+export { LoaderHeader } from "./loader.js";
+export type { IFluidModule } from "./fluidModule.js";
+export type {
 	IFluidPackage,
 	IFluidPackageEnvironment,
 	IFluidCodeDetails,
-	IFluidCodeDetailsComparer,
 	IFluidCodeDetailsConfig,
 	IProvideFluidCodeDetailsComparer,
+} from "./fluidPackage.js";
+export {
+	IFluidCodeDetailsComparer,
 	isFluidPackage,
 	isFluidCodeDetails,
-} from "./fluidPackage";
-export {
-	AttachState,
+} from "./fluidPackage.js";
+export type {
 	IBatchMessage,
 	IContainerContext,
 	IProvideRuntimeFactory,
 	IRuntime,
-	IRuntimeFactory,
-} from "./runtime";
+	IGetPendingLocalStateProps,
+} from "./runtime.js";
+export { AttachState, IRuntimeFactory } from "./runtime.js";
 
-export {
+export type {
 	/**
 	 * @deprecated IErrorBase is being deprecated as a public export is moving to "core-interfaces".
 	 */
 	IErrorBase,
 	/**
-	 * @deprecated IGenericError is being deprecated as a public export is moving to "core-interfaces".
-	 */
-	IGenericError,
-	/**
 	 * @deprecated IThrottlingWarning is being deprecated as a public export is moving to "core-interfaces".
 	 */
 	IThrottlingWarning,
-	/**
-	 * @deprecated IUsageError is being deprecated as a public export is moving to "core-interfaces".
-	 */
-	IUsageError,
-} from "@fluidframework/core-interfaces";
+} from "@fluidframework/core-interfaces/internal";

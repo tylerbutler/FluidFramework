@@ -3,10 +3,14 @@
  * Licensed under the MIT License.
  */
 
-import { type ISharedObject, type ISharedObjectEvents } from "@fluidframework/shared-object-base";
+import type {
+	ISharedObject,
+	ISharedObjectEvents,
+} from "@fluidframework/shared-object-base/internal";
 
 /**
- * IPactMapEvents are the events fired by an IPactMap.
+ * Events emitted by {@link IPactMap}.
+ * @internal
  */
 export interface IPactMapEvents extends ISharedObjectEvents {
 	/**
@@ -17,6 +21,7 @@ export interface IPactMapEvents extends ISharedObjectEvents {
 
 /**
  * Details of the accepted pact.
+ * @internal
  */
 export interface IAcceptedPact<T> {
 	/**
@@ -40,6 +45,7 @@ export interface IAcceptedPact<T> {
  * 1. "pending" state where the proposal has been sequenced, but there are still outstanding acceptances
  * 2. "accepted" state where all clients who were connected at the time the proposal was made have either accepted
  * or disconnected.
+ * @internal
  */
 export interface IPactMap<T = unknown> extends ISharedObject<IPactMapEvents> {
 	/**

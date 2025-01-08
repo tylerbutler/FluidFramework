@@ -9,22 +9,29 @@
 
 export {
 	doesItemRequireOwnDocument,
+	filterItems,
 	getHeadingForApiItem,
 	getLinkForApiItem,
-} from "./api-item-transforms";
+	shouldItemBeIncluded,
+} from "./api-item-transforms/index.js";
 export {
+	ancestryHasModifierTag,
+	getCustomBlockComments,
 	getDefaultValueBlock,
 	getDeprecatedBlock,
 	getExampleBlocks,
+	getFileSafeNameForApiItem,
 	getModifiers,
-	getQualifiedApiItemName,
+	getModifierTags,
 	getReleaseTag,
 	getReturnsBlock,
 	getSeeBlocks,
+	getSingleLineExcerptText,
 	getThrowsBlocks,
 	getUnscopedPackageName,
+	hasModifierTag,
 	isDeprecated,
 	isOptional,
 	isReadonly,
 	isStatic,
-} from "./utilities";
+} from "./utilities/index.js";

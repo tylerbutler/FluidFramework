@@ -3,8 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { getArrayStatistics } from "./ReporterUtilities";
+import { getArrayStatistics } from "./RunnerUtilities";
 
+/**
+ * @public
+ */
 export interface Timer<T = unknown> {
 	now(): T;
 	toSeconds(before: T, after: T): number;

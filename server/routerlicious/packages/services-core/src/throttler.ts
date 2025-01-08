@@ -6,17 +6,26 @@
 import { INackContent, NackErrorType } from "@fluidframework/protocol-definitions";
 import { IUsageData } from ".";
 
+/**
+ * @internal
+ */
 export interface IThrottlerResponse {
 	throttleStatus: boolean;
 	throttleReason: string;
 	retryAfterInMs: number;
 }
 
+/**
+ * @internal
+ */
 export interface IThrottlingMetrics extends IThrottlerResponse {
 	count: number;
 	lastCoolDownAt: number;
 }
 
+/**
+ * @internal
+ */
 export class ThrottlingError implements INackContent {
 	readonly code = 429;
 	readonly type = NackErrorType.ThrottlingError;
@@ -35,6 +44,7 @@ export class ThrottlingError implements INackContent {
 
 /**
  * Storage getter/setter with logic specific to throttling metrics and usage data.
+ * @internal
  */
 export interface IThrottleAndUsageStorageManager {
 	/**
@@ -45,7 +55,7 @@ export interface IThrottleAndUsageStorageManager {
 	/**
 	 * Get throttling metrics for the given id.
 	 */
-	getThrottlingMetric(id: string): Promise<IThrottlingMetrics>;
+	getThrottlingMetric(id: string): Promise<IThrottlingMetrics | undefined>;
 
 	/**
 	 * Store throttling metrics and usage data for the given id.
@@ -65,11 +75,12 @@ export interface IThrottleAndUsageStorageManager {
 	/**
 	 * Get usage data for given id.
 	 */
-	getUsageData(id: string): Promise<IUsageData>;
+	getUsageData(id: string): Promise<IUsageData | undefined>;
 }
 
 /**
  * Runs rate-limiting calculations for IThrottler.
+ * @internal
  */
 export interface IThrottlerHelper {
 	/**
@@ -85,12 +96,14 @@ export interface IThrottlerHelper {
 
 	/**
 	 * Retrieve most recent throttle status for given id.
+	 * @returns Throttle status if found, otherwise undefined if given id is not already tracked for throttling.
 	 */
-	getThrottleStatus(id: string): Promise<IThrottlerResponse>;
+	getThrottleStatus(id: string): Promise<IThrottlerResponse | undefined>;
 }
 
 /**
  * Determines if an operation should be allowed or throttled.
+ * @internal
  */
 export interface IThrottler {
 	/**

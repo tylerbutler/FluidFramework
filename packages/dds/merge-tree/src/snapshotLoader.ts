@@ -6,33 +6,46 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import { bufferToString } from "@fluid-internal/client-utils";
-import { assert } from "@fluidframework/core-utils";
-import { IFluidSerializer } from "@fluidframework/shared-object-base";
-import {
-	createChildLogger,
-	ITelemetryLoggerExt,
-	UsageError,
-} from "@fluidframework/telemetry-utils";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
+import { AttachState } from "@fluidframework/container-definitions";
+import { assert } from "@fluidframework/core-utils/internal";
 import {
 	IFluidDataStoreRuntime,
 	IChannelStorageService,
-} from "@fluidframework/datastore-definitions";
-import { AttachState } from "@fluidframework/container-definitions";
-import { Client } from "./client";
-import { NonCollabClient, UniversalSequenceNumber } from "./constants";
-import { ISegment } from "./mergeTreeNodes";
-import { IJSONSegment } from "./ops";
-import { IJSONSegmentWithMergeInfo, hasMergeInfo, MergeTreeChunkV1 } from "./snapshotChunks";
-import { SnapshotV1 } from "./snapshotV1";
-import { SnapshotLegacy } from "./snapshotlegacy";
-import { MergeTree } from "./mergeTree";
+} from "@fluidframework/datastore-definitions/internal";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+import { IFluidSerializer } from "@fluidframework/shared-object-base/internal";
+import {
+	ITelemetryLoggerExt,
+	UsageError,
+	createChildLogger,
+} from "@fluidframework/telemetry-utils/internal";
+
+import { Client } from "./client.js";
+import { NonCollabClient, UniversalSequenceNumber } from "./constants.js";
+import { MergeTree } from "./mergeTree.js";
+import { ISegmentPrivate } from "./mergeTreeNodes.js";
+import { IJSONSegment } from "./ops.js";
+import {
+	IRemovalInfo,
+	overwriteInfo,
+	type IInsertionInfo,
+	type IMoveInfo,
+	type SegmentWithInfo,
+} from "./segmentInfos.js";
+import {
+	IJSONSegmentWithMergeInfo,
+	MergeTreeChunkV1,
+	hasMergeInfo,
+} from "./snapshotChunks.js";
+import { SnapshotV1 } from "./snapshotV1.js";
+import { SnapshotLegacy } from "./snapshotlegacy.js";
 
 export class SnapshotLoader {
 	private readonly logger: ITelemetryLoggerExt;
 
 	constructor(
 		private readonly runtime: IFluidDataStoreRuntime,
+
 		private readonly client: Client,
 		private readonly mergeTree: MergeTree,
 		logger: ITelemetryLoggerExt,
@@ -51,8 +64,8 @@ export class SnapshotLoader {
 
 		const catchupOpsP = this.loadBodyAndCatchupOps(headerLoadedP, services);
 
-		catchupOpsP.catch((err) =>
-			this.logger.sendErrorEvent({ eventName: "CatchupOpsLoadFailure" }, err),
+		catchupOpsP.catch((error) =>
+			this.logger.sendErrorEvent({ eventName: "CatchupOpsLoadFailure" }, error),
 		);
 
 		await headerLoadedP;
@@ -73,64 +86,71 @@ export class SnapshotLoader {
 
 		const blobs = await blobsP;
 		if (blobs.length === headerChunk.headerMetadata!.orderedChunkMetadata.length + 1) {
-			headerChunk.headerMetadata!.orderedChunkMetadata.forEach((md) =>
-				blobs.splice(blobs.indexOf(md.id), 1),
-			);
+			for (const md of headerChunk.headerMetadata!.orderedChunkMetadata)
+				blobs.splice(blobs.indexOf(md.id), 1);
 			assert(blobs.length === 1, 0x060 /* There should be only one blob with catch up ops */);
 
 			// TODO: The 'Snapshot.catchupOps' tree entry is purely for backwards compatibility.
 			//       (See https://github.com/microsoft/FluidFramework/issues/84)
 
-			return this.loadCatchupOps(services.readBlob(blobs[0]));
+			return this.loadCatchupOps(services.readBlob(blobs[0]), this.serializer);
 		} else if (blobs.length !== headerChunk.headerMetadata!.orderedChunkMetadata.length) {
 			throw new Error("Unexpected blobs in snapshot");
 		}
 		return [];
 	}
 
-	private readonly specToSegment = (spec: IJSONSegment | IJSONSegmentWithMergeInfo) => {
-		let seg: ISegment;
-
+	private readonly specToSegment = (
+		spec: IJSONSegment | IJSONSegmentWithMergeInfo,
+	): SegmentWithInfo<IInsertionInfo> => {
 		if (hasMergeInfo(spec)) {
-			seg = this.client.specToSegment(spec.json);
-
-			// `specToSegment()` initializes `seg` with the LocalClientId.  Overwrite this with
-			// the `spec` client (if specified).  Otherwise overwrite with `NonCollabClient`.
-			seg.clientId =
-				spec.client !== undefined
-					? this.client.getOrAddShortClientId(spec.client)
-					: NonCollabClient;
-
-			seg.seq = spec.seq ?? UniversalSequenceNumber;
+			const seg = overwriteInfo<IInsertionInfo>(this.client.specToSegment(spec.json), {
+				clientId:
+					spec.client === undefined
+						? NonCollabClient
+						: this.client.getOrAddShortClientId(spec.client),
+				seq: spec.seq ?? UniversalSequenceNumber,
+			});
 
 			if (spec.removedSeq !== undefined) {
-				seg.removedSeq = spec.removedSeq;
+				// this format had a bug where it didn't store all the overlap clients
+				// this is for back compat, so we change the singular id to an array
+				// this will only cause problems if there is an overlapping delete
+				// spanning the snapshot, which should be rare
+				const specAsBuggyFormat: IJSONSegmentWithMergeInfo & { removedClient?: string } = spec;
+				if (specAsBuggyFormat.removedClient !== undefined) {
+					spec.removedClientIds ??= [specAsBuggyFormat.removedClient];
+				}
+				assert(spec.removedClientIds !== undefined, "must have removedClient ids");
+				overwriteInfo<IRemovalInfo>(seg, {
+					removedSeq: spec.removedSeq,
+					removedClientIds: spec.removedClientIds.map((id) =>
+						this.client.getOrAddShortClientId(id),
+					),
+				});
 			}
-			// this format had a bug where it didn't store all the overlap clients
-			// this is for back compat, so we change the singular id to an array
-			// this will only cause problems if there is an overlapping delete
-			// spanning the snapshot, which should be rare
-			const specAsBuggyFormat: IJSONSegmentWithMergeInfo & { removedClient?: string } = spec;
-			if (specAsBuggyFormat.removedClient !== undefined) {
-				seg.removedClientIds = [
-					this.client.getOrAddShortClientId(specAsBuggyFormat.removedClient),
-				];
-			}
-			if (spec.removedClientIds !== undefined) {
-				seg.removedClientIds = spec.removedClientIds?.map((sid) =>
-					this.client.getOrAddShortClientId(sid),
+			if (spec.movedSeq !== undefined) {
+				assert(
+					spec.movedClientIds !== undefined && spec.movedSeqs !== undefined,
+					0xaa5 /* must have movedIds ids */,
 				);
+				overwriteInfo<IMoveInfo>(seg, {
+					movedSeq: spec.movedSeq,
+					movedSeqs: spec.movedSeqs,
+					movedClientIds: spec.movedClientIds.map((id) =>
+						this.client.getOrAddShortClientId(id),
+					),
+					// BUG? This isn't persisted
+					wasMovedOnInsert: false,
+				});
 			}
-		} else {
-			seg = this.client.specToSegment(spec);
-			seg.seq = UniversalSequenceNumber;
 
-			// `specToSegment()` initializes `seg` with the LocalClientId.  We must overwrite this with
-			// `NonCollabClient`.
-			seg.clientId = NonCollabClient;
+			return seg;
 		}
-
-		return seg;
+		return overwriteInfo(this.client.specToSegment(spec), {
+			seq: UniversalSequenceNumber,
+			clientId: NonCollabClient,
+		});
 	};
 
 	private loadHeader(header: string): MergeTreeChunkV1 {
@@ -141,7 +161,7 @@ export class SnapshotLoader {
 			this.mergeTree.options,
 			this.serializer,
 		);
-		const segs = chunk.segments.map(this.specToSegment);
+		const segs = chunk.segments.map((element) => this.specToSegment(element));
 		this.extractAttribution(segs, chunk);
 
 		this.mergeTree.reloadFromSegments(segs);
@@ -187,8 +207,8 @@ export class SnapshotLoader {
 			return;
 		}
 
-		let chunksWithAttribution = chunk1.attribution !== undefined ? 1 : 0;
-		const segs: ISegment[] = [];
+		let chunksWithAttribution = chunk1.attribution === undefined ? 0 : 1;
+		const segs: SegmentWithInfo<IInsertionInfo>[] = [];
 		let lengthSofar = chunk1.length;
 		for (
 			let chunkIndex = 1;
@@ -204,9 +224,9 @@ export class SnapshotLoader {
 			);
 			lengthSofar += chunk.length;
 			// Deserialize each chunk segment and append it to the end of the MergeTree.
-			const newSegs = chunk.segments.map(this.specToSegment);
+			const newSegs = chunk.segments.map((element) => this.specToSegment(element));
 			this.extractAttribution(newSegs, chunk);
-			chunksWithAttribution += chunk.attribution !== undefined ? 1 : 0;
+			chunksWithAttribution += chunk.attribution === undefined ? 0 : 1;
 			segs.push(...newSegs);
 		}
 
@@ -225,7 +245,7 @@ export class SnapshotLoader {
 
 		// Helper to insert segments at the end of the MergeTree.
 		const mergeTree = this.mergeTree;
-		const append = (segments: ISegment[], cli: number, seq: number) => {
+		const append = (segments: ISegmentPrivate[], cli: number, seq: number): void => {
 			mergeTree.insertSegments(
 				mergeTree.root.cachedLength ?? 0,
 				segments,
@@ -237,33 +257,29 @@ export class SnapshotLoader {
 		};
 
 		// Helpers to batch-insert segments that are below the min seq
-		const batch: ISegment[] = [];
-		const flushBatch = () => {
+		const batch: SegmentWithInfo<IInsertionInfo>[] = [];
+		const flushBatch = (): void => {
 			if (batch.length > 0) {
 				append(batch, NonCollabClient, UniversalSequenceNumber);
 			}
 		};
 
 		for (const seg of segs) {
-			const cli = seg.clientId;
-			const seq = seg.seq;
-
+			const { clientId, seq } = seg;
 			// If the segment can be batch inserted, add it to the 'batch' array.  Otherwise, flush
 			// any batched segments and then insert the current segment individually.
-			if (cli === NonCollabClient && seq === UniversalSequenceNumber) {
+			if (clientId === NonCollabClient && seq === UniversalSequenceNumber) {
 				batch.push(seg);
 			} else {
 				flushBatch();
-				append([seg], cli, seq!);
+				append([seg], clientId, seq);
 			}
 		}
 
 		flushBatch();
 	}
 
-	private extractAttribution(segments: ISegment[], chunk: MergeTreeChunkV1): void {
-		this.mergeTree.options ??= {};
-		this.mergeTree.options.attribution ??= {};
+	private extractAttribution(segments: ISegmentPrivate[], chunk: MergeTreeChunkV1): void {
 		if (chunk.attribution) {
 			const { attributionPolicy } = this.mergeTree;
 			if (attributionPolicy === undefined) {
@@ -288,12 +304,15 @@ export class SnapshotLoader {
 	/**
 	 * If loading from a snapshot, get the catchup messages.
 	 * @param rawMessages - The messages in original encoding
-	 * @returns The decoded messages, but handles aren't parsed.  Matches the format that will be passed in
+	 * @returns The decoded messages with parsed+hydrated handles.  Matches the format that will be passed in
 	 * SharedObject.processCore.
 	 */
 	private async loadCatchupOps(
 		rawMessages: Promise<ArrayBufferLike>,
+		serializer: IFluidSerializer,
 	): Promise<ISequencedDocumentMessage[]> {
-		return JSON.parse(bufferToString(await rawMessages, "utf8")) as ISequencedDocumentMessage[];
+		return serializer.parse(
+			bufferToString(await rawMessages, "utf8"),
+		) as ISequencedDocumentMessage[];
 	}
 }

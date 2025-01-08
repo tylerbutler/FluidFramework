@@ -3,8 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { ITree } from "@fluidframework/protocol-definitions";
+import { ITree } from "@fluidframework/driver-definitions/internal";
 
+/**
+ * @internal
+ */
 export function getNormalizedObjectStoragePathParts(path: string) {
 	let normalizePath = path;
 	if (normalizePath.startsWith("/")) {
@@ -19,6 +22,9 @@ export function getNormalizedObjectStoragePathParts(path: string) {
 	return [];
 }
 
+/**
+ * @internal
+ */
 export async function listBlobsAtTreePath(
 	inputTree: ITree | undefined,
 	path: string,

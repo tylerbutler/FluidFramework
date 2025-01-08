@@ -4,48 +4,59 @@
  */
 
 import { strict as assert } from "assert";
+
 import {
 	IContainer,
-	IHostLoader,
-	ILoaderOptions,
 	IFluidCodeDetails,
-} from "@fluidframework/container-definitions";
-import { LocalResolver, LocalDocumentServiceFactory } from "@fluidframework/local-driver";
-import { MessageType } from "@fluidframework/protocol-definitions";
-import { SharedString } from "@fluidframework/sequence";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import { IUrlResolver } from "@fluidframework/driver-definitions";
+	ILoaderOptions,
+} from "@fluidframework/container-definitions/internal";
 import {
-	LocalDeltaConnectionServer,
+	loadExistingContainer,
+	type ILoaderProps,
+} from "@fluidframework/container-loader/internal";
+import { IUrlResolver, MessageType } from "@fluidframework/driver-definitions/internal";
+import {
+	LocalDocumentServiceFactory,
+	LocalResolver,
+} from "@fluidframework/local-driver/internal";
+import { SharedString } from "@fluidframework/sequence/internal";
+import {
 	ILocalDeltaConnectionServer,
+	LocalDeltaConnectionServer,
 } from "@fluidframework/server-local-server";
 import {
-	createAndAttachContainer,
-	createLoader,
-	LoaderContainerTracker,
 	ITestFluidObject,
+	LoaderContainerTracker,
 	TestFluidObjectFactory,
-} from "@fluidframework/test-utils";
+	createAndAttachContainerUsingProps,
+	createLoaderProps,
+} from "@fluidframework/test-utils/internal";
 
 /**
  * Creates a loader with the given package entries and a delta connection server.
  * @param packageEntries - A list of code details to Fluid entry points.
  * @param deltaConnectionServer - The delta connection server to use as the server.
  */
-function createLocalLoader(
+function createLocalLoaderProps(
 	packageEntries: Iterable<[IFluidCodeDetails, TestFluidObjectFactory]>,
 	deltaConnectionServer: ILocalDeltaConnectionServer,
 	urlResolver: IUrlResolver,
 	options?: ILoaderOptions,
-): IHostLoader {
+): ILoaderProps {
 	const documentServiceFactory = new LocalDocumentServiceFactory(deltaConnectionServer);
 
-	return createLoader(packageEntries, documentServiceFactory, urlResolver, undefined, options);
+	return createLoaderProps(
+		packageEntries,
+		documentServiceFactory,
+		urlResolver,
+		undefined,
+		options,
+	);
 }
 
 describe("LocalTestServer", () => {
 	const documentId = "localServerTest";
-	const documentLoadUrl = `fluid-test://localhost/${documentId}`;
+	const documentLoadUrl = `https://localhost/${documentId}`;
 	const stringId = "stringKey";
 	const codeDetails: IFluidCodeDetails = {
 		package: "localServerTestPackage",
@@ -64,27 +75,31 @@ describe("LocalTestServer", () => {
 	let sharedString2: SharedString;
 
 	async function createContainer(): Promise<IContainer> {
-		const loader = createLocalLoader(
+		const createDetachedContainerProps = createLocalLoaderProps(
 			[[codeDetails, factory]],
 			deltaConnectionServer,
 			urlResolver,
 		);
-		loaderContainerTracker.add(loader);
-		return createAndAttachContainer(
-			codeDetails,
-			loader,
+		const containerUsingPops = await createAndAttachContainerUsingProps(
+			{ ...createDetachedContainerProps, codeDetails },
 			urlResolver.createCreateNewRequest(documentId),
 		);
+		loaderContainerTracker.addContainer(containerUsingPops);
+		return containerUsingPops;
 	}
 
 	async function loadContainer(): Promise<IContainer> {
-		const loader = createLocalLoader(
+		const loaderProps = createLocalLoaderProps(
 			[[codeDetails, factory]],
 			deltaConnectionServer,
 			urlResolver,
 		);
-		loaderContainerTracker.add(loader);
-		return loader.resolve({ url: documentLoadUrl });
+		const containerUsingPops = await loadExistingContainer({
+			...loaderProps,
+			request: { url: documentLoadUrl },
+		});
+		loaderContainerTracker.addContainer(containerUsingPops);
+		return containerUsingPops;
 	}
 
 	beforeEach(async () => {
@@ -94,12 +109,12 @@ describe("LocalTestServer", () => {
 
 		// Create a Container for the first client.
 		container1 = await createContainer();
-		dataObject1 = await requestFluidObject<ITestFluidObject>(container1, "default");
+		dataObject1 = (await container1.getEntryPoint()) as ITestFluidObject;
 		sharedString1 = await dataObject1.getSharedObject<SharedString>(stringId);
 
 		// Load the Container that was created by the first client.
 		container2 = await loadContainer();
-		dataObject2 = await requestFluidObject<ITestFluidObject>(container2, "default");
+		dataObject2 = (await container2.getEntryPoint()) as ITestFluidObject;
 		sharedString2 = await dataObject2.getSharedObject<SharedString>(stringId);
 	});
 

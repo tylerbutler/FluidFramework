@@ -3,8 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { IsoDate } from "./date";
+import { IsoDate } from "./date.js";
 
+/**
+ * @alpha
+ */
 export interface IDocumentAttributes {
 	/**
 	 * Sequence number at which the snapshot was taken
@@ -17,6 +20,9 @@ export interface IDocumentAttributes {
 	minimumSequenceNumber: number;
 }
 
+/**
+ * @alpha
+ */
 export enum FileMode {
 	File = "100644",
 	Executable = "100755",
@@ -25,7 +31,8 @@ export enum FileMode {
 }
 
 /**
- * Raw blob stored within the tree
+ * Raw blob stored within the tree.
+ * @alpha
  */
 export interface IBlob {
 	/**
@@ -36,19 +43,27 @@ export interface IBlob {
 	/**
 	 * The encoding of the contents string
 	 */
+	// eslint-disable-next-line unicorn/text-encoding-identifier-case
 	encoding: "utf-8" | "base64";
 }
 
+/**
+ * @alpha
+ */
 export interface IAttachment {
 	id: string;
 }
 
+/**
+ * @alpha
+ */
 export interface ICreateBlobResponse {
 	id: string;
 }
 
 /**
- * A tree entry wraps a path with a type of node
+ * A tree entry wraps a path with a type of node.
+ * @alpha
  */
 export type ITreeEntry = {
 	/**
@@ -77,7 +92,8 @@ export type ITreeEntry = {
 );
 
 /**
- * Type of entries that can be stored in a tree
+ * Type of entries that can be stored in a tree.
+ * @alpha
  */
 export enum TreeEntry {
 	Blob = "Blob",
@@ -85,6 +101,9 @@ export enum TreeEntry {
 	Attachment = "Attachment",
 }
 
+/**
+ * @alpha
+ */
 export interface ITree {
 	entries: ITreeEntry[];
 
@@ -98,8 +117,19 @@ export interface ITree {
 	 * Indicates that this tree is unreferenced. If this is not present, the tree is considered referenced.
 	 */
 	unreferenced?: true;
+
+	/**
+	 * Represents the loading group to which the tree belongs to. Please refer to this readme for more context.
+	 * {@link https://github.com/microsoft/FluidFramework/blob/main/packages/runtime/container-runtime/README.md | README}
+	 * Also note that "groupId" is the same as "loadingGroupId" used elsewhere in the repo. The naming discrepancy is
+	 * intentional to minimize snapshot/summary size.
+	 */
+	groupId?: string;
 }
 
+/**
+ * @alpha
+ */
 export interface ISnapshotTree {
 	id?: string;
 	blobs: { [path: string]: string };
@@ -109,15 +139,27 @@ export interface ISnapshotTree {
 	 * Indicates that this tree is unreferenced. If this is not present, the tree is considered referenced.
 	 */
 	unreferenced?: true;
+
+	/**
+	 * Represents the loading group to which the snapshot tree belongs to. Please refer to this readme for more context.
+	 * {@link https://github.com/microsoft/FluidFramework/blob/main/packages/runtime/container-runtime/README.md | README}
+	 * Also note that "groupId" is the same as "loadingGroupId" used elsewhere in the repo. The naming discrepancy is
+	 * intentional to minimize snapshot/summary size.
+	 */
+	groupId?: string;
 }
 
+/**
+ * @internal
+ */
 export interface ISnapshotTreeEx extends ISnapshotTree {
 	id: string;
 	trees: { [path: string]: ISnapshotTreeEx };
 }
 
 /**
- * Represents a version of the snapshot of a data store
+ * Represents a version of the snapshot of a data store.
+ * @alpha
  */
 export interface IVersion {
 	/**

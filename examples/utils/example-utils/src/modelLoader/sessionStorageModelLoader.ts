@@ -3,35 +3,28 @@
  * Licensed under the MIT License.
  */
 
-import { ICodeDetailsLoader } from "@fluidframework/container-definitions";
-import {
-	LocalResolver,
-	LocalDocumentServiceFactory,
-	LocalSessionStorageDbFactory,
-	createLocalResolverCreateNewRequest,
-} from "@fluidframework/local-driver";
-import {
-	ILocalDeltaConnectionServer,
-	LocalDeltaConnectionServer,
-} from "@fluidframework/server-local-server";
-import { v4 as uuid } from "uuid";
+import { ICodeDetailsLoader } from "@fluidframework/container-definitions/legacy";
 import { ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
-import { IModelLoader } from "./interfaces";
-import { ModelLoader } from "./modelLoader";
+// eslint-disable-next-line import/no-internal-modules -- #26987: `local-driver` internal LocalSessionStorageDbFactory used in examples
+import { LocalSessionStorageDbFactory } from "@fluidframework/local-driver/internal";
+import {
+	LocalDocumentServiceFactory,
+	LocalResolver,
+	createLocalResolverCreateNewRequest,
+} from "@fluidframework/local-driver/legacy";
+import { LocalDeltaConnectionServer } from "@fluidframework/server-local-server";
+import { v4 as uuid } from "uuid";
+
+import { IDetachedModel, IModelLoader } from "./interfaces.js";
+import { ModelLoader } from "./modelLoader.js";
 
 const urlResolver = new LocalResolver();
 
-const deltaConnectionServerMap = new Map<string, ILocalDeltaConnectionServer>();
-const getDocumentServiceFactory = (documentId: string) => {
-	let deltaConnection = deltaConnectionServerMap.get(documentId);
-	if (deltaConnection === undefined) {
-		deltaConnection = LocalDeltaConnectionServer.create(new LocalSessionStorageDbFactory());
-		deltaConnectionServerMap.set(documentId, deltaConnection);
-	}
+const localServer = LocalDeltaConnectionServer.create(new LocalSessionStorageDbFactory());
 
-	return new LocalDocumentServiceFactory(deltaConnection);
-};
-
+/**
+ * @internal
+ */
 export class SessionStorageModelLoader<ModelType> implements IModelLoader<ModelType> {
 	public constructor(
 		private readonly codeLoader: ICodeDetailsLoader,
@@ -42,22 +35,22 @@ export class SessionStorageModelLoader<ModelType> implements IModelLoader<ModelT
 		return true;
 	}
 
-	public async createDetached(version: string) {
+	public async createDetached(version: string): Promise<IDetachedModel<ModelType>> {
 		const documentId = uuid();
 		const modelLoader = new ModelLoader<ModelType>({
 			urlResolver,
-			documentServiceFactory: getDocumentServiceFactory(documentId),
+			documentServiceFactory: new LocalDocumentServiceFactory(localServer),
 			codeLoader: this.codeLoader,
 			logger: this.logger,
 			generateCreateNewRequest: () => createLocalResolverCreateNewRequest(documentId),
 		});
 		return modelLoader.createDetached(version);
 	}
-	public async loadExisting(id: string) {
+	public async loadExisting(id: string): Promise<ModelType> {
 		const documentId = id;
 		const modelLoader = new ModelLoader<ModelType>({
 			urlResolver,
-			documentServiceFactory: getDocumentServiceFactory(documentId),
+			documentServiceFactory: new LocalDocumentServiceFactory(localServer),
 			codeLoader: this.codeLoader,
 			logger: this.logger,
 			generateCreateNewRequest: () => createLocalResolverCreateNewRequest(documentId),
@@ -67,7 +60,7 @@ export class SessionStorageModelLoader<ModelType> implements IModelLoader<ModelT
 	public async loadExistingPaused(id: string, sequenceNumber: number): Promise<ModelType> {
 		const modelLoader = new ModelLoader<ModelType>({
 			urlResolver,
-			documentServiceFactory: getDocumentServiceFactory(id),
+			documentServiceFactory: new LocalDocumentServiceFactory(localServer),
 			codeLoader: this.codeLoader,
 			generateCreateNewRequest: () => createLocalResolverCreateNewRequest(id),
 		});

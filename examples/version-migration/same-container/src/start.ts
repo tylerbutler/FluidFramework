@@ -3,22 +3,24 @@
  * Licensed under the MIT License.
  */
 
+import type {
+	ISameContainerMigratableModel,
+	IVersionedModel,
+} from "@fluid-example/example-utils";
+import { ModelLoader, SameContainerMigrator } from "@fluid-example/example-utils";
+import { createRouterliciousDocumentServiceFactory } from "@fluidframework/routerlicious-driver/legacy";
+import {
+	createInsecureTinyliciousTestTokenProvider,
+	createInsecureTinyliciousTestUrlResolver,
+	createTinyliciousTestCreateNewRequest,
+} from "@fluidframework/tinylicious-driver/test-utils";
 import React from "react";
 import ReactDOM from "react-dom";
 
-import type { ISameContainerMigratableModel, IVersionedModel } from "@fluid-example/example-utils";
-import { SameContainerMigrator, ModelLoader } from "@fluid-example/example-utils";
-import { RouterliciousDocumentServiceFactory } from "@fluidframework/routerlicious-driver";
-import {
-	createTinyliciousCreateNewRequest,
-	InsecureTinyliciousTokenProvider,
-	InsecureTinyliciousUrlResolver,
-} from "@fluidframework/tinylicious-driver";
-
-import { inventoryListDataTransformationCallback } from "./dataTransform";
-import { DemoCodeLoader } from "./demoCodeLoader";
-import type { IInventoryListAppModel } from "./modelInterfaces";
-import { DebugView, InventoryListAppView } from "./view";
+import { inventoryListDataTransformationCallback } from "./dataTransform.js";
+import { DemoCodeLoader } from "./demoCodeLoader.js";
+import type { IInventoryListAppModel } from "./modelInterfaces.js";
+import { DebugView, InventoryListAppView } from "./view/index.js";
 
 const updateTabForId = (id: string) => {
 	// Update the URL with the actual ID
@@ -63,14 +65,13 @@ async function start(): Promise<void> {
 	// If we assumed the container code could consistently present a model to us, we could bake that assumption
 	// in here as well as in the Migrator -- both places just need a reliable way to get a model regardless of the
 	// (unknown) container version.  So the ModelLoader would be replaced by whatever the consistent request call
-	// (e.g. container.request({ url: "mode" })) looks like.
 	const modelLoader = new ModelLoader<IInventoryListAppModel>({
-		urlResolver: new InsecureTinyliciousUrlResolver(),
-		documentServiceFactory: new RouterliciousDocumentServiceFactory(
-			new InsecureTinyliciousTokenProvider(),
+		urlResolver: createInsecureTinyliciousTestUrlResolver(),
+		documentServiceFactory: createRouterliciousDocumentServiceFactory(
+			createInsecureTinyliciousTestTokenProvider(),
 		),
 		codeLoader: new DemoCodeLoader(),
-		generateCreateNewRequest: createTinyliciousCreateNewRequest,
+		generateCreateNewRequest: createTinyliciousTestCreateNewRequest,
 	});
 
 	let id: string;

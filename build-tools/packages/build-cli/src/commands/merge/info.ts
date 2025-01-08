@@ -2,11 +2,11 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Flags } from "@oclif/core";
-import chalk from "chalk";
 
-import { BaseCommand } from "../../base";
-import { Repository } from "../../lib";
+import { Flags } from "@oclif/core";
+import chalk from "picocolors";
+
+import { BaseCommand } from "../../library/index.js";
 
 /**
  * An object containing merge status between two branches.
@@ -29,10 +29,11 @@ interface BranchMergeInfo {
 }
 
 export default class MergeInfoCommand extends BaseCommand<typeof MergeInfoCommand> {
-	static description = `Get info about the merge status of branches in the repo. Uses "main" and "next" if no branch names are provided. Output the data as JSON using --json.`;
+	static readonly description =
+		`Get info about the merge status of branches in the repo. Uses "main" and "next" if no branch names are provided. Output the data as JSON using --json.`;
 
-	static enableJsonFlag = true;
-	static flags = {
+	static readonly enableJsonFlag = true;
+	static readonly flags = {
 		branch: Flags.string({
 			char: "b",
 			description:
@@ -40,9 +41,9 @@ export default class MergeInfoCommand extends BaseCommand<typeof MergeInfoComman
 			multiple: true,
 		}),
 		...BaseCommand.flags,
-	};
+	} as const;
 
-	static examples = [
+	static readonly examples = [
 		{
 			description: "Get info about the merge status of the main and next branch in the repo.",
 			command: "<%= config.bin %> <%= command.id %>",
@@ -54,7 +55,7 @@ export default class MergeInfoCommand extends BaseCommand<typeof MergeInfoComman
 	];
 
 	public async run(): Promise<BranchMergeInfo> {
-		const flags = this.flags;
+		const { flags } = this;
 		const branchFlags = flags.branch;
 
 		let branch1: string;
@@ -78,11 +79,11 @@ export default class MergeInfoCommand extends BaseCommand<typeof MergeInfoComman
 		}
 
 		const context = await this.getContext();
-		const repo = new Repository({ baseDir: context.gitRepo.resolvedRoot });
-		const remote = await repo.getRemote(context.originRemotePartialUrl);
+		const repo = await context.getGitRepository();
+		const remote = await repo.getRemote(repo.upstreamRemotePartialUrl);
 
 		if (remote === undefined) {
-			this.error(`Can't find a remote with ${context.originRemotePartialUrl}`);
+			this.error(`Can't find a remote with ${repo.upstreamRemotePartialUrl}`);
 		}
 		this.verbose(`Remote is: ${remote}`);
 
@@ -99,7 +100,7 @@ export default class MergeInfoCommand extends BaseCommand<typeof MergeInfoComman
 
 		const revs = rawRevs.split(/\r?\n/);
 
-		const [b1Log, b2Log] = [chalk.bold.blue(branch1), chalk.bold.blue(branch2)];
+		const [b1Log, b2Log] = [chalk.bold(chalk.blue(branch1)), chalk.bold(chalk.blue(branch2))];
 
 		this.logHr();
 		this.log(

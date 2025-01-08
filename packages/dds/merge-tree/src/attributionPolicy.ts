@@ -3,20 +3,22 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/core-utils";
-import { AttributionKey } from "@fluidframework/runtime-definitions";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { AttributionPolicy } from "./mergeTree";
-import { Client } from "./client";
+import { assert } from "@fluidframework/core-utils/internal";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+import { AttributionKey } from "@fluidframework/runtime-definitions/internal";
+
+import { AttributionCollection } from "./attributionCollection.js";
+import { Client } from "./client.js";
+import { AttributionPolicy } from "./mergeTree.js";
 import {
 	IMergeTreeDeltaCallbackArgs,
 	IMergeTreeDeltaOpArgs,
 	IMergeTreeMaintenanceCallbackArgs,
 	IMergeTreeSegmentDelta,
 	MergeTreeMaintenanceType,
-} from "./mergeTreeDeltaCallback";
-import { MergeTreeDeltaType } from "./ops";
-import { AttributionCollection } from "./attributionCollection";
+} from "./mergeTreeDeltaCallback.js";
+import { MergeTreeDeltaType } from "./ops.js";
+import { isInserted } from "./segmentInfos.js";
 
 // Note: these thinly wrap MergeTreeDeltaCallback and MergeTreeMaintenanceCallback to provide the client.
 // This is because the base callbacks don't always have enough information to infer whether the op being
@@ -25,11 +27,13 @@ interface AttributionCallbacks {
 	delta: (
 		opArgs: IMergeTreeDeltaOpArgs,
 		deltaArgs: IMergeTreeDeltaCallbackArgs,
+
 		client: Client,
 	) => void;
 	maintenance: (
 		maintenanceArgs: IMergeTreeMaintenanceCallbackArgs,
 		opArgs: IMergeTreeDeltaOpArgs | undefined,
+
 		client: Client,
 	) => void;
 }
@@ -40,28 +44,27 @@ function createAttributionPolicyFromCallbacks({
 }: AttributionCallbacks): AttributionPolicy {
 	let unsubscribe: undefined | (() => void);
 	return {
-		attach: (client: Client) => {
-			assert(
-				unsubscribe === undefined,
-				0x557 /* cannot attach to multiple clients at once */,
-			);
+		attach: (client: Client): void => {
+			assert(unsubscribe === undefined, 0x557 /* cannot attach to multiple clients at once */);
 
-			const deltaSubscribed = (opArgs, deltaArgs) => delta(opArgs, deltaArgs, client);
-			const maintenanceSubscribed = (args, opArgs) => maintenance(args, opArgs, client);
+			const deltaSubscribed: AttributionCallbacks["delta"] = (opArgs, deltaArgs) =>
+				delta(opArgs, deltaArgs, client);
+			const maintenanceSubscribed: AttributionCallbacks["maintenance"] = (args, opArgs) =>
+				maintenance(args, opArgs, client);
 
 			client.on("delta", deltaSubscribed);
 			client.on("maintenance", maintenanceSubscribed);
 
-			unsubscribe = () => {
+			unsubscribe = (): void => {
 				client.off("delta", deltaSubscribed);
 				client.off("maintenance", maintenanceSubscribed);
 			};
 		},
-		detach: () => {
+		detach: (): void => {
 			unsubscribe?.();
 			unsubscribe = undefined;
 		},
-		get isAttached() {
+		get isAttached(): boolean {
 			return unsubscribe !== undefined;
 		},
 		serializer: AttributionCollection,
@@ -95,7 +98,7 @@ const attributeInsertionOnSegments = (
 	key: AttributionKey,
 ): void => {
 	for (const { segment } of deltaSegments) {
-		if (segment.seq !== undefined) {
+		if (isInserted(segment)) {
 			segment.attribution?.update(
 				undefined,
 				new AttributionCollection(segment.cachedLength, key),
@@ -126,28 +129,27 @@ const insertOnlyAttributionPolicyCallbacks: AttributionCallbacks = {
 	},
 };
 
-function createPropertyTrackingMergeTreeCallbacks(...propNames: string[]): AttributionCallbacks {
+function createPropertyTrackingMergeTreeCallbacks(
+	...propNames: string[]
+): AttributionCallbacks {
 	const toTrack = propNames.map((entry) => ({ propName: entry, channelName: entry }));
 	const attributeAnnotateOnSegments = (
+		isLocal: boolean,
 		deltaSegments: IMergeTreeSegmentDelta[],
-		{ op, sequencedMessage }: IMergeTreeDeltaOpArgs,
+		{ op }: IMergeTreeDeltaOpArgs,
 		key: AttributionKey,
 	): void => {
-		for (const { segment } of deltaSegments) {
+		for (const { segment, propertyDeltas } of deltaSegments) {
 			for (const { propName, channelName } of toTrack) {
 				const shouldAttributeInsert =
 					op.type === MergeTreeDeltaType.INSERT &&
 					segment.properties?.[propName] !== undefined;
 
-				const isLocal = sequencedMessage === undefined;
 				const shouldAttributeAnnotate =
 					op.type === MergeTreeDeltaType.ANNOTATE &&
 					// Only attribute annotations which change the tracked property
-					op.props[propName] !== undefined &&
-					// Local changes to the tracked property always take effect
-					(isLocal ||
-						// Acked changes only take effect if there isn't a pending local change
-						(!isLocal && !segment.propertyManager?.hasPendingProperty(propName)));
+					(op.props?.[propName] !== undefined || op.adjust?.[propName] !== undefined) &&
+					(isLocal || (propertyDeltas !== undefined && propName in propertyDeltas));
 
 				if (shouldAttributeInsert || shouldAttributeAnnotate) {
 					segment.attribution?.update(
@@ -159,19 +161,21 @@ function createPropertyTrackingMergeTreeCallbacks(...propNames: string[]): Attri
 		}
 	};
 	return {
-		delta: (opArgs, { deltaSegments }, client) => {
+		delta: (opArgs, { deltaSegments }, client): void => {
 			const { op, sequencedMessage } = opArgs;
 			if (op.type === MergeTreeDeltaType.ANNOTATE || op.type === MergeTreeDeltaType.INSERT) {
 				attributeAnnotateOnSegments(
+					sequencedMessage === undefined,
 					deltaSegments,
 					opArgs,
 					getAttributionKey(client, sequencedMessage),
 				);
 			}
 		},
-		maintenance: ({ deltaSegments, operation }, opArgs, client) => {
+		maintenance: ({ deltaSegments, operation }, opArgs, client): void => {
 			if (operation === MergeTreeMaintenanceType.ACKNOWLEDGED && opArgs !== undefined) {
 				attributeAnnotateOnSegments(
+					true,
 					deltaSegments,
 					opArgs,
 					getAttributionKey(client, opArgs.sequencedMessage),
@@ -183,16 +187,20 @@ function createPropertyTrackingMergeTreeCallbacks(...propNames: string[]): Attri
 
 function combineMergeTreeCallbacks(callbacks: AttributionCallbacks[]): AttributionCallbacks {
 	return {
-		delta: (...args) => callbacks.forEach(({ delta }) => delta(...args)),
-		maintenance: (...args) => callbacks.forEach(({ maintenance }) => maintenance(...args)),
+		delta: (...args): void => {
+			for (const { delta } of callbacks) delta(...args);
+		},
+		maintenance: (...args): void => {
+			for (const { maintenance } of callbacks) maintenance(...args);
+		},
 	};
 }
 
 /**
- * @returns An {@link AttributionPolicy} which tracks only insertion of content.
- *
- * @alpha
+ * Creates an {@link AttributionPolicy} which only tracks initial insertion of content.
+ * @internal
  */
+
 export function createInsertOnlyAttributionPolicy(): AttributionPolicy {
 	return createAttributionPolicyFromCallbacks(
 		combineMergeTreeCallbacks([
@@ -203,6 +211,7 @@ export function createInsertOnlyAttributionPolicy(): AttributionPolicy {
 }
 
 /**
+ * Creates an {@link AttributionPolicy} for tracking annotation of specific properties.
  * @param propNames - List of property names for which attribution should be tracked.
  * @returns A policy which only attributes annotation of the properties specified.
  * Keys for each property are stored under attribution channels of the same name--see example below.
@@ -217,7 +226,7 @@ export function createInsertOnlyAttributionPolicy(): AttributionPolicy {
  * const lastBoldedAttributionKey = segment.attribution?.getAtOffset(0, "bold");
  * const lastItalicizedAttributionKey = segment.attribution?.getAtOffset(0, "italic");
  * ```
- * @alpha
+ * @internal
  */
 export function createPropertyTrackingAttributionPolicyFactory(
 	...propNames: string[]
@@ -235,7 +244,7 @@ export function createPropertyTrackingAttributionPolicyFactory(
  * Creates an attribution policy which tracks insertion as well as annotation of certain property names.
  * This combines the policies creatable using {@link createPropertyTrackingAttributionPolicyFactory} and
  * {@link createInsertOnlyAttributionPolicy}: see there for more details.
- * @alpha
+ * @internal
  */
 export function createPropertyTrackingAndInsertionAttributionPolicyFactory(
 	...propNames: string[]

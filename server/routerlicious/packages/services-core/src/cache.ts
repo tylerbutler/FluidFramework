@@ -5,12 +5,14 @@
 
 /**
  * Interface for a page object cache
+ * @internal
  */
 export interface ICache {
 	/**
 	 * Retrieves the cached entry for the given key. Or null if it doesn't exist.
 	 */
-	get(key: string): Promise<string>;
+	// eslint-disable-next-line @rushstack/no-new-null
+	get(key: string): Promise<string | null>;
 
 	/**
 	 * Sets a cache value

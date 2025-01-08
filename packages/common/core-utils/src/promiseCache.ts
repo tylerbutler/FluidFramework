@@ -8,6 +8,8 @@
  * - indefinite: entries don't expire and must be explicitly removed
  * - absolute: entries expire after the given duration in MS, even if accessed multiple times in the mean time
  * - sliding: entries expire after the given duration in MS of inactivity (i.e. get resets the clock)
+ * @legacy
+ * @alpha
  */
 export type PromiseCacheExpiry =
 	| {
@@ -20,6 +22,8 @@ export type PromiseCacheExpiry =
 
 /**
  * Options for configuring the {@link PromiseCache}
+ * @legacy
+ * @alpha
  */
 export interface PromiseCacheOptions {
 	/**
@@ -87,6 +91,8 @@ class GarbageCollector<TKey> {
 /**
  * A specialized cache for async work, allowing you to safely cache the promised result of some async work
  * without fear of running it multiple times or losing track of errors.
+ * @legacy
+ * @alpha
  */
 export class PromiseCache<TKey, TResult> {
 	private readonly cache = new Map<TKey, Promise<TResult>>();

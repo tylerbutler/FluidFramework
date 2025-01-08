@@ -2,13 +2,14 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Command, Flags } from "@oclif/core";
-import chalk from "chalk";
-import { Machine } from "jssm";
 
-import { BaseCommand } from "./base";
-import { StateHandler } from "./handlers";
-import { testModeFlag } from "./flags";
+import { Command, Flags } from "@oclif/core";
+import { Machine } from "jssm";
+import chalk from "picocolors";
+
+import { testModeFlag } from "./flags.js";
+import { StateHandler } from "./handlers/index.js";
+import { BaseCommand } from "./library/index.js";
 
 /**
  * A base CLI command that uses an internal state machine to govern its behavior. Subclasses must provide a state
@@ -26,7 +27,9 @@ import { testModeFlag } from "./flags";
  * The command also provides a `state` flag that can be used to initialize the state machine to a specific state. This
  * is intended for testing.
  */
-export abstract class StateMachineCommand<T extends typeof Command> extends BaseCommand<T> {
+export abstract class StateMachineCommand<
+	T extends typeof Command & { flags: typeof StateMachineCommand.flags },
+> extends BaseCommand<T> {
 	static flags = {
 		// Test mode flags
 		testMode: testModeFlag,
@@ -36,6 +39,7 @@ export abstract class StateMachineCommand<T extends typeof Command> extends Base
 			dependsOn: ["testMode"],
 			hidden: true,
 		}),
+		...BaseCommand.flags,
 	};
 
 	/**
@@ -63,11 +67,13 @@ export abstract class StateMachineCommand<T extends typeof Command> extends Base
 	/**
 	 * Wires up some hooks on the state machine to do machine-wide logging.
 	 */
-	protected async initMachineHooks() {
+	protected async initMachineHooks(): Promise<void> {
 		for (const state of this.machine.states()) {
 			// Logs the entry into any terminal state, noting the source state and action that caused the transition.
 			if (this.machine.state_is_terminal(state) === true) {
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				this.machine.hook_entry(state, (o: any) => {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					const { from, action } = o;
 					this.verbose(`${state}: ${action} from ${from}`);
 				});
@@ -76,7 +82,9 @@ export abstract class StateMachineCommand<T extends typeof Command> extends Base
 
 		// Logs all transitions in the state machine, noting the source and target states and the action that caused the
 		// transition.
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		this.machine.hook_any_transition((t: any) => {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const { action, from, to } = t;
 			this.verbose(`STATE MACHINE: ${from} [${action}] ==> ${to}`);
 		});
@@ -87,21 +95,21 @@ export abstract class StateMachineCommand<T extends typeof Command> extends Base
 	 * of their `run` method.
 	 */
 	protected async stateLoop(): Promise<void> {
-		const flags = this.flags;
+		const { flags, machine, handler, logger, data } = this;
 
 		if (flags.testMode === true) {
-			const machineStates = this.machine.states();
+			const machineStates = machine.states();
 			if (flags.state !== undefined) {
 				if (!machineStates.includes(flags.state)) {
 					throw new Error(`State not found in state machine`);
 				}
 
-				const handled = await this.handler?.handleState(
+				const handled = await handler?.handleState(
 					flags.state,
-					this.machine,
+					machine,
 					flags.testMode,
-					this.logger,
-					this.data,
+					logger,
+					data,
 				);
 
 				if (handled === true) {
@@ -113,23 +121,23 @@ export abstract class StateMachineCommand<T extends typeof Command> extends Base
 			}
 		} else {
 			do {
-				const state = this.machine.state();
+				const state = machine.state();
 
 				// eslint-disable-next-line no-await-in-loop
-				const handled = await this.handler?.handleState(
+				const handled = await handler?.handleState(
 					state,
-					this.machine,
+					machine,
 					flags.testMode,
-					this.logger,
-					this.data,
+					logger,
+					data,
 				);
 				if (handled !== true) {
 					this.error(chalk.red(`Unhandled state: ${state}`));
 				}
 
-				if (this.machine.state_is_final(state)) {
+				if (machine.state_is_final(state)) {
 					this.verbose(`Exiting. Final state: ${state}`);
-					this.exit();
+					this.exit(0);
 				}
 
 				// eslint-disable-next-line no-constant-condition

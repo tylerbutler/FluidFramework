@@ -9,6 +9,9 @@ import { safelyParseJSON } from "@fluidframework/common-utils";
 import { BoxcarType, IBoxcarMessage, IMessage } from "./messages";
 import { IQueuedMessage } from "./queue";
 
+/**
+ * @internal
+ */
 export interface IPartitionLambdaPlugin {
 	create(
 		config: Provider,
@@ -19,6 +22,7 @@ export interface IPartitionLambdaPlugin {
 
 /**
  * Reasons why a lambda is closing
+ * @internal
  */
 export enum LambdaCloseType {
 	Stop = "Stop",
@@ -27,16 +31,25 @@ export enum LambdaCloseType {
 	Error = "Error",
 }
 
+/**
+ * @internal
+ */
 export enum LambdaName {
 	Scribe = "Scribe",
 }
 
+/**
+ * @internal
+ */
 export interface ILogger {
 	info(message: string, metaData?: any): void;
 	warn(message: string, metaData?: any): void;
 	error(message: string, metaData?: any): void;
 }
 
+/**
+ * @internal
+ */
 export interface IContextErrorData {
 	/**
 	 * Indicates whether the error is recoverable and the lambda should be restarted.
@@ -61,6 +74,9 @@ export interface IContextErrorData {
 	errorLabel?: string;
 }
 
+/**
+ * @internal
+ */
 export interface IContext {
 	/**
 	 * Updates the checkpoint
@@ -78,8 +94,23 @@ export interface IContext {
 	 * Used to log events / errors.
 	 */
 	readonly log: ILogger | undefined;
+
+	/**
+	 * Pauses the context
+	 * @param offset - The offset to pause at. This is the offset from which it will be resumed.
+	 * @param reason - The reason for pausing
+	 */
+	pause(offset: number, reason?: any): void;
+
+	/**
+	 * Resumes the context
+	 */
+	resume(): void;
 }
 
+/**
+ * @internal
+ */
 export interface IPartitionLambda {
 	/**
 	 * Expire document partition after this long of no activity.
@@ -88,7 +119,8 @@ export interface IPartitionLambda {
 	readonly activityTimeout?: number;
 
 	/**
-	 * Processes an incoming message
+	 * Processes an incoming message.
+	 * @returns a Promise if there is async work required, otherwise `undefined`.
 	 */
 	handler(message: IQueuedMessage): Promise<void> | undefined;
 
@@ -97,10 +129,21 @@ export interface IPartitionLambda {
 	 * any deferred work.
 	 */
 	close(closeType: LambdaCloseType): void;
+
+	/**
+	 * Pauses the lambda. It should clear any pending work.
+	 */
+	pause?(offset: number): void;
+
+	/**
+	 * Resumes the lambda. This is relevant for documentLambda to resume the documentPartition queueus.
+	 */
+	resume?(): void;
 }
 
 /**
  * Factory for creating lambda related objects
+ * @internal
  */
 export interface IPartitionLambdaFactory<TConfig = undefined> extends EventEmitter {
 	/**
@@ -109,7 +152,7 @@ export interface IPartitionLambdaFactory<TConfig = undefined> extends EventEmitt
 	create(
 		config: TConfig,
 		context: IContext,
-		updateActivityTime?: () => void,
+		updateActivityTime?: (activityTime?: number) => void,
 	): Promise<IPartitionLambda>;
 
 	/**
@@ -120,12 +163,26 @@ export interface IPartitionLambdaFactory<TConfig = undefined> extends EventEmitt
 
 /**
  * Lambda config
+ * @internal
  */
 export interface IPartitionLambdaConfig {
 	tenantId: string;
 	documentId: string;
 }
 
+/**
+ * Whether the boxcar message includes the optional Routing Key fields.
+ * @internal
+ */
+export function isCompleteBoxcarMessage(
+	boxcar: IBoxcarMessage,
+): boxcar is Required<IBoxcarMessage> {
+	return boxcar.documentId !== undefined && boxcar.tenantId !== undefined;
+}
+
+/**
+ * @internal
+ */
 export function extractBoxcar(message: IQueuedMessage): IBoxcarMessage {
 	if (typeof message.value !== "string" && !Buffer.isBuffer(message.value)) {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -140,8 +197,8 @@ export function extractBoxcar(message: IQueuedMessage): IBoxcarMessage {
 	if (!parsedMessage) {
 		return {
 			contents: [],
-			documentId: null,
-			tenantId: null,
+			documentId: undefined,
+			tenantId: undefined,
 			type: BoxcarType,
 		};
 	}

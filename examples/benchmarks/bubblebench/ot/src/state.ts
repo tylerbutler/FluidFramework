@@ -3,24 +3,28 @@
  * Licensed under the MIT License.
  */
 
-import { SharedJson1 } from "@fluid-experimental/sharejs-json1";
 import {
-	IAppState,
-	IClient,
-	IArrayish,
+	type IAppState,
+	type IBubble,
+	type IClient,
 	makeBubble,
 	randomColor,
+	type SimpleClient,
 } from "@fluid-example/bubblebench-common";
-import { observe } from "./proxy";
+import type { SharedJson1 } from "@fluid-experimental/sharejs-json1";
+
+import { observe } from "./proxy/index.js";
 
 interface IApp {
-	clients: IArrayish<IClient>;
+	clients: IArrayish<SimpleClient>;
 }
+
+interface IArrayish<T> extends ArrayLike<T>, Pick<T[], "push">, Iterable<T> {}
 
 export class AppState implements IAppState {
 	private readonly root: IApp;
 
-	public readonly localClient: IClient;
+	public readonly localClient: SimpleClient;
 
 	constructor(
 		tree: SharedJson1,
@@ -33,24 +37,26 @@ export class AppState implements IAppState {
 		const client = {
 			clientId: "pending",
 			color: randomColor(),
-			bubbles: new Array(numBubbles).fill(undefined).map(() => this.makeBubble()),
+			bubbles: Array.from({ length: numBubbles })
+				.fill(undefined)
+				.map(() => this.makeBubble()),
 		};
 
 		const length = this.root.clients.push(client);
 		this.localClient = this.root.clients[length - 1];
 	}
 
-	public applyEdits() {}
+	public applyEdits(): void {}
 
-	public setSize(width?: number, height?: number) {
+	public setSize(width?: number, height?: number): void {
 		this._width = width ?? 640;
 		this._height = height ?? 480;
 	}
 
-	public get width() {
+	public get width(): number {
 		return this._width;
 	}
-	public get height() {
+	public get height(): number {
 		return this._height;
 	}
 
@@ -58,18 +64,22 @@ export class AppState implements IAppState {
 		return this.root.clients;
 	}
 
-	private makeBubble() {
+	private makeBubble(): IBubble {
 		return makeBubble(this.width, this.height);
 	}
 
-	public increaseBubbles() {
+	public increaseBubbles(): void {
 		this.localClient.bubbles.push(this.makeBubble());
 	}
 
-	public decreaseBubbles() {
+	public decreaseBubbles(): void {
 		const bubbles = this.localClient.bubbles;
 		if (bubbles.length > 1) {
 			bubbles.pop();
 		}
+	}
+
+	public runTransaction(inner: () => void): void {
+		inner();
 	}
 }

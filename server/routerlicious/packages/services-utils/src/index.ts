@@ -5,20 +5,21 @@
 
 export { IApiCounters, InMemoryApiCounters } from "./apiCounters";
 export {
+	AsyncLocalStorageContextProvider,
+	AsyncLocalStorageTelemetryContext,
+	AsyncLocalStorageTimeoutContext,
+} from "./asyncContext";
+export {
 	bindCorrelationId,
 	getCorrelationId,
 	getCorrelationIdWithHttpFallback,
 } from "./asyncLocalStorage";
 export {
-	bindTelemetryContext,
-	getTelemetryContextPropertiesWithHttpInfo,
-} from "./telemetryContext";
-export { bindTimeoutContext } from "./timeoutContext";
-export {
 	generateToken,
 	generateUser,
 	getCreationToken,
 	getParam,
+	isKeylessFluidAccessClaimEnabled,
 	respondWithNetworkError,
 	validateTokenClaims,
 	verifyStorageToken,
@@ -33,6 +34,7 @@ export { FluidServiceError, FluidServiceErrorCode } from "./errorUtils";
 export { executeApiWithMetric } from "./executeApiWithMetric";
 export { executeOnInterval, ScheduledJob } from "./executeOnInterval";
 export { choose, getRandomName } from "./generateNames";
+export { configureGlobalTelemetryContext, configureGlobalTimeoutContext } from "./globalContext";
 export { configureLogging, IWinstonConfig } from "./logger";
 export {
 	alternativeMorganLoggerMiddleware,
@@ -42,13 +44,22 @@ export { normalizePort } from "./port";
 export {
 	executeRedisMultiWithHmsetExpire,
 	executeRedisMultiWithHmsetExpireAndLpush,
+	getRedisClusterRetryStrategy,
 	IRedisParameters,
 } from "./redisUtils";
+export {
+	bindTelemetryContext,
+	getTelemetryContextPropertiesWithHttpInfo,
+} from "./telemetryContext";
+export { bindTimeoutContext } from "./timeoutContext";
 export { IThrottleConfig, ISimpleThrottleConfig, getThrottleConfig } from "./throttlerConfigs";
 export { IThrottleMiddlewareOptions, throttle } from "./throttlerMiddleware";
-export {
-	WebSocketTracker,
-	DummyTokenRevocationManager,
-	DummyRevokedTokenChecker,
-} from "./tokenRevocationManager";
+export { DummyTokenRevocationManager, DummyRevokedTokenChecker } from "./tokenRevocationManager";
 export { WinstonLumberjackEngine } from "./winstonLumberjackEngine";
+export { WebSocketTracker } from "./webSocketTracker";
+export {
+	RedisClientConnectionManager,
+	IRedisClientConnectionManager,
+} from "./redisClientConnectionManager";
+export { ITenantKeyGenerator, TenantKeyGenerator } from "./tenantKeyGenerator";
+export { ResponseSizeMiddleware } from "./responseSizeMiddleware";

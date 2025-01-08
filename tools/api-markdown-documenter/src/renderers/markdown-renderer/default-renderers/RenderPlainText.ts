@@ -2,9 +2,10 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import type { PlainTextNode } from "../../../documentation-domain";
-import type { DocumentWriter } from "../../DocumentWriter";
-import type { RenderContext } from "../RenderContext";
+
+import type { PlainTextNode } from "../../../documentation-domain/index.js";
+import type { DocumentWriter } from "../../DocumentWriter.js";
+import type { RenderContext } from "../RenderContext.js";
 
 /**
  * This logic was adapted from:
@@ -35,15 +36,17 @@ export function renderPlainText(
 			case "\n":
 			case " ":
 			case "[":
-			case ">":
+			case ">": {
 				// okay to put a symbol
 				break;
-			default:
+			}
+			default: {
 				// This is no problem:        "**one** *two* **three**"
 				// But this is trouble:       "**one***two***three**"
 				// The most general solution: "**one**<!-- -->*two*<!-- -->**three**"
 				writer.write("<!-- -->");
 				break;
+			}
 		}
 	}
 
@@ -66,7 +69,7 @@ export function renderPlainText(
 
 	// Don't escape text within a code block in Markdown, or if it has already been escaped
 	const text =
-		context.insideCodeBlock === true || node.escaped ? body : getMarkdownEscapedText(body);
+		context.insideCodeBlock === true || node.escaped ? body : escapeTextForMarkdown(body);
 	writer.write(text);
 
 	if (context.strikethrough === true) {
@@ -101,12 +104,12 @@ function splitLeadingAndTrailingWhitespace(text: string): SplitTextResult {
 }
 
 /**
- * Converts text into an escaped, html-nesting-friendly form
+ * Escapes the provided text for use in Markdown.
  *
- * @param text - Text to escape
- * @returns Escaped text
+ * @param text - The text to escape.
+ * @returns The escaped text.
  */
-function getMarkdownEscapedText(text: string): string {
+export function escapeTextForMarkdown(text: string): string {
 	return text
 		.replace(/\\/g, "\\\\") // first replace the escape character
 		.replace(/[#*[\]_`|~]/g, (x) => `\\${x}`) // then escape any special characters

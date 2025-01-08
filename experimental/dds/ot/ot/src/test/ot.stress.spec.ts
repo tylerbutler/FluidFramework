@@ -4,15 +4,17 @@
  */
 
 import { strict as assert } from "assert";
-import { Random } from "best-random";
-import { IChannelServices } from "@fluidframework/datastore-definitions";
+
+import { IChannelServices } from "@fluidframework/datastore-definitions/internal";
 import {
-	MockFluidDataStoreRuntime,
-	MockStorage,
 	MockContainerRuntimeFactoryForReconnection,
 	MockContainerRuntimeForReconnection,
-} from "@fluidframework/test-runtime-utils";
-import { SharedDelta } from "./delta";
+	MockFluidDataStoreRuntime,
+	MockStorage,
+} from "@fluidframework/test-runtime-utils/internal";
+import { Random } from "best-random";
+
+import { SharedDelta } from "./delta.js";
 
 describe("SharedOT", () => {
 	describe("stress", () => {
@@ -84,7 +86,9 @@ describe("SharedOT", () => {
 
 				// Create docs for this stress run.
 				for (let i = 0; i < numClients; i++) {
-					const dataStoreRuntimeN = new MockFluidDataStoreRuntime();
+					const dataStoreRuntimeN = new MockFluidDataStoreRuntime({
+						registry: [SharedDelta.getFactory()],
+					});
 					const containerRuntimeN =
 						containerRuntimeFactory.createContainerRuntime(dataStoreRuntimeN);
 					const servicesN: IChannelServices = {
@@ -92,7 +96,7 @@ describe("SharedOT", () => {
 						objectStorage: new MockStorage(),
 					};
 
-					const docN = SharedDelta.getFactory().create(dataStoreRuntimeN, `doc-${i}`);
+					const docN = SharedDelta.create(dataStoreRuntimeN, `doc-${i}`);
 					docN.connect(servicesN);
 
 					docs.push(docN);
@@ -112,17 +116,13 @@ describe("SharedOT", () => {
 					trace?.push(
 						`doc${
 							docIndex + 1
-						}.insert(/* position: */ ${position}, /* text: */ ${JSON.stringify(
-							text,
-						)});`,
+						}.insert(/* position: */ ${position}, /* text: */ ${JSON.stringify(text)});`,
 					);
 					docs[docIndex].insert(position, text);
 				};
 
 				const del = (docIndex: number, start: number, end: number) => {
-					trace?.push(
-						`doc${docIndex + 1}.delete(/* start: */ ${start}, /* end: */ ${end});`,
-					);
+					trace?.push(`doc${docIndex + 1}.delete(/* start: */ ${start}, /* end: */ ${end});`);
 					docs[docIndex].delete(start, end);
 				};
 
@@ -253,8 +253,7 @@ describe("SharedOT", () => {
 				if (now - lastStatus > 5000) {
 					process.stdout.write(
 						`Stress loop: ${iterations} iterations completed - Total Elapsed: ${(
-							(Date.now() - start) /
-							1000
+							(Date.now() - start) / 1000
 						).toFixed(2)}s\n`,
 					);
 					lastStatus = now;

@@ -4,6 +4,7 @@
  */
 
 import { assert } from "chai";
+
 import { Phase } from "./runBenchmark";
 import { Timer } from "./timer";
 
@@ -56,6 +57,9 @@ export enum BenchmarkType {
 	OwnCorrectness,
 }
 
+/**
+ * @public
+ */
 export enum TestType {
 	/**
 	 * Tests that measure execution time
@@ -97,10 +101,16 @@ for (const type of Object.values(TestType)) {
 export type BenchmarkArguments = Titled &
 	(BenchmarkSyncArguments | BenchmarkAsyncArguments | CustomBenchmarkArguments);
 
+/**
+ * @public
+ */
 export type CustomBenchmarkArguments = MochaExclusiveOptions &
 	CustomBenchmark &
 	BenchmarkDescription;
 
+/**
+ * @public
+ */
 export type BenchmarkRunningOptions =
 	| BenchmarkSyncArguments
 	| BenchmarkAsyncArguments
@@ -160,13 +170,56 @@ export interface BenchmarkAsyncFunction extends BenchmarkOptions {
 	benchmarkFnAsync: () => Promise<unknown>;
 }
 
+/**
+ * @public
+ * @sealed
+ */
 export interface BenchmarkTimer<T> {
 	readonly iterationsPerBatch: number;
 	readonly timer: Timer<T>;
 	recordBatch(duration: number): boolean;
+
+	/**
+	 * A helper utility which uses `timer` to time running `callback` `iterationsPerBatch` times and passes the result to recordBatch returning the result.
+	 * @remarks
+	 * This is implemented in terms of the other public APIs, and can be used in simple cases when no extra operations are required.
+	 */
+	timeBatch(callback: () => void): boolean;
 }
 
+/**
+ * @public
+ */
 export interface CustomBenchmark extends BenchmarkTimingOptions {
+	/**
+	 * Use `state` to measure and report the performance of batches.
+	 * @example
+	 * ```typescript
+	 * benchmarkFnCustom: async <T>(state: BenchmarkTimer<T>) => {
+	 * 	let duration: number;
+	 * 	do {
+	 * 		let counter = state.iterationsPerBatch;
+	 * 		const before = state.timer.now();
+	 * 		while (counter--) {
+	 * 			// Do the thing
+	 * 		}
+	 * 		const after = state.timer.now();
+	 * 		duration = state.timer.toSeconds(before, after);
+	 * 		// Collect data
+	 * 	} while (state.recordBatch(duration));
+	 * },
+	 * ```
+	 *
+	 * @example
+	 * ```typescript
+	 * benchmarkFnCustom: async <T>(state: BenchmarkTimer<T>) => {
+	 * 	let running: boolean;
+	 * 	do {
+	 * 		running = state.timeBatch(() => {});
+	 * 	} while (running);
+	 * },
+	 * ```
+	 */
 	benchmarkFnCustom<T>(state: BenchmarkTimer<T>): Promise<void>;
 }
 
@@ -363,13 +416,13 @@ export interface HookArguments {
 	 *
 	 * @remarks This does *not* execute on each iteration or cycle.
 	 */
-	before?: HookFunction;
+	before?: HookFunction | undefined;
 	/**
 	 * Executes once, after the test body it's declared for.
 	 *
 	 * @remarks This does *not* execute on each iteration or cycle.
 	 */
-	after?: HookFunction;
+	after?: HookFunction | undefined;
 }
 
 /**
@@ -410,6 +463,7 @@ export function benchmarkArgumentsIsCustom(
 	const isAsync = intersection.benchmarkFnAsync !== undefined;
 	const isCustom = intersection.benchmarkFnCustom !== undefined;
 	assert(
+		// eslint-disable-next-line unicorn/prefer-native-coercion-functions
 		[isSync, isAsync, isCustom].filter((x) => x).length === 1,
 		"Exactly one of `benchmarkFn`, `benchmarkFnAsync` or `benchmarkFnCustom` should be defined.",
 	);
@@ -422,11 +476,23 @@ export function benchmarkArgumentsIsCustom(
  *
  * @param args - See {@link BenchmarkDescription} and {@link Titled}
  * @returns A formatted tagged title from the supplied `BenchmarkDescription`.
+ *
+ * @public
  */
-export function qualifiedTitle(args: BenchmarkDescription & Titled): string {
-	const benchmarkTypeTag = BenchmarkType[args.type ?? BenchmarkType.Measurement];
-	const testTypeTag = TestType[TestType.ExecutionTime];
-	let qualifiedTitle = `${performanceTestSuiteTag} @${benchmarkTypeTag} @${testTypeTag} ${args.title}`;
+export function qualifiedTitle(
+	args: BenchmarkDescription & Titled & { testType?: TestType | undefined },
+): string {
+	const benchmarkTypeTag =
+		BenchmarkType[args.type ?? BenchmarkType.Measurement] ??
+		assert.fail("Invalid BenchmarkType");
+	const tags = [performanceTestSuiteTag, `@${benchmarkTypeTag}`];
+	if (args.testType !== undefined) {
+		const testTypeTag =
+			TestType[args.testType] ?? assert.fail(`Invalid TestType: ${args.testType}`);
+		tags.push(`@${testTypeTag}`);
+	}
+
+	let qualifiedTitle = `${tags.join(" ")} ${args.title}`;
 
 	if (args.category !== "" && args.category !== undefined) {
 		qualifiedTitle = `${qualifiedTitle} ${userCategoriesSplitter} @${args.category}`;

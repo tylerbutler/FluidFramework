@@ -3,20 +3,24 @@
  * Licensed under the MIT License.
  */
 
+import { performance } from "@fluid-internal/client-utils";
 import {
 	ITelemetryBaseEvent,
 	ITelemetryBaseLogger,
-	ITelemetryProperties,
+	ITelemetryBaseProperties,
 } from "@fluidframework/core-interfaces";
-import { performance } from "@fluid-internal/client-utils";
-import { debug as registerDebug, IDebugger } from "debug";
 import {
 	ITelemetryLoggerExt,
 	ITelemetryLoggerPropertyBags,
 	createMultiSinkLogger,
 	eventNamespaceSeparator,
 	formatTick,
-} from "@fluidframework/telemetry-utils";
+} from "@fluidframework/telemetry-utils/internal";
+// This import style is necessary to ensure the emitted JS code works in both CJS and ESM.
+import debugPkg from "debug";
+import type { IDebugger } from "debug";
+
+const { debug: registerDebug } = debugPkg;
 
 /**
  * Implementation of debug logger
@@ -41,7 +45,7 @@ export class DebugLogger implements ITelemetryBaseLogger {
 		// Create one for errors that is always enabled
 		// It can be silenced by replacing console.error if the debug namespace is not enabled.
 		const debugErr = registerDebug(namespace);
-		debugErr.log = function (...args) {
+		debugErr.log = function (...args: unknown[]): void {
 			if (debug.enabled === true) {
 				// if the namespace is enabled, just use the default logger
 				registerDebug.log(...args);
@@ -71,15 +75,15 @@ export class DebugLogger implements ITelemetryBaseLogger {
 	 * @param event - the event to send
 	 */
 	public send(event: ITelemetryBaseEvent): void {
-		const newEvent: ITelemetryProperties = { ...event };
+		const newEvent: ITelemetryBaseProperties = { ...event };
 		const isError = newEvent.category === "error";
 		let logger = isError ? this.debugErr : this.debug;
 
 		// Use debug's coloring schema for base of the event
 		const index = event.eventName.lastIndexOf(eventNamespaceSeparator);
-		const name = event.eventName.substring(index + 1);
+		const name = event.eventName.slice(Math.max(0, index + 1));
 		if (index > 0) {
-			logger = logger.extend(event.eventName.substring(0, index));
+			logger = logger.extend(event.eventName.slice(0, index));
 		}
 		newEvent.eventName = undefined;
 
@@ -96,7 +100,7 @@ export class DebugLogger implements ITelemetryBaseLogger {
 		let payload: string;
 		try {
 			payload = JSON.stringify(newEvent);
-		} catch (error) {
+		} catch {
 			newEvent.error = undefined;
 			payload = JSON.stringify(newEvent);
 		}

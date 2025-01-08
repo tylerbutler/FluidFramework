@@ -1,6 +1,6 @@
 # @fluid-internal/devtools-browser-extension
 
-This package contains a browser (Chrome) developer tools extension for use with [@fluid-experimental/devtools][].
+This package contains a browser (Chrome) developer tools extension for use with [@fluidframework/devtools][].
 It offers visual insights into the workings of the Fluid Framework in your application.
 
 It is currently compatible with [Chromium](https://www.chromium.org/Home/)-based browsers (e.g. [Chrome](https://www.google.com/chrome/) and [Edge](https://www.microsoft.com/en-us/edge/)).
@@ -106,15 +106,43 @@ To use a local build of this extension in your browser:
       In File Explorer or any other Windows application that can browse files, navigate to the path: \\wsl$.
     - If you are working in a [Codespace](https://code.visualstudio.com/docs/remote/codespaces) with Visual Studio Code, you can download the build artifacts by right-clicking on `dist/bundle` in the `Explorer` view and clicking `download`. This will download the files to your local machine, which you can upload to the browser.
 
-<!-- AUTO-GENERATED-CONTENT:START (README_CONTRIBUTION_GUIDELINES_SECTION:includeHeading=TRUE) -->
+#### Sending local usage data to Kusto
+
+When doing development on the Devtools browser extension, usage telemetry can be optionally generated and sent to Kusto. To do so, follow these instructions. Note that this is only available to internal Fluid Framework devs.
+
+1. Create a .env file in the devtools-browser-extension's root folder.
+2. The file should have a single line that reads `DEVTOOLS_TELEMETRY_TOKEN=PLACEHOLDER_KEY`. Replace PLACEHOLDER_KEY with the ingestion key. Currently this Consult Alejandro/Wayne to receive this key.
+3. Run `pnpm run build` to build the extension.
+4. Load the unpacked extension in the browser by following the instructions above.
+5. When using the extension on the Devtools example app, ensure that Send Usage Telemetry is toggled in Settings.
+6. After using the extension, go to the Office Fluid Test database in Kusto and query the `office_fluid_devtools_generic` table.
+
+You should now see the Devtools usage telemetry events appear!
+
+### Publishing
+
+Note: The browser extensions may only be published by Microsoft employees.
+For details on the steps required, see [here](https://eng.ms/docs/experiences-devices/opg/office-shared/fluid-framework/fluid-framework-internal/fluid-framework/docs/infrastructure/devtools/publishing-the-browser-extension) (Microsoft only).
+
+#### Store Assets
+
+The following are links to image assets intended for use in the extension store pages:
+
+- Logo (128 x 128 pixels): https://storage.fluidframework.com/static/images/devtools/logo.png
+- Large marquee (1400 x 560 pixels): https://storage.fluidframework.com/static/images/devtools/marquee-large.png
+- Small marquee (440 x 280 pixels): https://storage.fluidframework.com/static/images/devtools/marquee-small.png
+- Sample screenshots (either 640 x 400 pixels or 1280 x 800 pixels)
+  - Audience View: https://storage.fluidframework.com/static/images/devtools/screenshots/audience-view.png
+  - Data View: https://storage.fluidframework.com/static/images/devtools/screenshots/data-view.png
+  - Telemetry View: https://storage.fluidframework.com/static/images/devtools/screenshots/telemetry-view.png
+
+Updates to these assets can only be made by a Microsoft Fluid team member.
+If you update these images, be sure to update each of the browser extension store pages with the new images.
+
+<!-- AUTO-GENERATED-CONTENT:START (README_FOOTER) -->
 
 <!-- prettier-ignore-start -->
 <!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
-
-## Inject telemetry key
-If you're manually releasing or testing the Devtools browser extension using a local build, create your .env file with content like  "DEVTOOLS_TELEMETRY_TOKEN=abcdefgh-ijkl-mnop-qrst-uvwxyz6ffd9c". In automated pipeline builds, the telemetry key will be fetched from the "prague-key-vault" group in Azure Ops, and output the generated extension in artifact named `devtools-extension-bundle`.
-`
-For local tests, execute the command npm run `start:client:test`. This ensures the telemetry token is correctly integrated.
 
 ## Contribution Guidelines
 
@@ -134,40 +162,19 @@ This project may contain Microsoft trademarks or logos for Microsoft projects, p
 Use of these trademarks or logos must follow Microsoft’s [Trademark & Brand Guidelines](https://www.microsoft.com/trademarks).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 
-<!-- prettier-ignore-end -->
-
-<!-- AUTO-GENERATED-CONTENT:END -->
-
-<!-- AUTO-GENERATED-CONTENT:START (README_HELP_SECTION:includeHeading=TRUE) -->
-
-<!-- prettier-ignore-start -->
-<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
-
 ## Help
 
-Not finding what you're looking for in this README? Check out our [GitHub
-Wiki](https://github.com/microsoft/FluidFramework/wiki) or [fluidframework.com](https://fluidframework.com/docs/).
+Not finding what you're looking for in this README? Check out [fluidframework.com](https://fluidframework.com/docs/).
 
-Still not finding what you're looking for? Please [file an
-issue](https://github.com/microsoft/FluidFramework/wiki/Submitting-Bugs-and-Feature-Requests).
+Still not finding what you're looking for? Please [file an issue](https://github.com/microsoft/FluidFramework/wiki/Submitting-Bugs-and-Feature-Requests).
 
 Thank you!
-
-<!-- prettier-ignore-end -->
-
-<!-- AUTO-GENERATED-CONTENT:END -->
-
-<!-- AUTO-GENERATED-CONTENT:START (README_TRADEMARK_SECTION:includeHeading=TRUE) -->
-
-<!-- prettier-ignore-start -->
-<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
 
 ## Trademark
 
 This project may contain Microsoft trademarks or logos for Microsoft projects, products, or services.
 
-Use of these trademarks or logos must follow Microsoft's [Trademark & Brand
-Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+Use of these trademarks or logos must follow Microsoft's [Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
 
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 
@@ -177,4 +184,4 @@ Use of Microsoft trademarks or logos in modified versions of this project must n
 
 <!-- Links -->
 
-[@fluid-experimental/devtools]: https://github.com/microsoft/FluidFramework/tree/main/packages/tools/devtools/devtoor
+[@fluidframework/devtools]: https://github.com/microsoft/FluidFramework/tree/main/packages/tools/devtools/devtoor

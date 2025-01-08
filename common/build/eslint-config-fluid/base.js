@@ -16,8 +16,8 @@ module.exports = {
 		"plugin:@typescript-eslint/eslint-recommended",
 		"plugin:@typescript-eslint/recommended-type-checked",
 		"plugin:@typescript-eslint/stylistic-type-checked",
-		"plugin:import/errors",
-		"plugin:import/warnings",
+		// import/recommended is the combination of import/errors and import/warnings
+		"plugin:import/recommended",
 		"plugin:import/typescript",
 	],
 	globals: {
@@ -33,7 +33,7 @@ module.exports = {
 		sourceType: "module",
 		project: "./tsconfig.json",
 	},
-	plugins: ["unicorn"],
+	plugins: ["import", "unicorn"],
 	reportUnusedDisableDirectives: true,
 	rules: {
 		// Please keep entries alphabetized within a group
@@ -135,15 +135,11 @@ module.exports = {
 			},
 		],
 
-		// eslint-plugin-import
+		// #region eslint-plugin-import
+
 		"import/no-default-export": "error",
 		"import/no-deprecated": "off",
-		"import/no-extraneous-dependencies": [
-			"error",
-			{
-				devDependencies: ["**/*.spec.ts", "src/test/**"],
-			},
-		],
+		"import/no-extraneous-dependencies": "error",
 		"import/no-internal-modules": "error",
 		"import/no-unassigned-import": "error",
 		"import/no-unresolved": [
@@ -153,7 +149,22 @@ module.exports = {
 			},
 		],
 		"import/no-unused-modules": "error",
-		"import/order": "error",
+		"import/order": [
+			"error",
+			{
+				"newlines-between": "always",
+				"alphabetize": {
+					order: "asc",
+					// Sorting is case-sensitive by default, which is the same as Biome. To avoid
+					// another huge set of changes to order things case-insensitively, we'll just
+					// use the rule with this config for now. This decision should be considered
+					// pragmatic and not a statement of preference, and we should revisit this.
+					caseInsensitive: false,
+				},
+			},
+		],
+
+		// #region
 
 		// eslint-plugin-unicorn
 		"unicorn/better-regex": "error",
@@ -334,6 +345,7 @@ module.exports = {
 			"@typescript-eslint/parser": [".ts", ".tsx", ".d.ts"],
 		},
 		"import/resolver": {
+			// See remark in minimal-deprecated.js on the importance of import/resolver key order.
 			node: {
 				extensions: [".ts", ".tsx", ".d.ts", ".js", ".jsx"],
 			},

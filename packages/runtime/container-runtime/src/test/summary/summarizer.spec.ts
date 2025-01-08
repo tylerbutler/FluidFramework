@@ -4,7 +4,10 @@
  */
 
 import { strict as assert } from "assert";
-import { SummarizerStopReason, Summarizer } from "../../summary";
+
+import type { SummarizerStopReason } from "@fluidframework/container-runtime-definitions/internal";
+
+import { Summarizer } from "../../summary/index.js";
 
 describe("Runtime", () => {
 	describe("Summarization", () => {

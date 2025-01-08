@@ -3,12 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/core-utils";
+import { assert } from "@fluidframework/core-utils/internal";
 
 export class SnapshotableArray<T> extends Array {
 	protected data: T[] = [];
 
-	public asArray() {
+	public asArray(): T[] {
 		return this.data;
 	}
 

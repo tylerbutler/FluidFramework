@@ -3,15 +3,19 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "assert";
-import { makeRandom } from "@fluid-internal/stochastic-test-utils";
-import { UniversalSequenceNumber } from "../constants";
-import { reservedMarkerIdKey, MaxNodesInBlock } from "../mergeTreeNodes";
-import { MergeTreeDeltaType, ReferenceType } from "../ops";
-import { reservedTileLabelsKey } from "../referencePositions";
-import { TextSegment } from "../textSegment";
-import { TestClient } from "./testClient";
-import { insertSegments } from "./testUtils";
+import { strict as assert } from "node:assert";
+
+import { makeRandom } from "@fluid-private/stochastic-test-utils";
+
+import { UniversalSequenceNumber } from "../constants.js";
+import { MaxNodesInBlock, reservedMarkerIdKey } from "../mergeTreeNodes.js";
+import { MergeTreeDeltaType, ReferenceType } from "../ops.js";
+import { reservedTileLabelsKey } from "../referencePositions.js";
+import { TextSegment } from "../textSegment.js";
+
+import { TestClient } from "./testClient.js";
+import { createClientsAtInitialState } from "./testClientLogger.js";
+import { insertSegments } from "./testUtils.js";
 
 describe("TestClient", () => {
 	const localUserLongId = "localUser";
@@ -219,9 +223,8 @@ describe("TestClient", () => {
 
 		it("Should be able to find forward marker position with multiple segments and markers", () => {
 			const markerLabel = "EOP";
-			Array.from({ length: MaxNodesInBlock ** 3 * 2 }).forEach((_, i) =>
-				client.insertTextLocal(0, i.toString()),
-			);
+			for (const [i, _] of Array.from({ length: MaxNodesInBlock ** 3 * 2 }).entries())
+				client.insertTextLocal(0, i.toString());
 			// pad the string with markers on both ends so we never get undefined solely for convenience of this test
 			for (let i = 0; i <= client.getLength(); i += 3) {
 				client.insertMarkerLocal(i, ReferenceType.Tile, {
@@ -247,9 +250,8 @@ describe("TestClient", () => {
 
 		it("Should be able to find backward marker position with multiple segments and markers", () => {
 			const markerLabel = "EOP";
-			Array.from({ length: MaxNodesInBlock ** 3 * 2 }).forEach((_, i) =>
-				client.insertTextLocal(0, i.toString()),
-			);
+			for (const [i, _] of Array.from({ length: MaxNodesInBlock ** 3 * 2 }).entries())
+				client.insertTextLocal(0, i.toString());
 			// pad the string with markers on both ends so we never get undefined solely for convenience of this test
 			for (let i = 0; i <= client.getLength(); i += 3) {
 				client.insertMarkerLocal(i, ReferenceType.Tile, {
@@ -268,19 +270,14 @@ describe("TestClient", () => {
 					client.getClientId(),
 				);
 
-				assert.equal(
-					exp,
-					index - (index % 3),
-					"Marker with label not at expected position",
-				);
+				assert.equal(exp, index - (index % 3), "Marker with label not at expected position");
 			}
 		});
 
 		it("Should be able to find distant forward marker", () => {
 			const markerLabel = "EOP";
-			Array.from({ length: MaxNodesInBlock ** 3 * 2 }).forEach((_, i) =>
-				client.insertTextLocal(0, i.toString()),
-			);
+			for (const [i, _] of Array.from({ length: MaxNodesInBlock ** 3 * 2 }).entries())
+				client.insertTextLocal(0, i.toString());
 			for (let i = 10; i > 1; i -= 2) {
 				client.insertMarkerLocal(client.getLength() - i, ReferenceType.Tile, {
 					[reservedTileLabelsKey]: [markerLabel],
@@ -298,9 +295,8 @@ describe("TestClient", () => {
 
 		it("Should be able to find distant backward marker", () => {
 			const markerLabel = "EOP";
-			Array.from({ length: MaxNodesInBlock ** 3 * 2 }).forEach((_, i) =>
-				client.insertTextLocal(0, i.toString()),
-			);
+			for (const [i, _] of Array.from({ length: MaxNodesInBlock ** 3 * 2 }).entries())
+				client.insertTextLocal(0, i.toString());
 			for (let i = 10; i > 1; i -= 2) {
 				client.insertMarkerLocal(client.getLength() - i, ReferenceType.Tile, {
 					[reservedTileLabelsKey]: [markerLabel],
@@ -318,9 +314,8 @@ describe("TestClient", () => {
 
 		it("Should match results from forwardExcursion for many segments", () => {
 			const markerLabel = "EOP";
-			Array.from({ length: MaxNodesInBlock * 3 }).forEach((_, i) =>
-				client.insertTextLocal(0, i.toString()),
-			);
+			for (const [i, _] of Array.from({ length: MaxNodesInBlock * 3 }).entries())
+				client.insertTextLocal(0, i.toString());
 			const random = makeRandom(0xdeadbeef, 0xfeedbed, client.getLength());
 			for (let i = 0; i <= client.getLength() / 6; i++) {
 				const pos = random.integer(0, client.getLength() - 1);
@@ -339,9 +334,8 @@ describe("TestClient", () => {
 
 		it("Should match results from backwardExcursion for many segments", () => {
 			const markerLabel = "EOP";
-			Array.from({ length: MaxNodesInBlock * 3 }).forEach((_, i) =>
-				client.insertTextLocal(0, i.toString()),
-			);
+			for (const [i, _] of Array.from({ length: MaxNodesInBlock * 3 }).entries())
+				client.insertTextLocal(0, i.toString());
 			const random = makeRandom(0xdeadbeef, 0xfeedbed, client.getLength());
 			for (let i = 0; i <= client.getLength() / 6; i++) {
 				const pos = random.integer(0, client.getLength() - 1);
@@ -704,6 +698,128 @@ describe("TestClient", () => {
 
 				assert.equal(marker, undefined, "Returned marker should be undefined.");
 			});
+		});
+	});
+	describe(".getMarkerById", () => {
+		it("removed marker", () => {
+			const clients = createClientsAtInitialState({ initialState: "hello world" }, "A", "B");
+
+			const randomMarkerKey = "randomKey1";
+
+			assert(!clients.A.getMarkerFromId(randomMarkerKey), "local client before insert");
+
+			const ops = [
+				clients.A.makeOpMessage(
+					clients.A.insertMarkerLocal(5, ReferenceType.Simple, {
+						[reservedMarkerIdKey]: randomMarkerKey,
+					}),
+					1,
+				),
+			];
+
+			assert(
+				clients.A.getMarkerFromId(randomMarkerKey),
+				"local client after insert before ack",
+			);
+
+			for (const op of ops.splice(0)) {
+				for (const c of clients.all) c.applyMsg(op);
+			}
+
+			assert(
+				clients.A.getMarkerFromId(randomMarkerKey),
+				"local client after insert after ack",
+			);
+			assert(
+				clients.B.getMarkerFromId(randomMarkerKey),
+				"remote client after insert after ack",
+			);
+
+			ops.push(clients.A.makeOpMessage(clients.A.removeRangeLocal(5, 6), 1));
+
+			assert(
+				!clients.A.getMarkerFromId(randomMarkerKey),
+				"local client after remove before ack",
+			);
+			assert(
+				clients.B.getMarkerFromId(randomMarkerKey),
+				"remote client after remove before ack",
+			);
+
+			for (const op of ops.splice(0)) {
+				for (const c of clients.all) c.applyMsg(op);
+			}
+
+			assert(
+				!clients.A.getMarkerFromId(randomMarkerKey),
+				"local client after remove after ack",
+			);
+			assert(
+				!clients.B.getMarkerFromId(randomMarkerKey),
+				"remote client after remove after ack",
+			);
+		});
+		it("obliterate marker", () => {
+			const clients = createClientsAtInitialState(
+				{ initialState: "hello world", options: { mergeTreeEnableObliterate: true } },
+				"A",
+				"B",
+			);
+
+			const randomMarkerKey = "randomKey1";
+
+			assert(!clients.A.getMarkerFromId(randomMarkerKey), "local client before insert");
+
+			const ops = [
+				clients.A.makeOpMessage(
+					clients.A.insertMarkerLocal(5, ReferenceType.Simple, {
+						[reservedMarkerIdKey]: randomMarkerKey,
+					}),
+					1,
+				),
+			];
+
+			assert(
+				clients.A.getMarkerFromId(randomMarkerKey),
+				"local client after insert before ack",
+			);
+
+			for (const op of ops.splice(0)) {
+				for (const c of clients.all) c.applyMsg(op);
+			}
+
+			assert(
+				clients.A.getMarkerFromId(randomMarkerKey),
+				"local client after insert after ack",
+			);
+			assert(
+				clients.B.getMarkerFromId(randomMarkerKey),
+				"remote client after insert after ack",
+			);
+
+			ops.push(clients.A.makeOpMessage(clients.A.obliterateRangeLocal(5, 6), 1));
+
+			assert(
+				!clients.A.getMarkerFromId(randomMarkerKey),
+				"local client after obliterate before ack",
+			);
+			assert(
+				clients.B.getMarkerFromId(randomMarkerKey),
+				"remote client after obliterate before ack",
+			);
+
+			for (const op of ops.splice(0)) {
+				for (const c of clients.all) c.applyMsg(op);
+			}
+
+			assert(
+				!clients.A.getMarkerFromId(randomMarkerKey),
+				"local client after obliterate after ack",
+			);
+			assert(
+				!clients.B.getMarkerFromId(randomMarkerKey),
+				"remote client after obliterate after ack",
+			);
 		});
 	});
 });

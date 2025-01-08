@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { ScopeType, ITokenClaims } from "@fluidframework/protocol-definitions";
+import { ITokenClaims, ScopeType } from "@fluidframework/driver-definitions/internal";
 import { ITokenProvider, ITokenResponse } from "@fluidframework/routerlicious-driver";
 import { KJUR as jsrsasign } from "jsrsasign";
 import { v4 as uuid } from "uuid";
@@ -11,6 +11,7 @@ import { v4 as uuid } from "uuid";
 /**
  * As the name implies this is not secure and should not be used in production. It simply makes the example easier
  * to get up and running.
+ * @internal
  */
 export class InsecureTinyliciousTokenProvider implements ITokenProvider {
 	constructor(
@@ -25,14 +26,20 @@ export class InsecureTinyliciousTokenProvider implements ITokenProvider {
 		private readonly scopes?: ScopeType[],
 	) {}
 
-	public async fetchOrdererToken(tenantId: string, documentId?: string): Promise<ITokenResponse> {
+	public async fetchOrdererToken(
+		tenantId: string,
+		documentId?: string,
+	): Promise<ITokenResponse> {
 		return {
 			fromCache: true,
 			jwt: this.getSignedToken(tenantId, documentId),
 		};
 	}
 
-	public async fetchStorageToken(tenantId: string, documentId: string): Promise<ITokenResponse> {
+	public async fetchStorageToken(
+		tenantId: string,
+		documentId: string,
+	): Promise<ITokenResponse> {
 		return {
 			fromCache: true,
 			jwt: this.getSignedToken(tenantId, documentId),
@@ -73,4 +80,11 @@ export class InsecureTinyliciousTokenProvider implements ITokenProvider {
 			utf8Key,
 		);
 	}
+}
+
+/**
+ * Creates an insecure Tinylicious token provider for testing purposes.
+ */
+export function createInsecureTinyliciousTestTokenProvider(): ITokenProvider {
+	return new InsecureTinyliciousTokenProvider();
 }

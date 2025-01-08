@@ -3,29 +3,20 @@
  * Licensed under the MIT License.
  */
 
-import { IClient } from "@fluidframework/protocol-definitions";
-import { ServiceAudience } from "fluid-framework";
-import {
-	ITinyliciousAudience,
-	TinyliciousMember,
-	TinyliciousUser,
-} from "@fluidframework/tinylicious-client";
+import type { AzureMember } from "@fluidframework/azure-client";
+import type { AzureUser } from "@fluidframework/azure-client/internal";
+import { IClient } from "@fluidframework/driver-definitions";
 
-export class MockAudience
-	extends ServiceAudience<TinyliciousMember>
-	implements ITinyliciousAudience
-{
-	protected createServiceMember(audienceMember: IClient): TinyliciousMember {
-		const tinyliciousUser = audienceMember.user as TinyliciousUser;
+export function createMockServiceMember(audienceMember: IClient): AzureMember {
+	const azureUser = audienceMember.user as AzureUser;
 
-		if (tinyliciousUser === undefined) {
-			throw new Error("Specified user was not of type TinyliciousUser");
-		}
-
-		return {
-			userId: tinyliciousUser.id,
-			userName: tinyliciousUser.name,
-			connections: [],
-		};
+	if (azureUser === undefined) {
+		throw new Error("Specified user was not of type azureUser");
 	}
+
+	return {
+		id: azureUser.id,
+		name: azureUser.name,
+		connections: [],
+	};
 }

@@ -4,18 +4,18 @@
  */
 
 import { ModelLoader } from "@fluid-example/example-utils";
+import { assert } from "@fluidframework/core-utils/legacy";
+import { createRouterliciousDocumentServiceFactory } from "@fluidframework/routerlicious-driver/legacy";
 import {
-	createTinyliciousCreateNewRequest,
-	InsecureTinyliciousTokenProvider,
-	InsecureTinyliciousUrlResolver,
-} from "@fluidframework/tinylicious-driver";
-import { RouterliciousDocumentServiceFactory } from "@fluidframework/routerlicious-driver";
-import { assert } from "@fluidframework/core-utils";
+	createInsecureTinyliciousTestTokenProvider,
+	createInsecureTinyliciousTestUrlResolver,
+	createTinyliciousTestCreateNewRequest,
+} from "@fluidframework/tinylicious-driver/test-utils";
 
-import { DemoCodeLoader as DemoCodeLoader1 } from "./demoCodeLoader1";
-import { DemoCodeLoader as DemoCodeLoader2 } from "./demoCodeLoader2";
-import { renderDiceRoller } from "./view";
-import { IDiceRollerAppModel } from "./interfaces";
+import { DemoCodeLoader as DemoCodeLoader1 } from "./demoCodeLoader1.js";
+import { DemoCodeLoader as DemoCodeLoader2 } from "./demoCodeLoader2.js";
+import { IDiceRollerAppModel } from "./interfaces.js";
+import { renderDiceRoller } from "./view.js";
 
 /**
  * Get the latest version of the model.
@@ -39,12 +39,12 @@ async function start() {
 	console.log("Starting app with model version", modelVersion);
 
 	const modelLoader = new ModelLoader<IDiceRollerAppModel>({
-		urlResolver: new InsecureTinyliciousUrlResolver(),
-		documentServiceFactory: new RouterliciousDocumentServiceFactory(
-			new InsecureTinyliciousTokenProvider(),
+		urlResolver: createInsecureTinyliciousTestUrlResolver(),
+		documentServiceFactory: createRouterliciousDocumentServiceFactory(
+			createInsecureTinyliciousTestTokenProvider(),
 		),
 		codeLoader: modelVersion === "1.0" ? new DemoCodeLoader1() : new DemoCodeLoader2(),
-		generateCreateNewRequest: createTinyliciousCreateNewRequest,
+		generateCreateNewRequest: createTinyliciousTestCreateNewRequest,
 	});
 
 	let id: string;

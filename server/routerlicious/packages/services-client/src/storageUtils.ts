@@ -30,6 +30,7 @@ import {
  * If a node is empty (blank) it will be removed.
  * If a node's name begins and/or ends with a "/", it will be removed.
  * @param nodeNames - node names in path
+ * @internal
  */
 export const buildTreePath = (...nodeNames: string[]): string =>
 	nodeNames
@@ -42,6 +43,7 @@ export const buildTreePath = (...nodeNames: string[]): string =>
  * @param parentHandle - Handle of the last uploaded summary or detach new summary.
  * @param tree - Summary Tree which will be converted to whole summary tree to be uploaded.
  * @param path - Current path of node which is getting evaluated.
+ * @internal
  */
 export function convertSummaryTreeToWholeSummaryTree(
 	parentHandle: string | undefined,
@@ -138,7 +140,7 @@ export function convertSummaryTreeToWholeSummaryTree(
 			throw new Error(`Invalid tree entry for ${summaryObject.type}`);
 		}
 
-		wholeSummaryTree.entries.push(entry);
+		wholeSummaryTree.entries?.push(entry);
 	}
 
 	return wholeSummaryTree;
@@ -195,6 +197,7 @@ function buildSummaryTreeHierarchy(
  * @param flatSummary - flat summary
  * @param treePrefixToRemove - tree prefix to strip. By default we are stripping ".app" prefix
  * @returns snapshot tree, blob array, and sequence number
+ * @internal
  */
 export function convertWholeFlatSummaryToSnapshotTreeAndBlobs(
 	flatSummary: IWholeFlatSummary,
@@ -223,7 +226,7 @@ export function convertWholeFlatSummaryToSnapshotTreeAndBlobs(
  * @returns Whether the value is of IWholeSummaryTreeEntry type
  */
 function isWholeSummaryTreeValueEntry(obj: any): obj is IWholeSummaryTreeValueEntry {
-	return obj && typeof obj === "object" && "value" in obj;
+	return typeof obj === "object" && obj !== null && "value" in obj;
 }
 
 /**
@@ -232,7 +235,7 @@ function isWholeSummaryTreeValueEntry(obj: any): obj is IWholeSummaryTreeValueEn
  * @returns Whether the value is of IWholeSummaryBlob type
  */
 function isWholeSummaryBlob(obj: unknown): obj is IWholeSummaryBlob {
-	return obj && typeof obj === "object" && "content" in obj;
+	return typeof obj === "object" && obj !== null && "content" in obj;
 }
 
 /**
@@ -241,20 +244,21 @@ function isWholeSummaryBlob(obj: unknown): obj is IWholeSummaryBlob {
  * @returns Whether the value is of IWholeSummaryBlob type
  */
 function isWholeSummaryTree(obj: any): obj is IWholeSummaryTree {
-	return obj && typeof obj === "object" && "type" in obj;
+	return typeof obj === "object" && obj !== null && "type" in obj;
 }
 
 /**
  * Converts existing IWholeSummaryTree to ISummaryTree for the first summary (without Handle entries)
  * @param wholeSummaryTree - wholeSummaryTree used on the payload for creating and uploading a document.
  * @returns Summary tree to be used when creating a new document.
+ * @internal
  */
 export function convertFirstSummaryWholeSummaryTreeToSummaryTree(
 	wholeSummaryTree: IWholeSummaryTree,
 	unreferenced?: true | undefined,
 ): ISummaryTree {
 	const tree: { [path: string]: SummaryObject } = {};
-	for (const entry of wholeSummaryTree.entries) {
+	for (const entry of wholeSummaryTree.entries ?? []) {
 		switch (entry.type) {
 			case "blob": {
 				assert(isWholeSummaryTreeValueEntry(entry), "Invalid entry type");

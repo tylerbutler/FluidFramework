@@ -3,5 +3,4 @@
  * Licensed under the MIT License.
  */
 
-export { SameContainerMigrator } from "./sameContainerMigrator";
-export { Migrator } from "./migrator";
+export { SameContainerMigrator } from "./sameContainerMigrator.js";

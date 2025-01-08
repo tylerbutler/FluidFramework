@@ -3,14 +3,19 @@
  * Licensed under the MIT License.
  */
 
-import { LocalReferencePosition } from "./localReference";
-import { ISegment } from "./mergeTreeNodes";
-import { SortedSet } from "./sortedSet";
+import { LocalReferencePosition } from "./localReference.js";
+import { ISegmentInternal } from "./mergeTreeNodes.js";
+import { hasProp, toMergeNodeInfo } from "./segmentInfos.js";
+import { SortedSet } from "./sortedSet.js";
 
+/**
+ * @internal
+ */
 export type SortedSegmentSetItem =
-	| ISegment
+	| ISegmentInternal
 	| LocalReferencePosition
-	| { readonly segment: ISegment };
+	| { readonly segment: ISegmentInternal };
+
 /**
  * Stores a unique and sorted set of segments, or objects with segments
  *
@@ -20,26 +25,28 @@ export type SortedSegmentSetItem =
  * segments ordered by their ordinals will always have the same order even if the ordinal values on
  * the segments changes. This invariant allows us to ensure the segments stay
  * ordered and unique, and that new segments can be inserted into that order.
+ *
+ * @internal
  */
-export class SortedSegmentSet<T extends SortedSegmentSetItem = ISegment> extends SortedSet<
-	T,
-	string
-> {
+
+export class SortedSegmentSet<
+	T extends SortedSegmentSetItem = ISegmentInternal,
+> extends SortedSet<T, string> {
 	protected getKey(item: T): string {
 		const maybeRef = item as Partial<LocalReferencePosition>;
 		if (maybeRef.getSegment !== undefined && maybeRef.isLeaf?.() === false) {
 			const lref = maybeRef as LocalReferencePosition;
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			const segment = lref.getSegment()!;
-			return segment.ordinal;
+			// If the reference position has no associated segment, assign it a sentinel value.
+			// The particular value for comparison doesn't matter because `findItemPosition` tolerates
+			// elements with duplicate keys (as it must, since local references use the same key as their segment).
+			// All that matters is that it's consistent.
+			return toMergeNodeInfo(lref.getSegment())?.ordinal ?? "";
 		}
-		const maybeObject = item as { readonly segment: ISegment };
-		if (maybeObject?.segment) {
-			return maybeObject.segment.ordinal;
+		if (hasProp(item, "segment", "object")) {
+			return toMergeNodeInfo(item.segment)?.ordinal ?? "";
 		}
 
-		const maybeSegment = item as ISegment;
-		return maybeSegment.ordinal;
+		return toMergeNodeInfo(item)?.ordinal ?? "";
 	}
 
 	protected findItemPosition(item: T): { exists: boolean; index: number } {

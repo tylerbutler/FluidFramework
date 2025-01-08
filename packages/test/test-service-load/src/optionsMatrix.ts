@@ -3,29 +3,41 @@
  * Licensed under the MIT License.
  */
 
+import { TestDriverTypes } from "@fluid-internal/test-driver-definitions";
 import {
+	OptionsMatrix,
 	booleanCases,
 	generatePairwiseOptions,
-	OptionsMatrix,
 	numberCases,
-} from "@fluid-internal/test-pairwise-generator";
+} from "@fluid-private/test-pairwise-generator";
+// eslint-disable-next-line import/no-deprecated
+import { ILoaderOptions } from "@fluidframework/container-loader/internal";
 import {
 	CompressionAlgorithms,
-	IContainerRuntimeOptions,
 	IGCRuntimeOptions,
 	ISummaryRuntimeOptions,
-} from "@fluidframework/container-runtime";
-import { ILoaderOptions } from "@fluidframework/container-loader";
-import { ConfigTypes, LoggingError } from "@fluidframework/telemetry-utils";
-import { TestDriverTypes } from "@fluidframework/test-driver-definitions";
-import { ILoadTestConfig, OptionOverride } from "./testConfigFile";
+	type IContainerRuntimeOptionsInternal,
+} from "@fluidframework/container-runtime/internal";
+import { ConfigTypes } from "@fluidframework/core-interfaces";
+import { LoggingError } from "@fluidframework/telemetry-utils/internal";
 
-const loaderOptionsMatrix: OptionsMatrix<ILoaderOptions> = {
+import type { OptionOverride, TestConfiguration } from "./testConfigFile.js";
+
+// eslint-disable-next-line import/no-deprecated
+interface ILoaderOptionsExperimental extends ILoaderOptions {
+	enableOfflineSnapshotRefresh?: boolean;
+	snapshotRefreshTimeoutMs?: number;
+}
+
+const loaderOptionsMatrix: OptionsMatrix<ILoaderOptionsExperimental> = {
 	cache: booleanCases,
+	client: [undefined],
 	provideScopeLoader: booleanCases,
 	maxClientLeaveWaitTime: numberCases,
 	summarizeProtocolTree: [undefined],
 	enableOfflineLoad: booleanCases,
+	enableOfflineSnapshotRefresh: booleanCases,
+	snapshotRefreshTimeoutMs: [undefined, 60 * 5 * 1000 /* 5min */],
 };
 
 export function applyOverrides<T extends Record<string, any>>(
@@ -54,19 +66,19 @@ export function applyOverrides<T extends Record<string, any>>(
 
 export const generateLoaderOptions = (
 	seed: number,
-	overrides: Partial<OptionsMatrix<ILoaderOptions>> | undefined,
-): ILoaderOptions[] => {
-	return generatePairwiseOptions<ILoaderOptions>(
+	overrides: Partial<OptionsMatrix<ILoaderOptionsExperimental>> | undefined,
+): ILoaderOptionsExperimental[] => {
+	return generatePairwiseOptions<ILoaderOptionsExperimental>(
 		applyOverrides(loaderOptionsMatrix, overrides),
 		seed,
 	);
 };
 
 const gcOptionsMatrix: OptionsMatrix<IGCRuntimeOptions> = {
-	disableGC: booleanCases,
-	gcAllowed: booleanCases,
 	runFullGC: booleanCases,
-	sessionExpiryTimeoutMs: [undefined], // Don't want coverage here
+	sessionExpiryTimeoutMs: [undefined], // Don't want sessions to expire at a fixed time
+	enableGCSweep: [undefined], // Don't need coverage here, GC sweep is tested separately
+	sweepGracePeriodMs: [undefined], // Don't need coverage here, GC sweep is tested separately
 };
 
 const summaryOptionsMatrix: OptionsMatrix<ISummaryRuntimeOptions> = {
@@ -76,7 +88,7 @@ const summaryOptionsMatrix: OptionsMatrix<ISummaryRuntimeOptions> = {
 
 export function generateRuntimeOptions(
 	seed: number,
-	overrides: Partial<OptionsMatrix<IContainerRuntimeOptions>> | undefined,
+	overrides: Partial<OptionsMatrix<IContainerRuntimeOptionsInternal>> | undefined,
 ) {
 	const gcOptions = generatePairwiseOptions(
 		applyOverrides(gcOptionsMatrix, overrides?.gcOptions as any),
@@ -88,7 +100,7 @@ export function generateRuntimeOptions(
 		seed,
 	);
 
-	const runtimeOptionsMatrix: OptionsMatrix<IContainerRuntimeOptions> = {
+	const runtimeOptionsMatrix: OptionsMatrix<IContainerRuntimeOptionsInternal> = {
 		gcOptions: [undefined, ...gcOptions],
 		summaryOptions: [undefined, ...summaryOptions],
 		loadSequenceNumberVerification: [undefined],
@@ -97,14 +109,14 @@ export function generateRuntimeOptions(
 			{ minimumBatchSizeInBytes: 500, compressionAlgorithm: CompressionAlgorithms.lz4 },
 		],
 		maxBatchSizeInBytes: [716800],
-		enableOpReentryCheck: [true],
 		// Compressed payloads exceeding this size will be chunked into messages of exactly this size
 		chunkSizeInBytes: [204800],
-		enableRuntimeIdCompressor: [undefined, true],
+		enableRuntimeIdCompressor: ["on", undefined, "delayed"],
 		enableGroupedBatching: [true, false],
+		explicitSchemaControl: [true, false],
 	};
 
-	return generatePairwiseOptions<IContainerRuntimeOptions>(
+	return generatePairwiseOptions<IContainerRuntimeOptionsInternal>(
 		applyOverrides(runtimeOptionsMatrix, {
 			...overrides,
 			gcOptions: undefined,
@@ -132,7 +144,7 @@ export function generateConfigurations(
  * @returns an option override
  */
 export function getOptionOverride(
-	testConfig: ILoadTestConfig | undefined,
+	testConfig: TestConfiguration | undefined,
 	driverType: TestDriverTypes,
 	endpoint: string | undefined,
 ): OptionOverride | undefined {

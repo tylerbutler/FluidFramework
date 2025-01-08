@@ -3,13 +3,19 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "assert";
-import { LocalClientId, UnassignedSequenceNumber, UniversalSequenceNumber } from "../constants";
-import { MergeTreeMaintenanceType } from "../mergeTreeDeltaCallback";
-import { MergeTree } from "../mergeTree";
-import { MergeTreeDeltaType, ReferenceType } from "../ops";
-import { TextSegment } from "../textSegment";
-import { countOperations, insertMarker, insertSegments, insertText } from "./testUtils";
+import { strict as assert } from "node:assert";
+
+import {
+	LocalClientId,
+	UnassignedSequenceNumber,
+	UniversalSequenceNumber,
+} from "../constants.js";
+import { MergeTree } from "../mergeTree.js";
+import { MergeTreeMaintenanceType } from "../mergeTreeDeltaCallback.js";
+import { MergeTreeDeltaType, ReferenceType } from "../ops.js";
+import { TextSegment } from "../textSegment.js";
+
+import { countOperations, insertMarker, insertSegments, insertText } from "./testUtils.js";
 
 describe("MergeTree", () => {
 	let mergeTree: MergeTree;
@@ -39,7 +45,7 @@ describe("MergeTree", () => {
 		it("Insert starting text", () => {
 			let eventCalled: number = 0;
 
-			mergeTree.mergeTreeDeltaCallback = (opArgs, deltaArgs) => {
+			mergeTree.mergeTreeDeltaCallback = (opArgs, deltaArgs): void => {
 				eventCalled++;
 			};
 
@@ -61,7 +67,7 @@ describe("MergeTree", () => {
 			const textLength = mergeTree.getLength(currentSequenceNumber, localClientId);
 			let eventCalled: number = 0;
 
-			mergeTree.mergeTreeDeltaCallback = (opArgs, deltaArgs) => {
+			mergeTree.mergeTreeDeltaCallback = (opArgs, deltaArgs): void => {
 				eventCalled++;
 			};
 

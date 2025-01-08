@@ -4,33 +4,42 @@
  */
 
 import { strict as assert } from "assert";
-import { v4 as uuid } from "uuid";
 
-import { Deferred } from "@fluidframework/core-utils";
 import {
-	bufferToString,
-	gitHashFile,
 	IsoBuffer,
 	TypedEventEmitter,
+	bufferToString,
+	gitHashFile,
 } from "@fluid-internal/client-utils";
 import { AttachState } from "@fluidframework/container-definitions";
-import { IContainerRuntimeEvents } from "@fluidframework/container-runtime-definitions";
-import { IErrorBase, IFluidHandle } from "@fluidframework/core-interfaces";
-import { IDocumentStorageService } from "@fluidframework/driver-definitions";
-import {
-	IClientDetails,
-	ISequencedDocumentMessage,
-	SummaryType,
-} from "@fluidframework/protocol-definitions";
+import { IContainerRuntimeEvents } from "@fluidframework/container-runtime-definitions/internal";
 import {
 	ConfigTypes,
 	IConfigProviderBase,
-	mixinMonitoringContext,
+	IErrorBase,
+	IFluidHandle,
+} from "@fluidframework/core-interfaces";
+import { type IFluidHandleInternal } from "@fluidframework/core-interfaces/internal";
+import { Deferred } from "@fluidframework/core-utils/internal";
+import { IClientDetails, SummaryType } from "@fluidframework/driver-definitions";
+import { IDocumentStorageService } from "@fluidframework/driver-definitions/internal";
+import type { ISequencedMessageEnvelope } from "@fluidframework/runtime-definitions/internal";
+import {
+	LoggingError,
 	MonitoringContext,
 	createChildLogger,
-} from "@fluidframework/telemetry-utils";
-import { BlobManager, IBlobManagerLoadInfo, IBlobManagerRuntime } from "../blobManager";
-import { disableAttachmentBlobSweepKey } from "../gc";
+	mixinMonitoringContext,
+	type ITelemetryLoggerExt,
+} from "@fluidframework/telemetry-utils/internal";
+import { v4 as uuid } from "uuid";
+
+import {
+	BlobManager,
+	IBlobManagerLoadInfo,
+	IBlobManagerRuntime,
+	blobManagerBasePath,
+	redirectTableBlobName,
+} from "../blobManager/index.js";
 
 const MIN_TTL = 24 * 60 * 60; // same as ODSP
 abstract class BaseMockBlobStorage
@@ -78,20 +87,20 @@ export class MockRuntime
 		super();
 		this.attachState = attached ? AttachState.Attached : AttachState.Detached;
 		this.ops = stashed[0];
-		this.blobManager = new BlobManager(
-			undefined as any, // routeContext
+		this.baseLogger = mc.logger;
+		this.blobManager = new BlobManager({
+			routeContext: undefined as any,
 			snapshot,
-			() => this.getStorage(),
-			(localId: string, blobId?: string) => this.sendBlobAttachOp(localId, blobId),
-			() => undefined,
-			(blobPath: string) => this.isBlobDeleted(blobPath),
-			this,
-			stashed[1],
-			() => (this.closed = true),
-		);
+			getStorage: () => this.getStorage(),
+			sendBlobAttachOp: (localId: string, blobId?: string) =>
+				this.sendBlobAttachOp(localId, blobId),
+			blobRequested: () => undefined,
+			isBlobDeleted: (blobPath: string) => this.isBlobDeleted(blobPath),
+			runtime: this,
+			stashedBlobs: stashed[1],
+			closeContainer: () => (this.closed = true),
+		});
 	}
-
-	public gcTombstoneEnforcementAllowed: boolean = true;
 
 	public get storage() {
 		return (this.attachState === AttachState.Detached
@@ -111,9 +120,7 @@ export class MockRuntime
 				const P = this.processBlobsP.promise.then(async () => {
 					if (!this.connected && this.attachState === AttachState.Attached) {
 						this.unprocessedBlobs.delete(blob);
-						throw new Error(
-							"fake error due to having no connection to storage service",
-						);
+						throw new Error("fake error due to having no connection to storage service");
 					} else {
 						this.unprocessedBlobs.delete(blob);
 						return this.storage.createBlob(blob);
@@ -135,13 +142,13 @@ export class MockRuntime
 	public async createBlob(
 		blob: ArrayBufferLike,
 		signal?: AbortSignal,
-	): Promise<IFluidHandle<ArrayBufferLike>> {
+	): Promise<IFluidHandleInternal<ArrayBufferLike>> {
 		const P = this.blobManager.createBlob(blob, signal);
 		this.handlePs.push(P);
 		return P;
 	}
 
-	public async getBlob(blobHandle: IFluidHandle<ArrayBufferLike>) {
+	public async getBlob(blobHandle: IFluidHandleInternal<ArrayBufferLike>) {
 		const pathParts = blobHandle.absolutePath.split("/");
 		const blobId = pathParts[2];
 		return this.blobManager.getBlob(blobId);
@@ -158,7 +165,7 @@ export class MockRuntime
 	public attachState: AttachState;
 	public attachedStorage = new DedupeStorage();
 	public detachedStorage = new NonDedupeStorage();
-	public logger = this.mc.logger;
+	public baseLogger: ITelemetryLoggerExt;
 
 	private ops: any[] = [];
 	private processBlobsP = new Deferred<void>();
@@ -168,17 +175,23 @@ export class MockRuntime
 
 	public processOps() {
 		assert(this.connected || this.ops.length === 0);
-		this.ops.forEach((op) => this.blobManager.processBlobAttachOp(op, true));
+		this.ops.forEach((op) => this.blobManager.processBlobAttachMessage(op, true));
 		this.ops = [];
 	}
 
-	public async processBlobs(resolve = true) {
+	public async processBlobs(
+		resolve: boolean,
+		canRetry: boolean = false,
+		retryAfterSeconds?: number,
+	) {
 		const blobPs = this.blobPs;
 		this.blobPs = [];
 		if (resolve) {
 			this.processBlobsP.resolve();
 		} else {
-			this.processBlobsP.reject(new Error("fake error"));
+			this.processBlobsP.reject(
+				new LoggingError("fake driver error", { canRetry, retryAfterSeconds }),
+			);
 		}
 		this.processBlobsP = new Deferred<void>();
 		await Promise.allSettled(blobPs).catch(() => {});
@@ -187,13 +200,13 @@ export class MockRuntime
 	public async processHandles() {
 		const handlePs = this.handlePs;
 		this.handlePs = [];
-		const handles: IFluidHandle<ArrayBufferLike>[] = await Promise.all(handlePs);
+		const handles: IFluidHandleInternal<ArrayBufferLike>[] = await Promise.all(handlePs);
 		handles.forEach((handle) => handle.attachGraph());
 	}
 
 	public async processAll() {
 		while (this.blobPs.length + this.handlePs.length + this.ops.length > 0) {
-			const p1 = this.processBlobs();
+			const p1 = this.processBlobs(true);
 			const p2 = this.processHandles();
 			this.processOps();
 			await Promise.race([p1, p2]);
@@ -218,21 +231,29 @@ export class MockRuntime
 		return summary;
 	}
 
-	public async connect(delay = 0) {
+	public async connect(delay = 0, processStashedWithRetry?: boolean) {
 		assert(!this.connected);
 		await new Promise<void>((resolve) => setTimeout(resolve, delay));
 		this.connected = true;
 		this.emit("connected", "client ID");
-		await this.processStashed();
+		await this.processStashed(processStashedWithRetry);
 		const ops = this.ops;
 		this.ops = [];
 		ops.forEach((op) => this.blobManager.reSubmit(op.metadata));
 	}
 
-	public async processStashed() {
-		const uploadP = this.blobManager.processStashedChanges();
+	public async processStashed(processStashedWithRetry?: boolean) {
+		const uploadP = this.blobManager.stashedBlobsUploadP;
 		this.processing = true;
-		await this.processBlobs();
+		if (processStashedWithRetry) {
+			await this.processBlobs(false, false, 0);
+			// wait till next retry
+			await new Promise<void>((resolve) => setTimeout(resolve, 1));
+			// try again successfully
+			await this.processBlobs(true);
+		} else {
+			await this.processBlobs(true);
+		}
 		await uploadP;
 		this.processing = false;
 	}
@@ -246,11 +267,11 @@ export class MockRuntime
 	public async remoteUpload(blob: ArrayBufferLike) {
 		const response = await this.storage.createBlob(blob);
 		const op = { metadata: { localId: uuid(), blobId: response.id } };
-		this.blobManager.processBlobAttachOp(op as ISequencedDocumentMessage, false);
+		this.blobManager.processBlobAttachMessage(op as ISequencedMessageEnvelope, false);
 		return op;
 	}
 
-	public deleteBlob(blobHandle: IFluidHandle<ArrayBufferLike>) {
+	public deleteBlob(blobHandle: IFluidHandleInternal<ArrayBufferLike>) {
 		this.deletedBlobs.push(blobHandle.absolutePath);
 	}
 
@@ -267,7 +288,7 @@ export const validateSummary = (runtime: MockRuntime) => {
 		if (attachment.type === SummaryType.Attachment) {
 			ids.push(attachment.id);
 		} else {
-			assert.strictEqual(key, (BlobManager as any).redirectTableBlobName);
+			assert.strictEqual(key, redirectTableBlobName);
 			assert(attachment.type === SummaryType.Blob);
 			assert(typeof attachment.content === "string");
 			redirectTable = new Map(JSON.parse(attachment.content));
@@ -414,7 +435,7 @@ describe("BlobManager", () => {
 		await runtime.connect();
 		runtime.attachedStorage.minTTL = 0.001; // force expired TTL being less than connection time (50ms)
 		await createBlob(IsoBuffer.from("blob", "utf8"));
-		await runtime.processBlobs();
+		await runtime.processBlobs(true);
 		runtime.disconnect();
 		await new Promise<void>((resolve) => setTimeout(resolve, 50));
 		await runtime.connect();
@@ -448,12 +469,31 @@ describe("BlobManager", () => {
 			await handleP;
 			assert.fail("should fail");
 		} catch (error: any) {
-			assert.strictEqual(error.message, "fake error");
+			assert.strictEqual(error.message, "fake driver error");
 		}
 		await assert.rejects(handleP);
 		const summaryData = validateSummary(runtime);
 		assert.strictEqual(summaryData.ids.length, 0);
 		assert.strictEqual(summaryData.redirectTable, undefined);
+	});
+
+	it.skip("upload fails and retries for retriable errors", async () => {
+		// Needs to use some sort of fake timer or write test in a different way as it is waiting
+		// for actual time which is causing timeouts.
+		await runtime.attach();
+		await runtime.connect();
+		const handleP = runtime.createBlob(IsoBuffer.from("blob", "utf8"));
+		await runtime.processBlobs(false, true, 0);
+		// wait till next retry
+		await new Promise<void>((resolve) => setTimeout(resolve, 1));
+		// try again successfully
+		await runtime.processBlobs(true);
+		runtime.processOps();
+		await runtime.processHandles();
+		assert(handleP);
+		const summaryData = validateSummary(runtime);
+		assert.strictEqual(summaryData.ids.length, 1);
+		assert.strictEqual(summaryData.redirectTable.size, 1);
 	});
 
 	it("completes after disconnection while op in flight", async () => {
@@ -462,7 +502,7 @@ describe("BlobManager", () => {
 
 		await createBlob(IsoBuffer.from("blob", "utf8"));
 		await createBlob(IsoBuffer.from("blob", "utf8"));
-		await runtime.processBlobs();
+		await runtime.processBlobs(true);
 
 		runtime.disconnect();
 		await runtime.connect();
@@ -506,7 +546,7 @@ describe("BlobManager", () => {
 
 		await createBlob(IsoBuffer.from("blob", "utf8"));
 		await createBlob(IsoBuffer.from("blob", "utf8"));
-		await runtime.processBlobs();
+		await runtime.processBlobs(true);
 
 		runtime.disconnect();
 		await runtime.connect();
@@ -599,7 +639,7 @@ describe("BlobManager", () => {
 		await runtime.connect();
 
 		await createBlob(IsoBuffer.from("blob", "utf8"));
-		await runtime.processBlobs();
+		await runtime.processBlobs(true);
 		await runtime.remoteUpload(IsoBuffer.from("blob", "utf8"));
 		await runtime.processAll();
 
@@ -613,7 +653,7 @@ describe("BlobManager", () => {
 
 		await createBlob(IsoBuffer.from("blob", "utf8"));
 		await runtime.connect();
-		await runtime.processBlobs();
+		await runtime.processBlobs(true);
 		await runtime.remoteUpload(IsoBuffer.from("blob", "utf8"));
 		await runtime.processAll();
 
@@ -642,7 +682,7 @@ describe("BlobManager", () => {
 		assert.strictEqual(runtime.blobManager.allBlobsAttached, true);
 		await createBlob(IsoBuffer.from("blob1", "utf8"));
 		assert.strictEqual(runtime.blobManager.allBlobsAttached, false);
-		await runtime.processBlobs();
+		await runtime.processBlobs(true);
 		assert.strictEqual(runtime.blobManager.allBlobsAttached, false);
 		await runtime.processAll();
 		assert.strictEqual(runtime.blobManager.allBlobsAttached, true);
@@ -683,7 +723,7 @@ describe("BlobManager", () => {
 			const handleP = runtime.createBlob(blob, ac.signal);
 			ac.abort("abort test");
 			assert.strictEqual(runtime.unprocessedBlobs.size, 1);
-			await runtime.processBlobs();
+			await runtime.processBlobs(true);
 			try {
 				await handleP;
 				assert.fail("Should not succeed");
@@ -716,14 +756,10 @@ describe("BlobManager", () => {
 				assert.strictEqual(error.message, "uploadBlob aborted");
 			}
 			try {
-				// failure with or without aborting behaves similar right now
-				// because we haven't made distinction between retriable and
-				// non-retriable errors. If uploadBlob finds a retriable error,
-				// it will keep retrying until the call is aborted.
 				await handleP2;
 				assert.fail("Should not succeed");
 			} catch (error: any) {
-				assert.strictEqual(error.message, "fake error");
+				assert.strictEqual(error.message, "fake driver error");
 			}
 			await assert.rejects(handleP);
 			await assert.rejects(handleP2);
@@ -740,7 +776,7 @@ describe("BlobManager", () => {
 			const handleP = runtime.createBlob(blob, ac.signal);
 			runtime.disconnect();
 			ac.abort();
-			await runtime.processBlobs();
+			await runtime.processBlobs(true);
 			try {
 				await handleP;
 				assert.fail("Should not succeed");
@@ -779,7 +815,7 @@ describe("BlobManager", () => {
 			const ac = new AbortController();
 			const blob = IsoBuffer.from("blob", "utf8");
 			const handleP = runtime.createBlob(blob, ac.signal);
-			const p1 = runtime.processBlobs();
+			const p1 = runtime.processBlobs(true);
 			const p2 = runtime.processHandles();
 			// finish upload
 			await Promise.race([p1, p2]);
@@ -807,7 +843,7 @@ describe("BlobManager", () => {
 			let handleP;
 			try {
 				handleP = runtime.createBlob(IsoBuffer.from("blob", "utf8"), ac.signal);
-				const p1 = runtime.processBlobs();
+				const p1 = runtime.processBlobs(true);
 				const p2 = runtime.processHandles();
 				// finish upload
 				await Promise.race([p1, p2]);
@@ -838,7 +874,7 @@ describe("BlobManager", () => {
 			const getBlobIdFromGCNodeId = (gcNodeId: string) => {
 				const pathParts = gcNodeId.split("/");
 				assert(
-					pathParts.length === 3 && pathParts[1] === BlobManager.basePath,
+					pathParts.length === 3 && pathParts[1] === blobManagerBasePath,
 					"Invalid blob node path",
 				);
 				return pathParts[2];
@@ -846,7 +882,7 @@ describe("BlobManager", () => {
 
 			// For a given blob's id, returns the GC node id.
 			const getGCNodeIdFromBlobId = (blobId: string) => {
-				return `/${BlobManager.basePath}/${blobId}`;
+				return `/${blobManagerBasePath}/${blobId}`;
 			};
 
 			const blobContents = IsoBuffer.from(content, "utf8");
@@ -913,47 +949,32 @@ describe("BlobManager", () => {
 			);
 		});
 
-		it("disableAttachmentBlobsSweep true - DOESN'T delete unused blobs ", async () => {
-			injectedSettings[disableAttachmentBlobSweepKey] = true;
+		// Support for this config has been removed.
+		const legacyKey_disableAttachmentBlobSweep =
+			"Fluid.GarbageCollection.DisableAttachmentBlobSweep";
+		[true, undefined].forEach((disableAttachmentBlobsSweep) =>
+			it(`deletes unused blobs regardless of DisableAttachmentBlobsSweep setting [DisableAttachmentBlobsSweep=${disableAttachmentBlobsSweep}]`, async () => {
+				injectedSettings[legacyKey_disableAttachmentBlobSweep] = disableAttachmentBlobsSweep;
 
-			await runtime.attach();
-			await runtime.connect();
+				await runtime.attach();
+				await runtime.connect();
 
-			const blob1 = await createBlobAndGetIds("blob1");
-			const blob2 = await createBlobAndGetIds("blob2");
+				const blob1 = await createBlobAndGetIds("blob1");
+				const blob2 = await createBlobAndGetIds("blob2");
 
-			// Delete blob1's local id. The local id and the storage id should both be deleted from the redirect table
-			// since the blob only had one reference.
-			runtime.blobManager.deleteSweepReadyNodes([blob1.localGCNodeId]);
-			assert(redirectTable.has(blob1.localId));
-			assert(redirectTable.has(blob1.storageId));
+				// Delete blob1's local id. The local id and the storage id should both be deleted from the redirect table
+				// since the blob only had one reference.
+				runtime.blobManager.deleteSweepReadyNodes([blob1.localGCNodeId]);
+				assert(!redirectTable.has(blob1.localId));
+				assert(!redirectTable.has(blob1.storageId));
 
-			// Delete blob2's local id. The local id and the storage id should both be deleted from the redirect table
-			// since the blob only had one reference.
-			runtime.blobManager.deleteSweepReadyNodes([blob2.localGCNodeId]);
-			assert(redirectTable.has(blob2.localId));
-			assert(redirectTable.has(blob2.storageId));
-		});
-
-		it("deletes unused blobs", async () => {
-			await runtime.attach();
-			await runtime.connect();
-
-			const blob1 = await createBlobAndGetIds("blob1");
-			const blob2 = await createBlobAndGetIds("blob2");
-
-			// Delete blob1's local id. The local id and the storage id should both be deleted from the redirect table
-			// since the blob only had one reference.
-			runtime.blobManager.deleteSweepReadyNodes([blob1.localGCNodeId]);
-			assert(!redirectTable.has(blob1.localId));
-			assert(!redirectTable.has(blob1.storageId));
-
-			// Delete blob2's local id. The local id and the storage id should both be deleted from the redirect table
-			// since the blob only had one reference.
-			runtime.blobManager.deleteSweepReadyNodes([blob2.localGCNodeId]);
-			assert(!redirectTable.has(blob2.localId));
-			assert(!redirectTable.has(blob2.storageId));
-		});
+				// Delete blob2's local id. The local id and the storage id should both be deleted from the redirect table
+				// since the blob only had one reference.
+				runtime.blobManager.deleteSweepReadyNodes([blob2.localGCNodeId]);
+				assert(!redirectTable.has(blob2.localId));
+				assert(!redirectTable.has(blob2.storageId));
+			}),
+		);
 
 		it("deletes unused de-duped blobs", async () => {
 			await runtime.attach();

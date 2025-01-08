@@ -1,5 +1,209 @@
 # @fluidframework/aqueduct
 
+## 2.13.0
+
+Dependency updates only.
+
+## 2.12.0
+
+### Minor Changes
+
+-   The ContainerRuntime class is now deprecated ([#23331](https://github.com/microsoft/FluidFramework/pull/23331)) [dc48446d7c](https://github.com/microsoft/FluidFramework/commit/dc48446d7c4914aca2a76095205975824aac1ba5)
+
+    The class `ContainerRuntime` is deprecated and will no longer be exported starting in version 2.20.0.
+
+    There are two possible migration paths to stop using `ContainerRuntime`:
+
+    -   When using it as a type, replace it with an interface like `IContainerRuntime`
+    -   When using the static function `ContainerRuntime.loadRuntime` replace it with the free function `loadContainerRuntime`.
+
+    `BaseContainerRuntimeFactory` has some changes as well, since it exposed `ContainerRuntime` in several function signatures:
+
+    -   `instantiateFirstTime` - Takes the wider type `IContainerRuntime` instead of `ContainerRuntime`
+    -   `instantiateFromExisting` - Takes the wider type `IContainerRuntime` instead of `ContainerRuntime`
+    -   `preInitialize` - deprecated as well, since it returns `ContainerRuntime`
+
+    These functions should never be called directly anyway - use `BaseContainerRuntimeFactory.instantiateRuntime` instead.
+
+## 2.11.0
+
+Dependency updates only.
+
+## 2.10.0
+
+### Minor Changes
+
+-   The inbound and outbound properties have been removed from IDeltaManager ([#22282](https://github.com/microsoft/FluidFramework/pull/22282)) [45a57693f2](https://github.com/microsoft/FluidFramework/commit/45a57693f291e0dc5e91af7f29a9b9c8f82dfad5)
+
+    The inbound and outbound properties were [deprecated in version 2.0.0-rc.2.0.0](https://github.com/microsoft/FluidFramework/blob/main/RELEASE_NOTES/2.0.0-rc.2.0.0.md#container-definitions-deprecate-ideltamanagerinbound-and-ideltamanageroutbound) and have been removed from `IDeltaManager`.
+
+    `IDeltaManager.inbound` contained functionality that could break core runtime features such as summarization and processing batches if used improperly. Data loss or corruption could occur when `IDeltaManger.inbound.pause()` or `IDeltaManager.inbound.resume()` were called.
+
+    Similarly, `IDeltaManager.outbound` contained functionality that could break core runtime features such as generation of batches and chunking. Data loss or corruption could occur when `IDeltaManger.inbound.pause()` or `IDeltaManager.inbound.resume()` were called.
+
+    #### Alternatives
+
+    -   Alternatives to `IDeltaManager.inbound.on("op", ...)` are `IDeltaManager.on("op", ...)`
+    -   Alternatives to calling `IDeltaManager.inbound.pause`, `IDeltaManager.outbound.pause` for `IContainer` disconnect use `IContainer.disconnect`.
+    -   Alternatives to calling `IDeltaManager.inbound.resume`, `IDeltaManager.outbound.resume` for `IContainer` reconnect use `IContainer.connect`.
+
+## 2.5.0
+
+Dependency updates only.
+
+## 2.4.0
+
+Dependency updates only.
+
+## 2.3.0
+
+Dependency updates only.
+
+## 2.2.0
+
+Dependency updates only.
+
+## 2.1.0
+
+Dependency updates only.
+
+## 2.0.0-rc.5.0.0
+
+### Minor Changes
+
+-   Update to TypeScript 5.4 ([#21214](https://github.com/microsoft/FluidFramework/pull/21214)) [0e6256c722](https://github.com/microsoft/FluidFramework/commit/0e6256c722d8bf024f4325bf02547daeeb18bfa6)
+
+    Update package implementations to use TypeScript 5.4.5.
+
+## 2.0.0-rc.4.0.0
+
+Dependency updates only.
+
+## 2.0.0-rc.3.0.0
+
+### Major Changes
+
+-   Packages now use package.json "exports" and require modern module resolution [97d68aa06b](https://github.com/microsoft/FluidFramework/commit/97d68aa06bd5c022ecb026655814aea222a062ae)
+
+    Fluid Framework packages have been updated to use the [package.json "exports"
+    field](https://nodejs.org/docs/latest-v18.x/api/packages.html#exports) to define explicit entry points for both
+    TypeScript types and implementation code.
+
+    This means that using Fluid Framework packages require the following TypeScript settings in tsconfig.json:
+
+    -   `"moduleResolution": "Node16"` with `"module": "Node16"`
+    -   `"moduleResolution": "Bundler"` with `"module": "ESNext"`
+
+    We recommend using Node16/Node16 unless absolutely necessary. That will produce transpiled JavaScript that is suitable
+    for use with modern versions of Node.js _and_ Bundlers.
+    [See the TypeScript documentation](https://www.typescriptlang.org/tsconfig#moduleResolution) for more information
+    regarding the module and moduleResolution options.
+
+    **Node10 moduleResolution is not supported; it does not support Fluid Framework's API structuring pattern that is used
+    to distinguish stable APIs from those that are in development.**
+
+## 2.0.0-rc.2.0.0
+
+### Minor Changes
+
+-   aqueduct: Deprecated PureDataObjectFactory.createRootInstance and replaced with PureDataObjectFactory.createInstanceWithDataStore ([#19471](https://github.com/microsoft/FluidFramework/issues/19471)) [0a79375ccb](https://github.com/microsoft/FluidFramework/commits/0a79375ccb523658a2565b8796fa06ec45a69394)
+
+    ### Deprecated: PureDataObjectFactory.createRootInstance
+
+    This was deprecated because `PureDataObjectFactory.createRootInstance` has an issue at scale.
+    `PureDataObjectFactory.createRootInstance` used the old method of creating `PureDataObject`s with names. The issue was
+    that simultaneous creations could happen, and the old api had no good way of dealing with those types of collisions.
+    This version slightly improved it by resolving those collisions by assuming whatever datastore was created with the
+    alias or `rootDataStoreId` would just return that datastore. This will work for developers who expect the same type of
+    `PureDataObject` to be returned from the `createRootInstance` api, but if a potentially different `PureDataObject`
+    would be returned, then this api would give you the wrong typing.
+
+    For a replacement api see `PureDataObjectFactory.createInstanceWithDataStore`.
+
+    ### New method PureDataObjectFactory.createInstanceWithDataStore
+
+    This was done as a replacement of `PureDataObjectFactory.createRootInstance`. This exposes the `IDataStore` interface
+    in the form of `[PureDataObject, IDataStore]`. `IDataStore` provides the opportunity for developers to use the
+    `IDataStore.trySetAlias` method. This can return 3 different scenarios `Success`, `Conflict`, or `AlreadyAliased`.
+    These scenarios can allow the developer to handle conflicts as they wish.
+
+-   aqueduct: PureDataObjectFactory.instantiateDataStore now returns IFluidDataStoreChannel ([#19353](https://github.com/microsoft/FluidFramework/issues/19353)) [3aad53da1e](https://github.com/microsoft/FluidFramework/commits/3aad53da1ee8c4079d4f3b4a096361d23e0725ab)
+
+    The return type of `PureDataObjectFactory.instantiateDataStore` was changed from `FluidDataStoreRuntime` to
+    `IFluidDataStoreChannel`.
+
+## 2.0.0-rc.1.0.0
+
+Dependency updates only.
+
+## 2.0.0-internal.8.0.0
+
+### Major Changes
+
+-   aqueduct: Removed getDefaultObjectFromContainer, getObjectWithIdFromContainer and getObjectFromContainer [9a451d4946](https://github.com/microsoft/FluidFramework/commits/9a451d4946b5c51a52e4d1ab5bf51e7b285b0d74)
+
+    The `getDefaultObjectFromContainer`, `getObjectWithIdFromContainer` and `getObjectFromContainer` helper methods have been removed from @fluidframework/aqueduct. Please move all code usage to the new `entryPoint` pattern.
+
+    See
+    [Removing-IFluidRouter.md](https://github.com/microsoft/FluidFramework/blob/main/packages/common/core-interfaces/Removing-IFluidRouter.md)
+    for more details.
+
+-   data-object-base: Removed IFluidRouter from DataObject interfaces and classes [9a451d4946](https://github.com/microsoft/FluidFramework/commits/9a451d4946b5c51a52e4d1ab5bf51e7b285b0d74)
+
+    The `IFluidRouter` property has been removed from a number of DataObject related classes:
+
+    -   `PureDataObject`
+    -   `LazyLoadedDataObject`
+    -   `TestFluidObject`
+
+    Please migrate to the new `entryPoint` pattern or use the relevant `request` method as necessary.
+
+    See
+    [Removing-IFluidRouter.md](https://github.com/microsoft/FluidFramework/blob/main/packages/common/core-interfaces/Removing-IFluidRouter.md)
+    for more details.
+
+-   aqueduct: Removed IRootDataObjectFactory [9a451d4946](https://github.com/microsoft/FluidFramework/commits/9a451d4946b5c51a52e4d1ab5bf51e7b285b0d74)
+
+    The `IRootDataObjectFactory` interface has been removed. Please remove all usage of it.
+
+-   aqueduct: Removed requestHandler utilities [9a451d4946](https://github.com/microsoft/FluidFramework/commits/9a451d4946b5c51a52e4d1ab5bf51e7b285b0d74)
+
+    The following `requestHandler` utilities have been removed:
+
+    -   `makeModelRequestHandler`
+    -   `defaultFluidObjectRequestHandler`
+    -   `defaultRouteRequestHandler`
+    -   `mountableViewRequestHandler`
+    -   `createFluidObjectResponse`
+    -   `rootDataStoreRequestHandler`
+    -   `handleFromLegacyUri`
+    -   `RuntimeRequestHandlerBuilder`
+
+    Please migrate all usage to the new `entryPoint` pattern.
+
+    See [Removing-IFluidRouter.md](https://github.com/microsoft/FluidFramework/blob/main/packages/common/core-interfaces/Removing-IFluidRouter.md) for more details.
+
+## 2.0.0-internal.7.4.0
+
+### Minor Changes
+
+-   aqueduct: Deprecated IRootDataObjectFactory ([#18565](https://github.com/microsoft/FluidFramework/issues/18565)) [030ab7adf9](https://github.com/microsoft/FluidFramework/commits/030ab7adf991d2d983437544600a191ac15ca5a5)
+
+    The `IRootDataObjectFactory` interface has been deprecated and will be removed in a future major release. Please remove
+    all usage of it.
+
+## 2.0.0-internal.7.3.0
+
+Dependency updates only.
+
+## 2.0.0-internal.7.2.0
+
+Dependency updates only.
+
+## 2.0.0-internal.7.1.0
+
+Dependency updates only.
+
 ## 2.0.0-internal.7.0.0
 
 ### Major Changes

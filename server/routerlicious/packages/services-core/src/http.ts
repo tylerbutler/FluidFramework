@@ -5,34 +5,48 @@
 
 import * as http from "http";
 
+/**
+ * @internal
+ */
 export type RequestListener = (
 	request: http.IncomingMessage,
 	response: http.ServerResponse,
 ) => void;
 
+/**
+ * @internal
+ */
 export interface IWebServerFactory {
-	create(requestListener: RequestListener): IWebServer;
+	create(requestListener?: RequestListener): IWebServer;
 }
 
+/**
+ * @alpha
+ */
 export interface IWebSocket {
 	id: string;
 
-	on(event: string, listener: (...args: any[]) => void);
+	on(event: string, listener: (...args: any[]) => void): void;
 
 	join(id: string): Promise<void>;
 
-	emit(event: string, ...args);
+	emit(event: string, ...args): void;
 
-	emitToRoom(roomId: string, event: string, ...args: any[]);
+	emitToRoom(roomId: string, event: string, ...args: any[]): void;
 
 	disconnect(close?: boolean): void;
+
+	dispose?(): void;
 }
 
+/**
+ * @internal
+ */
 export interface IWebServer {
 	/**
 	 * Web socket interface
 	 */
-	webSocketServer: IWebSocketServer;
+	webSocketServer: IWebSocketServer | undefined;
 
 	/**
 	 * HTTP server interface
@@ -45,12 +59,18 @@ export interface IWebServer {
 	close(): Promise<void>;
 }
 
+/**
+ * @alpha
+ */
 export interface IWebSocketServer {
 	on(event: string, listener: (...args: any[]) => void);
 
 	close(): Promise<void>;
 }
 
+/**
+ * @internal
+ */
 export interface IHttpServer {
 	listen(port: any): void;
 

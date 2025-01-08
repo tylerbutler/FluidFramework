@@ -16,9 +16,11 @@ import {
 	LumberEventName,
 	CommonProperties,
 } from "@fluidframework/server-services-telemetry";
+import { ConfigDumper } from "./configDumper";
 
 /**
  * Uses the provided factories to create and execute a runner.
+ * @internal
  */
 export async function run<T extends IResources>(
 	config: nconf.Provider,
@@ -27,13 +29,23 @@ export async function run<T extends IResources>(
 	logger: ILogger | undefined,
 ) {
 	const customizations = await (resourceFactory.customize
-		? resourceFactory.customize(config)
+		? resourceFactory.customize(config).catch((error) => {
+				prefixErrorLabel(error, "resourceFactory:customize");
+				throw error;
+		  })
 		: undefined);
-	const resources = await resourceFactory.create(config, customizations);
-	const runner = await runnerFactory.create(resources);
+	const resources = await resourceFactory.create(config, customizations).catch((error) => {
+		prefixErrorLabel(error, "resourceFactory:create");
+		throw error;
+	});
+	const runner = await runnerFactory.create(resources).catch((error) => {
+		prefixErrorLabel(error, "runnerFactory:create");
+		throw error;
+	});
 
 	// Start the runner and then listen for the message to stop it
 	const runningP = runner.start(logger).catch(async (error) => {
+		prefixErrorLabel(error, "runner:start");
 		logger?.error(`Encountered exception while running service: ${serializeError(error)}`);
 		Lumberjack.error(`Encountered exception while running service`, undefined, error);
 		await runner.stop().catch((innerError) => {
@@ -71,18 +83,33 @@ export async function run<T extends IResources>(
 		});
 	});
 
+	process.on("SIGINT", () => {
+		Lumberjack.info(`Received SIGINT request to stop the service.`);
+	});
+	process.on("SIGQUIT", () => {
+		Lumberjack.info(`Received SIGQUIT request to stop the service.`);
+	});
+	process.on("SIGHUP", () => {
+		Lumberjack.info(`Received SIGHUP request to stop the service.`);
+	});
+
 	try {
 		// Wait for the runner to complete
 		await runningP;
 	} finally {
-		// And then dispose of any resources
-		await resources.dispose();
+		try {
+			// And then dispose of any resources
+			await resources.dispose();
+		} catch (err) {
+			Lumberjack.error(`Could not dispose the resources due to error`, undefined, err);
+		}
 	}
 }
 
 /**
  * Variant of run that is used to fully run a service. It configures base settings such as logging. And then will
  * exit the service once the runner completes.
+ * @internal
  */
 export function runService<T extends IResources>(
 	resourceFactory: IResourcesFactory<T>,
@@ -101,6 +128,17 @@ export function runService<T extends IResources>(
 					.use("memory")
 			: configOrPath;
 
+	const configDumpEnabled = (config.get("config:configDumpEnabled") as boolean) ?? false;
+	if (configDumpEnabled) {
+		const secretNamesToRedactInConfigDump =
+			(config.get("config:secretNamesToRedactInConfigDump") as string[]) ?? undefined;
+		const configDumper = new ConfigDumper(
+			config.get(),
+			logger,
+			secretNamesToRedactInConfigDump,
+		);
+		configDumper.dumpConfig();
+	}
 	const waitInMs = waitBeforeExitInMs ?? 1000;
 	const runnerMetric = Lumberjack.newLumberMetric(LumberEventName.RunService);
 	const runningP = run(config, resourceFactory, runnerFactory, logger);
@@ -114,9 +152,13 @@ export function runService<T extends IResources>(
 			process.exit(0);
 		})
 		.catch(async (error) => {
-			if (error.uncaughtException) {
-				runnerMetric.setProperty(CommonProperties.restartReason, "uncaughtException");
-			}
+			runnerMetric.setProperties({
+				[CommonProperties.restartReason]: error?.uncaughtException
+					? "uncaughtException"
+					: undefined,
+				[CommonProperties.errorLabel]: error?.errorLabel,
+				[CommonProperties.isGlobalDb]: error?.isGlobalDb,
+			});
 			await executeAndWait(() => {
 				logger?.error(`${group} service exiting due to error`);
 				logger?.error(serializeError(error));
@@ -140,4 +182,23 @@ async function executeAndWait(func: () => void, waitInMs: number) {
 	return new Promise((resolve) => {
 		setTimeout(resolve, waitInMs);
 	});
+}
+
+/**
+ * Prefixes a caught error if possible.
+ * ```ts
+ * asyncCall().catch((error: any) => {
+ *   prefixErrorLabel(error, "my:prefix");
+ *   log("AsyncCall Failed", error);
+ * });
+ * // Example Result: "AsyncCall Failed" { errorLabel: "my:prefix" }
+ * ```
+ */
+function prefixErrorLabel(error: any, prefix: string): void {
+	if (typeof error !== "object" || error === null) return;
+	const errorLabel = [prefix];
+	if (error.errorLabel) {
+		errorLabel.push(error.errorLabel);
+	}
+	error.errorLabel = errorLabel.join(":");
 }

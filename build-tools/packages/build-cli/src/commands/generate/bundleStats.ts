@@ -2,16 +2,20 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { Flags } from "@oclif/core";
-import { copySync, existsSync, readJson } from "fs-extra";
-import path from "path";
 
-import { BaseCommand } from "../../base";
-import { PnpmListEntry, pnpmList } from "../../pnpm";
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { Flags } from "@oclif/core";
+import { copySync, readJson } from "fs-extra/esm";
+
+import { BaseCommand } from "../../library/index.js";
+import { PnpmListEntry, pnpmList } from "../../pnpm.js";
 
 export default class GenerateBundlestats extends BaseCommand<typeof GenerateBundlestats> {
-	static description = `Find all bundle analysis artifacts and copy them into a central location to upload as build artifacts for later consumption`;
-	static flags = {
+	static readonly description =
+		`Find all bundle analysis artifacts and copy them into a central location to upload as build artifacts for later consumption`;
+
+	static readonly flags = {
 		packageMetadataPath: Flags.file({
 			description:
 				"A path to a file containing JSON formatted package metadata. Used for testing. When not provided, the output of `pnpm -r list --depth -1 --json` is used.",
@@ -24,10 +28,10 @@ export default class GenerateBundlestats extends BaseCommand<typeof GenerateBund
 			required: false,
 		}),
 		...BaseCommand.flags,
-	};
+	} as const;
 
 	public async run(): Promise<void> {
-		const flags = this.flags;
+		const { flags } = this;
 		const pkgList = await (flags.packageMetadataPath === undefined
 			? pnpmList(process.cwd())
 			: (readJson(flags.packageMetadataPath) as Promise<PnpmListEntry[]>));
@@ -56,7 +60,8 @@ export default class GenerateBundlestats extends BaseCommand<typeof GenerateBund
 					this.error(`${reportPath} is missing; bundle analysis may not be accurate.`);
 				}
 
-				// eslint-disable-next-line no-await-in-loop
+				/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+				// eslint-disable-next-line no-await-in-loop, @typescript-eslint/no-unsafe-assignment
 				const report = await readJson(reportPath);
 				if (report.assets?.length === undefined || report.assets?.length === 0) {
 					this.error(`${reportPath} doesn't have any assets info`);
@@ -69,16 +74,13 @@ export default class GenerateBundlestats extends BaseCommand<typeof GenerateBund
 					}
 
 					if (asset.size < flags.smallestAssetSize) {
-						this.warning(
-							`${pkg.name}: asset ${asset.name} (${asset.size}) is too small`,
-						);
+						this.warning(`${pkg.name}: asset ${asset.name} (${asset.size}) is too small`);
 						hasSmallAssetError = true;
 					}
 				}
+				/* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
-				copySync(packageAnalysisPath, path.join(analysesDestPath, pkg.name), {
-					recursive: true,
-				});
+				copySync(packageAnalysisPath, path.join(analysesDestPath, pkg.name));
 			}
 		}
 

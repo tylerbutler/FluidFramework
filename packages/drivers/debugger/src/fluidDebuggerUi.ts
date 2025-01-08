@@ -3,9 +3,15 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/core-utils";
-import { ISequencedDocumentMessage, IVersion } from "@fluidframework/protocol-definitions";
+import { assert } from "@fluidframework/core-utils/internal";
+import {
+	IVersion,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
 
+/**
+ * @internal
+ */
 export interface IDebuggerUI {
 	/**
 	 * Version information is provided.
@@ -56,6 +62,9 @@ export interface IDebuggerUI {
 	updateLastOpText(lastKnownOp: number, stillLoading: boolean): void;
 }
 
+/**
+ * @internal
+ */
 export interface IDebuggerController {
 	/**
 	 * Initialization. UI layers calls into controller to connect the two.
@@ -132,6 +141,9 @@ Step to move: <input type='number' id='steps' value='1' min='1' style='width:50p
 <button type='button' id='downloadOps'>Download ops</button>
 </body>`;
 
+/**
+ * @internal
+ */
 export class DebuggerUI {
 	public static create(controller: IDebuggerController): DebuggerUI | null {
 		if (
@@ -211,7 +223,8 @@ export class DebuggerUI {
 		const buttonVers = doc.getElementById("buttonVers") as HTMLDivElement;
 		buttonVers.onclick = () => {
 			const index = this.selector!.selectedIndex;
-			controller.onVersionSelection(this.versions[index]);
+			// TODO Why are we non null asserting here
+			controller.onVersionSelection(this.versions[index]!);
 		};
 
 		const fileSnapshot = doc.getElementById("file") as HTMLInputElement;
@@ -220,7 +233,8 @@ export class DebuggerUI {
 			() => {
 				const files = fileSnapshot.files;
 				if (files) {
-					controller.onSnapshotFileSelection(files[0]);
+					// TODO Why are we non null asserting here
+					controller.onSnapshotFileSelection(files[0]!);
 				}
 			},
 			false,
@@ -316,7 +330,8 @@ export class DebuggerUI {
 			this.text2!.textContent = "";
 			this.text3!.textContent = "";
 		} else {
-			const op = ops[0];
+			// Non null asserting here because of the length check above
+			const op = ops[0]!;
 			const seq = op.sequenceNumber;
 			const date = DebuggerUI.formatDate(op.timestamp);
 			this.text1!.textContent = `Next op seq#: ${seq}`;

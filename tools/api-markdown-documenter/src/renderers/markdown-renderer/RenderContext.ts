@@ -2,8 +2,10 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import type { TextFormatting } from "../../documentation-domain";
-import type { Renderers } from "./configuration";
+
+import type { TextFormatting } from "../../documentation-domain/index.js";
+
+import type { Renderers } from "./configuration/index.js";
 
 /**
  * Context passed down during recursive {@link DocumentationNode} rendering.
@@ -44,7 +46,7 @@ export interface RenderContext extends TextFormatting {
 	 * Will automatically increment based on {@link SectionNode}s encountered, such that heading
 	 * levels can be increased automatically based on content hierarchy.
 	 */
-	headingLevel: number;
+	readonly headingLevel: number;
 
 	/**
 	 * Configuration for rendering different kinds of {@link DocumentationNode}s.
@@ -54,7 +56,7 @@ export interface RenderContext extends TextFormatting {
 	 * Will include default renderers for all {@link DocumentationNode} types enumerated in
 	 * {@link DocumentationNodeType}.
 	 */
-	customRenderers?: Renderers;
+	readonly customRenderers?: Renderers;
 }
 
 /**

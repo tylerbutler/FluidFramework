@@ -3,22 +3,23 @@
  * Licensed under the MIT License.
  */
 
-import { ISecretManager, ICache, ICollection } from "@fluidframework/server-services-core";
+import { ISecretManager, ICache, IReadinessCheck } from "@fluidframework/server-services-core";
 import { BaseTelemetryProperties } from "@fluidframework/server-services-telemetry";
 import * as bodyParser from "body-parser";
 import express from "express";
 import {
 	alternativeMorganLoggerMiddleware,
-	bindCorrelationId,
 	bindTelemetryContext,
 	jsonMorganLoggerMiddleware,
+	ITenantKeyGenerator,
 } from "@fluidframework/server-services-utils";
 import { catch404, getTenantIdFromRequest, handleError } from "../utils";
 import * as api from "./api";
-import { ITenantDocument } from "./tenantManager";
+import { ITenantRepository } from "./mongoTenantRepository";
+import { createHealthCheckEndpoints } from "@fluidframework/server-services-shared";
 
 export function create(
-	tenantsCollection: ICollection<ITenantDocument>,
+	tenantRepository: ITenantRepository,
 	loggerFormat: string,
 	baseOrdererUrl: string,
 	defaultHistorianUrl: string,
@@ -26,7 +27,10 @@ export function create(
 	secretManager: ISecretManager,
 	fetchTenantKeyMetricInterval: number,
 	riddlerStorageRequestMetricInterval: number,
+	tenantKeyGenerator: ITenantKeyGenerator,
+	startupCheck: IReadinessCheck,
 	cache?: ICache,
+	readinessCheck?: IReadinessCheck,
 ) {
 	// Express app configuration
 	const app: express.Express = express();
@@ -49,22 +53,24 @@ export function create(
 	app.use(bodyParser.json());
 	app.use(bodyParser.urlencoded({ extended: false }));
 
-	app.use(bindCorrelationId());
-
 	app.use(
 		"/api",
 		api.create(
-			tenantsCollection,
+			tenantRepository,
 			baseOrdererUrl,
 			defaultHistorianUrl,
 			defaultInternalHistorianUrl,
 			secretManager,
 			fetchTenantKeyMetricInterval,
 			riddlerStorageRequestMetricInterval,
+			tenantKeyGenerator,
 			cache,
 		),
 	);
 
+	const healthEndpoints = createHealthCheckEndpoints("riddler", startupCheck, readinessCheck);
+
+	app.use("/healthz", healthEndpoints);
 	// Catch 404 and forward to error handler
 	app.use(catch404());
 

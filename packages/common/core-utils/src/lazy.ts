@@ -5,6 +5,7 @@
 
 /**
  * Helper class for lazy initialized values. Ensures the value is only generated once, and remain immutable.
+ * @internal
  */
 export class Lazy<T> {
 	private _value: T | undefined;
@@ -40,10 +41,13 @@ export class Lazy<T> {
  * the promise is used, e.g. await, then, catch ...
  * The execute function is only called once.
  * All calls are then proxied to the promise returned by the execute method.
+ * @legacy
+ * @alpha
  */
 export class LazyPromise<T> implements Promise<T> {
+	// eslint-disable-next-line @typescript-eslint/class-literal-property-style
 	public get [Symbol.toStringTag](): string {
-		return this.getPromise()[Symbol.toStringTag];
+		return "[object LazyPromise]";
 	}
 
 	private result: Promise<T> | undefined;

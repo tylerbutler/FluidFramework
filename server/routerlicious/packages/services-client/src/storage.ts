@@ -14,6 +14,7 @@ import {
 
 /**
  * Required params to create ref with config
+ * @internal
  */
 export interface ICreateRefParamsExternal extends git.ICreateRefParams {
 	config?: IExternalWriterConfig;
@@ -21,6 +22,7 @@ export interface ICreateRefParamsExternal extends git.ICreateRefParams {
 
 /**
  * Required params to get ref with config
+ * @internal
  */
 export interface IGetRefParamsExternal {
 	config?: IExternalWriterConfig;
@@ -28,17 +30,22 @@ export interface IGetRefParamsExternal {
 
 /**
  * Required params to patch ref with config
+ * @internal
  */
 export interface IPatchRefParamsExternal extends git.IPatchRefParams {
 	config?: IExternalWriterConfig;
 }
 
-interface IExternalWriterConfig {
+/**
+ * @internal
+ */
+export interface IExternalWriterConfig {
 	enabled: boolean;
 }
 
 /**
  * Git cache data
+ * @internal
  */
 export interface IGitCache {
 	// Cached blob values
@@ -56,6 +63,7 @@ export interface IGitCache {
 
 /**
  * Interface to a generic Git provider
+ * @internal
  */
 export interface IGitService {
 	getBlob(sha: string): Promise<git.IBlob>;
@@ -65,7 +73,7 @@ export interface IGitService {
 	getCommit(sha: string): Promise<git.ICommit>;
 	createCommit(commit: git.ICreateCommitParams): Promise<git.ICommit>;
 	getRefs(): Promise<git.IRef[]>;
-	getRef(ref: string): Promise<git.IRef>;
+	getRef(ref: string): Promise<git.IRef | null>;
 	createRef(params: git.ICreateRefParams): Promise<git.IRef>;
 	updateRef(ref: string, params: git.IPatchRefParams): Promise<git.IRef>;
 	deleteRef(ref: string): Promise<void>;
@@ -81,6 +89,7 @@ export interface IGitService {
 /**
  * The Historian extends the git service by providing access to document header information stored in
  * the repository
+ * @internal
  */
 export interface IHistorian extends IGitService {
 	endpoint: string;
@@ -92,6 +101,9 @@ export interface IHistorian extends IGitService {
 	getFullTree(sha: string): Promise<any>;
 }
 
+/**
+ * @internal
+ */
 export interface IGitManager {
 	getHeader(id: string, sha: string): Promise<api.ISnapshotTree>;
 	getFullTree(sha: string): Promise<any>;
@@ -105,7 +117,8 @@ export interface IGitManager {
 	createGitTree(params: git.ICreateTreeParams): Promise<git.ITree>;
 	createTree(files: api.ITree): Promise<git.ITree>;
 	createCommit(commit: git.ICreateCommitParams): Promise<git.ICommit>;
-	getRef(ref: string): Promise<git.IRef>;
+	// eslint-disable-next-line @rushstack/no-new-null
+	getRef(ref: string): Promise<git.IRef | null>;
 	createRef(branch: string, sha: string): Promise<git.IRef>;
 	upsertRef(branch: string, commitSha: string): Promise<git.IRef>;
 	write(
@@ -121,6 +134,7 @@ export interface IGitManager {
 
 /**
  * Uploads a summary to storage.
+ * @internal
  */
 export interface ISummaryUploadManager {
 	/**

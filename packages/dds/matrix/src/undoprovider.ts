@@ -3,22 +3,24 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/core-utils";
+import { assert } from "@fluidframework/core-utils/internal";
 import {
-	MergeTreeDeltaType,
-	MergeTreeDeltaRevertible,
 	IMergeTreeDeltaCallbackArgs,
-	appendToMergeTreeDeltaRevertibles,
-	revertMergeTreeDeltaRevertibles,
-	MergeTreeRevertibleDriver,
-	discardMergeTreeDeltaRevertible,
-	TrackingGroup,
 	ITrackingGroup,
-} from "@fluidframework/merge-tree";
-import { MatrixItem, SharedMatrix } from "./matrix";
-import { Handle, isHandleValid } from "./handletable";
-import { PermutationSegment, PermutationVector } from "./permutationvector";
-import { IUndoConsumer } from "./types";
+	MergeTreeDeltaRevertible,
+	MergeTreeDeltaType,
+	MergeTreeRevertibleDriver,
+	TrackingGroup,
+	appendToMergeTreeDeltaRevertibles,
+	discardMergeTreeDeltaRevertible,
+	revertMergeTreeDeltaRevertibles,
+} from "@fluidframework/merge-tree/internal";
+
+import { Handle, isHandleValid } from "./handletable.js";
+import { SharedMatrix } from "./matrix.js";
+import { MatrixItem } from "./ops.js";
+import { PermutationSegment, PermutationVector } from "./permutationvector.js";
+import { IUndoConsumer } from "./types.js";
 
 export class VectorUndoProvider {
 	// 'currentGroup' and 'currentOp' are used while applying an IRevertable.revert() to coalesce
@@ -33,7 +35,7 @@ export class VectorUndoProvider {
 		private readonly driver: MergeTreeRevertibleDriver,
 	) {}
 
-	public record(deltaArgs: IMergeTreeDeltaCallbackArgs) {
+	public record(deltaArgs: IMergeTreeDeltaCallbackArgs): void {
 		if (deltaArgs.deltaSegments.length > 0) {
 			// If we are in the process of reverting, the `IRevertible.revert()` will provide the tracking
 			// group so that we can preserve the original segment ranges as a single op/group as we move
@@ -61,21 +63,22 @@ export class VectorUndoProvider {
 				//		the tracking group provides one.
 				const trackingGroup = (removeTrackingGroup =
 					this.currentRemoveTrackingGroup ?? new TrackingGroup());
-				deltaArgs.deltaSegments.forEach((d) =>
-					d.segment.trackingCollection.link(trackingGroup),
-				);
+				for (const d of deltaArgs.deltaSegments)
+					d.segment.trackingCollection.link(trackingGroup);
 			}
 
 			switch (deltaArgs.operation) {
 				case MergeTreeDeltaType.REMOVE:
-				case MergeTreeDeltaType.INSERT:
+				case MergeTreeDeltaType.INSERT: {
 					if (this.currentOp !== deltaArgs.operation) {
 						this.pushRevertible(revertibles, removeTrackingGroup);
 					}
 					break;
+				}
 
-				default:
+				default: {
 					throw new Error("operation type not revertible");
+				}
 			}
 
 			// If we are in the process of reverting, set 'currentOp' to remind ourselves not to push
@@ -91,9 +94,12 @@ export class VectorUndoProvider {
 	private pushRevertible(
 		revertibles: MergeTreeDeltaRevertible[],
 		removedTrackingGroup: ITrackingGroup | undefined,
-	) {
+	): {
+		revert: () => void;
+		discard: () => void;
+	} {
 		const reverter = {
-			revert: () => {
+			revert: (): void => {
 				assert(
 					this.currentGroup === undefined && this.currentOp === undefined,
 					0x02b /* "Must not nest calls to IRevertible.revert()" */,
@@ -122,7 +128,7 @@ export class VectorUndoProvider {
 					this.currentRemoveTrackingGroup = undefined;
 				}
 			},
-			discard: () => {
+			discard: (): void => {
 				if (removedTrackingGroup !== undefined) {
 					while (removedTrackingGroup.size > 0) {
 						removedTrackingGroup.unlink(removedTrackingGroup.tracked[0]);
@@ -146,30 +152,30 @@ export class MatrixUndoProvider<T> {
 		private readonly cols: PermutationVector,
 	) {
 		rows.undo = new VectorUndoProvider(consumer, {
-			annotateRange() {
+			annotateRange(): void {
 				throw new Error("not implemented");
 			},
-			insertFromSpec(pos, spec) {
+			insertFromSpec(pos, spec): void {
 				matrix._undoRemoveRows(pos, spec);
 			},
-			removeRange(start, end) {
+			removeRange(start, end): void {
 				matrix.removeRows(start, end - start);
 			},
 		});
 		cols.undo = new VectorUndoProvider(consumer, {
-			annotateRange() {
+			annotateRange(): void {
 				throw new Error("not implemented");
 			},
-			insertFromSpec(pos, spec) {
+			insertFromSpec(pos, spec): void {
 				matrix._undoRemoveCols(pos, spec);
 			},
-			removeRange(start, end) {
+			removeRange(start, end): void {
 				matrix.removeCols(start, end - start);
 			},
 		});
 	}
 
-	cellSet(rowHandle: Handle, colHandle: Handle, oldValue: MatrixItem<T>) {
+	cellSet(rowHandle: Handle, colHandle: Handle, oldValue: MatrixItem<T>): void {
 		assert(
 			isHandleValid(rowHandle) && isHandleValid(colHandle),
 			0x02c /* "On cellSet(), invalid row and/or column handles!" */,

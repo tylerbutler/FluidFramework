@@ -9,6 +9,7 @@ import { INode } from "./orderer";
 
 /**
  * Interface to abstract the backend database
+ * @alpha
  */
 export interface IDatabaseManager {
 	/**
@@ -30,27 +31,29 @@ export interface IDatabaseManager {
 	 * Retrieves the delta collection
 	 */
 	getDeltaCollection(
-		tenantId: string,
-		documentId: string,
+		tenantId: string | undefined,
+		documentId: string | undefined,
 	): Promise<ICollection<ISequencedOperationMessage>>;
 
 	/**
 	 * Scribe deltas collection
 	 */
 	getScribeDeltaCollection(
-		tenantId: string,
-		documentId: string,
+		tenantId: string | undefined,
+		documentId: string | undefined,
 	): Promise<ICollection<ISequencedOperationMessage>>;
 }
 
 /**
  * Abstract away IDocument collection logics
+ * @internal
  */
 export interface IDocumentRepository {
 	/**
 	 * Retrieves a document from the database
 	 */
-	readOne(filter: any): Promise<IDocument>;
+	// eslint-disable-next-line @rushstack/no-new-null
+	readOne(filter: any): Promise<IDocument | null>;
 
 	/**
 	 * Update one document in the database
@@ -91,12 +94,14 @@ export interface IDocumentRepository {
 
 /**
  * Abstract away ICheckpoint collection logic
+ * @internal
  */
 export interface ICheckpointRepository {
 	/**
 	 * Retrieves a checkpoint from the database
 	 */
-	getCheckpoint(documentId: string, tenantId: string): Promise<ICheckpoint>;
+	// eslint-disable-next-line @rushstack/no-new-null
+	getCheckpoint(documentId: string, tenantId: string): Promise<ICheckpoint | null>;
 
 	/**
 	 * Writes a checkpoint to the database
@@ -122,6 +127,7 @@ export interface ICheckpointRepository {
  * Interface for a database of values that have type T.
  * In some implementations, T should have a member "_id" which is a string used
  * when adding or finding value in the database.
+ * @internal
  */
 export interface ICollection<T> {
 	/**
@@ -151,7 +157,8 @@ export interface ICollection<T> {
 	 * @param options - optional. If set, provide customized options to the implementations
 	 * @returns The value of the query in the database.
 	 */
-	findOne(query: any, options?: any): Promise<T>;
+	// eslint-disable-next-line @rushstack/no-new-null
+	findOne(query: any, options?: any): Promise<T | null>;
 
 	/**
 	 * @returns All values in the database.
@@ -248,16 +255,28 @@ export interface ICollection<T> {
 	createTTLIndex?(index: any, mongoExpireAfterSeconds?: number): Promise<void>;
 }
 
+/**
+ * @internal
+ */
 export interface IRetryable {
 	retryEnabled: boolean;
 }
 
+/**
+ * @internal
+ */
 export function isRetryEnabled<T>(collection: ICollection<T>): boolean {
 	return (collection as unknown as IRetryable).retryEnabled === true;
 }
 
+/**
+ * @alpha
+ */
 export type IDbEvents = "close" | "reconnect" | "error" | "reconnectFailed";
 
+/**
+ * @alpha
+ */
 export interface IDb {
 	close(): Promise<void>;
 
@@ -268,15 +287,24 @@ export interface IDb {
 	 * @param name - collection name
 	 * @param dbName - database name where collection located
 	 */
-	collection<T>(name: string, dbName?: string): ICollection<T>;
+	collection<T extends { [key: string]: any }>(name: string, dbName?: string): ICollection<T>;
 
 	/**
 	 * Removes a collection or view from the database.
 	 * The method also removes any indexes associated with the dropped collection.
 	 */
 	dropCollection?(name: string): Promise<boolean>;
+
+	/**
+	 * Send a ping command to the database to check its health.
+	 * @param dbName - database name
+	 */
+	healthCheck?(dbName?: string): Promise<void>;
 }
 
+/**
+ * @alpha
+ */
 export interface IDbFactory {
 	connect(global: boolean): Promise<IDb>;
 }

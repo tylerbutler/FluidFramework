@@ -30,7 +30,7 @@ export class CheckpointContext {
 		checkpoint: ICheckpointParams,
 		restartOnCheckpointFailure?: boolean,
 		globalCheckpointOnly?: boolean,
-	) {
+	): Promise<void> {
 		// Exit early if already closed
 		if (this.closed) {
 			return;
@@ -51,10 +51,10 @@ export class CheckpointContext {
 		try {
 			this.pendingUpdateP = this.checkpointCore(checkpoint, globalCheckpointOnly);
 			await this.pendingUpdateP;
-		} catch (ex) {
+		} catch (error) {
 			// TODO flag context as error / use this.context.error() instead?
 			this.context.log?.error(
-				`Error writing checkpoint to the database: ${JSON.stringify(ex)}`,
+				`Error writing checkpoint to the database: ${JSON.stringify(error)}, ${error}`,
 				{
 					messageMetaData: {
 						documentId: this.id,
@@ -62,11 +62,23 @@ export class CheckpointContext {
 					},
 				},
 			);
-			Lumberjack.error(`Error writing checkpoint to the database`, lumberjackProperties, ex);
+			Lumberjack.error(
+				`Error writing checkpoint to the database`,
+				lumberjackProperties,
+				error,
+			);
 			databaseCheckpointFailed = true;
 		}
 
-		if (!databaseCheckpointFailed) {
+		// We write a kafka checkpoint if either the local or global checkpoint succeeds
+		// databaseCheckpointFailed is true only if both local and global checkpoint fail
+		if (databaseCheckpointFailed) {
+			Lumberjack.info(
+				`Skipping kafka checkpoint due to database checkpoint failure.`,
+				lumberjackProperties,
+			);
+			databaseCheckpointFailed = false;
+		} else {
 			// Kafka checkpoint
 			try {
 				// depending on the sequence of events, it might try to checkpoint the same offset a second time
@@ -80,10 +92,10 @@ export class CheckpointContext {
 					this.lastKafkaCheckpointOffset = kafkaCheckpointMessage.offset;
 					this.context.checkpoint(kafkaCheckpointMessage, restartOnCheckpointFailure);
 				}
-			} catch (ex) {
+			} catch (error) {
 				// TODO flag context as error / use this.context.error() instead?
 				this.context.log?.error(
-					`Error writing checkpoint to kafka: ${JSON.stringify(ex)}`,
+					`Error writing checkpoint to kafka: ${JSON.stringify(error)}`,
 					{
 						messageMetaData: {
 							documentId: this.id,
@@ -91,14 +103,12 @@ export class CheckpointContext {
 						},
 					},
 				);
-				Lumberjack.error(`Error writing checkpoint to the kafka`, lumberjackProperties, ex);
+				Lumberjack.error(
+					`Error writing checkpoint to the kafka`,
+					lumberjackProperties,
+					error,
+				);
 			}
-		} else {
-			Lumberjack.info(
-				`Skipping kafka checkpoint due to database checkpoint failure.`,
-				lumberjackProperties,
-			);
-			databaseCheckpointFailed = false;
 		}
 		this.pendingUpdateP = undefined;
 
@@ -112,14 +122,14 @@ export class CheckpointContext {
 		}
 	}
 
-	public close() {
+	public close(): void {
 		this.closed = true;
 	}
 
 	private async checkpointCore(
 		checkpoint: ICheckpointParams,
 		globalCheckpointOnly: boolean = false,
-	) {
+	): Promise<void> {
 		// Exit early if already closed
 		if (this.closed) {
 			return;
@@ -127,7 +137,7 @@ export class CheckpointContext {
 
 		let updateP: Promise<void>;
 
-		const localCheckpointEnabled = this.checkpointService?.localCheckpointEnabled;
+		const localCheckpointEnabled = this.checkpointService?.getLocalCheckpointEnabled();
 
 		// determine if checkpoint is local
 		const isLocal =

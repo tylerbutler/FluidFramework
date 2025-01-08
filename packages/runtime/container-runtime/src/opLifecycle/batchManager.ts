@@ -3,18 +3,63 @@
  * Licensed under the MIT License.
  */
 
-import { ICompressionRuntimeOptions } from "../containerRuntime";
-import { BatchMessage, IBatch, IBatchCheckpoint } from "./definitions";
+import { assert } from "@fluidframework/core-utils/internal";
+
+import { ICompressionRuntimeOptions } from "../containerRuntime.js";
+import { asBatchMetadata, type IBatchMetadata } from "../metadata.js";
+import type { IPendingMessage } from "../pendingStateManager.js";
+
+import { BatchMessage, IBatch, IBatchCheckpoint } from "./definitions.js";
+import type { BatchStartInfo } from "./remoteMessageProcessor.js";
 
 export interface IBatchManagerOptions {
 	readonly hardLimit: number;
-	readonly softLimit?: number;
 	readonly compressionOptions?: ICompressionRuntimeOptions;
+
+	/**
+	 * If true, the outbox is allowed to rebase the batch during flushing.
+	 */
+	readonly canRebase: boolean;
+
+	/** If true, don't compare batchID of incoming batches to this. e.g. ID Allocation Batch IDs should be ignored */
+	readonly ignoreBatchId?: boolean;
 }
 
 export interface BatchSequenceNumbers {
 	referenceSequenceNumber?: number;
 	clientSequenceNumber?: number;
+}
+
+/** Type alias for the batchId stored in batch metadata */
+export type BatchId = string;
+
+/** Compose original client ID and client sequence number into BatchId to stamp on the message during reconnect */
+export function generateBatchId(originalClientId: string, batchStartCsn: number): BatchId {
+	return `${originalClientId}_[${batchStartCsn}]`;
+}
+
+/**
+ * Get the effective batch ID for the input argument.
+ * Supports either an IPendingMessage or BatchStartInfo.
+ * If the batch ID is explicitly present, return it.
+ * Otherwise, generate a new batch ID using the client ID and batch start CSN.
+ */
+export function getEffectiveBatchId(
+	pendingMessageOrBatchStartInfo: IPendingMessage | BatchStartInfo,
+): string {
+	if ("localOpMetadata" in pendingMessageOrBatchStartInfo) {
+		const pendingMessage: IPendingMessage = pendingMessageOrBatchStartInfo;
+		return (
+			asBatchMetadata(pendingMessage.opMetadata)?.batchId ??
+			generateBatchId(
+				pendingMessage.batchInfo.clientId,
+				pendingMessage.batchInfo.batchStartCsn,
+			)
+		);
+	}
+
+	const batchStart: BatchStartInfo = pendingMessageOrBatchStartInfo;
+	return batchStart.batchId ?? generateBatchId(batchStart.clientId, batchStart.batchStartCsn);
 }
 
 /**
@@ -51,6 +96,10 @@ export class BatchManager {
 			: this.pendingBatch[this.pendingBatch.length - 1].referenceSequenceNumber;
 	}
 
+	/**
+	 * The last-processed CSN when this batch started.
+	 * This is used to ensure that while the batch is open, no incoming ops are processed.
+	 */
 	private clientSequenceNumber: number | undefined;
 
 	constructor(public readonly options: IBatchManagerOptions) {}
@@ -71,19 +120,6 @@ export class BatchManager {
 		// initially stored as base64, and that requires only 2 extra escape characters.
 		const socketMessageSize = contentSize + opOverhead * opCount;
 
-		// If we were provided soft limit, check for exceeding it.
-		// But only if we have any ops, as the intention here is to flush existing ops (on exceeding this limit)
-		// and start over. That's not an option if we have no ops.
-		// If compression is enabled, the soft and hard limit are ignored and the message will be pushed anyways.
-		// Cases where the message is still too large will be handled by the maxConsecutiveReconnects path.
-		if (
-			this.options.softLimit !== undefined &&
-			this.length > 0 &&
-			socketMessageSize >= this.options.softLimit
-		) {
-			return false;
-		}
-
 		if (socketMessageSize >= this.options.hardLimit) {
 			return false;
 		}
@@ -101,9 +137,12 @@ export class BatchManager {
 		return this.pendingBatch.length === 0;
 	}
 
-	public popBatch(): IBatch {
+	/**
+	 * Gets the pending batch and clears state for the next batch.
+	 */
+	public popBatch(batchId?: BatchId): IBatch {
 		const batch: IBatch = {
-			content: this.pendingBatch,
+			messages: this.pendingBatch,
 			contentSizeInBytes: this.batchContentSize,
 			referenceSequenceNumber: this.referenceSequenceNumber,
 			hasReentrantOps: this.hasReentrantOps,
@@ -114,7 +153,7 @@ export class BatchManager {
 		this.clientSequenceNumber = undefined;
 		this.hasReentrantOps = false;
 
-		return addBatchMetadata(batch);
+		return addBatchMetadata(batch, batchId);
 	}
 
 	/**
@@ -137,16 +176,31 @@ export class BatchManager {
 	}
 }
 
-const addBatchMetadata = (batch: IBatch): IBatch => {
-	if (batch.content.length > 1) {
-		batch.content[0].metadata = {
-			...batch.content[0].metadata,
-			batch: true,
-		};
-		batch.content[batch.content.length - 1].metadata = {
-			...batch.content[batch.content.length - 1].metadata,
-			batch: false,
-		};
+const addBatchMetadata = (batch: IBatch, batchId?: BatchId): IBatch => {
+	const batchEnd = batch.messages.length - 1;
+
+	const firstMsg = batch.messages[0];
+	const lastMsg = batch.messages[batchEnd];
+	assert(
+		firstMsg !== undefined && lastMsg !== undefined,
+		0x9d1 /* expected non-empty batch */,
+	);
+
+	const firstMetadata: Partial<IBatchMetadata> = firstMsg.metadata ?? {};
+	const lastMetadata: Partial<IBatchMetadata> = lastMsg.metadata ?? {};
+
+	// Multi-message batches: mark the first and last messages with the "batch" flag indicating batch start/end
+	if (batch.messages.length > 1) {
+		firstMetadata.batch = true;
+		lastMetadata.batch = false;
+		firstMsg.metadata = firstMetadata;
+		lastMsg.metadata = lastMetadata;
+	}
+
+	// If batchId is provided (e.g. in case of resubmit): stamp it on the first message
+	if (batchId !== undefined) {
+		firstMetadata.batchId = batchId;
+		firstMsg.metadata = firstMetadata;
 	}
 
 	return batch;
@@ -161,7 +215,7 @@ const addBatchMetadata = (batch: IBatch): IBatch => {
  * @returns An estimate of the payload size in bytes which will be produced when the batch is sent over the wire
  */
 export const estimateSocketSize = (batch: IBatch): number => {
-	return batch.contentSizeInBytes + opOverhead * batch.content.length;
+	return batch.contentSizeInBytes + opOverhead * batch.messages.length;
 };
 
 export const sequenceNumbersMatch = (

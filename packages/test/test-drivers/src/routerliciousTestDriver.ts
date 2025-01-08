@@ -4,16 +4,25 @@
  */
 
 import assert from "assert";
+
+import { ITestDriver, RouterliciousEndpoint } from "@fluid-internal/test-driver-definitions";
 import { IRequest } from "@fluidframework/core-interfaces";
-import { InsecureTokenProvider } from "@fluidframework/test-runtime-utils";
-import { InsecureUrlResolver } from "@fluidframework/driver-utils";
+import {
+	IDocumentServiceFactory,
+	IResolvedUrl,
+} from "@fluidframework/driver-definitions/internal";
+import { InsecureUrlResolver } from "@fluidframework/driver-utils/internal";
+import { IRouterliciousDriverPolicies } from "@fluidframework/routerlicious-driver/internal";
+import { InsecureTokenProvider } from "@fluidframework/test-runtime-utils/internal";
 import { v4 as uuid } from "uuid";
-import { IDocumentServiceFactory, IResolvedUrl } from "@fluidframework/driver-definitions";
-import { IRouterliciousDriverPolicies } from "@fluidframework/routerlicious-driver";
-import { ITestDriver, RouterliciousEndpoint } from "@fluidframework/test-driver-definitions";
-import { RouterliciousDriverApiType, RouterliciousDriverApi } from "./routerliciousDriverApi";
+
+import {
+	RouterliciousDriverApi,
+	RouterliciousDriverApiType,
+} from "./routerliciousDriverApi.js";
 
 interface IServiceEndpoint {
+	deltaStreamUrl: string;
 	hostUrl: string;
 	ordererUrl: string;
 	deltaStorageUrl: string;
@@ -21,6 +30,7 @@ interface IServiceEndpoint {
 
 const dockerConfig = (driverPolicies?: IRouterliciousDriverPolicies) => ({
 	serviceEndpoint: {
+		deltaStreamUrl: "http://localhost:3002",
 		hostUrl: "http://localhost:3000",
 		ordererUrl: "http://localhost:3003",
 		deltaStorageUrl: "http://localhost:3001",
@@ -40,13 +50,14 @@ function getConfig(
 	assert(tenantId, "Missing tenantId");
 	assert(tenantSecret, "Missing tenant secret");
 	if (discoveryEndpoint !== undefined) {
-		// The hostUrl and deltaStorageUrl will be replaced by the URLs of the discovery result.
+		// The hostUrl, deltaStreamUrl and deltaStorageUrl will be replaced by the URLs of the discovery result.
 		// The deltaStorageUrl is firstly set to https://dummy-historian to make the workflow successful.
 		return {
 			serviceEndpoint: {
 				hostUrl: "",
 				ordererUrl: discoveryEndpoint,
 				deltaStorageUrl: "https://dummy-historian",
+				deltaStreamUrl: "",
 			},
 			tenantId,
 			tenantSecret,
@@ -59,6 +70,7 @@ function getConfig(
 			hostUrl: fluidHost,
 			ordererUrl: fluidHost.replace("www", "alfred"),
 			deltaStorageUrl: fluidHost.replace("www", "historian"),
+			deltaStreamUrl: fluidHost.replace("www", "nexus"),
 		},
 		tenantId,
 		tenantSecret,
@@ -75,7 +87,8 @@ function getLegacyConfigFromEnv() {
 }
 
 function getEndpointConfigFromEnv(r11sEndpointName: RouterliciousEndpoint) {
-	const configStr = process.env[`fluid__test__driver__${r11sEndpointName}`];
+	const configStr: string | undefined =
+		process.env[`fluid__test__driver__${r11sEndpointName}`];
 	if (r11sEndpointName === "docker") {
 		const dockerDriverPolicies =
 			configStr === undefined ? configStr : JSON.parse(configStr).driverPolicies;
@@ -107,7 +120,9 @@ function getConfigFromEnv(r11sEndpointName?: RouterliciousEndpoint) {
 	}
 	return getEndpointConfigFromEnv(r11sEndpointName);
 }
-
+/**
+ * @internal
+ */
 export function assertRouterliciousEndpoint(
 	endpoint: string | undefined,
 ): asserts endpoint is RouterliciousEndpoint | undefined {
@@ -123,6 +138,9 @@ export function assertRouterliciousEndpoint(
 	throw new TypeError("Not a routerlicious endpoint");
 }
 
+/**
+ * @internal
+ */
 export class RouterliciousTestDriver implements ITestDriver {
 	public static createFromEnv(
 		config?: { r11sEndpointName?: string },
@@ -168,7 +186,10 @@ export class RouterliciousTestDriver implements ITestDriver {
 			name: uuid(),
 		});
 
-		return new this.api.RouterliciousDocumentServiceFactory(tokenProvider, this.driverPolicies);
+		return new this.api.RouterliciousDocumentServiceFactory(
+			tokenProvider,
+			this.driverPolicies,
+		);
 	}
 
 	createUrlResolver(): InsecureUrlResolver {
@@ -176,6 +197,7 @@ export class RouterliciousTestDriver implements ITestDriver {
 			this.serviceEndpoints.hostUrl,
 			this.serviceEndpoints.ordererUrl,
 			this.serviceEndpoints.deltaStorageUrl,
+			this.serviceEndpoints.deltaStreamUrl,
 			this.tenantId,
 			"", // Don't need the bearer secret for NodeTest
 			true,

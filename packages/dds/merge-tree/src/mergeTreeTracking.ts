@@ -3,12 +3,20 @@
  * Licensed under the MIT License.
  */
 
-import { LocalReferencePosition } from "./localReference";
-import { ISegment } from "./mergeTreeNodes";
-import { SortedSegmentSet } from "./sortedSegmentSet";
+import { LocalReferencePosition } from "./localReference.js";
+import { ISegment } from "./mergeTreeNodes.js";
+import { SortedSegmentSet } from "./sortedSegmentSet.js";
 
+/**
+ * @legacy
+ * @alpha
+ */
 export type Trackable = ISegment | LocalReferencePosition;
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface ITrackingGroup {
 	tracked: readonly Trackable[];
 	size: number;
@@ -17,6 +25,10 @@ export interface ITrackingGroup {
 	unlink(trackable: Trackable): boolean;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export class TrackingGroup implements ITrackingGroup {
 	private readonly trackedSet: SortedSegmentSet<Trackable>;
 
@@ -63,7 +75,7 @@ export class UnorderedTrackingGroup implements ITrackingGroup {
 	}
 
 	public get tracked(): readonly Trackable[] {
-		return Array.from(this.trackedSet);
+		return [...this.trackedSet];
 	}
 
 	public get size(): number {
@@ -90,6 +102,11 @@ export class UnorderedTrackingGroup implements ITrackingGroup {
 	}
 }
 
+/**
+ * A collection of {@link ITrackingGroup}.
+ * @legacy
+ * @alpha
+ */
 export class TrackingGroupCollection {
 	private readonly _trackingGroups: Set<ITrackingGroup>;
 
@@ -129,9 +146,9 @@ export class TrackingGroupCollection {
 	}
 
 	public copyTo(trackable: Trackable): void {
-		this._trackingGroups.forEach((sg) => {
+		for (const sg of this._trackingGroups) {
 			trackable.trackingCollection.link(sg);
-		});
+		}
 	}
 
 	public get empty(): boolean {

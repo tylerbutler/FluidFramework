@@ -3,10 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryLoggerExt, formatTick } from "@fluidframework/telemetry-utils";
 import { performance } from "@fluid-internal/client-utils";
-import { IDeltaManager } from "@fluidframework/container-definitions";
-import { IDocumentMessage, ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
+import { IDeltaManagerFull } from "@fluidframework/container-definitions/internal";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+import { ITelemetryLoggerExt, formatTick } from "@fluidframework/telemetry-utils/internal";
 
 /**
  * DeltaScheduler is responsible for the scheduling of inbound delta queue in cases where there
@@ -22,7 +22,7 @@ import { IDocumentMessage, ISequencedDocumentMessage } from "@fluidframework/pro
  * processed, the time and number of turns it took to process the ops.
  */
 export class DeltaScheduler {
-	private readonly deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>;
+	private readonly deltaManager: IDeltaManagerFull;
 	// The time for processing ops in a single turn.
 	public static readonly processingTime = 50;
 
@@ -50,7 +50,7 @@ export class DeltaScheduler {
 		| undefined;
 
 	constructor(
-		deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>,
+		deltaManager: IDeltaManagerFull,
 		private readonly logger: ITelemetryLoggerExt,
 	) {
 		this.deltaManager = deltaManager;
@@ -145,9 +145,7 @@ export class DeltaScheduler {
 				numberOfTurns: this.schedulingLog.numberOfTurns,
 				processingTime: formatTick(this.schedulingLog.totalProcessingTime),
 				opsProcessed:
-					this.schedulingLog.lastSequenceNumber -
-					this.schedulingLog.firstSequenceNumber +
-					1,
+					this.schedulingLog.lastSequenceNumber - this.schedulingLog.firstSequenceNumber + 1,
 				batchesProcessed: this.schedulingLog.numberOfBatchesProcessed,
 				duration: formatTick(currentTime - this.schedulingLog.startTime),
 				schedulingCount: this.schedulingCount,

@@ -3,9 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import React from "react";
-
 import { ICoordinate } from "@fluid-example/multiview-coordinate-interface";
+import React from "react";
 
 // eslint-disable-next-line import/no-unassigned-import
 import "./style.css";
@@ -34,6 +33,7 @@ interface ITriangleViewProps {
 /**
  * TriangleView is a React component that renders a triangle using the given ICoordinates as the vertices.
  * For now, it only renders out the triangle, but we could enhance it to allow manipulating the coordinates.
+ * @internal
  */
 export const TriangleView: React.FC<ITriangleViewProps> = (props: ITriangleViewProps) => {
 	const canvasRef = React.createRef<HTMLCanvasElement>();
@@ -41,12 +41,7 @@ export const TriangleView: React.FC<ITriangleViewProps> = (props: ITriangleViewP
 		if (canvasRef.current !== null) {
 			const ctx = canvasRef.current.getContext("2d");
 			if (ctx !== null) {
-				renderTriangleToCanvas(
-					ctx,
-					props.coordinate1,
-					props.coordinate2,
-					props.coordinate3,
-				);
+				renderTriangleToCanvas(ctx, props.coordinate1, props.coordinate2, props.coordinate3);
 			}
 		}
 	};

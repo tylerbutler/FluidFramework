@@ -3,37 +3,50 @@
  * Licensed under the MIT License.
  */
 
-// eslint-disable-next-line import/no-internal-modules
-import cloneDeep from "lodash/cloneDeep";
-import { DataProcessingError, ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
-import { IDocumentStorageService } from "@fluidframework/driver-definitions";
-import { ISequencedDocumentMessage, ISnapshotTree } from "@fluidframework/protocol-definitions";
-import { IChannel, IFluidDataStoreRuntime } from "@fluidframework/datastore-definitions";
+import { ISnapshotTreeWithBlobContents } from "@fluidframework/container-definitions/internal";
+import { assert, Lazy, LazyPromise } from "@fluidframework/core-utils/internal";
 import {
+	IChannel,
+	IFluidDataStoreRuntime,
+} from "@fluidframework/datastore-definitions/internal";
+import {
+	IDocumentStorageService,
+	ISnapshotTree,
+} from "@fluidframework/driver-definitions/internal";
+import {
+	ITelemetryContext,
 	IFluidDataStoreContext,
 	IGarbageCollectionData,
 	ISummarizeResult,
-	ITelemetryContext,
-} from "@fluidframework/runtime-definitions";
-import { assert, Lazy, LazyPromise } from "@fluidframework/core-utils";
-import { IFluidHandle } from "@fluidframework/core-interfaces";
+	type IPendingMessagesState,
+	type IRuntimeMessageCollection,
+} from "@fluidframework/runtime-definitions/internal";
+import {
+	ITelemetryLoggerExt,
+	DataProcessingError,
+} from "@fluidframework/telemetry-utils/internal";
+
 import {
 	ChannelServiceEndpoints,
-	createChannelServiceEndpoints,
 	IChannelContext,
+	createChannelServiceEndpoints,
 	loadChannel,
 	loadChannelFactoryAndAttributes,
 	summarizeChannel,
 	summarizeChannelAsync,
-} from "./channelContext";
-import { ISharedObjectRegistry } from "./dataStoreRuntime";
+} from "./channelContext.js";
+import { ISharedObjectRegistry } from "./dataStoreRuntime.js";
 
 /**
  * Channel context for a locally created channel
  */
 export abstract class LocalChannelContextBase implements IChannelContext {
 	private globallyVisible = false;
-	protected readonly pending: ISequencedDocumentMessage[] = [];
+	/** Tracks the messages for this channel that are sent while it's not loaded */
+	protected pendingMessagesState: IPendingMessagesState = {
+		messageCollections: [],
+		pendingCount: 0,
+	};
 	constructor(
 		protected readonly id: string,
 		protected readonly runtime: IFluidDataStoreRuntime,
@@ -42,6 +55,10 @@ export abstract class LocalChannelContextBase implements IChannelContext {
 		private _channel?: IChannel,
 	) {
 		assert(!this.id.includes("/"), 0x30f /* Channel context ID cannot contain slashes */);
+	}
+
+	protected get isGloballyVisible() {
+		return this.globallyVisible;
 	}
 
 	public async getChannel(): Promise<IChannel> {
@@ -62,11 +79,11 @@ export abstract class LocalChannelContextBase implements IChannelContext {
 		}
 	}
 
-	public processOp(
-		message: ISequencedDocumentMessage,
-		local: boolean,
-		localOpMetadata: unknown,
-	): void {
+	/**
+	 * Process messages for this channel context. The messages here are contiguous messages for this context in a batch.
+	 * @param messageCollection - The collection of messages to process.
+	 */
+	processMessages(messageCollection: IRuntimeMessageCollection): void {
 		assert(
 			this.globallyVisible,
 			0x2d3 /* "Local channel must be globally visible when processing op" */,
@@ -76,13 +93,17 @@ export abstract class LocalChannelContextBase implements IChannelContext {
 		// delay loading. So after the container is attached and some other client joins which start generating
 		// ops for this channel. So not loaded local channel can still receive ops and we store them to process later.
 		if (this.isLoaded) {
-			this.services.value.deltaConnection.process(message, local, localOpMetadata);
+			this.services.value.deltaConnection.processMessages(messageCollection);
 		} else {
 			assert(
-				local === false,
+				!messageCollection.local,
 				0x189 /* "Should always be remote because a local dds shouldn't generate ops before loading" */,
 			);
-			this.pending.push(message);
+			const propsCopy = {
+				...messageCollection,
+				messagesContent: Array.from(messageCollection.messagesContent),
+			};
+			this.pendingMessagesState.messageCollections.push(propsCopy);
 		}
 	}
 
@@ -103,9 +124,7 @@ export abstract class LocalChannelContextBase implements IChannelContext {
 		this.services.value.deltaConnection.rollback(content, localOpMetadata);
 	}
 
-	public applyStashedOp() {
-		throw new Error("no stashed ops on local channel");
-	}
+	public abstract applyStashedOp(content: unknown): unknown;
 
 	/**
 	 * Returns a summary at the current sequence number.
@@ -122,6 +141,11 @@ export abstract class LocalChannelContextBase implements IChannelContext {
 		return summarizeChannelAsync(channel, fullTree, trackState, telemetryContext);
 	}
 
+	/**
+	 * For crafting the DataStore attach op. Only to be called when the channel is loaded (if applicable).
+	 *
+	 * Synchronously generates the channel's attach summary to be joined with the same from the DataStore's other channels
+	 */
 	public getAttachSummary(telemetryContext?: ITelemetryContext): ISummarizeResult {
 		assert(
 			this._channel !== undefined,
@@ -133,6 +157,22 @@ export abstract class LocalChannelContextBase implements IChannelContext {
 			false /* trackState */,
 			telemetryContext,
 		);
+	}
+
+	/**
+	 * For crafting the DataStore attach op. Only to be called when the channel is loaded (if applicable).
+	 *
+	 * Synchronously generates the channel's attach GC data (set of outbound routes in the initial state)
+	 * to be joined with the same from the DataStore's other channels
+	 */
+	public getAttachGCData(telemetryContext?: ITelemetryContext): IGarbageCollectionData {
+		assert(
+			this._channel !== undefined,
+			0x8fd /* Local Channel should be loaded before being attached */,
+		);
+
+		// We need the GC Data to detect references added in this attach op
+		return this._channel.getGCData(/* fullGC: */ true);
 	}
 
 	public makeVisible(): void {
@@ -178,15 +218,17 @@ export class RehydratedLocalChannelContext extends LocalChannelContextBase {
 		logger: ITelemetryLoggerExt,
 		submitFn: (content: any, localOpMetadata: unknown) => void,
 		dirtyFn: (address: string) => void,
-		addedGCOutboundReferenceFn: (srcHandle: IFluidHandle, outboundHandle: IFluidHandle) => void,
 		private readonly snapshotTree: ISnapshotTree,
+		extraBlob?: Map<string, ArrayBufferLike>,
 	) {
 		super(
 			id,
 			runtime,
 			new Lazy(() => {
-				const blobMap: Map<string, ArrayBufferLike> = new Map<string, ArrayBufferLike>();
-				const clonedSnapshotTree = cloneDeep(this.snapshotTree);
+				const blobMap: Map<string, ArrayBufferLike> = new Map<string, ArrayBufferLike>(
+					extraBlob,
+				);
+				const clonedSnapshotTree = cloneSnapshotTree(this.snapshotTree);
 				// 0.47 back-compat Need to sanitize if snapshotTree.blobs still contains blob contents too.
 				// This is for older snapshot which is generated by loader <=0.47 version which still contains
 				// the contents within blobs. After a couple of revisions we can remove it.
@@ -197,7 +239,7 @@ export class RehydratedLocalChannelContext extends LocalChannelContextBase {
 					dataStoreContext.connected,
 					submitFn,
 					this.dirtyFn,
-					addedGCOutboundReferenceFn,
+					() => this.isGloballyVisible,
 					storageService,
 					logger,
 					clonedSnapshotTree,
@@ -221,12 +263,8 @@ export class RehydratedLocalChannelContext extends LocalChannelContextBase {
 						this.id,
 					);
 					// Send all pending messages to the channel
-					for (const message of this.pending) {
-						this.services.value.deltaConnection.process(
-							message,
-							false,
-							undefined /* localOpMetadata */,
-						);
+					for (const messageCollection of this.pendingMessagesState.messageCollections) {
+						this.services.value.deltaConnection.processMessages(messageCollection);
 					}
 					return channel;
 				} catch (err) {
@@ -244,19 +282,24 @@ export class RehydratedLocalChannelContext extends LocalChannelContextBase {
 		};
 	}
 
+	public override applyStashedOp(content) {
+		return this.services.value.deltaConnection.applyStashedOp(content);
+	}
+
 	private isSnapshotInOldFormatAndCollectBlobs(
-		snapshotTree: ISnapshotTree,
+		snapshotTree: ISnapshotTreeWithBlobContents,
 		blobMap: Map<string, ArrayBufferLike>,
 	): boolean {
 		let sanitize = false;
-		const blobsContents: { [path: string]: ArrayBufferLike } = (snapshotTree as any)
-			.blobsContents;
-		Object.entries(blobsContents).forEach(([key, value]) => {
-			blobMap.set(key, value);
-			if (snapshotTree.blobs[key] !== undefined) {
-				sanitize = true;
-			}
-		});
+		const blobsContents = snapshotTree.blobsContents;
+		if (blobsContents !== undefined) {
+			Object.entries(blobsContents).forEach(([key, value]) => {
+				blobMap.set(key, value);
+				if (snapshotTree.blobs[key] !== undefined) {
+					sanitize = true;
+				}
+			});
+		}
 		for (const value of Object.values(snapshotTree.trees)) {
 			sanitize = sanitize || this.isSnapshotInOldFormatAndCollectBlobs(value, blobMap);
 		}
@@ -280,34 +323,24 @@ export class RehydratedLocalChannelContext extends LocalChannelContextBase {
 
 export class LocalChannelContext extends LocalChannelContextBase {
 	private readonly dirtyFn: () => void;
-	public readonly channel: IChannel;
 	constructor(
-		id: string,
-		registry: ISharedObjectRegistry,
-		type: string,
+		public readonly channel: IChannel,
 		runtime: IFluidDataStoreRuntime,
 		dataStoreContext: IFluidDataStoreContext,
 		storageService: IDocumentStorageService,
 		logger: ITelemetryLoggerExt,
 		submitFn: (content: any, localOpMetadata: unknown) => void,
 		dirtyFn: (address: string) => void,
-		addedGCOutboundReferenceFn: (srcHandle: IFluidHandle, outboundHandle: IFluidHandle) => void,
 	) {
-		assert(type !== undefined, 0x209 /* "Factory Type should be defined" */);
-		const factory = registry.get(type);
-		if (factory === undefined) {
-			throw new Error(`Channel Factory ${type} not registered`);
-		}
-		const channel = factory.create(runtime, id);
 		super(
-			id,
+			channel.id,
 			runtime,
 			new Lazy(() => {
 				return createChannelServiceEndpoints(
 					dataStoreContext.connected,
 					submitFn,
 					this.dirtyFn,
-					addedGCOutboundReferenceFn,
+					() => this.isGloballyVisible,
 					storageService,
 					logger,
 				);
@@ -318,7 +351,28 @@ export class LocalChannelContext extends LocalChannelContextBase {
 		this.channel = channel;
 
 		this.dirtyFn = () => {
-			dirtyFn(id);
+			dirtyFn(channel.id);
 		};
 	}
+
+	public applyStashedOp() {
+		throw new Error("no stashed ops on local channel");
+	}
+}
+
+/**
+ * Deep clones a snapshot tree.
+ *
+ * TODO: Investigate replacing this with a deep clone utility.
+ * This is a temporary solution to avoid issues with lodash deepClone and ungap structuredClone.
+ * Using lodash caused a significant bundle size regression. structuredClone cannot be used since
+ * it does not support ArrayBuffer data types, and ISnapshotTree can contain blobContents properties,
+ * which are ArrayBuffer data types.
+ */
+function cloneSnapshotTree(tree: ISnapshotTree): ISnapshotTree {
+	const clone = { ...tree, blobs: { ...tree.blobs }, trees: {} };
+	for (const [k, v] of Object.entries(tree.trees)) {
+		clone.trees[k] = cloneSnapshotTree(v);
+	}
+	return clone;
 }

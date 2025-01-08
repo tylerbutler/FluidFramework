@@ -7,11 +7,12 @@ import { IStorageNameRetriever } from "@fluidframework/server-services-core";
 
 /**
  * Retriever to fetch storage name used for document.
+ * @internal
  */
 export class StorageNameRetriever implements IStorageNameRetriever {
 	public constructor() {}
 
 	public async get(tenantId: string, documentId: string): Promise<string> {
-		return undefined;
+		return "Unknown";
 	}
 }

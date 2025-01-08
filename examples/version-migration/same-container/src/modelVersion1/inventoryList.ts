@@ -3,13 +3,14 @@
  * Licensed under the MIT License.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "@fluid-example/example-utils";
+import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct/legacy";
+// eslint-disable-next-line import/no-internal-modules -- #26903: `cell` internals used in examples
+import { SharedCell, type ISharedCell } from "@fluidframework/cell/internal";
+import { SharedString } from "@fluidframework/sequence/legacy";
 import { v4 as uuid } from "uuid";
-import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct";
-import { SharedCell } from "@fluidframework/cell";
-import { SharedString } from "@fluidframework/sequence";
 
-import type { IInventoryItem, IInventoryList } from "../modelInterfaces";
+import type { IInventoryItem, IInventoryList } from "../modelInterfaces.js";
 
 class InventoryItem extends EventEmitter implements IInventoryItem {
 	public get id() {
@@ -32,7 +33,7 @@ class InventoryItem extends EventEmitter implements IInventoryItem {
 	public constructor(
 		private readonly _id: string,
 		private readonly _name: SharedString,
-		private readonly _quantity: SharedCell<number>,
+		private readonly _quantity: ISharedCell<number>,
 	) {
 		super();
 		// this._name.on("sequenceDelta", () =>{
@@ -48,6 +49,7 @@ class InventoryItem extends EventEmitter implements IInventoryItem {
 
 /**
  * The InventoryList is our data object that implements the IInventoryList interface.
+ * @internal
  */
 export class InventoryList extends DataObject implements IInventoryList {
 	private readonly inventoryItems = new Map<string, InventoryItem>();
@@ -55,7 +57,7 @@ export class InventoryList extends DataObject implements IInventoryList {
 	public readonly addItem = (name: string, quantity: number) => {
 		const nameString = SharedString.create(this.runtime);
 		nameString.insertText(0, name);
-		const quantityCell: SharedCell<number> = SharedCell.create(this.runtime);
+		const quantityCell: ISharedCell<number> = SharedCell.create(this.runtime);
 		quantityCell.set(quantity);
 		const id = uuid();
 		this.root.set(id, { name: nameString.handle, quantity: quantityCell.handle });
@@ -120,10 +122,7 @@ export class InventoryList extends DataObject implements IInventoryList {
 				itemData.name.get(),
 				itemData.quantity.get(),
 			]);
-			this.inventoryItems.set(
-				id,
-				new InventoryItem(id, nameSharedString, quantitySharedCell),
-			);
+			this.inventoryItems.set(id, new InventoryItem(id, nameSharedString, quantitySharedCell));
 		}
 	}
 }
@@ -132,6 +131,7 @@ export class InventoryList extends DataObject implements IInventoryList {
  * The DataObjectFactory is used by Fluid Framework to instantiate our DataObject.  We provide it with a unique name
  * and the constructor it will call.  The third argument lists the other data structures it will utilize.  In this
  * scenario, the fourth argument is not used.
+ * @internal
  */
 export const InventoryListInstantiationFactory = new DataObjectFactory<InventoryList>(
 	"inventory-list",

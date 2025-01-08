@@ -4,7 +4,8 @@
  */
 
 /**
- * Primary entry-point to the Fluid Devtools.
+ * Used in conjunction with the Fluid Framework Developer Tools browser extension to allow visualization of
+ * and interaction with Fluid data.
  *
  * To initialize the Devtools alongside your application's {@link @fluidframework/fluid-static#IFluidContainer}, call
  * {@link initializeDevtools}.
@@ -12,26 +13,30 @@
  * The Devtools will automatically dispose of themselves upon Window unload, but if you would like to close them
  * earlier, call {@link IDevtools.dispose}.
  *
- * To enable visualization of Telemetry data, you may create a {@link @fluid-experimental/devtools-core#DevtoolsLogger} and
+ * To enable visualization of Telemetry data, you may create a {@link DevtoolsLogger} and
  * provide it during Devtools initialization.
+ *
+ * For more details and examples, see the {@link https://github.com/microsoft/FluidFramework/tree/main/packages/tools/devtools/devtools | package README}.
  *
  * @packageDocumentation
  */
 
+import type { IDisposable, IFluidLoadable } from "@fluidframework/core-interfaces";
 import {
 	type ContainerDevtoolsProps as ContainerDevtoolsPropsBase,
-	type IFluidDevtools as IDevtoolsBase,
-	initializeDevtools as initializeDevtoolsBase,
-	type DevtoolsLogger,
 	type HasContainerKey,
-} from "@fluid-experimental/devtools-core";
-import { type IDisposable } from "@fluidframework/core-interfaces";
-import { type FluidContainer, type IFluidContainer } from "@fluidframework/fluid-static";
+	type IFluidDevtools as IDevtoolsBase,
+	type IDevtoolsLogger,
+	initializeDevtools as initializeDevtoolsBase,
+} from "@fluidframework/devtools-core/internal";
+import type { IFluidContainer } from "@fluidframework/fluid-static";
+import { isInternalFluidContainer } from "@fluidframework/fluid-static/internal";
 
 /**
  * Properties for configuring {@link IDevtools}.
  *
- * @public
+ * @sealed
+ * @beta
  */
 export interface DevtoolsProps {
 	/**
@@ -44,14 +49,14 @@ export interface DevtoolsProps {
 	 * This is provided to the Devtools instance strictly to enable communicating supported / desired functionality with
 	 * external listeners.
 	 */
-	logger?: DevtoolsLogger;
+	readonly logger?: IDevtoolsLogger;
 
 	/**
 	 * (optional) List of Containers to initialize the devtools with.
 	 *
 	 * @remarks Additional Containers can be registered with the Devtools via {@link IDevtools.registerContainerDevtools}.
 	 */
-	initialContainers?: ContainerDevtoolsProps[];
+	readonly initialContainers?: ContainerDevtoolsProps[];
 
 	// TODO: Add ability for customers to specify custom data visualizer overrides
 }
@@ -59,13 +64,14 @@ export interface DevtoolsProps {
 /**
  * Properties for configuring Devtools for an individual {@link @fluidframework/fluid-static#IFluidContainer}.
  *
- * @public
+ * @sealed
+ * @beta
  */
 export interface ContainerDevtoolsProps extends HasContainerKey {
 	/**
 	 * The Container to register with the Devtools.
 	 */
-	container: IFluidContainer;
+	readonly container: IFluidContainer;
 
 	// TODO: Add ability for customers to specify custom data visualizer overrides
 }
@@ -83,7 +89,8 @@ export interface ContainerDevtoolsProps extends HasContainerKey {
  * disposed of on Window unload.
  * If you wish to dispose of it earlier, you may call its {@link @fluidframework/core-interfaces#IDisposable.dispose} method.
  *
- * @public
+ * @sealed
+ * @beta
  */
 export interface IDevtools extends IDisposable {
 	/**
@@ -92,7 +99,7 @@ export interface IDevtools extends IDisposable {
 	 * @throws
 	 *
 	 * Will throw if devtools have already been registered for the specified
-	 * {@link @fluid-experimental/devtools-core#HasContainerKey.containerKey}.
+	 * {@link @fluidframework/devtools-core#HasContainerKey.containerKey}.
 	 */
 	registerContainerDevtools(props: ContainerDevtoolsProps): void;
 
@@ -115,9 +122,7 @@ class Devtools implements IDevtools {
 	 */
 	public registerContainerDevtools(props: ContainerDevtoolsProps): void {
 		const mappedProps = mapContainerProps(props);
-		if (mappedProps !== undefined) {
-			this._devtools.registerContainerDevtools(mappedProps);
-		}
+		this._devtools.registerContainerDevtools(mappedProps);
 	}
 
 	/**
@@ -143,23 +148,16 @@ class Devtools implements IDevtools {
 }
 
 /**
- * {@inheritDoc @fluid-experimental/devtools-core#initializeDevtoolsBase}
+ * Initializes the Devtools singleton and returns a handle to it.
  *
- * @public
+ * @see {@link @fluidframework/devtools-core#initializeDevtoolsBase}
+ *
+ * @beta
  */
 export function initializeDevtools(props: DevtoolsProps): IDevtools {
 	const { initialContainers, logger } = props;
 
-	let mappedInitialContainers: ContainerDevtoolsPropsBase[] | undefined;
-	if (initialContainers !== undefined) {
-		mappedInitialContainers = [];
-		for (const containerProps of initialContainers) {
-			const mappedContainerProps = mapContainerProps(containerProps);
-			if (mappedContainerProps !== undefined) {
-				mappedInitialContainers.push(mappedContainerProps);
-			}
-		}
-	}
+	const mappedInitialContainers = initialContainers?.map((p) => mapContainerProps(p));
 
 	const baseDevtools = initializeDevtoolsBase({
 		logger,
@@ -169,25 +167,23 @@ export function initializeDevtools(props: DevtoolsProps): IDevtools {
 }
 
 /**
- * Maps the input props to lower-level {@link @fluid-experimental/devtools-core#ContainerDevtoolsPropsBase},
+ * Maps the input props to lower-level {@link @fluidframework/devtools-core#ContainerDevtoolsPropsBase},
  * to be forwarded on to the base library.
  */
 function mapContainerProps(
 	containerProps: ContainerDevtoolsProps,
-): ContainerDevtoolsPropsBase | undefined {
+): ContainerDevtoolsPropsBase {
 	const { container, containerKey } = containerProps;
-	const fluidContainer = container as FluidContainer;
-
-	if (fluidContainer.INTERNAL_CONTAINER_DO_NOT_USE === undefined) {
-		console.error("Missing Container accessor on FluidContainer.");
-		return undefined;
+	if (!isInternalFluidContainer(container)) {
+		throw new TypeError(
+			"IFluidContainer was not recognized. Only Containers generated by the Fluid Framework are supported.",
+		);
 	}
 
-	const innerContainer = fluidContainer.INTERNAL_CONTAINER_DO_NOT_USE();
 	return {
-		container: innerContainer,
+		container: container.container,
 		containerKey,
-		containerData: container.initialObjects,
+		containerData: container.initialObjects as Record<string, IFluidLoadable>,
 	};
 }
 
@@ -195,5 +191,9 @@ function mapContainerProps(
 // so consumers don't need to import from this one *and* devtools-core.
 // DevtoolsLogger is necessary for consumers to set up Devtools.
 // ContainerDevtoolsProps extends HasContainerKey, so it needs ContainerKey.
-export type { ContainerKey, HasContainerKey } from "@fluid-experimental/devtools-core";
-export { DevtoolsLogger } from "@fluid-experimental/devtools-core";
+export {
+	type ContainerKey,
+	type HasContainerKey,
+	createDevtoolsLogger,
+	type IDevtoolsLogger,
+} from "@fluidframework/devtools-core/internal";

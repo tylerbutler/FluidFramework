@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 
-import { ApiItemKind } from "@microsoft/api-extractor-model";
 import {
 	DocumentNode,
 	HeadingNode,
@@ -13,17 +12,12 @@ import {
 	PlainTextNode,
 	SectionNode,
 	SpanNode,
-} from "../../../documentation-domain";
-import { renderDocument } from "../Render";
+} from "../../../documentation-domain/index.js";
+import { renderDocument } from "../Render.js";
 
 describe("Document HTML rendering tests", () => {
 	it("Renders a simple document", () => {
 		const document = new DocumentNode({
-			documentItemMetadata: {
-				apiItemName: "Foo-package",
-				apiItemKind: ApiItemKind.Package,
-				packageName: "Foo-package",
-			},
 			children: [
 				new SectionNode(
 					[
@@ -34,7 +28,7 @@ describe("Document HTML rendering tests", () => {
 						new SectionNode(
 							[
 								new ParagraphNode([
-									new PlainTextNode("This is test inside of a paragraph. "),
+									new PlainTextNode("This is text inside of a paragraph. "),
 									new PlainTextNode(
 										"It is also inside of a hierarchical section node. ",
 									),
@@ -53,26 +47,18 @@ describe("Document HTML rendering tests", () => {
 		});
 
 		const expected = [
-			"<!DOCTYPE html>",
+			"<!doctype html>",
 			'<html lang="en">',
 			"  <head>",
-			'    <meta charset="utf-8" />',
+			'    <meta charset="utf-8">',
 			"  </head>",
 			"  <body>",
 			"    <section>",
-			"      <h1>",
-			"        Sample Document",
-			"      </h1>",
-			"      <p>",
-			"        This is a sample document. It has very basic content.\t",
-			"      </p>",
+			"      <h1>Sample Document</h1>",
+			"      <p>This is a sample document. It has very basic content.</p>",
 			"      <section>",
-			"        <h2>",
-			"          Section Heading",
-			"        </h2>",
-			"        <p>",
-			"          This is test inside of a paragraph. It is also inside of a hierarchical section node. <span><i>That's real neat-o.</i></span>",
-			"        </p>",
+			"        <h2>Section Heading</h2>",
+			"        <p>This is text inside of a paragraph. It is also inside of a hierarchical section node. <span><i>That's real neat-o.</i></span></p>",
 			"      </section>",
 			"    </section>",
 			"  </body>",
@@ -80,6 +66,6 @@ describe("Document HTML rendering tests", () => {
 			"",
 		].join("\n");
 
-		expect(renderDocument(document, {})).to.equal(expected);
+		expect(renderDocument(document, { prettyFormatting: true })).to.equal(expected);
 	});
 });

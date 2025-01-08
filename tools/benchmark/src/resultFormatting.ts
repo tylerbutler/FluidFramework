@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import Table from "easy-table";
 import chalk from "chalk";
+import Table from "easy-table";
 
 /**
  * Library for converting a `Record<string, unknown>` into formatted table cells.
@@ -16,14 +16,14 @@ import chalk from "chalk";
  */
 export interface ExpectedCell {
 	key: string;
-	cell(table: Table, data: Record<string, unknown>);
+	cell(table: Table, data: Record<string, unknown>): void;
 }
 
-export function numberCell(key: string, title: string, f: (v: number) => string) {
+export function numberCell(key: string, title: string, f: (v: number) => string): ExpectedCell {
 	return {
 		key,
-		cell: (table, data) => {
-			const field = data[key];
+		cell: (table, data): void => {
+			const field: unknown = data[key];
 			const content =
 				typeof field === "number" ? f(field) : chalk.red(`Expected number got "${field}"`);
 			table.cell(title, content, Table.padLeft);
@@ -31,11 +31,11 @@ export function numberCell(key: string, title: string, f: (v: number) => string)
 	};
 }
 
-export function stringCell(key: string, title: string, f: (s: string) => string) {
+export function stringCell(key: string, title: string, f: (s: string) => string): ExpectedCell {
 	return {
 		key,
-		cell: (table, data) => {
-			const field = data[key];
+		cell: (table, data): void => {
+			const field: unknown = data[key];
 			const content =
 				typeof field === "string" ? f(field) : chalk.red(`Expected string got "${field}"`);
 			table.cell(title, content);
@@ -43,11 +43,11 @@ export function stringCell(key: string, title: string, f: (s: string) => string)
 	};
 }
 
-export function arrayCell(key: string, title: string, f: (a: unknown[]) => string) {
+export function arrayCell(key: string, title: string, f: (a: unknown[]) => string): ExpectedCell {
 	return {
 		key,
-		cell: (table, data) => {
-			const field = data[key];
+		cell: (table, data): void => {
+			const field: unknown = data[key];
 			const content = Array.isArray(field)
 				? f(field)
 				: chalk.red(`Expected array got "${field}"`);
@@ -56,37 +56,20 @@ export function arrayCell(key: string, title: string, f: (a: unknown[]) => strin
 	};
 }
 
-export function objectCell(key: string, title: string, f: (a: object) => string) {
+export function objectCell(key: string, title: string, f: (a: object) => string): ExpectedCell {
 	return {
 		key,
-		cell: (table, data) => {
-			const field = data[key];
+		cell: (table, data): void => {
+			const field: unknown = data[key];
 			const content =
-				typeof field === "object" ? f(field) : chalk.red(`Expected object got "${field}"`);
+				typeof field === "object" && field !== null
+					? f(field)
+					: chalk.red(`Expected object got "${field}"`);
 			table.cell(title, content);
 		},
 	};
 }
 
-export function skipCell(key: string) {
-	return { key, cell: () => {} };
-}
-
-export function addCells(
-	table: Table,
-	data: Record<string, unknown>,
-	expected: readonly ExpectedCell[],
-): void {
-	const keys = new Set(Object.getOwnPropertyNames(data));
-	// Add expected cells, with their custom formatting and canonical order
-	for (const cell of expected) {
-		if (keys.delete(cell.key)) {
-			cell.cell(table, data);
-		}
-	}
-
-	// Add extra cells
-	for (const key of keys) {
-		table.cell(key, data[key]);
-	}
+export function skipCell(key: string): ExpectedCell {
+	return { key, cell: (): void => {} };
 }

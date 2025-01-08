@@ -10,9 +10,11 @@ import { debug } from "./debug";
 /**
  * Helper class to manage access to database
  * \@TODO: Rename the file name as it behaves now as a generic DB Manager
+ * @internal
  */
 export class MongoManager {
 	private databaseP: Promise<IDb>;
+	public healthCheck: () => Promise<void>;
 
 	constructor(
 		private readonly factory: IDbFactory,
@@ -21,6 +23,13 @@ export class MongoManager {
 		private readonly global = false,
 	) {
 		this.databaseP = this.connect(this.global);
+		this.healthCheck = async (): Promise<void> => {
+			const database = await this.databaseP;
+			if (database.healthCheck === undefined) {
+				return;
+			}
+			return database.healthCheck();
+		};
 	}
 
 	/**
@@ -76,8 +85,9 @@ export class MongoManager {
 		});
 
 		databaseP.catch((error) => {
+			error.isGlobalDb = global;
 			debug("DB Connection Error", error);
-			Lumberjack.error("DB Connection Error", undefined, error);
+			Lumberjack.error("DB Connection Error", { isGlobalDb: global }, error);
 			this.reconnect(this.reconnectDelayMs);
 		});
 

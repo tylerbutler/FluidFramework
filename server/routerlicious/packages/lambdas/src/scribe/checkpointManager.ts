@@ -17,9 +17,11 @@ import {
 } from "@fluidframework/server-services-core";
 import { getLumberBaseProperties, Lumberjack } from "@fluidframework/server-services-telemetry";
 import { ICheckpointManager } from "./interfaces";
+import { isLocalCheckpoint } from "./utils";
 
 /**
  * MongoDB specific implementation of ICheckpointManager
+ * @internal
  */
 export class CheckpointManager implements ICheckpointManager {
 	private readonly clientFacadeRetryEnabled: boolean;
@@ -29,7 +31,7 @@ export class CheckpointManager implements ICheckpointManager {
 		private readonly documentId: string,
 		private readonly documentRepository: IDocumentRepository,
 		private readonly opCollection: ICollection<ISequencedOperationMessage>,
-		private readonly deltaService: IDeltaService,
+		private readonly deltaService: IDeltaService | undefined,
 		private readonly getDeltasViaAlfred: boolean,
 		private readonly verifyLastOpPersistence: boolean,
 		private readonly checkpointService: ICheckpointService,
@@ -47,9 +49,9 @@ export class CheckpointManager implements ICheckpointManager {
 		noActiveClients: boolean,
 		globalCheckpointOnly: boolean,
 		markAsCorrupt: boolean = false,
-	) {
-		const isLocalCheckpoint = !noActiveClients && !globalCheckpointOnly;
-		if (this.getDeltasViaAlfred) {
+	): Promise<void> {
+		const isLocal = isLocalCheckpoint(noActiveClients, globalCheckpointOnly);
+		if (this.getDeltasViaAlfred && this.deltaService !== undefined) {
 			if (pending.length > 0 && this.verifyLastOpPersistence) {
 				// Verify that the last pending op has been persisted to op storage
 				// If it is, we can checkpoint
@@ -108,7 +110,7 @@ export class CheckpointManager implements ICheckpointManager {
 				this.tenantId,
 				"scribe",
 				checkpoint,
-				isLocalCheckpoint,
+				isLocal,
 				markAsCorrupt,
 			);
 		} else {
@@ -134,7 +136,10 @@ export class CheckpointManager implements ICheckpointManager {
 					3 /* maxRetries */,
 					1000 /* retryAfterMs */,
 					getLumberBaseProperties(this.documentId, this.tenantId),
-					(error) => error.code === 11000 /* shouldIgnoreError */,
+					(error) =>
+						error.code === 11000 ||
+						error.message?.toString()?.indexOf("E11000 duplicate key") >=
+							0 /* shouldIgnoreError */,
 					(error) => !this.clientFacadeRetryEnabled /* shouldRetry */,
 				);
 			}
@@ -145,7 +150,7 @@ export class CheckpointManager implements ICheckpointManager {
 				this.tenantId,
 				"scribe",
 				checkpoint,
-				isLocalCheckpoint,
+				isLocal,
 				markAsCorrupt,
 			);
 
@@ -161,7 +166,7 @@ export class CheckpointManager implements ICheckpointManager {
 	/**
 	 * Removes the checkpoint information from MongoDB
 	 */
-	public async delete(sequenceNumber: number, lte: boolean) {
+	public async delete(sequenceNumber: number, lte: boolean): Promise<void> {
 		// Clears the checkpoint information from mongodb.
 		await this.documentRepository.updateOne(
 			{

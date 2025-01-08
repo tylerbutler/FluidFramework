@@ -4,14 +4,17 @@
  */
 
 import { IPactMap, PactMap } from "@fluid-experimental/pact-map";
-import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct";
-import type { IContainer } from "@fluidframework/container-definitions";
+import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct/legacy";
+import type { IContainer } from "@fluidframework/container-definitions/legacy";
 import type { IFluidHandle } from "@fluidframework/core-interfaces";
-import type { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { MessageType } from "@fluidframework/protocol-definitions";
+import { assert } from "@fluidframework/core-utils/legacy";
+import type { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/legacy";
+import { MessageType } from "@fluidframework/driver-definitions/legacy";
 
-import { assert } from "@fluidframework/core-utils";
-import type { ISameContainerMigrationTool } from "../migrationInterfaces";
+import type {
+	ISameContainerMigrationTool,
+	SameContainerMigrationState,
+} from "../migrationInterfaces/index.js";
 
 const pactMapKey = "pact-map";
 const newVersionKey = "newVersion";
@@ -22,7 +25,13 @@ const newVersionKey = "newVersion";
 // changing as we connect and that the Migrator should NOT take action.  Otherwise the Migrator would need to have the knowledge that it shouldn't immediately act upon
 // the state changes if not connected.
 
-export class SameContainerMigrationTool extends DataObject implements ISameContainerMigrationTool {
+/**
+ * @internal
+ */
+export class SameContainerMigrationTool
+	extends DataObject
+	implements ISameContainerMigrationTool
+{
 	private _pactMap: IPactMap<string> | undefined;
 	private readonly _containerP: Promise<IContainer>;
 
@@ -86,7 +95,7 @@ export class SameContainerMigrationTool extends DataObject implements ISameConta
 		return this._pactMap;
 	}
 
-	public get migrationState() {
+	public get migrationState(): SameContainerMigrationState {
 		// TODO: Other states
 		if (this._v2SummaryDone) {
 			return "migrated";
@@ -252,9 +261,7 @@ export class SameContainerMigrationTool extends DataObject implements ISameConta
 				this.pactMap.get(newVersionKey) !== undefined ||
 				this.pactMap.getPending(newVersionKey) !== undefined
 			) {
-				console.log(
-					"Resolving this._pendingP: Pending proposal already exists at load time",
-				);
+				console.log("Resolving this._pendingP: Pending proposal already exists at load time");
 				resolve();
 				return;
 			}
@@ -373,10 +380,7 @@ export class SameContainerMigrationTool extends DataObject implements ISameConta
 				// Would be good if we can verify the contents somehow too.
 				// TODO: Not appropriate to be watching _seenV1SummaryAck here, I'm just doing this to simulate second ack after acceptance
 				if (op.type === MessageType.SummaryAck) {
-					assert(
-						this.acceptedSeqNum !== undefined,
-						"this.acceptedSeqNum should be defined",
-					);
+					assert(this.acceptedSeqNum !== undefined, "this.acceptedSeqNum should be defined");
 					acksSeen++;
 					// TODO Is this also where I want to emit an internal state event of the ack coming in to help with abort flows?
 					// Or maybe set that up in ensureV1Summary().  Note as mentioned above, waiting for 2 acks here is a hack.
@@ -424,6 +428,7 @@ export class SameContainerMigrationTool extends DataObject implements ISameConta
  * The DataObjectFactory is used by Fluid Framework to instantiate our DataObject.  We provide it with a unique name
  * and the constructor it will call.  The third argument lists the other data structures it will utilize.  In this
  * scenario, the fourth argument is not used.
+ * @internal
  */
 export const SameContainerMigrationToolInstantiationFactory =
 	new DataObjectFactory<SameContainerMigrationTool>(

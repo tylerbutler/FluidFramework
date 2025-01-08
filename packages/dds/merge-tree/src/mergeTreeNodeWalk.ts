@@ -3,7 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { IMergeBlock, IMergeNode, ISegment } from "./mergeTreeNodes";
+import { type ISegmentLeaf, type MergeBlock, IMergeNode } from "./mergeTreeNodes.js";
+import { isMergeNodeInfo } from "./segmentInfos.js";
 
 export const LeafAction = {
 	Exit: false,
@@ -19,7 +20,9 @@ export const NodeAction = {
 } as const;
 
 // we exclude true from, as we only want one continue value, undefined
-export type NodeAction = (typeof NodeAction)[keyof typeof NodeAction] | Exclude<LeafAction, true>;
+export type NodeAction =
+	| (typeof NodeAction)[keyof typeof NodeAction]
+	| Exclude<LeafAction, true>;
 
 /**
  * Does a depth first walk of the tree from the specific start.
@@ -33,11 +36,11 @@ export type NodeAction = (typeof NodeAction)[keyof typeof NodeAction] | Exclude<
  * @returns true if we naturally exit, false if exiting due to Exit action result
  */
 export function depthFirstNodeWalk(
-	startBlock: IMergeBlock,
+	startBlock: MergeBlock,
 	startChild: IMergeNode | undefined,
 	downAction?: (node: IMergeNode) => NodeAction,
-	leafActionOverride?: (seg: ISegment) => LeafAction,
-	upAction?: (block: IMergeBlock) => void,
+	leafActionOverride?: (seg: ISegmentLeaf) => LeafAction,
+	upAction?: (block: MergeBlock) => void,
 	forward: boolean = true,
 ): boolean {
 	const increment = forward ? 1 : -1;
@@ -56,7 +59,7 @@ export function depthFirstNodeWalk(
 		let blockResult: NodeAction;
 		while (start?.isLeaf() === false) {
 			// cast is safe due to isLeaf === false in while above
-			block = start as IMergeBlock;
+			block = start as MergeBlock;
 			childCount = block.childCount;
 			blockResult = downAction?.(block);
 			// setting start undefined will skip the leaf walk
@@ -75,7 +78,7 @@ export function depthFirstNodeWalk(
 			for (let i = start.index; i !== -1 && i !== childCount; i += increment) {
 				// the above loop ensures start is a leaf or undefined, so all children
 				// will be leaves if start exits, so the cast is safe
-				if (leafAction(block.children[i] as ISegment) === LeafAction.Exit) {
+				if (leafAction(block.children[i] as ISegmentLeaf) === LeafAction.Exit) {
 					exit = true;
 					break;
 				}
@@ -120,9 +123,9 @@ export function depthFirstNodeWalk(
  */
 export function forwardExcursion(
 	startNode: IMergeNode,
-	leafAction: (seg: ISegment) => boolean | undefined,
+	leafAction: (seg: ISegmentLeaf) => boolean | undefined,
 ): boolean {
-	if (startNode.parent === undefined) {
+	if (!isMergeNodeInfo(startNode)) {
 		return true;
 	}
 
@@ -143,9 +146,9 @@ export function forwardExcursion(
  */
 export function backwardExcursion(
 	startNode: IMergeNode,
-	leafAction: (seg: ISegment) => boolean | undefined,
+	leafAction: (seg: ISegmentLeaf) => boolean | undefined,
 ): boolean {
-	if (startNode.parent === undefined) {
+	if (!isMergeNodeInfo(startNode)) {
 		return true;
 	}
 	return depthFirstNodeWalk(
@@ -168,8 +171,8 @@ export function backwardExcursion(
  * @returns true if we naturally exit, false if exiting due to leaf action result
  */
 export function walkAllChildSegments(
-	startBlock: IMergeBlock,
-	leafAction: (segment: ISegment) => boolean | undefined | void,
+	startBlock: MergeBlock,
+	leafAction: (segment: ISegmentLeaf) => boolean | undefined | void,
 ): boolean {
 	if (startBlock.childCount === 0) {
 		return true;
@@ -177,7 +180,7 @@ export function walkAllChildSegments(
 
 	// undefined shouldn't actually be added, but this allows subsequent check for `node.parent` to typecheck
 	// without further runtime work.
-	const ancestors = new Set<IMergeBlock | undefined>();
+	const ancestors = new Set<MergeBlock | undefined>();
 	for (let cur = startBlock.parent; cur !== undefined; cur = cur.parent) {
 		ancestors.add(cur);
 	}
@@ -187,7 +190,8 @@ export function walkAllChildSegments(
 		startBlock.children[0],
 		ancestors.size === 0
 			? undefined
-			: (node) => (ancestors.has(node.parent) ? NodeAction.Exit : NodeAction.Continue),
+			: (node): false | undefined =>
+					ancestors.has(node.parent) ? NodeAction.Exit : NodeAction.Continue,
 		leafAction,
 	);
 }

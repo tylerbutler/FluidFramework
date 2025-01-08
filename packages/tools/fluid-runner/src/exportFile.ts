@@ -4,25 +4,45 @@
  */
 
 import * as fs from "fs";
-import { ITelemetryLoggerExt, PerformanceEvent } from "@fluidframework/telemetry-utils";
-import { LoaderHeader } from "@fluidframework/container-definitions";
-import { Loader } from "@fluidframework/container-loader";
-import { createLocalOdspDocumentServiceFactory } from "@fluidframework/odsp-driver";
-import { IFluidFileConverter } from "./codeLoaderBundle";
-import { FakeUrlResolver } from "./fakeUrlResolver";
-import { getSnapshotFileContent, timeoutPromise, getArgsValidationError } from "./utils";
+
+import { LoaderHeader } from "@fluidframework/container-definitions/internal";
+import {
+	loadExistingContainer,
+	type ILoaderProps,
+} from "@fluidframework/container-loader/internal";
+import { createLocalOdspDocumentServiceFactory } from "@fluidframework/odsp-driver/internal";
+import {
+	ITelemetryLoggerExt,
+	PerformanceEvent,
+} from "@fluidframework/telemetry-utils/internal";
+
+import { IFluidFileConverter } from "./codeLoaderBundle.js";
+import { FakeUrlResolver } from "./fakeUrlResolver.js";
 /* eslint-disable import/no-internal-modules */
-import { ITelemetryOptions } from "./logger/fileLogger";
-import { createLogger, getTelemetryFileValidationError } from "./logger/loggerUtils";
+import { ITelemetryOptions } from "./logger/fileLogger.js";
+import { createLogger, getTelemetryFileValidationError } from "./logger/loggerUtils.js";
+import { getArgsValidationError, getSnapshotFileContent, timeoutPromise } from "./utils.js";
 /* eslint-enable import/no-internal-modules */
 
+/**
+ * @legacy
+ * @alpha
+ */
 export type IExportFileResponse = IExportFileResponseSuccess | IExportFileResponseFailure;
 
-interface IExportFileResponseSuccess {
+/**
+ * @legacy
+ * @alpha
+ */
+export interface IExportFileResponseSuccess {
 	success: true;
 }
 
-interface IExportFileResponseFailure {
+/**
+ * @legacy
+ * @alpha
+ */
+export interface IExportFileResponseFailure {
 	success: false;
 	eventName: string;
 	errorMessage: string;
@@ -33,6 +53,7 @@ const clientArgsValidationError = "Client_ArgsValidationError";
 
 /**
  * Execute code on Container based on ODSP snapshot and write result to file
+ * @internal
  */
 export async function exportFile(
 	fluidFileConverter: IFluidFileConverter,
@@ -90,6 +111,7 @@ export async function exportFile(
 /**
  * Create the container based on an ODSP snapshot and execute code on it
  * @returns result of execution
+ * @internal
  */
 export async function createContainerAndExecute(
 	localOdspSnapshot: string | Uint8Array,
@@ -106,18 +128,21 @@ export async function createContainerAndExecute(
 			};
 		}
 
-		const loader = new Loader({
+		const loaderProps: ILoaderProps = {
 			urlResolver: new FakeUrlResolver(),
 			documentServiceFactory: createLocalOdspDocumentServiceFactory(localOdspSnapshot),
 			codeLoader: await fluidFileConverter.getCodeLoader(logger),
 			scope: await fluidFileConverter.getScope?.(logger),
 			logger,
-		});
+		};
 
-		const container = await loader.resolve({
-			url: "/fakeUrl/",
-			headers: {
-				[LoaderHeader.loadMode]: { opsBeforeReturn: "cached" },
+		const container = await loadExistingContainer({
+			...loaderProps,
+			request: {
+				url: "/fakeUrl/",
+				headers: {
+					[LoaderHeader.loadMode]: { opsBeforeReturn: "cached" },
+				},
 			},
 		});
 

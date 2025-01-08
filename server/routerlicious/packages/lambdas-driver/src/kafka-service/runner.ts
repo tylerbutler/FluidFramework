@@ -22,11 +22,15 @@ import {
 import { Provider } from "nconf";
 import { PartitionManager } from "./partitionManager";
 
+/**
+ * @internal
+ */
 export class KafkaRunner implements IRunner {
 	private deferred: Deferred<void> | undefined;
 	private partitionManager: PartitionManager | undefined;
 	private stopped: boolean = false;
 	private readonly runnerMetric = Lumberjack.newLumberMetric(LumberEventName.KafkaRunner);
+	private runnerMetricProperties: Map<string, any> | Record<string, any> | undefined;
 
 	constructor(
 		private readonly factory: IPartitionLambdaFactory,
@@ -70,10 +74,14 @@ export class KafkaRunner implements IRunner {
 				},
 			};
 
-			this.runnerMetric.setProperties(lumberProperties);
+			this.runnerMetricProperties = {
+				...lumberProperties,
+				errorLabel: errorData?.errorLabel,
+			};
 
-			if (errorData?.errorLabel) {
-				this.runnerMetric.setProperty("errorLabel", errorData.errorLabel);
+			this.runnerMetric.setProperties(this.runnerMetricProperties);
+			if (typeof error === "object" && error !== null) {
+				error.errorLabel = errorData?.errorLabel;
 			}
 
 			if (errorData && !errorData.restart) {
@@ -84,7 +92,7 @@ export class KafkaRunner implements IRunner {
 				if (!this.runnerMetric.isCompleted()) {
 					this.runnerMetric.error(errorMsg, error);
 				} else {
-					Lumberjack.error(errorMsg, lumberProperties, error);
+					Lumberjack.error(errorMsg, this.runnerMetricProperties, error);
 				}
 			} else {
 				const errorMsg = "KafkaRunner encountered an error that will trigger a restart";
@@ -93,11 +101,43 @@ export class KafkaRunner implements IRunner {
 				if (!this.runnerMetric.isCompleted()) {
 					this.runnerMetric.error(errorMsg, error);
 				} else {
-					Lumberjack.error(errorMsg, lumberProperties, error);
+					Lumberjack.error(errorMsg, this.runnerMetricProperties, error);
 				}
 				this.deferred?.reject(error);
 				this.deferred = undefined;
 			}
+		});
+
+		this.partitionManager.on("pause", (partitionId: number, offset: number, reason?: any) => {
+			this.pause(partitionId, offset)
+				.then(() => {
+					Lumberjack.info("KafkaRunner paused", {
+						partitionId,
+						offset,
+						reason: serializeError(reason),
+					});
+				})
+				.catch((error) => {
+					Lumberjack.error(
+						"KafkaRunner encountered an error during pause",
+						{ partitionId, offset, reason },
+						error,
+					);
+				});
+		});
+
+		this.partitionManager.on("resume", (partitionId: number) => {
+			this.resume(partitionId)
+				.then(() => {
+					Lumberjack.info("KafkaRunner resumed", { partitionId });
+				})
+				.catch((error) => {
+					Lumberjack.error(
+						"KafkaRunner encountered an error during resume",
+						{ partitionId },
+						error,
+					);
+				});
 		});
 
 		this.stopped = false;
@@ -105,17 +145,34 @@ export class KafkaRunner implements IRunner {
 		return this.deferred.promise;
 	}
 
+	public async pause(partitionId: number, offset: number): Promise<void> {
+		Lumberjack.info(`KafkaRunner.pause starting`, { partitionId, offset });
+		if (this.consumer.pauseFetching) {
+			const seekTimeout = this.config?.get("kafka:seekTimeoutAfterPause") ?? 1000;
+			await this.consumer.pauseFetching(partitionId, seekTimeout, offset);
+		}
+		this.partitionManager?.pause(partitionId, offset);
+	}
+
+	public async resume(partitionId: number): Promise<void> {
+		Lumberjack.info(`KafkaRunner.resume starting`, { partitionId });
+		if (this.consumer.resumeFetching) {
+			await this.consumer.resumeFetching(partitionId);
+		}
+		this.partitionManager?.resume(partitionId);
+	}
+
 	/**
 	 * Signals to stop the service
 	 */
 	public async stop(caller?: string, uncaughtException?: any): Promise<void> {
 		if (this.stopped) {
-			Lumberjack.info("KafkaRunner.stop already called, returning early.");
+			Lumberjack.info("KafkaRunner.stop already called, returning early.", { caller });
 			return;
 		}
 
 		this.stopped = true;
-		Lumberjack.info("KafkaRunner.stop starting.");
+		Lumberjack.info("KafkaRunner.stop starting.", { caller });
 		try {
 			this.runnerMetric.setProperty("caller", caller);
 
@@ -143,13 +200,17 @@ export class KafkaRunner implements IRunner {
 			if (!this.runnerMetric.isCompleted()) {
 				this.runnerMetric.success("KafkaRunner stopped");
 			} else {
-				Lumberjack.info("KafkaRunner stopped");
+				Lumberjack.info("KafkaRunner stopped", { ...this.runnerMetricProperties, caller });
 			}
 		} catch (error) {
 			if (!this.runnerMetric.isCompleted()) {
 				this.runnerMetric.error("KafkaRunner encountered an error during stop", error);
 			} else {
-				Lumberjack.error("KafkaRunner encountered an error during stop", undefined, error);
+				Lumberjack.error(
+					"KafkaRunner encountered an error during stop",
+					{ ...this.runnerMetricProperties, caller },
+					error,
+				);
 			}
 			if (caller === "sigterm") {
 				this.deferred?.resolve();

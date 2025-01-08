@@ -3,25 +3,25 @@
  * Licensed under the MIT License.
  */
 
-import { List, walkList } from "./collections";
-import { ISegment, SegmentGroup } from "./mergeTreeNodes";
+import { DoublyLinkedList, walkList } from "./collections/index.js";
+import { SegmentGroup, type ISegmentLeaf } from "./mergeTreeNodes.js";
 
 export class SegmentGroupCollection {
-	private readonly segmentGroups: List<SegmentGroup>;
+	private readonly segmentGroups: DoublyLinkedList<SegmentGroup>;
 
-	constructor(private readonly segment: ISegment) {
-		this.segmentGroups = new List<SegmentGroup>();
+	constructor(private readonly segment: ISegmentLeaf) {
+		this.segmentGroups = new DoublyLinkedList<SegmentGroup>();
 	}
 
-	public get size() {
+	public get size(): number {
 		return this.segmentGroups.length;
 	}
 
-	public get empty() {
+	public get empty(): boolean {
 		return this.segmentGroups.empty;
 	}
 
-	public enqueue(segmentGroup: SegmentGroup) {
+	public enqueue(segmentGroup: SegmentGroup): void {
 		this.segmentGroups.push(segmentGroup);
 		segmentGroup.segments.push(this.segment);
 	}
@@ -30,17 +30,24 @@ export class SegmentGroupCollection {
 		return this.segmentGroups.shift()?.data;
 	}
 
-	public pop?(): SegmentGroup | undefined {
+	public remove(segmentGroup: SegmentGroup): boolean {
+		const found = this.segmentGroups.find((v) => v.data === segmentGroup);
+		if (found === undefined) {
+			return false;
+		}
+		this.segmentGroups.remove(found);
+		return true;
+	}
+
+	public pop(): SegmentGroup | undefined {
 		return this.segmentGroups.pop ? this.segmentGroups.pop()?.data : undefined;
 	}
 
-	public copyTo(segment: ISegment) {
-		walkList(this.segmentGroups, (sg) =>
-			segment.segmentGroups.enqueueOnCopy(sg.data, this.segment),
-		);
+	public copyTo(segmentGroups: SegmentGroupCollection): void {
+		walkList(this.segmentGroups, (sg) => segmentGroups.enqueueOnCopy(sg.data, this.segment));
 	}
 
-	private enqueueOnCopy(segmentGroup: SegmentGroup, sourceSegment: ISegment) {
+	private enqueueOnCopy(segmentGroup: SegmentGroup, sourceSegment: ISegmentLeaf): void {
 		this.enqueue(segmentGroup);
 		if (segmentGroup.previousProps) {
 			// duplicate the previousProps for this segment

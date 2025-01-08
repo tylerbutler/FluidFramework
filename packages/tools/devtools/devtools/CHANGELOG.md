@@ -1,4 +1,132 @@
-# @fluid-experimental/devtools
+# @fluidframework/devtools
+
+## 2.13.0
+
+Dependency updates only.
+
+## 2.12.0
+
+Dependency updates only.
+
+## 2.11.0
+
+### Minor Changes
+
+-   API clarifications for devtools packages ([#23165](https://github.com/microsoft/FluidFramework/pull/23165)) [cea34d10d0](https://github.com/microsoft/FluidFramework/commit/cea34d10d0f816335ab1b88b190940046ae7b696)
+
+    APIs that were never intended for direct consumer use have been marked as `@system`.
+    These are:
+
+    -   HasContainerKey
+
+    APIs that were not intended to be extended by consumers have been marked as `@sealed`.
+    These are:
+
+    -   ContainerDevtoolsProps
+    -   DevtoolsProps
+    -   HasContainerKey
+    -   IDevtools
+
+    Additionally, interface properties have been marked as `readonly`.
+
+## 2.10.0
+
+Dependency updates only.
+
+## 2.5.0
+
+Dependency updates only.
+
+## 2.4.0
+
+Dependency updates only.
+
+## 2.3.0
+
+Dependency updates only.
+
+## 2.2.0
+
+Dependency updates only.
+
+## 2.1.0
+
+Dependency updates only.
+
+## 2.0.0-rc.5.0.0
+
+### Minor Changes
+
+-   Update to TypeScript 5.4 ([#21214](https://github.com/microsoft/FluidFramework/pull/21214)) [0e6256c722](https://github.com/microsoft/FluidFramework/commit/0e6256c722d8bf024f4325bf02547daeeb18bfa6)
+
+    Update package implementations to use TypeScript 5.4.5.
+
+## 2.0.0-rc.4.0.0
+
+Dependency updates only.
+
+## 2.0.0-rc.3.0.0
+
+### Major Changes
+
+-   Packages now use package.json "exports" and require modern module resolution [97d68aa06b](https://github.com/microsoft/FluidFramework/commit/97d68aa06bd5c022ecb026655814aea222a062ae)
+
+    Fluid Framework packages have been updated to use the [package.json "exports"
+    field](https://nodejs.org/docs/latest-v18.x/api/packages.html#exports) to define explicit entry points for both
+    TypeScript types and implementation code.
+
+    This means that using Fluid Framework packages require the following TypeScript settings in tsconfig.json:
+
+    -   `"moduleResolution": "Node16"` with `"module": "Node16"`
+    -   `"moduleResolution": "Bundler"` with `"module": "ESNext"`
+
+    We recommend using Node16/Node16 unless absolutely necessary. That will produce transpiled JavaScript that is suitable
+    for use with modern versions of Node.js _and_ Bundlers.
+    [See the TypeScript documentation](https://www.typescriptlang.org/tsconfig#moduleResolution) for more information
+    regarding the module and moduleResolution options.
+
+    **Node10 moduleResolution is not supported; it does not support Fluid Framework's API structuring pattern that is used
+    to distinguish stable APIs from those that are in development.**
+
+## 2.0.0-rc.2.0.0
+
+Dependency updates only.
+
+## 2.0.0-rc.1.0.0
+
+Dependency updates only.
+
+## 2.0.0-internal.8.0.0
+
+Dependency updates only.
+
+## 2.0.0-internal.7.4.0
+
+### Minor Changes
+
+-   azure-client: Deprecated FluidStatic Classes ([#18402](https://github.com/microsoft/FluidFramework/issues/18402)) [589ec39de5](https://github.com/microsoft/FluidFramework/commits/589ec39de52116c7f782319e6f6aa61bc5aa9964)
+
+    Several FluidStatic classes were unnecessarily exposed. They have been replaced with creation functions. This helps us
+    keep implementations decoupled from usage which is easier to maintain and extend. It has very minimal impact on the
+    public surface area of downstream packages. The deprecated classes are as follows:
+
+    -   `AzureAudience` (use `IAzureAudience` instead)
+    -   `TinyliciousAudience` (use `ITinyliciousAudience` instead)
+    -   `DOProviderContainerRuntimeFactory`
+    -   `FluidContainer`
+    -   `ServiceAudience`
+
+## 2.0.0-internal.7.3.0
+
+Dependency updates only.
+
+## 2.0.0-internal.7.2.0
+
+Dependency updates only.
+
+## 2.0.0-internal.7.1.0
+
+Dependency updates only.
 
 ## 2.0.0-internal.7.0.0
 

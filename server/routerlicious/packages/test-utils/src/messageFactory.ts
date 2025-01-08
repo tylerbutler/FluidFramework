@@ -25,6 +25,9 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import hash = require("string-hash");
 
+/**
+ * @internal
+ */
 export class KafkaMessageFactory {
 	private readonly offsets: number[] = [];
 
@@ -32,8 +35,8 @@ export class KafkaMessageFactory {
 		public topic = "test",
 		partitions = 1,
 		private readonly stringify = true,
-		private readonly tenantId: string = null,
-		private readonly documentId: string = null,
+		private readonly tenantId: string | undefined = undefined,
+		private readonly documentId: string | undefined = undefined,
 	) {
 		for (let i = 0; i < partitions; i++) {
 			this.offsets.push(0);
@@ -70,6 +73,9 @@ export class KafkaMessageFactory {
 	}
 }
 
+/**
+ * @internal
+ */
 export class MessageFactory {
 	private clientSequenceNumber = 0;
 	private sequenceNumber = 0;
@@ -115,7 +121,9 @@ export class MessageFactory {
 				details: {
 					capabilities: { interactive: true },
 				},
-				user: null,
+				user: {
+					id: "test-user",
+				},
 			},
 		};
 		const operation: IDocumentSystemMessage = {

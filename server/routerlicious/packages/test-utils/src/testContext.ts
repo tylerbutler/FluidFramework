@@ -20,6 +20,9 @@ interface IWaitOffset {
 	value: number;
 }
 
+/**
+ * @internal
+ */
 export class TestContext extends EventEmitter implements IContext {
 	public offset: number = -1;
 	private waits: IWaitOffset[] = [];
@@ -64,5 +67,13 @@ export class TestContext extends EventEmitter implements IContext {
 
 	public getContextError() {
 		return;
+	}
+
+	public pause(offset: number, reason?: any): void {
+		this.emit("pause", offset, reason);
+	}
+
+	public resume(): void {
+		this.emit("resume");
 	}
 }

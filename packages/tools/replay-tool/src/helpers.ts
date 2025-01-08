@@ -5,23 +5,38 @@
 
 import { strict } from "assert";
 import fs from "fs";
-import { IContainer } from "@fluidframework/container-definitions";
-import { ILoaderOptions, Loader } from "@fluidframework/container-loader";
-import { ContainerRuntime, IContainerRuntimeOptions } from "@fluidframework/container-runtime";
-import { IDocumentServiceFactory, IResolvedUrl } from "@fluidframework/driver-definitions";
-import { IFileSnapshot } from "@fluidframework/replay-driver";
-import { ConfigTypes, IConfigProviderBase } from "@fluidframework/telemetry-utils";
-import { getNormalizedSnapshot, ISnapshotNormalizerConfig } from "@fluidframework/tool-utils";
-import stringify from "json-stable-stringify";
-import { FluidObject, ITelemetryLogger } from "@fluidframework/core-interfaces";
-import { assert } from "@fluidframework/core-utils";
+
+import { IContainer } from "@fluidframework/container-definitions/internal";
+import { ILoaderOptions, Loader } from "@fluidframework/container-loader/internal";
 import {
-	excludeChannelContentDdsFactories,
+	ContainerRuntime,
+	IContainerRuntimeOptions,
+} from "@fluidframework/container-runtime/internal";
+import {
+	ConfigTypes,
+	FluidObject,
+	IConfigProviderBase,
+	type ITelemetryBaseLogger,
+} from "@fluidframework/core-interfaces";
+import { assert } from "@fluidframework/core-utils/internal";
+import {
+	IDocumentServiceFactory,
+	IResolvedUrl,
+} from "@fluidframework/driver-definitions/internal";
+import { IFileSnapshot } from "@fluidframework/replay-driver/internal";
+import {
+	ISnapshotNormalizerConfig,
+	getNormalizedSnapshot,
+} from "@fluidframework/tool-utils/internal";
+import stringify from "json-stable-stringify";
+
+import {
 	ReplayDataStoreFactory,
 	ReplayRuntimeFactory,
-} from "./replayFluidFactories";
-import { ReplayCodeLoader, ReplayUrlResolver } from "./replayLoaderObject";
-import { mixinDataStoreWithAnyChannel } from "./unknownChannel";
+	excludeChannelContentDdsFactories,
+} from "./replayFluidFactories.js";
+import { ReplayCodeLoader, ReplayUrlResolver } from "./replayLoaderObject.js";
+import { mixinDataStoreWithAnyChannel } from "./unknownChannel.js";
 
 export interface ReplayToolContainerEntryPoint {
 	readonly containerRuntime: ContainerRuntime;
@@ -34,6 +49,7 @@ const normalizeOpts: ISnapshotNormalizerConfig = {
 /**
  * Helper function that normalizes the snapshot trees in the given file snapshot.
  * @returns the normalized file snapshot.
+ * @internal
  */
 export function getNormalizedFileSnapshot(snapshot: IFileSnapshot): IFileSnapshot {
 	const normalizedSnapshot: IFileSnapshot = {
@@ -49,13 +65,19 @@ export function getNormalizedFileSnapshot(snapshot: IFileSnapshot): IFileSnapsho
 	return normalizedSnapshot;
 }
 
+/**
+ * @internal
+ */
 export function compareWithReferenceSnapshot(
 	snapshot: IFileSnapshot,
 	referenceSnapshotFilename: string,
 	errorHandler: (description: string, error?: any) => void,
 ) {
 	// Read the reference snapshot and covert it to normalized IFileSnapshot.
-	const referenceSnapshotString = fs.readFileSync(`${referenceSnapshotFilename}.json`, "utf-8");
+	const referenceSnapshotString = fs.readFileSync(
+		`${referenceSnapshotFilename}.json`,
+		"utf-8",
+	);
 	const referenceSnapshot = JSON.parse(referenceSnapshotString);
 
 	/**
@@ -101,11 +123,14 @@ export function compareWithReferenceSnapshot(
 	}
 }
 
+/**
+ * @internal
+ */
 export async function loadContainer(
 	documentServiceFactory: IDocumentServiceFactory,
 	documentName: string,
 	strictChannels: boolean,
-	logger?: ITelemetryLogger,
+	logger?: ITelemetryBaseLogger,
 	loaderOptions?: ILoaderOptions,
 ): Promise<IContainer> {
 	const resolved: IResolvedUrl = {
@@ -170,7 +195,6 @@ export async function loadContainer(
 	};
 	// This is to align with the snapshot tests which may upgrade GC Version before the default is changed.
 	settings["Fluid.GarbageCollection.GCVersionUpgradeToV4"] = false;
-
 	// Load the Fluid document while forcing summarizeProtocolTree option
 	const loader = new Loader({
 		urlResolver,
@@ -186,13 +210,16 @@ export async function loadContainer(
 	return loader.resolve({ url: resolved.url });
 }
 
+/**
+ * @internal
+ */
 export async function uploadSummary(container: IContainer) {
-	const entryPoint: FluidObject<ReplayToolContainerEntryPoint> = await container.getEntryPoint();
+	const entryPoint: FluidObject<ReplayToolContainerEntryPoint> =
+		await container.getEntryPoint();
 	const runtime = entryPoint?.ReplayToolContainerEntryPoint?.containerRuntime;
 	assert(runtime !== undefined, 0x5a7 /* ContainerRuntime entryPoint was not initialized */);
 	const summaryResult = await runtime.summarize({
 		fullTree: true,
-		trackState: false,
 		fullGC: true,
 	});
 	return runtime.storage.uploadSummaryWithContext(summaryResult.summary, {

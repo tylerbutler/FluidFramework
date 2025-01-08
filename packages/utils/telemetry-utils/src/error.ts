@@ -3,14 +3,13 @@
  * Licensed under the MIT License.
  */
 
+import type { IErrorBase, ITelemetryBaseProperties } from "@fluidframework/core-interfaces";
 import {
 	FluidErrorTypes,
-	IGenericError,
-	IErrorBase,
-	ITelemetryBaseProperties,
-	IUsageError,
-} from "@fluidframework/core-interfaces";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
+	type IGenericError,
+	type IUsageError,
+} from "@fluidframework/core-interfaces/internal";
+import type { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
 
 import {
 	LoggingError,
@@ -18,8 +17,28 @@ import {
 	isExternalError,
 	normalizeError,
 	wrapError,
-} from "./errorLogging";
-import { IFluidErrorBase } from "./fluidErrorBase";
+} from "./errorLogging.js";
+import type { IFluidErrorBase } from "./fluidErrorBase.js";
+import type { ITelemetryPropertiesExt } from "./telemetryTypes.js";
+
+/**
+ * Throws a UsageError with the given message if the condition is not met.
+ * Use this API when `false` indicates a precondition is not met on a public API (for any FF layer).
+ *
+ * @param condition - The condition that should be true, if the condition is false a UsageError will be thrown.
+ * @param message - The message to include in the error when the condition does not hold.
+ * @param props - Telemetry props to include on the error when the condition does not hold.
+ * @internal
+ */
+export function validatePrecondition(
+	condition: boolean,
+	message: string,
+	props?: ITelemetryBaseProperties,
+): asserts condition {
+	if (!condition) {
+		throw new UsageError(message, props);
+	}
+}
 
 /**
  * Generic wrapper for an unrecognized/uncategorized error object
@@ -27,7 +46,7 @@ import { IFluidErrorBase } from "./fluidErrorBase";
  * @internal
  */
 export class GenericError extends LoggingError implements IGenericError, IFluidErrorBase {
-	readonly errorType = FluidErrorTypes.genericError;
+	public readonly errorType = FluidErrorTypes.genericError;
 
 	/**
 	 * Create a new GenericError
@@ -35,7 +54,7 @@ export class GenericError extends LoggingError implements IGenericError, IFluidE
 	 * @param error - inner error object
 	 * @param props - Telemetry props to include when the error is logged
 	 */
-	constructor(
+	public constructor(
 		message: string,
 		// TODO: Use `unknown` instead (API breaking change because error is not just an input parameter, but a public member of the class)
 		// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
@@ -53,9 +72,9 @@ export class GenericError extends LoggingError implements IGenericError, IFluidE
  * @internal
  */
 export class UsageError extends LoggingError implements IUsageError, IFluidErrorBase {
-	readonly errorType = FluidErrorTypes.usageError;
+	public readonly errorType = FluidErrorTypes.usageError;
 
-	constructor(message: string, props?: ITelemetryBaseProperties) {
+	public constructor(message: string, props?: ITelemetryBaseProperties) {
 		super(message, { ...props, usageError: true });
 	}
 }
@@ -67,10 +86,10 @@ export class UsageError extends LoggingError implements IUsageError, IFluidError
  * @internal
  */
 export class DataCorruptionError extends LoggingError implements IErrorBase, IFluidErrorBase {
-	readonly errorType = FluidErrorTypes.dataCorruptionError;
-	readonly canRetry = false;
+	public readonly errorType = FluidErrorTypes.dataCorruptionError;
+	public readonly canRetry = false;
 
-	constructor(message: string, props: ITelemetryBaseProperties) {
+	public constructor(message: string, props: ITelemetryBaseProperties) {
 		super(message, { ...props, dataProcessingError: 1 });
 	}
 }
@@ -105,7 +124,7 @@ export class DataProcessingError extends LoggingError implements IErrorBase, IFl
 		errorMessage: string,
 		dataProcessingCodepath: string,
 		sequencedMessage?: ISequencedDocumentMessage,
-		props: ITelemetryBaseProperties = {},
+		props: ITelemetryPropertiesExt = {},
 	): IFluidErrorBase {
 		const dataProcessingError = DataProcessingError.wrapIfUnrecognized(
 			errorMessage,
@@ -184,6 +203,8 @@ export class DataProcessingError extends LoggingError implements IErrorBase, IFl
  * Extracts specific properties from the provided message that we know are safe to log.
  *
  * @param messageLike - Message to include info about via telemetry props.
+ *
+ * @internal
  */
 export const extractSafePropertiesFromMessage = (
 	messageLike: Partial<

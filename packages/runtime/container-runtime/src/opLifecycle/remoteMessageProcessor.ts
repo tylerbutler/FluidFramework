@@ -3,17 +3,84 @@
  * Licensed under the MIT License.
  */
 
-import { ISequencedDocumentMessage, MessageType } from "@fluidframework/protocol-definitions";
+import { assert } from "@fluidframework/core-utils/internal";
+import {
+	MessageType,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+
 import {
 	ContainerMessageType,
 	type InboundContainerRuntimeMessage,
 	type InboundSequencedContainerRuntimeMessage,
-	type InboundSequencedContainerRuntimeMessageOrSystemMessage,
-	type InboundSequencedRecentlyAddedContainerRuntimeMessage,
-} from "../messageTypes";
-import { OpDecompressor } from "./opDecompressor";
-import { OpGroupingManager } from "./opGroupingManager";
-import { OpSplitter } from "./opSplitter";
+} from "../messageTypes.js";
+import { asBatchMetadata } from "../metadata.js";
+
+import { OpDecompressor } from "./opDecompressor.js";
+import { OpGroupingManager, isGroupedBatch } from "./opGroupingManager.js";
+import { OpSplitter, isChunkedMessage } from "./opSplitter.js";
+// eslint-disable-next-line unused-imports/no-unused-imports -- Used by "@link" comment annotation below
+import { serializeOpContents } from "./outbox.js";
+
+/** Info about the batch we learn when we process the first message */
+export interface BatchStartInfo {
+	/** Batch ID, if present */
+	readonly batchId: string | undefined;
+	/** clientId that sent this batch. Used to compute Batch ID if needed */
+	readonly clientId: string;
+	/**
+	 * Client Sequence Number of the Grouped Batch message, or the first message in the ungrouped batch.
+	 * Used to compute Batch ID if needed
+	 *
+	 * @remarks For chunked batches, this is the CSN of the "representative" chunk (the final chunk).
+	 * For grouped batches, clientSequenceNumber on messages is overwritten, so we track this original value here.
+	 */
+	readonly batchStartCsn: number;
+	/**
+	 * The first message in the batch, or if the batch is empty, the empty grouped batch message.
+	 * Used for accessing the sequence numbers for the (start of the) batch.
+	 *
+	 * @remarks Do not use clientSequenceNumber here, use batchStartCsn instead.
+	 */
+	readonly keyMessage: ISequencedDocumentMessage;
+}
+
+/**
+ * Result of processing the next inbound message.
+ * Depending on the message and configuration of RemoteMessageProcessor, the result may be:
+ * - A full batch of messages (including a single-message batch)
+ * - The first message of a multi-message batch
+ * - The next message in a multi-message batch
+ */
+export type InboundMessageResult =
+	| {
+			type: "fullBatch";
+			messages: InboundSequencedContainerRuntimeMessage[];
+			batchStart: BatchStartInfo;
+			length: number;
+			groupedBatch: boolean; // Messages in a grouped batches are sent to the runtime in bunches.
+	  }
+	| {
+			type: "batchStartingMessage";
+			batchStart: BatchStartInfo;
+			nextMessage: InboundSequencedContainerRuntimeMessage;
+			length?: never;
+	  }
+	| {
+			type: "nextBatchMessage";
+			batchEnd?: boolean;
+			nextMessage: InboundSequencedContainerRuntimeMessage;
+			length?: never;
+	  };
+
+function assertHasClientId(
+	message: ISequencedDocumentMessage,
+): asserts message is ISequencedDocumentMessage & { clientId: string } {
+	assert(
+		message.clientId !== null,
+		0xa02 /* Server-generated message should not reach RemoteMessageProcessor */,
+	);
+}
 
 /**
  * Stateful class for processing incoming remote messages as the virtualization measures are unwrapped,
@@ -22,6 +89,8 @@ import { OpSplitter } from "./opSplitter";
  * @internal
  */
 export class RemoteMessageProcessor {
+	private batchInProgress: boolean = false;
+
 	constructor(
 		private readonly opSplitter: OpSplitter,
 		private readonly opDecompressor: OpDecompressor,
@@ -37,81 +106,148 @@ export class RemoteMessageProcessor {
 	}
 
 	/**
-	 * Ungroups and Unchunks the runtime ops encapsulated by the single remoteMessage received over the wire
+	 * Ungroups and Unchunks the runtime ops of a batch received over the wire
 	 * @param remoteMessageCopy - A shallow copy of a message from another client, possibly virtualized
 	 * (grouped, compressed, and/or chunked).
 	 * Being a shallow copy, it's considered mutable, meaning no other Container or other parallel procedure
 	 * depends on this object instance.
 	 * Note remoteMessageCopy.contents (and other object props) MUST not be modified,
 	 * but may be overwritten (as is the case with contents).
-	 * @returns the unchunked, decompressed, ungrouped, unpacked SequencedContainerRuntimeMessages encapsulated in the remote message.
-	 * For ops that weren't virtualized (e.g. System ops that the ContainerRuntime will ultimately ignore),
-	 * a singleton array [remoteMessageCopy] is returned
+	 *
+	 * Incoming messages will always have compression, chunking, and grouped batching happen in a defined order and that order cannot be changed.
+	 * When processing these messages, the order is:
+	 * 1. If chunked, process the chunk and only continue if this is a final chunk
+	 * 2. If compressed, decompress the message and store for further unrolling of the decompressed content
+	 * 3. If grouped, ungroup the message
+	 * For more details, see https://github.com/microsoft/FluidFramework/blob/main/packages/runtime/container-runtime/src/opLifecycle/README.md#inbound
+	 *
+	 * @returns all the unchunked, decompressed, ungrouped, unpacked InboundSequencedContainerRuntimeMessage from a single batch
+	 * or undefined if the batch is not yet complete.
 	 */
 	public process(
 		remoteMessageCopy: ISequencedDocumentMessage,
-	): InboundSequencedContainerRuntimeMessageOrSystemMessage[] {
-		const result: InboundSequencedContainerRuntimeMessageOrSystemMessage[] = [];
+		logLegacyCase: (codePath: string) => void,
+	): InboundMessageResult | undefined {
+		let message = remoteMessageCopy;
 
-		ensureContentsDeserialized(remoteMessageCopy);
+		assertHasClientId(message);
+		const clientId = message.clientId;
 
-		// Ungroup before and after decompression for back-compat (cleanup tracked by AB#4371)
-		for (const ungroupedMessage of this.opGroupingManager.ungroupOp(remoteMessageCopy)) {
-			const message = this.opDecompressor.processMessage(ungroupedMessage).message;
+		if (isChunkedMessage(message)) {
+			const chunkProcessingResult = this.opSplitter.processChunk(message);
+			// Only continue further if current chunk is the final chunk
+			if (!chunkProcessingResult.isFinalChunk) {
+				return undefined;
+			}
+			// This message will always be compressed
+			message = chunkProcessingResult.message;
+		}
 
-			for (let ungroupedMessage2 of this.opGroupingManager.ungroupOp(message)) {
-				// unpack and unchunk the ungrouped message in place
-				unpackRuntimeMessage(ungroupedMessage2);
-				const chunkProcessingResult =
-					this.opSplitter.processRemoteMessage(ungroupedMessage2);
-				ungroupedMessage2 = chunkProcessingResult.message;
+		if (this.opDecompressor.isCompressedMessage(message)) {
+			this.opDecompressor.decompressAndStore(message);
+		}
 
-				if (chunkProcessingResult.state !== "Processed") {
-					// If the message is not chunked or if the splitter is still rebuilding the original message,
-					// there is no need to continue processing
-					result.push(
-						ungroupedMessage2 as InboundSequencedContainerRuntimeMessageOrSystemMessage,
-					);
-					continue;
-				}
-
-				// Ungroup before and after decompression for back-compat (cleanup tracked by AB#4371)
-				for (const ungroupedMessageAfterChunking of this.opGroupingManager.ungroupOp(
-					ungroupedMessage2,
-				)) {
-					const decompressionAfterChunking = this.opDecompressor.processMessage(
-						ungroupedMessageAfterChunking,
-					);
-
-					for (const ungroupedMessageAfterChunking2 of this.opGroupingManager.ungroupOp(
-						decompressionAfterChunking.message,
-					)) {
-						if (decompressionAfterChunking.state === "Skipped") {
-							// After chunking, if the original message was not compressed,
-							// there is no need to continue processing
-							result.push(
-								ungroupedMessageAfterChunking2 as InboundSequencedContainerRuntimeMessageOrSystemMessage,
-							);
-							continue;
-						}
-
-						// The message needs to be unpacked after chunking + decompression
-						unpack(ungroupedMessageAfterChunking2);
-						result.push(ungroupedMessageAfterChunking2);
-					}
-				}
+		if (this.opDecompressor.currentlyUnrolling) {
+			message = this.opDecompressor.unroll(message);
+			// Need to unpack after unrolling if not a groupedBatch
+			if (!isGroupedBatch(message)) {
+				unpack(message);
 			}
 		}
 
-		return result;
+		if (isGroupedBatch(message)) {
+			// We should be awaiting a new batch (batchInProgress false)
+			assert(!this.batchInProgress, 0x9d3 /* Grouped batch interrupting another batch */);
+			const batchId = asBatchMetadata(message.metadata)?.batchId;
+			const groupedMessages = this.opGroupingManager.ungroupOp(message).map(unpack);
+
+			return {
+				type: "fullBatch",
+				messages: groupedMessages, // Will be [] for an empty batch
+				batchStart: {
+					batchStartCsn: message.clientSequenceNumber,
+					clientId,
+					batchId,
+					keyMessage: groupedMessages[0] ?? message, // For an empty batch, this is the empty grouped batch message. Needed for sequence numbers for this batch
+				},
+				length: groupedMessages.length, // Will be 0 for an empty batch
+				groupedBatch: true,
+			};
+		}
+
+		// Do a final unpack of runtime messages in case the message was not grouped, compressed, or chunked
+		unpackRuntimeMessage(message, logLegacyCase);
+
+		return this.getResultBasedOnBatchMetadata(
+			message as InboundSequencedContainerRuntimeMessage & { clientId: string },
+		);
+	}
+
+	/**
+	 * Now that the message has been "unwrapped" as to any virtualization (grouping, compression, chunking),
+	 * inspect the batch metadata flag and determine what kind of result to return.
+	 */
+	private getResultBasedOnBatchMetadata(
+		message: InboundSequencedContainerRuntimeMessage & { clientId: string },
+	): InboundMessageResult {
+		const batchMetadataFlag = asBatchMetadata(message.metadata)?.batch;
+		if (!this.batchInProgress) {
+			// We are waiting for a new batch
+			assert(batchMetadataFlag !== false, 0x9d5 /* Unexpected batch end marker */);
+
+			// Start of a new multi-message batch
+			if (batchMetadataFlag === true) {
+				this.batchInProgress = true;
+				return {
+					type: "batchStartingMessage",
+					batchStart: {
+						batchId: asBatchMetadata(message.metadata)?.batchId,
+						clientId: message.clientId,
+						batchStartCsn: message.clientSequenceNumber,
+						keyMessage: message,
+					},
+					nextMessage: message,
+				};
+			}
+
+			// Single-message batch (Since metadata flag is undefined)
+			return {
+				type: "fullBatch",
+				messages: [message],
+				batchStart: {
+					batchStartCsn: message.clientSequenceNumber,
+					clientId: message.clientId,
+					batchId: asBatchMetadata(message.metadata)?.batchId,
+					keyMessage: message,
+				},
+				length: 1,
+				groupedBatch: false,
+			};
+		}
+		assert(batchMetadataFlag !== true, 0x9d6 /* Unexpected batch start marker */);
+
+		// Clear batchInProgress state if the batch is ending
+		if (batchMetadataFlag === false) {
+			this.batchInProgress = false;
+		}
+
+		return {
+			type: "nextBatchMessage",
+			nextMessage: message,
+			batchEnd: batchMetadataFlag === false,
+		};
 	}
 }
 
-/** Takes an incoming message and if the contents is a string, JSON.parse's it in place */
-function ensureContentsDeserialized(mutableMessage: ISequencedDocumentMessage): void {
-	// back-compat: ADO #1385: eventually should become unconditional, but only for runtime messages!
-	// System message may have no contents, or in some cases (mostly for back-compat) they may have actual objects.
-	// Old ops may contain empty string (I assume noops).
+/**
+ * Takes an incoming runtime message JSON.parse's its contents in place, if needed (old Loader does this for us).
+ * Only to be used for runtine messages.
+ * @remarks - Serialization during submit happens via {@link serializeOpContents}
+ * @param mutableMessage - op message received
+ */
+export function ensureContentsDeserialized(mutableMessage: ISequencedDocumentMessage): void {
+	// This should become unconditional once Loader LTS reaches 2.4 or later.
+	// There will be a long time of needing both cases, until LTS advances to that point.
 	if (typeof mutableMessage.contents === "string" && mutableMessage.contents !== "") {
 		mutableMessage.contents = JSON.parse(mutableMessage.contents);
 	}
@@ -122,11 +258,9 @@ function ensureContentsDeserialized(mutableMessage: ISequencedDocumentMessage): 
  *
  * The return type illustrates the assumption that the message param
  * becomes a InboundSequencedContainerRuntimeMessage by the time the function returns
- * (but there is no runtime validation of the 'type' or 'compatDetails' values).
+ * (but there is no runtime validation of the 'type').
  */
-function unpack(
-	message: ISequencedDocumentMessage,
-): asserts message is InboundSequencedContainerRuntimeMessage {
+function unpack(message: ISequencedDocumentMessage): InboundSequencedContainerRuntimeMessage {
 	// We assume the contents is an InboundContainerRuntimeMessage (the message is "packed")
 	const contents = message.contents as InboundContainerRuntimeMessage;
 
@@ -135,10 +269,7 @@ function unpack(
 
 	messageUnpacked.type = contents.type;
 	messageUnpacked.contents = contents.contents;
-	if ("compatDetails" in contents) {
-		(messageUnpacked as InboundSequencedRecentlyAddedContainerRuntimeMessage).compatDetails =
-			contents.compatDetails;
-	}
+	return messageUnpacked;
 }
 
 /**
@@ -150,7 +281,10 @@ function unpack(
  *
  * @internal
  */
-export function unpackRuntimeMessage(message: ISequencedDocumentMessage): boolean {
+export function unpackRuntimeMessage(
+	message: ISequencedDocumentMessage,
+	logLegacyCase: (codePath: string) => void = () => {},
+): boolean {
 	if (message.type !== MessageType.Operation) {
 		// Legacy format, but it's already "unpacked",
 		// i.e. message.type is actually ContainerMessageType.
@@ -166,6 +300,7 @@ export function unpackRuntimeMessage(message: ISequencedDocumentMessage): boolea
 		(message.contents as { type?: unknown }).type === undefined
 	) {
 		message.type = ContainerMessageType.FluidDataStoreOp;
+		logLegacyCase("unpackRuntimeMessage_contentsWithAddress");
 	} else {
 		// new format
 		unpack(message);

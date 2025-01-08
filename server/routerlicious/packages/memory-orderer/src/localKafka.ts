@@ -14,6 +14,7 @@ import { LocalKafkaSubscription } from "./localKafkaSubscription";
  * Lambdas can subscribe to messages.
  * Each subscription keeps track of its offset in the queue.
  * Queue is cleaned up once all subscriptions processed past the min.
+ * @internal
  */
 export class LocalKafka implements IProducer {
 	private readonly subscriptions: LocalKafkaSubscription[] = [];
@@ -99,6 +100,13 @@ export class LocalKafka implements IProducer {
 	}
 
 	public once(
+		event: "connected" | "produced" | "error",
+		listener: (...args: any[]) => void,
+	): this {
+		return this;
+	}
+
+	public off(
 		event: "connected" | "produced" | "error",
 		listener: (...args: any[]) => void,
 	): this {

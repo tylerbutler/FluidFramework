@@ -3,35 +3,39 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/core-utils";
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import { assert } from "@fluidframework/core-utils/internal";
+import { IClient, ISummaryTree } from "@fluidframework/driver-definitions";
 import {
 	IDocumentDeltaConnection,
 	IDocumentDeltaStorageService,
 	IDocumentService,
+	IDocumentServiceEvents,
 	IDocumentServiceFactory,
 	IDocumentStorageService,
 	IResolvedUrl,
-} from "@fluidframework/driver-definitions";
-import { buildSnapshotTree } from "@fluidframework/driver-utils";
-import {
-	IClient,
 	ISnapshotTree,
 	ITree,
 	IVersion,
-	ISummaryTree,
-} from "@fluidframework/protocol-definitions";
-import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
-import { EmptyDeltaStorageService } from "./emptyDeltaStorageService";
-import { ReadDocumentStorageServiceBase } from "./replayController";
+} from "@fluidframework/driver-definitions/internal";
+import { buildSnapshotTree } from "@fluidframework/driver-utils/internal";
+import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils/internal";
+
+import { EmptyDeltaStorageService } from "./emptyDeltaStorageService.js";
+import { ReadDocumentStorageServiceBase } from "./replayController.js";
 
 /**
  * Structure of snapshot on disk, when we store snapshot as single file
+ * @internal
  */
 export interface IFileSnapshot {
 	tree: ITree;
 	commits: { [key: string]: ITree };
 }
 
+/**
+ * @internal
+ */
 export class FileSnapshotReader
 	extends ReadDocumentStorageServiceBase
 	implements IDocumentStorageService
@@ -76,9 +80,9 @@ export class FileSnapshotReader
 			throw new Error(`Unknown version id: ${versionRequested}`);
 		}
 
-		let snapshotTree = this.trees[versionRequested.id];
+		let snapshotTree: ISnapshotTree | undefined = this.trees[versionRequested.id];
 		if (snapshotTree === undefined) {
-			const tree = this.commits[versionRequested.id];
+			const tree: ITree | undefined = this.commits[versionRequested.id];
 			if (tree === undefined) {
 				throw new Error(`Can't find version ${versionRequested.id}`);
 			}
@@ -100,6 +104,9 @@ export class FileSnapshotReader
 	}
 }
 
+/**
+ * @internal
+ */
 export class SnapshotStorage extends ReadDocumentStorageServiceBase {
 	protected docId?: string;
 
@@ -134,25 +141,16 @@ export class SnapshotStorage extends ReadDocumentStorageServiceBase {
 	}
 }
 
-export class OpStorage extends ReadDocumentStorageServiceBase {
-	public async getVersions(versionId: string | null, count: number): Promise<IVersion[]> {
-		return [];
-	}
-
-	public async getSnapshotTree(version?: IVersion): Promise<ISnapshotTree | null> {
-		throw new Error("no snapshot tree should be asked when playing ops");
-	}
-
-	public async readBlob(blobId: string): Promise<ArrayBufferLike> {
-		throw new Error(`Unknown blob ID: ${blobId}`);
-	}
-}
-
-export class StaticStorageDocumentService implements IDocumentService {
+export class StaticStorageDocumentService
+	extends TypedEventEmitter<IDocumentServiceEvents>
+	implements IDocumentService
+{
 	constructor(
 		public readonly resolvedUrl: IResolvedUrl,
 		private readonly storage: IDocumentStorageService,
-	) {}
+	) {
+		super();
+	}
 
 	public dispose() {}
 
@@ -170,6 +168,9 @@ export class StaticStorageDocumentService implements IDocumentService {
 	}
 }
 
+/**
+ * @internal
+ */
 export class StaticStorageDocumentServiceFactory implements IDocumentServiceFactory {
 	public constructor(protected readonly storage: IDocumentStorageService) {}
 

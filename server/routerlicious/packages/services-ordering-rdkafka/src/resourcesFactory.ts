@@ -15,6 +15,9 @@ import sillyname from "sillyname";
 import { Provider } from "nconf";
 import { RdkafkaConsumer } from "./rdkafkaConsumer";
 
+/**
+ * @internal
+ */
 export interface IRdkafkaResources extends IResources {
 	lambdaFactory: IPartitionLambdaFactory;
 
@@ -23,6 +26,9 @@ export interface IRdkafkaResources extends IResources {
 	config: Provider;
 }
 
+/**
+ * @internal
+ */
 export class RdkafkaResources implements IRdkafkaResources {
 	constructor(
 		public lambdaFactory: IPartitionLambdaFactory,
@@ -36,6 +42,9 @@ export class RdkafkaResources implements IRdkafkaResources {
 	}
 }
 
+/**
+ * @internal
+ */
 export class RdkafkaResourcesFactory implements IResourcesFactory<RdkafkaResources> {
 	constructor(
 		private readonly name: string,
@@ -62,9 +71,14 @@ export class RdkafkaResourcesFactory implements IResourcesFactory<RdkafkaResourc
 		const automaticConsume = config.get("kafka:lib:rdkafkaAutomaticConsume");
 		const consumeTimeout = config.get("kafka:lib:rdkafkaConsumeTimeout");
 		const maxConsumerCommitRetries = config.get("kafka:lib:rdkafkaMaxConsumerCommitRetries");
+		const consumeLoopTimeoutDelay = config.get("kafka:lib:rdkafkaConsumeLoopTimeoutDelay");
 		const sslCACertFilePath: string = config.get("kafka:lib:sslCACertFilePath");
 		const eventHubConnString: string = config.get("kafka:lib:eventHubConnString");
+		const oauthBearerConfig = config.get("kafka:lib:oauthBearerConfig");
 		const customRestartOnKafkaErrorCodes = config.get("kafka:customRestartOnKafkaErrorCodes");
+		const consumerGlobalAdditionalConfig = config.get(
+			"kafka:lib:consumerGlobalAdditionalConfig",
+		);
 
 		// Receive topic and group - for now we will assume an entry in config mapping
 		// to the given name. Later though the lambda config will likely be split from the stream config
@@ -86,10 +100,13 @@ export class RdkafkaResourcesFactory implements IResourcesFactory<RdkafkaResourc
 			automaticConsume,
 			consumeTimeout,
 			maxConsumerCommitRetries,
+			consumeLoopTimeoutDelay,
 			sslCACertFilePath,
 			zooKeeperClientConstructor: this.zookeeperClientConstructor,
 			eventHubConnString,
+			oauthBearerConfig,
 			restartOnKafkaErrorCodes: customRestartOnKafkaErrorCodes,
+			additionalOptions: consumerGlobalAdditionalConfig,
 		};
 
 		const consumer = new RdkafkaConsumer(endpoints, clientId, receiveTopic, groupId, options);

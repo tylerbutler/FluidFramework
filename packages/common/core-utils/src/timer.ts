@@ -3,9 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "./assert";
-import { Deferred } from "./promises";
+import { assert } from "./assert.js";
+import { Deferred } from "./promises.js";
 
+/**
+ * @internal
+ */
 export interface ITimer {
 	/**
 	 * True if timer is currently running
@@ -54,7 +57,7 @@ interface IRunningTimerState extends ITimeout {
 	/**
 	 * Intended restart timeout.
 	 */
-	restart?: ITimeout;
+	restart?: ITimeout | undefined;
 }
 
 const maxSetTimeoutMs = 0x7fffffff; // setTimeout limit is MAX_INT32=(2^31-1).
@@ -68,6 +71,7 @@ const maxSetTimeoutMs = 0x7fffffff; // setTimeout limit is MAX_INT32=(2^31-1).
  * @param setTimeoutIdFn - Executed to update the timeout if multiple timeouts are required when
  * timeoutMs greater than maxTimeout
  * @returns The initial timeout
+ * @internal
  */
 export function setLongTimeout(
 	timeoutFn: () => void,
@@ -95,6 +99,7 @@ export function setLongTimeout(
  * makes it simpler to keep track of recurring timeouts with the same
  * or similar handlers and timeouts. This class supports long timeouts
  * or timeouts exceeding (2^31)-1 ms or approximately 24.8 days.
+ * @internal
  */
 export class Timer implements ITimer {
 	/**
@@ -105,11 +110,12 @@ export class Timer implements ITimer {
 	}
 
 	private runningState: IRunningTimerState | undefined;
+	private readonly getCurrentTick: () => number = (): number => Date.now();
 
 	public constructor(
 		private readonly defaultTimeout: number,
 		private readonly defaultHandler: () => void,
-		private readonly getCurrentTick: () => number = (): number => Date.now(),
+		private readonly exceptionHandler?: (error: unknown) => void,
 	) {}
 
 	/**
@@ -201,7 +207,18 @@ export class Timer implements ITimer {
 			// Run clear first, in case the handler decides to start again
 			const handler = this.runningState.handler;
 			this.clear();
-			handler();
+			try {
+				handler();
+			} catch (error) {
+				if (this.exceptionHandler) {
+					this.exceptionHandler(error);
+				} else {
+					// This will be unhandled exception, but it's better to have unhandled exception than swallow it.
+					// Applications might have telemetry to report unhandled exceptions, letting us know where we are missing
+					// exception handlers.
+					throw error;
+				}
+			}
 		} else {
 			// Restart with remaining time
 			const remainingTime = this.calculateRemainingTime(restart);
@@ -215,6 +232,9 @@ export class Timer implements ITimer {
 	}
 }
 
+/**
+ * @internal
+ */
 export interface IPromiseTimerResult {
 	timerResult: "timeout" | "cancel";
 }
@@ -222,6 +242,7 @@ export interface IPromiseTimerResult {
 /**
  * Timer which offers a promise that fulfills when the timer
  * completes.
+ * @internal
  */
 export interface IPromiseTimer extends ITimer {
 	/**
@@ -236,9 +257,10 @@ export interface IPromiseTimer extends ITimer {
  * makes it simpler to keep track of recurring timeouts with the
  * same handlers and timeouts, while also providing a promise that
  * resolves when it times out.
+ * @internal
  */
 export class PromiseTimer implements IPromiseTimer {
-	private deferred?: Deferred<IPromiseTimerResult>;
+	private deferred: Deferred<IPromiseTimerResult> | undefined;
 	private readonly timer: Timer;
 
 	/**

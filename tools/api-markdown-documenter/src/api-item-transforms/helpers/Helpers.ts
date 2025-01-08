@@ -2,28 +2,38 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import {
 	ApiClass,
 	ApiDeclaredItem,
 	ApiDocumentedItem,
-	ApiEntryPoint,
+	type ApiEntryPoint,
 	ApiInterface,
-	ApiItem,
-	ApiItemKind,
+	type ApiItem,
 	ApiReturnTypeMixin,
-	Excerpt,
+	ApiTypeParameterListMixin,
+	type Excerpt,
 	ExcerptTokenKind,
-	HeritageType,
-	IResolveDeclarationReferenceResult,
-	TypeParameter,
+	type HeritageType,
+	type IResolveDeclarationReferenceResult,
+	type TypeParameter,
+	ApiPropertyItem,
+	ApiVariable,
 } from "@microsoft/api-extractor-model";
-import { DocNode, DocNodeContainer, DocNodeKind, DocPlainText, DocSection } from "@microsoft/tsdoc";
-
-import { Heading } from "../../Heading";
 import {
-	DocumentationNode,
+	type DocNode,
+	type DocNodeContainer,
+	DocNodeKind,
+	type DocPlainText,
+	type DocSection,
+} from "@microsoft/tsdoc";
+
+import type { Heading } from "../../Heading.js";
+import type { Logger } from "../../Logging.js";
+import {
+	type DocumentationNode,
 	DocumentationNodeType,
-	DocumentationParentNode,
+	type DocumentationParentNode,
 	FencedCodeBlockNode,
 	HeadingNode,
 	LineBreakNode,
@@ -31,32 +41,33 @@ import {
 	ParagraphNode,
 	PlainTextNode,
 	SectionNode,
-	SingleLineDocumentationNode,
+	type SingleLineDocumentationNode,
 	SingleLineSpanNode,
 	SpanNode,
 	UnorderedListNode,
-} from "../../documentation-domain";
-import { Logger } from "../../Logging";
+} from "../../documentation-domain/index.js";
 import {
-	ApiFunctionLike,
+	type ApiFunctionLike,
 	injectSeparator,
-	getQualifiedApiItemName,
+	getFileSafeNameForApiItem,
 	getSeeBlocks,
 	getThrowsBlocks,
 	getDeprecatedBlock,
 	getExampleBlocks,
 	getReturnsBlock,
-} from "../../utilities";
+	type ValidApiItemKind,
+} from "../../utilities/index.js";
 import {
 	doesItemKindRequireOwnDocument,
 	doesItemRequireOwnDocument,
 	getAncestralHierarchy,
 	getLinkForApiItem,
-} from "../ApiItemTransformUtilities";
-import { transformTsdocSection } from "../TsdocNodeTransforms";
-import { getTsdocNodeTransformationOptions } from "../Utilities";
-import { ApiItemTransformationConfiguration } from "../configuration";
-import { createParametersSummaryTable, createTypeParametersSummaryTable } from "./TableHelpers";
+} from "../ApiItemTransformUtilities.js";
+import { transformTsdocSection } from "../TsdocNodeTransforms.js";
+import { getTsdocNodeTransformationOptions } from "../Utilities.js";
+import type { ApiItemTransformationConfiguration } from "../configuration/index.js";
+
+import { createParametersSummaryTable, createTypeParametersSummaryTable } from "./TableHelpers.js";
 
 /**
  * Generates a section for an API signature.
@@ -72,7 +83,7 @@ import { createParametersSummaryTable, createTypeParametersSummaryTable } from "
  */
 export function createSignatureSection(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): SectionNode | undefined {
 	if (apiItem instanceof ApiDeclaredItem) {
 		const signatureExcerpt = apiItem.getExcerptWithModifiers();
@@ -90,7 +101,7 @@ export function createSignatureSection(
 
 			return wrapInSection(contents, {
 				title: "Signature",
-				id: `${getQualifiedApiItemName(apiItem)}-signature`,
+				id: `${getFileSafeNameForApiItem(apiItem)}-signature`,
 			});
 		}
 	}
@@ -112,7 +123,7 @@ export function createSignatureSection(
  */
 export function createSeeAlsoSection(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): SectionNode | undefined {
 	const seeBlocks = getSeeBlocks(apiItem);
 	if (seeBlocks === undefined || seeBlocks.length === 0) {
@@ -127,7 +138,7 @@ export function createSeeAlsoSection(
 
 	return wrapInSection(contents, {
 		title: "See Also",
-		id: `${getQualifiedApiItemName(apiItem)}-see-also`,
+		id: `${getFileSafeNameForApiItem(apiItem)}-see-also`,
 	});
 }
 
@@ -143,7 +154,7 @@ export function createSeeAlsoSection(
  */
 export function createHeritageTypesParagraph(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): ParagraphNode | undefined {
 	const { logger } = config;
 
@@ -176,16 +187,6 @@ export function createHeritageTypesParagraph(
 		if (renderedImplementsTypes !== undefined) {
 			contents.push(new ParagraphNode([renderedImplementsTypes]));
 		}
-
-		// Render type parameters if there are any.
-		const renderedTypeParameters = createTypeParametersSection(
-			apiItem.typeParameters,
-			apiItem,
-			config,
-		);
-		if (renderedTypeParameters !== undefined) {
-			contents.push(new ParagraphNode([renderedTypeParameters]));
-		}
 	}
 
 	if (apiItem instanceof ApiInterface) {
@@ -198,16 +199,27 @@ export function createHeritageTypesParagraph(
 		if (renderedExtendsTypes !== undefined) {
 			contents.push(new ParagraphNode([renderedExtendsTypes]));
 		}
+	}
 
-		// Render type parameters if there are any.
+	// Render type information for properties and variables
+	let renderedTypeSpan: SpanNode | undefined;
+	if (apiItem instanceof ApiPropertyItem) {
+		renderedTypeSpan = createTypeSpan(apiItem.propertyTypeExcerpt, config);
+	} else if (apiItem instanceof ApiVariable) {
+		renderedTypeSpan = createTypeSpan(apiItem.variableTypeExcerpt, config);
+	}
+	if (renderedTypeSpan !== undefined) {
+		contents.push(new ParagraphNode([renderedTypeSpan]));
+	}
+
+	// Render type parameters if there are any.
+	if (ApiTypeParameterListMixin.isBaseClassOf(apiItem) && apiItem.typeParameters.length > 0) {
 		const renderedTypeParameters = createTypeParametersSection(
 			apiItem.typeParameters,
 			apiItem,
 			config,
 		);
-		if (renderedTypeParameters !== undefined) {
-			contents.push(new ParagraphNode([renderedTypeParameters]));
-		}
+		contents.push(new ParagraphNode([renderedTypeParameters]));
 	}
 
 	if (contents.length === 0) {
@@ -223,6 +235,28 @@ export function createHeritageTypesParagraph(
 }
 
 /**
+ * Renders a labeled type-information entry.
+ *
+ * @remarks Displayed as `Type: <type>`. Type excerpt will be rendered with the appropriate hyperlinks for other types in the API model.
+ *
+ * @param excerpt - The type excerpt to be displayed.
+ * @param config - See {@link ApiItemTransformationConfiguration}.
+ */
+function createTypeSpan(
+	excerpt: Excerpt,
+	config: ApiItemTransformationConfiguration,
+): SpanNode | undefined {
+	if (!excerpt.isEmpty) {
+		const renderedLabel = SpanNode.createFromPlainText(`Type: `, { bold: true });
+		const renderedExcerpt = createExcerptSpanWithHyperlinks(excerpt, config);
+		if (renderedExcerpt !== undefined) {
+			return new SpanNode([renderedLabel, renderedExcerpt]);
+		}
+	}
+	return undefined;
+}
+
+/**
  * Renders a labeled, comma-separated list of heritage types.
  *
  * @remarks Displayed as `<label>: <heritage-type>[, <heritage-type>]*`
@@ -234,7 +268,7 @@ export function createHeritageTypesParagraph(
 function createHeritageTypeListSpan(
 	heritageTypes: readonly HeritageType[],
 	label: string,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): SpanNode | undefined {
 	if (heritageTypes.length > 0) {
 		const renderedLabel = SpanNode.createFromPlainText(`${label}: `, { bold: true });
@@ -269,19 +303,13 @@ function createHeritageTypeListSpan(
  * @param contextApiItem - The API item with which the example is associated.
  * @param config - See {@link ApiItemTransformationConfiguration}.
  *
- * @returns The doc section if any type parameters were provided, otherwise `undefined`.
- *
  * @public
  */
 export function createTypeParametersSection(
 	typeParameters: readonly TypeParameter[],
 	contextApiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
-): SectionNode | undefined {
-	if (typeParameters.length === 0) {
-		return undefined;
-	}
-
+	config: ApiItemTransformationConfiguration,
+): SectionNode {
 	const typeParametersTable = createTypeParametersSummaryTable(
 		typeParameters,
 		contextApiItem,
@@ -309,7 +337,7 @@ export function createTypeParametersSection(
  */
 export function createExcerptSpanWithHyperlinks(
 	excerpt: Excerpt,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): SingleLineSpanNode | undefined {
 	if (excerpt.isEmpty) {
 		return undefined;
@@ -327,7 +355,6 @@ export function createExcerptSpanWithHyperlinks(
 		// If it's hyperlink-able, then append a DocLinkTag
 		if (token.kind === ExcerptTokenKind.Reference && token.canonicalReference) {
 			const apiItemResult: IResolveDeclarationReferenceResult =
-				// eslint-disable-next-line unicorn/no-useless-undefined
 				config.apiModel.resolveDeclarationReference(token.canonicalReference, undefined);
 
 			if (apiItemResult.resolvedApiItem) {
@@ -364,7 +391,7 @@ export function createExcerptSpanWithHyperlinks(
  */
 export function createBreadcrumbParagraph(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): ParagraphNode {
 	// Get ordered ancestry of document items
 	const ancestry = getAncestralHierarchy(apiItem, (hierarchyItem) =>
@@ -421,7 +448,7 @@ export const betaWarningSpan = SpanNode.createFromPlainText(betaWarningText, { b
  */
 export function createSummaryParagraph(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): ParagraphNode | undefined {
 	const tsdocNodeTransformOptions = getTsdocNodeTransformationOptions(apiItem, config);
 	return apiItem instanceof ApiDocumentedItem && apiItem.tsdocComment !== undefined
@@ -444,7 +471,7 @@ export function createSummaryParagraph(
  */
 export function createRemarksSection(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): SectionNode | undefined {
 	if (
 		!(apiItem instanceof ApiDocumentedItem) ||
@@ -462,7 +489,7 @@ export function createRemarksSection(
 				tsdocNodeTransformOptions,
 			),
 		],
-		{ title: "Remarks", id: `${getQualifiedApiItemName(apiItem)}-remarks` },
+		{ title: "Remarks", id: `${getFileSafeNameForApiItem(apiItem)}-remarks` },
 	);
 }
 
@@ -482,7 +509,7 @@ export function createRemarksSection(
  */
 export function createThrowsSection(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 	headingText: string = "Throws",
 ): SectionNode | undefined {
 	const throwsBlocks = getThrowsBlocks(apiItem);
@@ -498,7 +525,7 @@ export function createThrowsSection(
 
 	return wrapInSection(paragraphs, {
 		title: headingText,
-		id: `${getQualifiedApiItemName(apiItem)}-throws`,
+		id: `${getFileSafeNameForApiItem(apiItem)}-throws`,
 	});
 }
 
@@ -517,7 +544,7 @@ export function createThrowsSection(
  */
 export function createDeprecationNoticeSection(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): ParagraphNode | undefined {
 	const tsdocNodeTransformOptions = getTsdocNodeTransformationOptions(apiItem, config);
 
@@ -558,7 +585,7 @@ export function createDeprecationNoticeSection(
  */
 export function createExamplesSection(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 	headingText: string = "Examples",
 ): SectionNode | undefined {
 	const exampleBlocks = getExampleBlocks(apiItem);
@@ -582,7 +609,7 @@ export function createExamplesSection(
 
 	return wrapInSection(exampleSections, {
 		title: headingText,
-		id: `${getQualifiedApiItemName(apiItem)}-examples`,
+		id: `${getFileSafeNameForApiItem(apiItem)}-examples`,
 	});
 }
 
@@ -664,7 +691,7 @@ interface ExampleProperties {
  */
 function createExampleSection(
 	example: ExampleProperties,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): SectionNode {
 	const { logger } = config;
 
@@ -683,11 +710,11 @@ function createExampleSection(
 	const exampleTitle = extractTitleFromExampleSection(example.content);
 
 	const headingTitle =
-		exampleTitle !== undefined
-			? `Example: ${exampleTitle}`
-			: example.exampleNumber === undefined
-			? "Example"
-			: `Example ${example.exampleNumber}`;
+		exampleTitle === undefined
+			? example.exampleNumber === undefined
+				? "Example"
+				: `Example ${example.exampleNumber}`
+			: `Example: ${exampleTitle}`;
 
 	// If our example contained a title line, we need to strip that content out of the body.
 	// Unfortunately, the input `DocNode` types are all class based, and do not expose their constructors, so it is
@@ -700,8 +727,8 @@ function createExampleSection(
 		exampleParagraph = stripTitleFromParagraph(exampleParagraph, exampleTitle, logger);
 	}
 
-	const headingId = `${getQualifiedApiItemName(example.apiItem)}-example${
-		example.exampleNumber === undefined ? "" : example.exampleNumber
+	const headingId = `${getFileSafeNameForApiItem(example.apiItem)}-example${
+		example.exampleNumber ?? ""
 	}`;
 
 	return wrapInSection([exampleParagraph], {
@@ -848,7 +875,7 @@ function stripTitleFromParagraph(
  */
 export function createParametersSection(
 	apiFunctionLike: ApiFunctionLike,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): SectionNode | undefined {
 	if (apiFunctionLike.parameters.length === 0) {
 		return undefined;
@@ -858,7 +885,7 @@ export function createParametersSection(
 		[createParametersSummaryTable(apiFunctionLike.parameters, apiFunctionLike, config)],
 		{
 			title: "Parameters",
-			id: `${getQualifiedApiItemName(apiFunctionLike)}-parameters`,
+			id: `${getFileSafeNameForApiItem(apiFunctionLike)}-parameters`,
 		},
 	);
 }
@@ -878,7 +905,7 @@ export function createParametersSection(
  */
 export function createReturnsSection(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): SectionNode | undefined {
 	const tsdocNodeTransformOptions = getTsdocNodeTransformationOptions(apiItem, config);
 
@@ -917,7 +944,7 @@ export function createReturnsSection(
 		? undefined
 		: wrapInSection(children, {
 				title: "Returns",
-				id: `${getQualifiedApiItemName(apiItem)}-returns`,
+				id: `${getFileSafeNameForApiItem(apiItem)}-returns`,
 		  });
 }
 
@@ -933,7 +960,7 @@ export interface ChildSectionProperties {
 	/**
 	 * The API item kind of all child items.
 	 */
-	itemKind: ApiItemKind;
+	itemKind: ValidApiItemKind;
 
 	/**
 	 * The child items to be rendered.
@@ -960,7 +987,7 @@ export interface ChildSectionProperties {
  */
 export function createChildDetailsSection(
 	childItems: readonly ChildSectionProperties[],
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 	createChildContent: (apiItem) => DocumentationNode[],
 ): SectionNode[] | undefined {
 	const sections: SectionNode[] = [];
@@ -1005,7 +1032,7 @@ export function wrapInSection(nodes: DocumentationNode[], heading?: Heading): Se
  */
 export function createEntryPointList(
 	apiEntryPoints: readonly ApiEntryPoint[],
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): UnorderedListNode | undefined {
 	if (apiEntryPoints.length === 0) {
 		return undefined;

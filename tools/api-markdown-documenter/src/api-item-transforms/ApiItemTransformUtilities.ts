@@ -2,18 +2,26 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import * as Path from "node:path";
 
-import { ApiItem, ApiItemKind } from "@microsoft/api-extractor-model";
+import { type ApiItem, ApiItemKind, ReleaseTag } from "@microsoft/api-extractor-model";
 
-import { Heading } from "../Heading";
-import { Link } from "../Link";
-import { getQualifiedApiItemName } from "../utilities";
+import type { Heading } from "../Heading.js";
+import type { Link } from "../Link.js";
 import {
+	getFileSafeNameForApiItem,
+	getReleaseTag,
+	getApiItemKind,
+	type ValidApiItemKind,
+	getFilteredParent,
+} from "../utilities/index.js";
+
+import type {
 	ApiItemTransformationConfiguration,
 	DocumentBoundaries,
 	HierarchyBoundaries,
-} from "./configuration";
+} from "./configuration/index.js";
 
 /**
  * This module contains `ApiItem`-related utilities for use in transformation logic.
@@ -64,7 +72,7 @@ function getFirstAncestorWithOwnDocument(
  */
 export function getLinkForApiItem(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 	textOverride?: string,
 ): Link {
 	const text = textOverride ?? config.getLinkTextForItem(apiItem);
@@ -87,7 +95,7 @@ export function getLinkForApiItem(
  */
 function getLinkUrlForApiItem(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): string {
 	const uriBase = config.getUriBaseOverrideForItem(apiItem) ?? config.uriRoot;
 	let documentPath = getApiItemPath(apiItem, config).join("/");
@@ -124,7 +132,7 @@ function getLinkUrlForApiItem(
  */
 export function getDocumentPathForApiItem(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): string {
 	const pathSegments = getApiItemPath(apiItem, config);
 	return Path.join(...pathSegments);
@@ -136,10 +144,7 @@ export function getDocumentPathForApiItem(
  * @param apiItem - The API item for which we are generating a file path.
  * @param config - See {@link ApiItemTransformationConfiguration}.
  */
-function getApiItemPath(
-	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
-): string[] {
+function getApiItemPath(apiItem: ApiItem, config: ApiItemTransformationConfiguration): string[] {
 	const targetDocumentItem = getFirstAncestorWithOwnDocument(apiItem, config.documentBoundaries);
 
 	const fileName = getDocumentNameForApiItem(apiItem, config);
@@ -151,7 +156,9 @@ function getApiItemPath(
 
 	return [
 		fileName,
-		...documentAncestry.map((hierarchyItem) => config.getFileNameForItem(hierarchyItem)),
+		...documentAncestry.map((hierarchyItem) =>
+			getDocumentNameForApiItem(hierarchyItem, config),
+		),
 	].reverse();
 }
 
@@ -171,7 +178,7 @@ function getApiItemPath(
  */
 function getDocumentNameForApiItem(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): string {
 	const targetDocumentItem = getFirstAncestorWithOwnDocument(apiItem, config.documentBoundaries);
 
@@ -230,7 +237,7 @@ function getDocumentNameForApiItem(
  */
 export function getHeadingForApiItem(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 	headingLevel?: number,
 ): Heading {
 	// Don't generate an ID for the root heading
@@ -264,16 +271,16 @@ export function getHeadingForApiItem(
  */
 function getHeadingIdForApiItem(
 	apiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): string {
 	let baseName: string | undefined;
-	const apiItemKind: ApiItemKind = apiItem.kind;
+	const apiItemKind = getApiItemKind(apiItem);
 
 	// Walk parentage up until we reach the ancestor into whose document we're being rendered.
 	// Generate ID information for everything back to that point
 	let hierarchyItem = apiItem;
 	while (!doesItemRequireOwnDocument(hierarchyItem, config.documentBoundaries)) {
-		const qualifiedName = getQualifiedApiItemName(hierarchyItem);
+		const qualifiedName = getFileSafeNameForApiItem(hierarchyItem);
 
 		// Since we're walking up the tree, we'll build the string from the end for simplicity
 		baseName = baseName === undefined ? qualifiedName : `${qualifiedName}-${baseName}`;
@@ -288,25 +295,6 @@ function getHeadingIdForApiItem(
 	}
 
 	return `${baseName}-${apiItemKind.toLowerCase()}`;
-}
-
-/**
- * Gets the "filted" parent of the provided API item.
- *
- * @remarks This logic specifically skips items of the following kinds:
- *
- * - EntryPoint: skipped because any given Package item will have exactly 1 EntryPoint child with current version of
- * API-Extractor, making this redundant in the hierarchy. We may need to revisit this in the future if/when
- * API-Extractor adds support for multiple entrypoints.
- *
- * @param apiItem - The API item whose filtered parent will be returned.
- */
-function getFilteredParent(apiItem: ApiItem): ApiItem | undefined {
-	const parent = apiItem.parent;
-	if (parent?.kind === ApiItemKind.EntryPoint) {
-		return parent.parent;
-	}
-	return parent;
 }
 
 /**
@@ -350,7 +338,7 @@ export function getAncestralHierarchy(
 /**
  * Determines whether or not the specified API item kind is one that should be rendered to its own document.
  *
- * @remarks This is essentially a wrapper around {@link DocumentationSuiteOptions.documentBoundaries}, but also enforces
+ * @remarks This is essentially a wrapper around {@link DocumentationSuiteConfiguration.documentBoundaries}, but also enforces
  * system-wide invariants.
  *
  * Namely...
@@ -366,7 +354,7 @@ export function getAncestralHierarchy(
  * @returns `true` if the item should be rendered to its own document. `false` otherwise.
  */
 export function doesItemKindRequireOwnDocument(
-	kind: ApiItemKind,
+	kind: ValidApiItemKind,
 	documentBoundaries: DocumentBoundaries,
 ): boolean {
 	if (
@@ -384,7 +372,7 @@ export function doesItemKindRequireOwnDocument(
  *
  * @remarks
  *
- * This is essentially a wrapper around {@link DocumentationSuiteOptions.hierarchyBoundaries}, but also enforces
+ * This is essentially a wrapper around {@link DocumentationSuiteConfiguration.hierarchyBoundaries}, but also enforces
  * system-wide invariants.
  *
  * Namely...
@@ -403,7 +391,7 @@ export function doesItemRequireOwnDocument(
 	apiItem: ApiItem,
 	documentBoundaries: DocumentBoundaries,
 ): boolean {
-	return doesItemKindRequireOwnDocument(apiItem.kind, documentBoundaries);
+	return doesItemKindRequireOwnDocument(getApiItemKind(apiItem), documentBoundaries);
 }
 
 /**
@@ -413,7 +401,7 @@ export function doesItemRequireOwnDocument(
  *
  * @remarks
  *
- * This is essentially a wrapper around {@link DocumentationSuiteOptions.hierarchyBoundaries}, but also enforces
+ * This is essentially a wrapper around {@link DocumentationSuiteConfiguration.hierarchyBoundaries}, but also enforces
  * system-wide invariants.
  *
  * Namely...
@@ -429,9 +417,14 @@ export function doesItemRequireOwnDocument(
  * @returns `true` if the item should contribute to directory-wise hierarchy in the output. `false` otherwise.
  */
 function doesItemKindGenerateHierarchy(
-	kind: ApiItemKind,
+	kind: ValidApiItemKind,
 	hierarchyBoundaries: HierarchyBoundaries,
 ): boolean {
+	if (kind === ApiItemKind.Model) {
+		// Model items always yield a document, and never introduce hierarchy
+		return false;
+	}
+
 	if (kind === ApiItemKind.Package) {
 		return true;
 	}
@@ -457,5 +450,100 @@ function doesItemGenerateHierarchy(
 	apiItem: ApiItem,
 	hierarchyBoundaries: HierarchyBoundaries,
 ): boolean {
-	return doesItemKindGenerateHierarchy(apiItem.kind, hierarchyBoundaries);
+	return doesItemKindGenerateHierarchy(getApiItemKind(apiItem), hierarchyBoundaries);
+}
+
+/**
+ * Determines whether or not the specified API item should have documentation generated for it.
+ * This is determined based on its release tag (or inherited release scope) compared to
+ * {@link DocumentationSuiteConfiguration.minimumReleaseLevel}.
+ *
+ * @remarks
+ *
+ * If an item does not have its own release tag, it will inherit its release scope from its nearest ancestor.
+ *
+ * Items without an associated release tag (directly or in their ancestry) will always be included as a precaution.
+ *
+ * @param apiItem - The API item being queried.
+ * @param config - See {@link ApiItemTransformationConfiguration}.
+ *
+ * @example Hierarchical inheritance
+ *
+ * Items with tagged ancestors inherit their release scope when one is not specified.
+ * This includes class/interface members...
+ *
+ * ```typescript
+ * // @public
+ * export interface Foo {
+ * 	// `@public` inherited from the interface
+ * 	bar: string;
+ * }
+ * ```
+ *
+ * This also includes scopes like namespaces, which can add further hierarchy...
+ *
+ * ```typescript
+ * // @public
+ * export namespace Foo {
+ * 	// `@public` inherited from the namespace
+ * 	export interface Bar {
+ * 		// `@public` inherited from the namespace
+ * 		baz: string;
+ * 	}
+ * }
+ * ```
+ *
+ * @public
+ */
+export function shouldItemBeIncluded(
+	apiItem: ApiItem,
+	config: ApiItemTransformationConfiguration,
+): boolean {
+	const releaseTag = getReleaseTag(apiItem);
+	if (releaseTag === undefined || releaseTag === ReleaseTag.None) {
+		// If the item does not have a release tag, then it inherits the release scope of its ancestry.
+		const parent = getFilteredParent(apiItem);
+		if (parent === undefined) {
+			// If we encounter an item with no release tag in its ancestry, we can't make a determination as to whether
+			// or not it is intended to be included in the generated documentation suite.
+			// To be safe, log a warning but return true.
+			config.logger.warning("Encountered an API item with no release tag in ancestry.");
+			return true;
+		}
+
+		return shouldItemBeIncluded(parent, config);
+	}
+
+	return releaseTag >= (config.minimumReleaseLevel as ReleaseTag);
+}
+
+/**
+ * Filters and returns the provided list of `ApiItem`s to include only those desired by the user configuration.
+ * This is determined based on its release tag (or inherited release scope) compared to
+ * {@link DocumentationSuiteConfiguration.minimumReleaseLevel}.
+ * @param apiItem - The API item being queried.
+ * @param config - See {@link ApiItemTransformationConfiguration}.
+ *
+ * @public
+ */
+export function filterItems(
+	apiItems: readonly ApiItem[],
+	config: ApiItemTransformationConfiguration,
+): ApiItem[] {
+	return apiItems.filter((member) => shouldItemBeIncluded(member, config));
+}
+
+/**
+ * Filters and returns the child members of the provided `apiItem` to include only those desired by the user configuration.
+ * This is determined based on its release tag (or inherited release scope) compared to
+ * {@link DocumentationSuiteConfiguration.minimumReleaseLevel}.
+ * @remarks See {@link shouldItemBeIncluded} for more details.
+ * @param apiItem - The API item being queried.
+ * @param config - See {@link ApiItemTransformationConfiguration}.
+ */
+export function filterChildMembers(
+	apiItem: ApiItem,
+	config: ApiItemTransformationConfiguration,
+): ApiItem[] {
+	return filterItems(apiItem.members, config);
 }

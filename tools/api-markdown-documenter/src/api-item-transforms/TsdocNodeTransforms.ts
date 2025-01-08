@@ -2,38 +2,42 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { ApiItem } from "@microsoft/api-extractor-model";
+
+import type { ApiItem } from "@microsoft/api-extractor-model";
 import {
-	DocCodeSpan,
-	DocDeclarationReference,
-	DocEscapedText,
-	DocFencedCode,
-	DocHtmlEndTag,
-	DocHtmlStartTag,
-	DocLinkTag,
-	DocNode,
+	type DocCodeSpan,
+	type DocDeclarationReference,
+	type DocEscapedText,
+	type DocFencedCode,
+	type DocLinkTag,
+	type DocNode,
 	DocNodeKind,
-	DocParagraph,
-	DocPlainText,
-	DocSection,
+	type DocParagraph,
+	type DocPlainText,
+	type DocSection,
+	type DocInlineTag,
+	type DocHtmlEndTag,
+	type DocHtmlStartTag,
 } from "@microsoft/tsdoc";
 
-import { Link } from "../Link";
+import type { Link } from "../Link.js";
+import type { LoggingConfiguration } from "../LoggingConfiguration.js";
 import {
 	CodeSpanNode,
-	DocumentationNode,
+	type DocumentationNode,
 	DocumentationNodeType,
 	FencedCodeBlockNode,
 	LineBreakNode,
 	LinkNode,
 	ParagraphNode,
 	PlainTextNode,
-	SingleLineDocumentationNode,
+	type SingleLineDocumentationNode,
 	SingleLineSpanNode,
-} from "../documentation-domain";
-import { ConfigurationBase } from "../ConfigurationBase";
-import { getTsdocNodeTransformationOptions } from "./Utilities";
-import { ApiItemTransformationConfiguration } from "./configuration";
+	SpanNode,
+} from "../documentation-domain/index.js";
+
+import { getTsdocNodeTransformationOptions } from "./Utilities.js";
+import type { ApiItemTransformationConfiguration } from "./configuration/index.js";
 
 /**
  * Library of transformations from {@link https://github.com/microsoft/tsdoc/blob/main/tsdoc/src/nodes/DocNode.ts| DocNode}s
@@ -57,7 +61,7 @@ import { ApiItemTransformationConfiguration } from "./configuration";
 export function transformTsdocNode(
 	node: DocNode,
 	contextApiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): DocumentationNode | undefined {
 	const transformOptions = getTsdocNodeTransformationOptions(contextApiItem, config);
 	return _transformTsdocNode(node, transformOptions);
@@ -66,7 +70,7 @@ export function transformTsdocNode(
 /**
  * Options for {@link @microsoft/tsdoc#DocNode} transformations.
  */
-export interface TsdocNodeTransformOptions extends ConfigurationBase {
+export interface TsdocNodeTransformOptions extends LoggingConfiguration {
 	/**
 	 * The API item with which the documentation node(s) are associated.
 	 */
@@ -76,9 +80,9 @@ export interface TsdocNodeTransformOptions extends ConfigurationBase {
 	 * Callback for resolving symbolic links to API items.
 	 *
 	 * @param codeDestination - The referenced target.
-	 * @param contextApiItem -
 	 *
-	 * @returns The appropriate URL target if the reference can be resolved. Otherwise, `undefined`.
+	 * @returns The appropriate URL target if the reference can be resolved.
+	 * Otherwise, `undefined`.
 	 */
 	readonly resolveApiReference: (codeDestination: DocDeclarationReference) => Link | undefined;
 }
@@ -99,29 +103,47 @@ export function _transformTsdocNode(
 	options: TsdocNodeTransformOptions,
 ): DocumentationNode | undefined {
 	switch (node.kind) {
-		case DocNodeKind.CodeSpan:
+		case DocNodeKind.CodeSpan: {
 			return transformTsdocCodeSpan(node as DocCodeSpan, options);
-		case DocNodeKind.EscapedText:
+		}
+		case DocNodeKind.EscapedText: {
 			return transformTsdocEscapedText(node as DocEscapedText, options);
-		case DocNodeKind.FencedCode:
+		}
+		case DocNodeKind.FencedCode: {
 			return transformTsdocFencedCode(node as DocFencedCode, options);
+		}
 		case DocNodeKind.HtmlStartTag:
-			return transformTsdocHtmlTag(node as DocHtmlStartTag, options);
-		case DocNodeKind.HtmlEndTag:
-			return transformTsdocHtmlTag(node as DocHtmlEndTag, options);
-		case DocNodeKind.LinkTag:
+		case DocNodeKind.HtmlEndTag: {
+			return transformTsdocHtmlTag(node as DocHtmlStartTag | DocHtmlEndTag, options);
+		}
+		case DocNodeKind.InheritDocTag: {
+			options.logger?.error(
+				`Encountered inheritDoc tag. This is not expected. Such tags should have already undergone content replacement.`,
+			);
+			return undefined;
+		}
+		case DocNodeKind.InlineTag: {
+			return transformTsdocInlineTag(node as DocInlineTag);
+		}
+		case DocNodeKind.LinkTag: {
 			return transformTsdocLinkTag(node as DocLinkTag, options);
-		case DocNodeKind.Paragraph:
+		}
+		case DocNodeKind.Paragraph: {
 			return transformTsdocParagraph(node as DocParagraph, options);
-		case DocNodeKind.PlainText:
+		}
+		case DocNodeKind.PlainText: {
 			return transformTsdocPlainText(node as DocPlainText, options);
-		case DocNodeKind.Section:
+		}
+		case DocNodeKind.Section: {
 			return transformTsdocSection(node as DocSection, options);
-		case DocNodeKind.SoftBreak:
+		}
+		case DocNodeKind.SoftBreak: {
 			return LineBreakNode.Singleton;
-		default:
+		}
+		default: {
 			options.logger?.error(`Unsupported DocNode kind: "${node.kind}".`, node);
 			return undefined;
+		}
 	}
 }
 
@@ -133,6 +155,31 @@ export function transformTsdocCodeSpan(
 	options: TsdocNodeTransformOptions,
 ): CodeSpanNode {
 	return CodeSpanNode.createFromPlainText(node.code.trim());
+}
+
+/**
+ * Handler for TSDoc HTML tag nodes.
+ *
+ * @remarks
+ *
+ * This library has made the policy choice to not support embedded HTML content.
+ * Instead, we will emit a warning and ignore the HTML tags (return `undefined`).
+ * "Contained" content (represented as adjacent nodes in the list, appearing between the start and end tag nodes) will
+ * be transformed as normal.
+ *
+ * This matches intellisense's policy for HTML in TSDoc/JSDoc comments.
+ *
+ * We may revisit this in the future.
+ */
+export function transformTsdocHtmlTag(
+	node: DocHtmlStartTag | DocHtmlEndTag,
+	options: TsdocNodeTransformOptions,
+): undefined {
+	const tag = node.emitAsHtml();
+	options.logger?.warning(
+		`Encountered an HTML tag: "${tag}". This library does not support embedded HTML content. Inner contents will be mapped as normal, but the HTML tags will be ignored.`,
+	);
+	return undefined;
 }
 
 /**
@@ -183,16 +230,6 @@ export function transformTsdocEscapedText(
 }
 
 /**
- * Converts a {@link @microsoft/tsdoc#DocHtmlStartTag} | {@link @microsoft/tsdoc#DocHtmlEndTag} to a {@link PlainTextNode}.
- */
-export function transformTsdocHtmlTag(
-	node: DocHtmlStartTag | DocHtmlEndTag,
-	options: TsdocNodeTransformOptions,
-): PlainTextNode {
-	return new PlainTextNode(node.emitAsHtml(), /* escaped: */ true);
-}
-
-/**
  * Converts a {@link @microsoft/tsdoc#DocPlainText} to a {@link PlainTextNode}.
  */
 export function transformTsdocFencedCode(
@@ -203,7 +240,7 @@ export function transformTsdocFencedCode(
 }
 
 /**
- * Converts a {@link @microsoft/tsdoc#DocPlainText} to a {@link PlainTextNode}.
+ * Converts a {@link @microsoft/tsdoc#DocPlainText} to a {@link SingleLineDocumentationNode}.
  */
 export function transformTsdocLinkTag(
 	input: DocLinkTag,
@@ -236,6 +273,35 @@ export function transformTsdocLinkTag(
 }
 
 /**
+ * Converts a {@link @microsoft/tsdoc#DocInlineTag} to a {@link SpanNode} (or `undefined` if the input is a `{@label}` tag).
+ *
+ * @remarks
+ * Custom inline tags are not something the system can do anything with inherently.
+ * In the future, we may be able to add extensibility points for transforming custom inline tags.
+ * But for now, we will simply emit them as italicized plain text in the output.
+ *
+ * Notes:
+ *
+ * * `{@link}` tags are handled separately via {@link transformTsdocLinkTag}.
+ *
+ * * `{@inheritDoc}` tags are resolved when loading the API model via simple content replacement.
+ * We do not expect to see them at this stage.
+ *
+ * * `{@label}` tags aren't really intended to appear in output; they're used as extra metadata
+ * for use in `{@link}` and `{@inheritDoc}` tags, so we will simply ignore them here. I.e. we
+ * will return `undefined`.
+ */
+export function transformTsdocInlineTag(node: DocInlineTag): SpanNode | undefined {
+	if (node.tagName === "@label") {
+		return undefined;
+	}
+
+	// For all other inline tags, there isn't really anything we can do with them except emit them
+	// as is. However, to help differentiate them in the output, we will italicize them.
+	return SpanNode.createFromPlainText(`{${node.tagName} ${node.tagContent}}`, { italic: true });
+}
+
+/**
  * Helper function for creating {@link ParagraphNode}s from input nodes that simply wrap child contents.
  *
  * Also performs the following cleanup steps:
@@ -263,23 +329,27 @@ function createParagraph(
 	// and trim trailing whitespace from last child if it is plain text.
 	if (transformedChildren.length > 0) {
 		if (transformedChildren[0].type === DocumentationNodeType.PlainText) {
+			const plainTextNode = transformedChildren[0] as PlainTextNode;
 			transformedChildren[0] = new PlainTextNode(
-				(transformedChildren[0] as PlainTextNode).value.trimStart(),
+				plainTextNode.value.trimStart(),
+				plainTextNode.escaped,
 			);
 		}
 		if (
 			transformedChildren[transformedChildren.length - 1].type ===
 			DocumentationNodeType.PlainText
 		) {
+			const plainTextNode = transformedChildren[
+				transformedChildren.length - 1
+			] as PlainTextNode;
 			transformedChildren[transformedChildren.length - 1] = new PlainTextNode(
-				(
-					transformedChildren[transformedChildren.length - 1] as PlainTextNode
-				).value.trimEnd(),
+				plainTextNode.value.trimEnd(),
+				plainTextNode.escaped,
 			);
 		}
 	}
 
-	// To reduce unecessary hierarchy, if the only child of this paragraph is a single paragraph,
+	// To reduce unnecessary hierarchy, if the only child of this paragraph is a single paragraph,
 	// return it, rather than wrapping it.
 	if (
 		transformedChildren.length === 1 &&
@@ -302,12 +372,16 @@ function transformChildren(
 	children: readonly DocNode[],
 	options: TsdocNodeTransformOptions,
 ): DocumentationNode[] {
+	// TODO: HTML contents come in as a start tag, followed by the content, followed by an end tag, rather than something with hierarchy.
+	// To ensure we map the content correctly, we should scan the child list for matching open/close tags,
+	// and map the subsequence to an "html" node.
+
 	// Transform child items into Documentation domain
 	const transformedChildren = children.map((child) => _transformTsdocNode(child, options));
 
 	// Filter out `undefined` values resulting from transformation errors.
 	let filteredChildren = transformedChildren.filter(
-		(child) => child !== undefined,
+		(child) => child !== undefined && !child.isEmpty,
 	) as DocumentationNode[];
 
 	// Collapse groups of adjacent line breaks to reduce unnecessary clutter in the output.

@@ -2,16 +2,22 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { ApiItem, IResolveDeclarationReferenceResult } from "@microsoft/api-extractor-model";
-import { DocDeclarationReference } from "@microsoft/tsdoc";
 
-import { DocumentNode, SectionNode } from "../documentation-domain";
-import { Link } from "../Link";
-import { getUnscopedPackageName } from "../utilities";
-import { getDocumentPathForApiItem, getLinkForApiItem } from "./ApiItemTransformUtilities";
-import { TsdocNodeTransformOptions } from "./TsdocNodeTransforms";
-import { ApiItemTransformationConfiguration } from "./configuration";
-import { wrapInSection } from "./helpers";
+import type { ApiItem } from "@microsoft/api-extractor-model";
+import type { DocDeclarationReference } from "@microsoft/tsdoc";
+
+import type { Link } from "../Link.js";
+import { DocumentNode, type SectionNode } from "../documentation-domain/index.js";
+import { resolveSymbolicReference } from "../utilities/index.js";
+
+import {
+	getDocumentPathForApiItem,
+	getLinkForApiItem,
+	shouldItemBeIncluded,
+} from "./ApiItemTransformUtilities.js";
+import type { TsdocNodeTransformOptions } from "./TsdocNodeTransforms.js";
+import type { ApiItemTransformationConfiguration } from "./configuration/index.js";
+import { wrapInSection } from "./helpers/index.js";
 
 /**
  * Creates a {@link DocumentNode} representing the provided API item.
@@ -25,28 +31,17 @@ import { wrapInSection } from "./helpers";
 export function createDocument(
 	documentItem: ApiItem,
 	sections: SectionNode[],
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): DocumentNode {
-	const associatedPackage = documentItem.getAssociatedPackage();
-	const packageName =
-		associatedPackage === undefined ? undefined : getUnscopedPackageName(associatedPackage);
-
 	// Wrap sections in a root section if top-level heading is requested.
 	const contents = config.includeTopLevelDocumentHeading
 		? [wrapInSection(sections, { title: config.getHeadingTextForItem(documentItem) })]
 		: sections;
 
-	const frontMatter = generateFrontMatter(documentItem, config);
-
 	return new DocumentNode({
-		documentItemMetadata: {
-			apiItemName: documentItem.displayName,
-			apiItemKind: documentItem.kind,
-			packageName,
-		},
+		apiItem: documentItem,
 		children: contents,
 		documentPath: getDocumentPathForApiItem(documentItem, config),
-		frontMatter,
 	});
 }
 
@@ -60,7 +55,7 @@ export function createDocument(
  */
 export function getTsdocNodeTransformationOptions(
 	contextApiItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): TsdocNodeTransformOptions {
 	return {
 		contextApiItem,
@@ -68,30 +63,6 @@ export function getTsdocNodeTransformationOptions(
 			resolveSymbolicLink(contextApiItem, codeDestination, config),
 		logger: config.logger,
 	};
-}
-
-/**
- * Helper function to generate the front matter based on the provided configuration.
- */
-function generateFrontMatter(
-	documentItem: ApiItem,
-	config: Required<ApiItemTransformationConfiguration>,
-): string | undefined {
-	if (config.frontMatter === undefined) {
-		return undefined;
-	}
-
-	if (typeof config.frontMatter === "string") {
-		return config.frontMatter;
-	}
-
-	if (typeof config.frontMatter !== "function") {
-		throw new TypeError(
-			"Invalid `frontMatter` configuration provided. Must be either a string or a function.",
-		);
-	}
-
-	return config.frontMatter(documentItem);
 }
 
 /**
@@ -104,21 +75,23 @@ function generateFrontMatter(
 function resolveSymbolicLink(
 	contextApiItem: ApiItem,
 	codeDestination: DocDeclarationReference,
-	config: Required<ApiItemTransformationConfiguration>,
+	config: ApiItemTransformationConfiguration,
 ): Link | undefined {
 	const { apiModel, logger } = config;
 
-	const resolvedReference: IResolveDeclarationReferenceResult =
-		apiModel.resolveDeclarationReference(codeDestination, contextApiItem);
-
-	if (resolvedReference.resolvedApiItem === undefined) {
-		logger.warning(
-			`Unable to resolve reference "${codeDestination.emitAsTsdoc()}" from "${contextApiItem.getScopedNameWithinPackage()}":`,
-			resolvedReference.errorMessage,
-		);
-
+	let resolvedReference: ApiItem;
+	try {
+		resolvedReference = resolveSymbolicReference(contextApiItem, codeDestination, apiModel);
+	} catch (error: unknown) {
+		logger.warning((error as Error).message);
 		return undefined;
 	}
 
-	return getLinkForApiItem(resolvedReference.resolvedApiItem, config);
+	// Return undefined if the resolved API item should be excluded based on release tags
+	if (!shouldItemBeIncluded(resolvedReference, config)) {
+		logger.verbose("Excluding link to item based on release tags");
+		return undefined;
+	}
+
+	return getLinkForApiItem(resolvedReference, config);
 }

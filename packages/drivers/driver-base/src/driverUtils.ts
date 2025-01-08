@@ -4,13 +4,14 @@
  */
 
 import { performance } from "@fluid-internal/client-utils";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils/internal";
 
 /**
  * Extract and return the w3c data.
  * @param url - request url for which w3c data needs to be reported.
  * @param initiatorType - type of the network call
+ * @internal
  */
 export function getW3CData(url: string, initiatorType: string) {
 	// From: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming
@@ -70,9 +71,7 @@ export function getW3CData(url: string, initiatorType: string) {
 					? indResTime.responseEnd - indResTime.responseStart
 					: undefined;
 			fetchStartToResponseEndTime =
-				indResTime.fetchStart > 0
-					? indResTime.responseEnd - indResTime.fetchStart
-					: undefined;
+				indResTime.fetchStart > 0 ? indResTime.responseEnd - indResTime.fetchStart : undefined;
 			reqStartToResponseEndTime =
 				indResTime.requestStart > 0
 					? indResTime.responseEnd - indResTime.requestStart
@@ -92,9 +91,10 @@ export function getW3CData(url: string, initiatorType: string) {
 	};
 }
 
-/*
+/**
  * An implementation of Promise.race that gives you the winner of the promise race.
  * If one of the promises is rejected before any other is resolved, this method will return the error/reason from that rejection.
+ * @internal
  */
 export async function promiseRaceWithWinner<T>(
 	promises: Promise<T>[],
@@ -106,6 +106,9 @@ export async function promiseRaceWithWinner<T>(
 	});
 }
 
+/**
+ * @internal
+ */
 export function validateMessages(
 	reason: string,
 	messages: ISequencedDocumentMessage[],
@@ -143,9 +146,7 @@ export function validateMessages(
 				details: JSON.stringify({
 					validLength: messages.length,
 					lastValidOpSeqNumber:
-						messages.length > 0
-							? messages[messages.length - 1].sequenceNumber
-							: undefined,
+						messages.length > 0 ? messages[messages.length - 1].sequenceNumber : undefined,
 					strict,
 				}),
 			});

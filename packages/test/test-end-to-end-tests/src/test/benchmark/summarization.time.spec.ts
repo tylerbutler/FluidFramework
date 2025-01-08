@@ -4,15 +4,25 @@
  */
 
 import { strict as assert } from "assert";
-import { IContainer } from "@fluidframework/container-definitions";
-import { ContainerRuntime, DefaultSummaryConfiguration } from "@fluidframework/container-runtime";
-import { channelsTreeName } from "@fluidframework/runtime-definitions";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import { ITestContainerConfig, ITestObjectProvider } from "@fluidframework/test-utils";
-import { describeNoCompat, ITestDataObject } from "@fluid-internal/test-version-utils";
-import { benchmark } from "@fluid-tools/benchmark";
-import { ISummaryBlob, SummaryType } from "@fluidframework/protocol-definitions";
+
 import { bufferToString } from "@fluid-internal/client-utils";
+import { ITestDataObject, describeCompat } from "@fluid-private/test-version-utils";
+import { benchmark } from "@fluid-tools/benchmark";
+import { IContainer } from "@fluidframework/container-definitions/internal";
+import {
+	ContainerRuntime,
+	DefaultSummaryConfiguration,
+} from "@fluidframework/container-runtime/internal";
+import {
+	ISummaryBlob,
+	SummaryType,
+	type SummaryObject,
+} from "@fluidframework/driver-definitions";
+import { channelsTreeName } from "@fluidframework/runtime-definitions/internal";
+import {
+	ITestContainerConfig,
+	ITestObjectProvider,
+} from "@fluidframework/test-utils/internal";
 
 const defaultDataStoreId = "default";
 const testContainerConfig: ITestContainerConfig = {
@@ -32,7 +42,7 @@ function readBlobContent(content: ISummaryBlob["content"]): unknown {
 	return JSON.parse(json);
 }
 
-describeNoCompat("Summarization - runtime benchmarks", (getTestObjectProvider) => {
+describeCompat("Summarization - runtime benchmarks", "NoCompat", (getTestObjectProvider) => {
 	let provider: ITestObjectProvider;
 	let mainContainer: IContainer;
 
@@ -46,18 +56,14 @@ describeNoCompat("Summarization - runtime benchmarks", (getTestObjectProvider) =
 	benchmark({
 		title: "Generate summary tree",
 		benchmarkFnAsync: async () => {
-			const defaultDataStore = await requestFluidObject<ITestDataObject>(
-				mainContainer,
-				defaultDataStoreId,
-			);
+			const defaultDataStore = (await mainContainer.getEntryPoint()) as ITestDataObject;
 			const containerRuntime = defaultDataStore._context.containerRuntime as ContainerRuntime;
 
 			await provider.ensureSynchronized();
 
 			const { stats, summary } = await containerRuntime.summarize({
 				runGC: false,
-				fullTree: false,
-				trackState: false,
+				fullTree: true,
 			});
 
 			// Validate stats
@@ -80,7 +86,7 @@ describeNoCompat("Summarization - runtime benchmarks", (getTestObjectProvider) =
 				summary.tree[".metadata"]?.type === SummaryType.Blob,
 				"Expected .metadata blob in summary root.",
 			);
-			const metadata = readBlobContent(summary.tree[".metadata"].content) as Record<
+			const metadata = readBlobContent(summary.tree[".metadata"]?.content) as Record<
 				string,
 				unknown
 			>;
@@ -93,13 +99,14 @@ describeNoCompat("Summarization - runtime benchmarks", (getTestObjectProvider) =
 				"Unexpected metadata blob disableIsolatedChannels",
 			);
 
-			const channelsTree = summary.tree[channelsTreeName];
+			const channelsTree: SummaryObject | undefined = summary.tree[channelsTreeName];
 			assert(
 				channelsTree?.type === SummaryType.Tree,
 				"Expected .channels tree in summary root.",
 			);
 
-			const defaultDataStoreNode = channelsTree.tree[defaultDataStore._context.id];
+			const defaultDataStoreNode: SummaryObject | undefined =
+				channelsTree.tree[defaultDataStore._context.id];
 			assert(
 				defaultDataStoreNode?.type === SummaryType.Tree,
 				"Expected default data store tree in summary.",
@@ -109,9 +116,10 @@ describeNoCompat("Summarization - runtime benchmarks", (getTestObjectProvider) =
 				defaultDataStoreNode.tree[".component"]?.type === SummaryType.Blob,
 				"Expected .component blob in default data store summary tree.",
 			);
-			const dataStoreChannelsTree = defaultDataStoreNode.tree[channelsTreeName];
+			const dataStoreChannelsTree: SummaryObject | undefined =
+				defaultDataStoreNode.tree[channelsTreeName];
 			const attributes = readBlobContent(
-				defaultDataStoreNode.tree[".component"].content,
+				defaultDataStoreNode.tree[".component"]?.content,
 			) as Record<string, unknown>;
 			assert(
 				attributes.snapshotFormatVersion === undefined,
@@ -130,7 +138,7 @@ describeNoCompat("Summarization - runtime benchmarks", (getTestObjectProvider) =
 				"Expected .channels tree in default data store.",
 			);
 
-			const defaultDdsNode = dataStoreChannelsTree.tree.root;
+			const defaultDdsNode: SummaryObject | undefined = dataStoreChannelsTree.tree.root;
 			assert(
 				defaultDdsNode?.type === SummaryType.Tree,
 				"Expected default root DDS in summary.",

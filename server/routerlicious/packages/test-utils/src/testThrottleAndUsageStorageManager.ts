@@ -11,6 +11,7 @@ import {
 
 /**
  * In-memory cache implementation of IThrottleManager for testing
+ * @internal
  */
 export class TestThrottleAndUsageStorageManager implements IThrottleAndUsageStorageManager {
 	private readonly throttlingCache: { [key: string]: IThrottlingMetrics } = {};
@@ -20,7 +21,7 @@ export class TestThrottleAndUsageStorageManager implements IThrottleAndUsageStor
 		this.throttlingCache[id] = throttleMetric;
 	}
 
-	async getThrottlingMetric(id: string): Promise<IThrottlingMetrics> {
+	async getThrottlingMetric(id: string): Promise<IThrottlingMetrics | undefined> {
 		return this.throttlingCache[id];
 	}
 

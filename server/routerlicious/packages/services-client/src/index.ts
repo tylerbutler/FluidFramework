@@ -9,17 +9,29 @@ export {
 	validateTokenClaims,
 	validateTokenClaimsExpiration,
 } from "./auth";
-export { convertSortedNumberArrayToRanges } from "./array";
-export { CorrelationIdHeaderName, DriverVersionHeaderName, LatestSummaryId } from "./constants";
+export {
+	convertSortedNumberArrayToRanges,
+	dedupeSortedArray,
+	mergeKArrays,
+	mergeSortedArrays,
+} from "./array";
+export {
+	CorrelationIdHeaderName,
+	DriverVersionHeaderName,
+	LatestSummaryId,
+	TelemetryContextHeaderName,
+} from "./constants";
 export {
 	createFluidServiceNetworkError,
 	INetworkErrorDetails,
+	InternalErrorCode,
 	isNetworkError,
 	NetworkError,
 	throwFluidServiceNetworkError,
 } from "./error";
 export { choose, getRandomName } from "./generateNames";
 export { GitManager } from "./gitManager";
+export { Heap, IHeapComparator } from "./heap";
 export { getAuthorizationTokenFromCredentials, Historian, ICredentials } from "./historian";
 export { IAlfredTenant, ISession } from "./interfaces";
 export { promiseTimeout } from "./promiseTimeout";
@@ -42,6 +54,7 @@ export {
 } from "./scribeHelper";
 export {
 	ICreateRefParamsExternal,
+	IExternalWriterConfig,
 	IGetRefParamsExternal,
 	IGitCache,
 	IGitManager,

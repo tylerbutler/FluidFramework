@@ -5,13 +5,15 @@
 
 import React from "react";
 
-import { IDiceRoller } from "./interface";
+import { IDiceRoller } from "./interface.js";
 
 interface IDiceRollerViewProps {
 	model: IDiceRoller;
 }
 
-export const DiceRollerView: React.FC<IDiceRollerViewProps> = (props: IDiceRollerViewProps) => {
+export const DiceRollerView: React.FC<IDiceRollerViewProps> = (
+	props: IDiceRollerViewProps,
+) => {
 	const [diceValue, setDiceValue] = React.useState(props.model.value);
 
 	React.useEffect(() => {

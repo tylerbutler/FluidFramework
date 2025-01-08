@@ -3,34 +3,32 @@
  * Licensed under the MIT License.
  */
 
-// eslint-disable-next-line import/no-deprecated
-import { defaultFluidObjectRequestHandler } from "@fluidframework/aqueduct";
+import { IFluidHandle, IRequest, IResponse } from "@fluidframework/core-interfaces";
+import { assert } from "@fluidframework/core-utils/internal";
 import {
-	IRequest,
-	IResponse,
-	IFluidHandle,
-	FluidObject,
-	IProvideFluidRouter,
-} from "@fluidframework/core-interfaces";
-import {
-	FluidObjectHandle,
 	FluidDataStoreRuntime,
+	FluidObjectHandle,
 	mixinRequestHandler,
-} from "@fluidframework/datastore";
-import { SharedMap, ISharedMap } from "@fluidframework/map";
+} from "@fluidframework/datastore/internal";
 import {
+	IChannelFactory,
+	IFluidDataStoreRuntime,
+} from "@fluidframework/datastore-definitions/internal";
+import { ISharedMap, SharedMap } from "@fluidframework/map/internal";
+import {
+	IFluidDataStoreChannel,
 	IFluidDataStoreContext,
 	IFluidDataStoreFactory,
-	IFluidDataStoreChannel,
-} from "@fluidframework/runtime-definitions";
-import { IFluidDataStoreRuntime, IChannelFactory } from "@fluidframework/datastore-definitions";
-import { assert } from "@fluidframework/core-utils";
-import { ITestFluidObject } from "./interfaces";
+} from "@fluidframework/runtime-definitions/internal";
+import { create404Response } from "@fluidframework/runtime-utils/internal";
+
+import { ITestFluidObject } from "./interfaces.js";
 
 /**
  * A test Fluid object that will create a shared object for each key-value pair in the factoryEntries passed to load.
  * The shared objects can be retrieved by passing the key of the entry to getSharedObject.
  * It exposes the IFluidDataStoreContext and IFluidDataStoreRuntime.
+ * @internal
  */
 export class TestFluidObject implements ITestFluidObject {
 	public get ITestFluidObject() {
@@ -38,13 +36,6 @@ export class TestFluidObject implements ITestFluidObject {
 	}
 
 	public get IFluidLoadable() {
-		return this;
-	}
-
-	/**
-	 * @deprecated - Will be removed in future major release. Migrate all usage of IFluidRouter to the "entryPoint" pattern. Refer to Removing-IFluidRouter.md
-	 */
-	public get IFluidRouter() {
 		return this;
 	}
 
@@ -84,19 +75,17 @@ export class TestFluidObject implements ITestFluidObject {
 		for (const key of this.factoryEntriesMap.keys()) {
 			if (key === id) {
 				const handle = this.root.get<IFluidHandle>(id);
-				return handle?.get() as unknown as T;
+				return handle?.get() as Promise<T>;
 			}
 		}
 
 		throw new Error(`Shared object with id ${id} not found.`);
 	}
 
-	/**
-	 * @deprecated - Will be removed in future major release. Migrate all usage of IFluidRouter to the "entryPoint" pattern. Refer to Removing-IFluidRouter.md
-	 */
 	public async request(request: IRequest): Promise<IResponse> {
-		// eslint-disable-next-line import/no-deprecated
-		return defaultFluidObjectRequestHandler(this, request);
+		return request.url === "" || request.url === "/" || request.url.startsWith("/?")
+			? { mimeType: "fluid/object", status: 200, value: this }
+			: create404Response(request);
 	}
 
 	public async initialize(existing: boolean) {
@@ -104,15 +93,10 @@ export class TestFluidObject implements ITestFluidObject {
 			if (!existing) {
 				this.root = SharedMap.create(this.runtime, "root");
 
-				this.factoryEntriesMap.forEach(
-					(sharedObjectFactory: IChannelFactory, key: string) => {
-						const sharedObject = this.runtime.createChannel(
-							key,
-							sharedObjectFactory.type,
-						);
-						this.root.set(key, sharedObject.handle);
-					},
-				);
+				this.factoryEntriesMap.forEach((sharedObjectFactory: IChannelFactory, key: string) => {
+					const sharedObject = this.runtime.createChannel(key, sharedObjectFactory.type);
+					this.root.set(key, sharedObject.handle);
+				});
 
 				this.root.bindToContext();
 			}
@@ -128,6 +112,9 @@ export class TestFluidObject implements ITestFluidObject {
 	}
 }
 
+/**
+ * @internal
+ */
 export type ChannelFactoryRegistry = Iterable<[string | undefined, IChannelFactory]>;
 
 /**
@@ -159,6 +146,7 @@ export type ChannelFactoryRegistry = Iterable<[string | undefined, IChannelFacto
  * `describeCompat` aims to provide:
  * `SharedMap`s always reference the current version of SharedMap.
  * AB#4670 tracks improving this situation.
+ * @internal
  */
 export class TestFluidObjectFactory implements IFluidDataStoreFactory {
 	public get IFluidDataStoreFactory() {
@@ -202,12 +190,13 @@ export class TestFluidObjectFactory implements IFluidDataStoreFactory {
 
 		const runtimeClass = mixinRequestHandler(
 			async (request: IRequest, rt: FluidDataStoreRuntime) => {
-				const maybeRouter: FluidObject<IProvideFluidRouter> = await rt.entryPoint.get();
+				// The provideEntryPoint callback below always returns TestFluidObject.
+				const dataObject = await rt.entryPoint.get();
 				assert(
-					maybeRouter.IFluidRouter !== undefined,
+					dataObject instanceof TestFluidObject,
 					"entryPoint should have been initialized by now",
 				);
-				return maybeRouter.IFluidRouter.request(request);
+				return dataObject.request(request);
 			},
 		);
 

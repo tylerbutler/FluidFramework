@@ -10,6 +10,9 @@ import {
 	IQueuedMessage,
 } from "@fluidframework/server-services-core";
 
+/**
+ * @internal
+ */
 export class LocalContext implements IContext {
 	constructor(public readonly log: ILogger | undefined) {}
 
@@ -18,6 +21,14 @@ export class LocalContext implements IContext {
 	}
 
 	public error(error: any, errorData: IContextErrorData) {
+		return;
+	}
+
+	public pause(offset: number, reason?: any) {
+		return;
+	}
+
+	public resume() {
 		return;
 	}
 }

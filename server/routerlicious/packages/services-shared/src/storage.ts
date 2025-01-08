@@ -36,23 +36,29 @@ import { toUtf8 } from "@fluidframework/common-utils";
 import {
 	BaseTelemetryProperties,
 	CommonProperties,
+	getLumberBaseProperties,
 	LumberEventName,
 	Lumberjack,
 } from "@fluidframework/server-services-telemetry";
 
+/**
+ * @internal
+ */
 export class DocumentStorage implements IDocumentStorage {
 	constructor(
 		private readonly documentRepository: IDocumentRepository,
 		private readonly tenantManager: ITenantManager,
 		private readonly enableWholeSummaryUpload: boolean,
 		private readonly opsCollection: ICollection<ISequencedOperationMessage>,
-		private readonly storageNameAssigner: IStorageNameAllocator,
+		private readonly storageNameAssigner: IStorageNameAllocator | undefined,
+		private readonly ephemeralDocumentTTLSec: number = 60 * 60 * 24, // 24 hours in seconds
 	) {}
 
 	/**
 	 * Retrieves database details for the given document
 	 */
-	public async getDocument(tenantId: string, documentId: string): Promise<IDocument> {
+	// eslint-disable-next-line @rushstack/no-new-null
+	public async getDocument(tenantId: string, documentId: string): Promise<IDocument | null> {
 		return this.documentRepository.readOne({ tenantId, documentId });
 	}
 
@@ -129,6 +135,7 @@ export class DocumentStorage implements IDocumentStorage {
 		values: [string, ICommittedProposal][],
 		enableDiscovery: boolean = false,
 		isEphemeralContainer: boolean = false,
+		messageBrokerId?: string,
 	): Promise<IDocumentDetails> {
 		const storageName = await this.storageNameAssigner?.assign(tenantId, documentId);
 		const gitManager = await this.tenantManager.getTenantGitManager(
@@ -141,12 +148,11 @@ export class DocumentStorage implements IDocumentStorage {
 
 		const storageNameAssignerEnabled = !!this.storageNameAssigner;
 		const lumberjackProperties = {
-			[BaseTelemetryProperties.tenantId]: tenantId,
-			[BaseTelemetryProperties.documentId]: documentId,
+			...getLumberBaseProperties(documentId, tenantId),
 			storageName,
 			enableWholeSummaryUpload: this.enableWholeSummaryUpload,
 			storageNameAssignerExists: storageNameAssignerEnabled,
-			isEphemeralContainer,
+			[CommonProperties.isEphemeralContainer]: isEphemeralContainer,
 		};
 		if (storageNameAssignerEnabled && !storageName) {
 			// Using a warning instead of an error just in case there are some outliers that we don't know about.
@@ -221,7 +227,6 @@ export class DocumentStorage implements IDocumentStorage {
 			signalClientConnectionNumber: 0,
 			lastSentMSN: 0,
 			nackMessages: undefined,
-			successfullyStartedLambdas: [],
 			checkpointTimestamp: Date.now(),
 		};
 
@@ -245,6 +250,8 @@ export class DocumentStorage implements IDocumentStorage {
 			// summary is a service summary. However, initial summary _is_ a valid parent in this scenario.
 			validParentSummaries: [initialSummaryVersionId],
 			isCorrupt: false,
+			protocolHead: undefined,
+			checkpointTimestamp: Date.now(),
 		};
 
 		const session: ISession = {
@@ -254,6 +261,11 @@ export class DocumentStorage implements IDocumentStorage {
 			isSessionAlive: true,
 			isSessionActive: false,
 		};
+
+		// if undefined and added directly to the session object - will be serialized as null in mongo which is undesirable
+		if (messageBrokerId) {
+			session.messageBrokerId = messageBrokerId;
+		}
 
 		Lumberjack.info(
 			`Create session with enableDiscovery as ${enableDiscovery}: ${JSON.stringify(session)}`,
@@ -265,23 +277,31 @@ export class DocumentStorage implements IDocumentStorage {
 			lumberjackProperties,
 		);
 
+		const document: IDocument = {
+			createTime: Date.now(),
+			deli: JSON.stringify(deli),
+			documentId,
+			session,
+			scribe: JSON.stringify(scribe),
+			tenantId,
+			version: "0.1",
+			storageName,
+			isEphemeralContainer,
+		};
+		const documentDbValue: IDocument & { ttl?: number } = {
+			...document,
+		};
+		if (isEphemeralContainer) {
+			documentDbValue.ttl = this.ephemeralDocumentTTLSec;
+		}
+
 		try {
 			const result = await this.documentRepository.findOneOrCreate(
 				{
 					documentId,
 					tenantId,
 				},
-				{
-					createTime: Date.now(),
-					deli: JSON.stringify(deli),
-					documentId,
-					session,
-					scribe: JSON.stringify(scribe),
-					tenantId,
-					version: "0.1",
-					storageName,
-					isEphemeralContainer,
-				},
+				documentDbValue,
 			);
 			createDocumentCollectionMetric.setProperty(
 				CommonProperties.isEphemeralContainer,
@@ -295,10 +315,10 @@ export class DocumentStorage implements IDocumentStorage {
 		}
 	}
 
-	public async getLatestVersion(tenantId: string, documentId: string): Promise<ICommit> {
+	public async getLatestVersion(tenantId: string, documentId: string): Promise<ICommit | null> {
 		const versions = await this.getVersions(tenantId, documentId, 1);
 		if (!versions.length) {
-			return null as unknown as ICommit;
+			return null;
 		}
 
 		const latest = versions[0];
@@ -340,7 +360,7 @@ export class DocumentStorage implements IDocumentStorage {
 				cache: {
 					blobs: [],
 					commits: [],
-					refs: { [documentId]: null as unknown as string },
+					refs: {},
 					trees: [],
 				},
 				code: null as unknown as string,

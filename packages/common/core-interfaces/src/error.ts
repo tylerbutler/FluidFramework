@@ -3,10 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryBaseProperties } from "./index";
+import type { ITelemetryBaseProperties } from "./index.js";
 
 /**
  * Error types the Fluid Framework may report.
+ * @legacy
+ * @alpha
  */
 export const FluidErrorTypes = {
 	/**
@@ -34,6 +36,11 @@ export const FluidErrorTypes = {
 	 */
 	usageError: "usageError",
 } as const;
+
+/**
+ * @legacy
+ * @alpha
+ */
 export type FluidErrorTypes = (typeof FluidErrorTypes)[keyof typeof FluidErrorTypes];
 
 /**
@@ -45,6 +52,7 @@ export type FluidErrorTypes = (typeof FluidErrorTypes)[keyof typeof FluidErrorTy
  * those from container-definitions. Once fully migrated, this will be a base interface for all errors and
  * warnings emitted by the Fluid Framework. Currently only the container layer is using IErrorBase.
  * Runtime and others will follow soon.
+ * @public
  */
 export interface IErrorBase extends Partial<Error> {
 	/**
@@ -87,6 +95,7 @@ export interface IErrorBase extends Partial<Error> {
 
 /**
  * Generic wrapper for an unrecognized/uncategorized error object
+ * @internal
  */
 export interface IGenericError extends IErrorBase {
 	/**
@@ -101,6 +110,7 @@ export interface IGenericError extends IErrorBase {
 
 /**
  * Error indicating an API is being used improperly resulting in an invalid operation.
+ * @internal
  */
 export interface IUsageError extends IErrorBase {
 	/**
@@ -111,6 +121,8 @@ export interface IUsageError extends IErrorBase {
 
 /**
  * Warning emitted when requests to storage are being throttled
+ * @legacy
+ * @alpha
  */
 export interface IThrottlingWarning extends IErrorBase {
 	/**

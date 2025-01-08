@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { ISnapshotTree } from "@fluidframework/protocol-definitions";
+import { ISnapshotTree } from "@fluidframework/driver-definitions/internal";
 
 /*
  *
@@ -16,6 +16,7 @@ export interface IWholeFlatSnapshotTreeEntryTree {
 	type: "tree";
 	// Indicates that this tree entry is unreferenced. If this is not present, the tree entry is considered referenced.
 	unreferenced?: true;
+	groupId?: string;
 }
 
 export interface IWholeFlatSnapshotTreeEntryBlob {
@@ -58,3 +59,10 @@ export interface INormalizedWholeSnapshot {
 	sequenceNumber: number | undefined;
 	id: string;
 }
+
+/**
+ * Error code for when the service drains a cluster to which the socket connection is connected to and it disconnects
+ * all the clients in that cluster.
+ * @internal
+ */
+export const R11sServiceClusterDrainingErrorCode = "ClusterDraining";

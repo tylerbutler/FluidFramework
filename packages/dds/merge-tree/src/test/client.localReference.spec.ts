@@ -2,26 +2,41 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { strict as assert } from "assert";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { Client } from "../client";
-import { toRemovalInfo } from "../mergeTreeNodes";
-import { MergeTreeDeltaType, ReferenceType } from "../ops";
-import { TextSegment } from "../textSegment";
-import { DetachedReferencePosition } from "../referencePositions";
-import { LocalReferencePosition, SlidingPreference } from "../localReference";
-import { getSlideToSegoff } from "../mergeTree";
-import { createClientsAtInitialState } from "./testClientLogger";
-import { TestClient } from "./";
+import { strict as assert } from "node:assert";
+
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+
+import { Client } from "../client.js";
+import {
+	LocalReferencePosition,
+	SlidingPreference,
+	setValidateRefCount,
+} from "../localReference.js";
+import { getSlideToSegoff } from "../mergeTree.js";
+import { type ISegmentPrivate } from "../mergeTreeNodes.js";
+import { TrackingGroup, UnorderedTrackingGroup } from "../mergeTreeTracking.js";
+import { MergeTreeDeltaType, ReferenceType } from "../ops.js";
+import { DetachedReferencePosition } from "../referencePositions.js";
+import { toRemovalInfo } from "../segmentInfos.js";
+import { TextSegment } from "../textSegment.js";
+
+import { TestClient } from "./testClient.js";
+import { createClientsAtInitialState } from "./testClientLogger.js";
+import { validateRefCount } from "./testUtils.js";
 
 function getSlideOnRemoveReferencePosition(
 	client: Client,
 	pos: number,
 	op: ISequencedDocumentMessage,
-) {
-	let segoff = client.getContainingSegment(pos, {
+): {
+	segment: ISegmentPrivate | undefined;
+	offset: number | undefined;
+} {
+	let segoff = client.getContainingSegment<ISegmentPrivate>(pos, {
 		referenceSequenceNumber: op.referenceSequenceNumber,
 		clientId: op.clientId,
 	});
@@ -30,6 +45,14 @@ function getSlideOnRemoveReferencePosition(
 }
 
 describe("MergeTree.Client", () => {
+	beforeEach(() => {
+		setValidateRefCount(validateRefCount);
+	});
+
+	afterEach(() => {
+		setValidateRefCount(undefined);
+	});
+
 	it("Remove segment of non-sliding local reference", () => {
 		const client1 = new TestClient();
 		const client2 = new TestClient();
@@ -47,7 +70,7 @@ describe("MergeTree.Client", () => {
 			client2.applyMsg(insert);
 		}
 
-		const segInfo = client1.getContainingSegment(2);
+		const segInfo = client1.getContainingSegment<ISegmentPrivate>(2);
 		const c1LocalRef = client1.createLocalReferencePosition(
 			segInfo.segment!,
 			segInfo.offset,
@@ -103,7 +126,7 @@ describe("MergeTree.Client", () => {
 			client2.applyMsg(insert);
 		}
 
-		const segInfo = client1.getContainingSegment(2);
+		const segInfo = client1.getContainingSegment<ISegmentPrivate>(2);
 		const c1LocalRef = client1.createLocalReferencePosition(
 			segInfo.segment!,
 			segInfo.offset,
@@ -150,7 +173,7 @@ describe("MergeTree.Client", () => {
 			client2.applyMsg(insert);
 		}
 
-		const segInfo = client1.getContainingSegment(2);
+		const segInfo = client1.getContainingSegment<ISegmentPrivate>(2);
 		const c1LocalRef = client1.createLocalReferencePosition(
 			segInfo.segment!,
 			segInfo.offset,
@@ -168,7 +191,10 @@ describe("MergeTree.Client", () => {
 		client1.applyMsg(remove);
 		client2.applyMsg(remove);
 
-		assert.equal(client1.localReferencePositionToPosition(c1LocalRef), client2.getLength() - 1);
+		assert.equal(
+			client1.localReferencePositionToPosition(c1LocalRef),
+			client2.getLength() - 1,
+		);
 	});
 
 	it("Remove segments from end with sliding local reference", () => {
@@ -180,7 +206,7 @@ describe("MergeTree.Client", () => {
 		insert.minimumSequenceNumber = seq - 1;
 		client1.applyMsg(insert);
 
-		const segInfo = client1.getContainingSegment(3);
+		const segInfo = client1.getContainingSegment<ISegmentPrivate>(3);
 		const c1LocalRef = client1.createLocalReferencePosition(
 			segInfo.segment!,
 			segInfo.offset,
@@ -292,7 +318,7 @@ describe("MergeTree.Client", () => {
 			client2.applyMsg(insert);
 		}
 
-		const segInfo = client1.getContainingSegment(2);
+		const segInfo = client1.getContainingSegment<ISegmentPrivate>(2);
 		const c1LocalRef = client1.createLocalReferencePosition(
 			segInfo.segment!,
 			segInfo.offset,
@@ -314,7 +340,7 @@ describe("MergeTree.Client", () => {
 			client1.localReferencePositionToPosition(c1LocalRef),
 			DetachedReferencePosition,
 		);
-		assert.notEqual(c1LocalRef.getSegment(), undefined);
+		assert.equal(c1LocalRef.getSegment(), undefined);
 	});
 
 	it("References can have offsets on removed segment", () => {
@@ -329,14 +355,14 @@ describe("MergeTree.Client", () => {
 		client1.applyMsg(insert1);
 		client2.applyMsg(insert1);
 
-		const segInfo1 = client1.getContainingSegment(1);
+		const segInfo1 = client1.getContainingSegment<ISegmentPrivate>(1);
 		const LocalRef1 = client1.createLocalReferencePosition(
 			segInfo1.segment!,
 			segInfo1.offset,
 			ReferenceType.SlideOnRemove,
 			undefined,
 		);
-		const segInfo3 = client1.getContainingSegment(3);
+		const segInfo3 = client1.getContainingSegment<ISegmentPrivate>(3);
 		const LocalRef2 = client1.createLocalReferencePosition(
 			segInfo3.segment!,
 			segInfo3.offset,
@@ -349,8 +375,8 @@ describe("MergeTree.Client", () => {
 		assert.equal(client1.localReferencePositionToPosition(LocalRef1), 1);
 		assert.equal(client1.localReferencePositionToPosition(LocalRef2), 5);
 
-		const c2SegInfo1 = client2.getContainingSegment(1);
-		const c2SegInfo3 = client2.getContainingSegment(3);
+		const c2SegInfo1 = client2.getContainingSegment<ISegmentPrivate>(1);
+		const c2SegInfo3 = client2.getContainingSegment<ISegmentPrivate>(3);
 		const remove = client2.makeOpMessage(
 			client2.removeRangeLocal(0, client2.getLength()),
 			++seq,
@@ -403,7 +429,7 @@ describe("MergeTree.Client", () => {
 		const opFromBeforeRemovePerspective = client2.makeOpMessage(
 			client2.insertTextLocal(3, "X"),
 		);
-		const { segment, offset } = client1.getContainingSegment(0, {
+		const { segment, offset } = client1.getContainingSegment<ISegmentPrivate>(0, {
 			referenceSequenceNumber: opFromBeforeRemovePerspective.referenceSequenceNumber,
 			clientId: opFromBeforeRemovePerspective.clientId,
 		});
@@ -430,7 +456,7 @@ describe("MergeTree.Client", () => {
 		client1.applyMsg(insert1);
 		client2.applyMsg(insert1);
 
-		const segInfo = client1.getContainingSegment(4);
+		const segInfo = client1.getContainingSegment<ISegmentPrivate>(4);
 		const localRef = client1.createLocalReferencePosition(
 			segInfo.segment!,
 			segInfo.offset,
@@ -487,9 +513,9 @@ describe("MergeTree.Client", () => {
 		messages.push(clients.A.makeOpMessage(clients.A.insertTextLocal(0, "0123456789"), ++seq));
 		// initialize the local reference collection on the segment, but keep it empty
 		{
-			const segInfo = clients.A.getContainingSegment(9);
+			const segInfo = clients.A.getContainingSegment<ISegmentPrivate>(9);
 			const segment = segInfo.segment;
-			assert(TextSegment.is(segment!));
+			assert(segment !== undefined && TextSegment.is(segment));
 			assert.strictEqual(segment.text[segInfo.offset!], "9");
 			const localRef = clients.A.createLocalReferencePosition(
 				segment,
@@ -504,9 +530,9 @@ describe("MergeTree.Client", () => {
 
 		// add a local reference to the newly inserted segment that caused the split
 		{
-			const segInfo = clients.A.getContainingSegment(6);
+			const segInfo = clients.A.getContainingSegment<ISegmentPrivate>(6);
 			const segment = segInfo.segment;
-			assert(TextSegment.is(segment!));
+			assert(segment !== undefined && TextSegment.is(segment));
 			assert.strictEqual(segment.text[segInfo.offset!], "B");
 			clients.A.createLocalReferencePosition(
 				segment,
@@ -518,11 +544,11 @@ describe("MergeTree.Client", () => {
 		// apply all the ops
 		while (messages.length > 0) {
 			const msg = messages.shift()!;
-			clients.all.forEach((c) => c.applyMsg(msg));
+			for (const c of clients.all) c.applyMsg(msg);
 		}
 
 		// regression: would fire 0x2be on zamboni during segment append
-		clients.all.forEach((c) => c.updateMinSeq(seq));
+		for (const c of clients.all) c.updateMinSeq(seq);
 	});
 
 	describe("avoids removing StayOnRemove references on local + remote concurrent delete", () => {
@@ -539,21 +565,21 @@ describe("MergeTree.Client", () => {
 			client.applyMessages(2);
 			assert.equal(client.getText(), "AB");
 			localRefA = client.createLocalReferencePosition(
-				client.getContainingSegment(0).segment!,
+				client.getContainingSegment<ISegmentPrivate>(0).segment!,
 				0,
 				ReferenceType.StayOnRemove,
 				{},
 			);
 			localRefB = client.createLocalReferencePosition(
-				client.getContainingSegment(1).segment!,
+				client.getContainingSegment<ISegmentPrivate>(1).segment!,
 				0,
 				ReferenceType.StayOnRemove,
 				{},
 			);
 			for (const ref of [localRefA, localRefB]) {
 				ref.callbacks = {
-					beforeSlide: () => assert.fail("Unexpected slide"),
-					afterSlide: () => assert.fail("Unexpected slide"),
+					beforeSlide: (): void => assert.fail("Unexpected slide"),
+					afterSlide: (): void => assert.fail("Unexpected slide"),
 				};
 			}
 		});
@@ -592,7 +618,7 @@ describe("MergeTree.Client", () => {
 		client1.applyMsg(insert1);
 		client2.applyMsg(insert1);
 
-		const segInfo = client1.getContainingSegment(3);
+		const segInfo = client1.getContainingSegment<ISegmentPrivate>(3);
 
 		const localRef = client1.createLocalReferencePosition(
 			segInfo.segment!,
@@ -618,5 +644,117 @@ describe("MergeTree.Client", () => {
 		assert.equal(client1.localReferencePositionToPosition(localRef), 0);
 		assert.equal(client2.getText(), "aghidef");
 		assert.equal(client2.localReferencePositionToPosition(localRef), 0);
+	});
+
+	const tgCases = [
+		{
+			name: "when the ref is not in a tracking group",
+			addRef: (): void => {},
+		},
+		{
+			name: "when the ref is in a TrackingGroup",
+			addRef: (ref: LocalReferencePosition): void => {
+				const tg = new TrackingGroup();
+				tg.link(ref);
+			},
+		},
+		{
+			name: "when the ref is in an UnorderedTrackingGroup",
+			addRef: (ref: LocalReferencePosition): void => {
+				const tg = new UnorderedTrackingGroup();
+				tg.link(ref);
+			},
+		},
+	];
+
+	describe("doesn't crash for remove ref then link to undefined", () => {
+		for (const { name, addRef } of tgCases) {
+			it(name, () => {
+				const client1 = new TestClient();
+				const client2 = new TestClient();
+
+				client1.startOrUpdateCollaboration("1");
+				client2.startOrUpdateCollaboration("2");
+
+				let seq = 0;
+				const insert1 = client1.makeOpMessage(client1.insertTextLocal(0, "abcdef"), ++seq);
+				client1.applyMsg(insert1);
+				client2.applyMsg(insert1);
+
+				const segInfo = client1.getContainingSegment<ISegmentPrivate>(3);
+
+				assert(segInfo.segment);
+
+				const localRef = client1.createLocalReferencePosition(
+					segInfo.segment,
+					segInfo.offset,
+					ReferenceType.SlideOnRemove,
+					undefined,
+				);
+				addRef(localRef);
+
+				assert.equal(localRef.getSegment(), segInfo.segment);
+
+				assert(segInfo.segment.localRefs);
+				assert(!segInfo.segment.localRefs.empty);
+
+				segInfo.segment.localRefs.removeLocalRef(localRef);
+				assert(segInfo.segment.localRefs.empty);
+				// Cast is necessary because LocalReference is not exported, so we can't directly call link.
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+				(localRef as any).link(undefined, 0, undefined);
+				assert(segInfo.segment.localRefs.empty);
+
+				assert.equal(segInfo.segment.localRefs.empty, true);
+				assert.equal(segInfo.segment.localRefs.has(localRef), false);
+				assert.equal(localRef.getSegment(), undefined);
+				assert.equal(localRef.getOffset(), 0);
+			});
+		}
+	});
+
+	describe("doesn't crash for link to undefined then remove ref", () => {
+		for (const { name, addRef } of tgCases) {
+			it(name, () => {
+				const client1 = new TestClient();
+				const client2 = new TestClient();
+
+				client1.startOrUpdateCollaboration("1");
+				client2.startOrUpdateCollaboration("2");
+
+				let seq = 0;
+				const insert1 = client1.makeOpMessage(client1.insertTextLocal(0, "abcdef"), ++seq);
+				client1.applyMsg(insert1);
+				client2.applyMsg(insert1);
+
+				const segInfo = client1.getContainingSegment<ISegmentPrivate>(3);
+
+				assert(segInfo.segment);
+
+				const localRef = client1.createLocalReferencePosition(
+					segInfo.segment,
+					segInfo.offset,
+					ReferenceType.SlideOnRemove,
+					undefined,
+				);
+				addRef(localRef);
+
+				assert.equal(localRef.getSegment(), segInfo.segment);
+
+				assert(segInfo.segment.localRefs);
+				assert(!segInfo.segment.localRefs.empty);
+				// Cast is necessary because LocalReference is not exported, so we can't directly call link
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+				(localRef as any).link(undefined, 0, undefined);
+				assert(segInfo.segment.localRefs.empty);
+				segInfo.segment.localRefs.removeLocalRef(localRef);
+				assert(segInfo.segment.localRefs.empty);
+
+				assert.equal(segInfo.segment.localRefs.empty, true);
+				assert.equal(segInfo.segment.localRefs.has(localRef), false);
+				assert.equal(localRef.getSegment(), undefined);
+				assert.equal(localRef.getOffset(), 0);
+			});
+		}
 	});
 });

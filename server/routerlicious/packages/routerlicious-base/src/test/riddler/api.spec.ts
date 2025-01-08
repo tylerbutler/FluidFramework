@@ -16,6 +16,8 @@ import {
 import * as riddlerApp from "../../riddler/app";
 import Sinon from "sinon";
 import { ITenantDocument } from "../../riddler";
+import { TenantKeyGenerator } from "@fluidframework/server-services-utils";
+import { StartupCheck } from "@fluidframework/server-services-shared";
 
 const documentsCollectionName = "testDocuments";
 const deltasCollectionName = "testDeltas";
@@ -26,7 +28,7 @@ class TestSecretManager implements ISecretManager {
 	constructor(private readonly encryptionKey: string) {}
 
 	public getLatestKeyVersion(): EncryptionKeyVersion {
-		return undefined;
+		return EncryptionKeyVersion.key2022;
 	}
 
 	public decryptSecret(encryptedSecret: string): string {
@@ -89,6 +91,8 @@ describe("Routerlicious", () => {
 					Sinon.useFakeTimers();
 					const testFetchTenantKeyMetricIntervalMs = 60000;
 					const testRiddlerStorageRequestMetricIntervalMs = 60000;
+					const tenantKeyGenerator = new TenantKeyGenerator();
+					const startupCheck = new StartupCheck();
 
 					app = riddlerApp.create(
 						defaultTenantsCollection,
@@ -99,6 +103,8 @@ describe("Routerlicious", () => {
 						testSecretManager,
 						testFetchTenantKeyMetricIntervalMs,
 						testRiddlerStorageRequestMetricIntervalMs,
+						tenantKeyGenerator,
+						startupCheck,
 					);
 					supertest = request(app);
 				});
@@ -127,6 +133,12 @@ describe("Routerlicious", () => {
 				});
 				it("PUT /tenants/:id/customData", async () => {
 					await assertCorrelationId(`/api/tenants/${testTenantId}/customData`, "put");
+				});
+				it("PUT /tenants/:id/keyAccess", async () => {
+					await assertCorrelationId(`/api/tenants/${testTenantId}/keyAccess`, "put");
+				});
+				it("PUT /tenants/:id/accesstoken", async () => {
+					await assertCorrelationId(`/api/tenants/${testTenantId}/accesstoken`, "put");
 				});
 				it("PUT /tenants/:id/key", async () => {
 					await assertCorrelationId(`/api/tenants/${testTenantId}/key`, "put");

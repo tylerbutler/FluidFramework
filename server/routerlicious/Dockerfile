@@ -3,7 +3,9 @@
 
 # DisableDockerDetector "No feasible secure solution for OSS repos yet"
 
-FROM node:18.17.1-buster-slim AS base
+# Use a direct sha256 hash to ensure we are always using the same version of the base image.
+# This avoids throttling issues with Docker Hub by using an image baked into the pipeline build image.
+FROM node:18.17.1-buster-slim@sha256:cb2a746612c2564d3bd0f871174618337af9d0f4d895df6a623fd7a69ca6e5bd AS base
 
 # node-gyp dependencies
 RUN apt-get update && apt-get install -y \
@@ -24,7 +26,7 @@ RUN chmod +x /tini
 
 # There are some packages outside the routerlicious folder that we need to build, so we copy the package to the /usr directory
 WORKDIR /usr
-COPY --from=root tools/changelog-generator-wrapper/package*.json tools/changelog-generator-wrapper/
+COPY --from=root packages/tools/changelog-generator-wrapper/package*.json packages/tools/changelog-generator-wrapper/
 
 # Copy over and build the server
 WORKDIR /usr/src/server
@@ -33,6 +35,8 @@ WORKDIR /usr/src/server
 COPY package*.json ./
 COPY pnpm*.yaml ./
 COPY scripts/*.* ./scripts/
+COPY .npmrc ./
+COPY patches/*.* ./patches/
 
 COPY packages/gitresources/package*.json packages/gitresources/
 COPY packages/kafka-orderer/package*.json packages/kafka-orderer/
@@ -53,13 +57,15 @@ COPY packages/services-telemetry/package*.json packages/services-telemetry/
 COPY packages/services-utils/package*.json packages/services-utils/
 COPY packages/test-utils/package*.json packages/test-utils/
 COPY packages/protocol-base/package*.json packages/protocol-base/
+COPY packages/tinylicious/package*.json packages/tinylicious/
 
 RUN corepack enable
 
-# Need to set the --unsafe-perm flag since we are doing the install as root. Consider adding an 'app' accout so we
+# Need to set the --unsafe-perm flag since we are doing the install as root. Consider adding an 'app' account so we
 # can do the install as node but then switch to 'app' to run. As app we won't be able to write to installed files
 # and be able to change them.
-RUN pnpm install --unsafe-perm
+# TODO: AB#26779: This Workaround (passing --no-frozen-lockfile) should be removed when possible.
+RUN pnpm install --unsafe-perm --no-frozen-lockfile
 
 # And now copy over our actual code and build
 COPY . .

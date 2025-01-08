@@ -4,54 +4,71 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unused-expressions */
+
 import { strict as assert } from "assert";
-import { expect } from "chai";
-import { v5 as uuidv5 } from "uuid";
+
+import { DeterministicRandomGenerator } from "@fluid-experimental/property-common";
+import {
+	ArrayProperty,
+	Float64Property,
+	Int32Property,
+	NamedProperty,
+	PropertyFactory,
+	StringArrayProperty,
+	StringProperty,
+} from "@fluid-experimental/property-properties";
 import {
 	IContainer,
-	IHostLoader,
-	ILoaderOptions,
 	IFluidCodeDetails,
-} from "@fluidframework/container-definitions";
-import { LocalResolver, LocalDocumentServiceFactory } from "@fluidframework/local-driver";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import { IUrlResolver } from "@fluidframework/driver-definitions";
+	ILoaderOptions,
+} from "@fluidframework/container-definitions/internal";
 import {
-	LocalDeltaConnectionServer,
+	loadExistingContainer,
+	type ILoaderProps,
+} from "@fluidframework/container-loader/internal";
+import { IUrlResolver } from "@fluidframework/driver-definitions/internal";
+import {
+	LocalDocumentServiceFactory,
+	LocalResolver,
+} from "@fluidframework/local-driver/internal";
+import {
 	ILocalDeltaConnectionServer,
+	LocalDeltaConnectionServer,
 } from "@fluidframework/server-local-server";
 import {
-	createAndAttachContainer,
-	createLoader,
 	ITestFluidObject,
-	TestFluidObjectFactory,
 	LoaderContainerTracker,
-} from "@fluidframework/test-utils";
-import { DeterministicRandomGenerator } from "@fluid-experimental/property-common";
-import * as _ from "lodash";
-import {
-	StringArrayProperty,
-	PropertyFactory,
-	ArrayProperty,
-	NamedProperty,
-	Int32Property,
-	StringProperty,
-	Float64Property,
-} from "@fluid-experimental/property-properties";
-import { SharedPropertyTree } from "../propertyTree";
+	TestFluidObjectFactory,
+	createAndAttachContainerUsingProps,
+	createLoaderProps,
+} from "@fluidframework/test-utils/internal";
+import { expect } from "chai";
+import lodash from "lodash";
+import { v5 as uuidv5 } from "uuid";
+
+// 'lodash' import workaround.
+const { range, sortedIndex, isFunction } = lodash;
+
+import { SharedPropertyTree } from "../propertyTree.js";
 
 // a "namespace" uuid to generate uuidv5 in fuzz tests
 const namespaceGuid: string = "b6abf2df-d86d-413b-8fd1-359d4aa341f2";
 
-function createLocalLoader(
+function createLocalLoaderProps(
 	packageEntries: Iterable<[IFluidCodeDetails, TestFluidObjectFactory]>,
 	deltaConnectionServer: ILocalDeltaConnectionServer,
 	urlResolver: IUrlResolver,
 	options?: ILoaderOptions,
-): IHostLoader {
+): ILoaderProps {
 	const documentServiceFactory = new LocalDocumentServiceFactory(deltaConnectionServer);
 
-	return createLoader(packageEntries, documentServiceFactory, urlResolver, undefined, options);
+	return createLoaderProps(
+		packageEntries,
+		documentServiceFactory,
+		urlResolver,
+		undefined,
+		options,
+	);
 }
 
 console.assert = (condition: boolean, ...data: any[]) => {
@@ -69,13 +86,15 @@ function getFunctionSource(fun: any): string {
 
 describe("PropertyDDS", () => {
 	const documentId = "localServerTest";
-	const documentLoadUrl = `fluid-test://localhost/${documentId}`;
+	const documentLoadUrl = `https://localhost/${documentId}`;
 	const propertyDdsId = "PropertyTree";
 	const codeDetails: IFluidCodeDetails = {
 		package: "localServerTestPackage",
 		config: {},
 	};
-	const factory = new TestFluidObjectFactory([[propertyDdsId, SharedPropertyTree.getFactory()]]);
+	const factory = new TestFluidObjectFactory([
+		[propertyDdsId, SharedPropertyTree.getFactory()],
+	]);
 
 	let deltaConnectionServer: ILocalDeltaConnectionServer;
 	let urlResolver: LocalResolver;
@@ -90,27 +109,31 @@ describe("PropertyDDS", () => {
 	let errorHandler: (Error) => void;
 
 	async function createContainer(): Promise<IContainer> {
-		const loader = createLocalLoader(
+		const createDetachedContainerProps = createLocalLoaderProps(
 			[[codeDetails, factory]],
 			deltaConnectionServer,
 			urlResolver,
 		);
-		opProcessingController.add(loader);
-		return createAndAttachContainer(
-			codeDetails,
-			loader,
+		const containerUsingPops = await createAndAttachContainerUsingProps(
+			{ ...createDetachedContainerProps, codeDetails },
 			urlResolver.createCreateNewRequest(documentId),
 		);
+		opProcessingController.addContainer(containerUsingPops);
+		return containerUsingPops;
 	}
 
 	async function loadContainer(): Promise<IContainer> {
-		const loader = createLocalLoader(
+		const loaderProps = createLocalLoaderProps(
 			[[codeDetails, factory]],
 			deltaConnectionServer,
 			urlResolver,
 		);
-		opProcessingController.add(loader);
-		return loader.resolve({ url: documentLoadUrl });
+		const containerUsingPops = await loadExistingContainer({
+			...loaderProps,
+			request: { url: documentLoadUrl },
+		});
+		opProcessingController.addContainer(containerUsingPops);
+		return containerUsingPops;
 	}
 
 	function createRandomTests(
@@ -138,17 +161,16 @@ describe("PropertyDDS", () => {
 				const operationCumSums = [] as number[];
 				for (const operation of operations) {
 					operationCumSums.push(
-						(operationCumSums[operationCumSums.length - 1] ?? 0) +
-							operation.probability,
+						(operationCumSums[operationCumSums.length - 1] ?? 0) + operation.probability,
 					);
 				}
 
 				try {
 					const numOperations = random.irandom(maxOperations);
 					const maxCount = operationCumSums[operationCumSums.length - 1];
-					for (const j of _.range(numOperations)) {
+					for (const _j of range(numOperations)) {
 						const operationId = 1 + random.irandom(maxCount);
-						const selectedOperation = _.sortedIndex(operationCumSums, operationId);
+						const selectedOperation = sortedIndex(operationCumSums, operationId);
 
 						const parameters = operations[selectedOperation].getParameters(random);
 
@@ -157,7 +179,7 @@ describe("PropertyDDS", () => {
 							operations[selectedOperation].op.toString(),
 						);
 						for (const [key, value] of Object.entries(parameters)) {
-							const valueString = _.isFunction(value)
+							const valueString = isFunction(value)
 								? getFunctionSource(value)
 								: value.toString();
 							operationSource = operationSource.replace(
@@ -187,13 +209,13 @@ describe("PropertyDDS", () => {
 
 		// Create a Container for the first client.
 		container1 = await createContainer();
-		dataObject1 = await requestFluidObject<ITestFluidObject>(container1, "default");
+		dataObject1 = (await container1.getEntryPoint()) as ITestFluidObject;
 		sharedPropertyTree1 = await dataObject1.getSharedObject<SharedPropertyTree>(propertyDdsId);
 		(sharedPropertyTree1 as any).__id = 1; // Add an id to simplify debugging via conditional breakpoints
 
 		// Load the Container that was created by the first client.
 		container2 = await loadContainer();
-		dataObject2 = await requestFluidObject<ITestFluidObject>(container2, "default");
+		dataObject2 = (await container2.getEntryPoint()) as ITestFluidObject;
 		sharedPropertyTree2 = await dataObject2.getSharedObject<SharedPropertyTree>(propertyDdsId);
 		(sharedPropertyTree2 as any).__id = 2; // Add an id to simplify debugging via conditional breakpoints
 
@@ -246,10 +268,10 @@ describe("PropertyDDS", () => {
 			});
 
 			afterEach(() => {
-				const result = _.range(1, ACount + 1)
+				const result = range(1, ACount + 1)
 					.map((i) => `A${i}`)
 					.concat(["B1", "B2", "B3"])
-					.concat(_.range(1, CCount + 1).map((i) => `C${i}`));
+					.concat(range(1, CCount + 1).map((i) => `C${i}`));
 
 				const array1 = sharedPropertyTree1.root.get("array") as StringArrayProperty;
 				const array2 = sharedPropertyTree2.root.get("array") as StringArrayProperty;
@@ -475,7 +497,7 @@ describe("PropertyDDS", () => {
 						let testString = "";
 
 						const numOperations = random.irandom(30);
-						for (const j of _.range(numOperations)) {
+						for (const _j of range(numOperations)) {
 							const operation = random.irandom(6);
 							switch (operation) {
 								case 0:
@@ -716,9 +738,7 @@ describe("PropertyDDS", () => {
 								};
 							},
 							op: async (parameters) => {
-								await opProcessingController.processOutgoing(
-									parameters.container(),
-								);
+								await opProcessingController.processOutgoing(parameters.container());
 							},
 							probability: 1,
 						},
@@ -731,9 +751,7 @@ describe("PropertyDDS", () => {
 								};
 							},
 							op: async (parameters) => {
-								await opProcessingController.processIncoming(
-									parameters.container(),
-								);
+								await opProcessingController.processIncoming(parameters.container());
 							},
 							probability: 1,
 						},
@@ -1098,9 +1116,8 @@ describe("PropertyDDS", () => {
 
 				// This collaborator should still have pending changes after rebase the incoming commits
 				expect(
-					Object.keys(
-						sharedPropertyTree2.root.getPendingChanges().getSerializedChangeSet(),
-					).length,
+					Object.keys(sharedPropertyTree2.root.getPendingChanges().getSerializedChangeSet())
+						.length,
 				).to.not.equal(0);
 
 				// Committing the new pending change

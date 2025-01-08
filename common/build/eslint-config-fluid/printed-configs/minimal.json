@@ -23,6 +23,7 @@
     "plugins": [
         "eslint-comments",
         "import",
+        "@fluid-internal/fluid",
         "unicorn",
         "unused-imports",
         "tsdoc",
@@ -39,6 +40,12 @@
         ],
         "@babel/semi": [
             "off"
+        ],
+        "@fluid-internal/fluid/no-member-release-tags": [
+            "error"
+        ],
+        "@fluid-internal/fluid/no-unchecked-record-access": [
+            "error"
         ],
         "@rushstack/no-new-null": [
             "warn"
@@ -68,11 +75,7 @@
             "off"
         ],
         "@typescript-eslint/brace-style": [
-            "error",
-            "1tbs",
-            {
-                "allowSingleLine": true
-            }
+            "off"
         ],
         "@typescript-eslint/class-literal-property-style": [
             "error"
@@ -82,7 +85,7 @@
             "always-multiline"
         ],
         "@typescript-eslint/comma-spacing": [
-            "error"
+            "off"
         ],
         "@typescript-eslint/consistent-generic-constructors": [
             "off"
@@ -119,7 +122,7 @@
             "off"
         ],
         "@typescript-eslint/func-call-spacing": [
-            "error"
+            "off"
         ],
         "@typescript-eslint/indent": [
             "off"
@@ -128,24 +131,13 @@
             "off"
         ],
         "@typescript-eslint/keyword-spacing": [
-            "error"
+            "off"
         ],
         "@typescript-eslint/lines-around-comment": [
             0
         ],
         "@typescript-eslint/member-delimiter-style": [
-            "error",
-            {
-                "multiline": {
-                    "delimiter": "semi",
-                    "requireLast": true
-                },
-                "multilineDetection": "brackets",
-                "singleline": {
-                    "delimiter": "semi",
-                    "requireLast": true
-                }
-            }
+            "off"
         ],
         "@typescript-eslint/member-ordering": [
             "off"
@@ -153,14 +145,14 @@
         "@typescript-eslint/naming-convention": [
             "error",
             {
-                "format": [
-                    "camelCase"
-                ],
-                "leadingUnderscore": "allow",
+                "selector": "accessor",
                 "modifiers": [
                     "private"
                 ],
-                "selector": "accessor"
+                "format": [
+                    "camelCase"
+                ],
+                "leadingUnderscore": "allow"
             }
         ],
         "@typescript-eslint/no-array-constructor": [
@@ -306,8 +298,7 @@
             "off"
         ],
         "@typescript-eslint/object-curly-spacing": [
-            "error",
-            "always"
+            "off"
         ],
         "@typescript-eslint/prefer-as-const": [
             "error"
@@ -360,14 +351,14 @@
             "error"
         ],
         "@typescript-eslint/semi": [
-            "error",
+            "off",
             "always"
         ],
         "@typescript-eslint/space-before-blocks": [
             "off"
         ],
         "@typescript-eslint/space-before-function-paren": [
-            "error",
+            "off",
             {
                 "anonymous": "never",
                 "asyncArrow": "always",
@@ -375,7 +366,7 @@
             }
         ],
         "@typescript-eslint/space-infix-ops": [
-            "error"
+            "off"
         ],
         "@typescript-eslint/strict-boolean-expressions": [
             "error"
@@ -384,7 +375,7 @@
             "error"
         ],
         "@typescript-eslint/type-annotation-spacing": [
-            "error"
+            "off"
         ],
         "@typescript-eslint/typedef": [
             "off"
@@ -402,7 +393,7 @@
             "off"
         ],
         "array-bracket-spacing": [
-            "error"
+            "off"
         ],
         "array-element-newline": [
             "off"
@@ -415,7 +406,7 @@
             "always"
         ],
         "arrow-spacing": [
-            "error"
+            "off"
         ],
         "babel/object-curly-spacing": [
             "off"
@@ -427,7 +418,7 @@
             "off"
         ],
         "block-spacing": [
-            "error"
+            "off"
         ],
         "brace-style": [
             "off"
@@ -463,8 +454,7 @@
             "error"
         ],
         "dot-location": [
-            "error",
-            "property"
+            "off"
         ],
         "dot-notation": [
             "off"
@@ -579,16 +569,22 @@
             1
         ],
         "import/no-extraneous-dependencies": [
-            "error",
-            {
-                "devDependencies": [
-                    "**/*.spec.ts",
-                    "src/test/**"
-                ]
-            }
+            "error"
         ],
         "import/no-internal-modules": [
-            "error"
+            "error",
+            {
+                "allow": [
+                    "@fluid-example/*/internal",
+                    "@fluid-experimental/*/internal",
+                    "@fluid-internal/*/internal",
+                    "@fluid-private/*/internal",
+                    "@fluid-tools/*/internal",
+                    "@fluidframework/*/internal",
+                    "@fluid-experimental/**",
+                    "*/index.js"
+                ]
+            }
         ],
         "import/no-named-as-default": [
             1
@@ -597,12 +593,7 @@
             1
         ],
         "import/no-nodejs-modules": [
-            "error",
-            {
-                "allow": [
-                    "events"
-                ]
-            }
+            "error"
         ],
         "import/no-unassigned-import": [
             "error"
@@ -618,7 +609,17 @@
             "error"
         ],
         "import/order": [
-            "error"
+            "error",
+            {
+                "newlines-between": "always",
+                "alphabetize": {
+                    "order": "asc",
+                    "caseInsensitive": false,
+                    "orderImportKind": "ignore"
+                },
+                "distinctGroup": true,
+                "warnOnUnassignedImports": false
+            }
         ],
         "indent": [
             "off"
@@ -660,10 +661,10 @@
             "error"
         ],
         "jsx-quotes": [
-            "error"
+            "off"
         ],
         "key-spacing": [
-            "error"
+            "off"
         ],
         "keyword-spacing": [
             "off"
@@ -681,11 +682,11 @@
             "error",
             {
                 "code": 120,
-                "ignoreRegExpLiterals": true,
+                "ignoreTrailingComments": true,
+                "ignoreUrls": true,
                 "ignoreStrings": true,
                 "ignoreTemplateLiterals": true,
-                "ignoreTrailingComments": true,
-                "ignoreUrls": true
+                "ignoreRegExpLiterals": true
             }
         ],
         "max-lines": [
@@ -900,8 +901,8 @@
         "no-restricted-syntax": [
             "error",
             {
-                "message": "Exporting * is not permitted. You should export only named items you intend to export.",
-                "selector": "ExportAllDeclaration"
+                "selector": "ExportAllDeclaration",
+                "message": "Exporting * is not permitted. You should export only named items you intend to export."
             },
             "ForInStatement"
         ],
@@ -1034,8 +1035,8 @@
             "off",
             {
                 "blankLine": "always",
-                "next": "return",
-                "prev": "*"
+                "prev": "*",
+                "next": "return"
             }
         ],
         "prefer-arrow-callback": [
@@ -1173,7 +1174,7 @@
             "off"
         ],
         "space-unary-ops": [
-            "error"
+            "off"
         ],
         "space-unary-word-ops": [
             "off"
@@ -1183,10 +1184,10 @@
             "always",
             {
                 "block": {
-                    "balanced": true,
                     "markers": [
                         "!"
-                    ]
+                    ],
+                    "balanced": true
                 }
             }
         ],
@@ -1200,7 +1201,7 @@
             "off"
         ],
         "switch-colon-spacing": [
-            "error"
+            "off"
         ],
         "template-curly-spacing": [
             "off"
@@ -1395,6 +1396,7 @@
             ".tsx",
             ".d.ts",
             ".js",
+            ".jsx",
             ".jsx"
         ],
         "import/external-module-folders": [
@@ -1405,15 +1407,39 @@
             "@typescript-eslint/parser": [
                 ".ts",
                 ".tsx",
-                ".d.ts"
+                ".d.ts",
+                ".tsx"
             ]
         },
         "import/resolver": {
-            "node": {
+            "typescript": {
                 "extensions": [
                     ".ts",
                     ".tsx",
                     ".d.ts",
+                    ".js",
+                    ".jsx"
+                ],
+                "conditionNames": [
+                    "allow-ff-test-exports",
+                    "types",
+                    "import",
+                    "esm2020",
+                    "es2020",
+                    "es2015",
+                    "require",
+                    "node",
+                    "node-addons",
+                    "browser",
+                    "default"
+                ]
+            },
+            "node": {
+                "extensions": [
+                    ".ts",
+                    ".cts",
+                    ".mts",
+                    ".tsx",
                     ".js",
                     ".jsx"
                 ]

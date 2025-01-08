@@ -8,6 +8,7 @@ import { Deferred } from "./promises";
 
 /**
  * @deprecated Moved to the `@fluidframework/core-utils` package.
+ * @internal
  */
 export interface ITimer {
 	/**
@@ -79,6 +80,7 @@ const maxSetTimeoutMs = 0x7fffffff; // setTimeout limit is MAX_INT32=(2^31-1).
  * @returns The initial timeout
  *
  * @deprecated Moved to the `@fluidframework/core-utils` package.
+ * @internal
  */
 export function setLongTimeout(
 	timeoutFn: () => void,
@@ -108,6 +110,7 @@ export function setLongTimeout(
  * or timeouts exceeding (2^31)-1 ms or approximately 24.8 days.
  *
  * @deprecated Moved to the `@fluidframework/core-utils` package.
+ * @internal
  */
 export class Timer implements ITimer {
 	/**
@@ -158,10 +161,7 @@ export class Timer implements ITimer {
 	 * @param handler - overrides previous or default handler
 	 */
 	public restart(ms?: number, handler?: () => void): void {
-		if (!this.runningState) {
-			// If restart is called first, it behaves as a call to start
-			this.start(ms, handler);
-		} else {
+		if (this.runningState) {
 			const duration = ms ?? this.runningState.intendedDuration;
 			const handlerToUse =
 				handler ?? this.runningState.restart?.handler ?? this.runningState.handler;
@@ -185,6 +185,9 @@ export class Timer implements ITimer {
 					handler: handlerToUse,
 				};
 			}
+		} else {
+			// If restart is called first, it behaves as a call to start
+			this.start(ms, handler);
 		}
 	}
 
@@ -210,15 +213,15 @@ export class Timer implements ITimer {
 	private handler(): void {
 		assert(!!this.runningState, 0x00a /* "Running timer missing handler" */);
 		const restart = this.runningState.restart;
-		if (restart !== undefined) {
-			// Restart with remaining time
-			const remainingTime = this.calculateRemainingTime(restart);
-			this.startCore(remainingTime, () => restart.handler(), restart.duration);
-		} else {
+		if (restart === undefined) {
 			// Run clear first, in case the handler decides to start again
 			const handler = this.runningState.handler;
 			this.clear();
 			handler();
+		} else {
+			// Restart with remaining time
+			const remainingTime = this.calculateRemainingTime(restart);
+			this.startCore(remainingTime, () => restart.handler(), restart.duration);
 		}
 	}
 
@@ -230,6 +233,7 @@ export class Timer implements ITimer {
 
 /**
  * @deprecated Moved to the `@fluidframework/core-utils` package.
+ * @internal
  */
 export interface IPromiseTimerResult {
 	timerResult: "timeout" | "cancel";
@@ -240,6 +244,7 @@ export interface IPromiseTimerResult {
  * completes.
  *
  * @deprecated Moved to the `@fluid-private/client-utils` package.
+ * @internal
  */
 export interface IPromiseTimer extends ITimer {
 	/**
@@ -256,6 +261,7 @@ export interface IPromiseTimer extends ITimer {
  * resolves when it times out.
  *
  * @deprecated Moved to the `@fluid-private/client-utils` package.
+ * @internal
  */
 export class PromiseTimer implements IPromiseTimer {
 	private deferred?: Deferred<IPromiseTimerResult>;

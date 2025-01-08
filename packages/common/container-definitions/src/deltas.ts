@@ -3,28 +3,36 @@
  * Licensed under the MIT License.
  */
 
-import {
+import type {
 	IDisposable,
-	IEventProvider,
-	IEvent,
-	IErrorEvent,
 	IErrorBase,
+	IErrorEvent,
+	IEvent,
+	IEventProvider,
 } from "@fluidframework/core-interfaces";
-import { IAnyDriverError } from "@fluidframework/driver-definitions";
-import {
+import type { IClientDetails } from "@fluidframework/driver-definitions";
+import type {
+	IAnyDriverError,
 	IClientConfiguration,
-	IClientDetails,
 	IDocumentMessage,
+	ITokenClaims,
 	ISequencedDocumentMessage,
 	ISignalMessage,
-	ITokenClaims,
-} from "@fluidframework/protocol-definitions";
+} from "@fluidframework/driver-definitions/internal";
 
 /**
  * Contract representing the result of a newly established connection to the server for syncing deltas.
+ * @legacy
+ * @alpha
  */
 export interface IConnectionDetails {
+	/**
+	 * The client's unique identifier assigned by the service.
+	 *
+	 * @remarks It is not stable across reconnections.
+	 */
 	clientId: string;
+
 	claims: ITokenClaims;
 	serviceConfiguration: IClientConfiguration;
 
@@ -33,16 +41,19 @@ export interface IConnectionDetails {
 	 *
 	 * @remarks
 	 *
-	 * It may lap actual last sequence number (quite a bit, if container is very active).
-	 * But it's the best information for client to figure out how far it is behind, at least
-	 * for "read" connections. "write" connections may use own "join" op to similar information,
-	 * that is likely to be more up-to-date.
+	 * It may lag behind the actual last sequence number (quite a bit, if the container is very active),
+	 * but it's the best information the client has to figure out how far behind it is, at least
+	 * for "read" connections. "write" connections may use the client's own "join" op to obtain similar
+	 * information which is likely to be more up-to-date.
 	 */
 	checkpointSequenceNumber: number | undefined;
 }
 
 /**
  * Contract supporting delivery of outbound messages to the server
+ * @sealed
+ * @legacy
+ * @alpha
  */
 export interface IDeltaSender {
 	/**
@@ -53,6 +64,9 @@ export interface IDeltaSender {
 
 /**
  * Events emitted by {@link IDeltaManager}.
+ * @sealed
+ * @legacy
+ * @alpha
  */
 export interface IDeltaManagerEvents extends IEvent {
 	/**
@@ -81,7 +95,10 @@ export interface IDeltaManagerEvents extends IEvent {
 	 *
 	 * - `processingTime`: The amount of time it took to process the inbound operation (op), expressed in milliseconds.
 	 */
-	(event: "op", listener: (message: ISequencedDocumentMessage, processingTime: number) => void);
+	(
+		event: "op",
+		listener: (message: ISequencedDocumentMessage, processingTime: number) => void,
+	);
 
 	/**
 	 * Emitted periodically with latest information on network roundtrip latency
@@ -132,18 +149,13 @@ export interface IDeltaManagerEvents extends IEvent {
 
 /**
  * Manages the transmission of ops between the runtime and storage.
+ * @sealed
+ * @legacy
+ * @alpha
  */
-export interface IDeltaManager<T, U> extends IEventProvider<IDeltaManagerEvents>, IDeltaSender {
-	/**
-	 * The queue of inbound delta messages
-	 */
-	readonly inbound: IDeltaQueue<T>;
-
-	/**
-	 * The queue of outbound delta messages
-	 */
-	readonly outbound: IDeltaQueue<U[]>;
-
+export interface IDeltaManager<T, U>
+	extends IEventProvider<IDeltaManagerEvents>,
+		IDeltaSender {
 	/**
 	 * The queue of inbound delta signals
 	 */
@@ -212,11 +224,41 @@ export interface IDeltaManager<T, U> extends IEventProvider<IDeltaManagerEvents>
 	 */
 	// TODO: use `unknown` instead (API breaking)
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	submitSignal(content: any): void;
+	submitSignal(content: any, targetClientId?: string): void;
+}
+
+/**
+ * DeltaManager which is used internally by the Fluid layers and not exposed to the end users.
+ * @internal
+ */
+export interface IDeltaManagerFull<T = ISequencedDocumentMessage, U = IDocumentMessage>
+	extends IDeltaManager<T, U> {
+	/**
+	 * The queue of inbound delta messages
+	 */
+	readonly inbound: IDeltaQueue<T>;
+
+	/**
+	 * The queue of outbound delta messages
+	 */
+	readonly outbound: IDeltaQueue<U[]>;
+}
+
+/**
+ * Type guard to check if the given deltaManager is of type {@link @fluidframework/container-definitions#IDeltaManagerFull}.
+ * @internal
+ */
+export function isIDeltaManagerFull(
+	deltaManager: IDeltaManager<ISequencedDocumentMessage, IDocumentMessage>,
+): deltaManager is IDeltaManagerFull {
+	return "inbound" in deltaManager && "outbound" in deltaManager;
 }
 
 /**
  * Events emitted by {@link IDeltaQueue}.
+ * @sealed
+ * @legacy
+ * @alpha
  */
 export interface IDeltaQueueEvents<T> extends IErrorEvent {
 	/**
@@ -259,6 +301,9 @@ export interface IDeltaQueueEvents<T> extends IErrorEvent {
 
 /**
  * Queue of ops to be sent to or processed from storage
+ * @sealed
+ * @legacy
+ * @alpha
  */
 export interface IDeltaQueue<T> extends IEventProvider<IDeltaQueueEvents<T>>, IDisposable {
 	/**
@@ -306,6 +351,10 @@ export interface IDeltaQueue<T> extends IEventProvider<IDeltaQueueEvents<T>>, ID
 	waitTillProcessingDone(): Promise<{ count: number; duration: number }>;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export type ReadOnlyInfo =
 	| {
 			readonly readonly: false | undefined;

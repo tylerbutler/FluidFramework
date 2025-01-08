@@ -5,26 +5,29 @@
 
 // eslint-disable-next-line import/no-nodejs-modules
 import assert from "assert";
-import { EventEmitter } from "events";
+
+import { EventEmitter } from "@fluid-example/example-utils";
+import { MergeTreeMaintenanceType, segmentIsRemoved } from "@fluidframework/merge-tree/legacy";
 import {
 	ISegment,
-	ReferencePosition,
-	MergeTreeMaintenanceType,
 	LocalReferencePosition,
-} from "@fluidframework/merge-tree";
-import { SequenceEvent } from "@fluidframework/sequence";
+	ReferencePosition,
+	SequenceEvent,
+} from "@fluidframework/sequence/legacy";
+
 import { FlowDocument } from "../document/index.js";
 import {
-	clamp,
 	Dom,
+	TagName,
+	clamp,
 	done,
 	emptyObject,
 	getSegmentRange,
 	hasTagName,
 	isTextNode,
-	TagName,
 } from "../util/index.js";
 import { extractRef, updateRef } from "../util/localref.js";
+
 import { debug } from "./debug.js";
 import { BootstrapFormatter, Formatter, IFormatterState, RootFormatter } from "./formatter.js";
 
@@ -306,7 +309,7 @@ export class Layout extends EventEmitter {
 		);
 
 		// Must not request a formatter for a removed segment.
-		assert.strictEqual(segment.removedSeq, undefined);
+		assert.strictEqual(segmentIsRemoved(segment), false);
 
 		// If we've checkpointed this segment previously, we can potentially reuse our previous state to
 		// minimize damage to the DOM.
@@ -418,7 +421,7 @@ export class Layout extends EventEmitter {
 
 	public nodeToSegment(node: Node): ISegment {
 		const seg = this.nodeToSegmentMap.get(node);
-		return seg && (seg.removedSeq === undefined ? seg : undefined);
+		return seg && (!segmentIsRemoved(seg) ? seg : undefined);
 	}
 
 	public segmentAndOffsetToNodeAndOffset(segment: ISegment, offset: number) {
@@ -606,7 +609,7 @@ export class Layout extends EventEmitter {
 
 		// If the segment was removed, promptly remove any DOM nodes it emitted.
 		for (const { segment } of e.ranges) {
-			if (segment.removedSeq) {
+			if (segmentIsRemoved(segment)) {
 				this.removeSegment(segment);
 			}
 		}

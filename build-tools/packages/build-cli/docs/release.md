@@ -6,6 +6,7 @@ Release commands are used to manage the Fluid release process.
 * [`flub release`](#flub-release)
 * [`flub release fromTag TAG`](#flub-release-fromtag-tag)
 * [`flub release history`](#flub-release-history)
+* [`flub release prepare PACKAGE_OR_RELEASE_GROUP`](#flub-release-prepare-package_or_release_group)
 * [`flub release report`](#flub-release-report)
 * [`flub release report-unreleased`](#flub-release-report-unreleased)
 * [`flub release setPackageTypesField`](#flub-release-setpackagetypesfield)
@@ -23,19 +24,19 @@ FLAGS
   -g, --releaseGroup=<option>  Name of a release group.
                                <options: client|server|azure|build-tools|gitrest|historian>
   -p, --package=<value>        Name of package. You can use scoped or unscoped package names. For example, both
-                               @fluid-tools/markdown-magic and markdown-magic are valid.
+                               @fluid-tools/benchmark and benchmark are valid.
   -t, --bumpType=<option>      Version bump type.
                                <options: major|minor|patch>
   -x, --skipChecks             Skip all checks.
-  --[no-]branchCheck           Check that the current branch is correct.
-  --[no-]commit                Commit changes to a new branch.
-  --[no-]install               Update lockfiles by running 'npm install' automatically.
-  --[no-]policyCheck           Check that the local repo complies with all policy.
-  --[no-]updateCheck           Check that the local repo is up to date with the remote.
+      --[no-]branchCheck       Check that the current branch is correct.
+      --[no-]commit            Commit changes to a new branch.
+      --[no-]install           Update lockfiles by running 'npm install' automatically.
+      --[no-]policyCheck       Check that the local repo complies with all policy.
+      --[no-]updateCheck       Check that the local repo is up to date with the remote.
 
 LOGGING FLAGS
   -v, --verbose  Enable verbose logging.
-  --quiet        Disable all logging.
+      --quiet    Disable all logging.
 
 DESCRIPTION
   Releases a package or release group.
@@ -60,14 +61,14 @@ Determines release information based on a git tag argument.
 
 ```
 USAGE
-  $ flub release fromTag TAG [-v | --quiet] [--json]
+  $ flub release fromTag TAG [--json] [-v | --quiet]
 
 ARGUMENTS
   TAG  A git tag that represents a release. May begin with 'refs/tags/'.
 
 LOGGING FLAGS
   -v, --verbose  Enable verbose logging.
-  --quiet        Disable all logging.
+      --quiet    Disable all logging.
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -87,14 +88,16 @@ EXAMPLES
     $ flub release fromTag refs/tags/2.0.0-internal.2.0.2
 ```
 
+_See code: [src/commands/release/fromTag.ts](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/release/fromTag.ts)_
+
 ## `flub release history`
 
 Prints a list of released versions of a package or release group. Releases are gathered from the git tags in repo containing the working directory.
 
 ```
 USAGE
-  $ flub release history [-v | --quiet] [-g client|server|azure|build-tools|gitrest|historian | -p <value>] [-l
-    <value>] [--json]
+  $ flub release history [--json] [-v | --quiet] [-g client|server|azure|build-tools|gitrest|historian | -p <value>]
+    [-l <value>]
 
 FLAGS
   -g, --releaseGroup=<option>  Name of a release group.
@@ -102,11 +105,11 @@ FLAGS
   -l, --limit=<value>          Limits the number of displayed releases for each release group. Results are sorted by
                                semver, so '--limit 10' will return the 10 highest semver releases for the release group.
   -p, --package=<value>        Name of package. You can use scoped or unscoped package names. For example, both
-                               @fluid-tools/markdown-magic and markdown-magic are valid.
+                               @fluid-tools/benchmark and benchmark are valid.
 
 LOGGING FLAGS
   -v, --verbose  Enable verbose logging.
-  --quiet        Disable all logging.
+      --quiet    Disable all logging.
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -129,14 +132,50 @@ EXAMPLES
     $ flub release history -g client --limit 10
 ```
 
+_See code: [src/commands/release/history.ts](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/release/history.ts)_
+
+## `flub release prepare PACKAGE_OR_RELEASE_GROUP`
+
+Runs checks on a local branch to verify it is ready to serve as the base for a release branch.
+
+```
+USAGE
+  $ flub release prepare PACKAGE_OR_RELEASE_GROUP [-v | --quiet]
+
+ARGUMENTS
+  PACKAGE_OR_RELEASE_GROUP  [default: client] The name of a package or a release group. Defaults to the client release
+                            group if not specified.
+
+LOGGING FLAGS
+  -v, --verbose  Enable verbose logging.
+      --quiet    Disable all logging.
+
+DESCRIPTION
+  Runs checks on a local branch to verify it is ready to serve as the base for a release branch.
+
+  Runs the following checks:
+
+  - Branch has no local changes
+  - The local branch is up to date with the microsoft/FluidFramework remote
+  - Dependencies are installed locally
+  - Has no pre-release Fluid dependencies
+  - No repo policy violations
+  - No untagged asserts
+
+ALIASES
+  $ flub release prep
+```
+
+_See code: [src/commands/release/prepare.ts](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/release/prepare.ts)_
+
 ## `flub release report`
 
 Generates a report of Fluid Framework releases.
 
 ```
 USAGE
-  $ flub release report [-v | --quiet] [--json] [-i | -r | -s] [-g
-    client|server|azure|build-tools|gitrest|historian] [-o <value>]
+  $ flub release report [--json] [-v | --quiet] [-i | -r | -s] [-g
+    client|server|azure|build-tools|gitrest|historian] [-o <value>] [--baseFileName <value>]
 
 FLAGS
   -g, --releaseGroup=<option>
@@ -162,9 +201,14 @@ FLAGS
   -s, --highest
       Always pick the greatest semver version as the latest (ignore dates).
 
+  --baseFileName=<value>
+      If provided, the output files will be named using this base name followed by the report kind (caret, simple, full,
+      tilde, legacy-compat) and the .json extension. For example, if baseFileName is 'foo', the output files will be named
+      'foo.caret.json', 'foo.simple.json', etc.
+
 LOGGING FLAGS
   -v, --verbose  Enable verbose logging.
-  --quiet        Disable all logging.
+      --quiet    Disable all logging.
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -200,33 +244,38 @@ EXAMPLES
     $ flub release report -i
 ```
 
+_See code: [src/commands/release/report.ts](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/release/report.ts)_
+
 ## `flub release report-unreleased`
 
-Creates a release report for the most recent build of the client release group published to an internal ADO feed. It does this by finding the most recent build in ADO produced from a provided branch, and creates a report using that version. The report is a combination of the "simple" and "caret" report formats. Packages released as part of the client release group will have an exact version range, while other packages, such as server packages or independent packages, will have a caret-equivalent version range.
+Creates a release report for an unreleased build (one that is not published to npm), using an existing report in the "full" format as input.
 
 ```
 USAGE
-  $ flub release report-unreleased --repo <value> --ado_pat <value> --sourceBranch <value> --output <value> [-v |
-  --quiet]
+  $ flub release report-unreleased --version <value> --outDir <value> --fullReportFilePath <value> --branchName <value> [-v |
+    --quiet]
 
 FLAGS
-  --ado_pat=<value>       (required) ADO Personal Access Token. This flag should be provided via the ADO_PAT environment
-                          variable for security reasons.
-  --output=<value>        (required) Output manifest file path
-  --repo=<value>          (required) Repository name
-  --sourceBranch=<value>  (required) Branch name across which the dev release manifest should be generated.
+  --branchName=<value>          (required) Branch name. For release branches, the manifest file is uplaoded by build
+                                number and not by current date.
+  --fullReportFilePath=<value>  (required) Path to a report file in the 'full' format.
+  --outDir=<value>              (required) Release report output directory
+  --version=<value>             (required) Version to generate a report for. Typically, this version is the version of a
+                                dev build.
 
 LOGGING FLAGS
   -v, --verbose  Enable verbose logging.
-  --quiet        Disable all logging.
+      --quiet    Disable all logging.
 
 DESCRIPTION
-  Creates a release report for the most recent build of the client release group published to an internal ADO feed. It
-  does this by finding the most recent build in ADO produced from a provided branch, and creates a report using that
-  version. The report is a combination of the "simple" and "caret" report formats. Packages released as part of the
-  client release group will have an exact version range, while other packages, such as server packages or independent
-  packages, will have a caret-equivalent version range.
+  Creates a release report for an unreleased build (one that is not published to npm), using an existing report in the
+  "full" format as input.
+
+  This command is primarily used to upload reports for non-PR main branch builds so that downstream pipelines can easily
+  consume them.
 ```
+
+_See code: [src/commands/release/report-unreleased.ts](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/release/report-unreleased.ts)_
 
 ## `flub release setPackageTypesField`
 
@@ -234,33 +283,41 @@ Updates which .d.ts file is referenced by the `types` field in package.json. Thi
 
 ```
 USAGE
-  $ flub release setPackageTypesField --types <value> [-v | --quiet] [--concurrency <value>] [--all | --dir <value> | --packages |
-    -g client|server|azure|build-tools|gitrest|historian|all | --releaseGroupRoot
-    client|server|azure|build-tools|gitrest|historian|all] [--private] [--scope <value> | --skipScope <value>] [--json]
+  $ flub release setPackageTypesField --types <value> [--json] [-v | --quiet] [--checkFileExists] [--concurrency <value>]
+    [--branch <value> [--changed |  |  |  | [--all | --dir <value> | --packages | -g
+    client|server|azure|build-tools|gitrest|historian|all... | --releaseGroupRoot
+    client|server|azure|build-tools|gitrest|historian|all...] | ]] [--private] [--scope <value>... | --skipScope
+    <value>...]
 
 FLAGS
-  --concurrency=<value>  [default: 25] The number of tasks to execute concurrently.
-  --types=<value>        (required) Which .d.ts types to include in the published package.
+  --[no-]checkFileExists  Check if the file path exists
+  --concurrency=<value>   [default: 25] The number of tasks to execute concurrently.
+  --types=<value>         (required) Which .d.ts types to include in the published package.
 
 PACKAGE SELECTION FLAGS
-  -g, --releaseGroup=<option>...  Run on all child packages within the specified release groups. This does not include
-                                  release group root packages. To include those, use the --releaseGroupRoot argument.
-                                  Cannot be used with --all, --dir, or --packages.
-                                  <options: client|server|azure|build-tools|gitrest|historian|all>
-  --all                           Run on all packages and release groups. Cannot be used with --all, --dir,
-                                  --releaseGroup, or --releaseGroupRoot.
-  --dir=<value>                   Run on the package in this directory. Cannot be used with --all, --dir,
-                                  --releaseGroup, or --releaseGroupRoot.
-  --packages                      Run on all independent packages in the repo. Cannot be used with --all, --dir,
-                                  --releaseGroup, or --releaseGroupRoot.
-  --releaseGroupRoot=<option>...  Run on the root package of the specified release groups. This does not include any
-                                  child packages within the release group. To include those, use the --releaseGroup
-                                  argument. Cannot be used with --all, --dir, or --packages.
-                                  <options: client|server|azure|build-tools|gitrest|historian|all>
+  -g, --releaseGroup=<option>...      Run on all child packages within the specified release groups. This does not
+                                      include release group root packages. To include those, use the --releaseGroupRoot
+                                      argument. Cannot be used with --all, --dir, or --packages.
+                                      <options: client|server|azure|build-tools|gitrest|historian|all>
+      --all                           Run on all packages and release groups. Cannot be used with --dir, --packages,
+                                      --releaseGroup, or --releaseGroupRoot.
+      --branch=<value>                [default: main] Select only packages that have been changed when compared to this
+                                      base branch. Can only be used with --changed.
+      --changed                       Select only packages that have changed when compared to a base branch. Use the
+                                      --branch option to specify a different base branch. Cannot be used with other
+                                      options.
+      --dir=<value>                   Run on the package in this directory. Cannot be used with --all, --packages,
+                                      --releaseGroup, or --releaseGroupRoot.
+      --packages                      Run on all independent packages in the repo. Cannot be used with --all, --dir,
+                                      --releaseGroup, or --releaseGroupRoot.
+      --releaseGroupRoot=<option>...  Run on the root package of the specified release groups. This does not include any
+                                      child packages within the release group. To include those, use the --releaseGroup
+                                      argument. Cannot be used with --all, --dir, or --packages.
+                                      <options: client|server|azure|build-tools|gitrest|historian|all>
 
 LOGGING FLAGS
   -v, --verbose  Enable verbose logging.
-  --quiet        Disable all logging.
+      --quiet    Disable all logging.
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -276,3 +333,5 @@ DESCRIPTION
   Updates which .d.ts file is referenced by the `types` field in package.json. This command is used during package
   publishing (by CI) to select the d.ts file which corresponds to the selected API-Extractor release tag.
 ```
+
+_See code: [src/commands/release/setPackageTypesField.ts](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/release/setPackageTypesField.ts)_

@@ -10,33 +10,44 @@ import {
 	NackMessagesType,
 } from "@fluidframework/server-services-core";
 import {
-	BaseTelemetryProperties,
 	CommonProperties,
+	getLumberBaseProperties,
 	Lumber,
 	LumberEventName,
 	Lumberjack,
 	SessionState,
 } from "@fluidframework/server-services-telemetry";
 
-export const createSessionMetric = (
+// TODO: documentation
+// eslint-disable-next-line jsdoc/require-description
+/**
+ * @internal
+ */
+export const createSessionMetric = <T extends string = LumberEventName>(
 	tenantId: string,
 	documentId: string,
-	lumberEventName: LumberEventName,
+	lumberEventName: T,
 	serviceConfiguration: IServiceConfiguration,
-): Lumber<any> | undefined => {
+	isEphemeralContainer: boolean = false,
+): Lumber<T> | undefined => {
 	if (!serviceConfiguration.enableLumberjack) {
-		return;
+		return undefined;
 	}
 
 	const sessionMetric = Lumberjack.newLumberMetric(lumberEventName);
 	sessionMetric?.setProperties({
-		[BaseTelemetryProperties.tenantId]: tenantId,
-		[BaseTelemetryProperties.documentId]: documentId,
+		...getLumberBaseProperties(documentId, tenantId),
+		[CommonProperties.isEphemeralContainer]: isEphemeralContainer,
 	});
 
 	return sessionMetric;
 };
 
+// TODO: documentation
+// eslint-disable-next-line jsdoc/require-description
+/**
+ * @internal
+ */
 export const logCommonSessionEndMetrics = (
 	context: DocumentContext,
 	closeType: LambdaCloseType,
@@ -44,7 +55,7 @@ export const logCommonSessionEndMetrics = (
 	sequenceNumber: number,
 	lastSummarySequenceNumber: number,
 	activeNackMessageTypes: NackMessagesType[] | undefined,
-) => {
+): void => {
 	if (!sessionMetric) {
 		return;
 	}
@@ -67,8 +78,7 @@ export const logCommonSessionEndMetrics = (
 		closeType === LambdaCloseType.Stop ||
 		closeType === LambdaCloseType.Rebalance
 	) {
-		sessionMetric.setProperties({ [CommonProperties.sessionState]: SessionState.paused });
-		sessionMetric.success("Session paused");
+		Lumberjack.info("Session Paused", sessionMetric?.properties);
 	} else if (closeType === LambdaCloseType.ActivityTimeout) {
 		if (activeNackMessageTypes?.includes(NackMessagesType.SummaryMaxOps)) {
 			sessionMetric.error(

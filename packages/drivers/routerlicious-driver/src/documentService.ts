@@ -3,58 +3,71 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/core-utils";
-import * as api from "@fluidframework/driver-definitions";
-import { DriverErrorTypes } from "@fluidframework/driver-definitions";
-import { RateLimiter, NetworkErrorBasic, canRetryOnError } from "@fluidframework/driver-utils";
-import { IClient } from "@fluidframework/protocol-definitions";
-import io from "socket.io-client";
-import { PerformanceEvent, wrapError, ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
-import { DeltaStorageService, DocumentDeltaStorageService } from "./deltaStorageService";
-import { DocumentStorageService } from "./documentStorageService";
-import { R11sDocumentDeltaConnection } from "./documentDeltaConnection";
-import { NullBlobStorageService } from "./nullBlobStorageService";
-import { ITokenProvider } from "./tokens";
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import { assert } from "@fluidframework/core-utils/internal";
+import { IClient } from "@fluidframework/driver-definitions";
+import {
+	IDocumentServiceEvents,
+	IDocumentServicePolicies,
+	IDocumentDeltaConnection,
+	IDocumentDeltaStorageService,
+	IDocumentService,
+	IDocumentStorageService,
+	IDocumentStorageServicePolicies,
+	IResolvedUrl,
+} from "@fluidframework/driver-definitions/internal";
+import {
+	NetworkErrorBasic,
+	RateLimiter,
+	canRetryOnError,
+} from "@fluidframework/driver-utils/internal";
+import {
+	ITelemetryLoggerExt,
+	PerformanceEvent,
+	wrapError,
+} from "@fluidframework/telemetry-utils/internal";
+
+import { ICache } from "./cache.js";
+import { INormalizedWholeSnapshot } from "./contracts.js";
+import { ISnapshotTreeVersion } from "./definitions.js";
+import { DeltaStorageService, DocumentDeltaStorageService } from "./deltaStorageService.js";
+import { R11sDocumentDeltaConnection } from "./documentDeltaConnection.js";
+import { DocumentStorageService } from "./documentStorageService.js";
+import { RouterliciousErrorTypes, type IR11sError } from "./errorUtils.js";
+import { GitManager } from "./gitManager.js";
+import { Historian } from "./historian.js";
+import { NullBlobStorageService } from "./nullBlobStorageService.js";
+import { pkgVersion as driverVersion } from "./packageVersion.js";
+import { IRouterliciousDriverPolicies } from "./policies.js";
 import {
 	RouterliciousOrdererRestWrapper,
 	RouterliciousStorageRestWrapper,
 	TokenFetcher,
-} from "./restWrapper";
-import { IRouterliciousDriverPolicies } from "./policies";
-import { ICache } from "./cache";
-import { ISnapshotTreeVersion } from "./definitions";
-import { pkgVersion as driverVersion } from "./packageVersion";
-import { GitManager } from "./gitManager";
-import { Historian } from "./historian";
-import { RestWrapper } from "./restWrapperBase";
-import { INormalizedWholeSnapshot } from "./contracts";
-
-/**
- * Amount of time between discoveries within which we don't need to rediscover on re-connect.
- * Currently, R11s defines session length at 10 minutes. To avoid any weird unknown edge-cases though,
- * we set the limit to 5 minutes here.
- * In the future, we likely want to retrieve this information from service's "inactive session" definition.
- */
-const RediscoverAfterTimeSinceDiscoveryMs = 5 * 60000; // 5 minute
+} from "./restWrapper.js";
+import { RestWrapper } from "./restWrapperBase.js";
+import type { IGetSessionInfoResponse } from "./sessionInfoManager.js";
+import { SocketIOClientStatic } from "./socketModule.js";
+import { ITokenProvider } from "./tokens.js";
 
 /**
  * The DocumentService manages the Socket.IO connection and manages routing requests to connected
  * clients.
  */
-// eslint-disable-next-line import/namespace
-export class DocumentService implements api.IDocumentService {
-	private lastDiscoveredAt: number = Date.now();
-	private discoverP: Promise<void> | undefined;
-
+export class DocumentService
+	extends TypedEventEmitter<IDocumentServiceEvents>
+	implements IDocumentService
+{
 	private storageManager: GitManager | undefined;
 	private noCacheStorageManager: GitManager | undefined;
+
+	private _policies: IDocumentServicePolicies | undefined;
 
 	public get resolvedUrl() {
 		return this._resolvedUrl;
 	}
 
 	constructor(
-		private _resolvedUrl: api.IResolvedUrl,
+		private _resolvedUrl: IResolvedUrl,
 		protected ordererUrl: string,
 		private deltaStorageUrl: string,
 		private deltaStreamUrl: string,
@@ -64,18 +77,24 @@ export class DocumentService implements api.IDocumentService {
 		protected tenantId: string,
 		protected documentId: string,
 		protected ordererRestWrapper: RouterliciousOrdererRestWrapper,
-		private readonly documentStorageServicePolicies: api.IDocumentStorageServicePolicies,
+		private readonly documentStorageServicePolicies: IDocumentStorageServicePolicies,
 		private readonly driverPolicies: IRouterliciousDriverPolicies,
 		private readonly blobCache: ICache<ArrayBufferLike>,
 		private readonly wholeSnapshotTreeCache: ICache<INormalizedWholeSnapshot>,
 		private readonly shreddedSummaryTreeCache: ICache<ISnapshotTreeVersion>,
-		private readonly discoverFluidResolvedUrl: () => Promise<api.IResolvedUrl>,
+		private readonly getSessionInfo: () => Promise<IGetSessionInfoResponse>,
 		private storageRestWrapper: RouterliciousStorageRestWrapper,
 		private readonly storageTokenFetcher: TokenFetcher,
 		private readonly ordererTokenFetcher: TokenFetcher,
-	) {}
+	) {
+		super();
+	}
 
 	private documentStorageService: DocumentStorageService | undefined;
+
+	public get policies(): IDocumentServicePolicies | undefined {
+		return this._policies;
+	}
 
 	public dispose() {}
 
@@ -84,7 +103,7 @@ export class DocumentService implements api.IDocumentService {
 	 *
 	 * @returns returns the document storage service for routerlicious driver.
 	 */
-	public async connectToStorage(): Promise<api.IDocumentStorageService> {
+	public async connectToStorage(): Promise<IDocumentStorageService> {
 		if (this.documentStorageService !== undefined) {
 			return this.documentStorageService;
 		}
@@ -94,26 +113,19 @@ export class DocumentService implements api.IDocumentService {
 		}
 
 		const getStorageManager = async (disableCache?: boolean): Promise<GitManager> => {
-			const shouldUpdateDiscoveredSessionInfo = this.shouldUpdateDiscoveredSessionInfo();
-			if (shouldUpdateDiscoveredSessionInfo) {
-				await this.refreshDiscovery();
-			}
-			if (
-				!this.storageManager ||
-				!this.noCacheStorageManager ||
-				shouldUpdateDiscoveredSessionInfo
-			) {
-				if (shouldUpdateDiscoveredSessionInfo) {
+			const refreshed = await this.refreshSessionInfoIfNeeded();
+			if (!this.storageManager || !this.noCacheStorageManager || refreshed) {
+				if (refreshed) {
 					const rateLimiter = new RateLimiter(
 						this.driverPolicies.maxConcurrentStorageRequests,
 					);
-					this.storageRestWrapper = await RouterliciousStorageRestWrapper.load(
+					this.storageRestWrapper = RouterliciousStorageRestWrapper.load(
 						this.tenantId,
 						this.storageTokenFetcher,
 						this.logger,
 						rateLimiter,
 						this.driverPolicies.enableRestLess,
-						this.storageUrl,
+						this.storageUrl /* baseUrl */,
 					);
 				}
 				const historian = new Historian(true, false, this.storageRestWrapper);
@@ -147,19 +159,16 @@ export class DocumentService implements api.IDocumentService {
 	 *
 	 * @returns returns the document delta storage service for routerlicious driver.
 	 */
-	public async connectToDeltaStorage(): Promise<api.IDocumentDeltaStorageService> {
+	public async connectToDeltaStorage(): Promise<IDocumentDeltaStorageService> {
 		await this.connectToStorage();
 		assert(!!this.documentStorageService, 0x0b1 /* "Storage service not initialized" */);
 
 		const getRestWrapper = async (): Promise<RestWrapper> => {
-			const shouldUpdateDiscoveredSessionInfo = this.shouldUpdateDiscoveredSessionInfo();
+			const refreshed = await this.refreshSessionInfoIfNeeded();
 
-			if (shouldUpdateDiscoveredSessionInfo) {
-				await this.refreshDiscovery();
-				const rateLimiter = new RateLimiter(
-					this.driverPolicies.maxConcurrentOrdererRequests,
-				);
-				this.ordererRestWrapper = await RouterliciousOrdererRestWrapper.load(
+			if (refreshed) {
+				const rateLimiter = new RateLimiter(this.driverPolicies.maxConcurrentOrdererRequests);
+				this.ordererRestWrapper = RouterliciousOrdererRestWrapper.load(
 					this.ordererTokenFetcher,
 					this.logger,
 					rateLimiter,
@@ -190,12 +199,10 @@ export class DocumentService implements api.IDocumentService {
 	 *
 	 * @returns returns the document delta stream service for routerlicious driver.
 	 */
-	public async connectToDeltaStream(client: IClient): Promise<api.IDocumentDeltaConnection> {
+	public async connectToDeltaStream(client: IClient): Promise<IDocumentDeltaConnection> {
 		const connect = async (refreshToken?: boolean) => {
 			let ordererToken = await this.ordererRestWrapper.getToken();
-			if (this.shouldUpdateDiscoveredSessionInfo()) {
-				await this.refreshDiscovery();
-			}
+			await this.refreshSessionInfoIfNeeded();
 
 			if (refreshToken) {
 				ordererToken = await PerformanceEvent.timedExecAsync(
@@ -221,7 +228,7 @@ export class DocumentService implements api.IDocumentService {
 										(errorMessage) =>
 											new NetworkErrorBasic(
 												`The Host-provided token fetcher threw an error`,
-												DriverErrorTypes.fetchTokenError,
+												RouterliciousErrorTypes.fetchTokenError,
 												canRetryOnError(error),
 												{ errorMessage, driverVersion },
 											),
@@ -243,7 +250,7 @@ export class DocumentService implements api.IDocumentService {
 						this.tenantId,
 						this.documentId,
 						ordererToken.jwt,
-						io,
+						SocketIOClientStatic,
 						client,
 						this.deltaStreamUrl,
 						this.logger,
@@ -258,11 +265,26 @@ export class DocumentService implements api.IDocumentService {
 		// Retry with new token on authorization error; otherwise, allow container layer to handle.
 		try {
 			const connection = await connect();
+			// Enable single-commit summaries via driver policy based on the enable_single_commit_summary flag which maybe provided by the service during connection.
+			// summarizeProtocolTree flag is used by the loader layer to attach protocol tree along with the summary required in the single-commit summaries.
+			const shouldSummarizeProtocolTree = (connection as R11sDocumentDeltaConnection).details
+				?.supportedFeatures?.enable_single_commit_summary
+				? true
+				: false;
+			this._policies = {
+				...this._policies,
+				summarizeProtocolTree: shouldSummarizeProtocolTree,
+			};
+
 			return connection;
 		} catch (error: any) {
-			if (error?.statusCode === 401) {
+			if (
+				typeof error === "object" &&
+				error !== null &&
+				(error as Partial<IR11sError>).errorType === RouterliciousErrorTypes.authorizationError
+			) {
 				// Fetch new token and retry once,
-				// otherwise 401 will be bubbled up as non-retriable AuthorizationError.
+				// otherwise 401/403 will be bubbled up as non-retriable AuthorizationError.
 				return connect(true /* refreshToken */);
 			}
 			throw error;
@@ -270,53 +292,20 @@ export class DocumentService implements api.IDocumentService {
 	}
 
 	/**
-	 * Re-discover session URLs if necessary.
+	 * Refresh session info URLs if necessary.
+	 * @returns boolean - true if session info was refreshed
 	 */
-	private async refreshDiscovery(): Promise<void> {
-		if (!this.discoverP) {
-			this.discoverP = PerformanceEvent.timedExecAsync(
-				this.logger,
-				{
-					eventName: "RefreshDiscovery",
-				},
-				async () => this.refreshDiscoveryCore(),
-			);
-		}
-		return this.discoverP;
-	}
-
-	private async refreshDiscoveryCore(): Promise<void> {
-		const fluidResolvedUrl = await this.discoverFluidResolvedUrl();
-		this._resolvedUrl = fluidResolvedUrl;
-		this.storageUrl = fluidResolvedUrl.endpoints.storageUrl;
-		this.ordererUrl = fluidResolvedUrl.endpoints.ordererUrl;
-		this.deltaStorageUrl = fluidResolvedUrl.endpoints.deltaStorageUrl;
-		this.deltaStreamUrl = fluidResolvedUrl.endpoints.deltaStreamUrl || this.ordererUrl;
-	}
-
-	/**
-	 * Whether enough time has passed since last disconnect to warrant a new discovery call on reconnect.
-	 */
-	private shouldUpdateDiscoveredSessionInfo(): boolean {
-		if (!this.driverPolicies.enableDiscovery) {
+	private async refreshSessionInfoIfNeeded(): Promise<boolean> {
+		const response = await this.getSessionInfo();
+		if (!response.refreshed) {
 			return false;
 		}
-		const now = Date.now();
-		// When connection is disconnected, we cannot know if session has moved or document has been deleted
-		// without re-doing discovery on the next attempt to connect.
-		// Disconnect event is not so reliable in local testing. To ensure re-discovery when necessary,
-		// re-discover if enough time has passed since last discovery.
-		const pastLastDiscoveryTimeThreshold =
-			now - this.lastDiscoveredAt > RediscoverAfterTimeSinceDiscoveryMs;
-		if (pastLastDiscoveryTimeThreshold) {
-			// Reset discover promise and refresh discovery.
-			this.lastDiscoveredAt = Date.now();
-			this.discoverP = undefined;
-			this.refreshDiscovery().catch(() => {
-				// Undo discovery time set on failure, so that next check refreshes.
-				this.lastDiscoveredAt = 0;
-			});
-		}
-		return pastLastDiscoveryTimeThreshold;
+		const fluidResolvedUrl = response.resolvedUrl;
+		this._resolvedUrl = fluidResolvedUrl;
+		this.storageUrl = fluidResolvedUrl.endpoints?.storageUrl;
+		this.ordererUrl = fluidResolvedUrl.endpoints?.ordererUrl;
+		this.deltaStorageUrl = fluidResolvedUrl.endpoints?.deltaStorageUrl;
+		this.deltaStreamUrl = fluidResolvedUrl.endpoints.deltaStreamUrl ?? this.ordererUrl;
+		return true;
 	}
 }

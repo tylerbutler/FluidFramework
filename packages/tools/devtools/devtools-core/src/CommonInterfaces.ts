@@ -4,28 +4,28 @@
  */
 
 /**
- * A key used to identify and differentiate Containers registered with the {@link IFluidDevtools}.
+ * A key used to identify and differentiate Containers registered with the {@link @fluidframework/devtools-core#IFluidDevtools}.
  *
  * @remarks Each Container registered with the Devtools must be assigned a unique `containerKey`.
  *
- * @example
+ * @example "Canvas Container"
  *
- * "Canvas Container"
- *
- * @public
+ * @beta
  */
 export type ContainerKey = string;
 
 /**
  * Common interface for data associated with a particular Container registered with the Devtools.
  *
- * @public
+ * @sealed
+ * @system
+ * @beta
  */
 export interface HasContainerKey {
 	/**
 	 * {@inheritDoc ContainerKey}
 	 */
-	containerKey: ContainerKey;
+	readonly containerKey: ContainerKey;
 }
 
 /**
@@ -45,7 +45,7 @@ export interface HasFluidObjectId {
 	/**
 	 * The ID of the Fluid object (DDS) associated with data or a request.
 	 */
-	fluidObjectId: FluidObjectId;
+	readonly fluidObjectId: FluidObjectId;
 }
 
 /**
@@ -81,6 +81,7 @@ export const EditType = {
 } as const;
 
 /**
+ * {@inheritDoc (EditType:variable)}
  * @internal
  */
 export type EditType = (typeof EditType)[keyof typeof EditType];

@@ -9,6 +9,7 @@ import { IContext, IContextErrorData } from "./lambdas";
 /**
  * Allows checkpointing the minimum offset for multiple lambdas
  * This is useful to use for a CombinedLambda
+ * @internal
  */
 export class CombinedContext {
 	private currentCheckpoint: IQueuedMessage | undefined;
@@ -26,6 +27,12 @@ export class CombinedContext {
 			log: this.context.log,
 			checkpoint: (message) => this.checkpoint(id, message),
 			error: (error, errorData) => this.error(id, error, errorData),
+			pause: (offset, reason) => {
+				this.context.pause(offset, reason);
+			},
+			resume: () => {
+				this.context.resume();
+			},
 		};
 	}
 

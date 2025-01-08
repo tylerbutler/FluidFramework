@@ -9,13 +9,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { type Theme } from "@fluentui/react-components";
+import type { Theme } from "@fluentui/react-components";
 import React from "react";
 import {
 	Area,
 	Bar,
 	CartesianGrid,
 	ComposedChart,
+	Label,
 	Legend,
 	Line,
 	ResponsiveContainer,
@@ -23,7 +24,8 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
-import { ThemeOption, useThemeContext } from "../../ThemeHelper";
+
+import { ThemeOption, useThemeContext } from "../../ThemeHelper.js";
 
 /**
  * Data To be rendered with Op Latency Graph
@@ -49,15 +51,18 @@ interface DataPoint {
 
 /**
  * Merges multiple {@link GraphDataSet}'s into singular objects by their x-axis (timestamp) value.
- * This method is necessary for showing composed graphs beacause Recharts expects data to be in a merged object format
+ * This method is necessary for showing composed graphs because Recharts expects data to be in a merged object format
  */
 const mergeDataSets = (dataSets: GraphDataSet[]): DataPoint[] => {
-	const xAxisDataPointToYAxisDataPointMap: Record<string, Record<string, number | string>> = {};
+	const xAxisDataPointToYAxisDataPointMap: Record<
+		string,
+		Record<string, number | string>
+	> = {};
 
 	for (const dataSet of dataSets) {
 		const { yAxisDataKey, xAxisDataKey, uuid } = dataSet.schema;
 		for (const dataPoint of dataSet.data) {
-			const xAxisDataPoint = dataPoint[xAxisDataKey];
+			const xAxisDataPoint: string | number | undefined = dataPoint[xAxisDataKey];
 			xAxisDataPointToYAxisDataPointMap[xAxisDataPoint] = {
 				...xAxisDataPointToYAxisDataPointMap[xAxisDataPoint],
 				[uuid]: dataPoint[yAxisDataKey],
@@ -236,8 +241,8 @@ export function DynamicComposedChart(props: DynamicComposedChartProps): React.Re
 					dy={16}
 					textAnchor="end"
 					fill={graphColorPalette.axisTick}
-					transform="rotate(-35)"
-					fontSize={16}
+					transform="rotate(-20)"
+					fontSize={14}
 				>
 					{payload.value}
 				</text>
@@ -251,15 +256,14 @@ export function DynamicComposedChart(props: DynamicComposedChartProps): React.Re
 	 */
 	const CustomizedYAxisTick = (yAxisProps: any): React.ReactElement => {
 		const { x, y, payload } = yAxisProps;
-		/* eslint-disable react/prop-types */
+
 		return (
 			<g>
-				<text x={x} y={y} textAnchor="end" fill={graphColorPalette.axisTick} fontSize={16}>
+				<text x={x} y={y} textAnchor="end" fill={graphColorPalette.axisTick} fontSize={14}>
 					{`${payload.value}${props.yAxisUnitDisplayName ?? ""}`}
 				</text>
 			</g>
 		);
-		/* eslint-enable react/prop-types */
 	};
 
 	/**
@@ -325,9 +329,7 @@ export function DynamicComposedChart(props: DynamicComposedChartProps): React.Re
 						stroke={hexColor}
 						strokeWidth={3}
 						activeDot={{ r: 6 }}
-						strokeOpacity={
-							activeIndex === undefined || activeIndex === dataKey ? 1 : 0.2
-						}
+						strokeOpacity={activeIndex === undefined || activeIndex === dataKey ? 1 : 0.2}
 					/>
 				);
 			}
@@ -396,7 +398,9 @@ export function DynamicComposedChart(props: DynamicComposedChartProps): React.Re
 				data-testId="test-dynamic-composed-chart"
 			>
 				<CartesianGrid strokeDasharray="2 2" stroke={graphColorPalette.cartesianGrid} />
-				<XAxis dataKey={"x"} tick={<CustomizedXAxisTick />} />
+				<XAxis dataKey={"x"} tick={<CustomizedXAxisTick />}>
+					<Label value="Timestamp" offset={12} position="bottom" />
+				</XAxis>
 				<YAxis tick={<CustomizedYAxisTick />} />
 				<Tooltip
 					contentStyle={{

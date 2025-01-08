@@ -1,14 +1,26 @@
-# @fluidframework/mocha-test-setup
+# @fluid-internal/mocha-test-setup
+
+<!-- AUTO-GENERATED-CONTENT:START (LIBRARY_README_HEADER) -->
+
+<!-- prettier-ignore-start -->
+<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
+
+**IMPORTANT: This package is intended strictly as an implementation detail of the Fluid Framework and is not intended for public consumption.**
+**We make no stability guarantees regarding its APIs.**
+
+<!-- prettier-ignore-end -->
+
+<!-- AUTO-GENERATED-CONTENT:END -->
 
 This package has a few main purposes:
 
--   Expose/generate a default `.mocharc.js` configuration for running [mocha](https://mochajs.org) tests, which other
+-   Expose/generate a default `.mocharc.cjs` configuration for running [mocha](https://mochajs.org) tests, which other
     packages can extend.
 -   Map paths for required packages/modules to account for [Lerna](https://lerna.js.org/)'s dependency hoisting.
 -   Add mocha `beforeAll`, `beforeEach` and `afterEach` [root hook plugins](https://mochajs.org/#root-hook-plugins) to add
     some special behavior when we run tests.
 
-## Base `mocharc.js` configuration
+## Base `mocharc.cjs` configuration
 
 To leverage the base mocha configuration exposed by this package, first add it as a `devDependency` to your `package.json`
 (the rest of the file has been omitted):
@@ -16,17 +28,17 @@ To leverage the base mocha configuration exposed by this package, first add it a
 ```json
 {
 	"devDependencies": {
-		"@fluidframework/mocha-test-setup": "version-that-matches-the-rest-of-the-release-group"
+		"@fluid-internal/mocha-test-setup": "version-that-matches-the-rest-of-the-release-group"
 	}
 }
 ```
 
-Then put this in a `.mocharc.js` file at the root of your package:
+Then put this in a `.mocharc.cjs` file at the root of your package:
 
 ```javascript
 "use strict";
 
-const getFluidTestMochaConfig = require("@fluidframework/mocha-test-setup/mocharc-common");
+const getFluidTestMochaConfig = require("@fluid-internal/mocha-test-setup/mocharc-common");
 
 const packageDir = __dirname;
 const config = getFluidTestMochaConfig(packageDir);
@@ -101,7 +113,7 @@ required packages that you can pass to `getFluidTestMochaConfig()`.
 For example, the path to a reporter file:
 
 ```console
-mocha --require @fluidframework/mocha-test-setup --reporter @fluid-tools/benchmark/dist/MochaMemoryTestReporter.js
+mocha --require @fluid-internal/mocha-test-setup --reporter @fluid-tools/benchmark/dist/MochaReporter.js
 ```
 
 Depending on where that file is coming from, you'll need to be careful with how that path is specified.
@@ -142,3 +154,46 @@ to the module with that implementation should **not** be specified with the `--r
 `FLUID_TEST_LOGGER_PKG_PATH` environment variable.
 This package has logic that needs the custom logger to be imported/executed at a particular time, and we ensure that
 by requiring that the path be provided through that environment variable.
+
+<!-- AUTO-GENERATED-CONTENT:START (README_FOOTER) -->
+
+<!-- prettier-ignore-start -->
+<!-- NOTE: This section is automatically generated using @fluid-tools/markdown-magic. Do not update these generated contents directly. -->
+
+## Contribution Guidelines
+
+There are many ways to [contribute](https://github.com/microsoft/FluidFramework/blob/main/CONTRIBUTING.md) to Fluid.
+
+-   Participate in Q&A in our [GitHub Discussions](https://github.com/microsoft/FluidFramework/discussions).
+-   [Submit bugs](https://github.com/microsoft/FluidFramework/issues) and help us verify fixes as they are checked in.
+-   Review the [source code changes](https://github.com/microsoft/FluidFramework/pulls).
+-   [Contribute bug fixes](https://github.com/microsoft/FluidFramework/blob/main/CONTRIBUTING.md).
+
+Detailed instructions for working in the repo can be found in the [Wiki](https://github.com/microsoft/FluidFramework/wiki).
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+This project may contain Microsoft trademarks or logos for Microsoft projects, products, or services.
+Use of these trademarks or logos must follow Microsoft’s [Trademark & Brand Guidelines](https://www.microsoft.com/trademarks).
+Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
+
+## Help
+
+Not finding what you're looking for in this README? Check out [fluidframework.com](https://fluidframework.com/docs/).
+
+Still not finding what you're looking for? Please [file an issue](https://github.com/microsoft/FluidFramework/wiki/Submitting-Bugs-and-Feature-Requests).
+
+Thank you!
+
+## Trademark
+
+This project may contain Microsoft trademarks or logos for Microsoft projects, products, or services.
+
+Use of these trademarks or logos must follow Microsoft's [Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
+
+Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
+
+<!-- prettier-ignore-end -->
+
+<!-- AUTO-GENERATED-CONTENT:END -->

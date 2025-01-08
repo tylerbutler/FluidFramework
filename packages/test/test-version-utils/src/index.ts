@@ -2,6 +2,7 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 export { mochaGlobalSetup } from "./compatConfig.js";
 export {
 	getDataStoreFactory,
@@ -10,16 +11,21 @@ export {
 	ITestDataObject,
 	TestDataObjectType,
 } from "./compatUtils.js";
-export { describeInstallVersions } from "./describeWithVersions.js";
+export {
+	describeInstallVersions,
+	IRequestedFluidVersions,
+	DescribeWithVersions,
+	DescribeSuiteWithVersions,
+} from "./describeWithVersions.js";
 export {
 	DescribeCompat,
 	DescribeCompatSuite,
-	describeFullCompat,
-	describeLoaderCompat,
-	describeNoCompat,
+	describeCompat,
 	ITestObjectProviderOptions,
+	type CompatType,
 } from "./describeCompat.js";
 export {
+	DescribeE2EDocSuite,
 	describeE2EDocs,
 	DocumentType,
 	DocumentTypeInfo,
@@ -48,8 +54,15 @@ export {
 	getDataRuntimeApi,
 	getDriverApi,
 	getLoaderApi,
+	InstalledPackage,
+	DataRuntimeApi,
+	ContainerRuntimeApi,
+	LoaderApi,
 } from "./testApi.js";
 export {
 	itExpectsSkipsFailureOnSpecificDrivers,
 	itSkipsFailureOnSpecificDrivers,
+	SkippedTestWithDriverType,
+	SkippedErrorExpectingTestWithDriverType,
 } from "./itSkipsOnFailure.js";
+export { getRequestedVersion, versionToComparisonNumber } from "./versionUtils.js";

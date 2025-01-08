@@ -2,11 +2,13 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import type { Parent as UnistParent } from "unist";
 
-import { ApiItemKind } from "@microsoft/api-extractor-model";
-import { DocumentationNodeType } from "./DocumentationNodeType";
-import { SectionNode } from "./SectionNode";
+import type { ApiItem } from "../index.js";
+
+import { DocumentationNodeType } from "./DocumentationNodeType.js";
+import type { SectionNode } from "./SectionNode.js";
 
 /**
  * {@link DocumentNode} construction properties.
@@ -15,9 +17,9 @@ import { SectionNode } from "./SectionNode";
  */
 export interface DocumentNodeProperties {
 	/**
-	 * Metadata for the document
+	 * The ApiItem the document node was created for, if it was created for an ApiItem.
 	 */
-	readonly documentItemMetadata: DocumentItemMetadata;
+	readonly apiItem?: ApiItem;
 
 	/**
 	 * Child nodes.
@@ -32,37 +34,6 @@ export interface DocumentNodeProperties {
 	 * @remarks Does not include the file extension, as this domain has no concept of what kind of file will be produced.
 	 */
 	readonly documentPath: string;
-
-	/**
-	 * Optional document front-matter, to be appended above all other content.
-	 */
-	readonly frontMatter?: string;
-}
-
-/**
- * Metadata of a {@link DocumentNode} in terms of its API.
- *
- * @remarks
- * `DocumentItemMetadata` aids in tracing a documentation node to its API, useful for cross-referencing and integrations.
- *
- * @public
- */
-export interface DocumentItemMetadata {
-	/**
-	 * Name of the original API, e.g., class or function, from which this documentation node is derived.
-	 */
-	readonly apiItemName: string;
-
-	/**
-	 * Category or type of the API like 'class' or 'function'.
-	 */
-	readonly apiItemKind: ApiItemKind;
-
-	/**
-	 * Originating package name for the API.
-	 * @remarks documents corresponding to an entity that doesn't belong to a package (e.g. an ApiModel) will not have this field set.
-	 */
-	readonly packageName: string | undefined;
 }
 
 /**
@@ -82,9 +53,9 @@ export class DocumentNode implements UnistParent<SectionNode>, DocumentNodePrope
 	public readonly type = DocumentationNodeType.Document;
 
 	/**
-	 * {@inheritDoc DocumentNodeProps.documentItemMetadata}
+	 * {@inheritDoc DocumentNodeProps.apiItem}
 	 */
-	public readonly documentItemMetadata: DocumentItemMetadata;
+	public readonly apiItem?: ApiItem;
 
 	/**
 	 * {@inheritDoc DocumentNodeProps.children}
@@ -96,15 +67,9 @@ export class DocumentNode implements UnistParent<SectionNode>, DocumentNodePrope
 	 */
 	public readonly documentPath: string;
 
-	/**
-	 * {@inheritDoc DocumentNodeProps.frontMatter}
-	 */
-	public readonly frontMatter?: string;
-
 	public constructor(properties: DocumentNodeProperties) {
-		this.documentItemMetadata = properties.documentItemMetadata;
+		this.apiItem = properties.apiItem;
 		this.children = properties.children;
 		this.documentPath = properties.documentPath;
-		this.frontMatter = properties.frontMatter;
 	}
 }

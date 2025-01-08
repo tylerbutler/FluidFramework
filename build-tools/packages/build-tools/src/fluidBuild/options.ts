@@ -2,13 +2,15 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import * as os from "os";
-import * as path from "path";
 
-import { commonOptionString, parseOption } from "../common/commonOptions";
+import { existsSync } from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
 import { defaultLogger } from "../common/logging";
-import { existsSync } from "../common/utils";
+import { commonOptionString, parseOption } from "./commonOptions";
 import { IPackageMatchedOptions } from "./fluidRepoBuild";
+import { defaultBuildTaskName, defaultCleanTaskName } from "./fluidTaskDefinitions";
 import { ISymlinkOptions } from "./symlinkUtils";
 
 const { log, warning, errorLog } = defaultLogger;
@@ -22,15 +24,25 @@ interface FastBuildOptions extends IPackageMatchedOptions, ISymlinkOptions {
 	buildTaskNames: string[];
 	build?: boolean;
 	vscode: boolean;
+
+	/**
+	 * @deprecated symlink-related functionality will be removed in an upcoming release.
+	 */
 	symlink: boolean;
+
+	/**
+	 * @deprecated symlink-related functionality will be removed in an upcoming release.
+	 */
 	fullSymlink: boolean | undefined;
+
+	/**
+	 * @deprecated depcheck-related functionality will be removed in an upcoming release.
+	 */
 	depcheck: boolean;
 	force: boolean;
 	install: boolean;
-	nohoist: boolean;
 	uninstall: boolean;
 	concurrency: number;
-	fix: boolean;
 	worker: boolean;
 	workerThreads: boolean;
 	workerMemoryLimit: number;
@@ -53,14 +65,12 @@ export const options: FastBuildOptions = {
 	depcheck: false,
 	force: false,
 	install: false,
-	nohoist: false,
 	uninstall: false,
 	concurrency: os.cpus().length,
-	fix: false,
 	all: false,
 	worker: false,
 	workerThreads: false,
-	workerMemoryLimit: -1,
+	workerMemoryLimit: Number.POSITIVE_INFINITY,
 };
 
 // This string is duplicated in the readme: update readme if changing this.
@@ -87,6 +97,7 @@ Options:
      --symlink:full   Fix symlink between packages across monorepo (full mode). This symlinks everything in the repo together. CI does not ensure this configuration is functional, so it may or may not work.
      --uninstall      Clean all node_modules. This errors if some node-nodules folders do not exists: if hitting this limitation you can do an install first to work around it.
      --vscode         Output error message to work with default problem matcher in vscode
+     --worker         Reuse worker threads for some tasks, increasing memory use but lowering overhead.
 ${commonOptionString}
 `,
 	);
@@ -104,14 +115,13 @@ function setBuild(build: boolean) {
 	}
 }
 
-function setReinstall(nohoist: boolean) {
+function setReinstall() {
 	options.uninstall = true;
-	setInstall(nohoist);
+	setInstall();
 }
 
-function setInstall(nohoist: boolean) {
+function setInstall() {
 	options.install = true;
-	options.nohoist = nohoist;
 	setBuild(false);
 }
 
@@ -166,29 +176,13 @@ export function parseOptions(argv: string[]) {
 			continue;
 		}
 
-		if (arg === "--fix") {
-			options.fix = true;
-			setBuild(false);
-			continue;
-		}
-
 		if (arg === "--install") {
-			setInstall(false);
-			continue;
-		}
-
-		if (arg === "--install:nohoist") {
-			setInstall(true);
+			setInstall();
 			continue;
 		}
 
 		if (arg === "--reinstall") {
-			setReinstall(false);
-			continue;
-		}
-
-		if (arg === "--reinstall:nohoist") {
-			setReinstall(true);
+			setReinstall();
 			continue;
 		}
 
@@ -230,16 +224,25 @@ export function parseOptions(argv: string[]) {
 		}
 
 		if (arg === "--symlink") {
+			console.warn(
+				"The --symlink flag is deprecated and will be removed in an upcoming release.",
+			);
 			setSymlink(false);
 			continue;
 		}
 
 		if (arg === "--symlink:full") {
+			console.warn(
+				"The --symlink:full flag is deprecated and will be removed in an upcoming release.",
+			);
 			setSymlink(true);
 			continue;
 		}
 
 		if (arg === "--depcheck") {
+			console.warn(
+				"The --depcheck flag is deprecated and will be removed in an upcoming release.",
+			);
 			options.depcheck = true;
 			setBuild(false);
 			continue;
@@ -344,11 +347,11 @@ export function parseOptions(argv: string[]) {
 
 	// If we are building, and don't have a task name, default to "build"
 	if (options.build !== false && options.buildTaskNames.length === 0) {
-		options.buildTaskNames.push("build");
+		options.buildTaskNames.push(defaultBuildTaskName);
 	}
 
 	// Add the "clean" task if --clean is specified
 	if (options.clean) {
-		options.buildTaskNames.push("clean");
+		options.buildTaskNames.push(defaultCleanTaskName);
 	}
 }

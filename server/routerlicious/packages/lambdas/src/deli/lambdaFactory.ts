@@ -10,6 +10,7 @@ import {
 	ICheckpointService,
 	IClientManager,
 	IContext,
+	IClusterDrainingChecker,
 	IDeliState,
 	IDocument,
 	IDocumentRepository,
@@ -23,7 +24,6 @@ import {
 	LambdaCloseType,
 	MongoManager,
 	requestWithRetry,
-	runWithRetry,
 } from "@fluidframework/server-services-core";
 import { defaultHash, IGitManager } from "@fluidframework/server-services-client";
 import {
@@ -31,7 +31,6 @@ import {
 	LumberEventName,
 	Lumberjack,
 	getLumberBaseProperties,
-	CommonProperties,
 } from "@fluidframework/server-services-telemetry";
 import { NoOpLambda, createSessionMetric, isDocumentValid, isDocumentSessionValid } from "../utils";
 import { DeliLambda } from "./lambda";
@@ -47,11 +46,13 @@ const getDefaultCheckpoint = (): IDeliState => {
 		signalClientConnectionNumber: 0,
 		lastSentMSN: 0,
 		nackMessages: undefined,
-		successfullyStartedLambdas: [],
 		checkpointTimestamp: Date.now(),
 	};
 };
 
+/**
+ * @internal
+ */
 export class DeliLambdaFactory
 	extends EventEmitter
 	implements IPartitionLambdaFactory<IPartitionLambdaConfig>
@@ -66,6 +67,7 @@ export class DeliLambdaFactory
 		private readonly signalProducer: IProducer | undefined,
 		private readonly reverseProducer: IProducer,
 		private readonly serviceConfiguration: IServiceConfiguration,
+		private readonly clusterDrainingChecker?: IClusterDrainingChecker | undefined,
 	) {
 		super();
 	}
@@ -73,20 +75,10 @@ export class DeliLambdaFactory
 	public async create(
 		config: IPartitionLambdaConfig,
 		context: IContext,
+		updateActivityTime?: (activityTime?: number) => void,
 	): Promise<IPartitionLambda> {
 		const { documentId, tenantId } = config;
-		const sessionMetric = createSessionMetric(
-			tenantId,
-			documentId,
-			LumberEventName.SessionResult,
-			this.serviceConfiguration,
-		);
-		const sessionStartMetric = createSessionMetric(
-			tenantId,
-			documentId,
-			LumberEventName.StartSessionResult,
-			this.serviceConfiguration,
-		);
+		let sessionMetric: Lumber<LumberEventName.SessionResult> | undefined;
 
 		const messageMetaData = {
 			documentId,
@@ -94,15 +86,16 @@ export class DeliLambdaFactory
 		};
 
 		let gitManager: IGitManager;
-		let document: IDocument;
+		let document: IDocument | undefined;
 
 		try {
 			// Lookup the last sequence number stored
 			// TODO - is this storage specific to the orderer in place? Or can I generalize the output context?
-			document = await this.documentRepository.readOne({ documentId, tenantId });
+			document =
+				(await this.documentRepository.readOne({ documentId, tenantId })) ?? undefined;
 
 			// Check if the document was deleted prior.
-			if (!isDocumentValid(document)) {
+			if (document === undefined || !isDocumentValid(document)) {
 				// (Old, from tanviraumi:) Temporary guard against failure until we figure out what causing this to trigger.
 				// Document sessions can be joined (via Alfred) after a document is functionally deleted.
 				const errorMessage = `Received attempt to connect to a missing/deleted document.`;
@@ -126,9 +119,12 @@ export class DeliLambdaFactory
 				}
 			}
 
-			sessionMetric?.setProperty(
-				CommonProperties.isEphemeralContainer,
-				document?.isEphemeralContainer ?? false,
+			sessionMetric = createSessionMetric(
+				tenantId,
+				documentId,
+				LumberEventName.SessionResult,
+				this.serviceConfiguration,
+				document?.isEphemeralContainer,
 			);
 
 			gitManager = await this.tenantManager.getTenantGitManager(tenantId, documentId);
@@ -136,7 +132,7 @@ export class DeliLambdaFactory
 			const errMsg = "Deli lambda creation failed";
 			context.log?.error(`${errMsg}. Exception: ${inspect(error)}`, { messageMetaData });
 			Lumberjack.error(errMsg, getLumberBaseProperties(documentId, tenantId), error);
-			this.logSessionFailureMetrics(sessionMetric, sessionStartMetric, errMsg);
+			this.logSessionFailureMetrics(sessionMetric, errMsg);
 			throw error;
 		}
 
@@ -166,7 +162,7 @@ export class DeliLambdaFactory
 					const errMsg = "Could not load state from summary";
 					context.log?.error(errMsg, { messageMetaData });
 					Lumberjack.error(errMsg, getLumberBaseProperties(documentId, tenantId));
-					this.logSessionFailureMetrics(sessionMetric, sessionStartMetric, errMsg);
+					this.logSessionFailureMetrics(sessionMetric, errMsg);
 
 					lastCheckpoint = getDefaultCheckpoint();
 				} else {
@@ -219,66 +215,132 @@ export class DeliLambdaFactory
 			this.reverseProducer,
 			this.serviceConfiguration,
 			sessionMetric,
-			sessionStartMetric,
 			this.checkpointService,
 		);
 
 		deliLambda.on("close", (closeType) => {
-			const handler = async () => {
+			const baseLumberjackProperties = getLumberBaseProperties(documentId, tenantId);
+			const handler = async (): Promise<void> => {
 				if (
 					closeType === LambdaCloseType.ActivityTimeout ||
 					closeType === LambdaCloseType.Error
 				) {
 					if (document?.isEphemeralContainer) {
-						// Call to historian to delete summaries
-						await requestWithRetry(
-							async () => gitManager.deleteSummary(false),
-							"deliLambda_onClose" /* callName */,
-							getLumberBaseProperties(documentId, tenantId) /* telemetryProperties */,
-							(error) => true /* shouldRetry */,
-							3 /* maxRetries */,
-						);
+						if (this.serviceConfiguration.deli.enableEphemeralContainerSummaryCleanup) {
+							// Call to historian to delete summaries
+							await requestWithRetry(
+								async () => gitManager.deleteSummary(false),
+								"deliLambda_onClose" /* callName */,
+								baseLumberjackProperties /* telemetryProperties */,
+								(error) => true /* shouldRetry */,
+								3 /* maxRetries */,
+							);
+						}
 
-						// Delete the document metadata
-						await runWithRetry(
-							async () =>
-								this.documentRepository.deleteOne({
-									documentId,
-									tenantId,
-								}),
-							"deleteDocMetadata",
-							3 /* maxRetries */,
-							1000 /* retryAfterMs */,
-							getLumberBaseProperties(documentId, tenantId),
-							(error) => error.code === 11000 /* shouldIgnoreError */,
-							(error) => true /* shouldRetry */,
-						);
+						// Delete the document metadata, soft or hard depending on the configuration
+						const deletionFilter = {
+							documentId,
+							tenantId,
+						};
+						if (
+							this.serviceConfiguration.deli.ephemeralContainerSoftDeleteTimeInMs >= 0
+						) {
+							const scheduledDeletionTimeStr = new Date(
+								Date.now() +
+									this.serviceConfiguration.deli
+										.ephemeralContainerSoftDeleteTimeInMs,
+							).toJSON();
+							await this.documentRepository.updateOne(
+								deletionFilter,
+								{ scheduledDeletionTime: scheduledDeletionTimeStr },
+								null,
+							);
+							Lumberjack.info(
+								`Successfully scheduled to clean up ephemeral container`,
+								{
+									...baseLumberjackProperties,
+									scheduledDeletionTime: scheduledDeletionTimeStr,
+								},
+							);
+						} else {
+							await this.documentRepository.deleteOne(deletionFilter);
 
-						Lumberjack.info(
-							`Successfully cleaned up ephemeral container`,
-							getLumberBaseProperties(documentId, tenantId),
-						);
-
+							Lumberjack.info(
+								`Successfully cleaned up ephemeral container`,
+								baseLumberjackProperties,
+							);
+						}
 						return;
 					}
 					const filter = { documentId, tenantId, session: { $exists: true } };
+					const keepSessionActive = this.checkpointService.getGlobalCheckpointFailed();
 					const data = {
 						"session.isSessionAlive": false,
-						"session.isSessionActive": false,
+						"session.isSessionActive": keepSessionActive,
 						"lastAccessTime": Date.now(),
 					};
+
+					// Set skip session stickiness to be true if cluster is in draining
+					if (this.clusterDrainingChecker) {
+						try {
+							const isClusterDraining =
+								await this.clusterDrainingChecker.isClusterDraining();
+							if (isClusterDraining) {
+								Lumberjack.info(
+									"Cluster is in draining, set skip session stickiness to be true",
+								);
+								// Skip session stickiness if cluster is in draining
+								data["session.ignoreSessionStickiness"] = true;
+							}
+						} catch (error) {
+							Lumberjack.error(
+								"Failed to get cluster draining status",
+								baseLumberjackProperties,
+								error,
+							);
+						}
+					}
+
 					await this.documentRepository.updateOne(filter, data, undefined);
-					const message = `Marked session alive and active as false for closeType:
+					const message = `Marked session alive as false and active as ${keepSessionActive} for closeType:
                         ${JSON.stringify(closeType)}`;
 
 					context.log?.info(message, { messageMetaData });
-					Lumberjack.info(message, getLumberBaseProperties(documentId, tenantId));
+					Lumberjack.info(message, baseLumberjackProperties);
 				}
 			};
-			handler().catch((e) => {
-				const message = `Failed to handle session alive and active with exception ${e}`;
+			handler().catch((error) => {
+				const message = `Failed to handle session alive and active with exception ${error}`;
 				context.log?.error(message, { messageMetaData });
-				Lumberjack.error(message, getLumberBaseProperties(documentId, tenantId), e);
+				Lumberjack.error(message, baseLumberjackProperties, error);
+			});
+		});
+
+		deliLambda.on("noClient", () => {
+			const baseLumberjackProperties = getLumberBaseProperties(documentId, tenantId);
+			const handler = async (): Promise<void> => {
+				// Set activity timer to reduce session grace period for ephemeral containers if cluster is in draining
+				if (document?.isEphemeralContainer && this.clusterDrainingChecker) {
+					const isClusterDraining = await this.clusterDrainingChecker.isClusterDraining();
+					if (isClusterDraining) {
+						Lumberjack.info(
+							"Cluster is under draining and NoClient event is received",
+							baseLumberjackProperties,
+						);
+						if (updateActivityTime) {
+							// Set session activity time to be 2 minutes later.
+							// It means this labmda will be closed in about 2 minutes
+							updateActivityTime(Date.now() + 2 * 60 * 1000);
+						}
+					}
+				}
+			};
+			handler().catch((error) => {
+				Lumberjack.error(
+					"Failed to handle NoClient event.",
+					baseLumberjackProperties,
+					error,
+				);
 			});
 		});
 
@@ -306,14 +368,14 @@ export class DeliLambdaFactory
 
 	private logSessionFailureMetrics(
 		sessionMetric: Lumber<LumberEventName.SessionResult> | undefined,
-		sessionStartMetric: Lumber<LumberEventName.StartSessionResult> | undefined,
 		errMsg: string,
-	) {
+	): void {
 		sessionMetric?.error(errMsg);
-		sessionStartMetric?.error(errMsg);
 	}
 
 	public async dispose(): Promise<void> {
+		// Emit this event to close the broadcasterLambda and publisher
+		this.emit("dispose");
 		const mongoClosedP = this.operationsDbMongoManager.close();
 		const forwardProducerClosedP = this.forwardProducer.close();
 		const signalProducerClosedP = this.signalProducer?.close();
@@ -344,18 +406,18 @@ export class DeliLambdaFactory
 					toUtf8(content.content, content.encoding),
 				) as IDeliState;
 				return summaryCheckpoint;
-			} catch (exception) {
+			} catch (error) {
 				const messageMetaData = {
 					documentId,
 					tenantId,
 				};
 				const errorMessage = `Error fetching deli state from summary`;
 				logger?.error(errorMessage, { messageMetaData });
-				logger?.error(JSON.stringify(exception), { messageMetaData });
+				logger?.error(JSON.stringify(error), { messageMetaData });
 				Lumberjack.error(
 					errorMessage,
 					getLumberBaseProperties(documentId, tenantId),
-					exception,
+					error,
 				);
 				return undefined;
 			}

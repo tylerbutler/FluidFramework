@@ -13,9 +13,12 @@ import {
 } from "@fluidframework/server-services-core";
 import { TestContext } from "./testContext";
 
+/**
+ * @internal
+ */
 export class TestConsumer implements IConsumer {
 	private readonly emitter = new EventEmitter();
-	private pausedQueue: string[] = null;
+	private pausedQueue: string[] | null = null;
 	private failOnCommit = false;
 
 	// Leverage the context code for storing and tracking an offset
@@ -116,6 +119,9 @@ export class TestConsumer implements IConsumer {
 	}
 }
 
+/**
+ * @internal
+ */
 export class TestProducer implements IProducer {
 	constructor(private readonly kafka: TestKafka) {}
 
@@ -138,10 +144,15 @@ export class TestProducer implements IProducer {
 	public once(event: string, listener: (...args: any[]) => void): this {
 		return this;
 	}
+
+	public off(event: string, listener: (...args: any[]) => void): this {
+		return this;
+	}
 }
 
 /**
  * Test Kafka implementation. Allows for the creation of a joined producer/consumer pair.
+ * @internal
  */
 export class TestKafka {
 	public static createdQueuedMessage(offset: number, metadata?: any): IQueuedMessage {

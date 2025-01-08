@@ -3,22 +3,38 @@
  * Licensed under the MIT License.
  */
 
-import {
-	type ITelemetryBaseEvent,
-	type ITelemetryBaseLogger,
+import type {
+	ITelemetryBaseEvent,
+	ITelemetryBaseLogger,
 } from "@fluidframework/core-interfaces";
 
+import type { ITimestampedTelemetryEvent } from "./TelemetryMetadata.js";
 import {
 	GetTelemetryHistory,
-	handleIncomingWindowMessage,
 	type IDevtoolsMessage,
 	type InboundHandlers,
 	type MessageLoggingOptions,
-	postMessagesToWindow,
-	TelemetryHistory,
 	TelemetryEvent,
-} from "./messaging";
-import { type ITimestampedTelemetryEvent } from "./TelemetryMetadata";
+	TelemetryHistory,
+	handleIncomingWindowMessage,
+	postMessagesToWindow,
+} from "./messaging/index.js";
+
+/**
+ * Logger implementation that posts all telemetry events to the window (globalThis object).
+ * This logger is intended to integrate with the Fluid DevTools browser extension.
+ *
+ * @remarks Note: external implementations of this interface are not supported.
+ * An `IDevtoolsLogger` can be created via {@link createDevtoolsLogger} - this logger may then be provided to the Fluid
+ * runtime to ensure telemetry messages are flowing to it.
+ * If you wish to enable telemetry functionality in the devtools, you **must** pass this same logger back when
+ * initializing the Devtools.
+ *
+ * @sealed
+ * @beta
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface IDevtoolsLogger extends ITelemetryBaseLogger {}
 
 /**
  * Logger implementation that posts all telemetry events to the window (globalThis object).
@@ -43,9 +59,8 @@ import { type ITimestampedTelemetryEvent } from "./TelemetryMetadata";
  * TODO: Document others as they are added.
  *
  * @sealed
- * @public
  */
-export class DevtoolsLogger implements ITelemetryBaseLogger {
+class DevtoolsLogger implements IDevtoolsLogger {
 	/**
 	 * Base telemetry logger provided by the consumer.
 	 * All messages sent to the Devtools logger will be forwarded to this.
@@ -80,7 +95,11 @@ export class DevtoolsLogger implements ITelemetryBaseLogger {
 	private readonly windowMessageHandler = (
 		event: MessageEvent<Partial<IDevtoolsMessage>>,
 	): void => {
-		handleIncomingWindowMessage(event, this.inboundMessageHandlers, this.messageLoggingOptions);
+		handleIncomingWindowMessage(
+			event,
+			this.inboundMessageHandlers,
+			this.messageLoggingOptions,
+		);
 	};
 
 	/**
@@ -137,4 +156,13 @@ export class DevtoolsLogger implements ITelemetryBaseLogger {
 			console.error(error);
 		}
 	}
+}
+
+/**
+ * Creates a new {@link IDevtoolsLogger} by wrapping the provided (optional) base logger.
+ *
+ * @beta
+ */
+export function createDevtoolsLogger(baseLogger?: ITelemetryBaseLogger): IDevtoolsLogger {
+	return new DevtoolsLogger(baseLogger);
 }

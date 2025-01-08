@@ -3,8 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { IDiceRoller } from "./dataObject";
-import { jsRenderDiceRoller, reactRenderDiceRoller, vueRenderDiceRoller } from "./views";
+import { IDiceRoller } from "./dataObject.js";
+import {
+	jsRenderDiceRoller,
+	reactRenderDiceRoller,
+	vueRenderDiceRoller,
+} from "./views/index.js";
 
 /**
  * Render an IDiceRoller into a given div as a text character, with a button to roll it.
@@ -16,7 +20,13 @@ export function renderSampler(diceRoller: IDiceRoller, div: HTMLDivElement) {
 	const reactDiv = document.createElement("div");
 	const vueDiv = document.createElement("div");
 
-	div.append(jsDiv, document.createElement("hr"), reactDiv, document.createElement("hr"), vueDiv);
+	div.append(
+		jsDiv,
+		document.createElement("hr"),
+		reactDiv,
+		document.createElement("hr"),
+		vueDiv,
+	);
 
 	jsRenderDiceRoller(diceRoller, jsDiv);
 	reactRenderDiceRoller(diceRoller, reactDiv);

@@ -1,10 +1,19 @@
-version: "3.4"
 services:
   alfred:
     image: ${REGISTRY_URL:-mcr.microsoft.com}/fluidframework/routerlicious/server:${ALFRED_IMAGE_TAG:-latest}
     ports:
       - "3003:3000"
     command: node packages/routerlicious/dist/alfred/www.js
+    environment:
+      - DEBUG=fluid:*
+      - NODE_ENV=development
+      - IS_FLUID_SERVER=true
+    restart: always
+  nexus:
+    image: ${REGISTRY_URL:-mcr.microsoft.com}/fluidframework/routerlicious/server:${ALFRED_IMAGE_TAG:-latest}
+    ports:
+      - "3002:3000"
+    command: node packages/routerlicious/dist/nexus/www.js
     environment:
       - DEBUG=fluid:*
       - NODE_ENV=development
@@ -97,8 +106,6 @@ services:
     image: "redis:alpine"
   mongodb:
     image: "mongo:4"
-  rabbitmq:
-    image: "rabbitmq:alpine"
 volumes:
   git:
     driver: local

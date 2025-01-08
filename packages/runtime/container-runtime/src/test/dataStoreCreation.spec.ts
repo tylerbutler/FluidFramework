@@ -2,26 +2,27 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import { strict as assert } from "assert";
 
 import { FluidObject } from "@fluidframework/core-interfaces";
-import { IDocumentStorageService } from "@fluidframework/driver-definitions";
+import { IDocumentStorageService } from "@fluidframework/driver-definitions/internal";
 import {
+	CreateChildSummarizerNodeFn,
+	CreateSummarizerNodeSource,
+	FluidDataStoreRegistryEntry,
 	IFluidDataStoreContext,
 	IFluidDataStoreFactory,
 	IFluidDataStoreRegistry,
-	FluidDataStoreRegistryEntry,
+	IFluidParentContext,
 	NamedFluidDataStoreRegistryEntries,
 	SummarizeInternalFn,
-	CreateChildSummarizerNodeFn,
-	CreateSummarizerNodeSource,
-} from "@fluidframework/runtime-definitions";
-import { createChildLogger } from "@fluidframework/telemetry-utils";
-import { MockFluidDataStoreRuntime } from "@fluidframework/test-runtime-utils";
+} from "@fluidframework/runtime-definitions/internal";
+import { createChildLogger } from "@fluidframework/telemetry-utils/internal";
+import { MockFluidDataStoreRuntime } from "@fluidframework/test-runtime-utils/internal";
 
-import { LocalFluidDataStoreContext } from "../dataStoreContext";
-import { ContainerRuntime } from "../containerRuntime";
-import { createRootSummarizerNodeWithGC } from "../summary";
+import { LocalFluidDataStoreContext } from "../dataStoreContext.js";
+import { createRootSummarizerNodeWithGC } from "../summary/index.js";
 
 describe("Data Store Creation Tests", () => {
 	describe("Store creation via local context creation and realize", () => {
@@ -43,7 +44,7 @@ describe("Data Store Creation Tests", () => {
 		let storage: IDocumentStorageService;
 		let scope: FluidObject;
 		const makeLocallyVisibleFn = () => {};
-		let containerRuntime: ContainerRuntime;
+		let parentContext: IFluidParentContext;
 		const defaultName = "default";
 		const dataStoreAName = "dataStoreA";
 		const dataStoreBName = "dataStoreB";
@@ -106,13 +107,11 @@ describe("Data Store Creation Tests", () => {
 				},
 				get: async (pkg) => globalRegistryEntries.get(pkg),
 			};
-			// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-			containerRuntime = {
+			parentContext = {
 				IFluidDataStoreRegistry: globalRegistry,
-				on: (event, listener) => {},
-				logger: createChildLogger(),
-				clientDetails: {},
-			} as ContainerRuntime;
+				baseLogger: createChildLogger(),
+				clientDetails: {} as unknown as IFluidParentContext["clientDetails"],
+			} satisfies Partial<IFluidParentContext> as unknown as IFluidParentContext;
 			const summarizerNode = createRootSummarizerNodeWithGC(
 				createChildLogger(),
 				(() => {}) as unknown as SummarizeInternalFn,
@@ -130,13 +129,12 @@ describe("Data Store Creation Tests", () => {
 			const context: LocalFluidDataStoreContext = new LocalFluidDataStoreContext({
 				id: dataStoreId,
 				pkg: [defaultName],
-				runtime: containerRuntime,
+				parentContext,
 				storage,
 				scope,
 				createSummarizerNodeFn: getCreateSummarizerNodeFn(dataStoreId),
 				makeLocallyVisibleFn,
 				snapshotTree: undefined,
-				isRootDataStore: false,
 			});
 
 			try {
@@ -155,13 +153,12 @@ describe("Data Store Creation Tests", () => {
 			const context: LocalFluidDataStoreContext = new LocalFluidDataStoreContext({
 				id: dataStoreId,
 				pkg: [dataStoreAName],
-				runtime: containerRuntime,
+				parentContext,
 				storage,
 				scope,
 				createSummarizerNodeFn: getCreateSummarizerNodeFn(dataStoreId),
 				makeLocallyVisibleFn,
 				snapshotTree: undefined,
-				isRootDataStore: false,
 			});
 
 			try {
@@ -180,13 +177,12 @@ describe("Data Store Creation Tests", () => {
 			const contextA: LocalFluidDataStoreContext = new LocalFluidDataStoreContext({
 				id: dataStoreId,
 				pkg: [defaultName, dataStoreAName],
-				runtime: containerRuntime,
+				parentContext,
 				storage,
 				scope,
 				createSummarizerNodeFn: getCreateSummarizerNodeFn(dataStoreId),
 				makeLocallyVisibleFn,
 				snapshotTree: undefined,
-				isRootDataStore: false,
 			});
 
 			try {
@@ -205,13 +201,12 @@ describe("Data Store Creation Tests", () => {
 			const contextB: LocalFluidDataStoreContext = new LocalFluidDataStoreContext({
 				id: dataStoreId,
 				pkg: [defaultName, dataStoreBName],
-				runtime: containerRuntime,
+				parentContext,
 				storage,
 				scope,
 				createSummarizerNodeFn: getCreateSummarizerNodeFn(dataStoreId),
 				makeLocallyVisibleFn,
 				snapshotTree: undefined,
-				isRootDataStore: false,
 			});
 
 			try {
@@ -230,13 +225,12 @@ describe("Data Store Creation Tests", () => {
 			const contextB: LocalFluidDataStoreContext = new LocalFluidDataStoreContext({
 				id: dataStoreBId,
 				pkg: [defaultName, dataStoreAName, dataStoreBName],
-				runtime: containerRuntime,
+				parentContext,
 				storage,
 				scope,
 				createSummarizerNodeFn: getCreateSummarizerNodeFn(dataStoreBId),
 				makeLocallyVisibleFn,
 				snapshotTree: undefined,
-				isRootDataStore: false,
 			});
 
 			try {
@@ -252,13 +246,12 @@ describe("Data Store Creation Tests", () => {
 			const contextC: LocalFluidDataStoreContext = new LocalFluidDataStoreContext({
 				id: dataStoreCId,
 				pkg: [defaultName, dataStoreAName, dataStoreCName],
-				runtime: containerRuntime,
+				parentContext,
 				storage,
 				scope,
 				createSummarizerNodeFn: getCreateSummarizerNodeFn(dataStoreCId),
 				makeLocallyVisibleFn,
 				snapshotTree: undefined,
-				isRootDataStore: false,
 			});
 
 			try {
@@ -277,13 +270,12 @@ describe("Data Store Creation Tests", () => {
 			const contextFake: LocalFluidDataStoreContext = new LocalFluidDataStoreContext({
 				id: dataStoreId,
 				pkg: [defaultName, dataStoreAName, "fake"],
-				runtime: containerRuntime,
+				parentContext,
 				storage,
 				scope,
 				createSummarizerNodeFn: getCreateSummarizerNodeFn(dataStoreId),
 				makeLocallyVisibleFn,
 				snapshotTree: undefined,
-				isRootDataStore: false,
 			});
 
 			try {
@@ -302,13 +294,12 @@ describe("Data Store Creation Tests", () => {
 			const contextFake: LocalFluidDataStoreContext = new LocalFluidDataStoreContext({
 				id: dataStoreId,
 				pkg: [defaultName, dataStoreAName, "fake"],
-				runtime: containerRuntime,
+				parentContext,
 				storage,
 				scope,
 				createSummarizerNodeFn: getCreateSummarizerNodeFn(dataStoreId),
 				makeLocallyVisibleFn,
 				snapshotTree: undefined,
-				isRootDataStore: false,
 			});
 
 			try {
@@ -327,13 +318,12 @@ describe("Data Store Creation Tests", () => {
 			const contextC: LocalFluidDataStoreContext = new LocalFluidDataStoreContext({
 				id: dataStoreId,
 				pkg: [defaultName, dataStoreAName, dataStoreBName, dataStoreCName],
-				runtime: containerRuntime,
+				parentContext,
 				storage,
 				scope,
 				createSummarizerNodeFn: getCreateSummarizerNodeFn(dataStoreId),
 				makeLocallyVisibleFn,
 				snapshotTree: undefined,
-				isRootDataStore: false,
 			});
 
 			try {

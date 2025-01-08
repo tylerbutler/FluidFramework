@@ -3,12 +3,13 @@
  * Licensed under the MIT License.
  */
 
-import { IUser } from "./users";
+import { IUser } from "./users.js";
 
 /**
  * {@link https://jwt.io/introduction/ | JSON Web Token (JWT)} Claims
  *
  * See {@link https://datatracker.ietf.org/doc/html/rfc7519#section-4}
+ * @alpha
  */
 export interface ITokenClaims {
 	/**
@@ -68,6 +69,7 @@ export interface ITokenClaims {
 
 /**
  * @deprecated Please use client-specific types instead. E.g. from `@fluidframework/routerlicious-driver`.
+ * @internal
  */
 export interface ISummaryTokenClaims {
 	sub: string;
@@ -77,6 +79,7 @@ export interface ISummaryTokenClaims {
 
 /**
  * @deprecated Please use client-specific types instead. E.g. from `@fluidframework/routerlicious-driver`.
+ * @internal
  */
 export interface IActorClient {
 	sub: string;
@@ -84,6 +87,7 @@ export interface IActorClient {
 
 /**
  * @deprecated Please use client-specific types instead. E.g. from `@fluidframework/routerlicious-driver`.
+ * @internal
  */
 export interface ITokenService {
 	extractClaims(token: string): ITokenClaims;
@@ -91,6 +95,7 @@ export interface ITokenService {
 
 /**
  * @deprecated Please use client-specific types instead. E.g. from `@fluidframework/routerlicious-driver`.
+ * @internal
  */
 export interface ITokenProvider {
 	/**

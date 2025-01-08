@@ -27,16 +27,17 @@
  *
  * This pattern enables discovery, and delegation in a standard way which is central
  * to FluidObject pattern.
+ * @public
  */
 export type FluidObjectProviderKeys<T, TProp extends keyof T = keyof T> = string extends TProp
 	? never
 	: number extends TProp
-	? never // exclude indexers [key:string |number]: any
-	: TProp extends keyof Required<T>[TProp] // TProp is a property of T, and T[TProp]
-	? Required<T>[TProp] extends Required<Required<T>[TProp]>[TProp] // T[TProp] is the same type as T[TProp][TProp]
-		? TProp
-		: never
-	: never;
+		? never // exclude indexers [key:string |number]: any
+		: TProp extends keyof Required<T>[TProp] // TProp is a property of T, and T[TProp]
+			? Required<T>[TProp] extends Required<Required<T>[TProp]>[TProp] // T[TProp] is the same type as T[TProp][TProp]
+				? TProp
+				: never
+			: never;
 
 /**
  * This utility type take interface(s) that follow the FluidObject pattern, and produces
@@ -69,7 +70,7 @@ export type FluidObjectProviderKeys<T, TProp extends keyof T = keyof T> = string
  *
  * You can inspect multiple types via a intersection. For example:
  * `FluidObject<IFoo & IBar>`
- *
+ * @public
  */
 export type FluidObject<T = unknown> = {
 	[P in FluidObjectProviderKeys<T>]?: T[P];
@@ -82,6 +83,6 @@ export type FluidObject<T = unknown> = {
  * See {@link FluidObject}
  *
  * For example `FluidObjectKeys<IFoo & IBar>` would result in `"IFoo" | "IBar"`
- *
+ * @public
  */
 export type FluidObjectKeys<T> = keyof FluidObject<T>;

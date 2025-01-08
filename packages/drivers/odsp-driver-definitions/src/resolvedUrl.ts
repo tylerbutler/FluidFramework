@@ -3,8 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { IResolvedUrl } from "@fluidframework/driver-definitions";
+import { IResolvedUrl } from "@fluidframework/driver-definitions/internal";
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface IOdspUrlParts {
 	siteUrl: string;
 	driveId: string;
@@ -12,15 +16,9 @@ export interface IOdspUrlParts {
 }
 
 /**
- * @deprecated Use ISharingLinkKind type instead.
- * Type of shareLink requested/created when creating the file for the first time.
- */
-export enum ShareLinkTypes {
-	csl = "csl",
-}
-
-/**
  * Sharing scope of the share links created for a file.
+ * @legacy
+ * @alpha
  */
 export enum SharingLinkScope {
 	organization = "organization",
@@ -31,6 +29,8 @@ export enum SharingLinkScope {
 
 /**
  * View/edit permission role for a sharing link.
+ * @legacy
+ * @alpha
  */
 export enum SharingLinkRole {
 	view = "view",
@@ -40,6 +40,8 @@ export enum SharingLinkRole {
 /**
  * Defines the permissions scope for a share link requested to be created during the creation the file in ODSP.
  * Providing these properties to the /snapshot api will also create and return the requested kind of sharing link.
+ * @legacy
+ * @alpha
  */
 export interface ISharingLinkKind {
 	scope: SharingLinkScope;
@@ -52,6 +54,8 @@ export interface ISharingLinkKind {
 
 /**
  * Sharing link data received from the /snapshot api response.
+ * @legacy
+ * @alpha
  */
 export interface ISharingLink extends ISharingLinkKind {
 	webUrl: string;
@@ -61,6 +65,8 @@ export interface ISharingLink extends ISharingLinkKind {
  * Sharing link data created for the ODSP item.
  * Contains information about either sharing link created while creating a new file or
  * a redeemable share link created when loading an existing file
+ * @legacy
+ * @alpha
  */
 export interface ShareLinkInfoType {
 	/**
@@ -72,17 +78,9 @@ export interface ShareLinkInfoType {
 	 */
 	createLink?: {
 		/**
-		 * @deprecated
-		 * Type of shareLink requested/created when creating the file for the first time. The 'type' property here
-		 * represents the type of sharing link requested.
-		 * Will be deprecated soon. Type of sharing link will be present in the link:ISharingLink property below.
-		 */
-		type?: ShareLinkTypes | ISharingLinkKind;
-
-		/**
 		 * Share link created when the file is created for the first time with /snapshot api call.
 		 */
-		link?: string | ISharingLink;
+		link?: ISharingLink;
 
 		/**
 		 * Error message if creation of sharing link fails with /snapshot api call
@@ -98,6 +96,10 @@ export interface ShareLinkInfoType {
 	 */
 	sharingLinkToRedeem?: string;
 }
+/**
+ * @legacy
+ * @alpha
+ */
 export interface IOdspResolvedUrl extends IResolvedUrl, IOdspUrlParts {
 	type: "fluid";
 	odspResolvedUrl: true;
@@ -120,6 +122,11 @@ export interface IOdspResolvedUrl extends IResolvedUrl, IOdspUrlParts {
 	tokens: {};
 
 	fileName: string;
+	/**
+	 * Used to track when a file was created with a temporary name. In that case this value will
+	 * be the desired name, which the file is eventually renamed too.
+	 */
+	pendingRename?: string;
 
 	summarizer: boolean;
 
@@ -141,4 +148,17 @@ export interface IOdspResolvedUrl extends IResolvedUrl, IOdspUrlParts {
 	shareLinkInfo?: ShareLinkInfoType;
 
 	isClpCompliantApp?: boolean;
+
+	/**
+	 * Context for given resolved URL. The context of a resolved URL is a string that contains
+	 * the resolved URL and the data store path of the resolved URL.
+	 */
+	context?: string;
+
+	/**
+	 * Name of the application that owns the URL. This hint is used by link handling logic which determines which
+	 * app to redirect to when user navigates directly to the link.
+	 * Can be ommited in case it is not necessary for the link handling logic.
+	 */
+	appName?: string;
 }

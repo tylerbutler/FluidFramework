@@ -3,34 +3,37 @@
  * Licensed under the MIT License.
  */
 
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import type {
+	ISummarizerEvents,
+	SummarizerStopReason,
+} from "@fluidframework/container-runtime-definitions/internal";
 import {
 	IDisposable,
 	IEvent,
 	IEventProvider,
 	ITelemetryBaseLogger,
 } from "@fluidframework/core-interfaces";
-import { assert } from "@fluidframework/core-utils";
-import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import { assert } from "@fluidframework/core-utils/internal";
+import { DriverErrorTypes } from "@fluidframework/driver-definitions/internal";
 import {
-	createChildLogger,
 	ITelemetryLoggerExt,
 	PerformanceEvent,
-} from "@fluidframework/telemetry-utils";
-import { DriverErrorTypes } from "@fluidframework/driver-definitions";
-import { IThrottler } from "../throttler";
-import { ISummarizerClientElection } from "./summarizerClientElection";
+	createChildLogger,
+} from "@fluidframework/telemetry-utils/internal";
+
+import { IThrottler } from "../throttler.js";
+
+import { Summarizer } from "./summarizer.js";
+import { ISummarizerClientElection } from "./summarizerClientElection.js";
 import {
 	EnqueueSummarizeResult,
 	IEnqueueSummarizeOptions,
 	IOnDemandSummarizeOptions,
-	ISummarizeEventProps,
 	ISummarizeResults,
 	ISummarizer,
-	ISummarizerEvents,
-	SummarizerStopReason,
-} from "./summarizerTypes";
-import { SummaryCollection } from "./summaryCollection";
-import { Summarizer } from "./summarizer";
+} from "./summarizerTypes.js";
+import { SummaryCollection } from "./summaryCollection.js";
 
 const defaultInitialDelayMs = 5000;
 const defaultOpsToBypassInitialDelay = 4000;
@@ -87,7 +90,10 @@ export interface ISummaryManagerConfig {
  * It observes changes in calculated summarizer and reacts to changes by either creating summarizer client or
  * stopping existing summarizer client.
  */
-export class SummaryManager extends TypedEventEmitter<ISummarizerEvents> implements IDisposable {
+export class SummaryManager
+	extends TypedEventEmitter<ISummarizerEvents>
+	implements IDisposable
+{
 	private readonly logger: ITelemetryLoggerExt;
 	private readonly opsToBypassInitialDelay: number;
 	private readonly initialDelayMs: number;
@@ -120,7 +126,6 @@ export class SummaryManager extends TypedEventEmitter<ISummarizerEvents> impleme
 			initialDelayMs = defaultInitialDelayMs,
 			opsToBypassInitialDelay = defaultOpsToBypassInitialDelay,
 		}: Readonly<Partial<ISummaryManagerConfig>> = {},
-		private readonly disableHeuristics?: boolean,
 	) {
 		super();
 
@@ -161,14 +166,14 @@ export class SummaryManager extends TypedEventEmitter<ISummarizerEvents> impleme
 		this.refreshSummarizer();
 	};
 
-	private readonly handleSummarizeEvent = (eventProps: ISummarizeEventProps) => {
-		this.emit("summarize", eventProps);
-	};
-
 	private static readonly isStartingOrRunning = (state: SummaryManagerState) =>
 		state === SummaryManagerState.Starting || state === SummaryManagerState.Running;
 
 	private getShouldSummarizeState(): ShouldSummarizeState {
+		if (this.disposed) {
+			return { shouldSummarize: false, stopReason: "parentNotConnected" };
+		}
+
 		// Note that if we're in the Running state, the electedClient may be a summarizer client, so we can't
 		// enforce connectedState.clientId === clientElection.electedClientId. But once we're Running, we should
 		// only transition to Stopping when the electedParentId changes. Stopping the summarizer without
@@ -191,11 +196,7 @@ export class SummaryManager extends TypedEventEmitter<ISummarizerEvents> impleme
 			return { shouldSummarize: false, stopReason: "parentNotConnected" };
 		}
 
-		if (this.disposed) {
-			assert(false, 0x260 /* "Disposed should mean disconnected!" */);
-		} else {
-			return { shouldSummarize: true };
-		}
+		return { shouldSummarize: true };
 	}
 
 	private readonly refreshSummarizer = () => {
@@ -239,6 +240,10 @@ export class SummaryManager extends TypedEventEmitter<ISummarizerEvents> impleme
 
 		this.delayBeforeCreatingSummarizer()
 			.then(async (startWithInitialDelay: boolean) => {
+				if (this.disposed) {
+					return "early exit (disposed)";
+				}
+
 				// Re-validate that it need to be running. Due to asynchrony, it may be not the case anymore
 				// but only if creation was delayed. If it was not, then we want to ensure we always create
 				// a summarizer to kick off lastSummary. Without that, we would not be able to summarize and get
@@ -258,15 +263,12 @@ export class SummaryManager extends TypedEventEmitter<ISummarizerEvents> impleme
 				// when the electedClient will be replaced with the new summarizer client.
 				// The alternative would be to let connectedState.clientId !== clientElection.electedClientId when
 				// state === Starting || state === Running.
-				assert(
-					this.state === SummaryManagerState.Starting,
-					0x263 /* "Expected: starting" */,
-				);
+				assert(this.state === SummaryManagerState.Starting, 0x263 /* "Expected: starting" */);
 				this.state = SummaryManagerState.Running;
 
 				const summarizer = await this.createSummarizerFn();
 				this.summarizer = summarizer;
-				this.summarizer.on("summarize", this.handleSummarizeEvent);
+				this.setupForwardedEvents();
 
 				// Re-validate that it need to be running. Due to asynchrony, it may be not the case anymore
 				// If we can't run the LastSummary, simply return as to avoid paying the cost of launching
@@ -295,7 +297,7 @@ export class SummaryManager extends TypedEventEmitter<ISummarizerEvents> impleme
 				return PerformanceEvent.timedExecAsync(
 					this.logger,
 					{ eventName: "RunningSummarizer", attempt: this.startThrottler.numAttempts },
-					async () => summarizer.run(clientId, this.disableHeuristics),
+					async () => summarizer.run(clientId),
 				);
 			})
 			.then((reason: string) => {
@@ -321,10 +323,7 @@ export class SummaryManager extends TypedEventEmitter<ISummarizerEvents> impleme
 				// means it also lost connection), and error happened on load (we do not have summarizer).
 				// We could annotate the error raised in Container.load where the container closed during load with no error
 				// and check for that case here, but that does not seem to be necessary.
-				if (
-					this.getShouldSummarizeState().shouldSummarize ||
-					this.summarizer !== undefined
-				) {
+				if (this.getShouldSummarizeState().shouldSummarize || this.summarizer !== undefined) {
 					// Report any failure as an error unless it was due to cancellation (like "disconnected" error)
 					// If failure happened on container load, we may not yet realized that socket disconnected, so check
 					// offlineError.
@@ -343,7 +342,7 @@ export class SummaryManager extends TypedEventEmitter<ISummarizerEvents> impleme
 				assert(this.state !== SummaryManagerState.Off, 0x264 /* "Expected: Not Off" */);
 				this.state = SummaryManagerState.Off;
 
-				this.summarizer?.off("summarize", this.handleSummarizeEvent);
+				this.cleanupForwardedEvents();
 				this.summarizer?.close();
 				this.summarizer = undefined;
 
@@ -446,7 +445,30 @@ export class SummaryManager extends TypedEventEmitter<ISummarizerEvents> impleme
 		this.clientElection.off("electedSummarizerChanged", this.refreshSummarizer);
 		this.connectedState.off("connected", this.handleConnected);
 		this.connectedState.off("disconnected", this.handleDisconnected);
-		this.summarizer?.off("summarize", this.handleSummarizeEvent);
+		this.cleanupForwardedEvents();
 		this._disposed = true;
+	}
+
+	private readonly forwardedEvents = new Map<any, () => void>();
+
+	private setupForwardedEvents() {
+		[
+			"summarize",
+			"summarizeAllAttemptsFailed",
+			"summarizerStop",
+			"summarizerStart",
+			"summarizerStartupFailed",
+		].forEach((event) => {
+			const listener = (...args: any[]) => {
+				this.emit(event, ...args);
+			};
+			this.summarizer?.on(event as any, listener);
+			this.forwardedEvents.set(event, listener);
+		});
+	}
+
+	private cleanupForwardedEvents() {
+		this.forwardedEvents.forEach((listener, event) => this.summarizer?.off(event, listener));
+		this.forwardedEvents.clear();
 	}
 }

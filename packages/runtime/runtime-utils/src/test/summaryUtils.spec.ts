@@ -4,24 +4,27 @@
  */
 
 import { strict as assert } from "assert";
-import { IsoBuffer, stringToBuffer, Uint8ArrayToString } from "@fluid-internal/client-utils";
-import { BlobTreeEntry, TreeTreeEntry } from "@fluidframework/driver-utils";
+
+import { IsoBuffer, Uint8ArrayToString, stringToBuffer } from "@fluid-internal/client-utils";
 import {
-	SummaryObject,
-	ISummaryTree,
 	ISummaryBlob,
 	ISummaryHandle,
+	ISummaryTree,
+	SummaryObject,
 	SummaryType,
-	ISnapshotTree,
-	ITree,
-} from "@fluidframework/protocol-definitions";
+} from "@fluidframework/driver-definitions";
+import { ISnapshotTree, ITree } from "@fluidframework/driver-definitions/internal";
+import { BlobTreeEntry, TreeTreeEntry } from "@fluidframework/driver-utils/internal";
+
 import {
+	SummaryTreeBuilder,
+	TelemetryContext,
 	convertSnapshotTreeToSummaryTree,
 	convertSummaryTreeToITree,
 	convertToSummaryTree,
-	TelemetryContext,
 	utf8ByteLength,
-} from "../summaryUtils";
+	type SummaryTreeBuilderParams,
+} from "../summaryUtils.js";
 
 describe("Summary Utils", () => {
 	function assertSummaryTree(obj: SummaryObject): ISummaryTree {
@@ -60,9 +63,14 @@ describe("Summary Utils", () => {
 						entries: [
 							new BlobTreeEntry("bu8", "test-u8"),
 							new BlobTreeEntry("b64", base64Content, "base64"),
-							new TreeTreeEntry("tu", { entries: [], unreferenced: true }),
+							new TreeTreeEntry("tu", {
+								entries: [],
+								unreferenced: true,
+								groupId: undefined,
+							}),
 						],
 						unreferenced: undefined,
+						groupId: undefined,
 					}),
 					new BlobTreeEntry("b", "test-blob"),
 					new TreeTreeEntry("h", {
@@ -72,9 +80,16 @@ describe("Summary Utils", () => {
 					new TreeTreeEntry("unref", {
 						entries: [],
 						unreferenced: true,
+						groupId: undefined,
+					}),
+					new TreeTreeEntry("groupId", {
+						entries: [],
+						unreferenced: undefined,
+						groupId: "group-id",
 					}),
 				],
 				unreferenced: undefined,
+				groupId: undefined,
 			};
 		});
 
@@ -137,7 +152,7 @@ describe("Summary Utils", () => {
 			// nodes should count
 			assert.strictEqual(summaryResults.stats.blobNodeCount, 3);
 			assert.strictEqual(summaryResults.stats.handleNodeCount, 1);
-			assert.strictEqual(summaryResults.stats.treeNodeCount, 4);
+			assert.strictEqual(summaryResults.stats.treeNodeCount, 5);
 
 			const bufferLength =
 				IsoBuffer.from("test-b64").byteLength +
@@ -183,6 +198,7 @@ describe("Summary Utils", () => {
 					return treeEntry.path !== "h";
 				}),
 				unreferenced: undefined,
+				groupId: undefined,
 			};
 			const summaryResults = convertToSummaryTree(treeWithoutHandles);
 			const summaryTree = assertSummaryTree(summaryResults.summary);
@@ -219,6 +235,7 @@ describe("Summary Utils", () => {
 								blobs: {},
 								trees: {},
 								unreferenced: true,
+								groupId: undefined,
 							},
 						},
 					},
@@ -226,6 +243,13 @@ describe("Summary Utils", () => {
 						blobs: {},
 						trees: {},
 						unreferenced: true,
+						groupId: undefined,
+					},
+					groupId: {
+						blobs: {},
+						trees: {},
+						unreferenced: true,
+						groupId: "group-id",
 					},
 				},
 			};
@@ -257,7 +281,7 @@ describe("Summary Utils", () => {
 			// nodes should count
 			assert.strictEqual(summaryResults.stats.blobNodeCount, 3);
 			assert.strictEqual(summaryResults.stats.handleNodeCount, 0);
-			assert.strictEqual(summaryResults.stats.treeNodeCount, 4);
+			assert.strictEqual(summaryResults.stats.treeNodeCount, 5);
 
 			const bufferLength =
 				IsoBuffer.from("test-b64").byteLength +
@@ -294,6 +318,31 @@ describe("Summary Utils", () => {
 				true,
 				"The unref subtree should be unreferenced",
 			);
+		});
+
+		it("should convert groupId state correctly", () => {
+			const summaryResults = convertSnapshotTreeToSummaryTree(snapshotTree);
+			const summaryTree = assertSummaryTree(summaryResults.summary);
+			assert.strictEqual(
+				summaryTree.groupId,
+				undefined,
+				"The root summary tree should not have groupId",
+			);
+
+			const subTreeT = assertSummaryTree(summaryTree.tree.t);
+			assert.strictEqual(subTreeT.groupId, undefined, "The t subtree not have groupId");
+			const subTreeTUnrefTree = assertSummaryTree(subTreeT.tree.tu);
+			assert.strictEqual(
+				subTreeTUnrefTree.groupId,
+				undefined,
+				"The tu subtree of t not have groupId",
+			);
+
+			const subTreeUnref = assertSummaryTree(summaryTree.tree.unref);
+			assert.strictEqual(subTreeUnref.groupId, undefined, "The groupId should not be set");
+
+			const subTreeGroupId = assertSummaryTree(summaryTree.tree.groupId);
+			assert.strictEqual(subTreeGroupId.groupId, "group-id", "The groupId should be set");
 		});
 	});
 
@@ -340,6 +389,109 @@ describe("Summary Utils", () => {
 			assert.strictEqual(obj.pre3_obj1_prop1, "1");
 			assert.strictEqual(obj.pre3_obj1_prop2, 2);
 			assert.strictEqual(obj.pre3_obj1_prop3, true);
+		});
+	});
+
+	describe("SummaryTreeBuilder", () => {
+		it("should initialize groupId correctly when set", () => {
+			const params: SummaryTreeBuilderParams = { groupId: "testGroupId" };
+			const summaryTreeBuilder = new SummaryTreeBuilder(params);
+			assert.strictEqual(summaryTreeBuilder.summary.groupId, "testGroupId");
+		});
+
+		it("should initialize groupId correctly when not set", () => {
+			const params: SummaryTreeBuilderParams = {};
+			const summaryTreeBuilder = new SummaryTreeBuilder(params);
+			assert.strictEqual(summaryTreeBuilder.summary.groupId, undefined);
+		});
+
+		it("should add a blob correctly", () => {
+			const params: SummaryTreeBuilderParams = {};
+			const summaryTreeBuilder = new SummaryTreeBuilder(params);
+			const blobContent = "testBlobContent";
+			summaryTreeBuilder.addBlob("testBlob", blobContent);
+			const summaryTree = summaryTreeBuilder.summary;
+			const blob: SummaryObject | undefined = summaryTree.tree.testBlob;
+			assert.strictEqual(blob.type, SummaryType.Blob);
+			assert.strictEqual(blob.content, blobContent);
+		});
+
+		it("should update stats correctly when adding a blob", () => {
+			const params: SummaryTreeBuilderParams = {};
+			const summaryTreeBuilder = new SummaryTreeBuilder(params);
+			const blobContent = "testBlobContent";
+			summaryTreeBuilder.addBlob("testBlob", blobContent);
+			const stats = summaryTreeBuilder.stats;
+			assert.strictEqual(stats.blobNodeCount, 1);
+			assert.strictEqual(stats.totalBlobSize, blobContent.length);
+		});
+
+		it("should add a handle correctly", () => {
+			const params: SummaryTreeBuilderParams = {};
+			const summaryTreeBuilder = new SummaryTreeBuilder(params);
+			const handle = "testHandle";
+			summaryTreeBuilder.addHandle("testHandleKey", SummaryType.Tree, handle);
+			const summaryTree = summaryTreeBuilder.summary;
+			const handleObject: SummaryObject | undefined = summaryTree.tree.testHandleKey;
+			assert.strictEqual(handleObject.type, SummaryType.Handle);
+			assert.strictEqual(handleObject.handleType, SummaryType.Tree);
+			assert.strictEqual(handleObject.handle, handle);
+		});
+
+		it("should update stats correctly when adding a handle", () => {
+			const params: SummaryTreeBuilderParams = {};
+			const summaryTreeBuilder = new SummaryTreeBuilder(params);
+			const handle = "testHandle";
+			summaryTreeBuilder.addHandle("testHandleKey", SummaryType.Tree, handle);
+			const stats = summaryTreeBuilder.stats;
+			assert.strictEqual(stats.handleNodeCount, 1);
+		});
+
+		it("should add an attachment correctly", () => {
+			const params: SummaryTreeBuilderParams = {};
+			const summaryTreeBuilder = new SummaryTreeBuilder(params);
+			const attachmentId = "testAttachmentId";
+			summaryTreeBuilder.addAttachment(attachmentId);
+			const summaryTree = summaryTreeBuilder.summary;
+			const attachment: SummaryObject | undefined = summaryTree.tree["0"];
+			assert.strictEqual(attachment.type, SummaryType.Attachment);
+			assert.strictEqual(attachment.id, attachmentId);
+		});
+
+		it("should add summarize result to summary correctly", () => {
+			const params: SummaryTreeBuilderParams = {};
+			const summaryTreeBuilder = new SummaryTreeBuilder(params);
+			const summarizeResult = {
+				summary: { type: SummaryType.Tree, tree: {} },
+				stats: {
+					blobNodeCount: 1,
+					totalBlobSize: 10,
+					treeNodeCount: 1,
+					handleNodeCount: 0,
+					unreferencedBlobSize: 0,
+				},
+			};
+			summaryTreeBuilder.addWithStats("testKey", summarizeResult);
+			const summaryTree = summaryTreeBuilder.summary;
+			const subTree: SummaryObject | undefined = summaryTree.tree.testKey;
+			assert.strictEqual(subTree.type, SummaryType.Tree);
+			const stats = summaryTreeBuilder.stats;
+			assert.strictEqual(stats.blobNodeCount, 1);
+			assert.strictEqual(stats.totalBlobSize, 10);
+			assert.strictEqual(stats.treeNodeCount, 2); // 1 for the root tree and 1 for the added tree
+		});
+
+		it("should get summary tree with correct stats", () => {
+			const params: SummaryTreeBuilderParams = {};
+			const summaryTreeBuilder = new SummaryTreeBuilder(params);
+			const blobContent = "testBlobContent";
+			summaryTreeBuilder.addBlob("testBlob", blobContent);
+			const summaryTreeWithStats = summaryTreeBuilder.getSummaryTree();
+			const summaryTree = summaryTreeWithStats.summary;
+			const stats = summaryTreeWithStats.stats;
+			assert.strictEqual(stats.blobNodeCount, 1);
+			assert.strictEqual(stats.totalBlobSize, blobContent.length);
+			assert.strictEqual(summaryTree.tree.testBlob?.type, SummaryType.Blob);
 		});
 	});
 });

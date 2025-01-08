@@ -8,12 +8,13 @@ import { IQueuedMessage } from "./queue";
 
 /**
  * A lambda that passes the same message to one or more lambdas
+ * @internal
  */
 export class CombinedLambda implements IPartitionLambda {
 	constructor(protected readonly lambdas: IPartitionLambda[]) {}
 
 	/**
-	 * Processes an incoming message
+	 * {@inheritDoc IPartitionLambda.handler}
 	 */
 	public handler(message: IQueuedMessage) {
 		const promises: Promise<void>[] = [];

@@ -22,6 +22,7 @@ import {
  * A lenient implementation of IThrottlerHelper that prioritizes low latency over strict throttling.
  * This should be used for implementing throttling in places where latency matters more than accuracy,
  * such as service endpoints or socket connections.
+ * @internal
  */
 export class Throttler implements IThrottler {
 	private readonly lastThrottleUpdateAtMap: LRUCache<string, number>;
@@ -116,7 +117,6 @@ export class Throttler implements IThrottler {
 
 		// check cached throttle status, but allow operation through if status is not yet cached
 		const cachedThrottlerResponse = this.throttlerResponseCache.get(id);
-		// eslint-disable-next-line @typescript-eslint/prefer-optional-chain
 		if (cachedThrottlerResponse && cachedThrottlerResponse.throttleStatus) {
 			const retryAfterInSeconds = Math.ceil(cachedThrottlerResponse.retryAfterInMs / 1000);
 			this.logger?.info(`Throttled: ${id}`, {
@@ -171,8 +171,11 @@ export class Throttler implements IThrottler {
 		}
 
 		const lastThrottleUpdateTime = this.lastThrottleUpdateAtMap.get(id);
-		if (now - lastThrottleUpdateTime > this.minThrottleIntervalInMs) {
-			const countDelta = this.countDeltaMap.get(id);
+		if (
+			lastThrottleUpdateTime !== undefined &&
+			now - lastThrottleUpdateTime > this.minThrottleIntervalInMs
+		) {
+			const countDelta = this.countDeltaMap.get(id) ?? 0;
 			this.lastThrottleUpdateAtMap.set(id, now);
 			this.countDeltaMap.set(id, 0);
 			const messageMetaData = {

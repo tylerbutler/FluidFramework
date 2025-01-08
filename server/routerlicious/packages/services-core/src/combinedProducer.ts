@@ -17,6 +17,7 @@ import { IProducer } from "./queue";
  * When producing sequentially, it will produce the messages to each producer one
  * after another in order of the producers argument.
  * It will wait for each send to complete before sending the message to the next producer.
+ * @internal
  */
 export class CombinedProducer<T = ITicketedMessage> implements IProducer<T> {
 	constructor(
@@ -34,7 +35,7 @@ export class CombinedProducer<T = ITicketedMessage> implements IProducer<T> {
 	public async send(messages: T[], tenantId: string, documentId: string): Promise<any> {
 		if (this.parallel) {
 			// parallelly
-			const sendP = [];
+			const sendP: Promise<void>[] = [];
 			for (const producer of this.producers) {
 				sendP.push(producer.send(messages, tenantId, documentId));
 			}
@@ -48,7 +49,7 @@ export class CombinedProducer<T = ITicketedMessage> implements IProducer<T> {
 	}
 
 	public async close(): Promise<void> {
-		const closeP = [];
+		const closeP: Promise<void>[] = [];
 		for (const producer of this.producers) {
 			closeP.push(producer.close());
 		}
@@ -60,6 +61,13 @@ export class CombinedProducer<T = ITicketedMessage> implements IProducer<T> {
 	}
 
 	public once(
+		event: "connected" | "produced" | "error",
+		listener: (...args: any[]) => void,
+	): this {
+		return this;
+	}
+
+	public off(
 		event: "connected" | "produced" | "error",
 		listener: (...args: any[]) => void,
 	): this {

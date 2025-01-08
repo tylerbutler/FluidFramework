@@ -3,4 +3,16 @@
  * Licensed under the MIT License.
  */
 
-export { useTree, useSubtree, useTreeContext } from "./useTree";
+/**
+ * Utilities for using SharedTree with React.
+ * @packageDocumentation
+ */
+
+export type {
+	ITreeDataObject,
+	IReactTreeDataObject,
+	TreeViewProps,
+	SchemaIncompatibleProps,
+} from "./reactSharedTreeView.js";
+export { treeDataObject, treeDataObjectInternal } from "./reactSharedTreeView.js";
+export { useTree } from "./useTree.js";

@@ -4,6 +4,7 @@
  */
 
 import { strict as assert } from "assert";
+
 import { RangeTracker } from "../..";
 
 describe("Routerlicious", () => {
@@ -11,7 +12,7 @@ describe("Routerlicious", () => {
 		describe("RangeTracker", () => {
 			let rangeTracker: RangeTracker;
 
-			beforeEach(() => {
+			beforeEach("initializeRangeTracker", () => {
 				rangeTracker = new RangeTracker(0, 0);
 			});
 
@@ -84,7 +85,7 @@ describe("Routerlicious", () => {
 			});
 
 			describe(".serialize", () => {
-				beforeEach(() => {
+				beforeEach("addToRangeTracker", () => {
 					rangeTracker.add(5, 10);
 					rangeTracker.add(10, 20);
 				});

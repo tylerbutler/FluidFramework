@@ -3,16 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import child_process from "child_process";
 import assert from "assert";
+import child_process from "child_process";
 
-const childArgs: string[] = [
-	"./dist/nodeStressTest.js",
-	"--driver",
-	"tinylicious",
-	"--profile",
-	"mini",
-];
+const childArgs: string[] = ["./dist/main.js", "--driver", "tinylicious", "--profile", "mini"];
 
 describe("stress test", () => {
 	it("Should return 0", async () => {

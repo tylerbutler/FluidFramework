@@ -3,14 +3,21 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "assert";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { LocalClientId, UnassignedSequenceNumber, UniversalSequenceNumber } from "../constants";
-import { MergeTreeMaintenanceType } from "../mergeTreeDeltaCallback";
-import { MergeTreeDeltaType } from "../ops";
-import { TextSegment } from "../textSegment";
-import { MergeTree } from "../mergeTree";
-import { countOperations, insertSegments, markRangeRemoved } from "./testUtils";
+import { strict as assert } from "node:assert";
+
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+
+import {
+	LocalClientId,
+	UnassignedSequenceNumber,
+	UniversalSequenceNumber,
+} from "../constants.js";
+import { MergeTree } from "../mergeTree.js";
+import { MergeTreeMaintenanceType } from "../mergeTreeDeltaCallback.js";
+import { MergeTreeDeltaType } from "../ops.js";
+import { TextSegment } from "../textSegment.js";
+
+import { countOperations, insertSegments, markRangeRemoved } from "./testUtils.js";
 
 describe("MergeTree", () => {
 	let mergeTree: MergeTree;
@@ -47,7 +54,7 @@ describe("MergeTree", () => {
 				clientId: localClientId,
 				seq: UnassignedSequenceNumber,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			assert.deepStrictEqual(count, {
@@ -71,7 +78,7 @@ describe("MergeTree", () => {
 				clientId: localClientId,
 				seq: UnassignedSequenceNumber,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			// In order for the removed segment to unlinked by zamboni, we need to ACK the segment
@@ -82,10 +89,9 @@ describe("MergeTree", () => {
 					pos2: end,
 					type: MergeTreeDeltaType.REMOVE,
 				},
-				// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 				sequencedMessage: {
 					sequenceNumber: ++currentSequenceNumber,
-				} as ISequencedDocumentMessage,
+				} as unknown as ISequencedDocumentMessage,
 			});
 
 			// Move currentSeq/minSeq past the seq# at which the removal was ACKed.
@@ -112,7 +118,7 @@ describe("MergeTree", () => {
 				clientId: remoteClientId,
 				seq: ++remoteSequenceNumber,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			const count = countOperations(mergeTree);
@@ -125,7 +131,7 @@ describe("MergeTree", () => {
 				clientId: localClientId,
 				seq: UnassignedSequenceNumber,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			assert.deepStrictEqual(count, {
@@ -146,7 +152,7 @@ describe("MergeTree", () => {
 				clientId: localClientId,
 				seq: UnassignedSequenceNumber,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			const count = countOperations(mergeTree);
@@ -159,7 +165,7 @@ describe("MergeTree", () => {
 				clientId: remoteClientId,
 				seq: ++remoteSequenceNumber,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			assert.deepStrictEqual(count, {
@@ -180,7 +186,7 @@ describe("MergeTree", () => {
 				clientId: localClientId,
 				seq: UnassignedSequenceNumber,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			const count = countOperations(mergeTree);
@@ -193,7 +199,7 @@ describe("MergeTree", () => {
 				clientId: remoteClientId,
 				seq: ++remoteSequenceNumber,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			assert.deepStrictEqual(count, {

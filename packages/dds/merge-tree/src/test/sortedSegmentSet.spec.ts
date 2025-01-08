@@ -3,20 +3,23 @@
  * Licensed under the MIT License.
  */
 
-import { strict as assert } from "assert";
-import { SortedSegmentSet, SortedSegmentSetItem } from "../sortedSegmentSet";
-import { ISegment } from "../mergeTreeNodes";
-import { LocalReferencePosition } from "../localReference";
-import { ReferenceType } from "../ops";
-import { TrackingGroup } from "../mergeTreeTracking";
-import { TestClient } from "./testClient";
+import { strict as assert } from "node:assert";
+
+import { LocalReferencePosition } from "../localReference.js";
+import { ISegment, type ISegmentPrivate } from "../mergeTreeNodes.js";
+import { TrackingGroup } from "../mergeTreeTracking.js";
+import { ReferenceType } from "../ops.js";
+import { toMergeNodeInfo } from "../segmentInfos.js";
+import { SortedSegmentSet, SortedSegmentSetItem } from "../sortedSegmentSet.js";
+
+import { TestClient } from "./testClient.js";
 const segmentCount = 15;
 
 function validateSorted<T extends SortedSegmentSetItem>(
 	set: SortedSegmentSet<T>,
 	getOrdinal: (item: T) => string | undefined,
 	prefix: string,
-) {
+): void {
 	for (let i = 0; i < set.size - 1; i++) {
 		const a = getOrdinal(set.items[i]);
 		const b = getOrdinal(set.items[i + 1]);
@@ -30,7 +33,7 @@ function validateSet<T extends SortedSegmentSetItem>(
 	client: TestClient,
 	set: SortedSegmentSet<T>,
 	getOrdinal: (item: T) => string | undefined,
-) {
+): void {
 	validateSorted(set, getOrdinal, "initial");
 
 	// add content to shift ordinals in tree
@@ -63,7 +66,7 @@ describe("SortedSegmentSet", () => {
 		const set = new SortedSegmentSet<{ segment: ISegment }>();
 		for (let i = 0; i < client.getLength(); i++) {
 			for (const pos of [i, client.getLength() - 1 - i]) {
-				const segment = client.getContainingSegment(pos).segment;
+				const segment = client.getContainingSegment<ISegmentPrivate>(pos).segment;
 				assert(segment);
 				const item = { segment };
 				assert.equal(set.has(item), false);
@@ -72,21 +75,21 @@ describe("SortedSegmentSet", () => {
 			}
 		}
 		assert.equal(set.size, client.getLength() * 2);
-		validateSet(client, set, (i) => i.segment.ordinal);
+		validateSet(client, set, (i) => toMergeNodeInfo(i.segment)?.ordinal);
 	});
 
 	it("SortedSegmentSet of segments", () => {
 		const set = new SortedSegmentSet();
 		for (let i = 0; i < client.getLength(); i++) {
 			for (const pos of [i, client.getLength() - 1 - i]) {
-				const segment = client.getContainingSegment(pos).segment;
+				const segment = client.getContainingSegment<ISegmentPrivate>(pos).segment;
 				assert(segment);
 				set.addOrUpdate(segment);
 				assert.equal(set.has(segment), true);
 			}
 		}
 		assert.equal(set.size, segmentCount);
-		validateSet(client, set, (i) => i.ordinal);
+		validateSet(client, set, (i) => toMergeNodeInfo(i)?.ordinal);
 	});
 
 	it("SortedSegmentSet of local references", () => {
@@ -97,7 +100,7 @@ describe("SortedSegmentSet", () => {
 		const set = new TrackingGroup();
 		for (let i = 0; i < client.getLength(); i++) {
 			for (const pos of [i, client.getLength() - 1 - i]) {
-				const segmentInfo = client.getContainingSegment(pos);
+				const segmentInfo = client.getContainingSegment<ISegmentPrivate>(pos);
 				assert(segmentInfo?.segment);
 				const lref = client.createLocalReferencePosition(
 					segmentInfo.segment,
@@ -113,8 +116,11 @@ describe("SortedSegmentSet", () => {
 		assert.equal(set.size, client.getLength() * 2);
 		validateSet<LocalReferencePosition>(
 			client,
+			// Cast to any because we are validating a set of local references, but the instantiated type of trackedSet
+			// on TrackingGroup is SortedSegmentSet<Trackable>.
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
 			(set as any).trackedSet,
-			(i) => i.getSegment()?.ordinal,
+			(i) => toMergeNodeInfo(i.getSegment())?.ordinal,
 		);
 	});
 });

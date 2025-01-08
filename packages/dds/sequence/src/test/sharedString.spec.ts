@@ -4,30 +4,34 @@
  */
 
 import { strict as assert } from "assert";
-import { ISummaryTree } from "@fluidframework/protocol-definitions";
-import { IChannelServices } from "@fluidframework/datastore-definitions";
+
+import { AttachState } from "@fluidframework/container-definitions";
+import { IChannelServices } from "@fluidframework/datastore-definitions/internal";
+import { ISummaryTree } from "@fluidframework/driver-definitions";
 import {
-	appendToMergeTreeDeltaRevertibles,
 	Marker,
-	matchProperties,
 	MergeTreeDeltaRevertible,
 	ReferenceType,
+	Side,
+	appendToMergeTreeDeltaRevertibles,
+	matchProperties,
 	reservedMarkerIdKey,
 	reservedMarkerSimpleTypeKey,
 	reservedTileLabelsKey,
 	revertMergeTreeDeltaRevertibles,
-} from "@fluidframework/merge-tree";
+} from "@fluidframework/merge-tree/internal";
 import {
-	MockFluidDataStoreRuntime,
 	MockContainerRuntimeFactory,
 	MockContainerRuntimeFactoryForReconnection,
 	MockContainerRuntimeForReconnection,
 	MockEmptyDeltaConnection,
+	MockFluidDataStoreRuntime,
 	MockStorage,
 	validateAssertionError,
-} from "@fluidframework/test-runtime-utils";
-import { getTextAndMarkers, SharedString } from "../sharedString";
-import { SharedStringFactory } from "../sequenceFactory";
+} from "@fluidframework/test-runtime-utils/internal";
+
+import { SharedStringFactory, type SharedString } from "../sequenceFactory.js";
+import { SharedStringClass, getTextAndMarkers } from "../sharedString.js";
 
 describe("SharedString", () => {
 	let sharedString: SharedString;
@@ -35,7 +39,7 @@ describe("SharedString", () => {
 
 	beforeEach(() => {
 		dataStoreRuntime1 = new MockFluidDataStoreRuntime();
-		sharedString = new SharedString(
+		sharedString = new SharedStringClass(
 			dataStoreRuntime1,
 			"shared-string-1",
 			SharedStringFactory.Attributes,
@@ -54,13 +58,12 @@ describe("SharedString", () => {
 				objectStorage: MockStorage.createFromSummary(summaryTree),
 			};
 			const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
-			const sharedString2 = new SharedString(
+			const sharedString2 = new SharedStringClass(
 				dataStoreRuntime2,
 				"shared-string-2",
 				SharedStringFactory.Attributes,
 			);
 			await sharedString2.load(services);
-			await sharedString2.loaded;
 
 			assert.equal(
 				sharedString.getText(),
@@ -105,11 +108,7 @@ describe("SharedString", () => {
 			assert.equal(sharedString.getText(), "hello there!", "Could not replace text");
 
 			sharedString.replaceText(0, 5, "hi");
-			assert.equal(
-				sharedString.getText(),
-				"hi there!",
-				"Could not replace text at beginning",
-			);
+			assert.equal(sharedString.getText(), "hi there!", "Could not replace text at beginning");
 		});
 
 		it("can remove text", async () => {
@@ -382,16 +381,13 @@ describe("SharedString", () => {
 			// Load a new Ink in connected state from the snapshot of the first one.
 			const containerRuntimeFactory = new MockContainerRuntimeFactory();
 			const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
-			const containerRuntime2 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
 			const services2: IChannelServices = {
 				deltaConnection: dataStoreRuntime2.createDeltaConnection(),
-				objectStorage: MockStorage.createFromSummary(
-					sharedString.getAttachSummary().summary,
-				),
+				objectStorage: MockStorage.createFromSummary(sharedString.getAttachSummary().summary),
 			};
 
-			const sharedString2 = new SharedString(
+			const sharedString2 = new SharedStringClass(
 				dataStoreRuntime2,
 				"shared-string-2",
 				SharedStringFactory.Attributes,
@@ -399,9 +395,8 @@ describe("SharedString", () => {
 			await sharedString2.load(services2);
 
 			// Now connect the first Ink
-			dataStoreRuntime1.local = false;
-			const containerRuntime1 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
+			dataStoreRuntime1.setAttachState(AttachState.Attached);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
 			const services1 = {
 				deltaConnection: dataStoreRuntime1.createDeltaConnection(),
 				objectStorage: new MockStorage(undefined),
@@ -448,9 +443,8 @@ describe("SharedString", () => {
 			containerRuntimeFactory = new MockContainerRuntimeFactory();
 
 			// Connect the first SharedString.
-			dataStoreRuntime1.local = false;
-			const containerRuntime1 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
+			dataStoreRuntime1.setAttachState(AttachState.Attached);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
 			const services1 = {
 				deltaConnection: dataStoreRuntime1.createDeltaConnection(),
 				objectStorage: new MockStorage(),
@@ -460,14 +454,13 @@ describe("SharedString", () => {
 
 			// Create and connect a second SharedString.
 			const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
-			const containerRuntime2 =
-				containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
+			containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
 			const services2 = {
 				deltaConnection: dataStoreRuntime2.createDeltaConnection(),
 				objectStorage: new MockStorage(),
 			};
 
-			sharedString2 = new SharedString(
+			sharedString2 = new SharedStringClass(
 				dataStoreRuntime2,
 				"shared-string-2",
 				SharedStringFactory.Attributes,
@@ -661,7 +654,6 @@ describe("SharedString", () => {
 	describe("reconnect", () => {
 		let containerRuntimeFactory: MockContainerRuntimeFactoryForReconnection;
 		let containerRuntime1: MockContainerRuntimeForReconnection;
-		let containerRuntime2: MockContainerRuntimeForReconnection;
 		let sharedString2: SharedString;
 
 		beforeEach(async () => {
@@ -678,8 +670,8 @@ describe("SharedString", () => {
 
 			// Create and connect a second SharedString.
 			const runtime2 = new MockFluidDataStoreRuntime();
-			containerRuntime2 = containerRuntimeFactory.createContainerRuntime(runtime2);
-			sharedString2 = new SharedString(
+			containerRuntimeFactory.createContainerRuntime(runtime2);
+			sharedString2 = new SharedStringClass(
 				runtime2,
 				"shared-string-2",
 				SharedStringFactory.Attributes,
@@ -708,6 +700,43 @@ describe("SharedString", () => {
 
 			// Verify that the changes were correctly received by the second SharedString
 			assert.equal(sharedString2.getText(), "hello friend");
+		});
+
+		it("insert in middle of multibyte character", async () => {
+			let base = "🎉";
+
+			sharedString.insertText(0, "🎉");
+
+			assert.equal(sharedString.getText(), base);
+			assert.equal(sharedString.getLength(), base.length);
+
+			containerRuntimeFactory.processAllMessages();
+
+			base = `${base.slice(0, 1)}a${base.slice(1)}`;
+			sharedString.insertText(1, "a");
+
+			containerRuntimeFactory.processAllMessages();
+
+			assert.equal(sharedString.getText(), base); // not 🎉a
+			assert.equal(sharedString.getLength(), base.length);
+		});
+
+		it("insert in middle of surrogate pair", async () => {
+			let base = "👨🏻‍🦱";
+			sharedString.insertText(0, "👨🏻‍🦱");
+
+			assert.equal(sharedString.getText(), base);
+			assert.equal(sharedString.getLength(), base.length);
+
+			containerRuntimeFactory.processAllMessages();
+
+			base = `${base.slice(0, 2)}a${base.slice(2)}`;
+			sharedString.insertText(2, "a");
+
+			containerRuntimeFactory.processAllMessages();
+
+			assert.equal(sharedString.getText(), base); // not 👨🏻‍🦱a
+			assert.equal(sharedString.getLength(), base.length);
 		});
 
 		it("can store ops in disconnected state and resend them on reconnection", async () => {
@@ -805,5 +834,79 @@ describe("SharedString", () => {
 				assert(matchProperties(sharedString.getPropertiesAtPosition(i), { test: i })),
 			);
 		});
+	});
+});
+
+describe("Shared String Obliterate", () => {
+	let sharedString: SharedString;
+	let dataStoreRuntime1: MockFluidDataStoreRuntime;
+	let sharedString2: SharedString;
+	let containerRuntimeFactory: MockContainerRuntimeFactory;
+
+	beforeEach(() => {
+		containerRuntimeFactory = new MockContainerRuntimeFactory();
+		dataStoreRuntime1 = new MockFluidDataStoreRuntime();
+		dataStoreRuntime1.options = {
+			mergeTreeEnableObliterate: true,
+			mergeTreeEnableSidedObliterate: true,
+		};
+		sharedString = new SharedStringClass(
+			dataStoreRuntime1,
+			"shared-string-1",
+			SharedStringFactory.Attributes,
+		);
+
+		// Connect the first SharedString.
+		dataStoreRuntime1.setAttachState(AttachState.Attached);
+		containerRuntimeFactory.createContainerRuntime(dataStoreRuntime1);
+		const services1 = {
+			deltaConnection: dataStoreRuntime1.createDeltaConnection(),
+			objectStorage: new MockStorage(),
+		};
+		sharedString.initializeLocal();
+		sharedString.connect(services1);
+
+		// Create and connect a second SharedString.
+		const dataStoreRuntime2 = new MockFluidDataStoreRuntime();
+		dataStoreRuntime2.options = {
+			mergeTreeEnableObliterate: true,
+			mergeTreeEnableSidedObliterate: true,
+		};
+		containerRuntimeFactory.createContainerRuntime(dataStoreRuntime2);
+		const services2 = {
+			deltaConnection: dataStoreRuntime2.createDeltaConnection(),
+			objectStorage: new MockStorage(),
+		};
+
+		sharedString2 = new SharedStringClass(
+			dataStoreRuntime2,
+			"shared-string-2",
+			SharedStringFactory.Attributes,
+		);
+		sharedString2.initializeLocal();
+		sharedString2.connect(services2);
+	});
+
+	it("zero length obliterate in the middle of the string", () => {
+		sharedString.insertText(0, "0123456789");
+		containerRuntimeFactory.processAllMessages();
+		assert.equal(
+			sharedString.getText(),
+			sharedString2.getText(),
+			"starting state should be equal",
+		);
+
+		sharedString.obliterateRange({ pos: 4, side: Side.After }, { pos: 5, side: Side.Before });
+		sharedString.insertText(5, "AAA");
+		sharedString2.obliterateRange({ pos: 4, side: Side.After }, { pos: 5, side: Side.Before });
+		sharedString2.insertText(5, "BBB");
+
+		containerRuntimeFactory.processAllMessages();
+		assert.equal(
+			sharedString.getText(),
+			sharedString2.getText(),
+			"end state should be equal after obliterate",
+		);
+		assert.equal(sharedString2.getText(), "01234BBB56789", "obliterate failed");
 	});
 });

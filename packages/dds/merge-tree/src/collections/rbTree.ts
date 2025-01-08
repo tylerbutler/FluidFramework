@@ -3,10 +3,6 @@
  * Licensed under the MIT License.
  */
 
-/* eslint-disable @typescript-eslint/consistent-type-assertions */
-
-/* Remove once strictNullCheck is enabled */
-
 /**
  * @internal
  */
@@ -132,29 +128,32 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		private readonly aug?: IRBAugmentation<TKey, TData>,
 	) {}
 
-	private makeNode(key: TKey, data: TData, color: RBColor, size: number) {
-		return <RBNode<TKey, TData>>{ key, data, color, size };
+	private makeNode(key: TKey, data: TData, color: RBColor, size: number): RBNode<TKey, TData> {
+		return { key, data, color, size } as unknown as RBNode<TKey, TData>;
 	}
 
-	private isRed(node: RBNode<TKey, TData> | undefined) {
+	private isRed(node: RBNode<TKey, TData> | undefined): boolean {
 		return !!node && node.color === RBColor.RED;
 	}
 
-	private nodeSize(node: RBNode<TKey, TData> | undefined) {
+	private nodeSize(node: RBNode<TKey, TData> | undefined): number {
 		return node ? node.size : 0;
 	}
-	public size() {
+	public size(): number {
 		return this.nodeSize(this.root);
 	}
-	public isEmpty() {
+	public isEmpty(): boolean {
 		return !this.root;
 	}
-	public get(key: TKey) {
+	public get(key: TKey): RBNode<TKey, TData> | undefined {
 		if (key !== undefined) {
 			return this.nodeGet(this.root, key);
 		}
 	}
-	private nodeGet(node: RBNode<TKey, TData> | undefined, key: TKey) {
+	private nodeGet(
+		node: RBNode<TKey, TData> | undefined,
+		key: TKey,
+	): RBNode<TKey, TData> | undefined {
 		let _node = node;
 		while (_node) {
 			const cmp = this.compareKeys(key, _node.key);
@@ -167,11 +166,11 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 			}
 		}
 	}
-	private contains(key: TKey) {
+	private contains(key: TKey): RBNode<TKey, TData> | undefined {
 		return this.get(key);
 	}
 
-	public gather(key: TKey, matcher: IRBMatcher<TKey, TData>) {
+	public gather(key: TKey, matcher: IRBMatcher<TKey, TData>): RBNode<TKey, TData>[] {
 		const results = [] as RBNode<TKey, TData>[];
 		if (key !== undefined) {
 			this.nodeGather(this.root, results, key, matcher);
@@ -184,7 +183,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		results: RBNode<TKey, TData>[],
 		key: TKey,
 		matcher: IRBMatcher<TKey, TData>,
-	) {
+	): void {
 		if (node) {
 			if (matcher.continueSubtree(node.left, key)) {
 				this.nodeGather(node.left, results, key, matcher);
@@ -203,7 +202,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		actionFn: (node: RBNode<TKey, TData>) => void,
 		continueLeftFn: (number: number) => boolean,
 		continueRightFn: (number: number) => boolean,
-	) {
+	): void {
 		this.nodeWalkExactMatchesForward(
 			this.root,
 			compareFn,
@@ -219,7 +218,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		actionFn: (node: RBNode<TKey, TData>) => void,
 		continueLeftFn: (number: number) => boolean,
 		continueRightFn: (number: number) => boolean,
-	) {
+	): void {
 		if (!node) {
 			return;
 		}
@@ -252,7 +251,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		actionFn: (node: RBNode<TKey, TData>) => void,
 		continueLeftFn: (number: number) => boolean,
 		continueRightFn: (number: number) => boolean,
-	) {
+	): void {
 		this.nodeWalkExactMatchesBackward(
 			this.root,
 			compareFn,
@@ -268,7 +267,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		actionFn: (node: RBNode<TKey, TData>) => void,
 		continueLeftFn: (cmp: number) => boolean,
 		continueRightFn: (cmp: number) => boolean,
-	) {
+	): void {
 		if (!node) {
 			return;
 		}
@@ -296,7 +295,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		}
 	}
 
-	public put(key: TKey, data: TData, conflict?: ConflictAction<TKey, TData>) {
+	public put(key: TKey, data: TData, conflict?: ConflictAction<TKey, TData>): void {
 		if (key !== undefined) {
 			if (data === undefined) {
 				this.remove(key);
@@ -312,11 +311,9 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		key: TKey,
 		data: TData,
 		conflict?: ConflictAction<TKey, TData>,
-	) {
+	): RBNode<TKey, TData> {
 		let _node = node;
-		if (!_node) {
-			return this.makeNode(key, data, RBColor.RED, 1);
-		} else {
+		if (_node) {
 			const cmp = this.compareKeys(key, _node.key);
 			if (cmp < 0) {
 				_node.left = this.nodePut(_node.left, key, data, conflict);
@@ -328,7 +325,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 					if (kd.key) {
 						_node.key = kd.key;
 					}
-					_node.data = kd.data ? kd.data : data;
+					_node.data = kd.data ?? data;
 				} else {
 					_node.data = data;
 				}
@@ -348,10 +345,12 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 				this.updateLocal(_node);
 			}
 			return _node;
+		} else {
+			return this.makeNode(key, data, RBColor.RED, 1);
 		}
 	}
 
-	private updateLocal(node: RBNode<TKey, TData>) {
+	private updateLocal(node: RBNode<TKey, TData>): void {
 		if (this.aug) {
 			if (this.isRed(node.left)) {
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -365,7 +364,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		}
 	}
 
-	private nodeRemoveMin(node: RBNode<TKey, TData>) {
+	private nodeRemoveMin(node: RBNode<TKey, TData>): RBNode<TKey, TData> | undefined {
 		let _node = node;
 		if (_node.left) {
 			if (!this.isRed(_node.left) && !this.isRed(_node.left.left)) {
@@ -378,7 +377,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		}
 	}
 
-	public remove(key: TKey) {
+	public remove(key: TKey): void {
 		if (key !== undefined) {
 			if (!this.contains(key)) {
 				return;
@@ -389,7 +388,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		// TODO: error on undefined key
 	}
 
-	public removeExisting(key: TKey) {
+	public removeExisting(key: TKey): void {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		if (!this.isRed(this.root!.left) && !this.isRed(this.root!.right)) {
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -400,7 +399,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		this.root = this.nodeRemove(this.root!, key);
 	}
 
-	private nodeRemove(node: RBNode<TKey, TData>, key: TKey) {
+	private nodeRemove(node: RBNode<TKey, TData>, key: TKey): RBNode<TKey, TData> | undefined {
 		let _node = node;
 		if (this.compareKeys(key, _node.key) < 0) {
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -436,9 +435,9 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 	}
 
 	/**
-	 * @returns The largest node in this tree which compares less than or equal to `key`
+	 * Finds the largest node that is less than or equal to a given key.
 	 */
-	public floor(key: TKey) {
+	public floor(key: TKey): RBNode<TKey, TData> | undefined {
 		if (!this.isEmpty()) {
 			return this.nodeFloor(this.root, key);
 		}
@@ -456,15 +455,15 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 				return this.nodeFloor(node.left, key);
 			} else {
 				const rightFloor = this.nodeFloor(node.right, key);
-				return rightFloor ? rightFloor : node;
+				return rightFloor ?? node;
 			}
 		}
 	}
 
 	/**
-	 * @returns The smallest node in this tree which compares greater than or equal to `key`
+	 * Finds the smallest node that is greater than or equal to a given key.
 	 */
-	public ceil(key: TKey) {
+	public ceil(key: TKey): RBNode<TKey, TData> | undefined {
 		if (!this.isEmpty()) {
 			return this.nodeCeil(this.root, key);
 		}
@@ -482,32 +481,32 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 				return this.nodeCeil(node.right, key);
 			} else {
 				const leftCeil = this.nodeCeil(node.left, key);
-				return leftCeil ? leftCeil : node;
+				return leftCeil ?? node;
 			}
 		}
 	}
 
-	public min() {
+	public min(): RBNode<TKey, TData> | undefined {
 		if (this.root) {
 			return this.nodeMin(this.root);
 		}
 	}
 
 	private nodeMin(node: RBNode<TKey, TData>): RBNode<TKey, TData> {
-		return !node.left ? node : this.nodeMin(node.left);
+		return node.left ? this.nodeMin(node.left) : node;
 	}
 
-	public max() {
+	public max(): RBNode<TKey, TData> | undefined {
 		if (this.root) {
 			return this.nodeMax(this.root);
 		}
 	}
 
 	private nodeMax(node: RBNode<TKey, TData>): RBNode<TKey, TData> {
-		return !node.right ? node : this.nodeMax(node.right);
+		return node.right ? this.nodeMax(node.right) : node;
 	}
 
-	private rotateRight(node: RBNode<TKey, TData>) {
+	private rotateRight(node: RBNode<TKey, TData>): RBNode<TKey, TData> {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const leftChild = node.left!;
 		node.left = leftChild.right;
@@ -523,7 +522,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		return leftChild;
 	}
 
-	private rotateLeft(node: RBNode<TKey, TData>) {
+	private rotateLeft(node: RBNode<TKey, TData>): RBNode<TKey, TData> {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const rightChild = node.right!;
 		node.right = rightChild.left;
@@ -539,11 +538,11 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		return rightChild;
 	}
 
-	private oppositeColor(c: RBColor) {
+	private oppositeColor(c: RBColor): RBColor {
 		return c === RBColor.BLACK ? RBColor.RED : RBColor.BLACK;
 	}
 
-	private flipColors(node: RBNode<TKey, TData>) {
+	private flipColors(node: RBNode<TKey, TData>): void {
 		node.color = this.oppositeColor(node.color);
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		node.left!.color = this.oppositeColor(node.left!.color);
@@ -551,7 +550,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		node.right!.color = this.oppositeColor(node.right!.color);
 	}
 
-	private moveRedLeft(node: RBNode<TKey, TData>) {
+	private moveRedLeft(node: RBNode<TKey, TData>): RBNode<TKey, TData> {
 		let _node = node;
 		this.flipColors(_node);
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -564,7 +563,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		return _node;
 	}
 
-	private moveRedRight(node: RBNode<TKey, TData>) {
+	private moveRedRight(node: RBNode<TKey, TData>): RBNode<TKey, TData> {
 		let _node = node;
 		this.flipColors(_node);
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -575,7 +574,7 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		return _node;
 	}
 
-	private balance(input: RBNode<TKey, TData>) {
+	private balance(input: RBNode<TKey, TData>): RBNode<TKey, TData> {
 		let node: RBNode<TKey, TData> | undefined = input;
 		if (this.isRed(node.right)) {
 			node = this.rotateLeft(node);
@@ -599,18 +598,18 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 		accum?: TAccum,
 		start?: TKey,
 		end?: TKey,
-	) {
+	): void {
 		this.nodeMap(this.root, action, accum, start, end);
 	}
 
-	public map<TAccum>(action: PropertyAction<TKey, TData>, accum?: TAccum) {
+	public map<TAccum>(action: PropertyAction<TKey, TData>, accum?: TAccum): void {
 		// TODO: optimize to avoid comparisons
 		this.nodeMap(this.root, action, accum);
 	}
 
-	public keys() {
-		const keyList = <TKey[]>[];
-		const actions = <RBNodeActions<TKey, TData>>{
+	public keys(): TKey[] {
+		const keyList: TKey[] = [];
+		const actions: RBNodeActions<TKey, TData> = {
 			showStructure: true,
 			infix: (node) => {
 				keyList.push(node.key);
@@ -626,11 +625,11 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 	 * false, traversal is halted.
 	 * @param action - action to apply to each node
 	 */
-	public walk(actions: RBNodeActions<TKey, TData>) {
+	public walk(actions: RBNodeActions<TKey, TData>): void {
 		this.nodeWalk(this.root, actions);
 	}
 
-	public walkBackward(actions: RBNodeActions<TKey, TData>) {
+	public walkBackward(actions: RBNodeActions<TKey, TData>): void {
 		this.nodeWalkBackward(this.root, actions);
 	}
 
@@ -640,29 +639,20 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 	): boolean {
 		let go = true;
 		if (node) {
-			if (actions.pre) {
-				// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- ?? is not logically equivalent when the first clause returns false.
-				if (actions.showStructure || node.color === RBColor.BLACK) {
-					go = actions.pre(node);
-				}
+			if (actions.pre && (!!actions.showStructure || node.color === RBColor.BLACK)) {
+				go = actions.pre(node);
 			}
 			if (node.left) {
 				go = this.nodeWalk(node.left, actions);
 			}
-			if (go && actions.infix) {
-				// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- ?? is not logically equivalent when the first clause returns false.
-				if (actions.showStructure || node.color === RBColor.BLACK) {
-					go = actions.infix(node);
-				}
+			if (go && actions.infix && (!!actions.showStructure || node.color === RBColor.BLACK)) {
+				go = actions.infix(node);
 			}
 			if (go) {
 				go = this.nodeWalk(node.right, actions);
 			}
-			if (go && actions.post) {
-				// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- ?? is not logically equivalent when the first clause returns false.
-				if (actions.showStructure || node.color === RBColor.BLACK) {
-					go = actions.post(node);
-				}
+			if (go && actions.post && (!!actions.showStructure || node.color === RBColor.BLACK)) {
+				go = actions.post(node);
 			}
 		}
 		return go;
@@ -674,29 +664,20 @@ export class RedBlackTree<TKey, TData> implements SortedDictionary<TKey, TData> 
 	): boolean {
 		let go = true;
 		if (node) {
-			if (actions.pre) {
-				// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- ?? is not logically equivalent when the first clause returns false.
-				if (actions.showStructure || node.color === RBColor.BLACK) {
-					go = actions.pre(node);
-				}
+			if (actions.pre && (!!actions.showStructure || node.color === RBColor.BLACK)) {
+				go = actions.pre(node);
 			}
 			if (node.right) {
 				go = this.nodeWalkBackward(node.right, actions);
 			}
-			if (go && actions.infix) {
-				// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- ?? is not logically equivalent when the first clause returns false.
-				if (actions.showStructure || node.color === RBColor.BLACK) {
-					go = actions.infix(node);
-				}
+			if (go && actions.infix && (!!actions.showStructure || node.color === RBColor.BLACK)) {
+				go = actions.infix(node);
 			}
 			if (go) {
 				go = this.nodeWalkBackward(node.left, actions);
 			}
-			if (go && actions.post) {
-				// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- ?? is not logically equivalent when the first clause returns false.
-				if (actions.showStructure || node.color === RBColor.BLACK) {
-					go = actions.post(node);
-				}
+			if (go && actions.post && (!!actions.showStructure || node.color === RBColor.BLACK)) {
+				go = actions.post(node);
 			}
 		}
 		return go;

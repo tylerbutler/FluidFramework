@@ -2,34 +2,42 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { PromiseCache } from "@fluidframework/core-utils";
-import { ITelemetryBaseLogger, IRequest } from "@fluidframework/core-interfaces";
+
+import { IRequest, ITelemetryBaseLogger } from "@fluidframework/core-interfaces";
+import { PromiseCache } from "@fluidframework/core-utils/internal";
 import {
 	IContainerPackageInfo,
 	IResolvedUrl,
 	IUrlResolver,
-} from "@fluidframework/driver-definitions";
-import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils";
+} from "@fluidframework/driver-definitions/internal";
 import {
 	IOdspResolvedUrl,
 	IdentityType,
 	OdspResourceTokenFetchOptions,
 	TokenFetcher,
-} from "@fluidframework/odsp-driver-definitions";
+} from "@fluidframework/odsp-driver-definitions/internal";
+import { ITelemetryLoggerExt } from "@fluidframework/telemetry-utils/internal";
+
+import { OdspFluidDataStoreLocator, SharingLinkHeader } from "./contractsPublic.js";
+import { createOdspUrl } from "./createOdspUrl.js";
+import { getFileLink } from "./getFileLink.js";
+import { OdspDriverUrlResolver } from "./odspDriverUrlResolver.js";
 import {
 	getLocatorFromOdspUrl,
-	storeLocatorInOdspUrl,
-	encodeOdspFluidDataStoreLocator,
 	locatorQueryParamName,
-} from "./odspFluidFileLink";
-import { OdspFluidDataStoreLocator, SharingLinkHeader } from "./contractsPublic";
-import { createOdspUrl } from "./createOdspUrl";
-import { OdspDriverUrlResolver } from "./odspDriverUrlResolver";
-import { getOdspResolvedUrl, createOdspLogger } from "./odspUtils";
-import { getFileLink } from "./getFileLink";
+	storeLocatorInOdspUrl,
+} from "./odspFluidFileLink.js";
+import {
+	appendNavParam,
+	createOdspLogger,
+	getOdspResolvedUrl,
+	getContainerPackageName,
+} from "./odspUtils.js";
 
 /**
  * Properties passed to the code responsible for fetching share link for a file.
+ * @legacy
+ * @alpha
  */
 export interface ShareLinkFetcherProps {
 	/**
@@ -46,6 +54,8 @@ export interface ShareLinkFetcherProps {
  * Resolver to resolve urls like the ones created by createOdspUrl which is driver inner
  * url format and the ones which have things like driveId, siteId, itemId etc encoded in nav param.
  * This resolver also handles share links and try to generate one for the use by the app.
+ * @legacy
+ * @alpha
  */
 export class OdspDriverUrlResolverForShareLink implements IUrlResolver {
 	private readonly logger: ITelemetryLoggerExt;
@@ -100,9 +110,9 @@ export class OdspDriverUrlResolverForShareLink implements IUrlResolver {
 		// Determine if the caller is passing a query parameter or path since processing will be different.
 		if (pathToAppend.startsWith("/?") || pathToAppend.startsWith("?")) {
 			const queryParams = new URLSearchParams(pathToAppend);
-			queryParams.forEach((value: string, key: string) => {
+			for (const [key, value] of queryParams.entries()) {
 				parsingUrl.searchParams.append(key, value);
-			});
+			}
 			fluidInfo.dataStorePath = `${parsingUrl.pathname}${parsingUrl.search}`;
 		} else {
 			fluidInfo.dataStorePath = `${parsingUrl.pathname}${
@@ -138,6 +148,13 @@ export class OdspDriverUrlResolverForShareLink implements IUrlResolver {
 
 		const odspResolvedUrl = await new OdspDriverUrlResolver().resolve(requestToBeResolved);
 
+		odspResolvedUrl.context = await this.getContext?.(
+			odspResolvedUrl,
+			odspResolvedUrl.dataStorePath ?? "",
+		);
+
+		odspResolvedUrl.appName = this.appName;
+
 		if (isSharingLinkToRedeem) {
 			// We need to remove the nav param if set by host when setting the sharelink as otherwise the shareLinkId
 			// when redeeming the share link during the redeem fallback for trees latest call becomes greater than
@@ -164,9 +181,7 @@ export class OdspDriverUrlResolverForShareLink implements IUrlResolver {
 
 	private async getShareLinkPromise(resolvedUrl: IOdspResolvedUrl): Promise<string> {
 		if (this.shareLinkFetcherProps === undefined) {
-			throw new Error(
-				"Failed to get share link because share link fetcher props are missing",
-			);
+			throw new Error("Failed to get share link because share link fetcher props are missing");
 		}
 
 		if (!(resolvedUrl.siteUrl && resolvedUrl.driveId && resolvedUrl.itemId)) {
@@ -212,63 +227,54 @@ export class OdspDriverUrlResolverForShareLink implements IUrlResolver {
 		const odspResolvedUrl = getOdspResolvedUrl(resolvedUrl);
 
 		const shareLink = await this.getShareLinkPromise(odspResolvedUrl);
-		const shareLinkUrl = new URL(shareLink);
 
-		let actualDataStorePath = dataStorePath;
+		return this.appendLocatorParams(shareLink, resolvedUrl, dataStorePath, packageInfoSource);
+	}
+
+	/**
+	 * Appends the store locator properties to the provided base URL. This function is useful for scenarios where an application
+	 * has a base URL (for example a sharing link) of the Fluid file, but does not have the locator information that would be used by Fluid
+	 * to load the file later.
+	 * @param baseUrl - The input URL on which the locator params will be appended.
+	 * @param resolvedUrl - odsp-driver's resolvedURL object.
+	 * @param dataStorePath - The relative data store path URL.
+	 * For requesting a driver URL, this value should always be '/'. If an empty string is passed, then dataStorePath
+	 * will be extracted from the resolved url if present.
+	 * @returns The provided base URL appended with odsp-specific locator information
+	 */
+	public async appendLocatorParams(
+		baseUrl: string,
+		resolvedUrl: IResolvedUrl,
+		dataStorePath: string,
+		packageInfoSource?: IContainerPackageInfo,
+	): Promise<string> {
+		const odspResolvedUrl = getOdspResolvedUrl(resolvedUrl);
+
 		// If the user has passed an empty dataStorePath, then extract it from the resolved url.
-		if (dataStorePath === "" && odspResolvedUrl.dataStorePath !== undefined) {
-			actualDataStorePath = odspResolvedUrl.dataStorePath;
-		}
+		const actualDataStorePath = dataStorePath || (odspResolvedUrl.dataStorePath ?? "");
 
-		// back-compat: GitHub #9653
-		const isFluidPackage = (pkg: any) =>
-			typeof pkg === "object" &&
-			typeof pkg?.name === "string" &&
-			typeof pkg?.fluid === "object";
-		let containerPackageName;
-		if (packageInfoSource && "name" in packageInfoSource) {
-			containerPackageName = packageInfoSource.name;
-			// packageInfoSource is cast to any as it is typed to IContainerPackageInfo instead of IFluidCodeDetails
-		} else if (isFluidPackage((packageInfoSource as any)?.package)) {
-			containerPackageName = (packageInfoSource as any)?.package.name;
-		} else {
-			containerPackageName = (packageInfoSource as any)?.package;
-		}
-		containerPackageName =
-			containerPackageName ?? odspResolvedUrl.codeHint?.containerPackageName;
+		odspResolvedUrl.context = await this.getContext?.(odspResolvedUrl, actualDataStorePath);
 
-		const context = await this.getContext?.(odspResolvedUrl, actualDataStorePath);
+		const containerPackageName: string | undefined =
+			getContainerPackageName(packageInfoSource) ??
+			odspResolvedUrl.codeHint?.containerPackageName;
 
-		storeLocatorInOdspUrl(shareLinkUrl, {
-			siteUrl: odspResolvedUrl.siteUrl,
-			driveId: odspResolvedUrl.driveId,
-			itemId: odspResolvedUrl.itemId,
-			dataStorePath: actualDataStorePath,
-			appName: this.appName,
-			containerPackageName,
-			fileVersion: odspResolvedUrl.fileVersion,
-			context,
-		});
+		odspResolvedUrl.appName = this.appName;
 
-		return shareLinkUrl.href;
+		return appendNavParam(baseUrl, odspResolvedUrl, actualDataStorePath, containerPackageName);
 	}
 
 	/**
 	 * Crafts a supported document/driver URL
 	 */
-	public static createDocumentUrl(baseUrl: string, driverInfo: OdspFluidDataStoreLocator) {
+	public static createDocumentUrl(
+		baseUrl: string,
+		driverInfo: OdspFluidDataStoreLocator,
+	): string {
 		const url = new URL(baseUrl);
 
 		storeLocatorInOdspUrl(url, driverInfo);
 
 		return url.href;
-	}
-
-	/**
-	 * Crafts a supported data store nav param
-	 * @deprecated encodeOdspFluidDataStoreLocator should be used instead
-	 */
-	public static createNavParam(locator: OdspFluidDataStoreLocator) {
-		return encodeOdspFluidDataStoreLocator(locator);
 	}
 }

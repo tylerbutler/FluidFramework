@@ -29,7 +29,7 @@ import { Provider } from "nconf";
 export async function scribeCreate(
 	config: Provider,
 	customizations?: Record<string, any>,
-): Promise<IPartitionLambdaFactory> {
+): Promise<IPartitionLambdaFactory<core.IPartitionLambdaConfig>> {
 	// Access config values
 	const globalDbEnabled = config.get("mongo:globalDbEnabled") as boolean;
 	const documentsCollectionName = config.get("mongo:collectionNames:documents");
@@ -44,7 +44,11 @@ export async function scribeCreate(
 	const kafkaReplicationFactor = config.get("kafka:lib:replicationFactor");
 	const kafkaMaxBatchSize = config.get("kafka:lib:maxBatchSize");
 	const kafkaSslCACertFilePath: string = config.get("kafka:lib:sslCACertFilePath");
+	const kafkaProducerGlobalAdditionalConfig = config.get(
+		"kafka:lib:producerGlobalAdditionalConfig",
+	);
 	const eventHubConnString: string = config.get("kafka:lib:eventHubConnString");
+	const oauthBearerConfig = config.get("kafka:lib:oauthBearerConfig");
 	const sendTopic = config.get("lambdas:deli:topic");
 	const kafkaClientId = config.get("scribe:kafkaClientId");
 	const mongoExpireAfterSeconds = config.get("mongo:expireAfterSeconds") as number;
@@ -53,6 +57,8 @@ export async function scribeCreate(
 	const internalAlfredUrl = config.get("worker:alfredUrl");
 	const getDeltasViaAlfred = config.get("scribe:getDeltasViaAlfred") as boolean;
 	const maxLogtailLength = (config.get("scribe:maxLogtailLength") as number) ?? 2000;
+	const maxPendingCheckpointMessagesLength =
+		(config.get("scribe:maxPendingCheckpointMessagesLength") as number) ?? 2000;
 	const verifyLastOpPersistence =
 		(config.get("scribe:verifyLastOpPersistence") as boolean) ?? false;
 	const transientTenants = config.get("shared:transientTenants") as string[];
@@ -81,7 +87,12 @@ export async function scribeCreate(
 	let globalDb;
 	if (globalDbEnabled) {
 		const globalDbReconnect = (config.get("mongo:globalDbReconnect") as boolean) ?? false;
-		const globalDbMongoManager = new MongoManager(factory, globalDbReconnect, null, true);
+		const globalDbMongoManager = new MongoManager(
+			factory,
+			globalDbReconnect,
+			undefined /* reconnectDelayMs */,
+			true /* global */,
+		);
 		globalDb = await globalDbMongoManager.getDatabase();
 	}
 
@@ -118,7 +129,7 @@ export async function scribeCreate(
 		);
 	}
 
-	if (mongoExpireAfterSeconds > 0) {
+	if (mongoExpireAfterSeconds > 0 && scribeDeltas.createTTLIndex !== undefined) {
 		await (createCosmosDBIndexes
 			? scribeDeltas.createTTLIndex({ _ts: 1 }, mongoExpireAfterSeconds)
 			: scribeDeltas.createTTLIndex({ mongoTimestamp: 1 }, mongoExpireAfterSeconds));
@@ -136,14 +147,31 @@ export async function scribeCreate(
 		kafkaMaxBatchSize,
 		kafkaSslCACertFilePath,
 		eventHubConnString,
+		kafkaProducerGlobalAdditionalConfig,
+		oauthBearerConfig,
 	);
 
 	const externalOrdererUrl = config.get("worker:serverUrl");
 	const enforceDiscoveryFlow: boolean = config.get("worker:enforceDiscoveryFlow");
+	const scrubUserDataInGlobalCheckpoints: boolean =
+		config.get("scribe:scrubUserDataInGlobalCheckpoints") ??
+		DefaultServiceConfiguration.scribe.scrubUserDataInGlobalCheckpoints;
+	const scrubUserDataInLocalCheckpoints: boolean =
+		config.get("scribe:scrubUserDataInLocalCheckpoints") ??
+		DefaultServiceConfiguration.scribe.scrubUserDataInLocalCheckpoints;
+	const scrubUserDataInSummaries: boolean =
+		config.get("scribe:scrubUserDataInSummaries") ??
+		DefaultServiceConfiguration.scribe.scrubUserDataInSummaries;
 	const serviceConfiguration: IServiceConfiguration = {
 		...DefaultServiceConfiguration,
 		externalOrdererUrl,
 		enforceDiscoveryFlow,
+		scribe: {
+			...DefaultServiceConfiguration.scribe,
+			scrubUserDataInGlobalCheckpoints,
+			scrubUserDataInLocalCheckpoints,
+			scrubUserDataInSummaries,
+		},
 	};
 
 	const checkpointService = new core.CheckpointService(
@@ -169,6 +197,7 @@ export async function scribeCreate(
 		restartOnCheckpointFailure,
 		kafkaCheckpointOnReprocessingOp,
 		maxLogtailLength,
+		maxPendingCheckpointMessagesLength,
 	);
 }
 

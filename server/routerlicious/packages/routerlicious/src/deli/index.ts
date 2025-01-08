@@ -14,13 +14,17 @@ import * as services from "@fluidframework/server-services";
 import * as core from "@fluidframework/server-services-core";
 import { Lumberjack } from "@fluidframework/server-services-telemetry";
 import { Provider } from "nconf";
-import { RedisOptions } from "ioredis";
+import { RedisOptions, ClusterOptions } from "ioredis";
 import * as winston from "winston";
+import {
+	RedisClientConnectionManager,
+	type IRedisClientConnectionManager,
+} from "@fluidframework/server-services-utils";
 
 export async function deliCreate(
 	config: Provider,
 	customizations?: Record<string, any>,
-): Promise<core.IPartitionLambdaFactory> {
+): Promise<core.IPartitionLambdaFactory<core.IPartitionLambdaConfig>> {
 	const kafkaEndpoint = config.get("kafka:lib:endpoint");
 	const kafkaLibrary = config.get("kafka:lib:name");
 	const kafkaProducerPollIntervalMs = config.get("kafka:lib:producerPollIntervalMs");
@@ -28,7 +32,11 @@ export async function deliCreate(
 	const kafkaReplicationFactor = config.get("kafka:lib:replicationFactor");
 	const kafkaMaxBatchSize = config.get("kafka:lib:maxBatchSize");
 	const kafkaSslCACertFilePath: string = config.get("kafka:lib:sslCACertFilePath");
+	const kafkaProducerGlobalAdditionalConfig = config.get(
+		"kafka:lib:producerGlobalAdditionalConfig",
+	);
 	const eventHubConnString: string = config.get("kafka:lib:eventHubConnString");
+	const oauthBearerConfig = config.get("kafka:lib:oauthBearerConfig");
 
 	const kafkaForwardClientId = config.get("deli:kafkaClientId");
 	const kafkaReverseClientId = config.get("alfred:kafkaClientId");
@@ -47,6 +55,11 @@ export async function deliCreate(
 	const kafkaCheckpointOnReprocessingOp =
 		(config.get("checkpoints:kafkaCheckpointOnReprocessingOp") as boolean) ?? true;
 
+	const enableLeaveOpNoClientServerMetadata =
+		(config.get("deli:enableLeaveOpNoClientServerMetadata") as boolean) ?? false;
+
+	const noOpConsolidationTimeout = config.get("deli:noOpConsolidationTimeout");
+
 	// Generate tenant manager which abstracts access to the underlying storage provider
 	const authEndpoint = config.get("auth:endpoint");
 	const internalHistorianUrl = config.get("worker:internalBlobStorageUrl");
@@ -63,17 +76,32 @@ export async function deliCreate(
 		core.DefaultServiceConfiguration.deli.checkpointHeuristics = checkpointHeuristics;
 	}
 
-	let globalDb: core.IDb;
+	const enableEphemeralContainerSummaryCleanup =
+		(config.get("deli:enableEphemeralContainerSummaryCleanup") as boolean | undefined) ?? true;
+	core.DefaultServiceConfiguration.deli.enableEphemeralContainerSummaryCleanup =
+		enableEphemeralContainerSummaryCleanup;
+
+	const ephemeralContainerSoftDeleteTimeInMs =
+		(config.get("deli:ephemeralContainerSoftDeleteTimeInMs") as number | undefined) ?? -1; // -1 means not soft deletion but hard deletion directly
+	core.DefaultServiceConfiguration.deli.ephemeralContainerSoftDeleteTimeInMs =
+		ephemeralContainerSoftDeleteTimeInMs;
+
+	let globalDb: core.IDb | undefined;
 	if (globalDbEnabled) {
 		const globalDbReconnect = (config.get("mongo:globalDbReconnect") as boolean) ?? false;
-		const globalDbManager = new core.MongoManager(factory, globalDbReconnect, null, true);
+		const globalDbManager = new core.MongoManager(
+			factory,
+			globalDbReconnect,
+			undefined /* reconnectDelayMs */,
+			true /* global */,
+		);
 		globalDb = await globalDbManager.getDatabase();
 	}
 
 	const operationsDbManager = new core.MongoManager(factory, false);
 	const operationsDb = await operationsDbManager.getDatabase();
 
-	const db: core.IDb = globalDbEnabled ? globalDb : operationsDb;
+	const db: core.IDb = globalDbEnabled && globalDb !== undefined ? globalDb : operationsDb;
 
 	// eslint-disable-next-line @typescript-eslint/await-thenable
 	const collection = await db.collection<core.IDocument>(documentsCollectionName);
@@ -96,6 +124,8 @@ export async function deliCreate(
 		kafkaMaxBatchSize,
 		kafkaSslCACertFilePath,
 		eventHubConnString,
+		kafkaProducerGlobalAdditionalConfig,
+		oauthBearerConfig,
 	);
 	const reverseProducer = services.createProducer(
 		kafkaLibrary,
@@ -109,10 +139,12 @@ export async function deliCreate(
 		kafkaMaxBatchSize,
 		kafkaSslCACertFilePath,
 		eventHubConnString,
+		kafkaProducerGlobalAdditionalConfig,
+		oauthBearerConfig,
 	);
 
 	const redisConfig = config.get("redis");
-	const redisOptions: RedisOptions = {
+	const redisOptions: RedisOptions & ClusterOptions = {
 		host: redisConfig.host,
 		port: redisConfig.port,
 		password: redisConfig.pass,
@@ -122,7 +154,16 @@ export async function deliCreate(
 			servername: redisConfig.host,
 		};
 	}
-	const publisher = new services.SocketIoRedisPublisher(redisOptions);
+	const redisClientConnectionManager: IRedisClientConnectionManager =
+		customizations?.redisClientConnectionManager ??
+		new RedisClientConnectionManager(
+			redisOptions,
+			undefined,
+			redisConfig.enableClustering,
+			redisConfig.slotsRefreshTimeout,
+		);
+	// The socketioredispublisher handles redis connection graceful shutdown
+	const publisher = new services.SocketIoRedisPublisher(redisClientConnectionManager);
 	publisher.on("error", (err) => {
 		winston.error("Error with Redis Publisher:", err);
 		Lumberjack.error("Error with Redis Publisher:", undefined, err);
@@ -153,6 +194,8 @@ export async function deliCreate(
 			...core.DefaultServiceConfiguration.deli,
 			restartOnCheckpointFailure,
 			kafkaCheckpointOnReprocessingOp,
+			enableLeaveOpNoClientServerMetadata,
+			noOpConsolidationTimeout,
 		},
 	};
 
@@ -162,7 +205,7 @@ export async function deliCreate(
 		localCheckpointEnabled,
 	);
 
-	return new DeliLambdaFactory(
+	const deliLambdaFactory = new DeliLambdaFactory(
 		operationsDbManager,
 		documentRepository,
 		checkpointService,
@@ -172,7 +215,17 @@ export async function deliCreate(
 		undefined,
 		reverseProducer,
 		serviceConfiguration,
+		customizations?.clusterDrainingChecker,
 	);
+
+	deliLambdaFactory.on("dispose", () => {
+		broadcasterLambda.close();
+		publisher.close().catch((error) => {
+			Lumberjack.error("Error closing publisher", undefined, error);
+		});
+	});
+
+	return deliLambdaFactory;
 }
 
 export async function create(

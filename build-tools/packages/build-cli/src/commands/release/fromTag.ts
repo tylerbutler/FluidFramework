@@ -2,16 +2,18 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { MonoRepo, MonoRepoKind, Package } from "@fluidframework/build-tools";
+
 import { ReleaseVersion, VersionBumpType, detectBumpType } from "@fluid-tools/version-tools";
+import { MonoRepo, Package } from "@fluidframework/build-tools";
 import { Args } from "@oclif/core";
 import semver from "semver";
 import { sortPackageJson as sortJson } from "sort-package-json";
 
-import { sortVersions } from "../../lib";
-import { ReleaseGroup, ReleasePackage } from "../../releaseGroups";
-import { ReleaseReportBaseCommand, ReleaseSelectionMode } from "./report";
-import { findPackageOrReleaseGroup } from "../../args";
+import { findPackageOrReleaseGroup } from "../../args.js";
+// eslint-disable-next-line import/no-deprecated
+import { MonoRepoKind, sortVersions } from "../../library/index.js";
+import { ReleaseGroup, ReleasePackage } from "../../releaseGroups.js";
+import { ReleaseReportBaseCommand, ReleaseSelectionMode } from "./report.js";
 
 const tagRefPrefix = "refs/tags/";
 
@@ -21,24 +23,24 @@ const tagRefPrefix = "refs/tags/";
  * This command is used in CI to determine release information when a new release tag is pushed.
  */
 export default class FromTagCommand extends ReleaseReportBaseCommand<typeof FromTagCommand> {
-	static summary = "Determines release information based on a git tag argument.";
+	static readonly summary = "Determines release information based on a git tag argument.";
 
-	static description =
+	static readonly description =
 		"This command is used in CI to determine release information when a new release tag is pushed.";
 
-	static enableJsonFlag = true;
+	static readonly enableJsonFlag = true;
 
-	static args = {
+	static readonly args = {
 		tag: Args.string({
 			required: true,
 			description: "A git tag that represents a release. May begin with 'refs/tags/'.",
 		}),
-	};
+	} as const;
 
 	defaultMode: ReleaseSelectionMode = "inRepo";
 	releaseGroupName: ReleaseGroup | undefined;
 
-	static examples = [
+	static readonly examples = [
 		{
 			description: "Get release information based on a git tag.",
 			command: "<%= config.bin %> <%= command.id %> build-tools_v0.13.0",
@@ -79,6 +81,8 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 			this.error(`Release matching version '${version.version}' not found`);
 		}
 
+		const taggedVersion = versions[taggedReleaseIndex];
+
 		const prevVersionDetails = versions[taggedReleaseIndex + 1];
 		if (prevVersionDetails === undefined) {
 			this.error(`No previous release found`);
@@ -99,7 +103,7 @@ export default class FromTagCommand extends ReleaseReportBaseCommand<typeof From
 			packageOrReleaseGroup: this.releaseGroupName,
 			title: getReleaseTitle(this.releaseGroupName, version, releaseType),
 			tag,
-			date: release.latestReleasedVersion.date,
+			date: taggedVersion.date,
 			releaseType,
 			version: version.version,
 			previousVersion,
@@ -150,7 +154,8 @@ const getReleaseTitle = (
 	version: semver.SemVer,
 	releaseType: VersionBumpType,
 ): string => {
+	// eslint-disable-next-line import/no-deprecated
 	const name = releaseGroup === MonoRepoKind.Client ? "Fluid Framework" : releaseGroup;
 	// e.g. Fluid Framework v2.0.0-internal.4.1.0 (minor)
-	return `${name} v${version} (${releaseType})`;
+	return `${name} v${version.version} (${releaseType})`;
 };

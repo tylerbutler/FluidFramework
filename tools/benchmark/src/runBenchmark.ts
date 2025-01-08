@@ -12,9 +12,13 @@ import {
 	benchmarkArgumentsIsCustom,
 	BenchmarkTimer,
 } from "./Configuration";
-import { Stats, getArrayStatistics } from "./ReporterUtilities";
+import type { BenchmarkData } from "./ResultTypes";
+import { getArrayStatistics, prettyNumber } from "./RunnerUtilities";
 import { Timer, defaultMinimumTime, timer } from "./timer";
 
+/**
+ * @public
+ */
 export enum Phase {
 	WarmUp,
 	AdjustIterationPerBatch,
@@ -27,39 +31,6 @@ export const defaultTimingOptions: Required<BenchmarkTimingOptions> = {
 	minBatchDurationSeconds: defaultMinimumTime,
 	startPhase: Phase.WarmUp,
 };
-
-/**
- * Result of successfully running a benchmark.
- * @public
- */
-export interface BenchmarkData {
-	/**
-	 * Iterations per batch.
-	 */
-	readonly iterationsPerBatch: number;
-
-	/**
-	 * Number of batches, each with `iterationsPerBatch` iterations.
-	 */
-	readonly numberOfBatches: number;
-
-	/**
-	 * Stats about runtime, in seconds.
-	 * This is already scaled to be per iteration and not per batch.
-	 */
-	readonly stats: Stats;
-
-	/**
-	 * Time it took to run the benchmark in seconds.
-	 */
-	readonly elapsedSeconds: number;
-}
-
-/**
- * Result of trying to run a benchmark.
- * @public
- */
-export type BenchmarkResult = BenchmarkError | BenchmarkData;
 
 /**
  * Use for readonly view of Json compatible data.
@@ -79,20 +50,9 @@ export type JsonCompatible =
 export type Results = { readonly [P in string]: JsonCompatible | undefined };
 
 /**
+ * Runs the benchmark.
  * @public
  */
-export function isResultError(result: BenchmarkResult): result is BenchmarkError {
-	return (result as Partial<BenchmarkError>).error !== undefined;
-}
-
-/**
- * Result of failing to run a benchmark.
- * @public
- */
-export interface BenchmarkError {
-	error: string;
-}
-
 export async function runBenchmark(args: BenchmarkRunningOptions): Promise<BenchmarkData> {
 	if (benchmarkArgumentsIsCustom(args)) {
 		const state = new BenchmarkState(timer, args);
@@ -113,7 +73,7 @@ export async function runBenchmark(args: BenchmarkRunningOptions): Promise<Bench
 	if (isAsync) {
 		data = await runBenchmarkAsync({
 			...options,
-			benchmarkFnAsync: argsBenchmarkFn as any,
+			benchmarkFnAsync: argsBenchmarkFn,
 		});
 	} else {
 		data = runBenchmarkSync({ ...options, benchmarkFn: argsBenchmarkFn });
@@ -207,7 +167,7 @@ class BenchmarkState<T> implements BenchmarkTimer<T> {
 		}
 
 		const stats = getArrayStatistics(this.samples);
-		if (stats.marginOfErrorPercent < 1.0) {
+		if (stats.marginOfErrorPercent < 1) {
 			// Already below 1% margin of error.
 			// Note that this margin of error computation doesn't account for low frequency noise (noise spanning a time scale longer than this test so far)
 			// which can be caused by many factors like CPU frequency changes due to limited boost time or thermals.
@@ -216,7 +176,7 @@ class BenchmarkState<T> implements BenchmarkTimer<T> {
 		}
 
 		// Exit if way too many samples to avoid out of memory.
-		if (this.samples.length > 1000000) {
+		if (this.samples.length > 1_000_000) {
 			// Test failed to converge after many samples.
 			// TODO: produce some warning or error state in this case (and probably the case for hitting max time as well).
 			return false;
@@ -227,16 +187,44 @@ class BenchmarkState<T> implements BenchmarkTimer<T> {
 
 	public computeData(): BenchmarkData {
 		const now = this.timer.now();
-		const stats: Stats = getArrayStatistics(
-			this.samples.map((v) => v / this.iterationsPerBatch),
-		);
+		const stats = getArrayStatistics(this.samples.map((v) => v / this.iterationsPerBatch));
 		const data: BenchmarkData = {
 			elapsedSeconds: this.timer.toSeconds(this.startTime, now),
-			numberOfBatches: this.samples.length,
-			stats,
-			iterationsPerBatch: this.iterationsPerBatch,
+			customData: {
+				"Batch Count": {
+					rawValue: this.samples.length,
+					formattedValue: prettyNumber(this.samples.length, 0),
+				},
+				"Iterations per Batch": {
+					rawValue: this.iterationsPerBatch,
+					formattedValue: prettyNumber(this.iterationsPerBatch, 0),
+				},
+				"Period (ns/op)": {
+					rawValue: 1e9 * stats.arithmeticMean,
+					formattedValue: prettyNumber(1e9 * stats.arithmeticMean, 2),
+				},
+				"Margin of Error": {
+					rawValue: stats.marginOfError,
+					formattedValue: `±${prettyNumber(stats.marginOfError, 2)}%`,
+				},
+				"Relative Margin of Error": {
+					rawValue: stats.marginOfErrorPercent,
+					formattedValue: `±${prettyNumber(stats.marginOfErrorPercent, 2)}%`,
+				},
+			},
 		};
 		return data;
+	}
+
+	public timeBatch(callback: () => void): boolean {
+		let counter = this.iterationsPerBatch;
+		const before = this.timer.now();
+		while (counter--) {
+			callback();
+		}
+		const after = this.timer.now();
+		const duration = this.timer.toSeconds(before, after);
+		return this.recordBatch(duration);
 	}
 }
 
@@ -248,7 +236,9 @@ export function runBenchmarkSync(args: BenchmarkRunningOptionsSync): BenchmarkDa
 	const state = new BenchmarkState(timer, args);
 	while (
 		state.recordBatch(doBatch(state.iterationsPerBatch, args.benchmarkFn, args.beforeEachBatch))
-	) {}
+	) {
+		// No-op
+	}
 	return state.computeData();
 }
 
@@ -268,7 +258,9 @@ export async function runBenchmarkAsync(
 				args.beforeEachBatch,
 			),
 		)
-	) {}
+	) {
+		// No-op
+	}
 	return state.computeData();
 }
 

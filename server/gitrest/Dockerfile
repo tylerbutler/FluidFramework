@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 # DisableDockerDetector "No feasible secure solution for OSS repos yet"
 
-FROM node:18.17.1-buster-slim AS base
+FROM node:18.17.1-buster-slim@sha256:cb2a746612c2564d3bd0f871174618337af9d0f4d895df6a623fd7a69ca6e5bd AS base
 
 # Add Tini
 ENV TINI_VERSION v0.18.0
@@ -15,16 +15,18 @@ WORKDIR /home/node/server
 COPY package*.json ./
 COPY pnpm*.yaml ./
 COPY scripts/*.* ./scripts/
+COPY .npmrc ./
 
 COPY packages/gitrest/package*.json packages/gitrest/
 COPY packages/gitrest-base/package*.json packages/gitrest-base/
 
 RUN corepack enable
 
-# Need to set the --unsafe-perm flag since we are doing the install as root. Consider adding an 'app' accout so we
+# Need to set the --unsafe-perm flag since we are doing the install as root. Consider adding an 'app' account so we
 # can do the install as node but then switch to 'app' to run. As app we won't be able to write to installed files
 # and be able to change them.
-RUN pnpm install --unsafe-perm
+# TODO: AB#26779: This Workaround (passing --no-frozen-lockfile) should be removed when possible.
+RUN pnpm install --unsafe-perm --no-frozen-lockfile
 
 COPY . .
 RUN npm run build

@@ -5,6 +5,7 @@
 
 /**
  * Used to replace console.assert to make sure that it always throws an error, both in the browser and in Node
+ * @internal
  */
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ConsoleUtils {
@@ -16,9 +17,7 @@ export class ConsoleUtils {
 	static assert(condition: any, message: string | number): asserts condition {
 		if (!(condition as boolean)) {
 			throw new Error(
-				typeof message === "number"
-					? `0x${message.toString(16).padStart(3, "0")}`
-					: message,
+				typeof message === "number" ? `0x${message.toString(16).padStart(3, "0")}` : message,
 			);
 		}
 	}

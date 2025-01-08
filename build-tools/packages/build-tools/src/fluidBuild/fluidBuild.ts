@@ -2,16 +2,16 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import chalk from "chalk";
-import * as path from "path";
 
-import { commonOptions } from "../common/commonOptions";
-import { getResolvedFluidRoot } from "../common/fluidUtils";
+import chalk from "picocolors";
+
+import { GitRepo } from "../common/gitRepo";
 import { defaultLogger } from "../common/logging";
 import { Timer } from "../common/timer";
-import { existsSync } from "../common/utils";
 import { BuildGraph, BuildResult } from "./buildGraph";
+import { commonOptions } from "./commonOptions";
 import { FluidRepoBuild } from "./fluidRepoBuild";
+import { getFluidBuildConfig, getResolvedFluidRoot } from "./fluidUtils";
 import { options, parseOptions } from "./options";
 
 const { log, errorLog: error, warning: warn } = defaultLogger;
@@ -20,21 +20,16 @@ parseOptions(process.argv);
 
 async function main() {
 	const timer = new Timer(commonOptions.timer);
-	const resolvedRoot = await getResolvedFluidRoot();
+	const resolvedRoot = await getResolvedFluidRoot(true);
 
-	log(`Fluid Repo Root: ${resolvedRoot}`);
+	log(`Build Root: ${resolvedRoot}`);
 
-	// Detect nohoist state mismatch and infer uninstall switch
-	if (options.install) {
-		const hasRootNodeModules = existsSync(path.join(resolvedRoot, "node_modules"));
-		if (hasRootNodeModules === options.nohoist) {
-			// We need to uninstall if nohoist doesn't match the current state of installation
-			options.uninstall = true;
-		}
-	}
-
-	// Load the package
-	const repo = new FluidRepoBuild(resolvedRoot);
+	// Load the packages
+	const repo = new FluidRepoBuild({
+		repoRoot: resolvedRoot,
+		gitRepo: new GitRepo(resolvedRoot),
+		fluidBuildConfig: getFluidBuildConfig(resolvedRoot),
+	});
 	timer.time("Package scan completed");
 
 	// Set matched package based on options filter
@@ -46,7 +41,7 @@ async function main() {
 
 	// Dependency checks
 	if (options.depcheck) {
-		repo.depcheck();
+		await repo.depcheck(false);
 		timer.time("Dependencies check completed", true);
 	}
 
@@ -77,7 +72,7 @@ async function main() {
 	// Install or check install
 	if (options.install) {
 		log("Installing packages");
-		if (!(await repo.install(options.nohoist))) {
+		if (!(await repo.install())) {
 			error(`Install failed`);
 			process.exit(-5);
 		}
@@ -97,8 +92,8 @@ async function main() {
 				options.fullSymlink
 					? "full"
 					: options.fullSymlink === false
-					? "isolated"
-					: "non-dependent"
+						? "isolated"
+						: "non-dependent"
 			} mode`,
 		);
 
@@ -127,9 +122,7 @@ async function main() {
 			const totalElapsedTime = buildGraph.totalElapsedTime;
 			const concurrency = buildGraph.totalElapsedTime / elapsedTime;
 			log(
-				`Execution time: ${totalElapsedTime.toFixed(
-					3,
-				)}s, Concurrency: ${concurrency.toFixed(
+				`Execution time: ${totalElapsedTime.toFixed(3)}s, Concurrency: ${concurrency.toFixed(
 					3,
 				)}, Queue Wait time: ${buildGraph.totalQueueWaitTime.toFixed(3)}s`,
 			);
@@ -146,14 +139,12 @@ async function main() {
 		log(`Other switches with no explicit build script, not building.`);
 	}
 
+	const totalTime = timer.getTotalTime();
 	const timeInMinutes =
-		timer.getTotalTime() > 60000
-			? ` (${Math.floor(timer.getTotalTime() / 60000)}m ${(
-					(timer.getTotalTime() % 60000) /
-					1000
-			  ).toFixed(3)}s)`
+		totalTime > 60000
+			? ` (${Math.floor(totalTime / 60000)}m ${((totalTime % 60000) / 1000).toFixed(3)}s)`
 			: "";
-	log(`Total time: ${(timer.getTotalTime() / 1000).toFixed(3)}s${timeInMinutes}`);
+	log(`Total time: ${(totalTime / 1000).toFixed(3)}s${timeInMinutes}`);
 
 	if (failureSummary !== "") {
 		log(`\n${failureSummary}`);

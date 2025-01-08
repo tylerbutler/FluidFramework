@@ -10,6 +10,7 @@
  * - sliding: entries expire after the given duration in MS of inactivity (i.e. get resets the clock)
  *
  * @deprecated Moved to the `@fluidframework/core-utils` package.
+ * @internal
  */
 export type PromiseCacheExpiry =
 	| {
@@ -24,11 +25,16 @@ export type PromiseCacheExpiry =
  * Options for configuring the {@link PromiseCache}
  *
  * @deprecated Moved to the `@fluidframework/core-utils` package.
+ * @internal
  */
 export interface PromiseCacheOptions {
-	/** Common expiration policy for all items added to this cache */
+	/**
+	 * Common expiration policy for all items added to this cache
+	 */
 	expiry?: PromiseCacheExpiry;
-	/** If the stored Promise is rejected with a particular error, should the given key be removed? */
+	/**
+	 * If the stored Promise is rejected with a particular error, should the given key be removed?
+	 */
 	removeOnError?: (e: any) => boolean;
 }
 
@@ -89,6 +95,7 @@ class GarbageCollector<TKey> {
  * without fear of running it multiple times or losing track of errors.
  *
  * @deprecated Moved to the `@fluidframework/core-utils` package.
+ * @internal
  */
 export class PromiseCache<TKey, TResult> {
 	private readonly cache = new Map<TKey, Promise<TResult>>();

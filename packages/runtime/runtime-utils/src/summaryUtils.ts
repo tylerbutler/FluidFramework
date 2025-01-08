@@ -3,37 +3,42 @@
  * Licensed under the MIT License.
  */
 
-import { TelemetryEventPropertyType } from "@fluidframework/core-interfaces";
 import {
-	bufferToString,
-	fromBase64ToUtf8,
 	IsoBuffer,
 	Uint8ArrayToString,
+	bufferToString,
+	fromBase64ToUtf8,
 } from "@fluid-internal/client-utils";
-import { unreachableCase } from "@fluidframework/core-utils";
-import { AttachmentTreeEntry, BlobTreeEntry, TreeTreeEntry } from "@fluidframework/driver-utils";
+import { ISnapshotTreeWithBlobContents } from "@fluidframework/container-definitions/internal";
+import { assert, unreachableCase } from "@fluidframework/core-utils/internal";
 import {
-	ITree,
-	SummaryType,
+	ISummaryBlob,
 	ISummaryTree,
 	SummaryObject,
-	ISummaryBlob,
-	TreeEntry,
-	ITreeEntry,
-	ISnapshotTree,
-} from "@fluidframework/protocol-definitions";
+	SummaryType,
+} from "@fluidframework/driver-definitions";
+import { ITree, ITreeEntry, TreeEntry } from "@fluidframework/driver-definitions/internal";
+import {
+	AttachmentTreeEntry,
+	BlobTreeEntry,
+	TreeTreeEntry,
+} from "@fluidframework/driver-utils/internal";
 import {
 	ISummaryStats,
-	ISummarizeResult,
 	ISummaryTreeWithStats,
 	ITelemetryContext,
 	IGarbageCollectionData,
-} from "@fluidframework/runtime-definitions";
+	ISummarizeResult,
+	ITelemetryContextExt,
+	gcDataBlobKey,
+} from "@fluidframework/runtime-definitions/internal";
+import type { TelemetryEventPropertyTypeExt } from "@fluidframework/telemetry-utils/internal";
 
 /**
  * Combines summary stats by adding their totals together.
  * Returns empty stats if called without args.
  * @param stats - stats to merge
+ * @internal
  */
 export function mergeStats(...stats: ISummaryStats[]): ISummaryStats {
 	const results = {
@@ -53,6 +58,9 @@ export function mergeStats(...stats: ISummaryStats[]): ISummaryStats {
 	return results;
 }
 
+/**
+ * @internal
+ */
 export function utf8ByteLength(str: string): number {
 	// returns the byte length of an utf8 string
 	let s = str.length;
@@ -70,6 +78,9 @@ export function utf8ByteLength(str: string): number {
 	return s;
 }
 
+/**
+ * @internal
+ */
 export function getBlobSize(content: ISummaryBlob["content"]): number {
 	return typeof content === "string" ? utf8ByteLength(content) : content.byteLength;
 }
@@ -97,12 +108,18 @@ function calculateStatsCore(summaryObject: SummaryObject, stats: ISummaryStats):
 	}
 }
 
+/**
+ * @internal
+ */
 export function calculateStats(summary: SummaryObject): ISummaryStats {
 	const stats = mergeStats();
 	calculateStatsCore(summary, stats);
 	return stats;
 }
 
+/**
+ * @internal
+ */
 export function addBlobToSummary(
 	summary: ISummaryTreeWithStats,
 	key: string,
@@ -117,15 +134,9 @@ export function addBlobToSummary(
 	summary.stats.totalBlobSize += getBlobSize(content);
 }
 
-export function addTreeToSummary(
-	summary: ISummaryTreeWithStats,
-	key: string,
-	summarizeResult: ISummarizeResult,
-): void {
-	summary.summary.tree[key] = summarizeResult.summary;
-	summary.stats = mergeStats(summary.stats, summarizeResult.stats);
-}
-
+/**
+ * @internal
+ */
 export function addSummarizeResultToSummary(
 	summary: ISummaryTreeWithStats,
 	key: string,
@@ -135,28 +146,57 @@ export function addSummarizeResultToSummary(
 	summary.stats = mergeStats(summary.stats, summarizeResult.stats);
 }
 
+/**
+ * An object who's properties are used to initialize a {@link SummaryTreeBuilder}
+ * @legacy
+ * @alpha
+ */
+export interface SummaryTreeBuilderParams {
+	/**
+	 * This value will become the {@link @fluidframework/driver-definitions#ISummaryTree.groupId}
+	 * of the {@link @fluidframework/driver-definitions#ISummaryTree} built by the {@link SummaryTreeBuilder}.
+	 */
+	groupId?: string;
+}
+/**
+ * A helper class for building summary trees.
+ * @remarks Uses the builder pattern.
+ * @legacy
+ * @alpha
+ */
 export class SummaryTreeBuilder implements ISummaryTreeWithStats {
 	private attachmentCounter: number = 0;
+	private readonly groupId?: string;
 
 	public get summary(): ISummaryTree {
-		return {
+		const summary: ISummaryTree = {
 			type: SummaryType.Tree,
 			tree: { ...this.summaryTree },
 		};
+		if (this.groupId !== undefined) {
+			summary.groupId = this.groupId;
+		}
+		return summary;
 	}
 
 	public get stats(): Readonly<ISummaryStats> {
 		return { ...this.summaryStats };
 	}
 
-	constructor() {
+	constructor(params?: { groupId?: string }) {
 		this.summaryStats = mergeStats();
 		this.summaryStats.treeNodeCount++;
+		this.groupId = params?.groupId;
 	}
 
 	private readonly summaryTree: { [path: string]: SummaryObject } = {};
 	private summaryStats: ISummaryStats;
 
+	/**
+	 * Add a blob to the summary tree. This blob will be stored at the given key in the summary tree.
+	 * @param key - The key to store the blob at in the current summary tree being generated. Should not contain any "/" characters.
+	 * @param content - The content of the blob to be added to the summary tree.
+	 */
 	public addBlob(key: string, content: string | Uint8Array): void {
 		// Prevent cloning by directly referencing underlying private properties
 		addBlobToSummary(
@@ -172,6 +212,16 @@ export class SummaryTreeBuilder implements ISummaryTreeWithStats {
 		);
 	}
 
+	/**
+	 * Adds an {@link @fluidframework/driver-definitions#ISummaryHandle} that references a subtree, blob, or attachment in a previous summary.
+	 *
+	 * @remarks
+	 * There are special limitations to both the key and handle parameters: We use encodeURIComponent and decodeURIComponent to encode and decode the key and handle parameters after they are added to the summary tree. This means that the key and handle parameters must be valid URI components. If they are not, the encoding and decoding will fail and the summary will not be generated correctly.
+	 *
+	 * @param key - The key to store the handle at in the current summary tree being generated. Should not contain any "/" characters.
+	 * @param handleType - the type of {@link @fluidframework/driver-definitions#SummaryObject} besides a SummaryHandle, i.e. {@link @fluidframework/driver-definitions#SummaryType.Tree}, {@link @fluidframework/driver-definitions#SummaryType.Blob}, {@link @fluidframework/driver-definitions#SummaryType.Attachment}
+	 * @param handle - The path pointing to the part of the previous summary being used to duplicate the data. Use {@link @fluidframework/driver-definitions#ISummaryHandle.handle} to help generate proper handle strings. Should not contain any "/" characters.
+	 */
 	public addHandle(
 		key: string,
 		handleType: SummaryType.Tree | SummaryType.Blob | SummaryType.Attachment,
@@ -185,15 +235,32 @@ export class SummaryTreeBuilder implements ISummaryTreeWithStats {
 		this.summaryStats.handleNodeCount++;
 	}
 
+	/**
+	 * Adds a child and updates the stats accordingly.
+	 * @param key - The key to store the handle at in the current summary tree being generated. Should not contain any "/" characters.
+	 * The key should be unique within the current summary tree, and not transform when encodeURIComponent is called.
+	 * @param summarizeResult - Similar to {@link @fluidframework/runtime-definitions#ISummaryTreeWithStats}. The provided summary can be either a {@link @fluidframework/driver-definitions#ISummaryHandle} or {@link @fluidframework/driver-definitions#ISummaryTree}.
+	 */
 	public addWithStats(key: string, summarizeResult: ISummarizeResult): void {
 		this.summaryTree[key] = summarizeResult.summary;
 		this.summaryStats = mergeStats(this.summaryStats, summarizeResult.stats);
 	}
 
+	/**
+	 * Adds an {@link @fluidframework/driver-definitions#ISummaryAttachment} to the summary. This blob needs to already be uploaded to storage.
+	 * @param id - The id of the uploaded attachment to be added to the summary tree.
+	 */
 	public addAttachment(id: string) {
 		this.summaryTree[this.attachmentCounter++] = { id, type: SummaryType.Attachment };
 	}
 
+	/**
+	 * Gives you the in-memory summary tree with stats built by the SummaryTreeBuilder.
+	 *
+	 * @remarks
+	 * Use this once you're done building the summary tree, the stats should automatically be generated.
+	 * @returns The summary tree and stats built by the SummaryTreeBuilder.
+	 */
 	public getSummaryTree(): ISummaryTreeWithStats {
 		return { summary: this.summary, stats: this.stats };
 	}
@@ -203,6 +270,8 @@ export class SummaryTreeBuilder implements ISummaryTreeWithStats {
  * Converts snapshot ITree to ISummaryTree format and tracks stats.
  * @param snapshot - snapshot in ITree format
  * @param fullTree - true to never use handles, even if id is specified
+ * @legacy
+ * @alpha
  */
 export function convertToSummaryTreeWithStats(
 	snapshot: ITree,
@@ -214,9 +283,7 @@ export function convertToSummaryTreeWithStats(
 			case TreeEntry.Blob: {
 				const blob = entry.value;
 				const content =
-					blob.encoding === "base64"
-						? IsoBuffer.from(blob.contents, "base64")
-						: blob.contents;
+					blob.encoding === "base64" ? IsoBuffer.from(blob.contents, "base64") : blob.contents;
 				builder.addBlob(entry.path, content);
 				break;
 			}
@@ -242,6 +309,7 @@ export function convertToSummaryTreeWithStats(
 
 	const summaryTree = builder.getSummaryTree();
 	summaryTree.summary.unreferenced = snapshot.unreferenced;
+	summaryTree.summary.groupId = snapshot.groupId;
 	return summaryTree;
 }
 
@@ -249,8 +317,12 @@ export function convertToSummaryTreeWithStats(
  * Converts snapshot ITree to ISummaryTree format and tracks stats.
  * @param snapshot - snapshot in ITree format
  * @param fullTree - true to never use handles, even if id is specified
+ * @internal
  */
-export function convertToSummaryTree(snapshot: ITree, fullTree: boolean = false): ISummarizeResult {
+export function convertToSummaryTree(
+	snapshot: ITree,
+	fullTree: boolean = false,
+): ISummarizeResult {
 	// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
 	if (snapshot.id && !fullTree) {
 		const stats = mergeStats();
@@ -272,20 +344,27 @@ export function convertToSummaryTree(snapshot: ITree, fullTree: boolean = false)
  * Converts ISnapshotTree to ISummaryTree format and tracks stats. This snapshot tree was
  * was taken by serialize api in detached container.
  * @param snapshot - snapshot in ISnapshotTree format
+ * @internal
  */
-export function convertSnapshotTreeToSummaryTree(snapshot: ISnapshotTree): ISummaryTreeWithStats {
+export function convertSnapshotTreeToSummaryTree(
+	snapshot: ISnapshotTreeWithBlobContents,
+): ISummaryTreeWithStats {
 	const builder = new SummaryTreeBuilder();
 	for (const [path, id] of Object.entries(snapshot.blobs)) {
 		let decoded: string | undefined;
-		if ((snapshot as any).blobsContents !== undefined) {
-			const content: ArrayBufferLike = (snapshot as any).blobsContents[id];
+		if (snapshot.blobsContents !== undefined) {
+			// TODO Why are we non null asserting here?
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			const content: ArrayBufferLike = snapshot.blobsContents[id]!;
 			if (content !== undefined) {
 				decoded = bufferToString(content, "utf-8");
 			}
 			// 0.44 back-compat We still put contents in same blob for back-compat so need to add blob
 			// only for blobPath -> blobId mapping and not for blobId -> blob value contents.
 		} else if (snapshot.blobs[id] !== undefined) {
-			decoded = fromBase64ToUtf8(snapshot.blobs[id]);
+			// Non null asserting here because of the undefined check above
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			decoded = fromBase64ToUtf8(snapshot.blobs[id]!);
 		}
 		if (decoded !== undefined) {
 			builder.addBlob(path, decoded);
@@ -299,12 +378,14 @@ export function convertSnapshotTreeToSummaryTree(snapshot: ISnapshotTree): ISumm
 
 	const summaryTree = builder.getSummaryTree();
 	summaryTree.summary.unreferenced = snapshot.unreferenced;
+	summaryTree.summary.groupId = snapshot.groupId;
 	return summaryTree;
 }
 
 /**
  * Converts ISummaryTree to ITree format. This is needed for back-compat while we get rid of snapshot.
  * @param summaryTree - summary tree in ISummaryTree format
+ * @internal
  */
 export function convertSummaryTreeToITree(summaryTree: ISummaryTree): ITree {
 	const entries: ITreeEntry[] = [];
@@ -344,16 +425,59 @@ export function convertSummaryTreeToITree(summaryTree: ISummaryTree): ITree {
 	return {
 		entries,
 		unreferenced: summaryTree.unreferenced,
+		groupId: summaryTree.groupId,
 	};
 }
 
-export class TelemetryContext implements ITelemetryContext {
-	private readonly telemetry = new Map<string, TelemetryEventPropertyType>();
+/**
+ * Looks in the given attach message snapshot for the .gcdata blob, which would
+ * contain the initial GC Data for the node being attached.
+ * If it finds it, it notifies GC of all the new outbound routes being added by the attach.
+ *
+ * @param snapshot - The snapshot from the attach message
+ * @param addedGCOutboundRoute - Callback to notify GC of a new outbound route.
+ * IMPORTANT: addedGCOutboundRoute's param nodeId is "/" for the attaching node itself, or "/<id>" for its children.
+ *
+ * @returns true if it found/processed GC Data, false otherwise
+ *
+ * @internal
+ */
+export function processAttachMessageGCData(
+	snapshot: ITree | null,
+	addedGCOutboundRoute: (fromNodeId: string, toPath: string) => void,
+): boolean {
+	const gcDataEntry = snapshot?.entries.find((e) => e.path === gcDataBlobKey);
+
+	// Old attach messages won't have GC Data
+	// (And REALLY old DataStore Attach messages won't even have a snapshot!)
+	if (gcDataEntry === undefined) {
+		return false;
+	}
+
+	assert(
+		gcDataEntry.type === TreeEntry.Blob && gcDataEntry.value.encoding === "utf-8",
+		0x8ff /* GC data should be a utf-8-encoded blob */,
+	);
+
+	const gcData = JSON.parse(gcDataEntry.value.contents) as IGarbageCollectionData;
+	for (const [nodeId, outboundRoutes] of Object.entries(gcData.gcNodes)) {
+		outboundRoutes.forEach((toPath) => {
+			addedGCOutboundRoute(nodeId, toPath);
+		});
+	}
+	return true;
+}
+
+/**
+ * @internal
+ */
+export class TelemetryContext implements ITelemetryContext, ITelemetryContextExt {
+	private readonly telemetry = new Map<string, TelemetryEventPropertyTypeExt>();
 
 	/**
 	 * {@inheritDoc @fluidframework/runtime-definitions#ITelemetryContext.set}
 	 */
-	set(prefix: string, property: string, value: TelemetryEventPropertyType): void {
+	set(prefix: string, property: string, value: TelemetryEventPropertyTypeExt): void {
 		this.telemetry.set(`${prefix}${property}`, value);
 	}
 
@@ -363,7 +487,7 @@ export class TelemetryContext implements ITelemetryContext {
 	setMultiple(
 		prefix: string,
 		property: string,
-		values: Record<string, TelemetryEventPropertyType>,
+		values: Record<string, TelemetryEventPropertyTypeExt>,
 	): void {
 		// Set the values individually so that they are logged as a flat list along with other properties.
 		for (const key of Object.keys(values)) {
@@ -374,7 +498,7 @@ export class TelemetryContext implements ITelemetryContext {
 	/**
 	 * {@inheritDoc @fluidframework/runtime-definitions#ITelemetryContext.get}
 	 */
-	get(prefix: string, property: string): TelemetryEventPropertyType {
+	get(prefix: string, property: string): TelemetryEventPropertyTypeExt {
 		return this.telemetry.get(`${prefix}${property}`);
 	}
 

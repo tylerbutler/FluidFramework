@@ -3,82 +3,28 @@
  * Licensed under the MIT License.
  */
 
-import {
-	TreeContext,
-	TreeNode,
-	FieldSchema,
-	ISharedTreeView,
-	InitializeAndSchematizeConfiguration,
-	SchemaAware,
-} from "@fluid-experimental/tree2";
-import React from "react";
+import { Tree, type TreeNode } from "@fluidframework/tree";
+import * as React from "react";
 
 /**
- * Returns the root of the given ISharedTree instance.
- * The returned object tree may be mutated and passed as properties to sub-components.
- *
- * Be aware that object retained between render passes will mutate.
- * Use deep clone if saving a copy for comparison.
- *
- * Not currently compatible with 'React.memo'.
- *
- * @deprecated Prefer using the new TypedTree entry point and tree types, and the hooks for them, {@link useTreeContext} and {@link useSubtree}.
+ * Custom hook which invalidates a React Component when there is a change in the subtree defined by `subtreeRoot`.
+ * This includes changes to the tree's content, but not changes to its parentage.
+ * See {@link @fluidframework/tree#TreeChangeEvents.treeChanged} for details.
+ * @privateRemarks
+ * Without a way to get invalidation callbacks for specific fields,
+ * it's impractical to implement an ergonomic and efficient more fine-grained invalidation hook.
+ * @public
  */
-export function useTree<TRoot extends FieldSchema>(
-	tree: ISharedTreeView,
-	config: InitializeAndSchematizeConfiguration<TRoot>,
-): SchemaAware.TypedField<TRoot> {
-	// TODO: reconsider where this belongs. Consider error handling from schema changes.
-	const typedTree = React.useMemo<ISharedTreeView>(() => tree.schematize(config), [tree]);
-
-	// This proof-of-concept implementation allocates a state variable this is modified
-	// when the tree changes to trigger re-render.
+export function useTree(subtreeRoot: TreeNode): void {
+	// Use a React effect hook to invalidate this component when the subtreeRoot changes.
+	// We do this by incrementing a counter, which is passed as a dependency to the effect hook.
 	const [invalidations, setInvalidations] = React.useState(0);
 
-	// Register for tree deltas when the component mounts
+	// React effect hook that increments the 'invalidation' counter whenever subtreeRoot or any of its children change.
 	React.useEffect(() => {
 		// Returns the cleanup function to be invoked when the component unmounts.
-		return typedTree.events.on("afterBatch", () => {
-			setInvalidations(invalidations + 1);
+		return Tree.on(subtreeRoot, "treeChanged", () => {
+			setInvalidations((i) => i + 1);
 		});
-	});
-
-	return typedTree.context.root as unknown as SchemaAware.TypedField<TRoot>;
+	}, [invalidations, subtreeRoot]);
 }
-
-/**
- * React Hook to trigger invalidation of the current component if anything in the document changes.
- */
-export function useTreeContext(document: TreeContext): void {
-	// This proof-of-concept implementation allocates a state variable this is modified
-	// when the tree changes to trigger re-render.
-	const [, setInvalidations] = React.useState(0);
-
-	// Register for tree deltas when the component mounts
-	React.useEffect(() => {
-		// Returns the cleanup function to be invoked when the component unmounts.
-		return document.on("afterChange", () => {
-			setInvalidations((invalidations) => invalidations + 1);
-		});
-	}, [document]);
-}
-
-/**
- * React Hook to trigger invalidation of the current component if anything in the provided subtree changes.
- * This does NOT include if this subtree is moved into a different parent!
- */
-export function useSubtree(tree: TreeNode): void {
-	// This proof-of-concept implementation allocates a state variable this is modified
-	// when the tree changes to trigger re-render.
-	const [, setInvalidations] = React.useState(0);
-
-	// Register for tree deltas when the component mounts
-	React.useEffect(() => {
-		// Returns the cleanup function to be invoked when the component unmounts.
-		return tree.on("subtreeChanging", () => {
-			setInvalidations((invalidations) => invalidations + 1);
-		});
-	}, [tree, setInvalidations]);
-}
-
-// TODO: schematize component which shows error (with proper invalidation), or passes tree to sub componet.

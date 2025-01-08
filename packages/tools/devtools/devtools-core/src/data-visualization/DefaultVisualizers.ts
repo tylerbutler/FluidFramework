@@ -8,29 +8,39 @@
  * implementations for our DDSs.
  */
 
-import { SharedCell } from "@fluidframework/cell";
-import { SharedCounter } from "@fluidframework/counter";
-import { type IDirectory, SharedDirectory, SharedMap } from "@fluidframework/map";
-import { SharedMatrix } from "@fluidframework/matrix";
-import { SharedString } from "@fluidframework/sequence";
+import { SharedCell, type ISharedCell } from "@fluidframework/cell/internal";
+import { SharedCounter } from "@fluidframework/counter/internal";
 import {
-	SharedTreeFactory,
-	type ISharedTree,
-	type UntypedTree,
-	type UntypedField,
-} from "@fluid-experimental/tree2";
-import { type ISharedObject } from "@fluidframework/shared-object-base";
-import { EditType } from "../CommonInterfaces";
-import { type VisualizeChildData, type VisualizeSharedObject } from "./DataVisualization";
+	type IDirectory,
+	type ISharedMap,
+	SharedMap,
+	type ISharedDirectory,
+	// eslint-disable-next-line import/no-deprecated
+	SharedDirectory,
+} from "@fluidframework/map/internal";
+import { SharedMatrix } from "@fluidframework/matrix/internal";
+import { SharedString } from "@fluidframework/sequence/internal";
+import type { ISharedObject } from "@fluidframework/shared-object-base/internal";
+import type { ITreeInternal } from "@fluidframework/tree/internal";
+import { SharedTree } from "@fluidframework/tree/internal";
+
+import { EditType } from "../CommonInterfaces.js";
+
+import type { VisualizeChildData, VisualizeSharedObject } from "./DataVisualization.js";
+import {
+	determineNodeKind,
+	toVisualTree,
+	visualizeSharedTreeNodeBySchema,
+} from "./SharedTreeVisualizer.js";
 import {
 	type FluidObjectNode,
 	type FluidObjectTreeNode,
 	type FluidObjectValueNode,
 	type FluidUnknownObjectNode,
-	VisualNodeKind,
 	type VisualChildNode,
+	VisualNodeKind,
 	type VisualTreeNode,
-} from "./VisualTree";
+} from "./VisualTree.js";
 
 /**
  * Default {@link VisualizeSharedObject} for {@link SharedCell}.
@@ -39,7 +49,7 @@ export const visualizeSharedCell: VisualizeSharedObject = async (
 	sharedObject: ISharedObject,
 	visualizeChildData: VisualizeChildData,
 ): Promise<FluidObjectNode> => {
-	const sharedCell = sharedObject as SharedCell<unknown>;
+	const sharedCell = sharedObject as ISharedCell<unknown>;
 	const data = sharedCell.get();
 
 	const renderedData = await visualizeChildData(data);
@@ -115,7 +125,7 @@ export const visualizeSharedDirectory: VisualizeSharedObject = async (
 	sharedObject: ISharedObject,
 	visualizeChildData: VisualizeChildData,
 ): Promise<FluidObjectTreeNode> => {
-	const sharedDirectory = sharedObject as SharedDirectory;
+	const sharedDirectory = sharedObject as ISharedDirectory;
 	const renderedChildData = await visualizeDirectory(sharedDirectory, visualizeChildData);
 	return {
 		fluidObjectId: sharedDirectory.id,
@@ -169,7 +179,7 @@ export const visualizeSharedMap: VisualizeSharedObject = async (
 	sharedObject: ISharedObject,
 	visualizeChildData: VisualizeChildData,
 ): Promise<FluidObjectTreeNode> => {
-	const sharedMap = sharedObject as SharedMap;
+	const sharedMap = sharedObject as ISharedMap;
 
 	const children: Record<string, VisualChildNode> = {};
 	for (const [key, value] of sharedMap) {
@@ -195,7 +205,7 @@ export const visualizeSharedMatrix: VisualizeSharedObject = async (
 	sharedObject: ISharedObject,
 	visualizeChildData: VisualizeChildData,
 ): Promise<FluidObjectTreeNode> => {
-	const sharedMatrix = sharedObject as SharedMatrix;
+	const sharedMatrix = sharedObject as unknown as SharedMatrix;
 
 	const { rowCount, colCount: columnCount, id: fluidObjectId } = sharedMatrix;
 
@@ -245,34 +255,39 @@ export const visualizeSharedString: VisualizeSharedObject = async (
 export const visualizeSharedTree: VisualizeSharedObject = async (
 	sharedObject: ISharedObject,
 	visualizeChildData: VisualizeChildData,
-): Promise<FluidObjectTreeNode> => {
-	const sharedTree = sharedObject as ISharedTree;
+): Promise<FluidObjectNode> => {
+	const sharedTree = sharedObject as ITreeInternal;
 
-	const contextRoot = sharedTree.view.context.root;
-	const children: Record<string, VisualChildNode> = {};
+	// Root node of the SharedTree's content.
+	const treeView = sharedTree.exportVerbose();
+	// TODO: this visualizer doesn't consider the root as a field, and thus does not display the allowed types or handle when it is empty.
+	// Tracked by https://dev.azure.com/fluidframework/internal/_workitems/edit/26472.
+	if (treeView === undefined) {
+		throw new Error("Support for visualizing empty trees is not implemented");
+	}
 
-	const iterateNodes = async (field: UntypedField): Promise<void> => {
-		for (const child of field) {
-			await iterateFields(child as unknown as UntypedTree);
-		}
-	};
+	// Schema of the tree node.
+	const treeSchema = sharedTree.exportSimpleSchema();
 
-	const iterateFields = async (node: UntypedTree): Promise<void> => {
-		for (const field of node) {
-			const renderedChild = await visualizeChildData(field);
+	// Traverses the SharedTree and generates a visual representation of the tree and its schema.
+	const visualTreeRepresentation = await visualizeSharedTreeNodeBySchema(
+		treeView,
+		treeSchema,
+		visualizeChildData,
+	);
 
-			children[field.fieldKey as string] = renderedChild;
-		}
-	};
+	// Maps the `visualTreeRepresentation` in the format compatible to {@link visualizeChildData} function.
+	const visualTree = toVisualTree(visualTreeRepresentation);
 
-	await iterateNodes(contextRoot);
-
-	return {
+	// TODO: Validate the type casting.
+	const visualTreeResult: FluidObjectNode = {
+		...visualTree,
 		fluidObjectId: sharedTree.id,
-		children,
 		typeMetadata: "SharedTree",
-		nodeKind: VisualNodeKind.FluidTreeNode,
-	};
+		nodeKind: determineNodeKind(visualTree.nodeKind),
+	} as unknown as FluidObjectNode;
+
+	return visualTreeResult;
 };
 
 /**
@@ -294,10 +309,11 @@ export const visualizeUnknownSharedObject: VisualizeSharedObject = async (
 export const defaultVisualizers: Record<string, VisualizeSharedObject> = {
 	[SharedCell.getFactory().type]: visualizeSharedCell,
 	[SharedCounter.getFactory().type]: visualizeSharedCounter,
+	// eslint-disable-next-line import/no-deprecated
 	[SharedDirectory.getFactory().type]: visualizeSharedDirectory,
 	[SharedMap.getFactory().type]: visualizeSharedMap,
 	[SharedMatrix.getFactory().type]: visualizeSharedMatrix,
 	[SharedString.getFactory().type]: visualizeSharedString,
-	[new SharedTreeFactory().type]: visualizeSharedTree,
+	[SharedTree.getFactory().type]: visualizeSharedTree,
 	// TODO: the others
 };

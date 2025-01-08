@@ -4,9 +4,11 @@
  */
 
 import { strict as assert } from "node:assert";
+
 import { LogLevel } from "@fluidframework/core-interfaces";
-import { MultiSinkLogger, createChildLogger, createMultiSinkLogger } from "../logger";
-import { MockLogger } from "../mockLogger";
+
+import { type MultiSinkLogger, createChildLogger, createMultiSinkLogger } from "../logger.js";
+import { MockLogger } from "../mockLogger.js";
 
 describe("MultiSinkLogger", () => {
 	it("Pushes logs to all sinks", () => {
@@ -22,7 +24,10 @@ describe("MultiSinkLogger", () => {
 	it("Appends namespace to all logged events", () => {
 		const logger1 = new MockLogger();
 		const logger2 = new MockLogger();
-		const multiSink = createMultiSinkLogger({ loggers: [logger1, logger2], namespace: "test" });
+		const multiSink = createMultiSinkLogger({
+			loggers: [logger1, logger2],
+			namespace: "test",
+		});
 		multiSink.sendTelemetryEvent({ eventName: "test" });
 
 		logger1.assertMatch([{ category: "generic", eventName: "test:test" }]);

@@ -8,16 +8,25 @@ import {
 	IContainerContext,
 	IRuntime,
 	IRuntimeFactory,
-} from "@fluidframework/container-definitions";
-import { IContainerRuntimeOptions, ContainerRuntime } from "@fluidframework/container-runtime";
-import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
-import { NamedFluidDataStoreRegistryEntries } from "@fluidframework/runtime-definitions";
-// eslint-disable-next-line import/no-deprecated
-import { makeModelRequestHandler } from "./modelLoader";
+} from "@fluidframework/container-definitions/legacy";
+import {
+	loadContainerRuntime,
+	IContainerRuntimeOptions,
+} from "@fluidframework/container-runtime/legacy";
+import { IContainerRuntime } from "@fluidframework/container-runtime-definitions/legacy";
+import { NamedFluidDataStoreRegistryEntries } from "@fluidframework/runtime-definitions/legacy";
+
+/**
+ * @internal
+ */
+export interface IModelContainerRuntimeEntryPoint<ModelType> {
+	getModel(container: IContainer): Promise<ModelType>;
+}
 
 /**
  * ModelContainerRuntimeFactory is an abstract class that gives a basic structure for container runtime initialization.
  * It also requires a createModel method to returns the expected model type.
+ * @internal
  */
 export abstract class ModelContainerRuntimeFactory<ModelType> implements IRuntimeFactory {
 	public get IRuntimeFactory() {
@@ -26,7 +35,7 @@ export abstract class ModelContainerRuntimeFactory<ModelType> implements IRuntim
 
 	/**
 	 * @param registryEntries - The data store registry for containers produced
-	 * @param runtimeOptions - The runtime options passed to the ContainerRuntime when instantiating it
+	 * @param runtimeOptions - The runtime options passed to the IContainerRuntime when instantiating it
 	 */
 	constructor(
 		private readonly registryEntries: NamedFluidDataStoreRegistryEntries,
@@ -37,15 +46,18 @@ export abstract class ModelContainerRuntimeFactory<ModelType> implements IRuntim
 		context: IContainerContext,
 		existing: boolean,
 	): Promise<IRuntime> {
-		const runtime = await ContainerRuntime.load(
+		const runtime = await loadContainerRuntime({
 			context,
-			this.registryEntries,
-			// eslint-disable-next-line import/no-deprecated
-			makeModelRequestHandler(this.createModel.bind(this)),
-			this.runtimeOptions,
-			undefined, // scope
+			registryEntries: this.registryEntries,
+			provideEntryPoint: async (
+				containerRuntime: IContainerRuntime,
+			): Promise<IModelContainerRuntimeEntryPoint<ModelType>> => ({
+				getModel: async (container: IContainer) =>
+					this.createModel(containerRuntime, container),
+			}),
+			runtimeOptions: this.runtimeOptions,
 			existing,
-		);
+		});
 
 		if (!existing) {
 			await this.containerInitializingFirstTime(runtime);

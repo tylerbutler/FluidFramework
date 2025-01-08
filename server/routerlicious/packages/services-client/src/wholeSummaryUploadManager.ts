@@ -9,6 +9,7 @@ import { convertSummaryTreeToWholeSummaryTree } from "./storageUtils";
 
 /**
  * Converts summary to snapshot tree and uploads with single snaphot tree payload.
+ * @internal
  */
 export class WholeSummaryUploadManager implements ISummaryUploadManager {
 	constructor(private readonly manager: IGitManager) {}
@@ -47,8 +48,8 @@ export class WholeSummaryUploadManager implements ISummaryUploadManager {
 			type === "channel" ? ".app" : "",
 		);
 		const snapshotPayload: IWholeSummaryPayload = {
-			entries: snapshotTree.entries,
-			message: undefined,
+			entries: snapshotTree.entries ?? [],
+			message: `${type} summary upload`,
 			sequenceNumber,
 			type,
 		};

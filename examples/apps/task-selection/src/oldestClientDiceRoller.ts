@@ -3,11 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { OldestClientObserver } from "@fluid-experimental/oldest-client-observer";
-import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct";
-import { assert } from "@fluidframework/core-utils";
+// Lint rule can be disabled once eslint config is upgraded to 5.3.0+
+import { OldestClientObserver } from "@fluid-experimental/oldest-client-observer/legacy";
+import { DataObject, DataObjectFactory } from "@fluidframework/aqueduct/legacy";
+import { assert } from "@fluidframework/core-utils/legacy";
 
-import { IDiceRoller } from "./interface";
+import { IDiceRoller } from "./interface.js";
 
 // The root is map-like, so we'll use this key for storing the value.
 const diceValueKey = "diceValue";

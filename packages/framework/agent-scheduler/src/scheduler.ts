@@ -4,25 +4,34 @@
  */
 
 import { TypedEventEmitter } from "@fluid-internal/client-utils";
-import { assert } from "@fluidframework/core-utils";
+import { AttachState } from "@fluidframework/container-definitions";
 import { FluidObject, IFluidHandle, IRequest } from "@fluidframework/core-interfaces";
+import { assert } from "@fluidframework/core-utils/internal";
 import {
 	FluidDataStoreRuntime,
 	FluidObjectHandle,
 	ISharedObjectRegistry,
-} from "@fluidframework/datastore";
-import { AttachState } from "@fluidframework/container-definitions";
-import { ISharedMap, IValueChanged, SharedMap } from "@fluidframework/map";
-import { ConsensusRegisterCollection } from "@fluidframework/register-collection";
-import { IFluidDataStoreRuntime, IChannelFactory } from "@fluidframework/datastore-definitions";
+} from "@fluidframework/datastore/internal";
+import {
+	IChannelFactory,
+	IFluidDataStoreRuntime,
+} from "@fluidframework/datastore-definitions/internal";
+import { ISharedMap, IValueChanged, SharedMap } from "@fluidframework/map/internal";
+import { ConsensusRegisterCollection } from "@fluidframework/register-collection/internal";
 import {
 	IFluidDataStoreContext,
 	IFluidDataStoreFactory,
 	NamedFluidDataStoreRegistryEntry,
-} from "@fluidframework/runtime-definitions";
+} from "@fluidframework/runtime-definitions/internal";
+import {
+	type ITelemetryLoggerExt,
+	UsageError,
+	createChildLogger,
+	tagCodeArtifacts,
+} from "@fluidframework/telemetry-utils/internal";
 import { v4 as uuid } from "uuid";
-import { tagCodeArtifacts, UsageError } from "@fluidframework/telemetry-utils";
-import { IAgentScheduler, IAgentSchedulerEvents } from "./agent";
+
+import { IAgentScheduler, IAgentSchedulerEvents } from "./agent.js";
 
 // Note: making sure this ID is unique and does not collide with storage provided clientID
 const UnattachedClientId = `${uuid()}_unattached`;
@@ -89,6 +98,8 @@ export class AgentScheduler
 		return this;
 	}
 
+	private readonly logger: ITelemetryLoggerExt;
+
 	private get clientId(): string {
 		if (this.runtime.attachState === AttachState.Detached) {
 			return UnattachedClientId;
@@ -121,6 +132,7 @@ export class AgentScheduler
 		private readonly consensusRegisterCollection: ConsensusRegisterCollection<string | null>,
 	) {
 		super();
+		this.logger = createChildLogger({ logger: runtime.logger });
 		// We are expecting this class to have many listeners, so we suppress noisy "MaxListenersExceededWarning" logging.
 		super.setMaxListeners(0);
 		this._handle = new FluidObjectHandle(this, "", this.runtime.objectsRoutingContext);
@@ -255,10 +267,8 @@ export class AgentScheduler
 		// Probably okay for now to have every client try to do this.
 		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		quorum.on("removeMember", async (clientId: string) => {
-			assert(
-				this.runtime.objectsRoutingContext.isAttached,
-				0x11c /* "Detached object routing context" */,
-			);
+			// TODO AB#19980: The scenario with a detached routing context is not fully supported.
+			if (!this.runtime.objectsRoutingContext.isAttached) return;
 			// Cleanup only if connected. If not, cleanup will happen in initializeCore() that runs on connection.
 			if (this.isActive()) {
 				const tasks: Promise<any>[] = [];
@@ -423,7 +433,7 @@ export class AgentScheduler
 	}
 
 	private sendErrorEvent(eventName: string, error: any, key?: string) {
-		this.runtime.logger.sendErrorEvent({ eventName, key }, error);
+		this.logger.sendErrorEvent({ eventName, key }, error);
 	}
 }
 
@@ -454,6 +464,10 @@ class AgentSchedulerRuntime extends FluidDataStoreRuntime {
 	}
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export class AgentSchedulerFactory implements IFluidDataStoreFactory {
 	public static readonly type = "_scheduler";
 	public readonly type = AgentSchedulerFactory.type;

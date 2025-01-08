@@ -3,13 +3,17 @@
  * Licensed under the MIT License.
  */
 
-import { IDocumentDeltaStorageService, IStream } from "@fluidframework/driver-definitions";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
+import {
+	IDocumentDeltaStorageService,
+	IStream,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import { streamFromMessages } from "@fluidframework/driver-utils/internal";
 import { IDatabaseManager } from "@fluidframework/server-services-core";
-import { streamFromMessages } from "@fluidframework/driver-utils";
 
 /**
  * Provides access to the underlying delta storage on the server for local driver.
+ * @internal
  */
 export class LocalDeltaStorageService implements IDocumentDeltaStorageService {
 	constructor(

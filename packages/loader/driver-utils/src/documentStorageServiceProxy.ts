@@ -3,20 +3,23 @@
  * Licensed under the MIT License.
  */
 
+import { ISummaryHandle, ISummaryTree } from "@fluidframework/driver-definitions";
 import {
 	FetchSource,
 	IDocumentStorageService,
 	IDocumentStorageServicePolicies,
+	ISnapshot,
+	ISnapshotFetchOptions,
 	ISummaryContext,
-} from "@fluidframework/driver-definitions";
-import {
 	ICreateBlobResponse,
 	ISnapshotTree,
-	ISummaryHandle,
-	ISummaryTree,
 	IVersion,
-} from "@fluidframework/protocol-definitions";
+} from "@fluidframework/driver-definitions/internal";
+import { UsageError } from "@fluidframework/telemetry-utils/internal";
 
+/**
+ * @internal
+ */
 export class DocumentStorageServiceProxy implements IDocumentStorageService {
 	private _policies: IDocumentStorageServicePolicies | undefined;
 
@@ -24,12 +27,8 @@ export class DocumentStorageServiceProxy implements IDocumentStorageService {
 		this._policies = policies;
 	}
 
-	public get policies() {
+	public get policies(): IDocumentStorageServicePolicies | undefined {
 		return this._policies ?? this.internalStorageService.policies;
-	}
-
-	public get repositoryUrl(): string {
-		return this.internalStorageService.repositoryUrl;
 	}
 
 	constructor(protected readonly internalStorageService: IDocumentStorageService) {}
@@ -41,13 +40,27 @@ export class DocumentStorageServiceProxy implements IDocumentStorageService {
 		return this.internalStorageService.getSnapshotTree(version, scenarioName);
 	}
 
+	public async getSnapshot(snapshotFetchOptions?: ISnapshotFetchOptions): Promise<ISnapshot> {
+		if (this.internalStorageService.getSnapshot !== undefined) {
+			return this.internalStorageService.getSnapshot(snapshotFetchOptions);
+		}
+		throw new UsageError(
+			"getSnapshot api should exist on internal storage in documentStorageServiceProxy class",
+		);
+	}
+
 	public async getVersions(
 		versionId: string | null,
 		count: number,
 		scenarioName?: string,
 		fetchSource?: FetchSource,
 	): Promise<IVersion[]> {
-		return this.internalStorageService.getVersions(versionId, count, scenarioName, fetchSource);
+		return this.internalStorageService.getVersions(
+			versionId,
+			count,
+			scenarioName,
+			fetchSource,
+		);
 	}
 
 	public async uploadSummaryWithContext(

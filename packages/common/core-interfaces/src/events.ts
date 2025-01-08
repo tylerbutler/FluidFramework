@@ -5,6 +5,7 @@
 
 /**
  * Base interface for event emitters.
+ * @public
  */
 export interface IEvent {
 	/**
@@ -17,12 +18,12 @@ export interface IEvent {
 	 *
 	 * @eventProperty
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	(event: string, listener: (...args: any[]) => void);
 }
 
 /**
  * Base interface for error event emitters.
+ * @public
  */
 export interface IErrorEvent extends IEvent {
 	/**
@@ -36,6 +37,7 @@ export interface IErrorEvent extends IEvent {
 
 /**
  * Base interface for event providers.
+ * @sealed @public
  */
 export interface IEventProvider<TEvent extends IEvent> {
 	/**
@@ -76,7 +78,7 @@ export interface IEventProvider<TEvent extends IEvent> {
  * ```
  *
  * interface B will now extend interface A and its events
- *
+ * @public
  */
 export type ExtendEventProvider<
 	TBaseEvent extends IEvent,
@@ -98,12 +100,14 @@ export type ExtendEventProvider<
 
 /**
  * The placeholder type that should be used instead of `this` in events.
+ * @public
  */
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export type IEventThisPlaceHolder = { thisPlaceHolder: "thisPlaceHolder" };
 
 /**
  * Does the type replacement by changing types of {@link IEventThisPlaceHolder} to `TThis`
+ * @public
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ReplaceIEventThisPlaceHolder<L extends any[], TThis> = L extends any[]
@@ -113,6 +117,7 @@ export type ReplaceIEventThisPlaceHolder<L extends any[], TThis> = L extends any
 /**
  * Transforms the event overload by replacing {@link IEventThisPlaceHolder} with `TThis` in the event listener
  * arguments and having the overload return `TTHis` as well
+ * @public
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TransformedEvent<TThis, E, A extends any[]> = (
@@ -128,6 +133,7 @@ export type TransformedEvent<TThis, E, A extends any[]> = (
  * It currently supports the max of 15 event overloads which is more than we use anywhere.
  * At more than 15 overloads we start to hit {@link https://github.com/microsoft/TypeScript/issues/37209 | TS2589}.
  * If we need to move beyond 15 we should evaluate using a mapped type pattern like `{"event":(listenerArgs)=>void}`
+ * @public
  */
 export type IEventTransformer<TThis, TEvent extends IEvent> = TEvent extends {
 	(event: infer E0, listener: (...args: infer A0) => void);
@@ -145,7 +151,7 @@ export type IEventTransformer<TThis, TEvent extends IEvent> = TEvent extends {
 	(event: infer E12, listener: (...args: infer A12) => void);
 	(event: infer E13, listener: (...args: infer A13) => void);
 	(event: infer E14, listener: (...args: infer A14) => void);
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	(event: string, listener: (...args: any[]) => void);
 }
 	? TransformedEvent<TThis, E0, A0> &
@@ -164,269 +170,269 @@ export type IEventTransformer<TThis, TEvent extends IEvent> = TEvent extends {
 			TransformedEvent<TThis, E13, A13> &
 			TransformedEvent<TThis, E14, A14>
 	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			(event: infer E3, listener: (...args: infer A3) => void);
-			(event: infer E4, listener: (...args: infer A4) => void);
-			(event: infer E5, listener: (...args: infer A5) => void);
-			(event: infer E6, listener: (...args: infer A6) => void);
-			(event: infer E7, listener: (...args: infer A7) => void);
-			(event: infer E8, listener: (...args: infer A8) => void);
-			(event: infer E9, listener: (...args: infer A9) => void);
-			(event: infer E10, listener: (...args: infer A10) => void);
-			(event: infer E11, listener: (...args: infer A11) => void);
-			(event: infer E12, listener: (...args: infer A12) => void);
-			(event: infer E13, listener: (...args: infer A13) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2> &
-			TransformedEvent<TThis, E3, A3> &
-			TransformedEvent<TThis, E4, A4> &
-			TransformedEvent<TThis, E5, A5> &
-			TransformedEvent<TThis, E6, A6> &
-			TransformedEvent<TThis, E7, A7> &
-			TransformedEvent<TThis, E8, A8> &
-			TransformedEvent<TThis, E9, A9> &
-			TransformedEvent<TThis, E10, A10> &
-			TransformedEvent<TThis, E11, A11> &
-			TransformedEvent<TThis, E12, A12> &
-			TransformedEvent<TThis, E13, A13>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			(event: infer E3, listener: (...args: infer A3) => void);
-			(event: infer E4, listener: (...args: infer A4) => void);
-			(event: infer E5, listener: (...args: infer A5) => void);
-			(event: infer E6, listener: (...args: infer A6) => void);
-			(event: infer E7, listener: (...args: infer A7) => void);
-			(event: infer E8, listener: (...args: infer A8) => void);
-			(event: infer E9, listener: (...args: infer A9) => void);
-			(event: infer E10, listener: (...args: infer A10) => void);
-			(event: infer E11, listener: (...args: infer A11) => void);
-			(event: infer E12, listener: (...args: infer A12) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2> &
-			TransformedEvent<TThis, E3, A3> &
-			TransformedEvent<TThis, E4, A4> &
-			TransformedEvent<TThis, E5, A5> &
-			TransformedEvent<TThis, E6, A6> &
-			TransformedEvent<TThis, E7, A7> &
-			TransformedEvent<TThis, E8, A8> &
-			TransformedEvent<TThis, E9, A9> &
-			TransformedEvent<TThis, E10, A10> &
-			TransformedEvent<TThis, E11, A11> &
-			TransformedEvent<TThis, E12, A12>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			(event: infer E3, listener: (...args: infer A3) => void);
-			(event: infer E4, listener: (...args: infer A4) => void);
-			(event: infer E5, listener: (...args: infer A5) => void);
-			(event: infer E6, listener: (...args: infer A6) => void);
-			(event: infer E7, listener: (...args: infer A7) => void);
-			(event: infer E8, listener: (...args: infer A8) => void);
-			(event: infer E9, listener: (...args: infer A9) => void);
-			(event: infer E10, listener: (...args: infer A10) => void);
-			(event: infer E11, listener: (...args: infer A11) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2> &
-			TransformedEvent<TThis, E3, A3> &
-			TransformedEvent<TThis, E4, A4> &
-			TransformedEvent<TThis, E5, A5> &
-			TransformedEvent<TThis, E6, A6> &
-			TransformedEvent<TThis, E7, A7> &
-			TransformedEvent<TThis, E8, A8> &
-			TransformedEvent<TThis, E9, A9> &
-			TransformedEvent<TThis, E10, A10> &
-			TransformedEvent<TThis, E11, A11>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			(event: infer E3, listener: (...args: infer A3) => void);
-			(event: infer E4, listener: (...args: infer A4) => void);
-			(event: infer E5, listener: (...args: infer A5) => void);
-			(event: infer E6, listener: (...args: infer A6) => void);
-			(event: infer E7, listener: (...args: infer A7) => void);
-			(event: infer E8, listener: (...args: infer A8) => void);
-			(event: infer E9, listener: (...args: infer A9) => void);
-			(event: infer E10, listener: (...args: infer A10) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2> &
-			TransformedEvent<TThis, E3, A3> &
-			TransformedEvent<TThis, E4, A4> &
-			TransformedEvent<TThis, E5, A5> &
-			TransformedEvent<TThis, E6, A6> &
-			TransformedEvent<TThis, E7, A7> &
-			TransformedEvent<TThis, E8, A8> &
-			TransformedEvent<TThis, E9, A9> &
-			TransformedEvent<TThis, E10, A10>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			(event: infer E3, listener: (...args: infer A3) => void);
-			(event: infer E4, listener: (...args: infer A4) => void);
-			(event: infer E5, listener: (...args: infer A5) => void);
-			(event: infer E6, listener: (...args: infer A6) => void);
-			(event: infer E7, listener: (...args: infer A7) => void);
-			(event: infer E8, listener: (...args: infer A8) => void);
-			(event: infer E9, listener: (...args: infer A9) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2> &
-			TransformedEvent<TThis, E3, A3> &
-			TransformedEvent<TThis, E4, A4> &
-			TransformedEvent<TThis, E5, A5> &
-			TransformedEvent<TThis, E6, A6> &
-			TransformedEvent<TThis, E7, A7> &
-			TransformedEvent<TThis, E8, A8> &
-			TransformedEvent<TThis, E9, A9>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			(event: infer E3, listener: (...args: infer A3) => void);
-			(event: infer E4, listener: (...args: infer A4) => void);
-			(event: infer E5, listener: (...args: infer A5) => void);
-			(event: infer E6, listener: (...args: infer A6) => void);
-			(event: infer E7, listener: (...args: infer A7) => void);
-			(event: infer E8, listener: (...args: infer A8) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2> &
-			TransformedEvent<TThis, E3, A3> &
-			TransformedEvent<TThis, E4, A4> &
-			TransformedEvent<TThis, E5, A5> &
-			TransformedEvent<TThis, E6, A6> &
-			TransformedEvent<TThis, E7, A7> &
-			TransformedEvent<TThis, E8, A8>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			(event: infer E3, listener: (...args: infer A3) => void);
-			(event: infer E4, listener: (...args: infer A4) => void);
-			(event: infer E5, listener: (...args: infer A5) => void);
-			(event: infer E6, listener: (...args: infer A6) => void);
-			(event: infer E7, listener: (...args: infer A7) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2> &
-			TransformedEvent<TThis, E3, A3> &
-			TransformedEvent<TThis, E4, A4> &
-			TransformedEvent<TThis, E5, A5> &
-			TransformedEvent<TThis, E6, A6> &
-			TransformedEvent<TThis, E7, A7>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			(event: infer E3, listener: (...args: infer A3) => void);
-			(event: infer E4, listener: (...args: infer A4) => void);
-			(event: infer E5, listener: (...args: infer A5) => void);
-			(event: infer E6, listener: (...args: infer A6) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2> &
-			TransformedEvent<TThis, E3, A3> &
-			TransformedEvent<TThis, E4, A4> &
-			TransformedEvent<TThis, E5, A5> &
-			TransformedEvent<TThis, E6, A6>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			(event: infer E3, listener: (...args: infer A3) => void);
-			(event: infer E4, listener: (...args: infer A4) => void);
-			(event: infer E5, listener: (...args: infer A5) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2> &
-			TransformedEvent<TThis, E3, A3> &
-			TransformedEvent<TThis, E4, A4> &
-			TransformedEvent<TThis, E5, A5>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			(event: infer E3, listener: (...args: infer A3) => void);
-			(event: infer E4, listener: (...args: infer A4) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2> &
-			TransformedEvent<TThis, E3, A3> &
-			TransformedEvent<TThis, E4, A4>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			(event: infer E3, listener: (...args: infer A3) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2> &
-			TransformedEvent<TThis, E3, A3>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			(event: infer E2, listener: (...args: infer A2) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> &
-			TransformedEvent<TThis, E1, A1> &
-			TransformedEvent<TThis, E2, A2>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			(event: infer E1, listener: (...args: infer A1) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0> & TransformedEvent<TThis, E1, A1>
-	: TEvent extends {
-			(event: infer E0, listener: (...args: infer A0) => void);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			(event: string, listener: (...args: any[]) => void);
-	  }
-	? TransformedEvent<TThis, E0, A0>
-	: // eslint-disable-next-line @typescript-eslint/no-explicit-any
-	  TransformedEvent<TThis, string, any[]>;
+				(event: infer E0, listener: (...args: infer A0) => void);
+				(event: infer E1, listener: (...args: infer A1) => void);
+				(event: infer E2, listener: (...args: infer A2) => void);
+				(event: infer E3, listener: (...args: infer A3) => void);
+				(event: infer E4, listener: (...args: infer A4) => void);
+				(event: infer E5, listener: (...args: infer A5) => void);
+				(event: infer E6, listener: (...args: infer A6) => void);
+				(event: infer E7, listener: (...args: infer A7) => void);
+				(event: infer E8, listener: (...args: infer A8) => void);
+				(event: infer E9, listener: (...args: infer A9) => void);
+				(event: infer E10, listener: (...args: infer A10) => void);
+				(event: infer E11, listener: (...args: infer A11) => void);
+				(event: infer E12, listener: (...args: infer A12) => void);
+				(event: infer E13, listener: (...args: infer A13) => void);
+
+				(event: string, listener: (...args: any[]) => void);
+			}
+		? TransformedEvent<TThis, E0, A0> &
+				TransformedEvent<TThis, E1, A1> &
+				TransformedEvent<TThis, E2, A2> &
+				TransformedEvent<TThis, E3, A3> &
+				TransformedEvent<TThis, E4, A4> &
+				TransformedEvent<TThis, E5, A5> &
+				TransformedEvent<TThis, E6, A6> &
+				TransformedEvent<TThis, E7, A7> &
+				TransformedEvent<TThis, E8, A8> &
+				TransformedEvent<TThis, E9, A9> &
+				TransformedEvent<TThis, E10, A10> &
+				TransformedEvent<TThis, E11, A11> &
+				TransformedEvent<TThis, E12, A12> &
+				TransformedEvent<TThis, E13, A13>
+		: TEvent extends {
+					(event: infer E0, listener: (...args: infer A0) => void);
+					(event: infer E1, listener: (...args: infer A1) => void);
+					(event: infer E2, listener: (...args: infer A2) => void);
+					(event: infer E3, listener: (...args: infer A3) => void);
+					(event: infer E4, listener: (...args: infer A4) => void);
+					(event: infer E5, listener: (...args: infer A5) => void);
+					(event: infer E6, listener: (...args: infer A6) => void);
+					(event: infer E7, listener: (...args: infer A7) => void);
+					(event: infer E8, listener: (...args: infer A8) => void);
+					(event: infer E9, listener: (...args: infer A9) => void);
+					(event: infer E10, listener: (...args: infer A10) => void);
+					(event: infer E11, listener: (...args: infer A11) => void);
+					(event: infer E12, listener: (...args: infer A12) => void);
+
+					(event: string, listener: (...args: any[]) => void);
+				}
+			? TransformedEvent<TThis, E0, A0> &
+					TransformedEvent<TThis, E1, A1> &
+					TransformedEvent<TThis, E2, A2> &
+					TransformedEvent<TThis, E3, A3> &
+					TransformedEvent<TThis, E4, A4> &
+					TransformedEvent<TThis, E5, A5> &
+					TransformedEvent<TThis, E6, A6> &
+					TransformedEvent<TThis, E7, A7> &
+					TransformedEvent<TThis, E8, A8> &
+					TransformedEvent<TThis, E9, A9> &
+					TransformedEvent<TThis, E10, A10> &
+					TransformedEvent<TThis, E11, A11> &
+					TransformedEvent<TThis, E12, A12>
+			: TEvent extends {
+						(event: infer E0, listener: (...args: infer A0) => void);
+						(event: infer E1, listener: (...args: infer A1) => void);
+						(event: infer E2, listener: (...args: infer A2) => void);
+						(event: infer E3, listener: (...args: infer A3) => void);
+						(event: infer E4, listener: (...args: infer A4) => void);
+						(event: infer E5, listener: (...args: infer A5) => void);
+						(event: infer E6, listener: (...args: infer A6) => void);
+						(event: infer E7, listener: (...args: infer A7) => void);
+						(event: infer E8, listener: (...args: infer A8) => void);
+						(event: infer E9, listener: (...args: infer A9) => void);
+						(event: infer E10, listener: (...args: infer A10) => void);
+						(event: infer E11, listener: (...args: infer A11) => void);
+
+						(event: string, listener: (...args: any[]) => void);
+					}
+				? TransformedEvent<TThis, E0, A0> &
+						TransformedEvent<TThis, E1, A1> &
+						TransformedEvent<TThis, E2, A2> &
+						TransformedEvent<TThis, E3, A3> &
+						TransformedEvent<TThis, E4, A4> &
+						TransformedEvent<TThis, E5, A5> &
+						TransformedEvent<TThis, E6, A6> &
+						TransformedEvent<TThis, E7, A7> &
+						TransformedEvent<TThis, E8, A8> &
+						TransformedEvent<TThis, E9, A9> &
+						TransformedEvent<TThis, E10, A10> &
+						TransformedEvent<TThis, E11, A11>
+				: TEvent extends {
+							(event: infer E0, listener: (...args: infer A0) => void);
+							(event: infer E1, listener: (...args: infer A1) => void);
+							(event: infer E2, listener: (...args: infer A2) => void);
+							(event: infer E3, listener: (...args: infer A3) => void);
+							(event: infer E4, listener: (...args: infer A4) => void);
+							(event: infer E5, listener: (...args: infer A5) => void);
+							(event: infer E6, listener: (...args: infer A6) => void);
+							(event: infer E7, listener: (...args: infer A7) => void);
+							(event: infer E8, listener: (...args: infer A8) => void);
+							(event: infer E9, listener: (...args: infer A9) => void);
+							(event: infer E10, listener: (...args: infer A10) => void);
+
+							(event: string, listener: (...args: any[]) => void);
+						}
+					? TransformedEvent<TThis, E0, A0> &
+							TransformedEvent<TThis, E1, A1> &
+							TransformedEvent<TThis, E2, A2> &
+							TransformedEvent<TThis, E3, A3> &
+							TransformedEvent<TThis, E4, A4> &
+							TransformedEvent<TThis, E5, A5> &
+							TransformedEvent<TThis, E6, A6> &
+							TransformedEvent<TThis, E7, A7> &
+							TransformedEvent<TThis, E8, A8> &
+							TransformedEvent<TThis, E9, A9> &
+							TransformedEvent<TThis, E10, A10>
+					: TEvent extends {
+								(event: infer E0, listener: (...args: infer A0) => void);
+								(event: infer E1, listener: (...args: infer A1) => void);
+								(event: infer E2, listener: (...args: infer A2) => void);
+								(event: infer E3, listener: (...args: infer A3) => void);
+								(event: infer E4, listener: (...args: infer A4) => void);
+								(event: infer E5, listener: (...args: infer A5) => void);
+								(event: infer E6, listener: (...args: infer A6) => void);
+								(event: infer E7, listener: (...args: infer A7) => void);
+								(event: infer E8, listener: (...args: infer A8) => void);
+								(event: infer E9, listener: (...args: infer A9) => void);
+
+								(event: string, listener: (...args: any[]) => void);
+							}
+						? TransformedEvent<TThis, E0, A0> &
+								TransformedEvent<TThis, E1, A1> &
+								TransformedEvent<TThis, E2, A2> &
+								TransformedEvent<TThis, E3, A3> &
+								TransformedEvent<TThis, E4, A4> &
+								TransformedEvent<TThis, E5, A5> &
+								TransformedEvent<TThis, E6, A6> &
+								TransformedEvent<TThis, E7, A7> &
+								TransformedEvent<TThis, E8, A8> &
+								TransformedEvent<TThis, E9, A9>
+						: TEvent extends {
+									(event: infer E0, listener: (...args: infer A0) => void);
+									(event: infer E1, listener: (...args: infer A1) => void);
+									(event: infer E2, listener: (...args: infer A2) => void);
+									(event: infer E3, listener: (...args: infer A3) => void);
+									(event: infer E4, listener: (...args: infer A4) => void);
+									(event: infer E5, listener: (...args: infer A5) => void);
+									(event: infer E6, listener: (...args: infer A6) => void);
+									(event: infer E7, listener: (...args: infer A7) => void);
+									(event: infer E8, listener: (...args: infer A8) => void);
+
+									(event: string, listener: (...args: any[]) => void);
+								}
+							? TransformedEvent<TThis, E0, A0> &
+									TransformedEvent<TThis, E1, A1> &
+									TransformedEvent<TThis, E2, A2> &
+									TransformedEvent<TThis, E3, A3> &
+									TransformedEvent<TThis, E4, A4> &
+									TransformedEvent<TThis, E5, A5> &
+									TransformedEvent<TThis, E6, A6> &
+									TransformedEvent<TThis, E7, A7> &
+									TransformedEvent<TThis, E8, A8>
+							: TEvent extends {
+										(event: infer E0, listener: (...args: infer A0) => void);
+										(event: infer E1, listener: (...args: infer A1) => void);
+										(event: infer E2, listener: (...args: infer A2) => void);
+										(event: infer E3, listener: (...args: infer A3) => void);
+										(event: infer E4, listener: (...args: infer A4) => void);
+										(event: infer E5, listener: (...args: infer A5) => void);
+										(event: infer E6, listener: (...args: infer A6) => void);
+										(event: infer E7, listener: (...args: infer A7) => void);
+
+										(event: string, listener: (...args: any[]) => void);
+									}
+								? TransformedEvent<TThis, E0, A0> &
+										TransformedEvent<TThis, E1, A1> &
+										TransformedEvent<TThis, E2, A2> &
+										TransformedEvent<TThis, E3, A3> &
+										TransformedEvent<TThis, E4, A4> &
+										TransformedEvent<TThis, E5, A5> &
+										TransformedEvent<TThis, E6, A6> &
+										TransformedEvent<TThis, E7, A7>
+								: TEvent extends {
+											(event: infer E0, listener: (...args: infer A0) => void);
+											(event: infer E1, listener: (...args: infer A1) => void);
+											(event: infer E2, listener: (...args: infer A2) => void);
+											(event: infer E3, listener: (...args: infer A3) => void);
+											(event: infer E4, listener: (...args: infer A4) => void);
+											(event: infer E5, listener: (...args: infer A5) => void);
+											(event: infer E6, listener: (...args: infer A6) => void);
+
+											(event: string, listener: (...args: any[]) => void);
+										}
+									? TransformedEvent<TThis, E0, A0> &
+											TransformedEvent<TThis, E1, A1> &
+											TransformedEvent<TThis, E2, A2> &
+											TransformedEvent<TThis, E3, A3> &
+											TransformedEvent<TThis, E4, A4> &
+											TransformedEvent<TThis, E5, A5> &
+											TransformedEvent<TThis, E6, A6>
+									: TEvent extends {
+												(event: infer E0, listener: (...args: infer A0) => void);
+												(event: infer E1, listener: (...args: infer A1) => void);
+												(event: infer E2, listener: (...args: infer A2) => void);
+												(event: infer E3, listener: (...args: infer A3) => void);
+												(event: infer E4, listener: (...args: infer A4) => void);
+												(event: infer E5, listener: (...args: infer A5) => void);
+
+												(event: string, listener: (...args: any[]) => void);
+											}
+										? TransformedEvent<TThis, E0, A0> &
+												TransformedEvent<TThis, E1, A1> &
+												TransformedEvent<TThis, E2, A2> &
+												TransformedEvent<TThis, E3, A3> &
+												TransformedEvent<TThis, E4, A4> &
+												TransformedEvent<TThis, E5, A5>
+										: TEvent extends {
+													(event: infer E0, listener: (...args: infer A0) => void);
+													(event: infer E1, listener: (...args: infer A1) => void);
+													(event: infer E2, listener: (...args: infer A2) => void);
+													(event: infer E3, listener: (...args: infer A3) => void);
+													(event: infer E4, listener: (...args: infer A4) => void);
+
+													(event: string, listener: (...args: any[]) => void);
+												}
+											? TransformedEvent<TThis, E0, A0> &
+													TransformedEvent<TThis, E1, A1> &
+													TransformedEvent<TThis, E2, A2> &
+													TransformedEvent<TThis, E3, A3> &
+													TransformedEvent<TThis, E4, A4>
+											: TEvent extends {
+														(event: infer E0, listener: (...args: infer A0) => void);
+														(event: infer E1, listener: (...args: infer A1) => void);
+														(event: infer E2, listener: (...args: infer A2) => void);
+														(event: infer E3, listener: (...args: infer A3) => void);
+
+														(event: string, listener: (...args: any[]) => void);
+													}
+												? TransformedEvent<TThis, E0, A0> &
+														TransformedEvent<TThis, E1, A1> &
+														TransformedEvent<TThis, E2, A2> &
+														TransformedEvent<TThis, E3, A3>
+												: TEvent extends {
+															(event: infer E0, listener: (...args: infer A0) => void);
+															(event: infer E1, listener: (...args: infer A1) => void);
+															(event: infer E2, listener: (...args: infer A2) => void);
+
+															(event: string, listener: (...args: any[]) => void);
+														}
+													? TransformedEvent<TThis, E0, A0> &
+															TransformedEvent<TThis, E1, A1> &
+															TransformedEvent<TThis, E2, A2>
+													: TEvent extends {
+																(event: infer E0, listener: (...args: infer A0) => void);
+																(event: infer E1, listener: (...args: infer A1) => void);
+
+																(event: string, listener: (...args: any[]) => void);
+															}
+														? TransformedEvent<TThis, E0, A0> & TransformedEvent<TThis, E1, A1>
+														: TEvent extends {
+																	(event: infer E0, listener: (...args: infer A0) => void);
+
+																	(event: string, listener: (...args: any[]) => void);
+																}
+															? TransformedEvent<TThis, E0, A0>
+															: // eslint-disable-next-line @typescript-eslint/no-explicit-any
+																TransformedEvent<TThis, string, any[]>;

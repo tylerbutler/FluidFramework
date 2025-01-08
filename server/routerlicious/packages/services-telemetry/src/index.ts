@@ -11,6 +11,7 @@ export {
 	TestEngine2,
 	TestLumberjack,
 	TestSchemaValidator,
+	TestFormatter,
 } from "./lumberjackCommonTestUtils";
 export {
 	BaseTelemetryProperties,
@@ -26,6 +27,7 @@ export {
 	QueuedMessageProperties,
 	SessionState,
 	ThrottlingTelemetryProperties,
+	ILumberFormatter,
 } from "./resources";
 export {
 	BaseLumberjackSchemaValidator,
@@ -35,6 +37,11 @@ export {
 export {
 	ITelemetryContextProperties,
 	ITelemetryContext,
+	isTelemetryContextProperties,
 	getGlobalTelemetryContext,
 	setGlobalTelemetryContext,
 } from "./telemetryContext";
+export {
+	SanitizationLumberFormatter,
+	BaseSanitizationLumberFormatter,
+} from "./sanitizationLumberFormatter";

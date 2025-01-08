@@ -9,11 +9,15 @@ import * as amqp from "amqplib";
 import * as winston from "winston";
 import { Lumberjack } from "@fluidframework/server-services-telemetry";
 
+/**
+ * @deprecated This was functionality related to RabbitMq which is not used anymore,
+ * and will be removed in a future release.
+ */
 class RabbitmqReceiver implements ITaskMessageReceiver {
 	private readonly events = new EventEmitter();
 	private readonly rabbitmqConnectionString: string;
-	private connection: amqp.Connection;
-	private channel: amqp.Channel;
+	private connection: amqp.Connection | undefined;
+	private channel: amqp.Channel | undefined;
 
 	constructor(
 		private readonly rabbitmqConfig: any,
@@ -35,6 +39,9 @@ class RabbitmqReceiver implements ITaskMessageReceiver {
 			.consume(
 				this.taskQueueName,
 				(msgBuffer) => {
+					if (msgBuffer === null) {
+						return;
+					}
 					const msgString = msgBuffer.content.toString();
 					const msg = JSON.parse(msgString) as ITaskMessage;
 					this.events.emit("message", msg);
@@ -60,13 +67,19 @@ class RabbitmqReceiver implements ITaskMessageReceiver {
 	}
 
 	public async close() {
-		const closeChannelP = this.channel.close();
-		const closeConnectionP = this.connection.close();
+		const closeChannelP = this.channel?.close();
+		const closeConnectionP = this.connection?.close();
 		await Promise.all([closeChannelP, closeConnectionP]);
 	}
 }
 
-// Factory to switch between different message receiver.
+/**
+ * Factory to switch between different message receiver.
+ *
+ * @deprecated This was functionality related to RabbitMq which is not used anymore,
+ * and will be removed in a future release.
+ * @internal
+ */
 export function createMessageReceiver(
 	rabbitmqConfig: any,
 	queueName: string,

@@ -4,13 +4,18 @@
  */
 
 import { strict as assert } from "assert";
-import { DriverErrorType } from "@fluidframework/driver-definitions";
-import { createChildLogger } from "@fluidframework/telemetry-utils";
-import { runWithRetry } from "../runWithRetry";
+
+import { DriverErrorTypes } from "@fluidframework/driver-definitions/internal";
+import { createChildLogger } from "@fluidframework/telemetry-utils/internal";
+
+import { runWithRetry } from "../runWithRetry.js";
 
 const _setTimeout = global.setTimeout;
-const fastSetTimeout: any = (callback: (...cbArgs: any[]) => void, ms: number, ...args: any[]) =>
-	_setTimeout(callback, ms / 1000.0, ...args);
+const fastSetTimeout: any = (
+	callback: (...cbArgs: any[]) => void,
+	ms: number,
+	...args: any[]
+) => _setTimeout(callback, ms / 1000.0, ...args);
 async function runWithFastSetTimeout<T>(callback: () => Promise<T>): Promise<T> {
 	global.setTimeout = fastSetTimeout;
 	return callback().finally(() => {
@@ -73,15 +78,11 @@ describe("runWithRetry Tests", () => {
 	it("Check that it retries after retry seconds", async () => {
 		let retryTimes: number = 1;
 		let success = false;
-		let timerFinished = false;
-		setTimeout(() => {
-			timerFinished = true;
-		}, 200);
 		const api = async () => {
 			if (retryTimes > 0) {
 				retryTimes -= 1;
 				const error = new Error("Throttle Error");
-				(error as any).errorType = DriverErrorType.throttlingError;
+				(error as any).errorType = DriverErrorTypes.throttlingError;
 				(error as any).retryAfterSeconds = 400;
 				(error as any).canRetry = true;
 				throw error;
@@ -89,7 +90,6 @@ describe("runWithRetry Tests", () => {
 			return true;
 		};
 		success = await runWithFastSetTimeout(async () => runWithRetry(api, "test", logger, {}));
-		assert.strictEqual(timerFinished, true, "Timer should be destroyed");
 		assert.strictEqual(retryTimes, 0, "Should retry once");
 		assert.strictEqual(success, true, "Retry should succeed ultimately");
 	});
@@ -107,9 +107,7 @@ describe("runWithRetry Tests", () => {
 			return true;
 		};
 		try {
-			success = await runWithFastSetTimeout(async () =>
-				runWithRetry(api, "test", logger, {}),
-			);
+			success = await runWithFastSetTimeout(async () => runWithRetry(api, "test", logger, {}));
 		} catch (error) {}
 		assert.strictEqual(retryTimes, 0, "Should retry");
 		assert.strictEqual(success, true, "Should succeed as retry should be successful");
@@ -128,9 +126,7 @@ describe("runWithRetry Tests", () => {
 			return true;
 		};
 		try {
-			success = await runWithFastSetTimeout(async () =>
-				runWithRetry(api, "test", logger, {}),
-			);
+			success = await runWithFastSetTimeout(async () => runWithRetry(api, "test", logger, {}));
 			assert.fail("Should not succeed");
 		} catch (error) {}
 		assert.strictEqual(retryTimes, 0, "Should not retry");
@@ -149,9 +145,7 @@ describe("runWithRetry Tests", () => {
 			return true;
 		};
 		try {
-			success = await runWithFastSetTimeout(async () =>
-				runWithRetry(api, "test", logger, {}),
-			);
+			success = await runWithFastSetTimeout(async () => runWithRetry(api, "test", logger, {}));
 			assert.fail("Should not succeed");
 		} catch (error) {}
 		assert.strictEqual(retryTimes, 0, "Should not retry");

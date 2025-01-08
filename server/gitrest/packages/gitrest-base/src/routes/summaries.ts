@@ -23,7 +23,6 @@ import {
 	getLumberjackBasePropertiesFromRepoManagerParams,
 	getRepoManagerFromWriteAPI,
 	getRepoManagerParamsFromRequest,
-	getSoftDeletedMarkerPath,
 	GitWholeSummaryManager,
 	IExternalWriterConfig,
 	IFileSystemManager,
@@ -32,24 +31,36 @@ import {
 	IRepositoryManager,
 	IRepositoryManagerFactory,
 	isContainerSummary,
+	isIStorageRoutingId,
 	latestSummarySha,
 	logAndThrowApiError,
 	persistLatestFullSummaryInStorage,
 	retrieveLatestFullSummaryFromStorage,
-	SystemErrors,
+	isFilesystemError,
+	throwFileSystemErrorAsNetworkError,
 } from "../utils";
 
 function getFullSummaryDirectory(repoManager: IRepositoryManager, documentId: string): string {
 	return `${repoManager.path}/${documentId}`;
 }
 
+type WholeSummaryCompatibleRepoManagerParams = IRepoManagerParams &
+	Required<Pick<IRepoManagerParams, "storageRoutingId">>;
+
+function isWholeSummaryCompatibleRepoManagerParams(
+	params: IRepoManagerParams,
+): params is WholeSummaryCompatibleRepoManagerParams {
+	return params.storageRoutingId !== undefined && isIStorageRoutingId(params.storageRoutingId);
+}
+
 async function getSummary(
 	repoManager: IRepositoryManager,
 	fileSystemManager: IFileSystemManager,
 	sha: string,
-	repoManagerParams: IRepoManagerParams,
+	repoManagerParams: WholeSummaryCompatibleRepoManagerParams,
 	externalWriterConfig?: IExternalWriterConfig,
 	persistLatestFullSummary = false,
+	persistLatestFullEphemeralSummary = false,
 	enforceStrictPersistedFullSummaryReads = false,
 ): Promise<IWholeFlatSummary> {
 	const lumberjackProperties = {
@@ -57,7 +68,10 @@ async function getSummary(
 		[BaseGitRestTelemetryProperties.sha]: sha,
 	};
 
-	if (persistLatestFullSummary && sha === latestSummarySha) {
+	const enablePersistLatestFullSummary = repoManagerParams.isEphemeralContainer
+		? persistLatestFullEphemeralSummary
+		: persistLatestFullSummary;
+	if (enablePersistLatestFullSummary && sha === latestSummarySha) {
 		try {
 			const latestFullSummaryFromStorage = await retrieveLatestFullSummaryFromStorage(
 				fileSystemManager,
@@ -76,14 +90,11 @@ async function getSummary(
 				error,
 			);
 			if (enforceStrictPersistedFullSummaryReads) {
-				if (isNetworkError(error) && error.code === 413) {
+				if (isNetworkError(error)) {
 					throw error;
 				}
-				if (
-					typeof (error as any).code === "string" &&
-					(error as any).code === SystemErrors.EFBIG.code
-				) {
-					throw new NetworkError(413, "Full summary too large.");
+				if (isFilesystemError(error)) {
+					throwFileSystemErrorAsNetworkError(error);
 				}
 			}
 		}
@@ -104,7 +115,7 @@ async function getSummary(
 
 	// Now that we computed the summary from scratch, we can persist it to storage if
 	// the following conditions are met.
-	if (persistLatestFullSummary && sha === latestSummarySha && fullSummary) {
+	if (enablePersistLatestFullSummary && sha === latestSummarySha && fullSummary) {
 		// We persist the full summary in a fire-and-forget way because we don't want it
 		// to impact getSummary latency. So upon computing the full summary above, we should
 		// return as soon as possible. Also, we don't care about failures much, since the
@@ -130,10 +141,11 @@ async function createSummary(
 	repoManager: IRepositoryManager,
 	fileSystemManager: IFileSystemManager,
 	payload: IWholeSummaryPayload,
-	repoManagerParams: IRepoManagerParams,
+	repoManagerParams: WholeSummaryCompatibleRepoManagerParams,
 	externalWriterConfig?: IExternalWriterConfig,
 	isInitialSummary?: boolean,
 	persistLatestFullSummary = false,
+	persistLatestFullEphemeralSummary = false,
 	enableLowIoWrite: "initial" | boolean = false,
 	optimizeForInitialSummary: boolean = false,
 ): Promise<IWriteSummaryResponse | IWholeFlatSummary> {
@@ -163,21 +175,23 @@ async function createSummary(
 	// Waiting to pre-compute and persist latest summary would slow down document creation,
 	// so skip this step if it is a new document.
 	if (isContainerSummary(payload)) {
-		const latestFullSummary: IWholeFlatSummary | undefined = (
-			writeSummaryResponse as IWholeFlatSummary
-		).trees
-			? writeSummaryResponse
-			: await wholeSummaryManager.readSummary(writeSummaryResponse.id).catch((error) => {
-					// This read is for Historian caching purposes, so it should be ignored on failure.
-					Lumberjack.error(
-						"Failed to read latest summary after writing container summary",
-						lumberjackProperties,
-						error,
-					);
-					return undefined;
-			  });
+		const latestFullSummary =
+			"trees" in writeSummaryResponse && Array.isArray(writeSummaryResponse.trees)
+				? writeSummaryResponse
+				: await wholeSummaryManager.readSummary(writeSummaryResponse.id).catch((error) => {
+						// This read is for Historian caching purposes, so it should be ignored on failure.
+						Lumberjack.error(
+							"Failed to read latest summary after writing container summary",
+							lumberjackProperties,
+							error,
+						);
+						return undefined;
+				  });
 		if (latestFullSummary) {
-			if (persistLatestFullSummary) {
+			const enablePersistLatestFullSummary = repoManagerParams.isEphemeralContainer
+				? persistLatestFullEphemeralSummary
+				: persistLatestFullSummary;
+			if (enablePersistLatestFullSummary) {
 				// Send latest full summary to storage for faster read access.
 				const persistP = persistLatestFullSummaryInStorage(
 					fileSystemManager,
@@ -212,7 +226,7 @@ async function createSummary(
 async function deleteSummary(
 	repoManager: IRepositoryManager,
 	fileSystemManager: IFileSystemManager,
-	repoManagerParams: IRepoManagerParams,
+	repoManagerParams: WholeSummaryCompatibleRepoManagerParams,
 	softDelete: boolean,
 	repoPerDocEnabled: boolean,
 	externalWriterConfig?: IExternalWriterConfig,
@@ -225,43 +239,15 @@ async function deleteSummary(
 		[BaseGitRestTelemetryProperties.repoPerDocEnabled]: repoPerDocEnabled,
 		[BaseGitRestTelemetryProperties.softDelete]: softDelete,
 	};
-	// In repo-per-doc model, the repoManager's path represents the directory that contains summary data.
-	const summaryFolderPath = repoManager.path;
-	lumberjackProperties.summaryFolderPath = summaryFolderPath;
-	Lumberjack.info(`Deleting summary`, lumberjackProperties);
 
-	try {
-		if (softDelete) {
-			const softDeletedMarkerPath = getSoftDeletedMarkerPath(summaryFolderPath);
-			await fileSystemManager.promises.writeFile(softDeletedMarkerPath, "");
-			Lumberjack.info(
-				`Successfully marked summary data as soft-deleted.`,
-				lumberjackProperties,
-			);
-			return;
-		}
+	const wholeSummaryManager = new GitWholeSummaryManager(
+		repoManagerParams.storageRoutingId.documentId,
+		repoManager,
+		lumberjackProperties,
+		externalWriterConfig?.enabled ?? false,
+	);
 
-		// Hard delete
-		await fileSystemManager.promises.rm(summaryFolderPath, { recursive: true });
-		Lumberjack.info(`Successfully hard-deleted summary data.`, lumberjackProperties);
-	} catch (error: any) {
-		if (
-			error?.code === "ENOENT" ||
-			(error instanceof NetworkError &&
-				error?.code === 400 &&
-				error?.message.startsWith("Repo does not exist"))
-		) {
-			// File does not exist.
-			Lumberjack.warning(
-				"Tried to delete summary, but it does not exist",
-				lumberjackProperties,
-				error,
-			);
-			return;
-		}
-		Lumberjack.error("Failed to delete summary", lumberjackProperties, error);
-		throw error;
-	}
+	return wholeSummaryManager.deleteSummary(fileSystemManager, softDelete);
 }
 
 export function create(
@@ -271,6 +257,8 @@ export function create(
 ): Router {
 	const router: Router = Router();
 	const persistLatestFullSummary: boolean = store.get("git:persistLatestFullSummary") ?? false;
+	const persistLatestFullEphemeralSummary: boolean =
+		store.get("git:persistLatestFullEphemeralSummary") ?? false;
 	const enableLowIoWrite: "initial" | boolean = store.get("git:enableLowIoWrite") ?? false;
 	const enableOptimizedInitialSummary: boolean =
 		store.get("git:enableOptimizedInitialSummary") ?? false;
@@ -285,9 +273,7 @@ export function create(
 	// eslint-disable-next-line @typescript-eslint/no-misused-promises
 	router.get("/repos/:owner/:repo/git/summaries/:sha", async (request, response) => {
 		const repoManagerParams = getRepoManagerParamsFromRequest(request);
-		const tenantId = repoManagerParams.storageRoutingId?.tenantId;
-		const documentId = repoManagerParams.storageRoutingId?.documentId;
-		if (!tenantId || !documentId) {
+		if (!isWholeSummaryCompatibleRepoManagerParams(repoManagerParams)) {
 			handleResponse(
 				Promise.reject(
 					new NetworkError(400, `Invalid ${Constants.StorageRoutingIdHeader} header`),
@@ -296,17 +282,20 @@ export function create(
 			);
 			return;
 		}
+		const tenantId = repoManagerParams.storageRoutingId.tenantId;
+		const documentId = repoManagerParams.storageRoutingId.documentId;
 		getGlobalTelemetryContext().bindProperties({ tenantId, documentId }, () => {
 			const resultP = repoManagerFactory
 				.open(repoManagerParams)
 				.then(async (repoManager) => {
 					const fileSystemManagerFactory = getFilesystemManagerFactory(
 						fileSystemManagerFactories,
-						repoManagerParams.isEphemeralContainer,
+						repoManagerParams.isEphemeralContainer ?? false,
 					);
-					const fsManager = fileSystemManagerFactory.create(
-						repoManagerParams.fileSystemManagerParams,
-					);
+					const fsManager = fileSystemManagerFactory.create({
+						...repoManagerParams.fileSystemManagerParams,
+						rootDir: repoManager.path,
+					});
 					await checkSoftDeleted(
 						fsManager,
 						repoManager.path,
@@ -320,6 +309,7 @@ export function create(
 						repoManagerParams,
 						getExternalWriterParams(request.query?.config as string | undefined),
 						persistLatestFullSummary,
+						persistLatestFullEphemeralSummary,
 						enforceStrictPersistedFullSummaryReads,
 					);
 				})
@@ -334,8 +324,6 @@ export function create(
 	// eslint-disable-next-line @typescript-eslint/no-misused-promises
 	router.post("/repos/:owner/:repo/git/summaries", async (request, response) => {
 		const repoManagerParams = getRepoManagerParamsFromRequest(request);
-		const tenantId = repoManagerParams.storageRoutingId?.tenantId;
-		const documentId = repoManagerParams.storageRoutingId?.documentId;
 		// request.query type is { [string]: string } but it's actually { [string]: any }
 		// Account for possibilities of undefined, boolean, or string types. A number will be false.
 		const isInitialSummary: boolean | undefined =
@@ -352,7 +340,7 @@ export function create(
 		};
 		Lumberjack.info("Received request to create a summary", lumberjackProperties);
 
-		if (!tenantId || !documentId) {
+		if (!isWholeSummaryCompatibleRepoManagerParams(repoManagerParams)) {
 			handleResponse(
 				Promise.reject(
 					new NetworkError(400, `Invalid ${Constants.StorageRoutingIdHeader} header`),
@@ -361,6 +349,8 @@ export function create(
 			);
 			return;
 		}
+		const tenantId = repoManagerParams.storageRoutingId.tenantId;
+		const documentId = repoManagerParams.storageRoutingId.documentId;
 		const wholeSummaryPayload: IWholeSummaryPayload = request.body;
 		getGlobalTelemetryContext().bindProperties({ tenantId, documentId }, () => {
 			const resultP = (async () => {
@@ -377,11 +367,12 @@ export function create(
 				);
 				const fileSystemManagerFactory = getFilesystemManagerFactory(
 					fileSystemManagerFactories,
-					repoManagerParams.isEphemeralContainer,
+					repoManagerParams.isEphemeralContainer ?? false,
 				);
-				const fsManager = fileSystemManagerFactory.create(
-					repoManagerParams.fileSystemManagerParams,
-				);
+				const fsManager = fileSystemManagerFactory.create({
+					...repoManagerParams.fileSystemManagerParams,
+					rootDir: repoManager.path,
+				});
 				// A new document cannot already be soft-deleted.
 				if (!optimizeForInitialSummary) {
 					await checkSoftDeleted(
@@ -399,6 +390,7 @@ export function create(
 					getExternalWriterParams(request.query?.config as string | undefined),
 					isInitialSummary,
 					persistLatestFullSummary,
+					persistLatestFullEphemeralSummary,
 					enableLowIoWrite,
 					optimizeForInitialSummary,
 				);
@@ -414,9 +406,7 @@ export function create(
 	// eslint-disable-next-line @typescript-eslint/no-misused-promises
 	router.delete("/repos/:owner/:repo/git/summaries", async (request, response) => {
 		const repoManagerParams = getRepoManagerParamsFromRequest(request);
-		const tenantId = repoManagerParams.storageRoutingId?.tenantId;
-		const documentId = repoManagerParams.storageRoutingId?.documentId;
-		if (!tenantId || !documentId) {
+		if (!isWholeSummaryCompatibleRepoManagerParams(repoManagerParams)) {
 			handleResponse(
 				Promise.reject(
 					new NetworkError(400, `Invalid ${Constants.StorageRoutingIdHeader} header`),
@@ -425,6 +415,8 @@ export function create(
 			);
 			return;
 		}
+		const tenantId = repoManagerParams.storageRoutingId.tenantId;
+		const documentId = repoManagerParams.storageRoutingId.documentId;
 		const softDelete = request.get("Soft-Delete")?.toLowerCase() === "true";
 		getGlobalTelemetryContext().bindProperties({ tenantId, documentId }, () => {
 			const resultP = repoManagerFactory
@@ -432,11 +424,12 @@ export function create(
 				.then(async (repoManager) => {
 					const fileSystemManagerFactory = getFilesystemManagerFactory(
 						fileSystemManagerFactories,
-						repoManagerParams.isEphemeralContainer,
+						repoManagerParams.isEphemeralContainer ?? false,
 					);
-					const fsManager = fileSystemManagerFactory.create(
-						repoManagerParams.fileSystemManagerParams,
-					);
+					const fsManager = fileSystemManagerFactory.create({
+						...repoManagerParams.fileSystemManagerParams,
+						rootDir: repoManager.path,
+					});
 					return deleteSummary(
 						repoManager,
 						fsManager,

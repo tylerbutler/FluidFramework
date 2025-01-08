@@ -12,9 +12,8 @@ import {
 	executeRedisMultiWithHmsetExpire,
 	executeRedisMultiWithHmsetExpireAndLpush,
 	IRedisParameters,
+	IRedisClientConnectionManager,
 } from "@fluidframework/server-services-utils";
-import * as Redis from "ioredis";
-import * as winston from "winston";
 import {
 	BaseTelemetryProperties,
 	CommonProperties,
@@ -23,13 +22,14 @@ import {
 
 /**
  * Manages storage of throttling metrics and usage data in redis.
+ * @internal
  */
 export class RedisThrottleAndUsageStorageManager implements IThrottleAndUsageStorageManager {
 	private readonly expireAfterSeconds: number = 60 * 60 * 24;
 	private readonly prefix: string = "throttle";
 
 	constructor(
-		private readonly client: Redis.default,
+		private readonly redisClientConnectionManager: IRedisClientConnectionManager,
 		parameters?: IRedisParameters,
 	) {
 		if (parameters?.expireAfterSeconds) {
@@ -40,14 +40,10 @@ export class RedisThrottleAndUsageStorageManager implements IThrottleAndUsageSto
 			this.prefix = parameters.prefix;
 		}
 
-		client.on("error", (error) => {
-			winston.error("Throttle Manager Redis Error:", error);
-			Lumberjack.error(
-				"Throttle Manager Redis Error",
-				{ [CommonProperties.telemetryGroupName]: "throttling" },
-				error,
-			);
-		});
+		redisClientConnectionManager.addErrorHandler(
+			{ [CommonProperties.telemetryGroupName]: "throttling" }, // lumber properties
+			"Throttle Manager Redis Error", // error message
+		);
 	}
 
 	public async setThrottlingMetric(
@@ -57,7 +53,7 @@ export class RedisThrottleAndUsageStorageManager implements IThrottleAndUsageSto
 		const throttlingKey = this.getKey(id);
 
 		return executeRedisMultiWithHmsetExpire(
-			this.client,
+			this.redisClientConnectionManager.getRedisClient(),
 			throttlingKey,
 			throttlingMetric as { [key: string]: any },
 			this.expireAfterSeconds,
@@ -79,7 +75,7 @@ export class RedisThrottleAndUsageStorageManager implements IThrottleAndUsageSto
 		});
 
 		return executeRedisMultiWithHmsetExpireAndLpush(
-			this.client,
+			this.redisClientConnectionManager.getRedisClient(),
 			throttlingKey,
 			throttlingMetric as { [key: string]: any },
 			usageStorageId,
@@ -89,7 +85,9 @@ export class RedisThrottleAndUsageStorageManager implements IThrottleAndUsageSto
 	}
 
 	public async getThrottlingMetric(id: string): Promise<IThrottlingMetrics | undefined> {
-		const throttlingMetric = await this.client.hgetall(this.getKey(id));
+		const throttlingMetric = await this.redisClientConnectionManager
+			.getRedisClient()
+			.hgetall(this.getKey(id));
 		if (Object.keys(throttlingMetric).length === 0) {
 			return undefined;
 		}
@@ -111,11 +109,11 @@ export class RedisThrottleAndUsageStorageManager implements IThrottleAndUsageSto
 			[BaseTelemetryProperties.documentId]: usageData.documentId,
 			[CommonProperties.clientId]: usageData.clientId,
 		});
-		await this.client.lpush(id, usageDataString);
+		await this.redisClientConnectionManager.getRedisClient().lpush(id, usageDataString);
 	}
 
-	public async getUsageData(id: string): Promise<IUsageData> {
-		const usageDataString = await this.client.rpop(id);
+	public async getUsageData(id: string): Promise<IUsageData | undefined> {
+		const usageDataString = await this.redisClientConnectionManager.getRedisClient().rpop(id);
 		if (usageDataString) {
 			return JSON.parse(usageDataString) as IUsageData;
 		}

@@ -6,6 +6,9 @@
 import { Deferred } from "@fluidframework/common-utils";
 import { ITicketedMessage } from "./messages";
 
+/**
+ * @internal
+ */
 export interface IQueuedMessage {
 	topic: string;
 	partition: number;
@@ -14,12 +17,18 @@ export interface IQueuedMessage {
 	timestamp?: number | undefined;
 }
 
+/**
+ * @internal
+ */
 export interface IPartition {
 	topic: string;
 	partition: number;
 	offset: number;
 }
 
+/**
+ * @internal
+ */
 export interface IConsumer {
 	readonly groupId: string;
 
@@ -44,6 +53,16 @@ export interface IConsumer {
 	 * Resumes retrival of messages
 	 */
 	resume(): Promise<void>;
+
+	/**
+	 * Pauses retrieval of new messages without a rebalance, and seeks the offset to the specified value.
+	 */
+	pauseFetching?(partitionId: number, seekTimeout: number, offset?: number): Promise<void>;
+
+	/**
+	 * Resumes retrieval of messages without a rebalance.
+	 */
+	resumeFetching?(partitionId: number): Promise<void>;
 
 	/**
 	 * Commits consumer checkpoint offset.
@@ -75,6 +94,7 @@ export interface IConsumer {
 
 /**
  * A pending message the producer is holding on to
+ * @internal
  */
 export interface IPendingMessage {
 	// The deferred is used to resolve a promise once the message is sent
@@ -84,6 +104,9 @@ export interface IPendingMessage {
 	message: string;
 }
 
+/**
+ * @internal
+ */
 export interface IProducer<T = ITicketedMessage> {
 	/**
 	 * Returns true if the producer is connected
@@ -113,8 +136,15 @@ export interface IProducer<T = ITicketedMessage> {
 		event: "connected" | "disconnected" | "closed" | "produced" | "throttled" | "log" | "error",
 		listener: (...args: any[]) => void,
 	): this;
+	off(
+		event: "connected" | "disconnected" | "closed" | "produced" | "throttled" | "log" | "error",
+		listener: (...args: any[]) => void,
+	): this;
 }
 
+/**
+ * @internal
+ */
 export interface IPendingBoxcar {
 	documentId: string;
 	tenantId: string;

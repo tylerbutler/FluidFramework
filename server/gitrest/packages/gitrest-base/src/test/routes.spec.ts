@@ -23,6 +23,7 @@ import * as app from "../app";
 import { ExternalStorageManager } from "../externalStorageManager";
 import { Constants, IsomorphicGitManagerFactory, NodeFsManagerFactory } from "../utils";
 import * as testUtils from "./utils";
+import { StartupCheck } from "@fluidframework/server-services-shared";
 
 // TODO: (issue logged): replace email & name
 const commitEmail = "kurtb@microsoft.com";
@@ -127,7 +128,7 @@ function normalizeMessage(gitLibrary: testUtils.gitLibType, message: string) {
 	return message;
 }
 
-const testModes: testUtils.ITestMode[] = [
+const testModes: testUtils.IRouteTestMode[] = [
 	{
 		name: "Using isomorphic-git as RepoManager with repoPerDoc enabled",
 		gitLibrary: "isomorphic-git",
@@ -186,7 +187,7 @@ testModes.forEach((mode) => {
 
 		const fileSystemManagerFactory = new NodeFsManagerFactory();
 		const externalStorageManager = new ExternalStorageManager(testUtils.defaultProvider);
-		const getRepoManagerFactory = (testMode: testUtils.ITestMode) => {
+		const getRepoManagerFactory = (testMode: testUtils.IRouteTestMode) => {
 			// The other possibility is isomorphic-git.
 			return new IsomorphicGitManagerFactory(
 				testUtils.defaultProvider.get("storageDir"),
@@ -203,10 +204,12 @@ testModes.forEach((mode) => {
 			beforeEach(() => {
 				const repoManagerFactory = getRepoManagerFactory(mode);
 				testUtils.defaultProvider.set("git:repoPerDocEnabled", mode.repoPerDocEnabled);
+				const startupCheck = new StartupCheck();
 				const testApp = app.create(
 					testUtils.defaultProvider,
 					{ defaultFileSystemManagerFactory: fileSystemManagerFactory },
 					repoManagerFactory,
+					startupCheck,
 				);
 				supertest = request(testApp);
 			});

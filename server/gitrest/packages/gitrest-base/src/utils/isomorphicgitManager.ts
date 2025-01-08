@@ -18,7 +18,7 @@ import {
 import { BaseGitRestTelemetryProperties } from "./gitrestTelemetryDefinitions";
 import * as helpers from "./helpers";
 import * as conversions from "./isomorphicgitConversions";
-import { RepositoryManagerBase } from "./repositoryManagerBase";
+import { IRepositoryManagerBaseOptions, RepositoryManagerBase } from "./repositoryManagerBase";
 import { RepositoryManagerFactoryBase } from "./repositoryManagerFactoryBase";
 
 export class IsomorphicGitRepositoryManager extends RepositoryManagerBase {
@@ -28,16 +28,9 @@ export class IsomorphicGitRepositoryManager extends RepositoryManagerBase {
 		private readonly repoName: string,
 		directory: string,
 		lumberjackBaseProperties: Record<string, any>,
-		enableRepositoryManagerMetrics: boolean = false,
-		apiMetricsSamplingPeriod?: number,
-		private readonly isEphemeralContainer?: boolean,
+		options: Partial<IRepositoryManagerBaseOptions>,
 	) {
-		super(
-			directory,
-			lumberjackBaseProperties,
-			enableRepositoryManagerMetrics,
-			apiMetricsSamplingPeriod,
-		);
+		super(directory, lumberjackBaseProperties, options);
 	}
 
 	protected async getCommitCore(sha: string): Promise<resources.ICommit> {
@@ -89,7 +82,7 @@ export class IsomorphicGitRepositoryManager extends RepositoryManagerBase {
 				},
 				err,
 			);
-			if (this.isEphemeralContainer && err?.code === "NotFoundError") {
+			if (err?.code === "NotFoundError" || err?.code === "ENOENT") {
 				throw new NetworkError(404, "Unable to get commits for ephemeral container.");
 			}
 			throw new NetworkError(500, "Unable to get commits.");
@@ -119,7 +112,7 @@ export class IsomorphicGitRepositoryManager extends RepositoryManagerBase {
 
 	private async getTreeInternalRecursive(sha: string): Promise<resources.ITree> {
 		const mapFunction: isomorphicGit.WalkerMap = async (filepath, [walkerEntry]) => {
-			if (filepath !== "." && filepath !== "..") {
+			if (walkerEntry !== null && filepath !== "." && filepath !== "..") {
 				const type = await walkerEntry.type();
 				const mode = (await walkerEntry.mode()).toString(8);
 				const oid = await walkerEntry.oid();
@@ -390,6 +383,7 @@ export class IsomorphicGitManagerFactory extends RepositoryManagerFactoryBase<vo
 		enableRepositoryManagerMetrics: boolean = false,
 		private readonly enableSlimGitInit: boolean = false,
 		apiMetricsSamplingPeriod?: number,
+		maxBlobSizeBytes?: number,
 	) {
 		super(
 			storageDirectoryConfig,
@@ -399,6 +393,7 @@ export class IsomorphicGitManagerFactory extends RepositoryManagerFactoryBase<vo
 			enableRepositoryManagerMetrics,
 			false /* enforceSynchronous */,
 			apiMetricsSamplingPeriod,
+			maxBlobSizeBytes,
 		);
 	}
 
@@ -427,6 +422,7 @@ export class IsomorphicGitManagerFactory extends RepositoryManagerFactoryBase<vo
 		enableRepositoryManagerMetrics: boolean,
 		apiMetricsSamplingPeriod?: number,
 		isEphemeralContainer?: boolean,
+		maxBlobSizeBytes?: number,
 	): IRepositoryManager {
 		return new IsomorphicGitRepositoryManager(
 			fileSystemManager,
@@ -434,9 +430,7 @@ export class IsomorphicGitManagerFactory extends RepositoryManagerFactoryBase<vo
 			repoName,
 			gitdir,
 			lumberjackBaseProperties,
-			enableRepositoryManagerMetrics,
-			apiMetricsSamplingPeriod,
-			isEphemeralContainer,
+			{ enableRepositoryManagerMetrics, apiMetricsSamplingPeriod, maxBlobSizeBytes },
 		);
 	}
 

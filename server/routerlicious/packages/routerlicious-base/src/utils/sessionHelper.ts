@@ -3,9 +3,16 @@
  * Licensed under the MIT License.
  */
 
-import { ISession, NetworkError } from "@fluidframework/server-services-client";
-import { IDocument, runWithRetry, IDocumentRepository } from "@fluidframework/server-services-core";
+import { ISession, isNetworkError, NetworkError } from "@fluidframework/server-services-client";
+import {
+	IDocument,
+	runWithRetry,
+	IDocumentRepository,
+	IClusterDrainingChecker,
+	shouldRetryNetworkError,
+} from "@fluidframework/server-services-core";
 import { getLumberBaseProperties, Lumberjack } from "@fluidframework/server-services-telemetry";
+import { StageTrace } from "./trace";
 
 const defaultSessionStickinessDurationMs = 60 * 60 * 1000; // 60 minutes
 
@@ -21,6 +28,7 @@ async function createNewSession(
 	documentId,
 	documentRepository: IDocumentRepository,
 	lumberjackProperties: Record<string, any>,
+	messageBrokerId?: string,
 ): Promise<ISession> {
 	const newSession: ISession = {
 		ordererUrl,
@@ -29,6 +37,10 @@ async function createNewSession(
 		isSessionAlive: true,
 		isSessionActive: false,
 	};
+	// if undefined and added directly to the session object - will be serialized as null in mongo which is undesirable
+	if (messageBrokerId) {
+		newSession.messageBrokerId = messageBrokerId;
+	}
 	try {
 		await documentRepository.updateOne(
 			{
@@ -73,12 +85,15 @@ async function updateExistingSession(
 	documentRepository: IDocumentRepository,
 	sessionStickinessDurationMs: number,
 	lumberjackProperties: Record<string, any>,
+	messageBrokerId?: string,
+	ignoreSessionStickiness: boolean = false,
 ): Promise<ISession> {
 	let updatedDeli: string | undefined;
 	let updatedScribe: string | undefined;
 	let updatedOrdererUrl: string | undefined;
 	let updatedHistorianUrl: string | undefined;
 	let updatedDeltaStreamUrl: string | undefined;
+	let updatedMessageBrokerId: string | undefined = existingSession.messageBrokerId;
 	// Session stickiness keeps the a given document in 1 location for the configured
 	// stickiness duration after the session ends. In the case of periodic op backup, this can ensure
 	// that ops are backed up to a global location before a session is allowed to move.
@@ -95,37 +110,42 @@ async function updateExistingSession(
 		!!existingSession.ordererUrl &&
 		!!existingSession.historianUrl &&
 		!!existingSession.deltaStreamUrl;
-	Lumberjack.info("Calculated isSessionSticky and sessionHasLocation", {
+	Lumberjack.info("Calculated isSessionSticky, sessionHasLocation and ignoreSessionStickiness", {
 		...lumberjackProperties,
 		isSessionSticky,
 		sessionHasLocation,
 		documentLastAccessTime: document.lastAccessTime,
 		sessionStickyCalculationTimestamp,
 		sessionStickinessDurationMs,
+		ignoreSessionStickiness,
 	});
-	if (!isSessionSticky || !sessionHasLocation) {
+	if (!isSessionSticky || ignoreSessionStickiness || !sessionHasLocation) {
 		// Allow session location to be moved.
 		if (
 			existingSession.ordererUrl !== ordererUrl ||
 			existingSession.historianUrl !== historianUrl ||
-			existingSession.deltaStreamUrl !== deltaStreamUrl
+			existingSession.deltaStreamUrl !== deltaStreamUrl ||
+			existingSession.messageBrokerId !== messageBrokerId
 		) {
 			// Previous session was in a different location. Move to current location.
 			// Reset logOffset, ordererUrl, and historianUrl when moving session location.
 			Lumberjack.info("Moving session", {
 				...lumberjackProperties,
 				isSessionSticky,
+				ignoreSessionStickiness,
 				sessionHasLocation,
 				oldSessionLocation: {
 					ordererUrl: existingSession.ordererUrl,
 					historianUrl: existingSession.historianUrl,
 					deltaStreamUrl: existingSession.deltaStreamUrl,
+					messageBrokerId: existingSession.messageBrokerId,
 				},
-				newSessionLocation: { ordererUrl, historianUrl, deltaStreamUrl },
+				newSessionLocation: { ordererUrl, historianUrl, deltaStreamUrl, messageBrokerId },
 			});
 			updatedOrdererUrl = ordererUrl;
 			updatedHistorianUrl = historianUrl;
 			updatedDeltaStreamUrl = deltaStreamUrl;
+			updatedMessageBrokerId = messageBrokerId;
 			if (document.deli !== "") {
 				const deli = JSON.parse(document.deli);
 				deli.logOffset = -1;
@@ -149,7 +169,14 @@ async function updateExistingSession(
 		isSessionAlive: true,
 		// If session was not alive, it cannot be "active"
 		isSessionActive: false,
+		// Always reset skip session stickiness to false when updating session
+		// since the session should be moved to a different cluster in a clean state.
+		ignoreSessionStickiness: false,
 	};
+	// if undefined and added directly to the session object - will be serialized as null in mongo which is undesirable
+	if (updatedMessageBrokerId) {
+		updatedSession.messageBrokerId = updatedMessageBrokerId;
+	}
 	try {
 		const result = await documentRepository.findOneAndUpdate(
 			{
@@ -168,7 +195,9 @@ async function updateExistingSession(
 			},
 		);
 		Lumberjack.info(
-			`The original document in updateExistingSession: ${JSON.stringify(result)}`,
+			`The original document session in updateExistingSession: ${JSON.stringify(
+				result?.value?.session,
+			)}`,
 			lumberjackProperties,
 		);
 		// There is no document with isSessionAlive as false. It means this session has been discovered by
@@ -179,7 +208,7 @@ async function updateExistingSession(
 				`The document with isSessionAlive as false does not exist`,
 				lumberjackProperties,
 			);
-			const doc: IDocument = await runWithRetry(
+			const doc = await runWithRetry(
 				async () =>
 					documentRepository.readOne({
 						tenantId,
@@ -193,7 +222,7 @@ async function updateExistingSession(
 				undefined /* shouldIgnoreError */,
 				(error) => true /* shouldRetry */,
 			);
-			if (!doc && !doc.session) {
+			if (!doc?.session) {
 				Lumberjack.error(
 					`Error running getSession from document: ${JSON.stringify(doc)}`,
 					lumberjackProperties,
@@ -242,6 +271,7 @@ function convertSessionToFreshSession(session: ISession, lumberjackProperties): 
 
 /**
  * Return to the caller with the status of the session.
+ * @internal
  */
 export async function getSession(
 	ordererUrl: string,
@@ -251,13 +281,77 @@ export async function getSession(
 	documentId: string,
 	documentRepository: IDocumentRepository,
 	sessionStickinessDurationMs: number = defaultSessionStickinessDurationMs,
+	messageBrokerId?: string,
+	clusterDrainingChecker?: IClusterDrainingChecker,
+	ephemeralDocumentTTLSec?: number,
+	connectionTrace?: StageTrace<string>,
+	readDocumentRetryDelay: number = 150,
+	readDocumentMaxRetries: number = 2,
 ): Promise<ISession> {
-	const lumberjackProperties = getLumberBaseProperties(documentId, tenantId);
+	const baseLumberjackProperties = getLumberBaseProperties(documentId, tenantId);
 
-	const document: IDocument = await documentRepository.readOne({ tenantId, documentId });
-	if (!document || document.scheduledDeletionTime !== undefined) {
+	const document = await runWithRetry(
+		async () =>
+			documentRepository.readOne({ tenantId, documentId }).then((result) => {
+				if (result === null) {
+					throw new NetworkError(
+						404,
+						"Document is deleted and cannot be accessed",
+						true /* canRetry */,
+					);
+				}
+				return result;
+			}),
+		"getDocumentForSession",
+		readDocumentMaxRetries, // maxRetries
+		readDocumentRetryDelay, // retryAfterMs
+		baseLumberjackProperties, // telemetry props
+		undefined,
+		(error) => shouldRetryNetworkError(error),
+	).catch((error) => {
+		if (isNetworkError(error) && error.code === 404) {
+			return undefined;
+		}
+		connectionTrace?.stampStage("DocumentDBError");
+		throw error;
+	});
+
+	// Check whether document was found in the DB.
+	if (!document || document?.scheduledDeletionTime !== undefined) {
+		connectionTrace?.stampStage("DocumentDoesNotExist");
 		throw new NetworkError(404, "Document is deleted and cannot be accessed.");
 	}
+	connectionTrace?.stampStage("DocumentExistenceChecked");
+
+	const lumberjackProperties = {
+		...baseLumberjackProperties,
+		isEphemeralContainer: document.isEphemeralContainer,
+	};
+	if (document.isEphemeralContainer && ephemeralDocumentTTLSec !== undefined) {
+		// Check if the document is ephemeral and has expired.
+		const currentTime = Date.now();
+		const documentExpirationTime = document.createTime + ephemeralDocumentTTLSec * 1000;
+		if (currentTime > documentExpirationTime) {
+			// If the document is ephemeral and older than the max ephemeral document TTL, throw an error indicating that it can't be accessed.
+			const documentExpiredByMs = currentTime - documentExpirationTime;
+			// TODO: switch back to "Ephemeral Container Expired" once clients update to use errorType, not error message. AB#12867
+			const error = new NetworkError(404, "Document is deleted and cannot be accessed.");
+			Lumberjack.warning(
+				"Document is older than the max ephemeral document TTL.",
+				{
+					...lumberjackProperties,
+					documentCreateTime: document.createTime,
+					documentExpirationTime,
+					documentExpiredByMs,
+				},
+				error,
+			);
+			connectionTrace?.stampStage("EphemeralDocumentExpired");
+			throw error;
+		}
+	}
+	connectionTrace?.stampStage("EphemeralExipiryChecked");
+
 	// Session can be undefined for documents that existed before the concept of service sessions.
 	const existingSession: ISession | undefined = document.session;
 	Lumberjack.info(
@@ -275,27 +369,51 @@ export async function getSession(
 			documentId,
 			documentRepository,
 			lumberjackProperties,
+			messageBrokerId,
 		);
-		return convertSessionToFreshSession(newSession, lumberjackProperties);
+
+		const freshSession: ISession = convertSessionToFreshSession(
+			newSession,
+			lumberjackProperties,
+		);
+		connectionTrace?.stampStage("NewSessionCreated");
+		return freshSession;
 	}
+	connectionTrace?.stampStage("SessionExistenceChecked");
 
 	if (existingSession.isSessionAlive || existingSession.isSessionActive) {
 		// Existing session is considered alive/discovered or active, so return to consumer as-is.
+		connectionTrace?.stampStage("SessionIsAlive");
 		return existingSession;
 	}
+	connectionTrace?.stampStage("SessionLivenessChecked");
 
 	// Session is not alive/discovered, so update and persist changes to DB.
-	const updatedSession: ISession = await updateExistingSession(
-		ordererUrl,
-		historianUrl,
-		deltaStreamUrl,
-		document,
-		existingSession,
-		documentId,
-		tenantId,
-		documentRepository,
-		sessionStickinessDurationMs,
-		lumberjackProperties,
-	);
-	return convertSessionToFreshSession(updatedSession, lumberjackProperties);
+	const ignoreSessionStickiness = existingSession.ignoreSessionStickiness ?? false;
+
+	try {
+		const updatedSession: ISession = await updateExistingSession(
+			ordererUrl,
+			historianUrl,
+			deltaStreamUrl,
+			document,
+			existingSession,
+			documentId,
+			tenantId,
+			documentRepository,
+			sessionStickinessDurationMs,
+			lumberjackProperties,
+			messageBrokerId,
+			ignoreSessionStickiness,
+		);
+		const freshSession: ISession = convertSessionToFreshSession(
+			updatedSession,
+			lumberjackProperties,
+		);
+		connectionTrace?.stampStage("UpdatedExistingSession");
+		return freshSession;
+	} catch (error) {
+		connectionTrace?.stampStage("FailedToUpdateExistingSession");
+		throw error;
+	}
 }

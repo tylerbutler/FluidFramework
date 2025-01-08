@@ -3,9 +3,18 @@
  * Licensed under the MIT License.
  */
 
-import { SaveInfo, makeRandom } from "@fluid-internal/stochastic-test-utils";
-import { IChannelFactory } from "@fluidframework/datastore-definitions";
-import { BaseOperation, DDSFuzzModel, DDSFuzzSuiteOptions, replayTest } from "./ddsFuzzHarness";
+import { TypedEventEmitter } from "@fluid-internal/client-utils";
+import type { SaveInfo } from "@fluid-private/stochastic-test-utils";
+import { makeRandom } from "@fluid-private/stochastic-test-utils";
+import type { IChannelFactory } from "@fluidframework/datastore-definitions/internal";
+
+import type {
+	BaseOperation,
+	DDSFuzzHarnessEvents,
+	DDSFuzzModel,
+	DDSFuzzSuiteOptions,
+} from "./ddsFuzzHarness.js";
+import { ReducerPreconditionError, replayTest } from "./ddsFuzzHarness.js";
 
 /**
  * A function which takes in an operation and modifies it by reference to be more
@@ -31,6 +40,8 @@ import { BaseOperation, DDSFuzzModel, DDSFuzzSuiteOptions, replayTest } from "./
  * 	 }
  * }
  * ```
+ *
+ * @internal
  */
 export type MinimizationTransform<TOperation extends BaseOperation> = (op: TOperation) => void;
 
@@ -38,7 +49,7 @@ export class FuzzTestMinimizer<
 	TChannelFactory extends IChannelFactory,
 	TOperation extends BaseOperation,
 > {
-	private initialErrorMessage: string | undefined;
+	private initialError?: { message: string; op: BaseOperation };
 	private readonly transforms: MinimizationTransform<TOperation>[];
 	private readonly random = makeRandom();
 
@@ -57,10 +68,11 @@ export class FuzzTestMinimizer<
 		const firstError = await this.assertFails();
 
 		if (!firstError) {
-			// throw an error here rather than silently returning the operations
-			// unchanged. a test case that doesn't fail initially indicates an
-			// error, either on the part of the user or in the fuzz test runner
-			throw new Error("test case doesn't fail.");
+			throw new Error(
+				"Attempted to minimize fuzz test, but the original case didn't fail. " +
+					"This can happen if the original test failed at operation generation time rather than as part of a reducer. " +
+					"Use the `skipMinimization` option to skip minimization in this case.",
+			);
 		}
 
 		await this.tryDeleteEachOp();
@@ -70,11 +82,13 @@ export class FuzzTestMinimizer<
 		}
 
 		for (let i = 0; i < this.numIterations; i += 1) {
-			await this.applyRandomTransform();
+			await this.applyTransforms();
 			// some minimizations can only occur if two or more ops are modified
 			// at the same time
-			await this.applyNRandomTransforms(2);
-			await this.applyNRandomTransforms(3);
+			for (let j = 0; j < 50; j++) {
+				await this.applyNRandomTransforms(2);
+				await this.applyNRandomTransforms(3);
+			}
 		}
 
 		await this.tryDeleteEachOp();
@@ -88,7 +102,8 @@ export class FuzzTestMinimizer<
 		while (idx > 0) {
 			const deletedOp = this.operations.splice(idx, 1)[0];
 
-			if (!(await this.assertFails())) {
+			// don't remove attach ops, as it creates invalid scenarios
+			if (deletedOp.type === "attach" || !(await this.assertFails())) {
 				this.operations.splice(idx, 0, deletedOp);
 			}
 
@@ -96,12 +111,16 @@ export class FuzzTestMinimizer<
 		}
 	}
 
-	private async applyRandomTransform(): Promise<void> {
-		const transform = this.random.pick(this.transforms);
+	/**
+	 * Apply all transforms in a random order
+	 */
+	private async applyTransforms(): Promise<void> {
+		const transforms = [...this.transforms];
+		this.random.shuffle(transforms);
 
-		const opIdx = this.random.integer(0, this.operations.length - 1);
-
-		await this.applyTransform(transform, opIdx);
+		for (const transform of transforms) {
+			await this.applyTransform(transform);
+		}
 	}
 
 	private async applyNRandomTransforms(n: number): Promise<void> {
@@ -125,44 +144,47 @@ export class FuzzTestMinimizer<
 			);
 		}
 
-		const originalOperations: [TOperation, number][] = [];
+		const originalOperations: [string, number][] = [];
 
 		for (let i = 0; i < transforms.length; i++) {
 			const transform = transforms[i];
 			const op = this.operations[operationIdxs[i]];
 
-			originalOperations.push([
-				JSON.parse(JSON.stringify(op)) as TOperation,
-				operationIdxs[i],
-			]);
+			originalOperations.push([JSON.stringify(op), operationIdxs[i]]);
 
 			transform(op);
 		}
 
 		if (!(await this.assertFails())) {
 			for (const [op, idx] of originalOperations) {
-				this.operations[idx] = op;
+				this.operations[idx] = JSON.parse(op) as TOperation;
 			}
 		}
 	}
 
-	private async applyTransform(
-		transform: MinimizationTransform<TOperation>,
-		opIdx: number,
-	): Promise<void> {
-		if (opIdx >= this.operations.length) {
-			throw new Error("invalid op index. this indicates a bug in minimization.");
-		}
+	/**
+	 * Apply a given transform on each op until it can no longer make progress
+	 */
+	private async applyTransform(transform: MinimizationTransform<TOperation>): Promise<void> {
+		for (let opIdx = this.operations.length - 1; opIdx >= 0; opIdx--) {
+			// apply this transform at most 10 times on the current op
+			for (let i = 0; i < 10; i++) {
+				const op = this.operations[opIdx];
 
-		const op = this.operations[opIdx];
+				// deep clone the op as transforms modify by reference
+				const originalOp = JSON.stringify(op);
 
-		// deep clone the op as transforms modify by reference
-		const originalOp = JSON.parse(JSON.stringify(op)) as TOperation;
+				transform(op);
 
-		transform(op);
+				if (JSON.stringify(op) === originalOp) {
+					break;
+				}
 
-		if (!(await this.assertFails())) {
-			this.operations[opIdx] = originalOp;
+				if (!(await this.assertFails())) {
+					this.operations[opIdx] = JSON.parse(originalOp) as TOperation;
+					break;
+				}
+			}
 		}
 	}
 
@@ -173,29 +195,56 @@ export class FuzzTestMinimizer<
 	 * to avoid dealing with transforms that would result in invalid ops
 	 */
 	private async assertFails(): Promise<boolean> {
+		const emitter = (this.providedOptions.emitter ??=
+			new TypedEventEmitter<DDSFuzzHarnessEvents>());
+
+		let lastOp: BaseOperation = { type: "___none___" };
+		const lastOpTracker = (op: BaseOperation): void => {
+			lastOp = op;
+		};
+		emitter.on("operationStart", lastOpTracker);
 		try {
 			await replayTest(
 				this.ddsModel,
 				this.seed,
 				this.operations,
-				{
-					saveOnFailure: false,
-					filepath: this.saveInfo?.filepath,
-				},
+				undefined,
 				this.providedOptions,
 			);
 			return false;
 		} catch (error: unknown) {
-			if (!error || !(error instanceof Error)) {
+			if (
+				!error ||
+				!(error instanceof Error) ||
+				error instanceof ReducerPreconditionError ||
+				error.stack === undefined
+			) {
 				return false;
 			}
 
-			if (this.initialErrorMessage === undefined) {
-				this.initialErrorMessage = error.message;
+			const stackLines = error.stack.split("\n").map((s) => s.trim());
+
+			const stackTop = stackLines.findIndex((s) => s.startsWith("at"));
+
+			const message = stackLines[stackTop].startsWith("at assert ")
+				? // Reproduce based on the final two lines+col of the error if it is an assert error
+					// This ensures the same assert is triggered by the minified test
+					stackLines
+						.slice(stackTop, stackTop + 2)
+						.join("\n")
+				: // Otherwise the final line is sufficient
+					stackLines[stackTop];
+
+			if (this.initialError === undefined) {
+				this.initialError = { message, op: lastOp };
 				return true;
 			}
 
-			return error.message === this.initialErrorMessage;
+			return (
+				message === this.initialError.message && this.initialError.op.type === lastOp.type
+			);
+		} finally {
+			emitter.off("operation", lastOpTracker);
 		}
 	}
 }

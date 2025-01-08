@@ -4,24 +4,28 @@
  */
 
 import { bufferToString } from "@fluid-internal/client-utils";
-import { assert, unreachableCase } from "@fluidframework/core-utils";
-import { ISequencedDocumentMessage, MessageType } from "@fluidframework/protocol-definitions";
+import { assert, unreachableCase } from "@fluidframework/core-utils/internal";
 import {
 	IChannelAttributes,
 	IFluidDataStoreRuntime,
 	IChannelStorageService,
-} from "@fluidframework/datastore-definitions";
-import { IFluidSerializer, SharedObject } from "@fluidframework/shared-object-base";
-import { ISummaryTreeWithStats } from "@fluidframework/runtime-definitions";
-import { SummaryTreeBuilder } from "@fluidframework/runtime-utils";
+} from "@fluidframework/datastore-definitions/internal";
+import {
+	MessageType,
+	ISequencedDocumentMessage,
+} from "@fluidframework/driver-definitions/internal";
+import { ISummaryTreeWithStats } from "@fluidframework/runtime-definitions/internal";
+import { SummaryTreeBuilder } from "@fluidframework/runtime-utils/internal";
+import { IFluidSerializer, SharedObject } from "@fluidframework/shared-object-base/internal";
 import { v4 as uuid } from "uuid";
+
 import {
 	ConsensusCallback,
 	ConsensusResult,
 	IConsensusOrderedCollection,
-	IOrderedCollection,
 	IConsensusOrderedCollectionEvents,
-} from "./interfaces";
+	IOrderedCollection,
+} from "./interfaces.js";
 
 const snapshotFileNameData = "header";
 const snapshotFileNameTracking = "jobTracking";
@@ -38,10 +42,11 @@ interface IConsensusOrderedCollectionValue<T> {
 /**
  * An operation for consensus ordered collection
  */
-interface IConsensusOrderedCollectionAddOperation {
+interface IConsensusOrderedCollectionAddOperation<T> {
 	opName: "add";
 	// serialized value
 	value: string;
+	deserializedValue?: T;
 }
 
 interface IConsensusOrderedCollectionAcquireOperation {
@@ -65,13 +70,15 @@ interface IConsensusOrderedCollectionReleaseOperation {
 	acquireId: string;
 }
 
-type IConsensusOrderedCollectionOperation =
-	| IConsensusOrderedCollectionAddOperation
+type IConsensusOrderedCollectionOperation<T> =
+	| IConsensusOrderedCollectionAddOperation<T>
 	| IConsensusOrderedCollectionAcquireOperation
 	| IConsensusOrderedCollectionCompleteOperation
 	| IConsensusOrderedCollectionReleaseOperation;
 
-/** The type of the resolve function to call after the local operation is ack'd */
+/**
+ * The type of the resolve function to call after the local operation is acknowledged.
+ */
 type PendingResolve<T> = (value: IConsensusOrderedCollectionValue<T> | undefined) => void;
 
 /**
@@ -90,7 +97,12 @@ const idForLocalUnattachedClient = undefined;
  *
  * Generally not used directly. A derived type will pass in a backing data type
  * IOrderedCollection that will define the deterministic add/acquire order and snapshot ability.
+ * @legacy
+ * @alpha
  */
+
+// TODO: #22835 Use undefined instead of any (breaking change)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class ConsensusOrderedCollection<T = any>
 	extends SharedObject<IConsensusOrderedCollectionEvents<T>>
 	implements IConsensusOrderedCollection<T>
@@ -136,9 +148,10 @@ export class ConsensusOrderedCollection<T = any>
 			return;
 		}
 
-		await this.submit<IConsensusOrderedCollectionAddOperation>({
+		await this.submit<IConsensusOrderedCollectionAddOperation<T>>({
 			opName: "add",
 			value: valueSer,
+			deserializedValue: value,
 		});
 	}
 
@@ -155,15 +168,18 @@ export class ConsensusOrderedCollection<T = any>
 		const res = await callback(result.value);
 
 		switch (res) {
-			case ConsensusResult.Complete:
+			case ConsensusResult.Complete: {
 				await this.complete(result.acquireId);
 				break;
-			case ConsensusResult.Release:
+			}
+			case ConsensusResult.Release: {
 				this.release(result.acquireId);
 				this.emit("localRelease", result.value, true /* intentional */);
 				break;
-			default:
+			}
+			default: {
 				unreachableCase(res);
+			}
 		}
 
 		return true;
@@ -191,16 +207,16 @@ export class ConsensusOrderedCollection<T = any>
 		const builder = new SummaryTreeBuilder();
 		let blobContent = this.serializeValue(this.data.asArray(), serializer);
 		builder.addBlob(snapshotFileNameData, blobContent);
-		blobContent = this.serializeValue(Array.from(this.jobTracking.entries()), serializer);
+		blobContent = this.serializeValue([...this.jobTracking.entries()], serializer);
 		builder.addBlob(snapshotFileNameTracking, blobContent);
 		return builder.getSummaryTree();
 	}
 
-	protected isActive() {
-		return this.runtime.connected && this.runtime.deltaManager.active;
+	protected isActive(): boolean {
+		return this.runtime.connected && this.deltaManager.active;
 	}
 
-	protected async complete(acquireId: string) {
+	protected async complete(acquireId: string): Promise<void> {
 		if (!this.isAttached()) {
 			this.completeCore(acquireId);
 			return;
@@ -215,7 +231,7 @@ export class ConsensusOrderedCollection<T = any>
 		}
 	}
 
-	protected completeCore(acquireId: string) {
+	protected completeCore(acquireId: string): void {
 		// Note: item may be no longer in jobTracking and returned back to queue!
 		const rec = this.jobTracking.get(acquireId);
 		if (rec !== undefined) {
@@ -224,7 +240,7 @@ export class ConsensusOrderedCollection<T = any>
 		}
 	}
 
-	protected release(acquireId: string) {
+	protected release(acquireId: string): void {
 		if (!this.isAttached()) {
 			this.releaseCore(acquireId);
 			return;
@@ -236,12 +252,12 @@ export class ConsensusOrderedCollection<T = any>
 				opName: "release",
 				acquireId,
 			}).catch((error) => {
-				this.runtime.logger.sendErrorEvent({ eventName: "ConsensusQueue_release" }, error);
+				this.logger.sendErrorEvent({ eventName: "ConsensusQueue_release" }, error);
 			});
 		}
 	}
 
-	protected releaseCore(acquireId: string) {
+	protected releaseCore(acquireId: string): void {
 		// Note: item may be no longer in jobTracking and returned back to queue!
 		const rec = this.jobTracking.get(acquireId);
 		if (rec !== undefined) {
@@ -262,7 +278,9 @@ export class ConsensusOrderedCollection<T = any>
 		const blob = await storage.readBlob(snapshotFileNameTracking);
 		const rawContentTracking = bufferToString(blob, "utf8");
 		const content = this.deserializeValue(rawContentTracking, this.serializer);
-		this.jobTracking = new Map(content) as JobTrackingInfo<T>;
+		this.jobTracking = new Map(
+			content as Iterable<[string, { value: T; clientId: string | undefined }]>,
+		);
 
 		assert(
 			this.data.size() === 0,
@@ -274,7 +292,7 @@ export class ConsensusOrderedCollection<T = any>
 		this.data.loadFrom(content2);
 	}
 
-	protected onDisconnect() {
+	protected onDisconnect(): void {
 		for (const [, { value, clientId }] of this.jobTracking) {
 			if (clientId === this.runtime.clientId) {
 				this.emit("localRelease", value, false /* intentional */);
@@ -286,29 +304,38 @@ export class ConsensusOrderedCollection<T = any>
 		message: ISequencedDocumentMessage,
 		local: boolean,
 		localOpMetadata: unknown,
-	) {
+	): void {
 		if (message.type === MessageType.Operation) {
-			const op = message.contents as IConsensusOrderedCollectionOperation;
+			const op = message.contents as IConsensusOrderedCollectionOperation<T>;
 			let value: IConsensusOrderedCollectionValue<T> | undefined;
 			switch (op.opName) {
-				case "add":
-					this.addCore(this.deserializeValue(op.value, this.serializer) as T);
+				case "add": {
+					if (op.deserializedValue === undefined) {
+						this.addCore(this.deserializeValue(op.value, this.serializer) as T);
+					} else {
+						this.addCore(op.deserializedValue);
+					}
 					break;
+				}
 
-				case "acquire":
+				case "acquire": {
 					value = this.acquireCore(op.acquireId, message.clientId ?? undefined);
 					break;
+				}
 
-				case "complete":
+				case "complete": {
 					this.completeCore(op.acquireId);
 					break;
+				}
 
-				case "release":
+				case "release": {
 					this.releaseCore(op.acquireId);
 					break;
+				}
 
-				default:
+				default: {
 					unreachableCase(op);
+				}
 			}
 			if (local) {
 				// Resolve the pending promise for this operation now that we have received an ack for it.
@@ -318,7 +345,7 @@ export class ConsensusOrderedCollection<T = any>
 		}
 	}
 
-	private async submit<TMessage extends IConsensusOrderedCollectionOperation>(
+	private async submit<TMessage extends IConsensusOrderedCollectionOperation<T>>(
 		message: TMessage,
 	): Promise<IConsensusOrderedCollectionValue<T> | undefined> {
 		assert(this.isAttached(), 0x06a /* "Trying to submit message while detached!" */);
@@ -333,7 +360,7 @@ export class ConsensusOrderedCollection<T = any>
 		).catch((error) => undefined);
 	}
 
-	private addCore(value: T) {
+	private addCore(value: T): void {
 		this.data.add(value);
 		this.emit("add", value, true /* newlyAdded */);
 	}
@@ -369,7 +396,7 @@ export class ConsensusOrderedCollection<T = any>
 		});
 	}
 
-	private removeClient(clientIdToRemove?: string) {
+	private removeClient(clientIdToRemove?: string): void {
 		const added: T[] = [];
 		for (const [acquireId, { value, clientId }] of this.jobTracking) {
 			if (clientId === clientIdToRemove) {
@@ -384,16 +411,15 @@ export class ConsensusOrderedCollection<T = any>
 		added.map((value) => this.emit("add", value, false /* newlyAdded */));
 	}
 
-	private serializeValue(value, serializer: IFluidSerializer) {
+	private serializeValue(value, serializer: IFluidSerializer): string {
 		return serializer.stringify(value, this.handle);
 	}
 
-	private deserializeValue(content: string, serializer: IFluidSerializer) {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+	private deserializeValue(content: string, serializer: IFluidSerializer): unknown {
 		return serializer.parse(content);
 	}
 
-	protected applyStashedOp() {
+	protected applyStashedOp(): void {
 		throw new Error("not implemented");
 	}
 }

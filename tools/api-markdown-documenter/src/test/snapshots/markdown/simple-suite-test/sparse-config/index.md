@@ -4,4 +4,4 @@
 
 | Package | Description |
 | --- | --- |
-| [simple-suite-test](docs/simple-suite-test) | Test package |
+| [test-suite-a](docs/test-suite-a) | Test package |

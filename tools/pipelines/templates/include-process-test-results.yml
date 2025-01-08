@@ -24,13 +24,3 @@ steps:
         searchFolder: ${{ parameters.buildDirectory }}/${{ testResultDir }}
         mergeTestResults: false
       condition: and(succeededOrFailed(), eq(variables['startTest'], 'true'))
-
-  # Console Log Failed Tests
-  - ${{ each testResultDir in parameters.testResultDirs }}:    
-    - task: Bash@3
-      displayName: Log Failed Tests in ${{ testResultDir }}
-      inputs:
-        targetType: inline
-        script: node $(Build.SourcesDirectory)/scripts/report-parser.js ${{ testResultDir }}
-        workingDirectory: ${{ parameters.buildDirectory }}
-      condition: and(succeededOrFailed(), eq(variables['startTest'], 'true'))

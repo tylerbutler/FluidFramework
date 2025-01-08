@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import minimatch from "minimatch";
-import { ReleaseGroup, ReleasePackage } from "./releaseGroups";
+import { minimatch } from "minimatch";
+import { ReleaseGroup, ReleasePackage } from "./releaseGroups.js";
 
 // Mapping of branch to a list of release groups/packages that should run policy by default.
 // TODO: This should be configured in the fluid-build config, like type test defaults are.
@@ -18,8 +18,12 @@ const defaults = new Map([
  */
 export const getRunPolicyCheckDefault = (
 	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
-	branch: string,
+	branch: string | undefined,
 ): boolean => {
+	if (branch === undefined) {
+		return false;
+	}
+
 	for (const [branchPattern, shouldRunPolicy] of defaults) {
 		if (minimatch(branch, branchPattern) === true) {
 			return shouldRunPolicy.includes(releaseGroupOrPackage);

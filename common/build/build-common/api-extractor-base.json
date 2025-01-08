@@ -18,9 +18,13 @@
 	 */
 	"apiReport": {
 		"enabled": true,
-		"reportFileName": "<unscopedPackageName>.api.md",
+		"reportFileName": "<unscopedPackageName>",
 		"reportFolder": "<projectFolder>/api-report/",
 		"reportTempFolder": "<projectFolder>/_api-extractor-temp/"
+		// https://github.com/microsoft/rushstack/issues/4786 requires the derived configs
+		// to have the same length reportVariants or longer. Otherwise, later array entries
+		// bleed thru. So reportVariants should only be set in derived configs.
+		// "reportVariants": set-in-derived-configs
 	},
 
 	/**
@@ -35,11 +39,7 @@
 	 * Configures how the .d.ts rollup file will be generated.
 	 */
 	"dtsRollup": {
-		"enabled": true,
-		"alphaTrimmedFilePath": "<projectFolder>/dist/<unscopedPackageName>-alpha.d.ts",
-		"betaTrimmedFilePath": "<projectFolder>/dist/<unscopedPackageName>-beta.d.ts",
-		"publicTrimmedFilePath": "<projectFolder>/dist/<unscopedPackageName>-public.d.ts",
-		"untrimmedFilePath": "<projectFolder>/dist/<unscopedPackageName>.d.ts"
+		"enabled": false
 	},
 
 	/**
@@ -154,6 +154,13 @@
 			"ae-missing-release-tag": {
 				"logLevel": "error",
 				"addToApiReportFile": false
+			},
+
+			// Require documentation on all package-exported API items.
+			"ae-undocumented": {
+				// TODO: re-enable once the following API-Extractor bug has been fixed:
+				// https://github.com/microsoft/rushstack/issues/3462
+				"logLevel": "none"
 			},
 
 			// The @inheritDoc tag needs a TSDoc declaration reference.

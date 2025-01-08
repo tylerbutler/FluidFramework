@@ -5,6 +5,7 @@
 
 import { assert } from "chai";
 import { Test } from "mocha";
+
 import {
 	BenchmarkArguments,
 	isParentProcess,
@@ -12,8 +13,10 @@ import {
 	Titled,
 	MochaExclusiveOptions,
 	qualifiedTitle,
+	TestType,
 } from "../Configuration";
-import { BenchmarkResult, Phase, runBenchmark } from "../runBenchmark";
+import type { BenchmarkResult } from "../ResultTypes";
+import { Phase, runBenchmark } from "../runBenchmark";
 
 /**
  * This is wrapper for Mocha's it function that runs a performance benchmark.
@@ -32,7 +35,7 @@ import { BenchmarkResult, Phase, runBenchmark } from "../runBenchmark";
  */
 export function benchmark(args: BenchmarkArguments): Test {
 	return supportParentProcess({
-		title: qualifiedTitle(args),
+		title: qualifiedTitle({ ...args, testType: TestType.ExecutionTime }),
 		only: args.only,
 		run: async () => {
 			const innerArgs = {
@@ -104,7 +107,7 @@ export function supportParentProcess<
 			}
 
 			// Do this import only if isParentProcess to enable running in the web as long as isParentProcess is false.
-			const childProcess = await import("child_process");
+			const childProcess = await import("node:child_process");
 			const result = childProcess.spawnSync(command, childArgs, { encoding: "utf8" });
 
 			if (result.error) {

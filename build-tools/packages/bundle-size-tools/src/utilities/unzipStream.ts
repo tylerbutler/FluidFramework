@@ -2,10 +2,12 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import * as JSZip from "jszip";
 
 function readStreamAsBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
 	return new Promise((resolve, reject) => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const data: any[] = [];
 		stream.on("data", (chunk) => {
 			data.push(chunk);

@@ -3,20 +3,20 @@
  * Licensed under the MIT License.
  */
 
-import { assert } from "@fluidframework/core-utils";
 import { bufferToString } from "@fluid-internal/client-utils";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
+import { assert } from "@fluidframework/core-utils/internal";
 import {
 	IChannelAttributes,
 	IFluidDataStoreRuntime,
 	IChannelStorageService,
-} from "@fluidframework/datastore-definitions";
-import { ISummaryTreeWithStats } from "@fluidframework/runtime-definitions";
+} from "@fluidframework/datastore-definitions/internal";
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
+import { ISummaryTreeWithStats } from "@fluidframework/runtime-definitions/internal";
 import {
-	createSingleBlobSummary,
 	IFluidSerializer,
 	SharedObject,
-} from "@fluidframework/shared-object-base";
+	createSingleBlobSummary,
+} from "@fluidframework/shared-object-base/internal";
 
 interface ISequencedOpInfo<TOp> {
 	client: string;
@@ -24,6 +24,9 @@ interface ISequencedOpInfo<TOp> {
 	op: TOp;
 }
 
+/**
+ * @internal
+ */
 export abstract class SharedOT<TState, TOp> extends SharedObject {
 	/**
 	 * Queue of sequenced ops that are above minSeq.  Used by 'processCore' to
@@ -102,7 +105,7 @@ export abstract class SharedOT<TState, TOp> extends SharedObject {
 
 	protected processCore(message: ISequencedDocumentMessage, local: boolean) {
 		// Discard any sequenced ops that are now below the minimum sequence number.
-		const minSeq = this.runtime.deltaManager.minimumSequenceNumber;
+		const minSeq = this.deltaManager.minimumSequenceNumber;
 		while (this.sequencedOps[0]?.seq < minSeq) {
 			this.sequencedOps.shift();
 		}
@@ -124,7 +127,7 @@ export abstract class SharedOT<TState, TOp> extends SharedObject {
 		// TODO: Verify whether this should be able to handle server-generated ops (with null clientId)
 		this.sequencedOps.push({
 			seq: messageSeq,
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+
 			client: remoteClient as string,
 			op: remoteOp as TOp,
 		});
@@ -166,7 +169,7 @@ export abstract class SharedOT<TState, TOp> extends SharedObject {
 		return this.local;
 	}
 
-	protected applyStashedOp() {
+	protected applyStashedOp(): void {
 		throw new Error("not implemented");
 	}
 }

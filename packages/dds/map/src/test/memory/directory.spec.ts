@@ -3,15 +3,19 @@
  * Licensed under the MIT License.
  */
 
-import { MockFluidDataStoreRuntime } from "@fluidframework/test-runtime-utils";
-import { benchmarkMemory, IMemoryTestObject } from "@fluid-tools/benchmark";
-import { DirectoryFactory, SharedDirectory } from "../../directory";
+import {
+	type IMemoryTestObject,
+	benchmarkMemory,
+	isInPerformanceTestingMode,
+} from "@fluid-tools/benchmark";
+import { MockFluidDataStoreRuntime } from "@fluidframework/test-runtime-utils/internal";
 
-function createLocalDirectory(id: string): SharedDirectory {
-	const directory = new SharedDirectory(
+import { type ISharedDirectory, SharedDirectory } from "../../index.js";
+
+function createLocalDirectory(id: string): ISharedDirectory {
+	const directory = SharedDirectory.create(
+		new MockFluidDataStoreRuntime({ registry: [SharedDirectory.getFactory()] }),
 		id,
-		new MockFluidDataStoreRuntime(),
-		DirectoryFactory.Attributes,
 	);
 	return directory;
 }
@@ -40,7 +44,7 @@ describe("SharedDirectory memory usage", () => {
 			public readonly title = "Create empty directory";
 			public readonly minSampleCount = 500;
 
-			private dir: SharedDirectory = createLocalDirectory("testDirectory");
+			private dir: ISharedDirectory = createLocalDirectory("testDirectory");
 
 			public async run(): Promise<void> {
 				this.dir = createLocalDirectory("testDirectory");
@@ -48,13 +52,16 @@ describe("SharedDirectory memory usage", () => {
 		})(),
 	);
 
-	const numbersOfEntriesForTests = [1000, 10_000, 100_000];
+	const numbersOfEntriesForTests = isInPerformanceTestingMode
+		? [1000, 10_000, 100_000]
+		: // When not measuring perf, use a single smaller data size so the tests run faster.
+			[10];
 
 	for (const x of numbersOfEntriesForTests) {
 		benchmarkMemory(
 			new (class implements IMemoryTestObject {
 				public readonly title = `Add ${x} integers to a local directory`;
-				private dir: SharedDirectory = createLocalDirectory("testDirectory");
+				private dir: ISharedDirectory = createLocalDirectory("testDirectory");
 
 				public async run(): Promise<void> {
 					for (let i = 0; i < x; i++) {
@@ -71,7 +78,7 @@ describe("SharedDirectory memory usage", () => {
 		benchmarkMemory(
 			new (class implements IMemoryTestObject {
 				public readonly title = `Add ${x} integers to a local directory, clear it`;
-				private dir: SharedDirectory = createLocalDirectory("testDirectory");
+				private dir: ISharedDirectory = createLocalDirectory("testDirectory");
 
 				public async run(): Promise<void> {
 					for (let i = 0; i < x; i++) {

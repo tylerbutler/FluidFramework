@@ -29,6 +29,7 @@ import { ILatestSummaryState, ISummaryReader } from "./interfaces";
 
 /**
  * Git specific implementation of ISummaryReader
+ * @internal
  */
 export class SummaryReader implements ISummaryReader {
 	private readonly lumberProperties: Record<string, any>;
@@ -37,9 +38,13 @@ export class SummaryReader implements ISummaryReader {
 		private readonly documentId: string,
 		private readonly summaryStorage: IGitManager,
 		private readonly enableWholeSummaryUpload: boolean,
+		private readonly isEphemeralContainer: boolean | undefined,
 		private readonly maxRetriesOnError: number = 6,
 	) {
-		this.lumberProperties = getLumberBaseProperties(this.documentId, this.tenantId);
+		this.lumberProperties = {
+			...getLumberBaseProperties(this.documentId, this.tenantId),
+			[CommonProperties.isEphemeralContainer]: this.isEphemeralContainer,
+		};
 	}
 
 	/**
@@ -54,6 +59,7 @@ export class SummaryReader implements ISummaryReader {
 			try {
 				let wholeFlatSummary: IWholeFlatSummary | undefined;
 				try {
+					// Attempt to fetch the latest summary by "latest" ID
 					wholeFlatSummary = await requestWithRetry(
 						async () => this.summaryStorage.getSummary(LatestSummaryId),
 						"readWholeSummary_getSummary",
@@ -71,6 +77,7 @@ export class SummaryReader implements ISummaryReader {
 				}
 
 				if (!wholeFlatSummary) {
+					// If fetching by "latest" ID fails, attempt to fetch the latest summary by explicit ref
 					const existingRef = await requestWithRetry(
 						async () => this.summaryStorage.getRef(encodeURIComponent(this.documentId)),
 						"readWholeSummary_getRef",
@@ -78,6 +85,9 @@ export class SummaryReader implements ISummaryReader {
 						shouldRetryNetworkError,
 						this.maxRetriesOnError,
 					);
+					if (!existingRef) {
+						throw new Error("Could not find a ref for the document.");
+					}
 					wholeFlatSummary = await requestWithRetry(
 						async () => this.summaryStorage.getSummary(existingRef.object.sha),
 						"readWholeSummary_getSummary",
@@ -161,6 +171,9 @@ export class SummaryReader implements ISummaryReader {
 					shouldRetryNetworkError,
 					this.maxRetriesOnError,
 				);
+				if (!existingRef) {
+					throw new Error("Could not find a ref for the document.");
+				}
 				const [attributesContent, scribeContent, deliContent, opsContent] =
 					await Promise.all([
 						requestWithRetry(
@@ -288,7 +301,6 @@ export class SummaryReader implements ISummaryReader {
 			expHash1: "",
 			lastSentMSN: undefined,
 			nackMessages: undefined,
-			successfullyStartedLambdas: [],
 			checkpointTimestamp: undefined,
 		};
 	}

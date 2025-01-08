@@ -2,61 +2,38 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import * as child_process from "child_process";
 import * as fs from "fs";
-import * as glob from "glob";
-import isEqual from "lodash.isequal";
 import * as path from "path";
-import * as util from "util";
+import isEqual from "lodash.isequal";
 
-export function getExecutableFromCommand(command: string) {
+/**
+ *	An array of commands that are known to have subcommands and should be parsed as such. These will be combined with
+ *	any additional commands provided in the Fluid build config.
+ */
+const defaultMultiCommandExecutables = ["flub", "biome"] as const;
+
+export function getExecutableFromCommand(command: string, multiCommandExecutables: string[]) {
 	let toReturn: string;
 	const commands = command.split(" ");
-	if (commands[0] === "flub") {
-		// Find the first flag argument, and filter them out. Assumes flags come at the end of the command, and that all
-		// subsequent arguments are flags.
-		const flagsStartIndex = commands.findIndex((c) => c.startsWith("-"));
-		toReturn = commands.slice(0, flagsStartIndex).join(" ");
+	const multiExecutables: Set<string> = new Set([
+		...defaultMultiCommandExecutables,
+		...multiCommandExecutables,
+	]);
+	if (multiExecutables.has(commands[0])) {
+		// For multi-commands (e.g., "flub bump ...") our heuristic is to scan for the first argument that cannot
+		// be the name of a sub-command, such as '.' or an argument that starts with '-'.
+		//
+		// This assumes that subcommand names always precede flags and that non-command arguments
+		// match one of the patterns we look for below.
+		const nonCommandIndex = commands.findIndex((c) => c.startsWith("-") || c === ".");
+		toReturn = nonCommandIndex !== -1 ? commands.slice(0, nonCommandIndex).join(" ") : command;
 	} else {
 		toReturn = commands[0];
 	}
 	return toReturn;
 }
-
-export function toPosixPath(s: string) {
-	return path.sep === "\\" ? s.replace(/\\/g, "/") : s;
-}
-
-export async function globFn(pattern: string, options: glob.IOptions = {}): Promise<string[]> {
-	return new Promise((resolve, reject) => {
-		glob.default(pattern, options, (err, matches) => {
-			if (err) {
-				reject(err);
-			}
-			resolve(matches);
-		});
-	});
-}
-
-export function unquote(str: string) {
-	if (str.length >= 2 && str[0] === '"' && str[str.length - 1] === '"') {
-		return str.substr(1, str.length - 2);
-	}
-	return str;
-}
-
-export const statAsync = util.promisify(fs.stat);
-export const lstatAsync = util.promisify(fs.lstat);
-export const readFileAsync = util.promisify(fs.readFile);
-export const writeFileAsync = util.promisify(fs.writeFile);
-export const unlinkAsync = util.promisify(fs.unlink);
-export const existsSync = fs.existsSync;
-export const appendFileAsync = util.promisify(fs.appendFile);
-export const realpathAsync = util.promisify(fs.realpath.native);
-export const symlinkAsync = util.promisify(fs.symlink);
-export const mkdirAsync = util.promisify(fs.mkdir);
-export const copyFileAsync = util.promisify(fs.copyFile);
-export const renameAsync = util.promisify(fs.rename);
 
 export interface ExecAsyncResult {
 	error: child_process.ExecException | null;
@@ -69,7 +46,7 @@ export async function execAsync(
 	options: child_process.ExecOptions,
 	pipeStdIn?: string,
 ): Promise<ExecAsyncResult> {
-	return new Promise((resolve, reject) => {
+	return new Promise((resolve) => {
 		const p = child_process.exec(command, options, (error, stdout, stderr) => {
 			resolve({ error, stdout, stderr });
 		});
@@ -134,23 +111,6 @@ function printExecError(
 	}
 }
 
-export function resolveNodeModule(basePath: string, lookupPath: string) {
-	let currentBasePath = basePath;
-	// eslint-disable-next-line no-constant-condition
-	while (true) {
-		const tryPath = path.join(currentBasePath, "node_modules", lookupPath);
-		if (existsSync(tryPath)) {
-			return tryPath;
-		}
-		const nextBasePath = path.resolve(currentBasePath, "..");
-		if (nextBasePath === currentBasePath) {
-			break;
-		}
-		currentBasePath = nextBasePath;
-	}
-	return undefined;
-}
-
 export async function lookUpDirAsync(
 	dir: string,
 	callback: (currentDir: string) => Promise<boolean>,
@@ -205,23 +165,24 @@ export function isSameFileOrDir(f1: string, f2: string) {
 	return isEqual(fs.lstatSync(n1), fs.lstatSync(n2));
 }
 
-export function fatal(error: string): never {
-	const e = new Error(error);
-	(e as any).fatal = true;
-	throw e;
-}
-
 /**
- * Execute a command. If there is an error, print error message and exit process
+ * Execute a command. If there is an error, throw.
  *
- * @param cmd Command line to execute
- * @param dir dir the directory to execute on
- * @param error description of command line to print when error happens
+ * @param cmd - Command line to execute
+ * @param dir - dir the directory to execute on
+ * @param error - description of command line to print when error happens
+ * @param pipeStdIn - optional string to pipe to stdin
  */
-export async function exec(cmd: string, dir: string, error: string, pipeStdIn?: string) {
-	const result = await execAsync(cmd, { cwd: dir }, pipeStdIn);
+export async function exec(
+	cmd: string,
+	dir: string,
+	error: string,
+	pipeStdIn?: string,
+	options?: Omit<child_process.ExecOptions, "cwd">,
+) {
+	const result = await execAsync(cmd, { ...options, cwd: dir }, pipeStdIn);
 	if (result.error) {
-		fatal(
+		throw new Error(
 			`ERROR: Unable to ${error}\nERROR: error during command ${cmd}\nERROR: ${result.error.message}`,
 		);
 	}
@@ -229,13 +190,17 @@ export async function exec(cmd: string, dir: string, error: string, pipeStdIn?: 
 }
 
 /**
- * Execute a command. If there is an error, print error message and exit process
+ * Execute a command. If there is an error, undefined is returned.
  *
- * @param cmd Command line to execute
- * @param dir dir the directory to execute on
- * @param error description of command line to print when error happens
+ * @param cmd - Command line to execute
+ * @param dir - dir the directory to execute on
+ * @param pipeStdIn - optional string to pipe to stdin
  */
-export async function execNoError(cmd: string, dir: string, pipeStdIn?: string) {
+export async function execNoError(
+	cmd: string,
+	dir: string,
+	pipeStdIn?: string,
+): Promise<string | undefined> {
 	const result = await execAsync(cmd, { cwd: dir }, pipeStdIn);
 	if (result.error) {
 		return undefined;

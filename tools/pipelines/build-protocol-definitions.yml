@@ -36,7 +36,14 @@ trigger:
     - release/*
   paths:
     include:
+    - .prettierignore
+    - fluidBuild.config.cjs
+    - common/build/build-common
     - common/lib/protocol-definitions
+    # Protocol-definitions references files from the patches folder at the root of the repo.
+    # Using the whole folder as dependency because when patch files are updated they might get new names.
+    - patches/*
+    - scripts/*
     - tools/pipelines/build-protocol-definitions.yml
     - tools/pipelines/templates/build-npm-package.yml
     - tools/pipelines/templates/include-set-package-version.yml
@@ -48,7 +55,8 @@ trigger:
     - tools/pipelines/templates/include-git-tag-steps.yml
     - tools/pipelines/templates/include-use-node-version.yml
     - tools/pipelines/templates/include-process-test-results.yml
-    - scripts/*
+    - tools/pipelines/templates/include-policy-check.yml
+    - tools/pipelines/templates/upload-dev-manifest.yml
 
 pr:
   branches:
@@ -59,7 +67,13 @@ pr:
     - release/*
   paths:
     include:
+    - .prettierignore
+    - common/build/build-common
     - common/lib/protocol-definitions
+    # Protocol-definitions references files from the patches folder at the root of the repo.
+    # Using the whole folder as dependency because when patch files are updated they might get new names.
+    - patches/*
+    - scripts/*
     - tools/pipelines/build-protocol-definitions.yml
     - tools/pipelines/templates/build-npm-package.yml
     - tools/pipelines/templates/include-set-package-version.yml
@@ -67,11 +81,19 @@ pr:
     - tools/pipelines/templates/include-install-pnpm.yml
     - tools/pipelines/templates/include-use-node-version.yml
     - tools/pipelines/templates/include-process-test-results.yml
-    - scripts/*
+    - tools/pipelines/templates/include-policy-check.yml
+    - tools/pipelines/templates/upload-dev-manifest.yml
+
+variables:
+  - template: /tools/pipelines/templates/include-vars.yml@self
+    parameters:
+      publishOverride: '${{ parameters.publishOverride }}'
+      releaseBuildOverride: '${{ parameters.releaseBuildOverride }}'
 
 extends:
-  template: templates/build-npm-package.yml
+  template: /tools/pipelines/templates/build-npm-package.yml@self
   parameters:
+    publish: ${{ variables.publish }}
     publishOverride: ${{ parameters.publishOverride }}
     releaseBuildOverride: ${{ parameters.releaseBuildOverride }}
     buildToolsVersionToInstall: ${{ parameters.buildToolsVersionToInstall }}
@@ -79,4 +101,5 @@ extends:
     packageManagerInstallCommand: 'pnpm i --frozen-lockfile'
     packageManager: pnpm
     tagName: protocol-definitions
+    testCoverage: false
     taskTest: [] # no tests

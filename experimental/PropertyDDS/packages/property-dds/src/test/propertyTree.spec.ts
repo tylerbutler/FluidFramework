@@ -3,47 +3,55 @@
  * Licensed under the MIT License.
  */
 
-import _ from "lodash";
-
-import { expect } from "chai";
-import { LocalServerTestDriver } from "@fluid-internal/test-drivers";
 import {
-	IContainer,
-	IHostLoader,
-	ILoaderOptions,
-	IFluidCodeDetails,
-} from "@fluidframework/container-definitions";
-import { LocalResolver, LocalDocumentServiceFactory } from "@fluidframework/local-driver";
-import { requestFluidObject } from "@fluidframework/runtime-utils";
-import {
-	LocalDeltaConnectionServer,
-	ILocalDeltaConnectionServer,
-} from "@fluidframework/server-local-server";
-import { IUrlResolver } from "@fluidframework/driver-definitions";
-import {
-	createAndAttachContainer,
-	createLoader,
-	LoaderContainerTracker,
-	ITestFluidObject,
-	TestFluidObjectFactory,
-	TestObjectProvider,
-	TestContainerRuntimeFactory,
-	ChannelFactoryRegistry,
-	ITestObjectProvider,
-	createSummarizer,
-	summarizeNow,
-} from "@fluidframework/test-utils";
-import {
-	PropertyFactory,
-	StringProperty,
+	ArrayProperty,
 	BaseProperty,
 	NodeProperty,
-	ArrayProperty,
+	PropertyFactory,
+	StringProperty,
 } from "@fluid-experimental/property-properties";
-import { Loader as ContainerLoader } from "@fluidframework/container-loader";
-import { DeflatedPropertyTree, LZ4PropertyTree } from "../propertyTreeExt";
-import { SharedPropertyTree } from "../propertyTree";
-import { PropertyTreeFactory } from "../propertyTreeFactory";
+import { LocalServerTestDriver } from "@fluid-private/test-drivers";
+import {
+	IContainer,
+	IFluidCodeDetails,
+	ILoaderOptions,
+} from "@fluidframework/container-definitions/internal";
+import {
+	Loader as ContainerLoader,
+	loadExistingContainer,
+	type ILoaderProps,
+} from "@fluidframework/container-loader/internal";
+import { ContainerRuntime } from "@fluidframework/container-runtime/internal";
+import { IFluidHandle } from "@fluidframework/core-interfaces";
+import { IUrlResolver } from "@fluidframework/driver-definitions/internal";
+import {
+	LocalDocumentServiceFactory,
+	LocalResolver,
+} from "@fluidframework/local-driver/internal";
+import {
+	ILocalDeltaConnectionServer,
+	LocalDeltaConnectionServer,
+} from "@fluidframework/server-local-server";
+import {
+	ChannelFactoryRegistry,
+	ITestFluidObject,
+	ITestObjectProvider,
+	LoaderContainerTracker,
+	TestContainerRuntimeFactory,
+	TestFluidObjectFactory,
+	TestObjectProvider,
+	createAndAttachContainerUsingProps,
+	createLoaderProps,
+	createSummarizer,
+	summarizeNow,
+} from "@fluidframework/test-utils/internal";
+import { expect } from "chai";
+import lodash from "lodash";
+const { isEmpty, last } = lodash;
+
+import { SharedPropertyTree } from "../propertyTree.js";
+import { DeflatedPropertyTree, LZ4PropertyTree } from "../propertyTreeExt.js";
+import { PropertyTreeFactory } from "../propertyTreeFactory.js";
 
 interface Result {
 	container: IContainer;
@@ -63,7 +71,7 @@ describe("PropertyDDS summarizer", () => {
 		const container = await (load
 			? objProvider.loadTestContainer()
 			: objProvider.makeTestContainer());
-		const dataObject = await requestFluidObject<ITestFluidObject>(container, "/");
+		const dataObject = (await container.getEntryPoint()) as ITestFluidObject;
 
 		let summarizer;
 		if (withSummarizer) {
@@ -127,15 +135,6 @@ describe("PropertyDDS summarizer", () => {
 		} = await getClient(true);
 		await objProvider.ensureSynchronized();
 
-		// Test debugging code
-		// container.deltaManager.inbound.on("op", (task: any) => {
-		//     console.info(task);
-		// });
-
-		// container.deltaManager.outbound.on("op", (task: any) => {
-		//     console.info(task);
-		// });
-
 		// 2- Insert array with u1 as user
 		u1.root.insert(USERS, PropertyFactory.create("NodeProperty", "array"));
 		u1.commit();
@@ -149,36 +148,18 @@ describe("PropertyDDS summarizer", () => {
 
 		await objProvider.ensureSynchronized();
 
-		const {
-			client: u2,
-			dataObject: dataObject2,
-			container: container2,
-		} = await getClient(false, true);
+		const { dataObject: dataObject2, container: container2 } = await getClient(false, true);
 		await objProvider.ensureSynchronized();
 
 		// We do two changes to a different DDS (the root map), to make sure, that
 		// updates are triggered that do not affect the propertyDDS
 		dataObject1.root.set("c2", "aaa");
 		dataObject2.root.set("c2", "aaa");
+		await objProvider.ensureSynchronized();
 
 		// Now we wait until the msn has sufficiently advanced that the pruning below
 		// will remove all remoteChanges
-		const expectedSequenceNumber = container2.deltaManager.lastSequenceNumber;
-		await new Promise((resolve) => {
-			const waitForMSN = () => {
-				if (
-					container1.deltaManager.minimumSequenceNumber >= expectedSequenceNumber &&
-					container2.deltaManager.minimumSequenceNumber >= expectedSequenceNumber
-				) {
-					resolve(undefined);
-				}
-
-				void objProvider.ensureSynchronized().then((x) => {
-					setTimeout(waitForMSN, 5);
-				});
-			};
-			waitForMSN();
-		});
+		await synchronizeMSN(container2, container1);
 
 		// Summarize
 		await summarizeNow(summarizer.summarizer);
@@ -196,11 +177,107 @@ describe("PropertyDDS summarizer", () => {
 
 		expect(u1.root.get<ArrayProperty>(USERS)?.getValues().length).to.equal(1);
 	});
+
+	it("Scenario 2 (repeated summarization)", async function () {
+		/**
+		 * This test produces a scenario where we have an empty remoteChanges array in the summarizer client
+		 * and then get more changes that cannot yet be pruned away, because the MSN continues to point to the
+		 * previous head commit.
+		 *
+		 * We used to have a bug that was caused by this, where the prune code would prune the remote changes
+		 * but not the unrebased remote changes, causing rebase errors.
+		 */
+		this.timeout(30000);
+
+		// 1- U1 joins together with summarizer
+		const {
+			client: u1,
+			summarizer,
+			dataObject: dataObject1,
+			container: container1,
+		} = await getClient(true);
+		await objProvider.ensureSynchronized();
+
+		// 2- Make some modifications
+		u1.root.insert("c1", PropertyFactory.create("NodeProperty"));
+		u1.commit();
+		await objProvider.ensureSynchronized();
+
+		u1.root.insert("c2", PropertyFactory.create("NodeProperty"));
+		u1.commit();
+
+		await objProvider.ensureSynchronized();
+
+		const { dataObject: dataObject2, container: container2 } = await getClient(false, true);
+		await objProvider.ensureSynchronized();
+
+		// We do two changes to a different DDS (the root map), to make sure, that
+		// updates are triggered that do not affect the propertyDDS
+		dataObject1.root.set("c2", "aaa");
+		dataObject2.root.set("c2", "aaa");
+		await objProvider.ensureSynchronized();
+
+		// Now we wait until the msn has sufficiently advanced that the pruning below
+		// will remove all remoteChanges
+		await synchronizeMSN(container2, container1);
+
+		// Summarize
+		await summarizeNow(summarizer.summarizer);
+
+		const runtime = (summarizer.summarizer as any).runtime as ContainerRuntime;
+		const entryPoint = (await runtime.getAliasedDataStoreEntryPoint("default")) as
+			| IFluidHandle<ITestFluidObject>
+			| undefined;
+		if (entryPoint === undefined) {
+			throw new Error("default dataStore must exist");
+		}
+		const summarizerDataObject = await entryPoint.get();
+		const summarizerClient =
+			await summarizerDataObject.getSharedObject<SharedPropertyTree>(propertyDdsId);
+
+		// Make changes only on u1, u2 must not advance to make sure
+		// the msn is not advanced
+		u1.root.insert("a", PropertyFactory.create("NodeProperty"));
+		u1.commit();
+
+		u1.root.insert("b", PropertyFactory.create("NodeProperty"));
+		u1.commit();
+
+		await objProvider.opProcessingController.processOutgoing(container1);
+		await objProvider.opProcessingController.processIncoming(container1);
+
+		// Summarize again
+		await summarizeNow(summarizer.summarizer);
+
+		// Make sure the summarizer did not delete any of the unrebased changes
+		expect(summarizerClient.remoteChanges.length).to.equal(2);
+		expect(Object.keys(summarizerClient.unrebasedRemoteChanges).length).to.equal(2);
+	});
+
+	async function synchronizeMSN(container2: IContainer, container1: IContainer) {
+		const expectedSequenceNumber = container2.deltaManager.lastSequenceNumber;
+		await new Promise((resolve) => {
+			const waitForMSN = () => {
+				if (
+					container1.deltaManager.minimumSequenceNumber >= expectedSequenceNumber &&
+					container2.deltaManager.minimumSequenceNumber >= expectedSequenceNumber
+				) {
+					resolve(undefined);
+					return;
+				}
+
+				void objProvider.ensureSynchronized().then((x) => {
+					setTimeout(waitForMSN, 5);
+				});
+			};
+			waitForMSN();
+		});
+	}
 });
 
 describe("PropertyTree", () => {
 	const documentId = "localServerTest";
-	const documentLoadUrl = `fluid-test://localhost/${documentId}`;
+	const documentLoadUrl = `https://localhost/${documentId}`;
 	const propertyDdsId = "PropertyTree";
 	const codeDetails: IFluidCodeDetails = {
 		package: "localServerTestPackage",
@@ -219,7 +296,9 @@ describe("PropertyTree", () => {
 		);
 	});
 
-	const factory2 = new TestFluidObjectFactory([[propertyDdsId, SharedPropertyTree.getFactory()]]);
+	const factory2 = new TestFluidObjectFactory([
+		[propertyDdsId, SharedPropertyTree.getFactory()],
+	]);
 	describe("SharedPropertyTree", () => {
 		executePerPropertyTreeType(
 			codeDetails,
@@ -234,7 +313,7 @@ describe("PropertyTree", () => {
 	describe("LZ4PropertyTree", () => {
 		executePerPropertyTreeType(
 			codeDetails,
-			factory1,
+			factory3,
 			documentId,
 			documentLoadUrl,
 			propertyDdsId,
@@ -258,15 +337,15 @@ function executePerPropertyTreeType(
 	let sharedPropertyTree1;
 	let sharedPropertyTree2;
 
-	function createLocalLoader(
+	function createLocalLoaderProps(
 		packageEntries: Iterable<[IFluidCodeDetails, TestFluidObjectFactory]>,
 		localDeltaConnectionServer: ILocalDeltaConnectionServer,
 		localUrlResolver: IUrlResolver,
 		options?: ILoaderOptions,
-	): IHostLoader {
+	): ILoaderProps {
 		const documentServiceFactory = new LocalDocumentServiceFactory(localDeltaConnectionServer);
 
-		return createLoader(
+		return createLoaderProps(
 			packageEntries,
 			documentServiceFactory,
 			localUrlResolver,
@@ -276,32 +355,36 @@ function executePerPropertyTreeType(
 	}
 
 	async function createContainer(): Promise<IContainer> {
-		const loader = createLocalLoader(
+		const createDetachedContainerProps = createLocalLoaderProps(
 			[[codeDetails, factory]],
 			deltaConnectionServer,
 			urlResolver,
 		);
-		opProcessingController.add(loader);
-		return createAndAttachContainer(
-			codeDetails,
-			loader,
+
+		const containerUsingProps = await createAndAttachContainerUsingProps(
+			{ ...createDetachedContainerProps, codeDetails },
 			urlResolver.createCreateNewRequest(documentId),
 		);
+		opProcessingController.addContainer(containerUsingProps);
+		return containerUsingProps;
 	}
 
 	async function loadContainer(): Promise<IContainer> {
-		const loader = createLocalLoader(
+		const loaderProps = createLocalLoaderProps(
 			[[codeDetails, factory]],
 			deltaConnectionServer,
 			urlResolver,
 		);
-		opProcessingController.add(loader);
-		return loader.resolve({ url: documentLoadUrl });
+
+		const containerUsingPops = await loadExistingContainer({
+			...loaderProps,
+			request: { url: documentLoadUrl },
+		});
+		opProcessingController.addContainer(containerUsingPops);
+		return containerUsingPops;
 	}
 
 	describe("Local state", () => {
-		let propertyTree;
-
 		beforeEach(async () => {
 			opProcessingController = new LoaderContainerTracker();
 			deltaConnectionServer = LocalDeltaConnectionServer.create();
@@ -309,12 +392,12 @@ function executePerPropertyTreeType(
 
 			// Create a Container for the first client.
 			container1 = await createContainer();
-			dataObject1 = await requestFluidObject<ITestFluidObject>(container1, "default");
+			dataObject1 = (await container1.getEntryPoint()) as ITestFluidObject;
 			sharedPropertyTree1 = await dataObject1.getSharedObject(propertyDdsId);
 
 			// Load the Container that was created by the first client.
 			container2 = await loadContainer();
-			dataObject2 = await requestFluidObject<ITestFluidObject>(container2, "default");
+			dataObject2 = (await container2.getEntryPoint()) as ITestFluidObject;
 			sharedPropertyTree2 = await dataObject2.getSharedObject(propertyDdsId);
 		});
 
@@ -338,18 +421,18 @@ function executePerPropertyTreeType(
 					PropertyFactory.create("String", undefined, "Magic"),
 				);
 
-				expect(
-					(sharedPropertyTree1.root.get("test") as StringProperty).getValue(),
-				).to.equal("Magic");
+				expect((sharedPropertyTree1.root.get("test") as StringProperty).getValue()).to.equal(
+					"Magic",
+				);
 				expect(sharedPropertyTree2.root.get("test")).to.equal(undefined);
 
 				sharedPropertyTree1.commit();
 
 				await opProcessingController.ensureSynchronized();
 
-				expect(
-					(sharedPropertyTree2.root.get("test") as StringProperty).getValue(),
-				).to.equal("Magic");
+				expect((sharedPropertyTree2.root.get("test") as StringProperty).getValue()).to.equal(
+					"Magic",
+				);
 			});
 
 			it("Can commit with metadata", async () => {
@@ -360,9 +443,9 @@ function executePerPropertyTreeType(
 					PropertyFactory.create("String", undefined, "Magic"),
 				);
 
-				expect(
-					(sharedPropertyTree1.root.get("test") as StringProperty).getValue(),
-				).to.equal("Magic");
+				expect((sharedPropertyTree1.root.get("test") as StringProperty).getValue()).to.equal(
+					"Magic",
+				);
 				expect(sharedPropertyTree2.root.get("test")).to.equal(undefined);
 
 				sharedPropertyTree1.commit({ someKey: "some data" });
@@ -372,9 +455,9 @@ function executePerPropertyTreeType(
 
 				await opProcessingController.ensureSynchronized();
 
-				expect(
-					(sharedPropertyTree2.root.get("test") as StringProperty).getValue(),
-				).to.equal("Magic");
+				expect((sharedPropertyTree2.root.get("test") as StringProperty).getValue()).to.equal(
+					"Magic",
+				);
 				expect(sharedPropertyTree2.activeCommit.metadata).to.deep.equal({
 					someKey: "some data",
 				});
@@ -432,10 +515,7 @@ function executePerPropertyTreeType(
 				await opProcessingController.ensureSynchronized();
 				expect(sharedPropertyTree2.remoteChanges.length).to.equal(1);
 				expect(
-					_.isEmpty(
-						_.last((sharedPropertyTree2 as SharedPropertyTree).remoteChanges)
-							?.changeSet,
-					),
+					isEmpty(last((sharedPropertyTree2 as SharedPropertyTree).remoteChanges)?.changeSet),
 				).to.equal(true);
 			});
 
@@ -446,9 +526,9 @@ function executePerPropertyTreeType(
 					PropertyFactory.create("String", undefined, "Magic"),
 				);
 
-				expect(
-					(sharedPropertyTree1.root.get("test") as StringProperty).getValue(),
-				).to.equal("Magic");
+				expect((sharedPropertyTree1.root.get("test") as StringProperty).getValue()).to.equal(
+					"Magic",
+				);
 				expect(sharedPropertyTree2.root.get("test")).to.be.equal(undefined);
 
 				sharedPropertyTree1.commit();
@@ -461,9 +541,9 @@ function executePerPropertyTreeType(
 
 				await opProcessingController.ensureSynchronized();
 
-				expect(
-					(sharedPropertyTree2.root.get("test") as StringProperty).getValue(),
-				).to.equal("Magic");
+				expect((sharedPropertyTree2.root.get("test") as StringProperty).getValue()).to.equal(
+					"Magic",
+				);
 			});
 
 			it("Can emit local modification event", () => {

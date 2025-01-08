@@ -3,8 +3,8 @@
  * Licensed under the MIT License.
  */
 
-import { ITelemetryBaseEvent, ITelemetryProperties } from '@fluidframework/core-interfaces';
-import BTree from 'sorted-btree';
+import { ITelemetryBaseEvent, ITelemetryBaseProperties } from '@fluidframework/core-interfaces';
+import { BTree } from '@tylerbu/sorted-btree-es6';
 
 const defaultFailMessage = 'Assertion failed';
 
@@ -14,20 +14,20 @@ const defaultFailMessage = 'Assertion failed';
  * https://github.com/microsoft/FluidFramework/blob/main/packages/loader/container-utils/src/error.ts
  *
  * Exporting this enables users to safely filter telemetry handling of errors based on their type.
- *
- * @public
+ * @internal
  */
 export const sharedTreeAssertionErrorType = 'SharedTreeAssertion';
 
 /**
  * Telemetry properties decorated on all SharedTree events.
  */
-export interface SharedTreeTelemetryProperties extends ITelemetryProperties {
+export interface SharedTreeTelemetryProperties extends ITelemetryBaseProperties {
 	readonly isSharedTreeEvent: true;
 }
 
 /**
  * Returns if the supplied event is a SharedTree telemetry event.
+ * @internal
  */
 export function isSharedTreeEvent(event: ITelemetryBaseEvent): boolean {
 	return (event as unknown as SharedTreeTelemetryProperties).isSharedTreeEvent === true;
@@ -398,14 +398,19 @@ export type ErrorString = string;
 
 /**
  * Discriminated union instance that wraps either a result of type `TOk` or an error of type `TError`.
+ * @internal
  */
 export type Result<TOk, TError> = Result.Ok<TOk> | Result.Error<TError>;
 
+/**
+ * @internal
+ */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Result {
 	/**
 	 * Factory function for making a successful Result.
 	 * @param result - The result to wrap in the Result.
+	 * @internal
 	 */
 	export function ok<TOk>(result: TOk): Ok<TOk> {
 		return { type: ResultType.Ok, result };
@@ -413,6 +418,7 @@ export namespace Result {
 	/**
 	 * Factory function for making a unsuccessful Result.
 	 * @param error - The error to wrap in the Result.
+	 * @internal
 	 */
 	export function error<TError>(error: TError): Error<TError> {
 		return { type: ResultType.Error, error };
@@ -420,6 +426,7 @@ export namespace Result {
 	/**
 	 * Type guard for successful Result.
 	 * @returns True if `result` is successful.
+	 * @internal
 	 */
 	export function isOk<TOk, TError>(result: Result<TOk, TError>): result is Ok<TOk> {
 		return result.type === ResultType.Ok;
@@ -427,6 +434,7 @@ export namespace Result {
 	/**
 	 * Type guard for unsuccessful Result.
 	 * @returns True if `result` is unsuccessful.
+	 * @internal
 	 */
 	export function isError<TOk, TError>(result: Result<TOk, TError>): result is Error<TError> {
 		return result.type === ResultType.Error;
@@ -436,6 +444,7 @@ export namespace Result {
 	 * @param result - The result to map.
 	 * @param map - The function to apply to derive the new result.
 	 * @returns The given result if it is not ok, the mapped result otherwise.
+	 * @internal
 	 */
 	export function mapOk<TOkIn, TOkOut, TError>(
 		result: Result<TOkIn, TError>,
@@ -448,6 +457,7 @@ export namespace Result {
 	 * @param result - The result to map.
 	 * @param map - The function to apply to derive the new error.
 	 * @returns The given result if it is ok, the mapped result otherwise.
+	 * @internal
 	 */
 	export function mapError<TOk, TErrorIn, TErrorOut>(
 		result: Result<TOk, TErrorIn>,
@@ -457,6 +467,7 @@ export namespace Result {
 	}
 	/**
 	 * Tag value use to differentiate the members of the `Result` discriminated union.
+	 * @internal
 	 */
 	export enum ResultType {
 		/** Signals a successful result. */
@@ -466,6 +477,7 @@ export namespace Result {
 	}
 	/**
 	 * Wraps a result of type `TOk`.
+	 * @internal
 	 */
 	export interface Ok<TOk> {
 		readonly type: ResultType.Ok;
@@ -473,6 +485,7 @@ export namespace Result {
 	}
 	/**
 	 * Wraps an error of type `TError`.
+	 * @internal
 	 */
 	export interface Error<TError> {
 		readonly type: ResultType.Error;
@@ -506,7 +519,9 @@ export interface ClosedMap<K, V> extends Omit<Map<K, V>, 'delete' | 'clear'> {
 /**
  * Change the given property Prop of type T to have a type of TPropNew
  */
-export type ChangePropType<T, Prop extends keyof T, TPropNew> = Omit<T, Prop> & { [_ in Prop]: TPropNew };
+export type ChangePropType<T, Prop extends keyof T, TPropNew> = Omit<T, Prop> & {
+	[_ in Prop]: TPropNew;
+};
 
 // eslint-disable-next-line @rushstack/no-new-null
 type Primitive = string | number | bigint | boolean | null | symbol | undefined;
@@ -517,10 +532,10 @@ type Primitive = string | number | bigint | boolean | null | symbol | undefined;
 export type ReplaceRecursive<T, TReplace, TWith> = T extends TReplace
 	? TWith
 	: T extends Primitive
-	? T
-	: {
-			[P in keyof T]: ReplaceRecursive<T[P], TReplace, TWith>;
-	  };
+		? T
+		: {
+				[P in keyof T]: ReplaceRecursive<T[P], TReplace, TWith>;
+			};
 
 /** A union type of the first `N` positive integers */
 export type TakeWholeNumbers<N extends number, A extends never[] = []> = N extends A['length']

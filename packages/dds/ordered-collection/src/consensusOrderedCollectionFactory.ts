@@ -7,13 +7,20 @@ import {
 	IChannelAttributes,
 	IFluidDataStoreRuntime,
 	IChannelServices,
-} from "@fluidframework/datastore-definitions";
-import { ConsensusQueue } from "./consensusQueue";
-import { IConsensusOrderedCollection, IConsensusOrderedCollectionFactory } from "./interfaces";
-import { pkgVersion } from "./packageVersion";
+} from "@fluidframework/datastore-definitions/internal";
+import { createSharedObjectKind } from "@fluidframework/shared-object-base/internal";
+
+import { ConsensusQueueClass } from "./consensusQueue.js";
+import {
+	IConsensusOrderedCollection,
+	IConsensusOrderedCollectionFactory,
+} from "./interfaces.js";
+import { pkgVersion } from "./packageVersion.js";
 
 /**
  * The factory that defines the consensus queue
+ *
+ * @internal
  */
 export class ConsensusQueueFactory implements IConsensusOrderedCollectionFactory {
 	public static Type = "https://graph.microsoft.com/types/consensus-queue";
@@ -24,11 +31,11 @@ export class ConsensusQueueFactory implements IConsensusOrderedCollectionFactory
 		packageVersion: pkgVersion,
 	};
 
-	public get type() {
+	public get type(): string {
 		return ConsensusQueueFactory.Type;
 	}
 
-	public get attributes() {
+	public get attributes(): IChannelAttributes {
 		return ConsensusQueueFactory.Attributes;
 	}
 
@@ -41,14 +48,30 @@ export class ConsensusQueueFactory implements IConsensusOrderedCollectionFactory
 		services: IChannelServices,
 		attributes: IChannelAttributes,
 	): Promise<IConsensusOrderedCollection> {
-		const collection = new ConsensusQueue(id, runtime, attributes);
+		const collection = new ConsensusQueueClass(id, runtime, attributes);
 		await collection.load(services);
 		return collection;
 	}
 
 	public create(document: IFluidDataStoreRuntime, id: string): IConsensusOrderedCollection {
-		const collection = new ConsensusQueue(id, document, this.attributes);
+		const collection = new ConsensusQueueClass(id, document, this.attributes);
 		collection.initializeLocal();
 		return collection;
 	}
 }
+
+/**
+ * {@inheritDoc ConsensusQueueClass}
+ * @legacy
+ * @alpha
+ */
+export const ConsensusQueue = createSharedObjectKind(ConsensusQueueFactory);
+
+/**
+ * {@inheritDoc ConsensusQueueClass}
+ * @legacy
+ * @alpha
+ */
+// TODO: #22835 Use undefined instead of any (breaking change)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ConsensusQueue<T = any> = ConsensusQueueClass<T>;

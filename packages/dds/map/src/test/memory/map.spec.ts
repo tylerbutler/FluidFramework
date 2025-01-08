@@ -3,12 +3,20 @@
  * Licensed under the MIT License.
  */
 
-import { MockFluidDataStoreRuntime } from "@fluidframework/test-runtime-utils";
-import { benchmarkMemory, IMemoryTestObject } from "@fluid-tools/benchmark";
-import { MapFactory, SharedMap } from "../../map";
+import {
+	type IMemoryTestObject,
+	benchmarkMemory,
+	isInPerformanceTestingMode,
+} from "@fluid-tools/benchmark";
+import { MockFluidDataStoreRuntime } from "@fluidframework/test-runtime-utils/internal";
 
-function createLocalMap(id: string): SharedMap {
-	const map = new SharedMap(id, new MockFluidDataStoreRuntime(), MapFactory.Attributes);
+import { type ISharedMap, SharedMap } from "../../index.js";
+
+function createLocalMap(id: string): ISharedMap {
+	const map = SharedMap.create(
+		new MockFluidDataStoreRuntime({ registry: [SharedMap.getFactory()] }),
+		id,
+	);
 	return map;
 }
 
@@ -36,7 +44,7 @@ describe("SharedMap memory usage", () => {
 			public readonly title = "Create empty map";
 			public readonly minSampleCount = 500;
 
-			private map: SharedMap = createLocalMap("testMap");
+			private map: ISharedMap = createLocalMap("testMap");
 
 			public async run(): Promise<void> {
 				this.map = createLocalMap("testMap");
@@ -44,13 +52,16 @@ describe("SharedMap memory usage", () => {
 		})(),
 	);
 
-	const numbersOfEntriesForTests = [1000, 10_000, 100_000];
+	const numbersOfEntriesForTests = isInPerformanceTestingMode
+		? [1000, 10_000, 100_000]
+		: // When not measuring perf, use a single smaller data size so the tests run faster.
+			[10];
 
 	for (const x of numbersOfEntriesForTests) {
 		benchmarkMemory(
 			new (class implements IMemoryTestObject {
 				public readonly title = `Add ${x} integers to a local map`;
-				private map: SharedMap = createLocalMap("testMap");
+				private map: ISharedMap = createLocalMap("testMap");
 
 				public async run(): Promise<void> {
 					for (let i = 0; i < x; i++) {
@@ -67,7 +78,7 @@ describe("SharedMap memory usage", () => {
 		benchmarkMemory(
 			new (class implements IMemoryTestObject {
 				public readonly title = `Add ${x} integers to a local map, clear it`;
-				private map: SharedMap = createLocalMap("testMap");
+				private map: ISharedMap = createLocalMap("testMap");
 
 				public async run(): Promise<void> {
 					for (let i = 0; i < x; i++) {

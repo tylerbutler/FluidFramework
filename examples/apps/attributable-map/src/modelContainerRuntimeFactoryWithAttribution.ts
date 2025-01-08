@@ -3,25 +3,19 @@
  * Licensed under the MIT License.
  */
 
+import { IModelContainerRuntimeEntryPoint } from "@fluid-example/example-utils";
+import { mixinAttributor } from "@fluid-experimental/attributor";
 import {
 	IContainer,
 	IContainerContext,
 	IRuntime,
 	IRuntimeFactory,
-} from "@fluidframework/container-definitions";
-import { IContainerRuntimeOptions, ContainerRuntime } from "@fluidframework/container-runtime";
-import { IContainerRuntime } from "@fluidframework/container-runtime-definitions";
-import { NamedFluidDataStoreRegistryEntries } from "@fluidframework/runtime-definitions";
-import {
-	mixinAttributor,
-	createRuntimeAttributor,
-	IProvideRuntimeAttributor,
-} from "@fluid-experimental/attributor";
-import { FluidObject } from "@fluidframework/core-interfaces";
-// eslint-disable-next-line import/no-deprecated
-import { makeModelRequestHandler } from "@fluid-example/example-utils";
+} from "@fluidframework/container-definitions/legacy";
+import { IContainerRuntimeOptions } from "@fluidframework/container-runtime/legacy";
+import { IContainerRuntime } from "@fluidframework/container-runtime-definitions/legacy";
+import { NamedFluidDataStoreRegistryEntries } from "@fluidframework/runtime-definitions/legacy";
 
-const containerRuntimeWithAttribution = mixinAttributor(ContainerRuntime);
+const containerRuntimeWithAttribution = mixinAttributor();
 
 /**
  * ModelContainerRuntimeFactoryWithAttribution is an abstract class that gives a basic structure for container runtime initialization with attributor enabled.
@@ -30,7 +24,7 @@ const containerRuntimeWithAttribution = mixinAttributor(ContainerRuntime);
 export abstract class ModelContainerRuntimeFactoryWithAttribution<ModelType>
 	implements IRuntimeFactory
 {
-	public get IRuntimeFactory() {
+	public get IRuntimeFactory(): IRuntimeFactory {
 		return this;
 	}
 
@@ -47,18 +41,18 @@ export abstract class ModelContainerRuntimeFactoryWithAttribution<ModelType>
 		context: IContainerContext,
 		existing: boolean,
 	): Promise<IRuntime> {
-		const attributor = createRuntimeAttributor();
-		const scope: FluidObject<IProvideRuntimeAttributor> = { IRuntimeAttributor: attributor };
-
-		const runtime = await containerRuntimeWithAttribution.load(
+		const runtime = await containerRuntimeWithAttribution.loadRuntime({
 			context,
-			this.registryEntries,
-			// eslint-disable-next-line import/no-deprecated
-			makeModelRequestHandler(this.createModel.bind(this)),
-			this.runtimeOptions,
-			scope, // scope
+			registryEntries: this.registryEntries,
+			provideEntryPoint: async (
+				containerRuntime: IContainerRuntime,
+			): Promise<IModelContainerRuntimeEntryPoint<ModelType>> => ({
+				getModel: async (container: IContainer) =>
+					this.createModel(containerRuntime, container),
+			}),
+			runtimeOptions: this.runtimeOptions,
 			existing,
-		);
+		});
 
 		if (!existing) {
 			await this.containerInitializingFirstTime(runtime);

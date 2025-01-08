@@ -3,32 +3,40 @@
  * Licensed under the MIT License.
  */
 
-export { Context } from "./common/context";
 export { GitRepo } from "./common/gitRepo";
-export {
-	type BrokenCompatTypes,
-	type ITypeValidationConfig,
-	FluidRepo,
-	type VersionDetails,
-} from "./common/fluidRepo";
-export { getResolvedFluidRoot, getFluidBuildConfig } from "./common/fluidUtils";
-export type { Logger, ErrorLoggingFunction, LoggingFunction } from "./common/logging";
-export { isMonoRepoKind, MonoRepo, MonoRepoKind, supportedMonoRepoValues } from "./common/monoRepo";
+export { FluidRepo } from "./fluidBuild/fluidRepo";
+export { type IFluidBuildConfig } from "./fluidBuild/fluidBuildConfig";
+export { getResolvedFluidRoot, getFluidBuildConfig } from "./fluidBuild/fluidUtils";
+export type { Logger } from "./common/logging";
+export { MonoRepo } from "./common/monoRepo";
 export {
 	Package,
 	type PackageJson,
-	type FluidPackageJson,
 	updatePackageJsonFile,
+	updatePackageJsonFileAsync,
 } from "./common/npmPackage";
-export { Timer } from "./common/timer";
-export { VersionBag } from "./common/versionBag";
-export { LayerGraph } from "./layerCheck/layerGraph";
-export { type Handler } from "./repoPolicyCheck/common";
-export { policyHandlers } from "./repoPolicyCheck/handlers";
+
+// For repo policy check
+export {
+	normalizeGlobalTaskDefinitions,
+	getTaskDefinitions,
+} from "./fluidBuild/fluidTaskDefinitions";
+export {
+	getApiExtractorConfigFilePath,
+	getEsLintConfigFilePath,
+} from "./fluidBuild/tasks/taskUtils";
+export * as TscUtils from "./fluidBuild/tscUtils";
+export { getTypeTestPreviousPackageDetails } from "./common/typeTests";
+
+/**
+ * The types defined here cannot be in build-cli because it is an ESM-only package, and these types are imported in
+ * packages that are dual-emit or CJS-only. Long term these types should move to a shared library between build-cli and
+ * build-tools.
+ */
 export type {
-	IFluidBuildConfig,
-	IFluidRepoPackage,
-	PackageNamePolicyConfig,
-	PolicyConfig,
-	PreviousVersionStyle,
-} from "./common/fluidRepo";
+	TypeOnly,
+	MinimalType,
+	FullType,
+	requireAssignableTo,
+	SkipUniqueSymbols,
+} from "./common/typeCompatibility";

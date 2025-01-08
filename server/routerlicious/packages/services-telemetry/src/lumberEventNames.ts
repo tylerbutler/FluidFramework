@@ -5,6 +5,9 @@
 
 // List of event names that should identify Lumber events throughout the code.
 // Values in the enum must be strings.
+/**
+ * @internal
+ */
 export enum LumberEventName {
 	// Lumberjack infrastructure and helpers
 	LumberjackError = "LumberjackError",
@@ -12,6 +15,7 @@ export enum LumberEventName {
 
 	// Fluid server infrastructure
 	RunService = "RunService",
+	GracefulShutdown = "GracefulShutdown",
 
 	// Unit Testing
 	UnitTestEvent = "UnitTestEvent",
@@ -21,6 +25,7 @@ export enum LumberEventName {
 	ClientSummary = "ClientSummary",
 	DeliHandler = "DeliHandler",
 	KafkaRunner = "KafkaRunner",
+	NexusRunner = "NexusRunner",
 	RiddlerRunner = "RiddlerRunner",
 	ScribeHandler = "ScribeHandler",
 	ServiceSummary = "ServiceSummary",
@@ -36,6 +41,14 @@ export enum LumberEventName {
 	StartSessionResult = "StartSessionResult",
 	ScribeSessionResult = "ScribeSessionResult",
 
+	// Collaboration Sessions
+	NexusSessionStart = "NexusSessionStart",
+	NexusSessionResult = "NexusSessionResult",
+
+	// Session Discovery
+	GetSession = "GetSession",
+	VerifyStorageToken = "VerifyStorageToken",
+
 	// Miscellaneous
 	ConnectDocument = "ConnectDocument",
 	ConnectDocumentAddClient = "ConnectDocumentAddClient",
@@ -47,9 +60,16 @@ export enum LumberEventName {
 	DisconnectDocumentRetry = "DisconnectDocumentRetry",
 	RiddlerFetchTenantKey = "RiddlerFetchTenantKey",
 	HttpRequest = "HttpRequest",
+	SocketConnection = "SocketConnection",
+	SocketConnectionCount = "SocketConnectionCount",
 	TotalConnectionCount = "TotalConnectionCount",
 	ConnectionCountPerNode = "ConnectionCountPerNode",
 	RestoreFromCheckpoint = "RestoreFromCheckpoint",
+	GlobalCheckpointError = "GlobalCheckpointError",
 	ReprocessOps = "ReprocessOps",
 	MongoMonitoring = "MongoMonitoring",
+	StartupProbe = "StartupProbe",
+	LivenessProbe = "LivenessProbe",
+	ReadinessProbe = "ReadinessProbe",
+	CircuitBreaker = "CircuitBreaker",
 }

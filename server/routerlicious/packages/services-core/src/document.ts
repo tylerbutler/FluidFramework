@@ -10,14 +10,19 @@ import {
 	ICommittedProposal,
 } from "@fluidframework/protocol-definitions";
 import { IGitCache, ISession } from "@fluidframework/server-services-client";
-import { LambdaName } from "./lambdas";
 import { INackMessagesControlMessageContents, NackMessagesType } from "./messages";
 
+/**
+ * @internal
+ */
 export interface IDocumentDetails {
 	existing: boolean;
 	value: IDocument;
 }
 
+/**
+ * @internal
+ */
 export interface IDocumentStaticProperties {
 	// Schema version
 	version: string;
@@ -28,12 +33,16 @@ export interface IDocumentStaticProperties {
 	isEphemeralContainer?: boolean;
 }
 
+/**
+ * @internal
+ */
 export interface IDocumentStorage {
-	getDocument(tenantId: string, documentId: string): Promise<IDocument>;
+	// eslint-disable-next-line @rushstack/no-new-null
+	getDocument(tenantId: string, documentId: string): Promise<IDocument | null>;
 
 	getOrCreateDocument(tenantId: string, documentId: string): Promise<IDocumentDetails>;
 
-	getLatestVersion(tenantId: string, documentId: string): Promise<ICommit>;
+	getLatestVersion(tenantId: string, documentId: string): Promise<ICommit | null>;
 
 	getVersions(tenantId: string, documentId: string, count: number): Promise<ICommitDetails[]>;
 
@@ -53,9 +62,13 @@ export interface IDocumentStorage {
 		values: [string, ICommittedProposal][],
 		enableDiscovery: boolean,
 		isEphemeralContainer: boolean,
+		messageBrokerId?: string,
 	): Promise<IDocumentDetails>;
 }
 
+/**
+ * @internal
+ */
 export interface IClientSequenceNumber {
 	// Whether or not the client can expire
 	canEvict: boolean;
@@ -68,6 +81,9 @@ export interface IClientSequenceNumber {
 	serverMetadata?: any;
 }
 
+/**
+ * @internal
+ */
 export interface IDeliState {
 	// List of connected clients
 	clients: IClientSequenceNumber[] | undefined;
@@ -96,14 +112,14 @@ export interface IDeliState {
 		| INackMessagesControlMessageContents
 		| undefined;
 
-	// List of successfully started lambdas at session start
-	successfullyStartedLambdas: LambdaName[];
-
 	// Checkpoint timestamp in UTC epoch
 	checkpointTimestamp: number | undefined;
 }
 
 // TODO: We should probably rename this to IScribeState
+/**
+ * @internal
+ */
 export interface IScribe {
 	// Kafka checkpoint that maps to the below stored data
 	logOffset: number;
@@ -129,8 +145,17 @@ export interface IScribe {
 
 	// Is document corrupted?
 	isCorrupt: boolean;
+
+	// Last summary sequence number
+	protocolHead: number | undefined;
+
+	// Time checkpoint was created
+	checkpointTimestamp: number | undefined;
 }
 
+/**
+ * @alpha
+ */
 export interface IDocument {
 	// Schema version
 	version: string;
@@ -162,6 +187,9 @@ export interface IDocument {
 	isEphemeralContainer?: boolean;
 }
 
+/**
+ * @alpha
+ */
 export interface ICheckpoint {
 	_id: string;
 

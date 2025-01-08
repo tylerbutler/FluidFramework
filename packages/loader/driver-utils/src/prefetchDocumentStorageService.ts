@@ -2,17 +2,26 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-import { LoaderCachingPolicy } from "@fluidframework/driver-definitions";
-import { ISnapshotTree, IVersion } from "@fluidframework/protocol-definitions";
-import { DocumentStorageServiceProxy } from "./documentStorageServiceProxy";
-import { canRetryOnError } from "./network";
 
+import type {
+	IDocumentStorageServicePolicies,
+	ISnapshotTree,
+	IVersion,
+} from "@fluidframework/driver-definitions/internal";
+import { LoaderCachingPolicy } from "@fluidframework/driver-definitions/internal";
+
+import { DocumentStorageServiceProxy } from "./documentStorageServiceProxy.js";
+import { canRetryOnError } from "./network.js";
+
+/**
+ * @internal
+ */
 export class PrefetchDocumentStorageService extends DocumentStorageServiceProxy {
 	// BlobId -> blob prefetchCache cache
 	private readonly prefetchCache = new Map<string, Promise<ArrayBufferLike>>();
 	private prefetchEnabled = true;
 
-	public get policies() {
+	public get policies(): IDocumentStorageServicePolicies | undefined {
 		const policies = this.internalStorageService.policies;
 		if (policies) {
 			return { ...policies, caching: LoaderCachingPolicy.NoCaching };

@@ -3,12 +3,18 @@
  * Licensed under the MIT License.
  */
 
-import { UnassignedSequenceNumber } from "../constants";
-import { MergeTree } from "../mergeTree";
-import { MergeTreeDeltaType } from "../ops";
-import { PartialSequenceLengths, verify } from "../partialLengths";
-import { TextSegment } from "../textSegment";
-import { insertSegments, insertText, markRangeRemoved, validatePartialLengths } from "./testUtils";
+import { UnassignedSequenceNumber } from "../constants.js";
+import { MergeTree } from "../mergeTree.js";
+import { MergeTreeDeltaType } from "../ops.js";
+import { TextSegment } from "../textSegment.js";
+
+import {
+	insertSegments,
+	insertText,
+	markRangeRemoved,
+	useStrictPartialLengthChecks,
+	validatePartialLengths,
+} from "./testUtils.js";
 
 describe("partial lengths", () => {
 	let mergeTree: MergeTree;
@@ -16,8 +22,9 @@ describe("partial lengths", () => {
 	const remoteClientId = 18;
 	const refSeq = 0;
 
+	useStrictPartialLengthChecks();
+
 	beforeEach(() => {
-		PartialSequenceLengths.options.verifier = verify;
 		mergeTree = new MergeTree();
 		insertSegments({
 			mergeTree,
@@ -30,10 +37,6 @@ describe("partial lengths", () => {
 		});
 
 		mergeTree.startCollaboration(localClientId, /* minSeq: */ 0, /* currentSeq: */ 0);
-	});
-
-	afterEach(() => {
-		PartialSequenceLengths.options.verifier = undefined;
 	});
 
 	it("passes with no additional ops", () => {
@@ -109,7 +112,7 @@ describe("partial lengths", () => {
 				clientId: localClientId,
 				seq: refSeq + 1,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			validatePartialLengths(localClientId, mergeTree, [{ seq: 1, len: 0 }]);
@@ -123,7 +126,7 @@ describe("partial lengths", () => {
 				clientId: localClientId,
 				seq: refSeq + 1,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			validatePartialLengths(remoteClientId, mergeTree, [{ seq: 1, len: 0 }]);
@@ -137,7 +140,7 @@ describe("partial lengths", () => {
 				clientId: remoteClientId,
 				seq: refSeq + 1,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			validatePartialLengths(localClientId, mergeTree, [{ seq: 1, len: 0 }]);
@@ -151,7 +154,7 @@ describe("partial lengths", () => {
 				clientId: remoteClientId,
 				seq: refSeq + 1,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			validatePartialLengths(remoteClientId, mergeTree, [{ seq: 1, len: 0 }]);
@@ -233,7 +236,7 @@ describe("partial lengths", () => {
 				clientId: remoteClientId,
 				seq: refSeq + 1,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 			markRangeRemoved({
 				mergeTree,
@@ -243,7 +246,7 @@ describe("partial lengths", () => {
 				clientId: remoteClientId + 1,
 				seq: refSeq + 2,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			validatePartialLengths(localClientId, mergeTree, [{ seq: 1, len: 2 }]);
@@ -257,7 +260,7 @@ describe("partial lengths", () => {
 				clientId: localClientId,
 				seq: refSeq + 1,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 			markRangeRemoved({
 				mergeTree,
@@ -267,7 +270,7 @@ describe("partial lengths", () => {
 				clientId: remoteClientId,
 				seq: refSeq + 2,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			validatePartialLengths(localClientId, mergeTree, [{ seq: 1, len: 2 }]);
@@ -282,7 +285,7 @@ describe("partial lengths", () => {
 				clientId: localClientId,
 				seq: UnassignedSequenceNumber,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 			markRangeRemoved({
 				mergeTree,
@@ -292,7 +295,7 @@ describe("partial lengths", () => {
 				clientId: remoteClientId,
 				seq: refSeq + 1,
 				overwrite: false,
-				opArgs: undefined as any,
+				opArgs: undefined as never,
 			});
 
 			validatePartialLengths(localClientId, mergeTree, [{ seq: 1, len: 2 }]);

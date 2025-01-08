@@ -9,8 +9,11 @@
 import { IZookeeperClient } from "@fluidframework/server-services-core";
 import type ZooKeeper from "zookeeper";
 
+/**
+ * @internal
+ */
 export class ZookeeperClient implements IZookeeperClient {
-	private client: ZooKeeper;
+	private client!: ZooKeeper;
 
 	constructor(private readonly url: string) {
 		this.connect();
@@ -29,7 +32,9 @@ export class ZookeeperClient implements IZookeeperClient {
 		if (this.client) {
 			this.client.removeAllListeners();
 			this.client.close();
-			this.client = undefined;
+			// This is necessary to make sure the client is not reused.
+			// If accessed after close, it will correctly throw a fatal type error.
+			this.client = undefined as unknown as ZooKeeper;
 		}
 	}
 

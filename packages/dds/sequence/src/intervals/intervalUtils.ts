@@ -5,17 +5,22 @@
 
 /* eslint-disable no-bitwise */
 
+import { ISequencedDocumentMessage } from "@fluidframework/driver-definitions/internal";
 import {
+	// eslint-disable-next-line import/no-deprecated
 	Client,
+	// eslint-disable-next-line import/no-deprecated
 	PropertiesManager,
 	PropertySet,
 	SlidingPreference,
-} from "@fluidframework/merge-tree";
-import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
-import { SequencePlace, Side } from "../intervalCollection";
+	SequencePlace,
+	Side,
+} from "@fluidframework/merge-tree/internal";
 
 /**
  * Basic interval abstraction
+ * @legacy
+ * @alpha
  */
 export interface IInterval {
 	/**
@@ -44,7 +49,6 @@ export interface IInterval {
 	compareEnd(b: IInterval): number;
 	/**
 	 * Modifies one or more of the endpoints of this interval, returning a new interval representing the result.
-	 * @internal
 	 */
 	modify(
 		label: string,
@@ -63,29 +67,45 @@ export interface IInterval {
 	 * Unions this interval with `b`, returning a new interval.
 	 * The union operates as a convex hull, i.e. if the two intervals are disjoint, the return value includes
 	 * intermediate values between the two intervals.
-	 * @internal
 	 */
 	union(b: IInterval): IInterval;
 }
 
 /**
- * Values are used in persisted formats (ops) and revertibles.
- * @alpha
+ * Values are used in persisted formats (ops).
+ * @internal
  */
-export const IntervalOpType = {
+export const IntervalDeltaOpType = {
 	ADD: "add",
 	DELETE: "delete",
 	CHANGE: "change",
+} as const;
+
+export type IntervalDeltaOpType =
+	(typeof IntervalDeltaOpType)[keyof typeof IntervalDeltaOpType];
+
+/**
+ * Values are used in revertibles.
+ * @legacy
+ * @alpha
+ */
+export const IntervalOpType = {
+	...IntervalDeltaOpType,
 	PROPERTY_CHANGED: "propertyChanged",
 	POSITION_REMOVE: "positionRemove",
 } as const;
+/**
+ * @legacy
+ * @alpha
+ */
+export type IntervalOpType = (typeof IntervalOpType)[keyof typeof IntervalOpType];
 
+/**
+ * @legacy
+ * @alpha
+ */
 export enum IntervalType {
 	Simple = 0x0,
-	/**
-	 * @deprecated - this functionality is no longer supported and will be removed
-	 */
-	Nest = 0x1,
 
 	/**
 	 * SlideOnRemove indicates that the ends of the interval will slide if the segment
@@ -105,7 +125,8 @@ export enum IntervalType {
 /**
  * Serialized object representation of an interval.
  * This representation is used for ops that create or change intervals.
- * @internal
+ * @legacy
+ * @alpha
  */
 export interface ISerializedInterval {
 	/**
@@ -132,35 +153,38 @@ export interface ISerializedInterval {
 	properties?: PropertySet;
 }
 
+/**
+ * @legacy
+ * @alpha
+ */
 export interface ISerializableInterval extends IInterval {
 	/** Serializable bag of properties associated with the interval. */
 	properties: PropertySet;
-	/** @internal */
-	propertyManager: PropertiesManager;
-	/** @internal */
+
+	/***/
 	serialize(): ISerializedInterval;
-	/** @internal */
-	addProperties(
-		props: PropertySet,
-		collaborating?: boolean,
-		seq?: number,
-	): PropertySet | undefined;
+
 	/**
 	 * Gets the id associated with this interval.
 	 * When the interval is used as part of an interval collection, this id can be used to modify or remove the
 	 * interval.
-	 * @remarks This signature includes `undefined` strictly for backwards-compatibility reasons, as older versions
-	 * of Fluid didn't always write interval ids.
 	 */
-	getIntervalId(): string | undefined;
+	getIntervalId(): string;
 }
+
+export type ISerializableIntervalPrivate<T extends ISerializableInterval> = T & {
+	propertyManager?: PropertiesManager;
+};
 
 /**
  * Represents a change that should be applied to an existing interval.
  * Changes can modify any of start/end/properties, with `undefined` signifying no change should be made.
  * @internal
  */
-export type SerializedIntervalDelta = Omit<ISerializedInterval, "start" | "end" | "properties"> &
+export type SerializedIntervalDelta = Omit<
+	ISerializedInterval,
+	"start" | "end" | "properties"
+> &
 	Partial<Pick<ISerializedInterval, "start" | "end" | "properties">>;
 
 /**
@@ -194,6 +218,7 @@ export type CompressedSerializedInterval =
 /**
  * @sealed
  * @deprecated The methods within have substitutions
+ * @internal
  */
 export interface IIntervalHelpers<TInterval extends ISerializableInterval> {
 	/**
@@ -207,14 +232,15 @@ export interface IIntervalHelpers<TInterval extends ISerializableInterval> {
 	 * @param op - If this create came from a remote client, op that created it. Default is undefined (i.e. local)
 	 * @param fromSnapshot - If this create came from loading a snapshot. Default is false.
 	 * @param startSide - The side on which the start position lays. See
-	 * {@link SequencePlace} for additional context
+	 * {@link @fluidframework/merge-tree#SequencePlace} for additional context
 	 * @param endSide - The side on which the end position lays. See
-	 * {@link SequencePlace} for additional context
+	 * {@link @fluidframework/merge-tree#SequencePlace} for additional context
 	 */
 	create(
 		label: string,
 		start: SequencePlace | undefined,
 		end: SequencePlace | undefined,
+		// eslint-disable-next-line import/no-deprecated
 		client: Client | undefined,
 		intervalType: IntervalType,
 		op?: ISequencedDocumentMessage,
@@ -230,7 +256,8 @@ export interface IIntervalHelpers<TInterval extends ISerializableInterval> {
  * Note that interval stickiness is currently an experimental feature and must
  * be explicitly enabled with the `intervalStickinessEnabled` flag
  *
- * @internal
+ * @legacy
+ * @alpha
  */
 export const IntervalStickiness = {
 	/**
@@ -262,19 +289,23 @@ export const IntervalStickiness = {
  *
  * Note that interval stickiness is currently an experimental feature and must
  * be explicitly enabled with the `intervalStickinessEnabled` flag
- *
- * @internal
+ * @legacy
+ * @alpha
  */
 export type IntervalStickiness = (typeof IntervalStickiness)[keyof typeof IntervalStickiness];
 
-export function startReferenceSlidingPreference(stickiness: IntervalStickiness): SlidingPreference {
+export function startReferenceSlidingPreference(
+	stickiness: IntervalStickiness,
+): SlidingPreference {
 	// if any start stickiness, prefer sliding backwards
 	return (stickiness & IntervalStickiness.START) === 0
 		? SlidingPreference.FORWARD
 		: SlidingPreference.BACKWARD;
 }
 
-export function endReferenceSlidingPreference(stickiness: IntervalStickiness): SlidingPreference {
+export function endReferenceSlidingPreference(
+	stickiness: IntervalStickiness,
+): SlidingPreference {
 	// if any end stickiness, prefer sliding forwards
 	return (stickiness & IntervalStickiness.END) === 0
 		? SlidingPreference.BACKWARD

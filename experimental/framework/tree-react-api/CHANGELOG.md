@@ -1,61 +1,47 @@
 # @fluid-experimental/tree-react-api
 
-## 2.0.0-internal.7.0.0
-
-### Major Changes
-
--   Minimum TypeScript version now 5.1.6 [871b3493dd](https://github.com/microsoft/FluidFramework/commits/871b3493dd0d7ea3a89be64998ceb6cb9021a04e)
-
-    The minimum supported TypeScript version for Fluid 2.0 clients is now 5.1.6.
-
-## 2.0.0-internal.6.4.0
+## 2.13.0
 
 Dependency updates only.
 
-## 2.0.0-internal.6.3.0
+## 2.12.0
 
 Dependency updates only.
 
-## 2.0.0-internal.6.2.0
+## 2.11.0
 
 Dependency updates only.
 
-## 2.0.0-internal.6.1.0
+## 2.10.0
 
 Dependency updates only.
 
-## 2.0.0-internal.6.0.0
-
-### Major Changes
-
--   Upgraded typescript transpilation target to ES2020 [8abce8cdb4](https://github.com/microsoft/FluidFramework/commits/8abce8cdb4e2832fb6405fb44e393bef03d5648a)
-
-    Upgraded typescript transpilation target to ES2020. This is done in order to decrease the bundle sizes of Fluid Framework packages. This has provided size improvements across the board for ex. Loader, Driver, Runtime etc. Reduced bundle sizes helps to load lesser code in apps and hence also helps to improve the perf.If any app wants to target any older versions of browsers with which this target version is not compatible, then they can use packages like babel to transpile to a older target.
-
-## 2.0.0-internal.5.4.0
+## 2.5.0
 
 Dependency updates only.
 
-## 2.0.0-internal.5.3.0
+## 2.4.0
 
 Dependency updates only.
 
-## 2.0.0-internal.5.2.0
+## 2.3.0
 
 Dependency updates only.
 
-## 2.0.0-internal.5.1.0
+## 2.2.0
 
 Dependency updates only.
 
-## 2.0.0-internal.5.0.0
+## 2.1.0
 
 Dependency updates only.
 
-## 2.0.0-internal.4.4.0
+## 2.0.0-rc.5.0.0
 
-Dependency updates only.
+### Minor Changes
 
-## 2.0.0-internal.4.1.0
+-   Update to TypeScript 5.4 ([#21214](https://github.com/microsoft/FluidFramework/pull/21214)) [0e6256c722](https://github.com/microsoft/FluidFramework/commit/0e6256c722d8bf024f4325bf02547daeeb18bfa6)
 
-Dependency updates only.
+    Update package implementations to use TypeScript 5.4.5.
+
+## 2.0.0-rc.4.0.0

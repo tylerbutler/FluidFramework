@@ -4,34 +4,36 @@
  */
 
 import { strict as assert } from "assert";
-import { SinonFakeTimers, useFakeTimers } from "sinon";
+
 import { ITelemetryBaseEvent } from "@fluidframework/core-interfaces";
-import { IGarbageCollectionData } from "@fluidframework/runtime-definitions";
+import { IGarbageCollectionData } from "@fluidframework/runtime-definitions/internal";
 import {
 	MockLogger,
-	TelemetryDataTag,
-	ConfigTypes,
-	mixinMonitoringContext,
 	MonitoringContext,
+	TelemetryDataTag,
 	createChildLogger,
+	mixinMonitoringContext,
 	tagCodeArtifacts,
-} from "@fluidframework/telemetry-utils";
+} from "@fluidframework/telemetry-utils/internal";
+import { SinonFakeTimers, useFakeTimers } from "sinon";
+
+import { blobManagerBasePath } from "../../blobManager/index.js";
 import {
 	GCNodeType,
 	GCTelemetryTracker,
-	defaultSessionExpiryDurationMs,
-	oneDayMs,
-	disableSweepLogKey,
+	IGarbageCollectorConfigs,
 	UnreferencedStateTracker,
 	cloneGCData,
-} from "../../gc";
-import { pkgVersion } from "../../packageVersion";
-import { BlobManager } from "../../blobManager";
-import { configProvider } from "./gcUnitTestHelpers";
+	defaultSessionExpiryDurationMs,
+	oneDayMs,
+	stableGCVersion,
+} from "../../gc/index.js";
+import { pkgVersion } from "../../packageVersion.js";
 
 describe("GC Telemetry Tracker", () => {
 	const defaultSnapshotCacheExpiryMs = 5 * 24 * 60 * 60 * 1000;
-	const sweepTimeoutMs = defaultSessionExpiryDurationMs + defaultSnapshotCacheExpiryMs + oneDayMs;
+	const tombstoneTimeoutMs =
+		defaultSessionExpiryDurationMs + defaultSnapshotCacheExpiryMs + oneDayMs;
 	const inactiveTimeoutMs = 500;
 
 	// Nodes in the reference graph.
@@ -41,10 +43,10 @@ describe("GC Telemetry Tracker", () => {
 	// The package data is tagged in the telemetry event.
 	const eventPkg = { value: testPkgPath.join("/"), tag: TelemetryDataTag.CodeArtifact };
 
-	let injectedSettings: Record<string, ConfigTypes> = {};
 	let mockLogger: MockLogger;
 	let mc: MonitoringContext;
 	let clock: SinonFakeTimers;
+	let sweepGracePeriodMs = 1000; // Default case for these tests
 	let unreferencedNodesState: Map<string, UnreferencedStateTracker> = new Map();
 	let telemetryTracker: GCTelemetryTracker;
 
@@ -58,7 +60,7 @@ describe("GC Telemetry Tracker", () => {
 		// Path with two parts such as "/id1/id2" - sub data stores.
 		// Everything else - other.
 		const getNodeType = (nodePath: string) => {
-			if (nodePath.split("/")[1] === BlobManager.basePath) {
+			if (nodePath.split("/")[1] === blobManagerBasePath) {
 				return GCNodeType.Blob;
 			}
 			if (nodePath.split("/").length === 2) {
@@ -69,11 +71,25 @@ describe("GC Telemetry Tracker", () => {
 			}
 			return GCNodeType.Other;
 		};
+		const configs: IGarbageCollectorConfigs = {
+			gcAllowed: true,
+			sweepAllowed: false,
+			sweepEnabled: false,
+			runFullGC: false,
+			testMode: false,
+			inactiveTimeoutMs,
+			sessionExpiryTimeoutMs: defaultSessionExpiryDurationMs,
+			tombstoneTimeoutMs: enableSweep ? tombstoneTimeoutMs : undefined,
+			sweepGracePeriodMs,
+			throwOnTombstoneLoad: false,
+			persistedGcFeatureMatrix: undefined,
+			gcVersionInBaseSnapshot: stableGCVersion,
+			gcVersionInEffect: stableGCVersion,
+		};
 		const tracker = new GCTelemetryTracker(
 			mc,
-			{ inactiveTimeoutMs, sweepTimeoutMs: enableSweep ? sweepTimeoutMs : undefined },
+			configs,
 			isSummarizerClient,
-			false /* gcTombstoneEnforcementAllowed */,
 			{ createContainerRuntimeVersion: pkgVersion },
 			getNodeType,
 			(nodeId: string) => unreferencedNodesState.get(nodeId),
@@ -94,7 +110,8 @@ describe("GC Telemetry Tracker", () => {
 					Date.now(),
 					inactiveTimeoutMs,
 					Date.now(),
-					sweepTimeoutMs,
+					tombstoneTimeoutMs,
+					sweepGracePeriodMs,
 				),
 			);
 		});
@@ -103,7 +120,7 @@ describe("GC Telemetry Tracker", () => {
 	// Mock node loaded and changed activity for the given nodes.
 	function mockNodeChanges(nodeIds: string[]) {
 		nodeIds.forEach((id) => {
-			telemetryTracker.nodeUsed({
+			telemetryTracker.nodeUsed(id, {
 				id,
 				usageType: "Loaded",
 				currentReferenceTimestampMs: Date.now(),
@@ -111,7 +128,7 @@ describe("GC Telemetry Tracker", () => {
 				completedGCRuns: 0,
 				isTombstoned: false,
 			});
-			telemetryTracker.nodeUsed({
+			telemetryTracker.nodeUsed(id, {
 				id,
 				usageType: "Changed",
 				currentReferenceTimestampMs: Date.now(),
@@ -124,7 +141,7 @@ describe("GC Telemetry Tracker", () => {
 
 	// Mock node revived activity for the given nodes.
 	function reviveNode(fromId: string, toId: string, isTombstoned = false) {
-		telemetryTracker.nodeUsed({
+		telemetryTracker.nodeUsed(toId, {
 			id: toId,
 			usageType: "Revived",
 			currentReferenceTimestampMs: Date.now(),
@@ -144,7 +161,6 @@ describe("GC Telemetry Tracker", () => {
 		if (!isSummarizerClient) {
 			return;
 		}
-		telemetryTracker.logSweepEvents(mc.logger, Date.now(), unreferencedNodesState, 0);
 		await telemetryTracker.logPendingEvents(mc.logger);
 	}
 
@@ -156,7 +172,6 @@ describe("GC Telemetry Tracker", () => {
 		mockLogger = new MockLogger();
 		mc = mixinMonitoringContext(
 			createChildLogger({ logger: mockLogger, namespace: "GarbageCollector" }),
-			configProvider(injectedSettings),
 		);
 		unreferencedNodesState = new Map();
 	});
@@ -164,7 +179,7 @@ describe("GC Telemetry Tracker", () => {
 	afterEach(() => {
 		clock.reset();
 		mockLogger.clear();
-		injectedSettings = {};
+		sweepGracePeriodMs = 1000; // Default case for these tests
 	});
 
 	after(() => {
@@ -175,8 +190,8 @@ describe("GC Telemetry Tracker", () => {
 	const clientTypeTests = (isSummarizerClient: boolean) => {
 		/**
 		 * Asserts that the events are as expected based on whether its a summarizer client or not. In non-summarizer
-		 * clients, only "InactiveObject_Loaded" and "SweepReadyObject_Loaded" events are logged. "Changed" and "Revived"
-		 * events are not logged.
+		 * clients, only "InactiveObject_Loaded", "TombstoneReadyObject_Loaded" and "SweepReadyObject_Loaded" events are logged.
+		 * "_Changed" and "_Revived" events are not logged.
 		 */
 		function assertMatchEvents(
 			events: Omit<ITelemetryBaseEvent, "category">[],
@@ -194,15 +209,16 @@ describe("GC Telemetry Tracker", () => {
 				}
 			}
 
-			// Note that mock logger clears all events after one of the `match` functions is called. Since we call match
-			// functions twice, cache the events and repopulate the mock logger with if after the first match call.
-			const cachedEvents = Array.from(mockLogger.events);
-			mockLogger.assertMatch(expectedEvents, message, true /* inlineDetailsProp */);
-			mockLogger.events = cachedEvents;
+			mockLogger.assertMatch(
+				expectedEvents,
+				message,
+				true /* inlineDetailsProp */,
+				false /* clearEventsAfterCheck */, // Don't clear events so we can run another check.
+			);
 			mockLogger.assertMatchNone(unexpectedEvents, message, true /* inlineDetailsProp */);
 		}
 
-		it("generates inactive and sweep ready events when nodes are used after time out", async () => {
+		it("generates inactive, tombstone ready, and sweep ready events when nodes are used after time out", async () => {
 			telemetryTracker = createTelemetryTracker(true /* enable Sweep */, isSummarizerClient);
 			// Mark nodes 2 and 3 as unreferenced.
 			markNodesUnreferenced([nodes[2], nodes[3]]);
@@ -237,30 +253,60 @@ describe("GC Telemetry Tracker", () => {
 				"inactive events not as expected",
 			);
 
-			// Advance the clock to trigger sweep timeout and validate that sweep ready events are as expected.
-			clock.tick(sweepTimeoutMs - inactiveTimeoutMs);
+			// Advance the clock to trigger tombstone timeout and validate that TombstoneReady events are as expected.
+			clock.tick(tombstoneTimeoutMs - inactiveTimeoutMs);
+			mockNodeChanges(nodes);
+			await simulateGCToTriggerEvents(isSummarizerClient);
+			assertMatchEvents(
+				[
+					{
+						eventName: "GarbageCollector:TombstoneReadyObject_Loaded",
+						timeout: tombstoneTimeoutMs,
+						...tagCodeArtifacts({ id: nodes[2] }),
+					},
+					{
+						eventName: "GarbageCollector:TombstoneReadyObject_Changed",
+						timeout: tombstoneTimeoutMs,
+						...tagCodeArtifacts({ id: nodes[2] }),
+					},
+					{
+						eventName: "GarbageCollector:TombstoneReadyObject_Loaded",
+						timeout: tombstoneTimeoutMs,
+						...tagCodeArtifacts({ id: nodes[3] }),
+					},
+					{
+						eventName: "GarbageCollector:TombstoneReadyObject_Changed",
+						timeout: tombstoneTimeoutMs,
+						...tagCodeArtifacts({ id: nodes[3] }),
+					},
+				],
+				"tombstone ready events not as expected",
+			);
+
+			// Advance the clock by the delay and validate that SweepReady events are as expected.
+			clock.tick(sweepGracePeriodMs);
 			mockNodeChanges(nodes);
 			await simulateGCToTriggerEvents(isSummarizerClient);
 			assertMatchEvents(
 				[
 					{
 						eventName: "GarbageCollector:SweepReadyObject_Loaded",
-						timeout: sweepTimeoutMs,
+						timeout: tombstoneTimeoutMs + sweepGracePeriodMs,
 						...tagCodeArtifacts({ id: nodes[2] }),
 					},
 					{
 						eventName: "GarbageCollector:SweepReadyObject_Changed",
-						timeout: sweepTimeoutMs,
+						timeout: tombstoneTimeoutMs + sweepGracePeriodMs,
 						...tagCodeArtifacts({ id: nodes[2] }),
 					},
 					{
 						eventName: "GarbageCollector:SweepReadyObject_Loaded",
-						timeout: sweepTimeoutMs,
+						timeout: tombstoneTimeoutMs + sweepGracePeriodMs,
 						...tagCodeArtifacts({ id: nodes[3] }),
 					},
 					{
 						eventName: "GarbageCollector:SweepReadyObject_Changed",
-						timeout: sweepTimeoutMs,
+						timeout: tombstoneTimeoutMs + sweepGracePeriodMs,
 						...tagCodeArtifacts({ id: nodes[3] }),
 					},
 				],
@@ -273,31 +319,30 @@ describe("GC Telemetry Tracker", () => {
 			// Mark node 2 as unreferenced.
 			markNodesUnreferenced([nodes[2]]);
 
-			// Advance the clock to trigger sweep timeout and validate that tombstone revived event is as expected.
-			clock.tick(sweepTimeoutMs + 1);
+			// Advance the clock to trigger tombstone timeout and validate that tombstone revived event is as expected.
+			clock.tick(tombstoneTimeoutMs + 1);
 			reviveNode(nodes[1], nodes[2], true /* isTombstoned */);
 			mockLogger.assertMatch(
 				[
 					{
 						eventName: "GarbageCollector:GC_Tombstone_DataStore_Revived",
-						...tagCodeArtifacts({ url: nodes[2] }),
+						pkg: eventPkg,
+						...tagCodeArtifacts({ id: nodes[2] }),
 					},
 				],
 				"inactive events not as expected",
 			);
 		});
 
-		/** Tests that validate either inactive or sweep events are logged as expected. */
-		const inactiveOrSweepEventTests = (
+		/** Tests that validate either the relevant events are logged as expected. */
+		const unreferencedPhasesEventTests = (
 			timeout: number,
-			mode: "inactive" | "sweep",
+			mode: "inactive" | "tombstone" | "sweep",
 			revivedEventName: string,
 			changedEventName: string,
 			loadedEventName: string,
-			expectDeleteLogs?: boolean,
+			sweepGracePeriodMsOverride?: number,
 		) => {
-			const deleteEventName = "GarbageCollector:GC_SweepReadyObjects_Delete";
-
 			// Validates that no unexpected event has been fired.
 			function validateNoEvents() {
 				mockLogger.assertMatchNone(
@@ -305,15 +350,17 @@ describe("GC Telemetry Tracker", () => {
 						{ eventName: revivedEventName },
 						{ eventName: changedEventName },
 						{ eventName: loadedEventName },
-						{ eventName: deleteEventName },
 					],
 					"unexpected events logged",
 				);
 			}
 
 			beforeEach(() => {
+				if (sweepGracePeriodMsOverride !== undefined) {
+					sweepGracePeriodMs = sweepGracePeriodMsOverride;
+				}
 				telemetryTracker = createTelemetryTracker(
-					mode === "sweep" ? true : false /* enableSweep */,
+					mode !== "inactive" /* enableSweep */,
 					isSummarizerClient,
 				);
 			});
@@ -336,7 +383,7 @@ describe("GC Telemetry Tracker", () => {
 				validateNoEvents();
 			});
 
-			it("generates events for nodes that are used after inactive / sweep ready", async () => {
+			it("generates events for nodes that are used after state changes", async () => {
 				// Mark nodes 1 and 2 as unreferenced.
 				markNodesUnreferenced([nodes[1], nodes[2]]);
 
@@ -351,18 +398,6 @@ describe("GC Telemetry Tracker", () => {
 				mockNodeChanges(nodes);
 				await simulateGCToTriggerEvents(isSummarizerClient);
 				const expectedEvents: Omit<ITelemetryBaseEvent, "category">[] = [];
-				if (expectDeleteLogs && isSummarizerClient) {
-					expectedEvents.push({
-						eventName: deleteEventName,
-						timeout,
-						...tagCodeArtifacts({ id: JSON.stringify([nodes[1], nodes[2]]) }),
-					});
-				} else {
-					assert(
-						!mockLogger.events.some((event) => event.eventName === deleteEventName),
-						"Should not have any delete events logged",
-					);
-				}
 				expectedEvents.push(
 					{
 						eventName: loadedEventName,
@@ -410,6 +445,37 @@ describe("GC Telemetry Tracker", () => {
 				);
 			});
 
+			it("generates events properly for untracked subDataStore paths", async () => {
+				// Mark node 1 as unreferenced.
+				markNodesUnreferenced([nodes[1]]);
+
+				// We'll mock a Loaded event for this path, passing the DataStore path as trackedId to ensure coverage
+				const subDataStorePath = `${nodes[1]}/something`;
+
+				// Expire the timeout, update nodes and validate that all events for node 1 are logged.
+				clock.tick(timeout);
+				telemetryTracker.nodeUsed(nodes[1], {
+					id: subDataStorePath,
+					usageType: "Loaded",
+					currentReferenceTimestampMs: Date.now(),
+					packagePath: testPkgPath,
+					completedGCRuns: 0,
+					isTombstoned: false,
+				});
+				await simulateGCToTriggerEvents(isSummarizerClient);
+				const expectedEvents: Omit<ITelemetryBaseEvent, "category">[] = [];
+				expectedEvents.push({
+					eventName: loadedEventName,
+					timeout,
+					...tagCodeArtifacts({ id: subDataStorePath, pkg: testPkgPath.join("/") }),
+					createContainerRuntimeVersion: pkgVersion,
+					isTombstoned: false,
+					trackedId: nodes[1],
+					type: "SubDataStore",
+				});
+				assertMatchEvents(expectedEvents, "all events not as expected");
+			});
+
 			it("generates events once per node", async () => {
 				// Mark node 2 as unreferenced.
 				markNodesUnreferenced([nodes[2]]);
@@ -426,18 +492,6 @@ describe("GC Telemetry Tracker", () => {
 				mockNodeChanges(nodes);
 				await simulateGCToTriggerEvents(isSummarizerClient);
 				const expectedEvents: Omit<ITelemetryBaseEvent, "category">[] = [];
-				if (expectDeleteLogs && isSummarizerClient) {
-					expectedEvents.push({
-						eventName: deleteEventName,
-						timeout,
-						...tagCodeArtifacts({ id: JSON.stringify([nodes[2]]) }),
-					});
-				} else {
-					assert(
-						!mockLogger.events.some((event) => event.eventName === deleteEventName),
-						"Should not have any delete events logged",
-					);
-				}
 				expectedEvents.push(
 					{
 						eventName: loadedEventName,
@@ -462,7 +516,7 @@ describe("GC Telemetry Tracker", () => {
 
 			// This test is only relevant for summarizer client because it does not log changed events if the node is revived.
 			if (isSummarizerClient) {
-				it("generates only revived event in summarizer when an inactive node is updated and revived", async () => {
+				it("generates only revived event in summarizer when a node is updated and revived", async () => {
 					// Mark node 2 as unreferenced.
 					markNodesUnreferenced([nodes[2]]);
 
@@ -510,7 +564,7 @@ describe("GC Telemetry Tracker", () => {
 		};
 
 		describe("Inactive events", () => {
-			inactiveOrSweepEventTests(
+			unreferencedPhasesEventTests(
 				inactiveTimeoutMs,
 				"inactive",
 				"GarbageCollector:InactiveObject_Revived",
@@ -519,33 +573,36 @@ describe("GC Telemetry Tracker", () => {
 			);
 		});
 
-		describe("SweepReady events", () => {
-			beforeEach(() => {
-				injectedSettings[disableSweepLogKey] = true;
-			});
+		describe("TombstoneReady events", () => {
+			unreferencedPhasesEventTests(
+				tombstoneTimeoutMs,
+				"tombstone",
+				"GarbageCollector:TombstoneReadyObject_Revived",
+				"GarbageCollector:TombstoneReadyObject_Changed",
+				"GarbageCollector:TombstoneReadyObject_Loaded",
+			);
+		});
 
-			inactiveOrSweepEventTests(
-				sweepTimeoutMs,
+		describe("SweepReady events (with no delay)", () => {
+			unreferencedPhasesEventTests(
+				tombstoneTimeoutMs,
+				"sweep", // Jump straight to SweepReady given 0 delay
+				"GarbageCollector:SweepReadyObject_Revived",
+				"GarbageCollector:SweepReadyObject_Changed",
+				"GarbageCollector:SweepReadyObject_Loaded",
+				0 /* sweepGracePeriodMsOverride */,
+			);
+		});
+
+		describe("SweepReady events", () => {
+			unreferencedPhasesEventTests(
+				tombstoneTimeoutMs + sweepGracePeriodMs,
 				"sweep",
 				"GarbageCollector:SweepReadyObject_Revived",
 				"GarbageCollector:SweepReadyObject_Changed",
 				"GarbageCollector:SweepReadyObject_Loaded",
-				false, // expectDeleteLogs
 			);
 		});
-
-		if (isSummarizerClient) {
-			describe("SweepReady events - with delete log", () => {
-				inactiveOrSweepEventTests(
-					sweepTimeoutMs,
-					"sweep",
-					"GarbageCollector:SweepReadyObject_Revived",
-					"GarbageCollector:SweepReadyObject_Changed",
-					"GarbageCollector:SweepReadyObject_Loaded",
-					true, // expectDeleteLogs
-				);
-			});
-		}
 	};
 
 	describe("Summarizer client", () => {

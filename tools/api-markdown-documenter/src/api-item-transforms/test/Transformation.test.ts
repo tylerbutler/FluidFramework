@@ -2,22 +2,26 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+
 import * as Path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
-	ApiFunction,
-	ApiInterface,
-	ApiItem,
+	type ApiFunction,
+	type ApiInterface,
+	type ApiItem,
 	ApiItemKind,
 	ApiModel,
-	ApiVariable,
+	type ApiNamespace,
+	type ApiVariable,
+	ReleaseTag,
 } from "@microsoft/api-extractor-model";
 import { expect } from "chai";
 
 import {
 	CodeSpanNode,
 	DocumentNode,
-	DocumentationNode,
+	type DocumentationNode,
 	FencedCodeBlockNode,
 	HeadingNode,
 	LinkNode,
@@ -31,26 +35,28 @@ import {
 	TableHeaderRowNode,
 	TableNode,
 	UnorderedListNode,
-} from "../../documentation-domain";
-import { getHeadingForApiItem } from "../ApiItemTransformUtilities";
-import { apiItemToSections } from "../TransformApiItem";
+} from "../../documentation-domain/index.js";
+import { getHeadingForApiItem } from "../ApiItemTransformUtilities.js";
+import { apiItemToSections } from "../TransformApiItem.js";
+import { transformApiModel } from "../TransformApiModel.js";
 import {
-	ApiItemTransformationConfiguration,
+	type ApiItemTransformationConfiguration,
+	type ApiItemTransformationOptions,
 	getApiItemTransformationConfigurationWithDefaults,
-} from "../configuration";
-import { wrapInSection } from "../helpers";
-import { transformApiModel } from "../TransformApiModel";
+} from "../configuration/index.js";
+import { betaWarningSpan, wrapInSection } from "../helpers/index.js";
 
 /**
  * Sample "default" configuration.
  */
-const defaultPartialConfig: Omit<ApiItemTransformationConfiguration, "apiModel"> = {
+const defaultPartialConfig: Omit<ApiItemTransformationOptions, "apiModel"> = {
 	uriRoot: ".",
 };
 
-// Relative to dist/api-item-transforms/test
+// Relative to lib/api-item-transforms/test
+const dirname = Path.dirname(fileURLToPath(import.meta.url));
 const testDataDirectoryPath = Path.resolve(
-	__dirname,
+	dirname,
 	"..",
 	"..",
 	"..",
@@ -109,9 +115,9 @@ function findApiMember(
  * Creates a config for testing.
  */
 function createConfig(
-	partialConfig: Omit<ApiItemTransformationConfiguration, "apiModel">,
+	partialConfig: Omit<ApiItemTransformationOptions, "apiModel">,
 	apiModel: ApiModel,
-): Required<ApiItemTransformationConfiguration> {
+): ApiItemTransformationConfiguration {
 	return getApiItemTransformationConfigurationWithDefaults({
 		...partialConfig,
 		apiModel,
@@ -130,7 +136,7 @@ describe("ApiItem to Documentation transformation tests", () => {
 
 		const config = createConfig(defaultPartialConfig, model);
 
-		const result = config.transformApiVariable(apiVariable, config);
+		const result = config.transformations[ApiItemKind.Variable](apiVariable, config);
 
 		const expected = [
 			wrapInSection(
@@ -167,7 +173,7 @@ describe("ApiItem to Documentation transformation tests", () => {
 
 		const config = createConfig(defaultPartialConfig, model);
 
-		const result = config.transformApiFunction(apiFunction, config);
+		const result = config.transformations[ApiItemKind.Function](apiFunction, config);
 
 		const expected = [
 			wrapInSection(
@@ -186,6 +192,33 @@ describe("ApiItem to Documentation transformation tests", () => {
 								],
 								"typescript",
 							),
+							new ParagraphNode([
+								new SectionNode(
+									[
+										new TableNode(
+											[
+												new TableBodyRowNode([
+													TableBodyCellNode.createFromPlainText(
+														"TTypeParameter",
+													),
+													TableBodyCellNode.createFromPlainText(
+														"A test type parameter",
+													),
+												]),
+											],
+											new TableHeaderRowNode([
+												TableHeaderCellNode.createFromPlainText(
+													"Parameter",
+												),
+												TableHeaderCellNode.createFromPlainText(
+													"Description",
+												),
+											]),
+										),
+									],
+									HeadingNode.createFromPlainText("Type Parameters"),
+								),
+							]),
 						],
 						{
 							title: "Signature",
@@ -275,8 +308,10 @@ describe("ApiItem to Documentation transformation tests", () => {
 
 		const config = createConfig(defaultPartialConfig, model);
 
-		const result = config.transformApiInterface(apiInterface, config, (childItem) =>
-			apiItemToSections(childItem, config),
+		const result = config.transformations[ApiItemKind.Interface](
+			apiInterface,
+			config,
+			(childItem) => apiItemToSections(childItem, config),
 		);
 
 		const expected: DocumentationNode[] = [
@@ -337,15 +372,23 @@ describe("ApiItem to Documentation transformation tests", () => {
 				[
 					wrapInSection(
 						[
+							// Summary section
 							wrapInSection([
 								ParagraphNode.createFromPlainText("Test optional property"),
 							]),
+							// Signature section
 							wrapInSection(
 								[
 									FencedCodeBlockNode.createFromPlainText(
 										"testOptionalInterfaceProperty?: number;",
 										"typescript",
 									),
+									new ParagraphNode([
+										new SpanNode([
+											SpanNode.createFromPlainText("Type: ", { bold: true }),
+											SpanNode.createFromPlainText("number"),
+										]),
+									]),
 								],
 								{
 									title: "Signature",
@@ -366,6 +409,162 @@ describe("ApiItem to Documentation transformation tests", () => {
 		expect(result).deep.equals(expected);
 	});
 
+	it("Transform Namespace with children at different release levels", () => {
+		const model = generateModel("test-namespace.json");
+		const members = getApiItems(model);
+		const apiNamespace = findApiMember(
+			members,
+			"TestNamespace",
+			ApiItemKind.Namespace,
+		) as ApiNamespace;
+
+		const config = createConfig(
+			{
+				...defaultPartialConfig,
+				minimumReleaseLevel: ReleaseTag.Beta, // Only include `@beta` and `@public` items in generated docs
+			},
+			model,
+		);
+
+		const result = config.transformations[ApiItemKind.Namespace](
+			apiNamespace,
+			config,
+			(childItem) => apiItemToSections(childItem, config),
+		);
+
+		// Note: the namespace being processed includes 3 const variables:
+		// - foo (@public)
+		// - bar (@beta)
+		// - baz (@alpha)
+		// We expect docs to be generated for `foo` and `bar`, but not `baz`, since it's @alpha, and we are filtering those out per our config above.
+		// Also note that child items are listed alphabetically, so we expect `bar` before `foo`.
+		const expected: DocumentationNode[] = [
+			// Summary section
+			wrapInSection([ParagraphNode.createFromPlainText("Test namespace")]),
+
+			// Signature section
+			wrapInSection(
+				[
+					FencedCodeBlockNode.createFromPlainText(
+						"export declare namespace TestNamespace",
+						"typescript",
+					),
+				],
+				{ title: "Signature", id: "testnamespace-signature" },
+			),
+
+			// Variables section
+			wrapInSection(
+				[
+					new TableNode(
+						[
+							// Table row for `bar`
+							new TableBodyRowNode([
+								new TableBodyCellNode([
+									LinkNode.createFromPlainText(
+										"bar",
+										"./test-package/testnamespace-namespace#bar-variable",
+									),
+								]),
+								new TableBodyCellNode([CodeSpanNode.createFromPlainText("Beta")]), // Alert
+								new TableBodyCellNode([
+									CodeSpanNode.createFromPlainText("readonly"),
+								]), // Modifier
+								TableBodyCellNode.Empty, // Type
+								TableBodyCellNode.Empty, // Description
+							]),
+							// Table row for `foo`
+							new TableBodyRowNode([
+								new TableBodyCellNode([
+									LinkNode.createFromPlainText(
+										"foo",
+										"./test-package/testnamespace-namespace#foo-variable",
+									),
+								]),
+								TableBodyCellNode.Empty, // No alert for `@public`
+								new TableBodyCellNode([
+									CodeSpanNode.createFromPlainText("readonly"),
+								]), // Modifier
+								TableBodyCellNode.Empty, // Type
+								TableBodyCellNode.Empty, // Description
+							]),
+							// No entry should be included for `baz` because it is `@alpha`
+						],
+						new TableHeaderRowNode([
+							TableHeaderCellNode.createFromPlainText("Variable"),
+							TableHeaderCellNode.createFromPlainText("Alerts"),
+							TableHeaderCellNode.createFromPlainText("Modifiers"),
+							TableHeaderCellNode.createFromPlainText("Type"),
+							TableHeaderCellNode.createFromPlainText("Description"),
+						]),
+					),
+				],
+				{ title: "Variables" },
+			),
+
+			// Variables details section
+			wrapInSection(
+				[
+					// Details for `bar`
+					wrapInSection(
+						[
+							// Summary
+							wrapInSection([ParagraphNode.Empty]), // No summary docs on `bar`
+							// Beta warning
+							wrapInSection([betaWarningSpan]),
+							// Signature
+							wrapInSection(
+								[
+									FencedCodeBlockNode.createFromPlainText(
+										'bar = "bar"',
+										"typescript",
+									),
+								],
+								{
+									title: "Signature",
+									id: "bar-signature",
+								},
+							),
+						],
+						{
+							title: "bar",
+							id: "bar-variable",
+						},
+					),
+					// Details for `foo`
+					wrapInSection(
+						[
+							// Summary
+							wrapInSection([ParagraphNode.Empty]), // No summary docs on `bar`
+							// Signature
+							wrapInSection(
+								[
+									FencedCodeBlockNode.createFromPlainText(
+										'foo = "foo"',
+										"typescript",
+									),
+								],
+								{
+									title: "Signature",
+									id: "foo-signature",
+								},
+							),
+						],
+						{
+							title: "foo",
+							id: "foo-variable",
+						},
+					),
+
+					// No entry should be included for `baz` because it is `@alpha`
+				],
+				{ title: "Variable Details" },
+			),
+		];
+
+		expect(result).deep.equals(expected);
+	});
+
 	it("Transform a Model with multiple entry-points", () => {
 		const model = generateModel("multiple-entry-points.json");
 		const config = createConfig(defaultPartialConfig, model);
@@ -376,11 +575,7 @@ describe("ApiItem to Documentation transformation tests", () => {
 		// The model-level doc in this case isn't particularly interesting, so we will skip evaluating it.
 
 		const expectedPackageDocument = new DocumentNode({
-			documentItemMetadata: {
-				apiItemName: "test-package",
-				apiItemKind: ApiItemKind.Package,
-				packageName: "test-package",
-			},
+			apiItem: model.packages[0],
 			documentPath: "test-package",
 			children: [
 				new SectionNode(
@@ -418,11 +613,7 @@ describe("ApiItem to Documentation transformation tests", () => {
 		expect(documents[1]).to.deep.equal(expectedPackageDocument);
 
 		const expectedEntryPointADocument = new DocumentNode({
-			documentItemMetadata: {
-				apiItemName: "entry-point-a",
-				apiItemKind: ApiItemKind.EntryPoint,
-				packageName: "test-package",
-			},
+			apiItem: model.packages[0].entryPoints[0],
 			documentPath: "test-package/entry-point-a-entrypoint",
 			children: [
 				new SectionNode(
@@ -456,12 +647,14 @@ describe("ApiItem to Documentation transformation tests", () => {
 											new TableBodyCellNode([
 												CodeSpanNode.createFromPlainText("readonly"),
 											]),
+											TableBodyCellNode.Empty, // Type
 											TableBodyCellNode.createFromPlainText("Test Constant"),
 										]),
 									],
 									new TableHeaderRowNode([
 										TableHeaderCellNode.createFromPlainText("Variable"),
 										TableHeaderCellNode.createFromPlainText("Modifiers"),
+										TableHeaderCellNode.createFromPlainText("Type"),
 										TableHeaderCellNode.createFromPlainText("Description"),
 									]),
 								),
@@ -506,11 +699,7 @@ describe("ApiItem to Documentation transformation tests", () => {
 		expect(documents[2]).to.deep.equal(expectedEntryPointADocument);
 
 		const expectedEntryPointBDocument = new DocumentNode({
-			documentItemMetadata: {
-				apiItemName: "entry-point-b",
-				apiItemKind: ApiItemKind.EntryPoint,
-				packageName: "test-package",
-			},
+			apiItem: model.packages[0].entryPoints[1],
 			documentPath: "test-package/entry-point-b-entrypoint",
 			children: [
 				new SectionNode(
@@ -541,11 +730,13 @@ describe("ApiItem to Documentation transformation tests", () => {
 													"./test-package#world-variable",
 												),
 											]),
+											TableBodyCellNode.Empty, // Type
 											TableBodyCellNode.createFromPlainText("Test Constant"),
 										]),
 									],
 									new TableHeaderRowNode([
 										TableHeaderCellNode.createFromPlainText("Variable"),
+										TableHeaderCellNode.createFromPlainText("Type"),
 										TableHeaderCellNode.createFromPlainText("Description"),
 									]),
 								),

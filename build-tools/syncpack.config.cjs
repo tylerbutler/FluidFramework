@@ -82,6 +82,7 @@ module.exports = {
 		{
 			label: "Must use tilde dependency ranges",
 			dependencies: [
+				"@biomejs/biome",
 				"eslint-plugin-*",
 				"eslint-config-prettier",
 				"eslint",
@@ -90,18 +91,15 @@ module.exports = {
 				"typescript",
 				"vue",
 				"webpack-dev-server",
-
-				// Required due to use of "unstable" tree component APIs
-				"@fluentui/react-components",
 			],
 			packages: ["**"],
 			range: "~",
 		},
 
 		{
-			label: "Dependencies on other fluid packages within the workspace should use tilde dependency ranges",
+			label:
+				"Dependencies on other fluid packages within the workspace should use tilde dependency ranges",
 			dependencies: [
-				"@fluid-private/readme-command",
 				"@fluid-tools/build-cli",
 				"@fluid-tools/version-tools",
 				"@fluidframework/build-tools",
@@ -129,6 +127,12 @@ module.exports = {
 	 */
 	versionGroups: [
 		{
+			label: "chalk >2 is ESM only but build-tools and version-tools are still CJS only.",
+			dependencies: ["chalk"],
+			packages: ["@fluidframework/build-tools", "@fluid-tools/version-tools"],
+		},
+
+		{
 			label: "Versions of common Fluid packages should all match",
 			dependencies: [
 				"@fluidframework/build-common",
@@ -153,7 +157,8 @@ module.exports = {
 		},
 
 		{
-			label: "Ignore interdependencies on other Fluid packages. This is needed because syncpack doesn't understand our >= < semver ranges",
+			label:
+				"Ignore interdependencies on other Fluid packages. This is needed because syncpack doesn't understand our >= < semver ranges",
 			isIgnored: true,
 			packages: [
 				"@fluid-example/**",

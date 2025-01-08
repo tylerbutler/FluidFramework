@@ -5,12 +5,32 @@
 
 import { BaseTelemetryProperties } from "./resources";
 
+/**
+ * @internal
+ */
 export interface ITelemetryContextProperties {
 	[BaseTelemetryProperties.tenantId]: string;
 	[BaseTelemetryProperties.documentId]: string;
 	[BaseTelemetryProperties.correlationId]: string;
+	[BaseTelemetryProperties.requestSource]: string;
 }
 
+/**
+ * @internal
+ */
+export function isTelemetryContextProperties(props: unknown): props is ITelemetryContextProperties {
+	return (
+		typeof props === "object" &&
+		props !== null &&
+		typeof props[BaseTelemetryProperties.tenantId] === "string" &&
+		typeof props[BaseTelemetryProperties.documentId] === "string" &&
+		typeof props[BaseTelemetryProperties.correlationId] === "string"
+	);
+}
+
+/**
+ * @internal
+ */
 export interface ITelemetryContext {
 	/**
 	 * Bind properties to context where `callback()` is executed.
@@ -50,9 +70,15 @@ const nullTelemetryContext = new NullTelemetryContext();
 
 export const getGlobal = () => (typeof window !== "undefined" ? window : global);
 
+/**
+ * @internal
+ */
 export const getGlobalTelemetryContext = () =>
 	(getGlobal().telemetryContext as ITelemetryContext | undefined) ?? nullTelemetryContext;
 
+/**
+ * @internal
+ */
 export const setGlobalTelemetryContext = (telemetryContext: ITelemetryContext) => {
 	getGlobal().telemetryContext = telemetryContext;
 };
