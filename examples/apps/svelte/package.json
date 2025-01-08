@@ -1,0 +1,42 @@
+{
+	"name": "@fluid-examples/sudoku-svelte",
+	"version": "2.20.0",
+	"private": true,
+	"homepage": "https://fluidframework.com",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/microsoft/FluidFramework.git",
+		"directory": "examples/apps/svelte"
+	},
+	"license": "MIT",
+	"author": "Microsoft and contributors",
+	"type": "module",
+	"scripts": {
+		"build": "vite build",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"clean": "rimraf --glob nyc",
+		"dev": "vite dev",
+		"lint": "eslint .",
+		"preview": "vite preview",
+		"test": "npm run test:unit -- --run",
+		"test:unit": "vitest"
+	},
+	"devDependencies": {
+		"@eslint/compat": "^1.2.3",
+		"@sveltejs/adapter-static": "^3.0.6",
+		"@sveltejs/kit": "^2.0.0",
+		"@sveltejs/vite-plugin-svelte": "^5.0.3",
+		"eslint": "~8.55.0",
+		"eslint-plugin-svelte": "~2.36.0",
+		"globals": "^15.0.0",
+		"mdsvex": "^0.12.3",
+		"rimraf": "^4.4.0",
+		"svelte": "^5.0.0",
+		"svelte-check": "^4.0.0",
+		"typescript": "~5.4.5",
+		"typescript-eslint": "^8.0.0",
+		"vite": "^6.0.7",
+		"vitest": "^2.1.8"
+	}
+}

@@ -90,6 +90,5 @@ fluid-framework
 @fluid-experimental/property-common
 @fluid-experimental/property-changeset
 @fluid-example/table-document
-@fluid-example/sudoku
 @fluidframework/azure-service-utils
 @fluidframework/azure-local-service
