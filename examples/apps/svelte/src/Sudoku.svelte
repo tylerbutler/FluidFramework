@@ -5,24 +5,24 @@ import type { SudokuCell } from "./helpers/sudokuCell";
 
 import PuzzleTable from "./PuzzleTable.svelte";
 
-const props = $props();
+const { puzzle, presence, clientSessionId } = $props();
 let theme = $state("default");
 
 const handleResetButton = () => {
-	props.puzzle.forEach((value: SudokuCell, key: CoordinateString) => {
+	puzzle.forEach((value: SudokuCell, key: CoordinateString) => {
 		if (!value.fixed && value.value !== 0) {
 			value.value = 0;
-			props.puzzle.set(key, value);
+			puzzle.set(key, value);
 		}
 	});
 };
 
 const loadPuzzle1 = () => {
-	loadPuzzle(0, props.puzzle);
+	loadPuzzle(0, puzzle);
 };
 
 const loadPuzzle2 = () => {
-	loadPuzzle(1, props.puzzle);
+	loadPuzzle(1, puzzle);
 };
 
 function onThemeChange(e: any) {
@@ -33,7 +33,7 @@ function onThemeChange(e: any) {
 <div class={`sudoku ${theme}`}>
 	<div class="sudoku-wrapper">
 
-		<PuzzleTable {...props} />
+		<PuzzleTable {puzzle} {clientSessionId} {presence} />
 
 		<div class="sudoku-buttons">
 			<span class="sudoku-theme-select">

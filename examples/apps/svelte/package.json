@@ -23,6 +23,7 @@
 		"test:unit": "vitest"
 	},
 	"dependencies": {
+		"@fluidframework/presence": "workspace:~",
 		"sudokus": "^1.0.2"
 	},
 	"devDependencies": {

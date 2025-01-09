@@ -6,11 +6,11 @@
 
 <script lang="ts">
 import { Coordinate, type CoordinateString } from "./helpers/coordinate";
-import { PUZZLE_INDEXES, type PuzzleGrid } from "./helpers/puzzles";
-import { CellState, SudokuCell } from "./helpers/sudokuCell";
+import { PUZZLE_INDEXES } from "./helpers/puzzles";
+import { SudokuCell } from "./helpers/sudokuCell";
 import { type SudokuAppProps } from "./helpers/props";
 
-const { puzzle, clientSessionId }: SudokuAppProps = $props();
+const { puzzle, clientSessionId, presence }: SudokuAppProps = $props();
 
 const coordinateDataAttributeName = "cellcoordinate";
 
@@ -18,21 +18,21 @@ const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(`${clientSessionId}-${coord}`) as HTMLInputElement;
 
 const handleInputFocus = (e: any) => {
-	// const coord = e.target.dataset[coordinateDataAttributeName];
-	// if (props.setPresence) {
-	// 	if (coord !== undefined) {
-	// 		props.setPresence(coord, false);
-	// 	}
-	// }
+	const coord = e.target.dataset[coordinateDataAttributeName];
+	if (presence) {
+		if (coord !== undefined) {
+			presence.set(coord, false);
+		}
+	}
 };
 
 const handleInputBlur = (e: any) => {
-	// const coord = e.target.dataset[coordinateDataAttributeName];
-	// if (props.setPresence) {
-	// 	if (coord !== undefined) {
-	// 		props.setPresence(coord, true);
-	// 	}
-	// }
+	const coord = e.target.dataset[coordinateDataAttributeName];
+	if (presence) {
+		if (coord !== undefined) {
+			presence.set(coord, true);
+		}
+	}
 };
 
 const handleKeyDown = (e: any) => {
@@ -177,6 +177,8 @@ function getCellBorderStyles(coord: CoordinateString) {
 
 	return objectToCssString(styles);
 }
+
+$inspect(presence).with(console.trace);
 </script>
 
 <table>

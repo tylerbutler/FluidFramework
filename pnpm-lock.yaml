@@ -1127,6 +1127,9 @@ importers:
 
   examples/apps/svelte:
     dependencies:
+      '@fluidframework/presence':
+        specifier: workspace:~
+        version: link:../../../packages/framework/presence
       sudokus:
         specifier: ^1.0.2
         version: 1.0.2
