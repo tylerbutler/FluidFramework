@@ -117,6 +117,66 @@ const moveCell = (keyString: string, coordIn: string) => {
 	const newCell = getCellInputElement(newCoord);
 	newCell.focus();
 };
+
+/**
+ * Returns CSS border properties to use when rendering a cell. This helps give the grid that authentic Sudoku look.
+ */
+function getCellBorderStyles(coord: CoordinateString) {
+	const borderStyle = "solid medium";
+	const styles = {
+		borderTop: "none",
+		borderBottom: "none",
+		borderLeft: "none",
+		borderRight: "none",
+		borderColor: "var(--neutralPrimaryAlt)",
+		paddingTop: 0,
+		paddingBottom: 0,
+		paddingLeft: 0,
+		paddingRight: 0,
+	};
+	const [row, col] = Coordinate.asArrayNumbers(coord);
+
+	switch (row) {
+		case 0:
+		case 3:
+		case 6:
+			styles.borderTop = borderStyle;
+			styles.paddingTop = 4;
+			break;
+		case 2:
+		case 5:
+		case 8:
+			styles.borderBottom = borderStyle;
+			styles.paddingBottom = 4;
+			break;
+		default: // Nothing
+	}
+
+	switch (col) {
+		case 0:
+		case 3:
+		case 6:
+			styles.borderLeft = borderStyle;
+			styles.paddingLeft = 4;
+			break;
+		case 2:
+		case 5:
+		case 8:
+			styles.borderRight = borderStyle;
+			styles.paddingRight = 4;
+			break;
+		default: // Nothing
+	}
+
+	// Converts an object to a CSS style declaration string
+	function objectToCssString(obj: Record<string, any>) {
+		return Object.entries(obj)
+			.map(([key, value]) => `${key.replace(/([A-Z])/g, "-$1").toLowerCase()}: ${value}`)
+			.join("; ");
+	}
+
+	return objectToCssString(styles);
+}
 </script>
 
 <table>
@@ -124,21 +184,22 @@ const moveCell = (keyString: string, coordIn: string) => {
 		{#each PUZZLE_INDEXES as row (row.toString())}
 		<tr>
 			{#each PUZZLE_INDEXES as column (column.toString())}
-			{@const currentCell = puzzle.get(Coordinate.asString(row, column))!}
+			{@const coord = Coordinate.asString(row, column)}
+			{@const currentCell = puzzle.get(coord)!}
 			{@const currentCellState = SudokuCell.getState(currentCell)}
 
-			<td class="sudoku-cell">
+			<td class="sudoku-cell" style={getCellBorderStyles(coord)}>
 				<input
-					id={`${clientSessionId}-${Coordinate.asString(row, column)}`}
+					id={`${clientSessionId}-${coord}`}
 					class="sudoku-input {currentCellState}"
 					type="text"
 					readOnly={true}
 					onfocus={handleInputFocus}
 					onblur={handleInputBlur}
 					onkeydown={handleKeyDown}
-					value={SudokuCell.getDisplayString(puzzle.get(Coordinate.asString(row, column))!)}
+					value={SudokuCell.getDisplayString(currentCell)}
 					max={1}
-					data-cellcoordinate={Coordinate.asString(row, column)}
+					data-cellcoordinate={coord}
 				/>
 			</td>
 			{/each}
