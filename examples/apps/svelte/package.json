@@ -22,11 +22,15 @@
 		"test": "npm run test:unit -- --run",
 		"test:unit": "vitest"
 	},
+	"dependencies": {
+		"sudokus": "^1.0.2"
+	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.3",
 		"@sveltejs/adapter-static": "^3.0.6",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.3",
+		"@types/sudokus": "^1.0.3",
 		"eslint": "~8.55.0",
 		"eslint-plugin-svelte": "~2.36.0",
 		"globals": "^15.0.0",

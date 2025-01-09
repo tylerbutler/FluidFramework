@@ -1126,6 +1126,10 @@ importers:
         version: 6.0.1
 
   examples/apps/svelte:
+    dependencies:
+      sudokus:
+        specifier: ^1.0.2
+        version: 1.0.2
     devDependencies:
       '@eslint/compat':
         specifier: ^1.2.3
@@ -1139,6 +1143,9 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^5.0.3
         version: 5.0.3(svelte@5.17.1)(vite@6.0.7)
+      '@types/sudokus':
+        specifier: ^1.0.3
+        version: 1.0.3
       eslint:
         specifier: ~8.55.0
         version: 8.55.0
