@@ -10,7 +10,7 @@ const { puzzle, presence, clientSessionId }: SudokuAppProps = $props();
 let theme = $state("default");
 
 const handleResetButton = () => {
-	puzzle.forEach((value: SudokuCell, key: CoordinateString) => {
+	puzzle.grid.forEach((value: SudokuRow, key: CoordinateString) => {
 		if (!value.fixed && value.value !== 0) {
 			value.value = 0;
 			puzzle.set(key, value);

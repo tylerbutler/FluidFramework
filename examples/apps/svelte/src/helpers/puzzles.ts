@@ -110,22 +110,22 @@ export function loadPuzzle(index: number, puzzleMap: SudokuPuzzle): number[][] {
 	const puzzleInput = PUZZLES[index];
 	const solution = sudoku.solve(puzzleInput) as unknown as SudokuInput;
 
-	// for (const row of PUZZLE_INDEXES) {
-	// 	for (const col of PUZZLE_INDEXES) {
-	// 		const key = Coordinate.asString(row, col);
-	// 		const cell = new SudokuCell(puzzleInput[row][col], solution[row][col], key);
-	// 		puzzleMap.set(key, cell);
-	// 	}
-	// }
-	for (const [row, rowData] of puzzleMap.grid.entries()) {
-		for (const [col, cellData] of rowData.entries()) {
-			const cell = new SudokuCell(
-				puzzleInput[row][col],
-				solution[row][col],
-				Coordinate.asString(row, col),
-			);
-			cellData = cell;
+	for (const row of PUZZLE_INDEXES) {
+		for (const col of PUZZLE_INDEXES) {
+			const key = Coordinate.asString(row, col);
+			const cell = new SudokuCell(puzzleInput[row][col], solution[row][col], key);
+			puzzleMap.grid[row][col] = cell;
 		}
 	}
+	// for (const [row, rowData] of puzzleMap.grid.entries()) {
+	// 	for (const [col, cellData] of rowData.entries()) {
+	// 		const cell = new SudokuCell(
+	// 			puzzleInput[row][col],
+	// 			solution[row][col],
+	// 			Coordinate.asString(row, col),
+	// 		);
+	// 		cellData = cell;
+	// 	}
+	// }
 	return solution;
 }

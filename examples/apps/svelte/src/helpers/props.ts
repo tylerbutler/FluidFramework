@@ -1,8 +1,8 @@
 import type { CoordinateString } from "./coordinate";
-import type { PuzzleGrid } from "./puzzles";
+import type { SudokuPuzzle } from "./puzzles";
 
 export interface SudokuAppProps {
-	puzzle: PuzzleGrid;
+	puzzle: SudokuPuzzle;
 	clientSessionId: string;
 	presence: Map<CoordinateString, boolean>;
 }

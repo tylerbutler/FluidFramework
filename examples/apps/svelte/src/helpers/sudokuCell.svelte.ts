@@ -46,7 +46,7 @@ export class SudokuCell implements sudoku.Cell {
 	public constructor(
 		value: SudokuNumber,
 		public readonly correctValue: SudokuNumber,
-		public readonly coordinate: Coordinate,
+		public readonly coordinate: string,
 	) {
 		this.value = Number.isSafeInteger(value) ? value : 0;
 		this.fixed = this.value !== 0;
