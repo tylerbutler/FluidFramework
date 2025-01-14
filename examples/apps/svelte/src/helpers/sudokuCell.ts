@@ -4,6 +4,7 @@
  */
 
 import sudoku from "sudokus";
+
 import type { CoordinateString } from "./coordinate";
 
 export const CellState = {
@@ -29,7 +30,9 @@ export class SudokuCell implements sudoku.Cell {
 	/**
 	 * True if the value in the cell is correct; false otherwise.
 	 */
-	public isCorrect = false;
+	public isCorrect = $state(false);
+
+	public value = $state(0);
 
 	/**
 	 * Creates a new SudokuCell instance.
@@ -40,14 +43,13 @@ export class SudokuCell implements sudoku.Cell {
 	 * @param coordinate - The coordinate of the cell in the grid.
 	 */
 	public constructor(
-		public value: number,
 		public readonly correctValue: number,
 		public readonly coordinate: CoordinateString,
 	) {
-		if (!Number.isSafeInteger(value)) {
+		if (!Number.isSafeInteger(this.value)) {
 			this.value = 0;
 		}
-		this.fixed = value !== 0;
+		this.fixed = this.value !== 0;
 		SudokuCell.setIsCorrect(this);
 	}
 

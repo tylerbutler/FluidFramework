@@ -1,9 +1,3 @@
-<style>
-	table {
-		border: none;
-	}
-</style>
-
 <script lang="ts">
 import { Coordinate, type CoordinateString } from "./helpers/coordinate";
 import { PUZZLE_INDEXES } from "./helpers/puzzles";
@@ -209,3 +203,9 @@ $inspect(presence).with(console.trace);
 		{/each}
 	</tbody>
 </table>
+
+<style>
+	table {
+		border: none;
+	}
+</style>

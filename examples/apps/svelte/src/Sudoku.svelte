@@ -1,11 +1,12 @@
 <script lang="ts">
 import type { CoordinateString } from "./helpers/coordinate";
+import type { SudokuAppProps } from "./helpers/props";
 import { loadPuzzle } from "./helpers/puzzles";
 import type { SudokuCell } from "./helpers/sudokuCell";
 
 import PuzzleTable from "./PuzzleTable.svelte";
 
-const { puzzle, presence, clientSessionId } = $props();
+const { puzzle, presence, clientSessionId }: SudokuAppProps = $props();
 let theme = $state("default");
 
 const handleResetButton = () => {

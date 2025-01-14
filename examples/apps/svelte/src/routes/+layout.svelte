@@ -1,5 +1,5 @@
 <script>
-  import '../helpers/styles.css'
+import "../helpers/styles.css";
 </script>
 
 <slot />
