@@ -1,10 +1,14 @@
 <script lang="ts">
 import { Coordinate, type CoordinateString } from "./helpers/coordinate";
-import { PUZZLE_INDEXES } from "./helpers/puzzles";
 import { SudokuCell } from "./helpers/sudokuCell.svelte";
 import { type SudokuAppProps } from "./helpers/props";
 
-const { puzzle = $bindable(), clientSessionId, presence }: SudokuAppProps = $props();
+// export let cell: SudokuCell;
+
+let { currentCell, coord = $bindable(), clientSessionId = "none" } = $props();
+
+// export let clientSessionId: string;
+// export let presence: Map<CoordinateString, boolean>;
 
 const coordinateDataAttributeName = "cellcoordinate";
 
@@ -57,9 +61,6 @@ const handleKeyDown = (e: any) => {
 			}
 			numericInput(keyString, coord);
 			return;
-		default:
-			moveCell(keyString, coord);
-			return;
 	}
 };
 
@@ -82,34 +83,6 @@ const numericInput = (keyString: string, coord: string) => {
 		toSet.isCorrect = valueToSet === toSet.correctValue;
 		puzzle.set(coord, toSet);
 	}
-};
-
-const moveCell = (keyString: string, coordIn: string) => {
-	const coord = coordIn;
-	let newCoord = coordIn;
-	switch (keyString) {
-		case "ArrowDown":
-		case "s":
-			newCoord = Coordinate.moveDown(coord);
-			break;
-		case "ArrowUp":
-		case "w":
-			newCoord = Coordinate.moveUp(coord);
-			break;
-		case "ArrowLeft":
-		case "a":
-			newCoord = Coordinate.moveLeft(coord);
-			break;
-		case "ArrowRight":
-		case "d":
-			newCoord = Coordinate.moveRight(coord);
-			break;
-		default:
-			newCoord = coord;
-	}
-
-	const newCell = getCellInputElement(newCoord);
-	newCell.focus();
 };
 
 /**
@@ -171,42 +144,19 @@ function getCellBorderStyles(coord: CoordinateString) {
 
 	return objectToCssString(styles);
 }
-
-// $inspect(puzzle);
-$inspect(presence);
 </script>
 
-<table>
-	<tbody>
-		{#each PUZZLE_INDEXES as row (row.toString())}
-		<tr>
-			{#each PUZZLE_INDEXES as column (column.toString())}
-			{@const coord = Coordinate.asString(row, column)}
-			{@const currentCell = puzzle.get(coord)!}
-			{@const currentCellState = SudokuCell.getState(currentCell)}
-
-			<td class="sudoku-cell" style={getCellBorderStyles(coord)}>
-				<input
-					id={`${clientSessionId}-${coord}`}
-					class="sudoku-input {currentCellState}"
-					type="text"
-					readOnly={true}
-					onfocus={handleInputFocus}
-					onblur={handleInputBlur}
-					onkeydown={handleKeyDown}
-					value={SudokuCell.getDisplayString(currentCell)}
-					max={1}
-					data-cellcoordinate={coord}
-				/>
-			</td>
-			{/each}
-		</tr>
-		{/each}
-	</tbody>
-</table>
-
-<style>
-	table {
-		border: none;
-	}
-</style>
+<td class="sudoku-cell" style={getCellBorderStyles(coord)}>
+	<input
+		id={`${clientSessionId}-${coord}`}
+		class="sudoku-input {currentCellState}"
+		type="text"
+		readOnly={true}
+		onfocus={handleInputFocus}
+		onblur={handleInputBlur}
+		onkeydown={handleKeyDown}
+			bind:value={currentCell.value}
+		max={1}
+		data-cellcoordinate={coord}
+	/>
+</td>

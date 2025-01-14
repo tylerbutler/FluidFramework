@@ -2,7 +2,7 @@
 import type { CoordinateString } from "./helpers/coordinate";
 import type { SudokuAppProps } from "./helpers/props";
 import { loadPuzzle } from "./helpers/puzzles";
-import type { SudokuCell } from "./helpers/sudokuCell";
+import type { SudokuCell } from "./helpers/sudokuCell.svelte";
 
 import PuzzleTable from "./PuzzleTable.svelte";
 

@@ -5,7 +5,8 @@
 
 import sudoku from "sudokus";
 
-import type { CoordinateString } from "./coordinate";
+import type { Coordinate } from "./coordinate";
+import type { SudokuNumber } from "./puzzles";
 
 export const CellState = {
 	empty: "empty",
@@ -43,12 +44,11 @@ export class SudokuCell implements sudoku.Cell {
 	 * @param coordinate - The coordinate of the cell in the grid.
 	 */
 	public constructor(
-		public readonly correctValue: number,
-		public readonly coordinate: CoordinateString,
+		value: SudokuNumber,
+		public readonly correctValue: SudokuNumber,
+		public readonly coordinate: Coordinate,
 	) {
-		if (!Number.isSafeInteger(this.value)) {
-			this.value = 0;
-		}
+		this.value = Number.isSafeInteger(value) ? value : 0;
 		this.fixed = this.value !== 0;
 		SudokuCell.setIsCorrect(this);
 	}
