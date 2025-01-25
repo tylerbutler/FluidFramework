@@ -21,7 +21,7 @@ export const AllPackagesSelectionCriteria: PackageSelectionCriteria;
 export const BUILDPROJECT_CONFIG_VERSION = 1;
 
 // @public
-export interface BuildProjectLayout {
+export interface BuildProjectConfig {
     buildProject?: {
         workspaces: {
             [name: string]: WorkspaceDefinition;
@@ -71,7 +71,7 @@ export function getAllDependencies(repo: IBuildProject, packages: IPackage[]): {
 
 // @public
 export function getBuildProjectConfig(searchPath: string, noCache?: boolean): {
-    config: BuildProjectLayout;
+    config: BuildProjectConfig;
     configFilePath: string;
 };
 
@@ -98,7 +98,7 @@ export type GlobString = string;
 
 // @public
 export interface IBuildProject<P extends IPackage = IPackage> extends Reloadable {
-    configuration: BuildProjectLayout;
+    configuration: BuildProjectConfig;
     getGitRepository(): Promise<Readonly<SimpleGit>>;
     getPackageReleaseGroup(pkg: Readonly<P>): Readonly<IReleaseGroup>;
     packages: Map<PackageName, P>;

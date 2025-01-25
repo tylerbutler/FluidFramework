@@ -4,8 +4,6 @@
  */
 
 import path from "node:path";
-// import type { IPackage } from "@fluid-tools/build-infrastructure";
-// import type { Package } from "./npmPackage";
 
 /**
  * Given a package, returns the name that should be used for the previous version of the package to generate type tests.

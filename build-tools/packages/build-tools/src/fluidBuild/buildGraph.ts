@@ -9,11 +9,11 @@ import { Spinner } from "picospinner";
 import * as semver from "semver";
 
 import * as assert from "assert";
-import type { Stopwatch } from "@fluid-tools/build-infrastructure";
+import type { BuildProjectConfig, Stopwatch } from "@fluid-tools/build-infrastructure";
 import registerDebug from "debug";
 import type { SimpleGit } from "simple-git";
 import { defaultLogger } from "../common/logging";
-import { Package } from "../common/npmPackage";
+import { BuildPackage } from "../common/npmPackage";
 import type { BuildContext } from "./buildContext";
 import { FileHashCache } from "./fileHashCache";
 import type { IFluidBuildConfig } from "./fluidBuildConfig";
@@ -69,7 +69,7 @@ class BuildGraphContext implements BuildContext {
 	public readonly taskStats = new TaskStats();
 	public readonly failedTaskLines: string[] = [];
 	public readonly fluidBuildConfig: IFluidBuildConfig;
-	public readonly buildProjectLayout: BuildProjectLayout;
+	public readonly buildProjectLayout: BuildProjectConfig;
 	public readonly repoRoot: string;
 	public readonly gitRepo: SimpleGit;
 	public readonly gitRoot: string;
@@ -544,7 +544,9 @@ export class BuildGraph {
 		spinner.start();
 
 		const isUpToDate = await this.isUpToDate();
-		if (timer) timer.log(`Check up to date completed`);
+
+		timer?.log(`Check up to date completed`);
+		spinner.succeed("Tasks loaded.");
 
 		log(
 			`Start tasks '${chalk.cyanBright(this.buildTaskNames.join("', '"))}' in ${

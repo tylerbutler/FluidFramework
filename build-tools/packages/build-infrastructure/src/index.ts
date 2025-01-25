@@ -24,7 +24,7 @@ export {
 	type IFluidBuildDir,
 	type IFluidBuildDirs,
 	type IFluidBuildDirEntry,
-	type BuildProjectConfig as BuildProjectLayout,
+	type BuildProjectConfig,
 	BUILDPROJECT_CONFIG_VERSION,
 	getBuildProjectConfig,
 } from "./config.js";
