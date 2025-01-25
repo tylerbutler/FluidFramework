@@ -36,6 +36,7 @@ import {
 	BaseCommand,
 	ReleaseReport,
 	ReportKind,
+	type Repository,
 	VersionDetails,
 	filterVersionsOlderThan,
 	getDisplayDate,

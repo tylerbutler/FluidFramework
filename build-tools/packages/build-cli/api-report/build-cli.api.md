@@ -10,13 +10,16 @@ import { run } from '@oclif/core';
 import { VersionBumpType } from '@fluid-tools/version-tools';
 import type { WrittenConfig } from '@changesets/types';
 
-// @public (undocumented)
+// @public
 export interface AssertTaggingConfig {
-    // (undocumented)
+    enabledPaths?: RegExp[];
+}
+
+// @public
+export interface AssertTaggingPackageConfig {
     assertionFunctions: {
         [functionName: string]: number;
     };
-    enabledPaths?: RegExp[];
 }
 
 // @public

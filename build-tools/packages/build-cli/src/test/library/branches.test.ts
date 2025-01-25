@@ -61,19 +61,19 @@ describe("generateBumpVersionBranchName", () => {
 describe("generateBumpDepsBranchName", () => {
 	describe("semver versions", () => {
 		it("patch", () => {
-			const actual = generateBumpDepsBranchName(MonoRepoKind.Azure, "patch");
+			const actual = generateBumpDepsBranchName("azure", "patch");
 			const expected = "bump_deps_azure_patch";
 			assert.equal(actual, expected);
 		});
 
 		it("minor", () => {
-			const actual = generateBumpDepsBranchName(MonoRepoKind.Azure, "minor");
+			const actual = generateBumpDepsBranchName("azure", "minor");
 			const expected = "bump_deps_azure_minor";
 			assert.equal(actual, expected);
 		});
 
 		it("major", () => {
-			const actual = generateBumpDepsBranchName(MonoRepoKind.Azure, "major");
+			const actual = generateBumpDepsBranchName("azure", "major");
 			const expected = "bump_deps_azure_major";
 			assert.equal(actual, expected);
 		});

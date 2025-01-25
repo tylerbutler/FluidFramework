@@ -41,3 +41,14 @@ export type {
 	requireAssignableTo,
 	SkipUniqueSymbols,
 } from "./common/typeCompatibility";
+
+// re-export some stuff temporarily from build-infrastructure
+export {
+	type IPackage,
+	type ReleaseGroupName,
+	type PackageName,
+	/**
+	 * @deprecated Replace as soon as possible with IReleaseGroup directly.
+	 */
+	// type IReleaseGroup as MonoRepo,
+} from "@fluid-tools/build-infrastructure";

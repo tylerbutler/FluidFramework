@@ -10,6 +10,7 @@ import { compareAsc, formatISO, parseISO } from "date-fns";
 import globby from "globby";
 import matter from "gray-matter";
 import issueParser from "issue-parser";
+import { simpleGit } from "simple-git";
 const { test: hasFrontMatter } = matter;
 
 import type { Logger } from "@fluid-tools/build-infrastructure";

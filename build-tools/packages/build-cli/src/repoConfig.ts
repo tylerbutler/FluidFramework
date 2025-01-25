@@ -20,6 +20,10 @@ export const getRunPolicyCheckDefault = (
 	releaseGroupOrPackage: IReleaseGroup,
 	branch: string,
 ): boolean => {
+	if (branch === undefined) {
+		return false;
+	}
+
 	for (const [branchPattern, shouldRunPolicy] of defaults) {
 		if (minimatch(branch, branchPattern) === true) {
 			return shouldRunPolicy.includes(releaseGroupOrPackage.name);

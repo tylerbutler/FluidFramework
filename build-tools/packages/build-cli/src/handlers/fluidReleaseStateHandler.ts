@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import { ReleaseVersion, VersionBumpType, VersionScheme } from "@fluid-tools/version-tools";
 import { Command } from "@oclif/core";
 import { Machine } from "jssm";
 import chalk from "picocolors";
@@ -12,6 +13,7 @@ import { ReleaseVersion, VersionBumpType, VersionScheme } from "@fluid-tools/ver
 import type { IBuildProject, IReleaseGroup } from "@fluid-tools/build-infrastructure";
 import type { SimpleGit } from "simple-git";
 import { InstructionalPromptWriter } from "../instructionalPromptWriter.js";
+import { Context } from "../library/index.js";
 import { CommandLogger } from "../logging.js";
 import { MachineState } from "../machines/index.js";
 import { askForReleaseType } from "./askFunctions.js";

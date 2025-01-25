@@ -32,7 +32,6 @@ export default class UpdateDependencyInLockfileCommand extends BaseCommand<
 	static readonly enableJsonFlag = true;
 
 	static readonly flags = {
-		releaseGroup: releaseGroupFlag({ required: true }),
 		dependencyName: Flags.string({
 			description: "Name of the dependency (npm package) to update.",
 			required: true,
@@ -45,14 +44,24 @@ export default class UpdateDependencyInLockfileCommand extends BaseCommand<
 		}),
 	};
 
+	public static readonly args = {
+		package_or_release_group: packageOrReleaseGroupArg({
+			description:
+				"The name of a package or a release group. Defaults to the client release group if not specified.",
+			default: "client",
+		}),
+	} as const;
+
 	public async run(): Promise<void> {
 		const fluidRepo = await this.getBuildProject();
 		const releaseGroup = fluidRepo.releaseGroups.get(this.flags.releaseGroup);
 
-		if (releaseGroup === undefined) {
-			// exits the process
-			this.error(`Can't find release group: ${this.flags.releaseGroup}`, { exit: 1 });
+		const rgArg = this.args.package_or_release_group;
+		const pkgOrReleaseGroup = findPackageOrReleaseGroup(rgArg, context);
+		if (pkgOrReleaseGroup === undefined) {
+			this.error(`Can't find package or release group "${rgArg}"`, { exit: 1 });
 		}
+		this.verbose(`Release group or package found: ${pkgOrReleaseGroup.name}`);
 
 		// Add override to package.json
 		this.info(
