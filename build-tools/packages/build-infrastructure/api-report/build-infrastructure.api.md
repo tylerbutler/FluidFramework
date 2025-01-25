@@ -18,6 +18,23 @@ export type AdditionalPackageProps = Record<string, string> | undefined;
 export const AllPackagesSelectionCriteria: PackageSelectionCriteria;
 
 // @public
+export class BuildProject<P extends IPackage> implements IBuildProject<P> {
+    constructor(searchPath: string,
+    upstreamRemotePartialUrl?: string | undefined);
+    protected readonly configFilePath: string;
+    readonly configuration: BuildProjectConfig;
+    getGitRepository(): Promise<Readonly<SimpleGit>>;
+    getPackageReleaseGroup(pkg: Readonly<P>): Readonly<IReleaseGroup>;
+    get packages(): Map<PackageName, P>;
+    relativeToRepo(p: string): string;
+    get releaseGroups(): Map<ReleaseGroupName, IReleaseGroup>;
+    reload(): void;
+    readonly root: string;
+    readonly upstreamRemotePartialUrl?: string | undefined;
+    get workspaces(): Map<WorkspaceName, IWorkspace>;
+}
+
+// @public
 export const BUILDPROJECT_CONFIG_VERSION = 1;
 
 // @public

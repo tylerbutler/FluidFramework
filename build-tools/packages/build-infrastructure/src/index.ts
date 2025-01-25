@@ -15,6 +15,7 @@
  */
 
 export {
+	BuildProject,
 	getAllDependencies,
 	loadBuildProject,
 } from "./buildProject.js";

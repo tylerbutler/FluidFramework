@@ -31,11 +31,11 @@ async function main() {
 		process.exit(-4);
 	}
 
-	// Dependency checks
-	if (options.depcheck) {
-		await repo.depcheck(false);
-		timer.log("Dependencies check completed", true);
-	}
+	// // Dependency checks
+	// if (options.depcheck) {
+	// 	await repo.depcheck(false);
+	// 	timer.log("Dependencies check completed", true);
+	// }
 
 	// Uninstall
 	if (options.uninstall) {
@@ -70,11 +70,6 @@ async function main() {
 		}
 		timer.log("Install completed", true);
 	}
-
-	// Symlink check
-	const symlinkTaskName = options.symlink ? "Symlink" : "Symlink check";
-	await repo.symlink(options);
-	timer.log(`${symlinkTaskName} completed`, options.symlink);
 
 	let failureSummary = "";
 	let exitCode = 0;
