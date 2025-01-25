@@ -6,7 +6,7 @@
 import { unlinkSync } from "node:fs";
 import path from "node:path";
 import {
-	type BuildProjectLayout,
+	type BuildProjectConfig,
 	getBuildProjectConfig,
 } from "@fluid-tools/build-infrastructure";
 import { FlubConfig, getFlubConfig } from "../../config.js";
@@ -15,7 +15,7 @@ import { Handler } from "./common.js";
 const lockFilePattern = /.*?package-lock\.json$/i;
 let _knownPaths: string[] | undefined;
 
-const getKnownPaths = (config: FlubConfig, repoConfig: BuildProjectLayout): string[] => {
+const getKnownPaths = (config: FlubConfig, repoConfig: BuildProjectConfig): string[] => {
 	if (_knownPaths === undefined) {
 		// Add the root path (.) because a lockfile is expected there
 		_knownPaths = ["."];
