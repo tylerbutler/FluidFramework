@@ -16,8 +16,7 @@ export class Stopwatch {
 	constructor(
 		private readonly enabled: boolean,
 		protected logFunc = defaultLogger.log,
-	) {
-	}
+	) {}
 
 	public log(msg?: string, print?: boolean): number {
 		const currTime = Date.now();

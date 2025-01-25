@@ -4,6 +4,7 @@
 
 ```ts
 
+import { LoggingFunction as LoggingFunction_2 } from './logging.js';
 import type { Opaque } from 'type-fest';
 import type { PackageJson as PackageJson_2 } from 'type-fest';
 import { SemVer } from 'semver';
@@ -299,6 +300,17 @@ export function selectAndFilterPackages<P extends IPackage>(buildProject: IBuild
 
 // @public
 export function setVersion<J extends PackageJson>(packages: IPackage<J>[], version: SemVer): Promise<void>;
+
+// @public
+export class Stopwatch {
+    constructor(enabled: boolean, logFunc?: LoggingFunction_2);
+    // (undocumented)
+    getTotalTime(): number;
+    // (undocumented)
+    log(msg?: string, print?: boolean): number;
+    // (undocumented)
+    protected logFunc: LoggingFunction_2;
+}
 
 // @public
 export function updatePackageJsonFile<J extends PackageJson = PackageJson>(packagePath: string, packageTransformer: (json: J) => void): void;
