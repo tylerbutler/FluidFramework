@@ -6,7 +6,7 @@
 import path from "node:path";
 
 import { getPackagesSync } from "@manypkg/get-packages";
-import execa from "execa";
+import { installDependencies } from "nypm";
 
 import type { ReleaseGroupDefinition, WorkspaceDefinition } from "./config.js";
 import { loadPackageFromWorkspaceDefinition } from "./package.js";
@@ -185,15 +185,7 @@ export class Workspace implements IWorkspace {
 	 * {@inheritDoc Installable.install}
 	 */
 	public async install(updateLockfile: boolean): Promise<boolean> {
-		const commandArgs = this.packageManager.getInstallCommandWithArgs(updateLockfile);
-
-		const output = await execa(this.packageManager.name, commandArgs, {
-			cwd: this.directory,
-		});
-
-		if (output.exitCode !== 0) {
-			return false;
-		}
+		await installDependencies({ frozenLockFile: !updateLockfile });
 		return true;
 	}
 

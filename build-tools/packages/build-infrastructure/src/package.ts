@@ -9,6 +9,7 @@ import path from "node:path";
 // Imports are written this way for CJS/ESM compat
 import fsePkg from "fs-extra";
 const { readJsonSync } = fsePkg;
+import { ensureDependencyInstalled } from "nypm";
 import colors from "picocolors";
 
 import { type WorkspaceDefinition, findReleaseGroupForPackage } from "./config.js";
@@ -23,7 +24,6 @@ import type {
 	PackageName,
 	ReleaseGroupName,
 } from "./types.js";
-import { lookUpDirSync } from "./utils.js";
 
 /**
  * A base class for npm packages. A custom type can be used for the package.json schema, which is useful
@@ -203,14 +203,11 @@ export abstract class PackageBase<
 		}
 
 		const errors: string[] = [];
-		for (const dep of this.combinedDependencies) {
-			const found = lookUpDirSync(this.directory, (currentDir) => {
-				// TODO: check semver as well
-				return existsSync(path.join(currentDir, "node_modules", dep.name));
-			});
+		for (const { name } of this.combinedDependencies) {
+			const found = await ensureDependencyInstalled(name, { cwd: this.directory });
 
 			if (found === undefined) {
-				errors.push(`${this.nameColored}: dependency ${dep.name} not found`);
+				errors.push(`${this.nameColored}: dependency ${name} not found`);
 			}
 		}
 		return errors.length === 0 ? true : errors;

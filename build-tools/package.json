@@ -163,6 +163,9 @@
 				"type-fest",
 				"typescript"
 			]
+		},
+		"patchedDependencies": {
+			"nypm": "patches/nypm.patch"
 		}
 	}
 }
