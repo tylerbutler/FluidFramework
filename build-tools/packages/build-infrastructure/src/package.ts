@@ -17,7 +17,6 @@ import { readPackageJsonAndIndent, writePackageJson } from "./packageJsonUtils.j
 import type {
 	AdditionalPackageProps,
 	IPackage,
-	IPackageManager,
 	IWorkspace,
 	PackageDependency,
 	PackageJson,
@@ -86,7 +85,7 @@ export abstract class PackageBase<
 		/**
 		 * {@inheritDoc IPackage.packageManager}
 		 */
-		public readonly packageManager: IPackageManager,
+		// public readonly packageManager: IPackageManager,
 
 		/**
 		 * {@inheritDoc IPackage.workspace}
@@ -250,7 +249,7 @@ class Package<
 	>(
 		this: T,
 		packageJsonFilePath: string,
-		packageManager: IPackageManager,
+		// packageManager: IPackageManager,
 		isWorkspaceRoot: boolean,
 		workspaceDefinition: WorkspaceDefinition,
 		workspace: IWorkspace,
@@ -280,7 +279,7 @@ class Package<
 
 		const pkg = new this(
 			packageJsonFilePath,
-			packageManager,
+			// packageManager,
 			workspace,
 			isWorkspaceRoot,
 			releaseGroupName,
@@ -304,14 +303,12 @@ class Package<
  */
 export function loadPackageFromWorkspaceDefinition(
 	packageJsonFilePath: string,
-	packageManager: IPackageManager,
 	isWorkspaceRoot: boolean,
 	workspaceDefinition: WorkspaceDefinition,
 	workspace: IWorkspace,
 ): IPackage {
 	return Package.loadFromWorkspaceDefinition(
 		packageJsonFilePath,
-		packageManager,
 		isWorkspaceRoot,
 		workspaceDefinition,
 		workspace,

@@ -3,6 +3,8 @@
  * Licensed under the MIT License.
  */
 
+import { detectPackageManager } from "nypm";
+
 import type { IPackageManager, PackageManagerName } from "./types.js";
 
 export class PackageManager implements IPackageManager {
@@ -65,6 +67,14 @@ export class PackageManager implements IPackageManager {
 /**
  * Create a new package manager instance.
  */
-export function createPackageManager(name: PackageManagerName): IPackageManager {
+export async function createPackageManager(
+	name: PackageManagerName,
+): Promise<IPackageManager> {
+	const detected = await detectPackageManager(process.cwd());
+	if (detected?.warnings !== undefined) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+		throw new Error(detected.warnings.join("\n"));
+	}
+
 	return new PackageManager(name);
 }

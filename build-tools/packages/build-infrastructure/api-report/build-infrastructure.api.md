@@ -29,7 +29,7 @@ export interface BuildProjectLayout {
 }
 
 // @public
-export function createPackageManager(name: PackageManagerName): IPackageManager;
+export function createPackageManager(name: PackageManagerName): Promise<IPackageManager>;
 
 // @public
 export function findGitRootSync(cwd?: string): string;
@@ -118,7 +118,6 @@ export interface IPackage<J extends PackageJson = PackageJson> extends Installab
     readonly nameColored: string;
     packageJson: J;
     readonly packageJsonFilePath: string;
-    readonly packageManager: IPackageManager;
     readonly private: boolean;
     releaseGroup: ReleaseGroupName;
     savePackageJson(): Promise<void>;
@@ -180,7 +179,6 @@ export class NotInGitRepository extends Error {
 export abstract class PackageBase<J extends PackageJson = PackageJson, TAddProps extends AdditionalPackageProps = undefined> implements IPackage<J> {
     constructor(
     packageJsonFilePath: string,
-    packageManager: IPackageManager,
     workspace: IWorkspace,
     isWorkspaceRoot: boolean,
     releaseGroup: ReleaseGroupName,
@@ -196,7 +194,6 @@ export abstract class PackageBase<J extends PackageJson = PackageJson, TAddProps
     get nameColored(): string;
     get packageJson(): J;
     readonly packageJsonFilePath: string;
-    readonly packageManager: IPackageManager;
     get private(): boolean;
     readonly releaseGroup: ReleaseGroupName;
     reload(): void;

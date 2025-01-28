@@ -5,17 +5,18 @@
 
 import path from "node:path";
 
-import { getPackagesSync } from "@manypkg/get-packages";
+import globby from "globby";
 import { installDependencies } from "nypm";
+import resolveWorkspacePkg from "resolve-workspace-root";
+
+const { getWorkspaceGlobs, resolveWorkspaceRoot } = resolveWorkspacePkg;
 
 import type { ReleaseGroupDefinition, WorkspaceDefinition } from "./config.js";
 import { loadPackageFromWorkspaceDefinition } from "./package.js";
-import { createPackageManager } from "./packageManagers.js";
 import { ReleaseGroup } from "./releaseGroup.js";
 import type {
 	IBuildProject,
 	IPackage,
-	IPackageManager,
 	IReleaseGroup,
 	IWorkspace,
 	ReleaseGroupName,
@@ -51,7 +52,7 @@ export class Workspace implements IWorkspace {
 	 */
 	public readonly directory: string;
 
-	private readonly packageManager: IPackageManager;
+	// private readonly packageManager: IPackageManager;
 
 	/**
 	 * Construct a new workspace object.
@@ -73,13 +74,13 @@ export class Workspace implements IWorkspace {
 		this.name = name as WorkspaceName;
 		this.directory = path.resolve(root, definition.directory);
 
-		const {
-			tool,
-			packages: foundPackages,
-			rootPackage: foundRootPackage,
-			rootDir: foundRoot,
-		} = getPackagesSync(this.directory);
-		if (foundRoot !== this.directory) {
+		// Find the workspace root
+		const foundRoot = resolveWorkspaceRoot(definition.directory);
+		if (foundRoot === null) {
+			throw new Error(
+				`Could not find a workspace root. Started looking at '${definition.directory}'.`,
+			);
+		} else if (foundRoot !== this.directory) {
 			// This is a sanity check. directory is the path passed in when creating the Workspace object, while rootDir is
 			// the dir that `getPackagesSync` found. They should be the same.
 			throw new Error(
@@ -87,51 +88,59 @@ export class Workspace implements IWorkspace {
 			);
 		}
 
-		if (foundRootPackage === undefined) {
-			throw new Error(`No root package found for workspace in '${foundRoot}'`);
+		const workspaceGlobs = getWorkspaceGlobs();
+		if (workspaceGlobs === null) {
+			throw new Error(`Couldn't find workspace globs.`);
 		}
 
-		switch (tool.type) {
-			case "npm":
-			case "pnpm":
-			case "yarn": {
-				this.packageManager = createPackageManager(tool.type);
-				break;
-			}
-			default: {
-				throw new Error(`Unknown package manager '${tool.type}'`);
-			}
-		}
+		// detectPackageManager(definition.directory).then((A)=> {
+
+		// })
+		// if (foundRootPackage === undefined) {
+		// 	throw new Error(`No root package found for workspace in '${foundRoot}'`);
+		// }
+
+		// switch (tool.type) {
+		// 	case "npm":
+		// 	case "pnpm":
+		// 	case "yarn": {
+		// 		this.packageManager = createPackageManager(tool.type);
+		// 		break;
+		// 	}
+		// 	default: {
+		// 		throw new Error(`Unknown package manager '${tool.type}'`);
+		// 	}
+		// }
+
+		const packageGlobs = workspaceGlobs.map((g) => `${g}/package.json`);
+		const packageJsonPaths = globby.sync(packageGlobs, {
+			cwd: foundRoot,
+			gitignore: true,
+			onlyFiles: true,
+			absolute: true,
+		});
 
 		this.packages = [];
-		for (const pkg of foundPackages) {
+
+		// Load all the workspace packages
+		for (const pkgJsonPath of packageJsonPaths) {
 			const loadedPackage = loadPackageFromWorkspaceDefinition(
-				path.join(pkg.dir, "package.json"),
-				this.packageManager,
-				/* isWorkspaceRoot */ foundPackages.length === 1,
+				pkgJsonPath,
+				/* isWorkspaceRoot */ false,
 				definition,
 				this,
 			);
 			this.packages.push(loadedPackage);
 		}
 
-		// Load the workspace root IPackage; only do this if more than one package was found in the workspace; otherwise the
-		// single package loaded will be the workspace root.
-		if (foundPackages.length > 1) {
-			this.rootPackage = loadPackageFromWorkspaceDefinition(
-				path.join(this.directory, "package.json"),
-				this.packageManager,
-				/* isWorkspaceRoot */ true,
-				definition,
-				this,
-			);
-
-			// Prepend the root package to the list of packages
-			this.packages.unshift(this.rootPackage);
-		} else {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			this.rootPackage = this.packages[0]!;
-		}
+		// Load the workspace root IPackage
+		this.rootPackage = loadPackageFromWorkspaceDefinition(
+			path.join(foundRoot, "package.json"),
+			/* isWorkspaceRoot */ true,
+			definition,
+			this,
+		);
+		this.packages.unshift(this.rootPackage);
 
 		const rGroupDefinitions: Map<ReleaseGroupName, ReleaseGroupDefinition> =
 			definition.releaseGroups === undefined

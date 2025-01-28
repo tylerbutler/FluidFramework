@@ -375,7 +375,7 @@ export interface IPackage<J extends PackageJson = PackageJson>
 	 * If this is needed at the package level, perhaps it should instead be retrieved from the package's workspace,
 	 * since the package manager is defined at the workspace level.
 	 */
-	readonly packageManager: IPackageManager;
+	// readonly packageManager: IPackageManager;
 
 	/**
 	 * The version of the package. This is the same as `packageJson.version`.
