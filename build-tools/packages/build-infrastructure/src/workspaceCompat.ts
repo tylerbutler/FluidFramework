@@ -6,7 +6,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-import globby from "globby";
+import { globSync } from "tinyglobby";
 
 import type {
 	// eslint-disable-next-line import/no-deprecated -- back-compat code
@@ -99,20 +99,18 @@ function loadWorkspacesFromLegacyConfigEntry(
 		];
 	}
 
-	const packageJsonPaths = globby
-		.sync(["**/package.json"], {
-			cwd: path.dirname(packagePath),
-			gitignore: true,
-			onlyFiles: true,
-			absolute: true,
-			// BACK-COMPAT HACK - only search two levels below entries for package.jsons. This avoids finding some test
-			// files and treating them as packages. This is only needed when loading old configs.
-			deep: 2,
-		})
-		.map(
-			// Make the paths relative to the repo root
-			(filePath) => path.relative(buildProject.root, filePath),
-		);
+	const packageJsonPaths = globSync(["**/package.json"], {
+		cwd: path.dirname(packagePath),
+		ignore: ["**/node_modules/**"],
+		onlyFiles: true,
+		absolute: true,
+		// BACK-COMPAT HACK - only search two levels below entries for package.jsons. This avoids finding some test
+		// files and treating them as packages. This is only needed when loading old configs.
+		deep: 2,
+	}).map(
+		// Make the paths relative to the repo root
+		(filePath) => path.relative(buildProject.root, filePath),
+	);
 	const workspaces = packageJsonPaths.flatMap((pkgPath) => {
 		const dir = path.dirname(pkgPath);
 		return loadWorkspacesFromLegacyConfigEntry(dir, buildProject);

@@ -168,7 +168,7 @@ export interface IWorkspace extends Installable, Reloadable {
 	name: WorkspaceName;
 
 	/**
-	 * The root directory of the workspace. This directory will contain the workspace root package.
+	 * The absolute path to the root directory of the workspace. This directory will contain the workspace root package.
 	 */
 	directory: string;
 

@@ -5,9 +5,9 @@
 
 import path from "node:path";
 
-import globby from "globby";
 import { installDependencies } from "nypm";
 import resolveWorkspacePkg from "resolve-workspace-root";
+import { globSync } from "tinyglobby";
 
 const { getWorkspaceGlobs, resolveWorkspaceRoot } = resolveWorkspacePkg;
 
@@ -75,10 +75,10 @@ export class Workspace implements IWorkspace {
 		this.directory = path.resolve(root, definition.directory);
 
 		// Find the workspace root
-		const foundRoot = resolveWorkspaceRoot(definition.directory);
+		const foundRoot = resolveWorkspaceRoot(this.directory);
 		if (foundRoot === null) {
 			throw new Error(
-				`Could not find a workspace root. Started looking at '${definition.directory}'.`,
+				`Could not find a workspace root. Started looking at '${this.directory}'.`,
 			);
 		} else if (foundRoot !== this.directory) {
 			// This is a sanity check. directory is the path passed in when creating the Workspace object, while rootDir is
@@ -88,7 +88,7 @@ export class Workspace implements IWorkspace {
 			);
 		}
 
-		const workspaceGlobs = getWorkspaceGlobs();
+		const workspaceGlobs = getWorkspaceGlobs(foundRoot);
 		if (workspaceGlobs === null) {
 			throw new Error(`Couldn't find workspace globs.`);
 		}
@@ -113,9 +113,9 @@ export class Workspace implements IWorkspace {
 		// }
 
 		const packageGlobs = workspaceGlobs.map((g) => `${g}/package.json`);
-		const packageJsonPaths = globby.sync(packageGlobs, {
+		const packageJsonPaths = globSync(packageGlobs, {
 			cwd: foundRoot,
-			gitignore: true,
+			ignore: ["**/node_modules/**"],
 			onlyFiles: true,
 			absolute: true,
 		});
