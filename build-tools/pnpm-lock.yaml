@@ -12,11 +12,6 @@ overrides:
   oclif>@aws-sdk/client-cloudfront: npm:empty-npm-package@1.0.0
   oclif>@aws-sdk/client-s3: npm:empty-npm-package@1.0.0
 
-patchedDependencies:
-  nypm:
-    hash: joxtg77uc55d3pr6aabnh3qnim
-    path: patches/nypm.patch
-
 importers:
 
   .:
@@ -419,8 +414,8 @@ importers:
         specifier: ^4.0.8
         version: 4.0.8
       nypm:
-        specifier: ^0.5.1
-        version: 0.5.1(patch_hash=joxtg77uc55d3pr6aabnh3qnim)
+        specifier: ^0.5.2
+        version: 0.5.2
       oclif:
         specifier: ^4.15.16
         version: 4.15.16(@types/node@18.19.60)
@@ -5473,8 +5468,8 @@ packages:
     resolution: {integrity: sha512-/vBvz5Jfr9dT/aFWd0FIRf+T/Q2WBsLENygUaFUqstqsycmZAP/t5BvFJTK0viFmSUxiUKTUplWy5vt+rvKIxg==}
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
 
-  nypm@0.5.1:
-    resolution: {integrity: sha512-irxlzb8A2mxHHRvVHkCpuVLEg7VLeONGf0JAMruajlvpL7OHULVd6ii3Yg5qS0o8cEZdPDGZOC1XPx242nNeUA==}
+  nypm@0.5.2:
+    resolution: {integrity: sha512-AHzvnyUJYSrrphPhRWWZNcoZfArGNp3Vrc4pm/ZurO74tYNTgAPrEyBQEKy+qioqmWlPXwvMZCG2wOaHlPG0Pw==}
     engines: {node: ^14.16.0 || >=16.10.0}
     hasBin: true
 
@@ -13341,7 +13336,7 @@ snapshots:
       gauge: 4.0.4
       set-blocking: 2.0.0
 
-  nypm@0.5.1(patch_hash=joxtg77uc55d3pr6aabnh3qnim):
+  nypm@0.5.2:
     dependencies:
       citty: 0.1.6
       consola: 3.4.0
