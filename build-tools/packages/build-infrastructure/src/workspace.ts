@@ -194,7 +194,11 @@ export class Workspace implements IWorkspace {
 	 * {@inheritDoc Installable.install}
 	 */
 	public async install(updateLockfile: boolean): Promise<boolean> {
-		await installDependencies({ frozenLockFile: !updateLockfile });
+		try {
+			await installDependencies({ cwd: this.directory, frozenLockFile: !updateLockfile });
+		} catch {
+			return false;
+		}
 		return true;
 	}
 
