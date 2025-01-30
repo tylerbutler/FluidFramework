@@ -37,7 +37,6 @@ export class PackageManager implements IPackageManager {
 			throw new Error("Cannot generate command");
 		}
 		const { command, args } = resolvedCommand;
-		console.log(`${command} ${args.join(" ")}`); // 'pnpm add -g @antfu/ni'
 		return [command, ...args];
 	}
 }

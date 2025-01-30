@@ -9,7 +9,6 @@ import path from "node:path";
 // Imports are written this way for CJS/ESM compat
 import fsePkg from "fs-extra";
 const { readJsonSync } = fsePkg;
-import { ensureDependencyInstalled } from "nypm";
 import colors from "picocolors";
 
 import { type WorkspaceDefinition, findReleaseGroupForPackage } from "./config.js";
@@ -23,6 +22,7 @@ import type {
 	PackageName,
 	ReleaseGroupName,
 } from "./types.js";
+import { lookUpDirSync } from "./utils.js";
 
 /**
  * A base class for npm packages. A custom type can be used for the package.json schema, which is useful
@@ -202,11 +202,11 @@ export abstract class PackageBase<
 		}
 
 		const errors: string[] = [];
-		for (const { name } of this.combinedDependencies) {
-			const found = await ensureDependencyInstalled(name, { cwd: this.directory });
+		for (const dep of this.combinedDependencies) {
+			const found = checkDependency(this.directory, dep);
 
-			if (found === undefined) {
-				errors.push(`${this.nameColored}: dependency ${name} not found`);
+			if (!found) {
+				errors.push(`${this.nameColored}: dependency ${dep.name} not found`);
 			}
 		}
 		return errors.length === 0 ? true : errors;
@@ -357,4 +357,21 @@ function* iterateDependencies<T extends PackageJson>(
 			depKind: "peer",
 		} as const;
 	}
+}
+
+/**
+ * Checks if a dependency is installed by looking up the folder tree's node_modules folders and looking for the
+ * dependent package. If the dependency's folder in node_modules is found, the dependency is considered installed.
+ *
+ * @remarks
+ *
+ * Note that the version of the dependency is _not_ checked.
+ */
+function checkDependency(packagePath: string, dependency: PackageDependency): boolean {
+	const foundDepPath = lookUpDirSync(packagePath, (currentDir) => {
+		// TODO: check that the version matches the requested semver range as well
+		return existsSync(path.join(currentDir, "node_modules", dependency.name));
+	});
+
+	return foundDepPath !== undefined;
 }
