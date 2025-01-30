@@ -74,7 +74,7 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 				this._workspaces = loadWorkspacesFromLegacyConfig(config.repoPackages, this);
 			}
 		} else {
-			this._workspaces = new Map<WorkspaceName, IWorkspace>(
+			this._workspaces = new WriteOnceMap<WorkspaceName, IWorkspace>(
 				Object.entries(config.buildProject.workspaces).map((entry) => {
 					const name = entry[0] as WorkspaceName;
 					const definition = entry[1];

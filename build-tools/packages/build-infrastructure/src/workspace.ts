@@ -24,6 +24,7 @@ import type {
 	ReleaseGroupName,
 	WorkspaceName,
 } from "./types.js";
+import { WriteOnceMap } from "./writeOnceMap.js";
 
 /**
  * {@inheritDoc IWorkspace}
@@ -150,8 +151,8 @@ export class Workspace implements IWorkspace {
 
 		const rGroupDefinitions: Map<ReleaseGroupName, ReleaseGroupDefinition> =
 			definition.releaseGroups === undefined
-				? new Map<ReleaseGroupName, ReleaseGroupDefinition>()
-				: new Map(
+				? new WriteOnceMap<ReleaseGroupName, ReleaseGroupDefinition>()
+				: new WriteOnceMap(
 						Object.entries(definition.releaseGroups).map(([rgName, group]) => {
 							return [rgName as ReleaseGroupName, group];
 						}),

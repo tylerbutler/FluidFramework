@@ -18,6 +18,7 @@ import type {
 } from "./config.js";
 import type { IBuildProject, IWorkspace, WorkspaceName } from "./types.js";
 import { Workspace } from "./workspace.js";
+import { WriteOnceMap } from "./writeOnceMap.js";
 
 /**
  * Loads workspaces based on the "legacy" config -- the former repoPackages section of the fluid-build config.
@@ -32,7 +33,7 @@ export function loadWorkspacesFromLegacyConfig(
 	config: IFluidBuildDirs,
 	buildProject: IBuildProject,
 ): Map<WorkspaceName, IWorkspace> {
-	const workspaces: Map<WorkspaceName, IWorkspace> = new Map();
+	const workspaces: Map<WorkspaceName, IWorkspace> = new WriteOnceMap();
 
 	// Iterate over the entries and create synthetic workspace definitions for them, then load the workspaces.
 	for (const [name, entry] of Object.entries(config)) {
