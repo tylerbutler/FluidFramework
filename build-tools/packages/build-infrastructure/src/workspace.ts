@@ -77,72 +77,75 @@ export class Workspace implements IWorkspace {
 		this.directory = path.resolve(root, definition.directory);
 
 		// Find the workspace root
-		const foundRoot = resolveWorkspaceRoot(this.directory);
-		if (foundRoot === null) {
+		const foundWorkspaceRootPath = resolveWorkspaceRoot(this.directory);
+		if (foundWorkspaceRootPath === null) {
 			throw new Error(
 				`Could not find a workspace root. Started looking at '${this.directory}'.`,
 			);
-		} else if (foundRoot !== this.directory) {
+		} else if (foundWorkspaceRootPath !== this.directory) {
 			// This is a sanity check. directory is the path passed in when creating the Workspace object, while rootDir is
 			// the dir that `getPackagesSync` found. They should be the same.
 			throw new Error(
-				`The root dir found by manypkg, '${foundRoot}', does not match the configured directory '${this.directory}'`,
+				`The root dir found by resolve-workspace-root, '${foundWorkspaceRootPath}', does not match the configured directory '${this.directory}'`,
 			);
 		}
 
-		const workspaceGlobs = getWorkspaceGlobs(foundRoot);
+		this.packageManager = detectPackageManager(foundWorkspaceRootPath);
+
+		const rootPackageJsonPath = path.join(this.directory, "package.json");
+		const workspaceGlobs = getWorkspaceGlobs(foundWorkspaceRootPath);
 		if (workspaceGlobs === null) {
 			throw new Error(`Couldn't find workspace globs.`);
 		}
 
-		this.packageManager = detectPackageManager(foundRoot);
-		// detectPackageManager(definition.directory).then((A)=> {
-
-		// })
-		// if (foundRootPackage === undefined) {
-		// 	throw new Error(`No root package found for workspace in '${foundRoot}'`);
-		// }
-
-		// switch (tool.type) {
-		// 	case "npm":
-		// 	case "pnpm":
-		// 	case "yarn": {
-		// 		this.packageManager = createPackageManager(tool.type);
-		// 		break;
-		// 	}
-		// 	default: {
-		// 		throw new Error(`Unknown package manager '${tool.type}'`);
-		// 	}
-		// }
-
 		const packageGlobs = workspaceGlobs.map((g) => `${g}/package.json`);
 		const packageJsonPaths = globSync(packageGlobs, {
-			cwd: foundRoot,
+			cwd: foundWorkspaceRootPath,
 			ignore: ["**/node_modules/**"],
 			onlyFiles: true,
 			absolute: true,
 		});
 
+		// Load the workspace root IPackage
+		// this.rootPackage = loadPackageFromWorkspaceDefinition(
+		// 	path.join(foundRoot, "package.json"),
+		// 	/* isWorkspaceRoot */ true,
+		// 	definition,
+		// 	this,
+		// );
+		// this.packages.unshift(this.rootPackage);
+
 		this.packages = [];
 
 		// Load all the workspace packages
+		// if (this.packages.length > 1) {
 		for (const pkgJsonPath of packageJsonPaths) {
-			const loadedPackage = loadPackageFromWorkspaceDefinition(
-				pkgJsonPath,
-				/* isWorkspaceRoot */ false,
-				definition,
-				this,
-			);
-			this.packages.push(loadedPackage);
+			const isWorkspaceRoot = pkgJsonPath === rootPackageJsonPath;
+
+			// Add all packages except the root; we'll add it after the other packages.
+			if (!isWorkspaceRoot) {
+				const loadedPackage = loadPackageFromWorkspaceDefinition(
+					pkgJsonPath,
+					/* isWorkspaceRoot */ false,
+					definition,
+					this,
+				);
+				this.packages.push(loadedPackage);
+			}
 		}
 
-		// Load the workspace root IPackage
 		this.rootPackage = loadPackageFromWorkspaceDefinition(
-			path.join(foundRoot, "package.json"),
+			rootPackageJsonPath,
 			/* isWorkspaceRoot */ true,
 			definition,
 			this,
 		);
+
+		if (this.rootPackage === undefined) {
+			throw new Error(`No root package found for workspace in '${foundWorkspaceRootPath}'`);
+		}
+
+		// Prepend the root package to the package list.
 		this.packages.unshift(this.rootPackage);
 
 		const rGroupDefinitions: Map<ReleaseGroupName, ReleaseGroupDefinition> =
