@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { PackageManager } from "nypm";
+import type { AgentName } from "package-manager-detector";
 import { SimpleGit } from "simple-git";
 import type { Opaque, SetRequired, PackageJson as StandardPackageJson } from "type-fest";
 
@@ -194,10 +194,12 @@ export interface IWorkspace extends Installable, Reloadable {
 	 */
 	packages: IPackage[];
 
-	/**
-	 * The package manager used to manage this package. This is an async operation.
-	 */
-	getPackageManager(): Promise<IPackageManager>;
+	// /**
+	//  * The package manager used to manage this package. This is an async operation.
+	//  */
+	// getPackageManager(): Promise<IPackageManager>;
+
+	packageManager: IPackageManager;
 
 	toString(): string;
 }
@@ -279,12 +281,38 @@ export function isIReleaseGroup(
 /**
  * Known package managers supported by build-infrastructure.
  */
-export type PackageManagerName = "npm" | "pnpm" | "yarn";
+export type PackageManagerName = AgentName;
 
 /**
  * A package manager, such as "npm" or "pnpm".
  */
-export type IPackageManager = Pick<PackageManager, "name">;
+export interface IPackageManager {
+	/**
+	 * The name of the package manager.
+	 */
+	readonly name: PackageManagerName;
+
+	/**
+	 * The name of the lockfile used by the package manager.
+	 */
+	// readonly lockfileName: string;
+
+	/**
+	 * Returns an array of arguments, including the name of the command, e.g. "install", that can be used to install
+	 * dependencies using this package manager.
+	 *
+	 * @param updateLockfile - If `true`, then the returned command will include flags or arguments necessary to update
+	 * the lockfile during install. If `false`, such flags or arguments should be omitted. Note that the command will
+	 * _not_ include the package manager name istself. For example, the `npm` package manager will return `["install"]`,
+	 * not `["npm", "install"]`.
+	 *
+	 * @example
+	 *
+	 * For the pnpm package manager, calling `getInstallCommandWithArgs(true)` would return
+	 * `["install", "--no-frozen-lockfile"]`.
+	 */
+	getInstallCommandWithArgs(updateLockfile: boolean): string[];
+}
 
 /**
  * Information about a package dependency. That is, en extry in the "dependencies", "devDependencies", or

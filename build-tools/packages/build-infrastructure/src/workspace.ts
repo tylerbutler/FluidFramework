@@ -5,7 +5,6 @@
 
 import path from "node:path";
 
-import { installDependencies, detectPackageManager } from "nypm";
 import resolveWorkspacePkg from "resolve-workspace-root";
 import { globSync } from "tinyglobby";
 
@@ -13,6 +12,7 @@ const { getWorkspaceGlobs, resolveWorkspaceRoot } = resolveWorkspacePkg;
 
 import type { ReleaseGroupDefinition, WorkspaceDefinition } from "./config.js";
 import { loadPackageFromWorkspaceDefinition } from "./package.js";
+import { detectPackageManager } from "./packageManagers.js";
 import { ReleaseGroup } from "./releaseGroup.js";
 import type {
 	IBuildProject,
@@ -23,6 +23,7 @@ import type {
 	ReleaseGroupName,
 	WorkspaceName,
 } from "./types.js";
+import execa from "execa";
 
 /**
  * {@inheritDoc IWorkspace}
@@ -53,7 +54,7 @@ export class Workspace implements IWorkspace {
 	 */
 	public readonly directory: string;
 
-	// private readonly packageManager: IPackageManager;
+	public readonly packageManager: IPackageManager;
 
 	/**
 	 * Construct a new workspace object.
@@ -94,6 +95,7 @@ export class Workspace implements IWorkspace {
 			throw new Error(`Couldn't find workspace globs.`);
 		}
 
+		this.packageManager = detectPackageManager(foundRoot);
 		// detectPackageManager(definition.directory).then((A)=> {
 
 		// })
@@ -194,25 +196,32 @@ export class Workspace implements IWorkspace {
 	/**
 	 * The package manager used to manage this package. This is an async operation.
 	 */
-	async getPackageManager(): Promise<IPackageManager> {
-		const r = await detectPackageManager(this.directory);
-		if (r === undefined) {
-			throw new Error("No package manager found.");
-		}
+	// async getPackageManager(): Promise<IPackageManager> {
+	// 	const r = await detectPackageManager(this.directory);
+	// 	if (r === undefined) {
+	// 		throw new Error("No package manager found.");
+	// 	}
 
-		if (r.warnings !== undefined) {
-			throw new Error(r.warnings.join("/n"));
-		}
-		return r;
-	}
+	// 	if (r.warnings !== undefined) {
+	// 		throw new Error(r.warnings.join("/n"));
+	// 	}
+	// 	return r;
+	// }
 
 	/**
 	 * {@inheritDoc Installable.install}
 	 */
+	/**
+	 * {@inheritDoc Installable.install}
+	 */
 	public async install(updateLockfile: boolean): Promise<boolean> {
-		try {
-			await installDependencies({ cwd: this.directory, frozenLockFile: !updateLockfile });
-		} catch {
+		const commandArgs = this.packageManager.getInstallCommandWithArgs(updateLockfile);
+
+		const output = await execa(this.packageManager.name.toString(), commandArgs, {
+			cwd: this.directory,
+		});
+
+		if (output.exitCode !== 0) {
 			return false;
 		}
 		return true;

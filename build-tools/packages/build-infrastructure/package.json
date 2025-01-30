@@ -63,6 +63,7 @@
 		"tsc": "fluid-tsc commonjs --project ./tsconfig.cjs.json && copyfiles -f ../../../common/build/build-common/src/cjs/package.json ./dist"
 	},
 	"dependencies": {
+		"@antfu/ni": "^23.3.0",
 		"@fluid-tools/version-tools": "workspace:~",
 		"@manypkg/get-packages": "^2.2.2",
 		"@oclif/core": "^4.0.30",
@@ -73,6 +74,7 @@
 		"micromatch": "^4.0.8",
 		"nypm": "^0.5.2",
 		"oclif": "^4.15.16",
+		"package-manager-detector": "^0.2.8",
 		"picocolors": "^1.1.1",
 		"read-pkg-up": "^7.0.1",
 		"resolve-workspace-root": "^2.0.0",

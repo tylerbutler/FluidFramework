@@ -386,6 +386,9 @@ importers:
 
   packages/build-infrastructure:
     dependencies:
+      '@antfu/ni':
+        specifier: ^23.3.0
+        version: 23.3.0
       '@fluid-tools/version-tools':
         specifier: workspace:~
         version: link:../version-tools
@@ -416,6 +419,9 @@ importers:
       oclif:
         specifier: ^4.15.16
         version: 4.15.16(@types/node@18.19.60)
+      package-manager-detector:
+        specifier: ^0.2.8
+        version: 0.2.8
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
@@ -832,6 +838,10 @@ packages:
 
   '@andrewbranch/untar.js@1.0.3':
     resolution: {integrity: sha512-Jh15/qVmrLGhkKJBdXlK1+9tY4lZruYjsgkDFj08ZmDiWVBLJcqkok7Z0/R0In+i1rScBpJlSvrTS2Lm41Pbnw==}
+
+  '@antfu/ni@23.3.0':
+    resolution: {integrity: sha512-H3avrIQMnmo8rJu9w62vE/c4WGgLCGemnBDg83pgdARIttKgyJpTOX5hQ4JFjeZ7fRfrzkRCCDg3vLxseH4Xtg==}
+    hasBin: true
 
   '@apidevtools/json-schema-ref-parser@11.7.0':
     resolution: {integrity: sha512-pRrmXMCwnmrkS3MLgAIW5dXRzeTv6GLjkjb4HmxNnvAKXN1Nfzp4KmGADBQvlVUcqi+a5D+hfGDLLnd5NnYxog==}
@@ -5637,6 +5647,9 @@ packages:
     resolution: {integrity: sha512-hySwcV8RAWeAfPsXb9/HGSPn8lwDnv6fabH+obUZKX169QknRkRhPxd1yMubpKDskLFATkl3jHpNtVtDPFA0Wg==}
     engines: {node: '>=14.16'}
 
+  package-manager-detector@0.2.8:
+    resolution: {integrity: sha512-ts9KSdroZisdvKMWVAVCXiKqnqNfXz4+IbrBG8/BWx/TR5le+jfenvoBuIZ6UWM9nz47W7AbD9qYfAwfWMIwzA==}
+
   pacote@15.2.0:
     resolution: {integrity: sha512-rJVZeIwHTUta23sIZgEIM62WYwbmGbThdbnkt81ravBplQv+HjyroqnLRNH2+sLJHcGZmLRmhPwACqhfTcOmnA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
@@ -7223,6 +7236,8 @@ snapshots:
       is-fullwidth-code-point: 4.0.0
 
   '@andrewbranch/untar.js@1.0.3': {}
+
+  '@antfu/ni@23.3.0': {}
 
   '@apidevtools/json-schema-ref-parser@11.7.0':
     dependencies:
@@ -13560,6 +13575,8 @@ snapshots:
       registry-auth-token: 5.0.2
       registry-url: 6.0.1
       semver: 7.6.3
+
+  package-manager-detector@0.2.8: {}
 
   pacote@15.2.0:
     dependencies:
