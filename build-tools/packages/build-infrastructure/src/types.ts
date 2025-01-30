@@ -194,11 +194,9 @@ export interface IWorkspace extends Installable, Reloadable {
 	 */
 	packages: IPackage[];
 
-	// /**
-	//  * The package manager used to manage this package. This is an async operation.
-	//  */
-	// getPackageManager(): Promise<IPackageManager>;
-
+	/**
+	 * The package manager used to manage this workspace.
+	 */
 	packageManager: IPackageManager;
 
 	toString(): string;

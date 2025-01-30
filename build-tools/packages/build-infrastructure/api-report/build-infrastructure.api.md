@@ -158,7 +158,6 @@ export interface IWorkspace extends Installable, Reloadable {
     buildProject: IBuildProject;
     directory: string;
     name: WorkspaceName;
-    // (undocumented)
     packageManager: IPackageManager;
     packages: IPackage[];
     releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;

@@ -55,6 +55,9 @@ export class Workspace implements IWorkspace {
 	 */
 	public readonly directory: string;
 
+	/**
+	 * {@inheritDoc IWorkspace.packageManager}
+	 */
 	public readonly packageManager: IPackageManager;
 
 	/**
