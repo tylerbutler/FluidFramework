@@ -5,7 +5,7 @@
 
 import path from "node:path";
 
-import { installDependencies } from "nypm";
+import { installDependencies, detectPackageManager } from "nypm";
 import resolveWorkspacePkg from "resolve-workspace-root";
 import { globSync } from "tinyglobby";
 
@@ -17,6 +17,7 @@ import { ReleaseGroup } from "./releaseGroup.js";
 import type {
 	IBuildProject,
 	IPackage,
+	IPackageManager,
 	IReleaseGroup,
 	IWorkspace,
 	ReleaseGroupName,
@@ -188,6 +189,21 @@ export class Workspace implements IWorkspace {
 			return errors;
 		}
 		return true;
+	}
+
+	/**
+	 * The package manager used to manage this package. This is an async operation.
+	 */
+	async getPackageManager(): Promise<IPackageManager> {
+		const r = await detectPackageManager(this.directory);
+		if (r === undefined) {
+			throw new Error("No package manager found.");
+		}
+
+		if (r.warnings !== undefined) {
+			throw new Error(r.warnings.join("/n"));
+		}
+		return r;
 	}
 
 	/**

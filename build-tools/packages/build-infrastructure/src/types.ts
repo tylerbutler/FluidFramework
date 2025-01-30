@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import type { PackageManager } from "nypm";
 import { SimpleGit } from "simple-git";
 import type { Opaque, SetRequired, PackageJson as StandardPackageJson } from "type-fest";
 
@@ -192,6 +193,12 @@ export interface IWorkspace extends Installable, Reloadable {
 	 * constituent packages as well.
 	 */
 	packages: IPackage[];
+
+	/**
+	 * The package manager used to manage this package. This is an async operation.
+	 */
+	getPackageManager(): Promise<IPackageManager>;
+
 	toString(): string;
 }
 
@@ -277,33 +284,7 @@ export type PackageManagerName = "npm" | "pnpm" | "yarn";
 /**
  * A package manager, such as "npm" or "pnpm".
  */
-export interface IPackageManager {
-	/**
-	 * The name of the package manager.
-	 */
-	readonly name: PackageManagerName;
-
-	/**
-	 * The name of the lockfile used by the package manager.
-	 */
-	readonly lockfileName: string;
-
-	/**
-	 * Returns an array of arguments, including the name of the command, e.g. "install", that can be used to install
-	 * dependencies using this package manager.
-	 *
-	 * @param updateLockfile - If `true`, then the returned command will include flags or arguments necessary to update
-	 * the lockfile during install. If `false`, such flags or arguments should be omitted. Note that the command will
-	 * _not_ include the package manager name istself. For example, the `npm` package manager will return `["install"]`,
-	 * not `["npm", "install"]`.
-	 *
-	 * @example
-	 *
-	 * For the pnpm package manager, calling `getInstallCommandWithArgs(true)` would return
-	 * `["install", "--no-frozen-lockfile"]`.
-	 */
-	getInstallCommandWithArgs(updateLockfile: boolean): string[];
-}
+export type IPackageManager = Pick<PackageManager, "name">;
 
 /**
  * Information about a package dependency. That is, en extry in the "dependencies", "devDependencies", or
@@ -366,16 +347,6 @@ export interface IPackage<J extends PackageJson = PackageJson>
 	 * The package.json contents of the package.
 	 */
 	packageJson: J;
-
-	/**
-	 * The package manager used to manage this package.
-	 *
-	 * @privateRemarks
-	 *
-	 * If this is needed at the package level, perhaps it should instead be retrieved from the package's workspace,
-	 * since the package manager is defined at the workspace level.
-	 */
-	// readonly packageManager: IPackageManager;
 
 	/**
 	 * The version of the package. This is the same as `packageJson.version`.

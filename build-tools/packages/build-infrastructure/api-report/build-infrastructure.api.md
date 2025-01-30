@@ -6,6 +6,7 @@
 
 import type { Opaque } from 'type-fest';
 import type { PackageJson as PackageJson_2 } from 'type-fest';
+import type { PackageManager } from 'nypm';
 import { SemVer } from 'semver';
 import type { SetRequired } from 'type-fest';
 import { SimpleGit } from 'simple-git';
@@ -128,11 +129,7 @@ export interface IPackage<J extends PackageJson = PackageJson> extends Installab
 }
 
 // @public
-export interface IPackageManager {
-    getInstallCommandWithArgs(updateLockfile: boolean): string[];
-    readonly lockfileName: string;
-    readonly name: PackageManagerName;
-}
+export type IPackageManager = Pick<PackageManager, "name">;
 
 // @public
 export interface IReleaseGroup extends Reloadable {
@@ -157,6 +154,7 @@ export function isIReleaseGroup(toCheck: Exclude<any, string | number | ReleaseG
 export interface IWorkspace extends Installable, Reloadable {
     buildProject: IBuildProject;
     directory: string;
+    getPackageManager(): Promise<IPackageManager>;
     name: WorkspaceName;
     packages: IPackage[];
     releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
