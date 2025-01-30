@@ -249,7 +249,6 @@ class Package<
 	>(
 		this: T,
 		packageJsonFilePath: string,
-		// packageManager: IPackageManager,
 		isWorkspaceRoot: boolean,
 		workspaceDefinition: WorkspaceDefinition,
 		workspace: IWorkspace,
