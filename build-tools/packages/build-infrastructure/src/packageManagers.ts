@@ -3,10 +3,15 @@
  * Licensed under the MIT License.
  */
 
-import { detectSync, type Agent } from "package-manager-detector";
+import { detectSync } from "package-manager-detector";
+// eslint-disable-next-line import/no-internal-modules
 import { resolveCommand } from "package-manager-detector/commands";
 
-import type { IPackageManager, PackageManagerName } from "./types.js";
+import type {
+	IPackageManager,
+	PackageManagerInstallName,
+	PackageManagerName,
+} from "./types.js";
 
 export class PackageManager implements IPackageManager {
 	/**
@@ -15,7 +20,7 @@ export class PackageManager implements IPackageManager {
 	 */
 	public constructor(
 		public readonly name: PackageManagerName,
-		private readonly agent: Agent,
+		private readonly installName: PackageManagerInstallName,
 	) {}
 
 	/**
@@ -23,7 +28,7 @@ export class PackageManager implements IPackageManager {
 	 */
 	public getInstallCommandWithArgs(updateLockfile: boolean): string[] {
 		const resolvedCommand = resolveCommand(
-			this.agent,
+			this.installName,
 			updateLockfile ? "install" : "frozen",
 			[],
 		);
@@ -40,10 +45,6 @@ export class PackageManager implements IPackageManager {
 /**
  * Create a new package manager instance.
  */
-export function createPackageManager(name: PackageManagerName): IPackageManager {
-	return new PackageManager(name);
-}
-
 export function detectPackageManager(cwd = process.cwd()): IPackageManager {
 	const result = detectSync({
 		cwd,
@@ -56,5 +57,5 @@ export function detectPackageManager(cwd = process.cwd()): IPackageManager {
 		throw new Error(`Package manager could not be detected. Started looking at '${cwd}'.`);
 	}
 
-	return new PackageManager();
+	return new PackageManager(result.name, result.agent);
 }

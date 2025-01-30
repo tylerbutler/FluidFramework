@@ -4,9 +4,9 @@
 
 ```ts
 
+import type { AgentName } from 'package-manager-detector';
 import type { Opaque } from 'type-fest';
 import type { PackageJson as PackageJson_2 } from 'type-fest';
-import type { PackageManager } from 'nypm';
 import { SemVer } from 'semver';
 import type { SetRequired } from 'type-fest';
 import { SimpleGit } from 'simple-git';
@@ -30,7 +30,7 @@ export interface BuildProjectLayout {
 }
 
 // @public
-export function createPackageManager(name: PackageManagerName): Promise<IPackageManager>;
+export function detectPackageManager(cwd?: string): IPackageManager;
 
 // @public
 export function findGitRootSync(cwd?: string): string;
@@ -129,7 +129,10 @@ export interface IPackage<J extends PackageJson = PackageJson> extends Installab
 }
 
 // @public
-export type IPackageManager = Pick<PackageManager, "name">;
+export interface IPackageManager {
+    getInstallCommandWithArgs(updateLockfile: boolean): string[];
+    readonly name: PackageManagerName;
+}
 
 // @public
 export interface IReleaseGroup extends Reloadable {
@@ -154,8 +157,9 @@ export function isIReleaseGroup(toCheck: Exclude<any, string | number | ReleaseG
 export interface IWorkspace extends Installable, Reloadable {
     buildProject: IBuildProject;
     directory: string;
-    getPackageManager(): Promise<IPackageManager>;
     name: WorkspaceName;
+    // (undocumented)
+    packageManager: IPackageManager;
     packages: IPackage[];
     releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
     rootPackage: IPackage;
@@ -213,7 +217,7 @@ export interface PackageDependency {
 export type PackageJson = SetRequired<PackageJson_2 & FluidPackageJsonFields, "name" | "scripts" | "version">;
 
 // @public
-export type PackageManagerName = "npm" | "pnpm" | "yarn";
+export type PackageManagerName = AgentName;
 
 // @public
 export type PackageName = Opaque<string, "PackageName">;

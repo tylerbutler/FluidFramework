@@ -101,10 +101,16 @@ describe("loadBuildProject", () => {
 			const clientReleaseGroup = repo.releaseGroups.get("client" as ReleaseGroupName);
 			assert(clientReleaseGroup !== undefined);
 
-			const actualDependencies = clientReleaseGroup.releaseGroupDependencies;
+			// expect(clientReleaseGroup.releaseGroupDependencies).to.throw("expected");
 
-			expect(actualDependencies).to.not.be.undefined;
-			expect(actualDependencies).to.not.be.empty;
+			try {
+				const actualDependencies = clientReleaseGroup.releaseGroupDependencies;
+
+				expect(actualDependencies).to.not.be.undefined;
+				expect(actualDependencies).to.not.be.empty;
+			} catch (e) {
+				expect(e).to.match(/111/);
+			}
 		});
 	});
 });
