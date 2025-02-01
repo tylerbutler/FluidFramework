@@ -80,7 +80,6 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 
 	async init(): Promise<void> {
 		await super.init();
-		const context = await this.getContext();
 
 		const { argv, flags, logger, machine } = this;
 
@@ -91,6 +90,7 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 			"Either release group and package flags must be provided.",
 		);
 
+		const context = await this.getContext();
 		const packageOrReleaseGroup = findPackageOrReleaseGroup(rgOrPackageName, context);
 		if (packageOrReleaseGroup === undefined) {
 			this.error(`Could not find release group or package: ${rgOrPackageName}`, {
@@ -99,8 +99,6 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 		}
 		const releaseGroup = packageOrReleaseGroup.name;
 		const releaseVersion = packageOrReleaseGroup.version;
-		const gitRepo = await context.getGitRepository();
-		const currentBranch = await gitRepo.getCurrentBranchName();
 		const [bumpType] = await askForReleaseVersion(this.logger, {
 			bumpType: flags.bumpType,
 			context,
@@ -122,6 +120,7 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 				? false
 				: undefined;
 
+		const gitRepo = await context.getGitRepository();
 		const branchPolicyCheckDefault = getRunPolicyCheckDefault(
 			releaseGroup,
 			gitRepo.originalBranchName,
@@ -147,8 +146,6 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 			exitFunc: (code: number): void => this.exit(code),
 			command: this,
 		};
-
-		// this.data.bumpType = await askForReleaseVersion(this.logger, this.data);
 	}
 }
 
