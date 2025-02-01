@@ -105,4 +105,17 @@ export abstract class BaseStateHandler implements StateHandler {
 			throw new Error(`Failed when signaling failure from state: ${state}`);
 		}
 	}
+
+	/**
+	 * Sends an arbitrary action to a state machine. Throws an error if the state transition fails.
+	 *
+	 * @param machine - The state machine.
+	 * @param state - The state from which to transition. Only used for logging.
+	 */
+	static forceFailed(machine: Machine<unknown>, state: MachineState) {
+		const transitioned = machine.transition("Failed");
+		if (!transitioned) {
+			throw new Error(`Failed when transitioning to Failed from state: ${state}`);
+		}
+	}
 }

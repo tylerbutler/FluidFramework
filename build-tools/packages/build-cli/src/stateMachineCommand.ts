@@ -3,13 +3,12 @@
  * Licensed under the MIT License.
  */
 
-import { Command, Flags } from "@oclif/core";
-import { Machine } from "jssm";
-import chalk from "picocolors";
+import { type Command, Flags } from "@oclif/core";
+import type { Machine } from "jssm";
 
 import { testModeFlag } from "./flags.js";
-import { StateHandler } from "./handlers/index.js";
-import { BaseCommand } from "./library/index.js";
+import type { StateHandler } from "./handlers/index.js";
+import { BaseCommand } from "./library/commands/base.js";
 
 /**
  * A base CLI command that uses an internal state machine to govern its behavior. Subclasses must provide a state
@@ -37,7 +36,7 @@ export abstract class StateMachineCommand<
 			description:
 				"A state to start in when the command initializes. Used to test the processing of specific states.",
 			dependsOn: ["testMode"],
-			hidden: true,
+			hidden: false,
 		}),
 		...BaseCommand.flags,
 	};
@@ -61,7 +60,7 @@ export abstract class StateMachineCommand<
 
 	async init(): Promise<void> {
 		await super.init();
-		await this.initMachineHooks();
+		await StateMachineCommand.initMachineHooks(this.machine, this);
 	}
 
 	/**
@@ -75,7 +74,7 @@ export abstract class StateMachineCommand<
 				this.machine.hook_entry(state, (o: any) => {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 					const { from, action } = o;
-					this.verbose(`${state}: ${action} from ${from}`);
+					log.verbose(`${state}: ${action} from ${from}`);
 				});
 			}
 		}
@@ -86,7 +85,7 @@ export abstract class StateMachineCommand<
 		this.machine.hook_any_transition((t: any) => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const { action, from, to } = t;
-			this.verbose(`STATE MACHINE: ${from} [${action}] ==> ${to}`);
+			log.verbose(`STATE MACHINE: ${from} [${action}] ==> ${to}`);
 		});
 	}
 

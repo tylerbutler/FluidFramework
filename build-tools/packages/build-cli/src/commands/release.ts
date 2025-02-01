@@ -9,8 +9,8 @@ import {
 	bumpVersionScheme,
 	detectVersionScheme,
 } from "@fluid-tools/version-tools";
-import { rawlist } from "@inquirer/prompts";
 import { Config } from "@oclif/core";
+import { formatDistanceToNow } from "date-fns";
 import chalk from "picocolors";
 
 import { findPackageOrReleaseGroup } from "../args.js";
@@ -27,8 +27,8 @@ import {
 	StateHandler,
 } from "../handlers/index.js";
 import { PromptWriter } from "../instructionalPromptWriter.js";
-// eslint-disable-next-line import/no-deprecated
-import { MonoRepoKind, getDefaultBumpTypeForBranch } from "../library/index.js";
+import { getDefaultBumpTypeForBranch, sortVersions } from "../library/index.js";
+import { CommandLogger } from "../logging.js";
 import { FluidReleaseMachine } from "../machines/index.js";
 import { getRunPolicyCheckDefault } from "../repoConfig.js";
 import { StateMachineCommand } from "../stateMachineCommand.js";
@@ -76,8 +76,11 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 
 	async init(): Promise<void> {
 		await super.init();
+		const [context] = await Promise.all([
+			this.getContext(),
+			StateMachineCommand.initMachineHooks(this.machine, this.logger),
+		]);
 
-		const [context] = await Promise.all([this.getContext(), this.initMachineHooks()]);
 		const { argv, flags, logger, machine } = this;
 
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -101,8 +104,7 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 
 		// eslint-disable-next-line no-warning-comments
 		// TODO: can be removed once server team owns server releases
-		// eslint-disable-next-line import/no-deprecated
-		if (flags.releaseGroup === MonoRepoKind.Server && bumpType === "minor") {
+		if (flags.releaseGroup === "server" && flags.bumpType === "minor") {
 			this.error(`Server release are always a ${chalk.bold("MAJOR")} release`);
 		}
 
@@ -139,43 +141,79 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 			exitFunc: (code: number): void => this.exit(code),
 			command: this,
 		};
+
+		// this.data.bumpType = await askForReleaseVersion(this.logger, this.data);
 	}
 }
 
 /**
- * Gets the bump type to use. If a bumpType was passed in, use it. Otherwise use the default for the branch. If
- * there's no default for the branch, ask the user.
+ * Ask the user which version they are releasing, and return the bump type based on the version returned.
  */
-async function getBumpType(
-	inputBumpType: VersionBumpType | undefined,
-	branch: string,
-	version: string,
-): Promise<VersionBumpType> {
-	const bumpedMajor = bumpVersionScheme(version, "major");
-	const bumpedMinor = bumpVersionScheme(version, "minor");
-	const bumpedPatch = bumpVersionScheme(version, "patch");
+const askForReleaseVersion = async (
+	log: CommandLogger,
+	data: FluidReleaseStateHandlerData,
+): Promise<VersionBumpType> => {
+	const { bumpType: inputBumpType, context, releaseVersion, releaseGroup } = data;
 
-	let bumpType = inputBumpType ?? getDefaultBumpTypeForBranch(branch);
-	if (bumpType === undefined) {
-		const selectedBumpType = await rawlist({
-			message: `The current branch is '${branch}'. There is no default bump type for this branch. What type of release are you doing?`,
-			choices: [
-				{
-					value: "major" as VersionBumpType,
-					name: `major (${version} => ${bumpedMajor.version})`,
-				},
-				{
-					value: "minor" as VersionBumpType,
-					name: `minor (${version} => ${bumpedMinor.version})`,
-				},
-				{
-					value: "patch" as VersionBumpType,
-					name: `patch  (${version} => ${bumpedPatch.version})`,
-				},
-			],
-		});
+	const currentBranch = await context.gitRepo.getCurrentBranchName();
 
-		bumpType = selectedBumpType;
+	const recentVersions = await context.getAllVersions(releaseGroup, 10);
+	assert(recentVersions !== undefined, "versions is undefined");
+
+	const mostRecentRelease = recentVersions?.[0];
+
+	// Split the versions by version scheme because we need to treat them differently
+	const regularSemVer: VersionDetails[] = [];
+	const internalVersions: VersionDetails[] = [];
+	const virtualPatchVersions: VersionDetails[] = [];
+	for (const verDetails of recentVersions) {
+		const scheme = detectVersionScheme(verDetails.version);
+		if (scheme === "internal" || scheme === "internalPrerelease") {
+			internalVersions.push(verDetails);
+		} else if (scheme === "virtualPatch") {
+			virtualPatchVersions.push(verDetails);
+		} else {
+			regularSemVer.push(verDetails);
+		}
+	}
+
+	// take the highest releases from each minor series as the input for choices
+	const choices = [
+		...choicesFromVersions(takeHighestOfMinorSeries(internalVersions)),
+		...choicesFromVersions(takeHighestOfMinorSeries(virtualPatchVersions)),
+		...choicesFromVersions(takeHighestOfMinorSeries(regularSemVer)),
+	];
+
+	const questions: inquirer.Question[] = [];
+
+	log.log(`Branch: ${chalk.blue(currentBranch)}`);
+	log.log(`${chalk.blue(releaseGroup)} version on this branch: ${chalk.bold(releaseVersion)}`);
+	log.log(
+		`Most recent release: ${mostRecentRelease.version} (${
+			mostRecentRelease.date === undefined
+				? `no date`
+				: formatDistanceToNow(mostRecentRelease.date)
+		})`,
+	);
+	log.log();
+
+	// If a bumpType was set in the handler data, use it. Otherwise set it as the default for the branch. If there's
+	// no default for the branch, ask the user.
+	let bumpType = inputBumpType ?? getDefaultBumpTypeForBranch(currentBranch);
+	if (inputBumpType === undefined) {
+		const askBumpType: inquirer.ListQuestion = {
+			type: "list",
+			name: "releaseVersion",
+			choices,
+			default: 1,
+			message: `What version do you wish to release?`,
+		};
+		questions.push(askBumpType);
+
+		const answers = await inquirer.prompt(questions);
+		bumpType = answers.releaseVersion.bumpType;
+		data.bumpType = bumpType;
+		data.releaseVersion = answers.releaseVersion.version;
 	}
 
 	if (bumpType === undefined) {
@@ -183,4 +221,86 @@ async function getBumpType(
 	}
 
 	return bumpType;
+};
+
+/**
+ * Iterates through the versions and takes the first (highest) version of every minor version series. That is, the input
+ * [2.2.3, 2.2.2, 1.2.3, 1.2.2] will return [2.2.3, 1.2.3].
+ *
+ * All versions in the input must be of the same scheme or this function will throw.
+ */
+function takeHighestOfMinorSeries(versions: VersionDetails[]) {
+	const minorSeries = new Set<string>();
+	const minors: VersionDetails[] = [];
+
+	if (versions.length === 0) {
+		return minors;
+	}
+
+	// Detect version scheme based on first element
+	const expectedScheme = detectVersionScheme(versions[0].version);
+	const sortedVersions = sortVersions(versions, "version");
+	for (const details of sortedVersions) {
+		const { version } = details;
+		const detectedScheme = detectVersionScheme(version);
+		if (expectedScheme !== detectedScheme) {
+			throw new Error(
+				`All versions should use the ${expectedScheme} version scheme, but found one using ${detectedScheme} (${version}).`,
+			);
+		}
+
+		const scheme = detectVersionScheme(version);
+		const versionNormalized =
+			scheme === "internal" || scheme === "internalPrerelease"
+				? // Second item in the returned 3-tuple is the internal version
+					fromInternalScheme(version)[1]
+				: scheme === "virtualPatch"
+					? fromVirtualPatchScheme(version).version
+					: version;
+
+		const minorZero = `${semver.major(versionNormalized)}.${semver.minor(versionNormalized)}.0`;
+		if (!minorSeries.has(minorZero)) {
+			minors.push(details);
+			minorSeries.add(minorZero);
+		}
+	}
+
+	return minors;
+}
+
+function choicesFromVersions(versions: VersionDetails[]) {
+	const choices: any[] = [];
+	for (const [index, relVersion] of versions.entries()) {
+		// The first item is the most recent release, so offer all three bumped versions as release options
+		if (index === 0) {
+			const majorVer = bumpVersionScheme(relVersion.version, "major").version;
+			choices.push({
+				value: { bumpType: "major", version: majorVer },
+				name: `${majorVer} (major)`,
+			});
+
+			const minorVer = bumpVersionScheme(relVersion.version, "minor").version;
+			choices.push({
+				value: { bumpType: "minor", version: minorVer },
+				name: `${minorVer} (minor)`,
+			});
+
+			const patchVer = bumpVersionScheme(relVersion.version, "patch").version;
+			choices.push({
+				value: { bumpType: "patch", version: patchVer },
+				name: `${patchVer} (patch)`,
+			});
+		} else {
+			const patchVer = bumpVersionScheme(relVersion.version, "patch").version;
+			choices.push({
+				value: { bumpType: "patch", version: patchVer },
+				name: `${patchVer} (patch)`,
+			});
+		}
+
+		choices.push(new inquirer.Separator());
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+	return choices;
 }

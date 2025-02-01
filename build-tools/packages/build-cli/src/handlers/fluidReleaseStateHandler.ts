@@ -9,11 +9,11 @@ import { Machine } from "jssm";
 import chalk from "picocolors";
 
 import { InstructionalPromptWriter } from "../instructionalPromptWriter.js";
-import { Context } from "../library/index.js";
+import type { Context } from "../library/index.js";
 import { CommandLogger } from "../logging.js";
 import { MachineState } from "../machines/index.js";
 import { ReleaseGroup, ReleasePackage } from "../releaseGroups.js";
-import { askForReleaseType } from "./askFunctions.js";
+import { askForReleaseType, askForReleaseVersion } from "./askFunctions.js";
 import {
 	checkAssertTagging,
 	checkBranchName,
@@ -37,7 +37,11 @@ import {
 	checkTypeTestPrepare,
 	checkValidReleaseGroup,
 } from "./checkFunctions.js";
-import { doBumpReleasedDependencies, doReleaseGroupBump } from "./doFunctions.js";
+import {
+	doBumpReleasedDependencies,
+	doConfirmReleasePlan,
+	doReleaseGroupBump,
+} from "./doFunctions.js";
 import { InitFailedStateHandler } from "./initFailedStateHandler.js";
 import {
 	promptToCommitChanges,
@@ -148,6 +152,7 @@ export class FluidReleaseStateHandler extends InitFailedStateHandler {
 	 */
 	private readonly stateHandlerMap: Map<string, StateHandlerFunction> = new Map([
 		["AskForReleaseType", askForReleaseType],
+		["AskForReleaseVersion", askForReleaseVersion],
 		["CheckAssertTagging", checkAssertTagging],
 		["CheckBranchName", checkBranchName],
 		["CheckBranchName2", checkBranchName],
@@ -190,6 +195,7 @@ export class FluidReleaseStateHandler extends InitFailedStateHandler {
 		["CheckTypeTestPrepare", checkTypeTestPrepare],
 		["CheckTypeTestPrepare2", checkTypeTestPrepare],
 		["CheckValidReleaseGroup", checkValidReleaseGroup],
+		["DoConfirmReleasePlan", doConfirmReleasePlan],
 		["DoBumpReleasedDependencies", doBumpReleasedDependencies],
 		["DoMajorRelease", handleBumpType],
 		["DoMinorRelease", handleBumpType],

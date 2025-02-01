@@ -63,7 +63,9 @@ machine_name: "Fluid Unified Release Process";
 // The machine initializes and first does several optional, skippable checks.
 
 Init 'success'
-=> CheckShouldRunOptionalChecks 'success'
+=> AskForReleaseVersion;
+
+CheckShouldRunOptionalChecks 'success'
 => CheckValidReleaseGroup 'success'
 => CheckDependenciesInstalled 'success'
 => CheckPolicy 'success'
@@ -73,7 +75,7 @@ Init 'success'
 => CheckHasRemote 'success'
 => CheckBranchUpToDate 'success'
 => CheckNoPrereleaseDependencies 'success'
-=> AskForReleaseType;
+=> Done;
 
 CheckShouldRunOptionalChecks 'failure'
 // There are pre-release dependencies, so bump those first.
@@ -149,7 +151,7 @@ CheckShouldCommitBump 'failure'
 // BEGIN PATCH RELEASE
 
 // Fully successful path
-AskForReleaseType 'patch'
+AskForReleaseVersion 'patch'
 => DoPatchRelease 'success'
 => CheckDoesReleaseFromReleaseBranch 'success'
 => CheckOnReleaseBranch 'success'
@@ -183,7 +185,7 @@ CheckTypeTestGenerate2
 // BEGIN MINOR RELEASE
 
 // Fully successful path
-AskForReleaseType 'minor'
+AskForReleaseVersion 'minor'
 => DoMinorRelease 'success'
 => CheckDoesReleaseFromReleaseBranch2 'success'
 => CheckOnReleaseBranch2 'success'
@@ -220,7 +222,7 @@ CheckReleaseGroupIsBumpedMinor 'failure'
 
 // BEGIN MAJOR RELEASE
 
-AskForReleaseType 'major'
+AskForReleaseVersion 'major'
 => DoMajorRelease 'success'
 => CheckDoesReleaseFromReleaseBranch3 'success'
 => CheckMainNextIntegrated 'success'

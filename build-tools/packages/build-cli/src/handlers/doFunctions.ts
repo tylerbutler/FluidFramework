@@ -14,7 +14,10 @@ import { bumpVersionScheme, detectVersionScheme } from "@fluid-tools/version-too
 import { getDefaultInterdependencyRange } from "../config.js";
 import {
 	difference,
+	generateReleaseBranchName,
+	generateReleaseGitTagName,
 	getPreReleaseDependencies,
+	getReleaseSourceForReleaseGroup,
 	npmCheckUpdates,
 	setVersion,
 } from "../library/index.js";
@@ -184,6 +187,86 @@ export const doReleaseGroupBump: StateHandlerFunction = async (
 
 	if (shouldInstall === true && !(await FluidRepo.ensureInstalled(packages))) {
 		log.errorLog("Install failed.");
+		BaseStateHandler.signalFailure(machine, state);
+		return true;
+	}
+
+	BaseStateHandler.signalSuccess(machine, state);
+	return true;
+};
+
+export const doConfirmReleasePlan: StateHandlerFunction = async (
+	state: MachineState,
+	machine: Machine<unknown>,
+	testMode: boolean,
+	log: CommandLogger,
+	data: FluidReleaseStateHandlerData,
+): Promise<boolean> => {
+	if (testMode) return true;
+
+	const { bumpType, context, releaseGroup, releaseVersion } = data;
+	if (!isReleaseGroup(releaseGroup)) {
+		BaseStateHandler.signalSuccess(machine, state);
+		return true;
+	}
+
+	// context.repo.reload();
+	const releaseSource = getReleaseSourceForReleaseGroup(releaseGroup);
+	const branchShouldReleaseFrom =
+		releaseSource === "releaseBranches"
+			? generateReleaseBranchName(releaseGroup, releaseVersion)
+			: context.gitRepo.getCurrentBranchName();
+
+	const repoVersion = context.getVersion(releaseGroup);
+	const postBumpVersion = bumpVersionScheme(releaseVersion, bumpType).version;
+	const [currentBranch, postBumpVersionReleaseTag] = await Promise.all([
+		context.gitRepo.getCurrentBranchName(),
+		context.gitRepo.getShaForTag(generateReleaseGitTagName(releaseGroup, postBumpVersion)),
+		context.gitRepo.getShaForTag(generateReleaseGitTagName(releaseGroup, repoVersion)),
+	]);
+	// const repoVersionReleased = repoVersionReleaseTag !== undefined;
+	const postBumpVersionReleased = postBumpVersionReleaseTag !== undefined;
+
+	log.logHr();
+	log.log(`
+${chalk.yellow(`Confirm the following information is correct before continuing.`)}
+
+${chalk.bold.underline(`RELEASE PLAN`)}
+
+Package or release group: ${chalk.blue(releaseGroup)}
+Releasing version: ${chalk.bold(releaseVersion)} ${
+		releaseVersion === repoVersion
+			? chalk.green(`✔️`)
+			: chalk.red(`x (doesn't match version on this branch)`)
+	}
+Branch to release from: ${branchShouldReleaseFrom} ${
+		branchShouldReleaseFrom === currentBranch
+			? chalk.green(`✔️`)
+			: chalk.red(`x (${currentBranch} is not the correct release branch)`)
+	}
+
+Post release version: ${postBumpVersion} ${
+		postBumpVersionReleased ? chalk.red(`x (version already released!)`) : chalk.green(`✔️`)
+	}
+`);
+
+	if (postBumpVersionReleased) {
+		log.errorLog(
+			`post-bump version (${postBumpVersion}) was already released. Something is wrong.`,
+		);
+		BaseStateHandler.signalFailure(machine, state);
+		return true;
+	}
+
+	const confirmIntegratedQuestion: inquirer.ConfirmQuestion = {
+		type: "confirm",
+		name: "proceed",
+		message: `Proceed?`,
+	};
+
+	const answers = await inquirer.prompt(confirmIntegratedQuestion);
+	if (answers.proceed !== true) {
+		log.warning(`Cancelled.`);
 		BaseStateHandler.signalFailure(machine, state);
 		return true;
 	}

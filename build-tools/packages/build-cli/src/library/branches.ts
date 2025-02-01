@@ -2,11 +2,12 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+import { strict as assert } from "assert";
 
 import { PackageName } from "@rushstack/node-core-library";
 import * as semver from "semver";
 
-import { Context } from "./context.js";
+import { Logger } from "@fluidframework/build-tools";
 
 import {
 	DEFAULT_PRERELEASE_IDENTIFIER,
@@ -29,6 +30,7 @@ import {
 	isReleaseGroup,
 } from "../releaseGroups.js";
 import { DependencyUpdateType } from "./bump.js";
+import type { Context } from "./context.js";
 
 /**
  * Creates an appropriate branch for a release group and bump type. Does not commit!
@@ -283,6 +285,32 @@ export function getDefaultBumpTypeForBranch(
 export function getReleaseSourceForReleaseGroup(
 	releaseGroupOrPackage: ReleaseGroup | ReleasePackage,
 ): ReleaseSource {
+	if (
+		!isReleaseGroup(releaseGroupOrPackage) &&
+		// These packages are released without release branches
+		!["@fluid-internal/getkeys"].includes(releaseGroupOrPackage)
+	) {
+		return "direct";
+	}
+
 	// All packages and release groups use release branches.
 	return "releaseBranches";
+}
+
+export async function checkBranchExists(
+	branch: string,
+	context: Context,
+	log?: Logger,
+): Promise<boolean> {
+	const repo = await context.getGitRepository();
+	const remote = await repo.getRemote(repo.originalBranchName);
+	assert(remote !== undefined, `Remote couldn't be found for ${repo.originalBranchName}`);
+
+	const commit = await repo.getShaForBranch(branch, remote);
+	if (commit === undefined) {
+		log?.errorLog(`Can't find the '${branch}' branch.`);
+		return false;
+	}
+
+	return true;
 }
