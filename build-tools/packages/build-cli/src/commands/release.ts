@@ -99,12 +99,13 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 		}
 		const releaseGroup = packageOrReleaseGroup.name;
 		const releaseVersion = packageOrReleaseGroup.version;
-		const [bumpType] = await askForReleaseVersion(this.logger, {
-			bumpType: flags.bumpType,
-			context,
-			releaseGroup,
-			releaseVersion,
-		});
+		const bumpType =
+			flags.bumpType ??
+			(await askForReleaseVersion(this.logger, {
+				context,
+				releaseGroup,
+				releaseVersion,
+			}));
 
 		// eslint-disable-next-line no-warning-comments
 		// TODO: can be removed once server team owns server releases
@@ -154,23 +155,17 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
  */
 const askForReleaseVersion = async (
 	log: CommandLogger,
-	data: Partial<Pick<FluidReleaseStateHandlerData, "bumpType">> &
-		Pick<FluidReleaseStateHandlerData, "context" | "releaseVersion" | "releaseGroup">,
-): Promise<[VersionBumpType, string]> => {
-	const {
-		bumpType: inputBumpType,
-		context,
-		releaseVersion: branchVersion,
-		releaseGroup,
-	} = data;
+	data: Pick<FluidReleaseStateHandlerData, "context" | "releaseVersion" | "releaseGroup">,
+): Promise<VersionBumpType> => {
+	const { context, releaseVersion: branchVersion, releaseGroup } = data;
 
 	const gitRepo = await context.getGitRepository();
 	const currentBranch = await gitRepo.getCurrentBranchName();
 
 	const recentVersions = await gitRepo.getAllVersions(releaseGroup);
 	assert(recentVersions !== undefined, "versions is undefined");
-
-	const mostRecentRelease = recentVersions?.[0];
+	const sortedVersions = sortVersions([...recentVersions], "version");
+	const mostRecentRelease = sortedVersions?.[0];
 
 	// Split the versions by version scheme because we need to treat them differently
 	const regularSemVer: VersionDetails[] = [];
@@ -207,23 +202,18 @@ const askForReleaseVersion = async (
 
 	// If a bumpType was set in the handler data, use it. Otherwise set it as the default for the branch. If there's
 	// no default for the branch, ask the user.
-	let bumpType = inputBumpType;
-	let releaseVersion: string = "";
+	const versionToRelease = await rawlist({
+		choices,
+		message: `What version do you wish to release?`,
+	});
+
+	const { bumpType } = versionToRelease;
+
 	if (bumpType === undefined) {
-		const versionToRelease = await rawlist({
-			choices,
-			message: `What version do you wish to release?`,
-		});
-
-		bumpType = versionToRelease.bumpType;
-		releaseVersion = versionToRelease.version;
-	}
-
-	if (bumpType === undefined || releaseVersion === "") {
 		throw new Error(`bumpType is undefined.`);
 	}
 
-	return [bumpType, releaseVersion];
+	return bumpType;
 };
 
 /**
