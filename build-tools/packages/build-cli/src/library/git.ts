@@ -131,6 +131,13 @@ export class Repository implements GitContext {
 		return result;
 	}
 
+	public async getShaForTag(tag: string): Promise<string> {
+		const refspec = `refs/tags/${tag}`;
+		const result = await this.git.raw(`show-ref`, refspec);
+
+		return result;
+	}
+
 	/**
 	 * Get the remote based on the partial Url. It will match the first remote that contains the partialUrl case
 	 * insensitively.

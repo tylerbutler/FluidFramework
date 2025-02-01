@@ -4,7 +4,6 @@
  */
 
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { FileSystem as fs } from "@rushstack/node-core-library";
 import { type Machine, from as createStateMachine } from "jssm";
 

@@ -8,10 +8,14 @@ import {
 	VersionBumpType,
 	bumpVersionScheme,
 	detectVersionScheme,
+	fromInternalScheme,
+	fromVirtualPatchScheme,
 } from "@fluid-tools/version-tools";
+import { Separator, rawlist } from "@inquirer/prompts";
 import { Config } from "@oclif/core";
 import { formatDistanceToNow } from "date-fns";
 import chalk from "picocolors";
+import semver from "semver";
 
 import { findPackageOrReleaseGroup } from "../args.js";
 import {
@@ -27,8 +31,8 @@ import {
 	StateHandler,
 } from "../handlers/index.js";
 import { PromptWriter } from "../instructionalPromptWriter.js";
-import { getDefaultBumpTypeForBranch, sortVersions } from "../library/index.js";
-import { CommandLogger } from "../logging.js";
+import { type VersionDetails, sortVersions } from "../library/index.js";
+import type { CommandLogger } from "../logging.js";
 import { FluidReleaseMachine } from "../machines/index.js";
 import { getRunPolicyCheckDefault } from "../repoConfig.js";
 import { StateMachineCommand } from "../stateMachineCommand.js";
@@ -76,10 +80,7 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 
 	async init(): Promise<void> {
 		await super.init();
-		const [context] = await Promise.all([
-			this.getContext(),
-			StateMachineCommand.initMachineHooks(this.machine, this.logger),
-		]);
+		const context = await this.getContext();
 
 		const { argv, flags, logger, machine } = this;
 
@@ -100,7 +101,12 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 		const releaseVersion = packageOrReleaseGroup.version;
 		const gitRepo = await context.getGitRepository();
 		const currentBranch = await gitRepo.getCurrentBranchName();
-		const bumpType = await getBumpType(flags.bumpType, currentBranch, releaseVersion);
+		const [bumpType] = await askForReleaseVersion(this.logger, {
+			bumpType: flags.bumpType,
+			context,
+			releaseGroup,
+			releaseVersion,
+		});
 
 		// eslint-disable-next-line no-warning-comments
 		// TODO: can be removed once server team owns server releases
@@ -147,17 +153,24 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 }
 
 /**
- * Ask the user which version they are releasing, and return the bump type based on the version returned.
+ * Ask the user which version they are releasing, and return the bump type based on the version specified.
  */
 const askForReleaseVersion = async (
 	log: CommandLogger,
-	data: FluidReleaseStateHandlerData,
-): Promise<VersionBumpType> => {
-	const { bumpType: inputBumpType, context, releaseVersion, releaseGroup } = data;
+	data: Partial<Pick<FluidReleaseStateHandlerData, "bumpType">> &
+		Pick<FluidReleaseStateHandlerData, "context" | "releaseVersion" | "releaseGroup">,
+): Promise<[VersionBumpType, string]> => {
+	const {
+		bumpType: inputBumpType,
+		context,
+		releaseVersion: branchVersion,
+		releaseGroup,
+	} = data;
 
-	const currentBranch = await context.gitRepo.getCurrentBranchName();
+	const gitRepo = await context.getGitRepository();
+	const currentBranch = await gitRepo.getCurrentBranchName();
 
-	const recentVersions = await context.getAllVersions(releaseGroup, 10);
+	const recentVersions = await gitRepo.getAllVersions(releaseGroup);
 	assert(recentVersions !== undefined, "versions is undefined");
 
 	const mostRecentRelease = recentVersions?.[0];
@@ -184,10 +197,8 @@ const askForReleaseVersion = async (
 		...choicesFromVersions(takeHighestOfMinorSeries(regularSemVer)),
 	];
 
-	const questions: inquirer.Question[] = [];
-
 	log.log(`Branch: ${chalk.blue(currentBranch)}`);
-	log.log(`${chalk.blue(releaseGroup)} version on this branch: ${chalk.bold(releaseVersion)}`);
+	log.log(`${chalk.blue(releaseGroup)} version on this branch: ${chalk.bold(branchVersion)}`);
 	log.log(
 		`Most recent release: ${mostRecentRelease.version} (${
 			mostRecentRelease.date === undefined
@@ -195,32 +206,27 @@ const askForReleaseVersion = async (
 				: formatDistanceToNow(mostRecentRelease.date)
 		})`,
 	);
-	log.log();
+	log.log("");
 
 	// If a bumpType was set in the handler data, use it. Otherwise set it as the default for the branch. If there's
 	// no default for the branch, ask the user.
-	let bumpType = inputBumpType ?? getDefaultBumpTypeForBranch(currentBranch);
-	if (inputBumpType === undefined) {
-		const askBumpType: inquirer.ListQuestion = {
-			type: "list",
-			name: "releaseVersion",
+	let bumpType = inputBumpType;
+	let releaseVersion: string = "";
+	if (bumpType === undefined) {
+		const versionToRelease = await rawlist({
 			choices,
-			default: 1,
 			message: `What version do you wish to release?`,
-		};
-		questions.push(askBumpType);
+		});
 
-		const answers = await inquirer.prompt(questions);
-		bumpType = answers.releaseVersion.bumpType;
-		data.bumpType = bumpType;
-		data.releaseVersion = answers.releaseVersion.version;
+		bumpType = versionToRelease.bumpType;
+		releaseVersion = versionToRelease.version;
 	}
 
-	if (bumpType === undefined) {
+	if (bumpType === undefined || releaseVersion === "") {
 		throw new Error(`bumpType is undefined.`);
 	}
 
-	return bumpType;
+	return [bumpType, releaseVersion];
 };
 
 /**
@@ -229,7 +235,7 @@ const askForReleaseVersion = async (
  *
  * All versions in the input must be of the same scheme or this function will throw.
  */
-function takeHighestOfMinorSeries(versions: VersionDetails[]) {
+function takeHighestOfMinorSeries(versions: VersionDetails[]): VersionDetails[] {
 	const minorSeries = new Set<string>();
 	const minors: VersionDetails[] = [];
 
@@ -268,8 +274,13 @@ function takeHighestOfMinorSeries(versions: VersionDetails[]) {
 	return minors;
 }
 
-function choicesFromVersions(versions: VersionDetails[]) {
-	const choices: any[] = [];
+function choicesFromVersions(
+	versions: VersionDetails[],
+): (Separator | { value: { bumpType: VersionBumpType; version: string }; name: string })[] {
+	const choices: (
+		| Separator
+		| { value: { bumpType: VersionBumpType; version: string }; name: string }
+	)[] = [];
 	for (const [index, relVersion] of versions.entries()) {
 		// The first item is the most recent release, so offer all three bumped versions as release options
 		if (index === 0) {
@@ -298,9 +309,8 @@ function choicesFromVersions(versions: VersionDetails[]) {
 			});
 		}
 
-		choices.push(new inquirer.Separator());
+		choices.push(new Separator());
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 	return choices;
 }

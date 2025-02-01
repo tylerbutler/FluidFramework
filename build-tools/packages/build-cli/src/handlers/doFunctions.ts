@@ -4,6 +4,7 @@
  */
 
 import { strict as assert } from "node:assert";
+import { confirm } from "@inquirer/prompts";
 import { Machine } from "jssm";
 import chalk from "picocolors";
 
@@ -210,19 +211,19 @@ export const doConfirmReleasePlan: StateHandlerFunction = async (
 		return true;
 	}
 
-	// context.repo.reload();
+	const gitRepo = await context.getGitRepository();
 	const releaseSource = getReleaseSourceForReleaseGroup(releaseGroup);
 	const branchShouldReleaseFrom =
 		releaseSource === "releaseBranches"
 			? generateReleaseBranchName(releaseGroup, releaseVersion)
-			: context.gitRepo.getCurrentBranchName();
+			: await gitRepo.getCurrentBranchName();
 
 	const repoVersion = context.getVersion(releaseGroup);
 	const postBumpVersion = bumpVersionScheme(releaseVersion, bumpType).version;
 	const [currentBranch, postBumpVersionReleaseTag] = await Promise.all([
-		context.gitRepo.getCurrentBranchName(),
-		context.gitRepo.getShaForTag(generateReleaseGitTagName(releaseGroup, postBumpVersion)),
-		context.gitRepo.getShaForTag(generateReleaseGitTagName(releaseGroup, repoVersion)),
+		gitRepo.getCurrentBranchName(),
+		gitRepo.getShaForTag(generateReleaseGitTagName(releaseGroup, postBumpVersion)),
+		gitRepo.getShaForTag(generateReleaseGitTagName(releaseGroup, repoVersion)),
 	]);
 	// const repoVersionReleased = repoVersionReleaseTag !== undefined;
 	const postBumpVersionReleased = postBumpVersionReleaseTag !== undefined;
@@ -231,7 +232,7 @@ export const doConfirmReleasePlan: StateHandlerFunction = async (
 	log.log(`
 ${chalk.yellow(`Confirm the following information is correct before continuing.`)}
 
-${chalk.bold.underline(`RELEASE PLAN`)}
+${chalk.bold(chalk.underline(`RELEASE PLAN`))}
 
 Package or release group: ${chalk.blue(releaseGroup)}
 Releasing version: ${chalk.bold(releaseVersion)} ${
@@ -258,14 +259,11 @@ Post release version: ${postBumpVersion} ${
 		return true;
 	}
 
-	const confirmIntegratedQuestion: inquirer.ConfirmQuestion = {
-		type: "confirm",
-		name: "proceed",
+	const proceed = await confirm({
 		message: `Proceed?`,
-	};
+	});
 
-	const answers = await inquirer.prompt(confirmIntegratedQuestion);
-	if (answers.proceed !== true) {
+	if (proceed !== true) {
 		log.warning(`Cancelled.`);
 		BaseStateHandler.signalFailure(machine, state);
 		return true;

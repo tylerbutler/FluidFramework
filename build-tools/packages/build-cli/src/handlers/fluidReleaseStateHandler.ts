@@ -13,7 +13,7 @@ import type { Context } from "../library/index.js";
 import { CommandLogger } from "../logging.js";
 import { MachineState } from "../machines/index.js";
 import { ReleaseGroup, ReleasePackage } from "../releaseGroups.js";
-import { askForReleaseType, askForReleaseVersion } from "./askFunctions.js";
+import { askForReleaseVersion } from "./askFunctions.js";
 import {
 	checkAssertTagging,
 	checkBranchName,
@@ -151,7 +151,6 @@ export class FluidReleaseStateHandler extends InitFailedStateHandler {
 	 * A map of state machine states to the function that should be called to handle that state.
 	 */
 	private readonly stateHandlerMap: Map<string, StateHandlerFunction> = new Map([
-		["AskForReleaseType", askForReleaseType],
 		["AskForReleaseVersion", askForReleaseVersion],
 		["CheckAssertTagging", checkAssertTagging],
 		["CheckBranchName", checkBranchName],

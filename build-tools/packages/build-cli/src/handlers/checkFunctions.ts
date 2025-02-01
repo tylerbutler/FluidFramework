@@ -13,6 +13,8 @@ import { Machine } from "jssm";
 import { bumpVersionScheme } from "@fluid-tools/version-tools";
 import { FluidRepo } from "@fluidframework/build-tools";
 
+// eslint-disable-next-line import/no-internal-modules
+import { checkBranchExists } from "../library/branches.js";
 import {
 	generateBumpDepsBranchName,
 	generateBumpDepsCommitMessage,
@@ -30,8 +32,6 @@ import { ReleaseSource, isReleaseGroup } from "../releaseGroups.js";
 import { getRunPolicyCheckDefault } from "../repoConfig.js";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler.js";
 import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers.js";
-// eslint-disable-next-line import/no-internal-modules
-import { checkBranchExists } from "../library/branches.js";
 
 /**
  * Only client and server release groups use changesets and the related release note and per-package changelog

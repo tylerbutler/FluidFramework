@@ -112,7 +112,7 @@ export abstract class BaseStateHandler implements StateHandler {
 	 * @param machine - The state machine.
 	 * @param state - The state from which to transition. Only used for logging.
 	 */
-	static forceFailed(machine: Machine<unknown>, state: MachineState) {
+	static forceFailed(machine: Machine<unknown>, state: MachineState): void {
 		const transitioned = machine.transition("Failed");
 		if (!transitioned) {
 			throw new Error(`Failed when transitioning to Failed from state: ${state}`);
