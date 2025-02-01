@@ -4,12 +4,15 @@
  */
 
 import path from "node:path";
+import url from "node:url";
 import { FileSystem as fs } from "@rushstack/node-core-library";
 import { type Machine, from as createStateMachine } from "jssm";
 
 const loadMachine = (fslFile: string): Machine<unknown> => {
-	// eslint-disable-next-line unicorn/prefer-module
-	const machineDefinitionFile = path.join(__dirname, fslFile);
+	const machineDefinitionFile = path.join(
+		path.dirname(url.fileURLToPath(import.meta.url)),
+		fslFile,
+	);
 	const fsl = fs.readFile(machineDefinitionFile).toString();
 	return createStateMachine(fsl);
 };
