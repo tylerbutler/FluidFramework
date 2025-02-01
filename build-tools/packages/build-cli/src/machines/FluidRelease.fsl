@@ -63,9 +63,7 @@ machine_name: "Fluid Unified Release Process";
 // The machine initializes and first does several optional, skippable checks.
 
 Init 'success'
-=> AskForReleaseVersion;
-
-CheckShouldRunOptionalChecks 'success'
+=> CheckShouldRunOptionalChecks 'success'
 => CheckValidReleaseGroup 'success'
 => CheckDependenciesInstalled 'success'
 => CheckPolicy 'success'
@@ -276,11 +274,6 @@ state DoBumpReleasedDependencies: {
 
 state DoChecks: {
    background-color : steelblue;
-   text-color       : white;
-};
-
-state AskForReleaseType: {
-   background-color : purple;
    text-color       : white;
 };
 
