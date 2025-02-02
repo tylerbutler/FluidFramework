@@ -71,7 +71,7 @@ const handlerPerformanceData = new Map<policyAction, Map<string, number>>();
  *
  * i.e. `git ls-files -co --exclude-standard --full-name | flub check policy --stdin --verbose`
  */
-export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
+export class CheckPolicyCommand extends BaseCommand<typeof CheckPolicyCommand> {
 	static readonly description =
 		"Checks and applies policies to the files in the repository, such as ensuring a consistent header comment in files, assert tagging, etc.";
 
@@ -122,7 +122,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 	private processed = 0;
 	private count = 0;
 
-	async run(): Promise<void> {
+	async run(): Promise<boolean> {
 		let handlersToRun: Handler[] = policyHandlers.filter((h) => {
 			if (this.flags.excludeHandler === undefined || this.flags.excludeHandler.length === 0) {
 				return true;
@@ -208,6 +208,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 		};
 
 		await this.executePolicy(filePathsToCheck, commandContext);
+		return process.exitCode !== 1;
 	}
 
 	private async executePolicy(
@@ -297,15 +298,17 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 	}
 
 	private logStats(): void {
-		this.log(
-			`Statistics: ${this.processed} processed, ${this.count - this.processed} excluded, ${
-				this.count
-			} total`,
-		);
-		for (const [action, handlerPerf] of handlerPerformanceData.entries()) {
-			this.log(`Performance for "${action}":`);
-			for (const [handler, dur] of handlerPerf.entries()) {
-				this.log(`\t${handler}: ${dur}ms`);
+		if (!this.flags.quiet) {
+			this.log(
+				`Statistics: ${this.processed} processed, ${this.count - this.processed} excluded, ${
+					this.count
+				} total`,
+			);
+			for (const [action, handlerPerf] of handlerPerformanceData.entries()) {
+				this.log(`Performance for "${action}":`);
+				for (const [handler, dur] of handlerPerf.entries()) {
+					this.log(`\t${handler}: ${dur}ms`);
+				}
 			}
 		}
 	}

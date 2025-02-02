@@ -1,9 +1,8 @@
 import type { MonoRepo, Package } from "@fluidframework/build-tools";
 import chalk from "picocolors";
-
-import type { CommandLogger } from "../../../logging.js";
 import type { Context } from "../../context.js";
-import type { CheckFunction, CheckResult } from "../../releasePrepChecks.js";
+import type { CheckResult, CheckFunction } from "../../releasePrepChecks.js";
+import type { CommandLogger } from "../../../logging.js";
 
 export async function runChecks(
 	context: Context,
@@ -19,11 +18,7 @@ export async function runChecks(
 	return results;
 }
 
-export function reportResult(
-	name: string,
-	checkResult: CheckResult,
-	log: CommandLogger,
-): void {
+export function reportResult(name: string, checkResult: CheckResult, log: CommandLogger): void {
 	const checkPassed = checkResult === undefined;
 	const icon = checkPassed
 		? chalk.bgGreen(chalk.black(" ✔︎ "))

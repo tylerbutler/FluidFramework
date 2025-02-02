@@ -6,6 +6,7 @@
 import { MonoRepo, type Package } from "@fluidframework/build-tools";
 import execa from "execa";
 import { ResetMode } from "simple-git";
+import { CheckPolicyCommand } from "../commands/check/policy.js";
 import type { Context } from "./context.js";
 import { getPreReleaseDependencies } from "./package.js";
 
@@ -189,17 +190,22 @@ export const CheckHasNoPrereleaseDependencies: CheckFunction = async (
 export const CheckNoPolicyViolations: CheckFunction = async (
 	context: Context,
 ): Promise<CheckResult> => {
-	// policy-check is scoped to the path that it's run in. Since we have multiple folders at the root that represent
-	// the client release group, we can't easily scope it to just the client. Thus, we always run it at the root just
-	// like we do in CI.
-	const result = await execa("npm", ["run", "policy-check"], {
-		cwd: context.root,
-	});
+	try {
+		// we always run on the whole repo
+		const originalWd = process.cwd();
+		process.chdir(context.root);
+		const passedCheck = await CheckPolicyCommand.run(["--quiet"]);
+		process.chdir(originalWd);
 
-	if (result.exitCode !== 0) {
+		if (!passedCheck) {
+			return {
+				message: "Policy check failed. These failures must be fixed before release.",
+				fixCommand: "pnpm run policy-check:fix",
+			};
+		}
+	} catch (error: unknown) {
 		return {
-			message: "Policy check failed. These failures must be fixed before release.",
-			fixCommand: "pnpm run policy-check:fix",
+			message: `Unexpected error checking for policy violations: ${error}`,
 		};
 	}
 };
