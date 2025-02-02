@@ -14,6 +14,10 @@ export async function runChecks(
 		// eslint-disable-next-line no-await-in-loop -- the checks are supposed to run serially
 		const checkResult = await check(context, pkgOrReleaseGroup);
 		results.set(name, checkResult);
+		if(checkResult?.fatal === true) {
+			// return immediately since further checks cannot be run after a fatal one.
+			break;
+		}
 	}
 	return results;
 }
