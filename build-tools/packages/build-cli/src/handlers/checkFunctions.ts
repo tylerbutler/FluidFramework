@@ -4,7 +4,6 @@
  */
 
 import { strict as assert } from "node:assert";
-import { existsSync } from "node:fs";
 
 import { confirm, rawlist } from "@inquirer/prompts";
 import execa from "execa";
@@ -491,60 +490,6 @@ export const checkAssertTagging: StateHandlerFunction = async (
 		);
 	} else {
 		log.warning("Skipping assert tagging.");
-	}
-
-	BaseStateHandler.signalSuccess(machine, state);
-	return true;
-};
-
-/**
- * Checks that release notes have been generated.
- *
- * If release notes exist, then this function will send the "success" action to the state machine and return `true`. The
- * state machine will transition to the appropriate state based on the "success" action.
- *
- * If release notes have not been generated, then this function will send the "failure" action to the state machine and
- * still return `true`, since the state has been handled. The state machine will transition to the appropriate state
- * based on the "failure" action.
- *
- * Once this function returns, the state machine's state will be reevaluated and passed to another state handler.
- *
- * @param state - The current state machine state.
- * @param machine - The state machine.
- * @param testMode - Set to true to run function in test mode. In test mode, the function returns true immediately.
- * @param log - A logger that the function can use for logging.
- * @param data - An object with handler-specific contextual data.
- * @returns True if the state was handled; false otherwise.
- */
-export const checkReleaseNotes: StateHandlerFunction = async (
-	state: MachineState,
-	machine: Machine<unknown>,
-	testMode: boolean,
-	log: CommandLogger,
-	data: FluidReleaseStateHandlerData,
-): Promise<boolean> => {
-	if (testMode) return true;
-
-	const { bumpType, releaseGroup, releaseVersion } = data;
-
-	if (
-		// Only some release groups use changeset-based change-tracking.
-		releaseGroupsUsingChangesets.has(releaseGroup) &&
-		// This check should only be run for minor/major releases. Patch releases do not use changesets or generate release
-		// notes so there is no need to check them.
-		bumpType !== "patch"
-	) {
-		// Check if the release notes file exists
-		const filename = `RELEASE_NOTES/${releaseVersion}.md`;
-
-		if (!existsSync(filename)) {
-			log.logHr();
-			log.errorLog(
-				`Release notes for ${releaseGroup} version ${releaseVersion} are not found.`,
-			);
-			BaseStateHandler.signalFailure(machine, state);
-			return false;
-		}
 	}
 
 	BaseStateHandler.signalSuccess(machine, state);
