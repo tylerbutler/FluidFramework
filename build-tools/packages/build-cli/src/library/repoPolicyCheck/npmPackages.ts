@@ -361,7 +361,7 @@ async function ensurePrivatePackagesComputed(): Promise<Set<string>> {
 
 	computedPrivatePackages = new Set();
 	const pathToGitRoot = child_process
-		.execSync("git rev-parse --show-cdup", { encoding: "utf8" })
+		.execSync("git rev-parse --show-toplevel", { encoding: "utf8" })
 		.trim();
 	const repo = new Repository({ baseDir: pathToGitRoot }, "microsoft/FluidFramework");
 	const packageJsons = await repo.getFiles("**/package.json");

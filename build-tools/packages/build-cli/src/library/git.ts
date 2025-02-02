@@ -126,14 +126,14 @@ export class Repository implements GitContext {
 	public async getShaForBranch(branch: string, remote?: string): Promise<string> {
 		const refspec =
 			remote === undefined ? `refs/heads/${branch}` : `refs/remotes/${remote}/${branch}`;
-		const result = await this.git.raw(`show-ref`, refspec);
+		const result = await this.git.raw(`show-ref`, refspec, "--hash");
 
 		return result;
 	}
 
 	public async getShaForTag(tag: string): Promise<string> {
 		const refspec = `refs/tags/${tag}`;
-		const result = await this.git.raw(`show-ref`, refspec);
+		const result = await this.git.raw(`show-ref`, refspec, "--hash");
 
 		return result;
 	}
@@ -423,12 +423,15 @@ export class Repository implements GitContext {
 	}
 
 	public async isBranchUpToDate(branch: string, remote: string): Promise<boolean> {
-		try {
-			await this.fetchBranch(remote, branch);
-		} catch(error: unknown) {
-			console.error(error);
-			return false;
-		}
+		// try {
+		// 	await this.fetchBranch(remote, branch);
+		// } catch(error: unknown) {
+		// 	console.error(error);
+		// 	return false;
+		// }
+
+		await this.fetchBranch(remote, branch);
+
 		const currentSha = await this.getShaForBranch(branch);
 		const remoteSha = await this.getShaForBranch(branch, remote);
 		return remoteSha === currentSha;
@@ -467,7 +470,7 @@ export function getCurrentBranchNameSync(cwd: string = process.cwd()): string {
 		return revParseOut.split(/\r?\n/)[0];
 	} catch (error) {
 		throw new Error(
-			`Failed to find Git branch name. Make sure you are inside a Git repository. Error: ${error}`,
+			`Failed to find Git branch name. Is '${cwd}' a Git repository? Error: ${error}\n${(error as Error).stack}`,
 		);
 	}
 }
