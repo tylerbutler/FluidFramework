@@ -142,6 +142,7 @@ export default class ReleaseCommand extends BaseCommand<typeof ReleaseCommand> {
 		const gitRepo = await context.getGitRepository();
 		if (!shouldSkipChecks) {
 			const prepareResults = await ReleasePrepareCommand.run([releaseGroup]);
+			console.log(prepareResults);
 		}
 	}
 }

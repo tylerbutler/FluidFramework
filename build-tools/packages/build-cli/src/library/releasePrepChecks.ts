@@ -11,6 +11,13 @@ import type { Context } from "./context.js";
 import { getPreReleaseDependencies } from "./package.js";
 
 /**
+ * Only client and server release groups use changesets and the related release note and per-package changelog
+ * generation. Other release groups use various other means to track changes.
+ */
+const releaseGroupsUsingChangesets = new Set(["client", "server"]);
+
+
+/**
  * An async function that executes a release preparation check. The function returns a {@link CheckResult} with details
  * about the results of the check.
  *
@@ -234,4 +241,28 @@ export const CheckNoUntaggedAsserts: CheckFunction = async (
 			fixCommand: "pnpm run policy-check:asserts",
 		};
 	}
+};
+
+export const CheckReleaseNotes: CheckFunction = async (
+	context,
+	releaseGroupOrPackage,
+): Promise<CheckResult> => {
+	if (
+		// Only some release groups use changeset-based change-tracking.
+		releaseGroupsUsingChangesets.has(releaseGroupOrPackage.name) &&
+		// This check should only be run for minor/major releases. Patch releases do not use changesets or generate release
+		// notes so there is no need to check them.
+		bumpType !== "patch"
+	) {
+		// Check if the release notes file exists
+		const filename = `RELEASE_NOTES/${releaseVersion}.md`;
+
+		if (!existsSync(filename)) {
+			log.logHr();
+			log.errorLog(
+				`Release notes for ${releaseGroup} version ${releaseVersion} are not found.`,
+			);
+		}
+	}
+	return true;
 };
