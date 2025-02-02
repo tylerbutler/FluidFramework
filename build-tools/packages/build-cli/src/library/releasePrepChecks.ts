@@ -105,8 +105,9 @@ export const CheckDependenciesInstalled: CheckFunction = async (
 
 	// If any of the install checks returned false, dependencies need to be installed
 	if (installChecks.includes(false)) {
+		const missing = installChecks.filter((c) => c === false).join("\n");
 		return {
-			message: "Some dependencies aren't installed. Try installing dependencies manually.",
+			message: `Some dependencies aren't installed. Try installing dependencies manually. Missing dependencies:\n${missing}`,
 			fixCommand: "pnpm install",
 		};
 	}
