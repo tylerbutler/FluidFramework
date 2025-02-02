@@ -425,7 +425,8 @@ export class Repository implements GitContext {
 	public async isBranchUpToDate(branch: string, remote: string): Promise<boolean> {
 		try {
 			await this.fetchBranch(remote, branch);
-		} catch {
+		} catch(error: unknown) {
+			console.error(error);
 			return false;
 		}
 		const currentSha = await this.getShaForBranch(branch);
@@ -437,7 +438,7 @@ export class Repository implements GitContext {
 	 * Fetch branch
 	 */
 	public async fetchBranch(remote: string, branchName: string): Promise<void> {
-		await this.gitClient.fetch(remote, [branchName]);
+		await this.gitClient.fetch(remote, branchName);
 	}
 
 	public async getRootPath(): Promise<string> {
