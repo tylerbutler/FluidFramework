@@ -423,7 +423,11 @@ export class Repository implements GitContext {
 	}
 
 	public async isBranchUpToDate(branch: string, remote: string): Promise<boolean> {
-		await this.fetchBranch(remote, branch);
+		try {
+			await this.fetchBranch(remote, branch);
+		} catch {
+			return false;
+		}
 		const currentSha = await this.getShaForBranch(branch);
 		const remoteSha = await this.getShaForBranch(branch, remote);
 		return remoteSha === currentSha;
