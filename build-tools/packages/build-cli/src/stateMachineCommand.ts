@@ -26,6 +26,9 @@ import { BaseCommand } from "./library/index.js";
  *
  * The command also provides a `state` flag that can be used to initialize the state machine to a specific state. This
  * is intended for testing.
+ *
+ * @deprecated This class should no longer be used. The state-machine based design is not something we plan to continue
+ * using, so nonew subclasses of this class should be created.
  */
 export abstract class StateMachineCommand<
 	T extends typeof Command & { flags: typeof StateMachineCommand.flags },

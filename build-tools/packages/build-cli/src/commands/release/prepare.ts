@@ -3,10 +3,9 @@
  * Licensed under the MIT License.
  */
 
-import chalk from "picocolors";
-
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../../args.js";
-import { BaseCommand } from "../../library/index.js";
+import { BaseCommand } from "../../library/commands/base.js";
+import { reportResult, runChecks } from "../../library/commands/release/prepare.js";
 import {
 	CheckDependenciesInstalled,
 	type CheckFunction,
@@ -67,27 +66,12 @@ export class ReleasePrepareCommand extends BaseCommand<typeof ReleasePrepareComm
 		this.verbose(`Release group or package found: ${pkgOrReleaseGroup.name}`);
 
 		this.logHr();
-		for (const [name, check] of allChecks) {
-			// eslint-disable-next-line no-await-in-loop -- the checks are supposed to run serially
-			const checkResult = await check(context, pkgOrReleaseGroup);
-			const checkPassed = checkResult === undefined;
-			const icon = checkPassed
-				? chalk.bgGreen(chalk.black(" ✔︎ "))
-				: chalk.bgRed(chalk.white(" ✖︎ "));
 
-			this.log(`${icon} ${checkPassed ? name : chalk.red(checkResult.message)}`);
-			if (!checkPassed) {
-				if (checkResult.fixCommand !== undefined) {
-					this.logIndent(
-						`${chalk.yellow(`Possible fix command:`)} ${chalk.yellow(
-							chalk.bold(checkResult.fixCommand),
-						)}`,
-						6,
-					);
-				}
-				if (checkResult.fatal === true) {
-					this.error("Can't do other checks until the failures are resolved.", { exit: 5 });
-				}
+		const checkResults = await runChecks(context, pkgOrReleaseGroup, allChecks);
+		for (const [name, result] of checkResults) {
+			reportResult(name, result, this.logger);
+			if (result?.fatal === true) {
+				this.error("Can't run other checks until the failures are resolved.", { exit: 5 });
 			}
 		}
 	}

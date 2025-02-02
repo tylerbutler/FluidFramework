@@ -435,6 +435,11 @@ export class Repository implements GitContext {
 	public async fetchBranch(remote: string, branchName: string): Promise<void> {
 		await this.gitClient.fetch(remote, [branchName]);
 	}
+
+	public async getRootPath(): Promise<string> {
+		const rootPath = await this.gitClient.revparse(["--show-toplevel"]);
+		return rootPath.trim();
+	}
 }
 
 /**

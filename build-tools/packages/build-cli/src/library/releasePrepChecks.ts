@@ -62,7 +62,7 @@ export interface CheckResultFailure {
  * The results of a {@link CheckFunction}. If a CheckResult is `true`, then the check succeeded. Otherwise the result is
  * a {@link CheckResultFailure}.
  */
-type CheckResult = CheckResultFailure | undefined;
+export type CheckResult = CheckResultFailure | undefined;
 
 /**
  * Checks that there are no local changes in the local repository. This failure is fatal to ensure changes aren't lost.
