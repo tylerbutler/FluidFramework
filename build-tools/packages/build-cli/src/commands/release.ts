@@ -16,17 +16,13 @@ import {
 	releaseGroupFlag,
 	skipCheckFlag,
 } from "../flags.js";
-import {
-	FluidReleaseStateHandler,
-	FluidReleaseStateHandlerData,
-	StateHandler,
-} from "../handlers/index.js";
+import { FluidReleaseStateHandlerData } from "../handlers/index.js";
 import { PromptWriter } from "../instructionalPromptWriter.js";
+import { BaseCommand } from "../library/commands/base.js";
 // eslint-disable-next-line import/no-internal-modules
 import { askForReleaseVersion } from "../library/release.js";
-import { FluidReleaseMachine } from "../machines/index.js";
 import { getRunPolicyCheckDefault } from "../repoConfig.js";
-import { StateMachineCommand } from "../stateMachineCommand.js";
+import { ReleasePrepareCommand } from "./release/prepare.js";
 
 /**
  * Releases a package or release group. This command is mostly scaffolding and setting up the state machine, handlers,
@@ -34,7 +30,7 @@ import { StateMachineCommand } from "../stateMachineCommand.js";
  * {@link FluidReleaseStateHandler} itself.
  */
 
-export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCommand> {
+export default class ReleaseCommand extends BaseCommand<typeof ReleaseCommand> {
 	static readonly summary = "Releases a package or release group.";
 	static readonly description =
 		`The release command ensures that a release branch is in good condition, then walks the user through releasing a package or release group.
@@ -43,8 +39,6 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 
     This process is continued until all the dependencies have been released, after which the release group itself is released.`;
 
-	readonly machine = FluidReleaseMachine;
-	handler: StateHandler | undefined;
 	data: FluidReleaseStateHandlerData | undefined;
 
 	constructor(argv: string[], config: Config) {
@@ -66,13 +60,13 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 		}),
 		skipChecks: skipCheckFlag,
 		...checkFlags,
-		...StateMachineCommand.flags,
+		...BaseCommand.flags,
 	} as const;
 
 	async init(): Promise<void> {
 		await super.init();
 
-		const { argv, flags, logger, machine } = this;
+		const { argv, flags, logger } = this;
 
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const rgOrPackageName = flags.releaseGroup ?? flags.package!;
@@ -118,8 +112,6 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 			gitRepo.originalBranchName,
 		);
 
-		this.handler = new FluidReleaseStateHandler(machine, logger);
-
 		this.data = {
 			releaseGroup,
 			releaseVersion,
@@ -138,5 +130,18 @@ export default class ReleaseCommand extends StateMachineCommand<typeof ReleaseCo
 			exitFunc: (code: number): void => this.exit(code),
 			command: this,
 		};
+	}
+
+	async run(): Promise<void> {
+		const { data } = this;
+		if (data === undefined) {
+			this.error("Release data was undefined.", { exit: 2 });
+		}
+
+		const { context, releaseGroup, shouldCheckPolicy, shouldSkipChecks } = data;
+		const gitRepo = await context.getGitRepository();
+		if (!shouldSkipChecks) {
+			const prepareResults = await ReleasePrepareCommand.run();
+		}
 	}
 }

@@ -14,6 +14,7 @@ import {
 	CheckNoLocalChanges,
 	CheckNoPolicyViolations,
 	CheckNoUntaggedAsserts,
+	type CheckResult,
 	// library is overloaded with too much stuff now, and we should consider allowing interior imports.
 	// eslint-disable-next-line import/no-internal-modules
 } from "../../library/releasePrepChecks.js";
@@ -55,7 +56,7 @@ export class ReleasePrepareCommand extends BaseCommand<typeof ReleasePrepareComm
 		}),
 	} as const;
 
-	public async run(): Promise<void> {
+	public async run(): Promise<Map<string, CheckResult>> {
 		const context = await this.getContext();
 
 		const rgArg = this.args.package_or_release_group;
@@ -74,5 +75,6 @@ export class ReleasePrepareCommand extends BaseCommand<typeof ReleasePrepareComm
 				this.error("Can't run other checks until the failures are resolved.", { exit: 5 });
 			}
 		}
+		return checkResults;
 	}
 }

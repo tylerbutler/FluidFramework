@@ -277,10 +277,10 @@ export async function askForReleaseVersion(
 	const gitRepo = await context.getGitRepository();
 	const currentBranch = await gitRepo.getCurrentBranchName();
 
-	const recentVersions = await gitRepo.getAllVersions(releaseGroup);
-	assert(recentVersions !== undefined, "versions is undefined");
-	const sortedVersions = sortVersions(recentVersions, "version");
-	const mostRecentRelease = sortedVersions?.[0];
+	const allVersions = await gitRepo.getAllVersions(releaseGroup);
+	assert(allVersions !== undefined, "allVersions is undefined");
+	const recentVersions = sortVersions(allVersions, "version").slice(0, 3);
+	const mostRecentRelease = recentVersions?.[0];
 
 	// Split the versions by version scheme because we need to treat them differently
 	const regularSemVer: VersionDetails[] = [];
