@@ -14,6 +14,7 @@ import {
 	CheckNoLocalChanges,
 	CheckNoPolicyViolations,
 	CheckNoUntaggedAsserts,
+	CheckReleaseNotes,
 	type CheckResult,
 	// library is overloaded with too much stuff now, and we should consider allowing interior imports.
 	// eslint-disable-next-line import/no-internal-modules
@@ -32,6 +33,7 @@ const allChecks: ReadonlyMap<string, CheckFunction> = new Map([
 	["Has no pre-release Fluid dependencies", CheckHasNoPrereleaseDependencies],
 	["No repo policy violations", CheckNoPolicyViolations],
 	["No untagged asserts", CheckNoUntaggedAsserts],
+	["Release notes have been generated", CheckReleaseNotes],
 ]);
 
 /**
@@ -68,13 +70,21 @@ export class ReleasePrepareCommand extends BaseCommand<typeof ReleasePrepareComm
 
 		this.logHr();
 
-		const checkResults = await runChecks(context, pkgOrReleaseGroup, allChecks);
-		for (const [name, result] of checkResults) {
+		const generator = runChecks(context, pkgOrReleaseGroup, allChecks, {
+			// TODO: Is there a better strategy here? May e it should be an optional
+			releaseType: "minor",
+			releaseVersion: pkgOrReleaseGroup.version,
+		});
+
+		const checkResults: Map<string, CheckResult> = new Map();
+		for await (const [name, result] of generator) {
+			checkResults.set(name, result);
 			reportResult(name, result, this.logger);
 			if (result?.fatal === true) {
 				this.error("Can't run other checks until the failures are resolved.", { exit: 5 });
 			}
 		}
+
 		return checkResults;
 	}
 }

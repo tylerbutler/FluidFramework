@@ -2,24 +2,27 @@ import type { MonoRepo, Package } from "@fluidframework/build-tools";
 import chalk from "picocolors";
 import type { CommandLogger } from "../../../logging.js";
 import type { Context } from "../../context.js";
-import type { CheckFunction, CheckResult } from "../../releasePrepChecks.js";
+import type {
+	AdditionalCheckMetadata,
+	CheckFunction,
+	CheckResult,
+} from "../../releasePrepChecks.js";
 
-export async function runChecks(
+/**
+ * Executes all the provided check functions and yields the result. It's a generator function so results can be handled
+ * instead of waiting for all of them to run before reporting any results.
+ */
+export async function* runChecks(
 	context: Context,
 	pkgOrReleaseGroup: MonoRepo | Package,
 	checks: ReadonlyMap<string, CheckFunction>,
-): Promise<Map<string, CheckResult>> {
-	const results: Map<string, CheckResult> = new Map();
+	metadata: AdditionalCheckMetadata,
+): AsyncGenerator<[string, CheckResult]> {
 	for (const [name, check] of checks) {
 		// eslint-disable-next-line no-await-in-loop -- the checks are supposed to run serially
-		const checkResult = await check(context, pkgOrReleaseGroup);
-		results.set(name, checkResult);
-		if (checkResult?.fatal === true) {
-			// return immediately since further checks cannot be run after a fatal one.
-			break;
-		}
+		const checkResult = await check(context, pkgOrReleaseGroup, metadata);
+		yield [name, checkResult];
 	}
-	return results;
 }
 
 export function reportResult(

@@ -3,6 +3,8 @@
  * Licensed under the MIT License.
  */
 
+import { existsSync } from "node:fs";
+import type { ReleaseVersion, VersionBumpType } from "@fluid-tools/version-tools";
 import { MonoRepo, type Package } from "@fluidframework/build-tools";
 import execa from "execa";
 import { ResetMode } from "simple-git";
@@ -16,6 +18,20 @@ import { getPreReleaseDependencies } from "./package.js";
  */
 const releaseGroupsUsingChangesets = new Set(["client", "server"]);
 
+/**
+ * Additional metadata commonly used by Check functions.
+ */
+export interface AdditionalCheckMetadata {
+	/**
+	 * The type of release being done, i.e., patch, minor, or major.
+	 */
+	releaseType: VersionBumpType;
+
+	/**
+	 * The version being released.
+	 */
+	releaseVersion: ReleaseVersion;
+}
 
 /**
  * An async function that executes a release preparation check. The function returns a {@link CheckResult} with details
@@ -42,6 +58,11 @@ export type CheckFunction = (
 	 * future refactoring.
 	 */
 	releaseGroupOrPackage: MonoRepo | Package,
+
+	/**
+	 * Additional optional metadata used by some check functions.
+	 */
+	metadata?: AdditionalCheckMetadata,
 ) => Promise<CheckResult>;
 
 /**
@@ -244,25 +265,33 @@ export const CheckNoUntaggedAsserts: CheckFunction = async (
 };
 
 export const CheckReleaseNotes: CheckFunction = async (
-	context,
+	_,
 	releaseGroupOrPackage,
+	metadata,
 ): Promise<CheckResult> => {
+	if (metadata === undefined) {
+		return {
+			message: "Additional check metadata was undefined. This is likely a bug!",
+		};
+	}
+
+	const { releaseType, releaseVersion } = metadata;
+
 	if (
 		// Only some release groups use changeset-based change-tracking.
 		releaseGroupsUsingChangesets.has(releaseGroupOrPackage.name) &&
 		// This check should only be run for minor/major releases. Patch releases do not use changesets or generate release
 		// notes so there is no need to check them.
-		bumpType !== "patch"
+		releaseType !== "patch"
 	) {
 		// Check if the release notes file exists
 		const filename = `RELEASE_NOTES/${releaseVersion}.md`;
 
 		if (!existsSync(filename)) {
-			log.logHr();
-			log.errorLog(
-				`Release notes for ${releaseGroup} version ${releaseVersion} are not found.`,
-			);
+			return {
+				message: `Release notes for ${releaseGroupOrPackage.name} version ${releaseVersion} are not found.`,
+				fixCommand: `pnpm flub generate releaseNotes -g ${releaseGroupOrPackage.name} -t ${releaseType} --outFile RELEASE_NOTES/${releaseVersion}.md`,
+			};
 		}
 	}
-	return true;
 };
