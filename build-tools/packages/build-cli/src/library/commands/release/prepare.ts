@@ -1,8 +1,8 @@
 import type { MonoRepo, Package } from "@fluidframework/build-tools";
 import chalk from "picocolors";
-import type { Context } from "../../context.js";
-import type { CheckResult, CheckFunction } from "../../releasePrepChecks.js";
 import type { CommandLogger } from "../../../logging.js";
+import type { Context } from "../../context.js";
+import type { CheckFunction, CheckResult } from "../../releasePrepChecks.js";
 
 export async function runChecks(
 	context: Context,
@@ -14,7 +14,7 @@ export async function runChecks(
 		// eslint-disable-next-line no-await-in-loop -- the checks are supposed to run serially
 		const checkResult = await check(context, pkgOrReleaseGroup);
 		results.set(name, checkResult);
-		if(checkResult?.fatal === true) {
+		if (checkResult?.fatal === true) {
 			// return immediately since further checks cannot be run after a fatal one.
 			break;
 		}
@@ -22,7 +22,11 @@ export async function runChecks(
 	return results;
 }
 
-export function reportResult(name: string, checkResult: CheckResult, log: CommandLogger): void {
+export function reportResult(
+	name: string,
+	checkResult: CheckResult,
+	log: CommandLogger,
+): void {
 	const checkPassed = checkResult === undefined;
 	const icon = checkPassed
 		? chalk.bgGreen(chalk.black(" ✔︎ "))
