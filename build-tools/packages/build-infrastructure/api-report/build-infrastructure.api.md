@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { AgentName } from 'package-manager-detector';
 import type { Opaque } from 'type-fest';
 import type { PackageJson as PackageJson_2 } from 'type-fest';
 import { SemVer } from 'semver';
@@ -29,7 +30,7 @@ export interface BuildProjectLayout {
 }
 
 // @public
-export function createPackageManager(name: PackageManagerName): IPackageManager;
+export function detectPackageManager(cwd?: string): IPackageManager;
 
 // @public
 export function findGitRootSync(cwd?: string): string;
@@ -118,7 +119,6 @@ export interface IPackage<J extends PackageJson = PackageJson> extends Installab
     readonly nameColored: string;
     packageJson: J;
     readonly packageJsonFilePath: string;
-    readonly packageManager: IPackageManager;
     readonly private: boolean;
     releaseGroup: ReleaseGroupName;
     savePackageJson(): Promise<void>;
@@ -131,7 +131,6 @@ export interface IPackage<J extends PackageJson = PackageJson> extends Installab
 // @public
 export interface IPackageManager {
     getInstallCommandWithArgs(updateLockfile: boolean): string[];
-    readonly lockfileName: string;
     readonly name: PackageManagerName;
 }
 
@@ -159,6 +158,7 @@ export interface IWorkspace extends Installable, Reloadable {
     buildProject: IBuildProject;
     directory: string;
     name: WorkspaceName;
+    packageManager: IPackageManager;
     packages: IPackage[];
     releaseGroups: Map<ReleaseGroupName, IReleaseGroup>;
     rootPackage: IPackage;
@@ -180,7 +180,6 @@ export class NotInGitRepository extends Error {
 export abstract class PackageBase<J extends PackageJson = PackageJson, TAddProps extends AdditionalPackageProps = undefined> implements IPackage<J> {
     constructor(
     packageJsonFilePath: string,
-    packageManager: IPackageManager,
     workspace: IWorkspace,
     isWorkspaceRoot: boolean,
     releaseGroup: ReleaseGroupName,
@@ -196,7 +195,6 @@ export abstract class PackageBase<J extends PackageJson = PackageJson, TAddProps
     get nameColored(): string;
     get packageJson(): J;
     readonly packageJsonFilePath: string;
-    readonly packageManager: IPackageManager;
     get private(): boolean;
     readonly releaseGroup: ReleaseGroupName;
     reload(): void;
@@ -218,7 +216,7 @@ export interface PackageDependency {
 export type PackageJson = SetRequired<PackageJson_2 & FluidPackageJsonFields, "name" | "scripts" | "version">;
 
 // @public
-export type PackageManagerName = "npm" | "pnpm" | "yarn";
+export type PackageManagerName = AgentName;
 
 // @public
 export type PackageName = Opaque<string, "PackageName">;

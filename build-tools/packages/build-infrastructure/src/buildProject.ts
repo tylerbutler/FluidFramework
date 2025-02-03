@@ -23,6 +23,7 @@ import {
 } from "./types.js";
 import { Workspace } from "./workspace.js";
 import { loadWorkspacesFromLegacyConfig } from "./workspaceCompat.js";
+import { WriteOnceMap } from "./writeOnceMap.js";
 
 /**
  * {@inheritDoc IBuildProject}
@@ -73,7 +74,7 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 				this._workspaces = loadWorkspacesFromLegacyConfig(config.repoPackages, this);
 			}
 		} else {
-			this._workspaces = new Map<WorkspaceName, IWorkspace>(
+			this._workspaces = new WriteOnceMap<WorkspaceName, IWorkspace>(
 				Object.entries(config.buildProject.workspaces).map((entry) => {
 					const name = entry[0] as WorkspaceName;
 					const definition = entry[1];
@@ -117,12 +118,12 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 	 * {@inheritDoc IBuildProject.packages}
 	 */
 	public get packages(): Map<PackageName, P> {
-		const pkgs: Map<PackageName, P> = new Map();
+		const pkgs: Map<PackageName, P> = new WriteOnceMap();
 		for (const ws of this.workspaces.values()) {
 			for (const pkg of ws.packages) {
-				if (pkgs.has(pkg.name)) {
-					throw new Error(`Duplicate package: ${pkg.name}`);
-				}
+				// if (pkgs.has(pkg.name)) {
+				// 	throw new Error(`Duplicate package: ${pkg.name}`);
+				// }
 
 				pkgs.set(pkg.name, pkg as P);
 			}

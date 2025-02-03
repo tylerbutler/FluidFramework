@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import type { Agent, AgentName } from "package-manager-detector";
 import { SimpleGit } from "simple-git";
 import type { Opaque, SetRequired, PackageJson as StandardPackageJson } from "type-fest";
 
@@ -168,7 +169,7 @@ export interface IWorkspace extends Installable, Reloadable {
 	name: WorkspaceName;
 
 	/**
-	 * The root directory of the workspace. This directory will contain the workspace root package.
+	 * The absolute path to the root directory of the workspace. This directory will contain the workspace root package.
 	 */
 	directory: string;
 
@@ -192,6 +193,12 @@ export interface IWorkspace extends Installable, Reloadable {
 	 * constituent packages as well.
 	 */
 	packages: IPackage[];
+
+	/**
+	 * The package manager used to manage this workspace.
+	 */
+	packageManager: IPackageManager;
+
 	toString(): string;
 }
 
@@ -272,7 +279,15 @@ export function isIReleaseGroup(
 /**
  * Known package managers supported by build-infrastructure.
  */
-export type PackageManagerName = "npm" | "pnpm" | "yarn";
+export type PackageManagerName = AgentName;
+
+/**
+ * For package managers that have multiple versions or flavors, this type contains the unambiguous string that can be
+ * used to install the package manager.
+ *
+ * For example, "yarn" is yarn 1, while "yarn\@berry" is yarn's new version.
+ */
+export type PackageManagerInstallName = Agent;
 
 /**
  * A package manager, such as "npm" or "pnpm".
@@ -286,7 +301,7 @@ export interface IPackageManager {
 	/**
 	 * The name of the lockfile used by the package manager.
 	 */
-	readonly lockfileName: string;
+	// readonly lockfileName: string;
 
 	/**
 	 * Returns an array of arguments, including the name of the command, e.g. "install", that can be used to install
@@ -366,16 +381,6 @@ export interface IPackage<J extends PackageJson = PackageJson>
 	 * The package.json contents of the package.
 	 */
 	packageJson: J;
-
-	/**
-	 * The package manager used to manage this package.
-	 *
-	 * @privateRemarks
-	 *
-	 * If this is needed at the package level, perhaps it should instead be retrieved from the package's workspace,
-	 * since the package manager is defined at the workspace level.
-	 */
-	readonly packageManager: IPackageManager;
 
 	/**
 	 * The version of the package. This is the same as `packageJson.version`.
