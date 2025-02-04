@@ -46,7 +46,6 @@ USAGE
 * [`flub promote`](docs/promote.md) - Promote commands are used to promote packages published to an npm registry.
 * [`flub publish`](docs/publish.md) - Publish commands are used to publish packages to an npm registry.
 * [`flub release`](docs/release.md) - Release commands are used to manage the Fluid release process.
-* [`flub releaseDeprecated`](docs/releaseDeprecated.md) - Releases a package or release group.
 * [`flub rename-types`](docs/rename-types.md) - Renames type declaration files from .d.ts to .d.mts.
 * [`flub report`](docs/report.md) - Report analysis about the codebase, like code coverage and bundle size measurements.
 * [`flub transform`](docs/transform.md) - Transform commands are used to transform code, docs, etc. into alternative forms.
