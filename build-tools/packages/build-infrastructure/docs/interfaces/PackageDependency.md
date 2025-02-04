@@ -1,8 +1,8 @@
-[**@fluid-tools/build-infrastructure**](../README.md) • **Docs**
+[**@tylerbu/build-infrastructure**](../README.md) • **Docs**
 
 ***
 
-[@fluid-tools/build-infrastructure](../README.md) / PackageDependency
+[@tylerbu/build-infrastructure](../README.md) / PackageDependency
 
 # Interface: PackageDependency
 

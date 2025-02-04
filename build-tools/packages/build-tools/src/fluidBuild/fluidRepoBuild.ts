@@ -20,7 +20,7 @@ import { NpmDepChecker } from "./npmDepChecker";
 import { ISymlinkOptions, symlinkPackage } from "./symlinkUtils";
 import { globFn } from "./tasks/taskUtils";
 
-const traceInit = registerDebug("fluid-build:init");
+const traceInit = registerDebug("sail:init");
 
 const { log } = defaultLogger;
 

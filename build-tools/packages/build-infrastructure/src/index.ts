@@ -65,7 +65,7 @@ export type {
 	ReleaseGroupName,
 	Reloadable,
 	WorkspaceName,
-	PnpmPackageJsonFields as FluidPackageJsonFields,
+	PnpmPackageJsonFields,
 	PackageDependency,
 	IPackageManager,
 } from "./types.js";

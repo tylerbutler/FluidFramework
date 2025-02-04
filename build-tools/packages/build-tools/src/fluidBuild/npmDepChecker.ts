@@ -7,7 +7,7 @@ import { readFile } from "node:fs/promises";
 import { Package } from "../common/npmPackage";
 
 import registerDebug from "debug";
-const traceDepCheck = registerDebug("fluid-build:depCheck");
+const traceDepCheck = registerDebug("sail:depCheck");
 
 /**
  * @deprecated depcheck-related functionality will be removed in an upcoming release.

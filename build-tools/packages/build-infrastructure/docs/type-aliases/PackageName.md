@@ -1,8 +1,8 @@
-[**@fluid-tools/build-infrastructure**](../README.md) • **Docs**
+[**@tylerbu/build-infrastructure**](../README.md) • **Docs**
 
 ***
 
-[@fluid-tools/build-infrastructure](../README.md) / PackageName
+[@tylerbu/build-infrastructure](../README.md) / PackageName
 
 # Type Alias: PackageName
 

@@ -12,7 +12,7 @@
 	"author": "Microsoft and contributors",
 	"dependencies": {
 		"@fluid-private/changelog-generator-wrapper": "link:../../../../../../../packages/tools/changelog-generator-wrapper",
-		"@fluid-tools/build-infrastructure": "link:../../../../../build-infrastructure"
+		"@tylerbu/build-infrastructure": "link:../../../../../build-infrastructure"
 	},
 	"devDependencies": {
 		"@changesets/cli": "^2.27.11"

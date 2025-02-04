@@ -1,8 +1,8 @@
-[**@fluid-tools/build-infrastructure**](../README.md) • **Docs**
+[**@tylerbu/build-infrastructure**](../README.md) • **Docs**
 
 ***
 
-[@fluid-tools/build-infrastructure](../README.md) / isIPackage
+[@tylerbu/build-infrastructure](../README.md) / isIPackage
 
 # Function: isIPackage()
 

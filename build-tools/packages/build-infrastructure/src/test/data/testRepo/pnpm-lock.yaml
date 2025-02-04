@@ -11,7 +11,7 @@ importers:
       '@fluid-private/changelog-generator-wrapper':
         specifier: link:../../../../../../../packages/tools/changelog-generator-wrapper
         version: link:../../../../../../../packages/tools/changelog-generator-wrapper
-      '@fluid-tools/build-infrastructure':
+      '@tylerbu/build-infrastructure':
         specifier: link:../../../../../build-infrastructure
         version: link:../../../..
     devDependencies:

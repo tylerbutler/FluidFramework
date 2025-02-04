@@ -13,6 +13,14 @@ import type {
 	PackageManagerName,
 } from "./types.js";
 
+const lockFileMap = new Map<PackageManagerName, string[]>([
+	["bun", ["bun.lock", "bun.lockb"]],
+	["deno", ["deno.lock"]],
+	["npm", ["package-lock.json"]],
+	["pnpm", ["pnpm-lock.yaml"]],
+	["yarn", ["yarn.lock"]],
+]);
+
 export class PackageManager implements IPackageManager {
 	/**
 	 * Instantiates a new package manager object. Prefer the {@link createPackageManager} function, which retuns an
@@ -21,7 +29,15 @@ export class PackageManager implements IPackageManager {
 	public constructor(
 		public readonly name: PackageManagerName,
 		private readonly installName: PackageManagerInstallName,
-	) {}
+	) {
+		const entry = lockFileMap.get(name);
+		if(entry === undefined) {
+			throw new Error(`Lockfiles not known for package manager "${name}"`);
+		}
+		this.lockfileNames = entry;
+	}
+
+	public readonly lockfileNames: string[];
 
 	/**
 	 * {@inheritdoc IPackageManager.getInstallCommandWithArgs}

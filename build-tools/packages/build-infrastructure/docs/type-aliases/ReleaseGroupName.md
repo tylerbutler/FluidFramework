@@ -1,8 +1,8 @@
-[**@fluid-tools/build-infrastructure**](../README.md) • **Docs**
+[**@tylerbu/build-infrastructure**](../README.md) • **Docs**
 
 ***
 
-[@fluid-tools/build-infrastructure](../README.md) / ReleaseGroupName
+[@tylerbu/build-infrastructure](../README.md) / ReleaseGroupName
 
 # Type Alias: ReleaseGroupName
 

@@ -299,9 +299,9 @@ export interface IPackageManager {
 	readonly name: PackageManagerName;
 
 	/**
-	 * The name of the lockfile used by the package manager.
+	 * The name of the lockfile(s) used by the package manager.
 	 */
-	// readonly lockfileName: string;
+	readonly lockfileNames: string[];
 
 	/**
 	 * Returns an array of arguments, including the name of the command, e.g. "install", that can be used to install

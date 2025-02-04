@@ -1,8 +1,8 @@
-[**@fluid-tools/build-infrastructure**](../README.md) • **Docs**
+[**@tylerbu/build-infrastructure**](../README.md) • **Docs**
 
 ***
 
-[@fluid-tools/build-infrastructure](../README.md) / WorkspaceName
+[@tylerbu/build-infrastructure](../README.md) / WorkspaceName
 
 # Type Alias: WorkspaceName
 

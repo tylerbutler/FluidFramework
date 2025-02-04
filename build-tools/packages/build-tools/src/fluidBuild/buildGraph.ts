@@ -30,9 +30,9 @@ import { Task, TaskExec } from "./tasks/task";
 import { TaskFactory } from "./tasks/taskFactory";
 import { WorkerPool } from "./tasks/workers/workerPool";
 
-const traceTaskDef = registerDebug("fluid-build:task:definition");
-const traceTaskDepTask = registerDebug("fluid-build:task:init:dep:task");
-const traceGraph = registerDebug("fluid-build:graph");
+const traceTaskDef = registerDebug("sail:task:definition");
+const traceTaskDepTask = registerDebug("sail:task:init:dep:task");
+const traceGraph = registerDebug("sail:graph");
 
 const { log } = defaultLogger;
 

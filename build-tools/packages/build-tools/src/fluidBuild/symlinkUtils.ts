@@ -14,7 +14,7 @@ import { Package } from "../common/npmPackage";
 import { FluidRepoBuild } from "./fluidRepoBuild";
 
 import registerDebug from "debug";
-const traceSymLink = registerDebug("fluid-build:symlink");
+const traceSymLink = registerDebug("sail:symlink");
 
 const { warning } = defaultLogger;
 
