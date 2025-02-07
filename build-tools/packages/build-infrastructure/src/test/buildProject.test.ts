@@ -8,8 +8,6 @@ import { strict as assert } from "node:assert";
 import chai, { expect } from "chai";
 import assertArrays from "chai-arrays";
 import { describe, it } from "mocha";
-import * as semver from "semver";
-import { simpleGit } from "simple-git";
 
 import { loadBuildProject } from "../buildProject.js";
 import { findGitRootSync } from "../git.js";
@@ -18,8 +16,6 @@ import type { ReleaseGroupName, WorkspaceName } from "../types.js";
 import { testRepoRoot } from "./init.js";
 
 chai.use(assertArrays);
-
-const git = simpleGit(testRepoRoot);
 
 describe("loadBuildProject", () => {
 	describe("testRepo", () => {

@@ -1,5 +1,5 @@
 {
-	"extends": "../../tsconfig.json",
+	"extends": "../../../../../common/build/build-common/tsconfig.test.node16.json",
 	"include": ["./**/*"],
 	"compilerOptions": {
 		"rootDir": "./",

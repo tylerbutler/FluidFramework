@@ -229,15 +229,6 @@ function generateConfig(searchPath: string): BuildProjectConfig {
 		throw new Error("Unexpected error loading config-less build project.");
 	}
 
-	function makeReleaseGroup(name: string): Record<string, ReleaseGroupDefinition> {
-		const entry: Record<string, ReleaseGroupDefinition> = {};
-		entry[name] = {
-			// include all packages
-			include: ["*"],
-		};
-		return entry;
-	}
-
 	// const workspaces: Map<string, string> = new Map();
 	for (const workspaceRootPath of workspaceRoots) {
 		const wsName = path.basename(workspaceRootPath);
@@ -250,6 +241,15 @@ function generateConfig(searchPath: string): BuildProjectConfig {
 	}
 
 	return toReturn;
+}
+
+function makeReleaseGroup(name: string): Record<string, ReleaseGroupDefinition> {
+	const entry: Record<string, ReleaseGroupDefinition> = {};
+	entry[name] = {
+		// include all packages
+		include: ["*"],
+	};
+	return entry;
 }
 
 /**
