@@ -1,4 +1,4 @@
-# @tylerbu/build-infrastructure
+# @fluid-tools/build-infrastructure
 
 This package contains types and helper functions that are used across multiple build-tools packages, including
 `@fluidframework/build-tools` and `@fluid-tools/build-cli`.

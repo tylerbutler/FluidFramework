@@ -1,8 +1,8 @@
-[**@tylerbu/build-infrastructure**](../README.md) • **Docs**
+[**@fluid-tools/build-infrastructure**](../README.md) • **Docs**
 
 ***
 
-[@tylerbu/build-infrastructure](../README.md) / Installable
+[@fluid-tools/build-infrastructure](../README.md) / Installable
 
 # Interface: Installable
 
