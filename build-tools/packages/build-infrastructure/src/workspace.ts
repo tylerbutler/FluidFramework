@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import path from "node:path";
+import * as path from "node:path";
 
 import execa from "execa";
 import resolveWorkspacePkg from "resolve-workspace-root";

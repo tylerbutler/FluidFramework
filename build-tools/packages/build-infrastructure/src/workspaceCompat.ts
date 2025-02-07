@@ -4,7 +4,7 @@
  */
 
 import { existsSync } from "node:fs";
-import path from "node:path";
+import * as path from "node:path";
 
 import { globSync } from "tinyglobby";
 

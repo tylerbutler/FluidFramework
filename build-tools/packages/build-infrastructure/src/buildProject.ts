@@ -3,15 +3,15 @@
  * Licensed under the MIT License.
  */
 
-import path from "node:path";
+import * as path from "node:path";
 
 import { type SimpleGit, simpleGit } from "simple-git";
 import { globSync } from "tinyglobby";
 
 import {
 	type BuildProjectConfig,
-	getBuildProjectConfig,
 	type ReleaseGroupDefinition,
+	getBuildProjectConfig,
 } from "./config.js";
 import { NotInGitRepository } from "./errors.js";
 import { findGitRootSync } from "./git.js";

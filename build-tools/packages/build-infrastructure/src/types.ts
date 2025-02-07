@@ -5,7 +5,7 @@
 
 import type { Agent, AgentName } from "package-manager-detector";
 import { SimpleGit } from "simple-git";
-import type { Tagged, SetRequired, PackageJson as StandardPackageJson } from "type-fest";
+import type { Opaque, SetRequired, PackageJson as StandardPackageJson } from "type-fest";
 
 import type { BuildProjectConfig } from "./config.js";
 
@@ -138,7 +138,7 @@ export interface Reloadable {
 /**
  * A tagged type representing workspace names.
  */
-export type WorkspaceName = Tagged<string, "WorkspaceName">;
+export type WorkspaceName = Opaque<string, "WorkspaceName">;
 
 /**
  * A workspace is a collection of packages, including a root package, that is managed using a package manager's
@@ -205,7 +205,7 @@ export interface IWorkspace extends Installable, Reloadable {
 /**
  * A tagged type representing release group names.
  */
-export type ReleaseGroupName = Tagged<string, "IReleaseGroup">;
+export type ReleaseGroupName = Opaque<string, "IReleaseGroup">;
 
 /**
  * A release group is a collection of packages that are versioned and released together. All packages within a release
@@ -348,7 +348,7 @@ export interface PackageDependency {
 /**
  * A tagged type representing package names.
  */
-export type PackageName = Tagged<string, "PackageName">;
+export type PackageName = Opaque<string, "PackageName">;
 
 /**
  * A common type representing an npm package. A custom type can be used for the package.json schema, which is useful

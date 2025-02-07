@@ -5,7 +5,7 @@
 
 import { strict as assert } from "node:assert";
 import { rm } from "node:fs/promises";
-import path from "node:path";
+import * as path from "node:path";
 
 import { expect } from "chai";
 import { describe, it } from "mocha";

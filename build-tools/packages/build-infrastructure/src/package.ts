@@ -4,7 +4,7 @@
  */
 
 import { existsSync } from "node:fs";
-import path from "node:path";
+import * as path from "node:path";
 
 // Imports are written this way for CJS/ESM compat
 import fsePkg from "fs-extra";
