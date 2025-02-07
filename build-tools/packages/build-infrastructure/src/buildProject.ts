@@ -70,6 +70,8 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 			this.configFilePath = searchPath;
 		}
 
+		this.root = path.resolve(path.dirname(this.configFilePath));
+
 		// Check for the buildProject config first
 		if (this.configuration.buildProject === undefined) {
 			// If there's no `buildProject` _and_ no `repoPackages`, then we need to error since there's no loadable config.
@@ -105,8 +107,6 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 			}
 		}
 		this._releaseGroups = releaseGroups;
-
-		this.root = path.resolve(path.dirname(this.configFilePath));
 	}
 
 	private readonly _workspaces: Map<WorkspaceName, IWorkspace>;
