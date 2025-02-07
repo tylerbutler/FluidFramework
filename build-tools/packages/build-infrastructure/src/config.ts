@@ -24,7 +24,7 @@ export interface BuildProjectConfig {
 	/**
 	 * The version of the config.
 	 */
-	version: typeof BUILDPROJECT_CONFIG_VERSION;
+	version: number;
 
 	/**
 	 * **BACK-COMPAT ONLY**
