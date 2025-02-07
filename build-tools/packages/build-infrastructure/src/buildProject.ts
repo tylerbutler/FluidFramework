@@ -6,8 +6,13 @@
 import path from "node:path";
 
 import { type SimpleGit, simpleGit } from "simple-git";
+import { globSync } from "tinyglobby";
 
-import { type BuildProjectConfig, getBuildProjectConfig } from "./config.js";
+import {
+	type BuildProjectConfig,
+	getBuildProjectConfig,
+	type ReleaseGroupDefinition,
+} from "./config.js";
 import { NotInGitRepository } from "./errors.js";
 import { findGitRootSync } from "./git.js";
 import {
@@ -28,7 +33,8 @@ import { WriteOnceMap } from "./writeOnceMap.js";
  */
 export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 	/**
-	 * The absolute path to the root of the build project. This is the path where the config file is located.
+	 * The absolute path to the root of the build project. This is the path where the config file is located, if one
+	 * exists.
 	 */
 	public readonly root: string;
 
@@ -55,25 +61,32 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 		 */
 		public readonly upstreamRemotePartialUrl?: string,
 	) {
-		const { config, configFilePath } = getBuildProjectConfig(searchPath);
-		this.root = path.resolve(path.dirname(configFilePath));
-		this.configuration = config;
-		this.configFilePath = configFilePath;
+		try {
+			const { config, configFilePath } = getBuildProjectConfig(searchPath);
+			this.configuration = config;
+			this.configFilePath = configFilePath;
+		} catch {
+			this.configuration = generateConfig(searchPath);
+			this.configFilePath = searchPath;
+		}
 
 		// Check for the buildProject config first
-		if (config.buildProject === undefined) {
+		if (this.configuration.buildProject === undefined) {
 			// If there's no `buildProject` _and_ no `repoPackages`, then we need to error since there's no loadable config.
-			if (config.repoPackages === undefined) {
-				throw new Error(`Can't find configuration.`);
+			if (this.configuration.repoPackages === undefined) {
+				throw new Error(`Can't find configuration or load the default.`);
 			} else {
 				console.warn(
 					`The repoPackages setting is deprecated and will no longer be read in a future version. Use buildProject instead.`,
 				);
-				this._workspaces = loadWorkspacesFromLegacyConfig(config.repoPackages, this);
+				this._workspaces = loadWorkspacesFromLegacyConfig(
+					this.configuration.repoPackages,
+					this,
+				);
 			}
 		} else {
 			this._workspaces = new WriteOnceMap<WorkspaceName, IWorkspace>(
-				Object.entries(config.buildProject.workspaces).map((entry) => {
+				Object.entries(this.configuration.buildProject.workspaces).map((entry) => {
 					const name = entry[0] as WorkspaceName;
 					const definition = entry[1];
 					const ws = Workspace.load(name, definition, this.root, this);
@@ -92,6 +105,8 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 			}
 		}
 		this._releaseGroups = releaseGroups;
+
+		this.root = path.resolve(path.dirname(this.configFilePath));
 	}
 
 	private readonly _workspaces: Map<WorkspaceName, IWorkspace>;
@@ -181,6 +196,60 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 
 		return found;
 	}
+}
+
+function generateConfig(searchPath: string): BuildProjectConfig {
+	const toReturn: BuildProjectConfig = {
+		version: 1,
+		buildProject: {
+			workspaces: {},
+		},
+	};
+
+	// Find workspace roots based on lockfiles
+	const lockfilePaths = globSync(
+		[
+			"package-lock.json",
+			"pnpm-lock.yaml",
+			"bun.lock",
+			"bun.lockb",
+			"deno.lock",
+			"yarn.lock",
+		].map((lockfile) => `**/${lockfile}`),
+		{
+			cwd: searchPath,
+			ignore: ["**/node_modules/**"],
+			onlyFiles: true,
+			absolute: true,
+		},
+	);
+
+	const workspaceRoots = new Set(lockfilePaths.map((p) => path.dirname(p)));
+	if (toReturn.buildProject === undefined) {
+		throw new Error("Unexpected error loading config-less build project.");
+	}
+
+	function makeReleaseGroup(name: string): Record<string, ReleaseGroupDefinition> {
+		const entry: Record<string, ReleaseGroupDefinition> = {};
+		entry[name] = {
+			// include all packages
+			include: ["*"],
+		};
+		return entry;
+	}
+
+	// const workspaces: Map<string, string> = new Map();
+	for (const workspaceRootPath of workspaceRoots) {
+		const wsName = path.basename(workspaceRootPath);
+		// workspaces.set(wsName, workspaceRootPath);
+
+		toReturn.buildProject.workspaces[wsName] = {
+			directory: workspaceRootPath,
+			releaseGroups: makeReleaseGroup(wsName),
+		};
+	}
+
+	return toReturn;
 }
 
 /**

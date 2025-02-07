@@ -49,7 +49,7 @@ export interface BuildProjectConfig {
 }
 
 /**
- * The definition of a workspace ih configuration.
+ * The definition of a workspace in configuration.
  */
 export interface WorkspaceDefinition {
 	/**

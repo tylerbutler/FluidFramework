@@ -31,7 +31,7 @@ export class PackageManager implements IPackageManager {
 		private readonly installName: PackageManagerInstallName,
 	) {
 		const entry = lockFileMap.get(name);
-		if(entry === undefined) {
+		if (entry === undefined) {
 			throw new Error(`Lockfiles not known for package manager "${name}"`);
 		}
 		this.lockfileNames = entry;
