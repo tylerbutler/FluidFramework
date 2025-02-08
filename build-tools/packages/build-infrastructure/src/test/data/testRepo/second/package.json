@@ -11,6 +11,6 @@
 	"license": "MIT",
 	"author": "Microsoft and contributors",
 	"dependencies": {
-		"@tylerbu/build-infrastructure": "link:../../../../../../build-infrastructure"
+		"@fluid-tools/build-infrastructure": "link:../../../../../../build-infrastructure"
 	}
 }
