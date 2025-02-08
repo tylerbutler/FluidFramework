@@ -83,6 +83,12 @@ export interface IBuildProject<P extends IPackage = IPackage> extends Reloadable
 	configuration: BuildProjectConfig;
 
 	/**
+	 * The source for the configuration. If the configuration is loaded from a file, this will be the path to the file. If
+	 * the configuration is inferred, this will be the string "INFERRED".
+	 */
+	configurationSource: string | "INFERRED";
+
+	/**
 	 * Transforms an absolute path to a path relative to the IBuildProject root.
 	 *
 	 * @param p - The path to make relative to the IBuildProject root.

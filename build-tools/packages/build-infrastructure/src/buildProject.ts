@@ -43,33 +43,44 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 	 */
 	public readonly configuration: BuildProjectConfig;
 
+	public readonly configurationSource: string;
+
 	/**
 	 * The absolute path to the config file.
 	 */
-	protected readonly configFilePath: string;
+	private readonly configFilePath: string;
 
 	/**
 	 * @param searchPath - The path that should be searched for a BuildProject config file.
+	 * @param infer - Set to true to always infer the build project config.
 	 * @param gitRepository - A SimpleGit instance rooted in the root of the Git repository housing the BuildProject. This
 	 * should be set to false if the BuildProject is not within a Git repository.
 	 */
 	public constructor(
 		searchPath: string,
+		infer = false,
 
 		/**
 		 * {@inheritDoc IBuildProject.upstreamRemotePartialUrl}
 		 */
 		public readonly upstreamRemotePartialUrl?: string,
 	) {
-		try {
-			const { config, configFilePath } = getBuildProjectConfig(searchPath);
-			this.configuration = config;
-			this.configFilePath = configFilePath;
-		} catch {
+		if (infer) {
 			this.configuration = generateConfig(searchPath);
 			this.configFilePath = searchPath;
+			this.configurationSource = "INFERRED";
+		} else {
+			try {
+				const { config, configFilePath } = getBuildProjectConfig(searchPath);
+				this.configuration = config;
+				this.configFilePath = configFilePath;
+				this.configurationSource = configFilePath;
+			} catch {
+				this.configuration = generateConfig(searchPath);
+				this.configFilePath = searchPath;
+				this.configurationSource = "INFERRED";
+			}
 		}
-
 		this.root = path.resolve(path.dirname(this.configFilePath));
 
 		// Check for the buildProject config first
@@ -198,6 +209,11 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 	}
 }
 
+/**
+ * Generates a BuildProjectConfig by searching searchPath and below for workspaces. If any workspaces are found, they're
+ * automatically added to the config, and a single release group is created within the workspace. Both the workspace and
+ * the release group will be named the "basename" of the workspace path.
+ */
 function generateConfig(searchPath: string): BuildProjectConfig {
 	const toReturn: BuildProjectConfig = {
 		version: 1,
@@ -236,14 +252,16 @@ function generateConfig(searchPath: string): BuildProjectConfig {
 
 		toReturn.buildProject.workspaces[wsName] = {
 			directory: workspaceRootPath,
-			releaseGroups: makeReleaseGroup(wsName),
+			releaseGroups: makeReleaseGroupDefinitionEntry(wsName),
 		};
 	}
 
 	return toReturn;
 }
 
-function makeReleaseGroup(name: string): Record<string, ReleaseGroupDefinition> {
+function makeReleaseGroupDefinitionEntry(
+	name: string,
+): Record<string, ReleaseGroupDefinition> {
 	const entry: Record<string, ReleaseGroupDefinition> = {};
 	entry[name] = {
 		// include all packages
@@ -257,15 +275,17 @@ function makeReleaseGroup(name: string): Record<string, ReleaseGroupDefinition> 
  *
  * @typeParam P - The type to use for Packages.
  * @param searchPath - The path to start searching for a BuildProject config.
+ * @param infer - Set to true to always infer the build project config.
  * @param upstreamRemotePartialUrl - A partial URL to the upstream repo. This is used to find the local git remote that
  * corresponds to the upstream repo.
  * @returns The loaded BuildProject.
  */
 export function loadBuildProject<P extends IPackage>(
 	searchPath: string,
+	infer = false,
 	upstreamRemotePartialUrl?: string,
 ): IBuildProject<P> {
-	const repo = new BuildProject<P>(searchPath, upstreamRemotePartialUrl);
+	const repo = new BuildProject<P>(searchPath, infer, upstreamRemotePartialUrl);
 	return repo;
 }
 
