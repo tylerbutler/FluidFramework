@@ -32,9 +32,20 @@ export interface PnpmPackageJsonFields {
  * The `name`, `scripts`, and `version` fields are required, unlike standard package.json.
  */
 export type PackageJson = SetRequired<
-	StandardPackageJson & PnpmPackageJsonFields,
+	Pick<
+		StandardPackageJson,
+		| "name"
+		| "scripts"
+		| "version"
+		| "dependencies"
+		| "devDependencies"
+		| "peerDependencies"
+		| "private"
+		| "type"
+	>,
 	"name" | "scripts" | "version"
->;
+> &
+	PnpmPackageJsonFields;
 
 /**
  * Additional properties that can be added to an {@link IPackage}.
