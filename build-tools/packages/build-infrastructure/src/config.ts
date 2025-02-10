@@ -24,7 +24,7 @@ export interface BuildProjectConfig {
 	/**
 	 * The version of the config.
 	 */
-	version: typeof BUILDPROJECT_CONFIG_VERSION;
+	version: number;
 
 	/**
 	 * **BACK-COMPAT ONLY**
@@ -49,7 +49,7 @@ export interface BuildProjectConfig {
 }
 
 /**
- * The definition of a workspace ih configuration.
+ * The definition of a workspace in configuration.
  */
 export interface WorkspaceDefinition {
 	/**

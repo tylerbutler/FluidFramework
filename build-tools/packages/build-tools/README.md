@@ -234,40 +234,40 @@ like.
 `fluid-build` using the `debug` package to do traces for investigating and diagnosing problem. Below are some of the trace
 names `fluid-build` uses.
 
-### fluid-build:init
+### sail:init
 
 Trace the initialization of `fluid-build`, including root directory inference, package loading and selection (based on command line
 scopes).
 
-### fluid-build:task:definition
+### sail:task:definition
 
 Used to debug the logic that combines task and dependency definitions from the default in `fluidBuild.config.cjs` at the root
 of the
 repo and the local package's `package.json`. It will dump the full combined definition for each package.
 
-### fluid-build:task:init\*
+### sail:task:init\*
 
 These traces show the tasks and relationships in the build graph to diagnose task dependency and ordering problems.
 Debugging traces can be enabled for individual steps or for all of them.
 
--   `fluid-build:task:init` - Trace the task that are created, to show what task is included
--   `fluid-build:task:init:defdep` - Trace the task dependencies derived from expanding and resolving task definitions
--   `fluid-build:task:init:dep` - Trace full build graph of leaf tasks (a single command invocation)
--   `fluid-build:task:init:weight` - Weight assigned to each task (where higher weight is prioritized to run first)
+-   `sail:task:init` - Trace the task that are created, to show what task is included
+-   `sail:task:init:defdep` - Trace the task dependencies derived from expanding and resolving task definitions
+-   `sail:task:init:dep` - Trace full build graph of leaf tasks (a single command invocation)
+-   `sail:task:init:weight` - Weight assigned to each task (where higher weight is prioritized to run first)
 
-### fluid-build:task:trigger
+### sail:task:trigger
 
 Trace the reasons why each task is triggered. Useful to diagnose problems with incremental build.
 
-### fluid-build:task:exec\*
+### sail:task:exec\*
 
 These traces show the execution flow of the task, to show the task invocation in action.
 
--   `fluid-build:task:exec` - Trace whether the task is skipped or, if it runs, the start and finish of the task
--   `fluid-build:task:queue` - Trace when the task is queued after the dependent tasks are done
--   `fluid-build:task:exec:wait` - Trace the wait time of a task in queue (the delay in execution after it is ready to be scheduled)
+-   `sail:task:exec` - Trace whether the task is skipped or, if it runs, the start and finish of the task
+-   `sail:task:queue` - Trace when the task is queued after the dependent tasks are done
+-   `sail:task:exec:wait` - Trace the wait time of a task in queue (the delay in execution after it is ready to be scheduled)
 
-### Other fluid-build:\* traces
+### Other sail:\* traces
 
--   `fluid-build:task:error` - Trace of detailed error messages on any operation in a task
--   `fluid-build:symlink` - Trace the action of the `--symlink` switch
+-   `sail:task:error` - Trace of detailed error messages on any operation in a task
+-   `sail:symlink` - Trace the action of the `--symlink` switch

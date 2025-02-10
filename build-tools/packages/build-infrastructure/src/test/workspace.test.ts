@@ -5,7 +5,7 @@
 
 import { strict as assert } from "node:assert";
 import { rm } from "node:fs/promises";
-import path from "node:path";
+import * as path from "node:path";
 
 import { expect } from "chai";
 import { describe, it } from "mocha";
@@ -69,7 +69,7 @@ describe("workspaces", () => {
 		it("checkInstall returns errors when node_modules is missing", async () => {
 			const actual = await workspace?.checkInstall();
 			expect(actual).not.to.be.true;
-			expect(actual?.[0]).to.include(": node_modules not installed in");
+			expect((actual as string[])[0]).to.include(": node_modules not installed in");
 		});
 
 		it("install succeeds", async () => {

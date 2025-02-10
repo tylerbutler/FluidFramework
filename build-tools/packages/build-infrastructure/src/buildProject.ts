@@ -3,13 +3,16 @@
  * Licensed under the MIT License.
  */
 
-import path from "node:path";
+import * as path from "node:path";
 
-import type { InterdependencyRange } from "@fluid-tools/version-tools";
-import * as semver from "semver";
 import { type SimpleGit, simpleGit } from "simple-git";
+import { globSync } from "tinyglobby";
 
-import { type BuildProjectConfig, getBuildProjectConfig } from "./config.js";
+import {
+	type BuildProjectConfig,
+	type ReleaseGroupDefinition,
+	getBuildProjectConfig,
+} from "./config.js";
 import { NotInGitRepository } from "./errors.js";
 import { findGitRootSync } from "./git.js";
 import {
@@ -23,13 +26,15 @@ import {
 } from "./types.js";
 import { Workspace } from "./workspace.js";
 import { loadWorkspacesFromLegacyConfig } from "./workspaceCompat.js";
+import { WriteOnceMap } from "./writeOnceMap.js";
 
 /**
  * {@inheritDoc IBuildProject}
  */
 export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 	/**
-	 * The absolute path to the root of the build project. This is the path where the config file is located.
+	 * The absolute path to the root of the build project. This is the path where the config file is located, if one
+	 * exists.
 	 */
 	public readonly root: string;
 
@@ -38,43 +43,63 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 	 */
 	public readonly configuration: BuildProjectConfig;
 
+	public readonly configurationSource: string;
+
 	/**
 	 * The absolute path to the config file.
 	 */
-	protected readonly configFilePath: string;
+	private readonly configFilePath: string;
 
 	/**
 	 * @param searchPath - The path that should be searched for a BuildProject config file.
+	 * @param infer - Set to true to always infer the build project config.
 	 * @param gitRepository - A SimpleGit instance rooted in the root of the Git repository housing the BuildProject. This
 	 * should be set to false if the BuildProject is not within a Git repository.
 	 */
 	public constructor(
 		searchPath: string,
+		infer = false,
 
 		/**
 		 * {@inheritDoc IBuildProject.upstreamRemotePartialUrl}
 		 */
 		public readonly upstreamRemotePartialUrl?: string,
 	) {
-		const { config, configFilePath } = getBuildProjectConfig(searchPath);
-		this.root = path.resolve(path.dirname(configFilePath));
-		this.configuration = config;
-		this.configFilePath = configFilePath;
+		if (infer) {
+			this.configuration = generateConfig(searchPath);
+			this.configFilePath = searchPath;
+			this.configurationSource = "INFERRED";
+		} else {
+			try {
+				const { config, configFilePath } = getBuildProjectConfig(searchPath);
+				this.configuration = config;
+				this.configFilePath = configFilePath;
+				this.configurationSource = configFilePath;
+			} catch {
+				this.configuration = generateConfig(searchPath);
+				this.configFilePath = searchPath;
+				this.configurationSource = "INFERRED";
+			}
+		}
+		this.root = path.resolve(path.dirname(this.configFilePath));
 
 		// Check for the buildProject config first
-		if (config.buildProject === undefined) {
+		if (this.configuration.buildProject === undefined) {
 			// If there's no `buildProject` _and_ no `repoPackages`, then we need to error since there's no loadable config.
-			if (config.repoPackages === undefined) {
-				throw new Error(`Can't find configuration.`);
+			if (this.configuration.repoPackages === undefined) {
+				throw new Error(`Can't find configuration or load the default.`);
 			} else {
 				console.warn(
 					`The repoPackages setting is deprecated and will no longer be read in a future version. Use buildProject instead.`,
 				);
-				this._workspaces = loadWorkspacesFromLegacyConfig(config.repoPackages, this);
+				this._workspaces = loadWorkspacesFromLegacyConfig(
+					this.configuration.repoPackages,
+					this,
+				);
 			}
 		} else {
-			this._workspaces = new Map<WorkspaceName, IWorkspace>(
-				Object.entries(config.buildProject.workspaces).map((entry) => {
+			this._workspaces = new WriteOnceMap<WorkspaceName, IWorkspace>(
+				Object.entries(this.configuration.buildProject.workspaces).map((entry) => {
 					const name = entry[0] as WorkspaceName;
 					const definition = entry[1];
 					const ws = Workspace.load(name, definition, this.root, this);
@@ -117,12 +142,12 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 	 * {@inheritDoc IBuildProject.packages}
 	 */
 	public get packages(): Map<PackageName, P> {
-		const pkgs: Map<PackageName, P> = new Map();
+		const pkgs: Map<PackageName, P> = new WriteOnceMap();
 		for (const ws of this.workspaces.values()) {
 			for (const pkg of ws.packages) {
-				if (pkgs.has(pkg.name)) {
-					throw new Error(`Duplicate package: ${pkg.name}`);
-				}
+				// if (pkgs.has(pkg.name)) {
+				// 	throw new Error(`Duplicate package: ${pkg.name}`);
+				// }
 
 				pkgs.set(pkg.name, pkg as P);
 			}
@@ -185,19 +210,82 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 }
 
 /**
+ * Generates a BuildProjectConfig by searching searchPath and below for workspaces. If any workspaces are found, they're
+ * automatically added to the config, and a single release group is created within the workspace. Both the workspace and
+ * the release group will be named the "basename" of the workspace path.
+ */
+function generateConfig(searchPath: string): BuildProjectConfig {
+	const toReturn: BuildProjectConfig = {
+		version: 1,
+		buildProject: {
+			workspaces: {},
+		},
+	};
+
+	// Find workspace roots based on lockfiles
+	const lockfilePaths = globSync(
+		[
+			"package-lock.json",
+			"pnpm-lock.yaml",
+			"bun.lock",
+			"bun.lockb",
+			"deno.lock",
+			"yarn.lock",
+		].map((lockfile) => `**/${lockfile}`),
+		{
+			cwd: searchPath,
+			ignore: ["**/node_modules/**"],
+			onlyFiles: true,
+			absolute: true,
+		},
+	);
+
+	const workspaceRoots = new Set(lockfilePaths.map((p) => path.dirname(p)));
+	if (toReturn.buildProject === undefined) {
+		throw new Error("Unexpected error loading config-less build project.");
+	}
+
+	// const workspaces: Map<string, string> = new Map();
+	for (const workspaceRootPath of workspaceRoots) {
+		const wsName = path.basename(workspaceRootPath);
+		// workspaces.set(wsName, workspaceRootPath);
+
+		toReturn.buildProject.workspaces[wsName] = {
+			directory: workspaceRootPath,
+			releaseGroups: makeReleaseGroupDefinitionEntry(wsName),
+		};
+	}
+
+	return toReturn;
+}
+
+function makeReleaseGroupDefinitionEntry(
+	name: string,
+): Record<string, ReleaseGroupDefinition> {
+	const entry: Record<string, ReleaseGroupDefinition> = {};
+	entry[name] = {
+		// include all packages
+		include: ["*"],
+	};
+	return entry;
+}
+
+/**
  * Searches for a BuildProject config file and loads the project from the config if found.
  *
  * @typeParam P - The type to use for Packages.
  * @param searchPath - The path to start searching for a BuildProject config.
+ * @param infer - Set to true to always infer the build project config.
  * @param upstreamRemotePartialUrl - A partial URL to the upstream repo. This is used to find the local git remote that
  * corresponds to the upstream repo.
  * @returns The loaded BuildProject.
  */
 export function loadBuildProject<P extends IPackage>(
 	searchPath: string,
+	infer = false,
 	upstreamRemotePartialUrl?: string,
 ): IBuildProject<P> {
-	const repo = new BuildProject<P>(searchPath, upstreamRemotePartialUrl);
+	const repo = new BuildProject<P>(searchPath, infer, upstreamRemotePartialUrl);
 	return repo;
 }
 
@@ -236,57 +324,4 @@ export function getAllDependencies(
 		releaseGroups: [...releaseGroups],
 		workspaces: [...workspaces],
 	};
-}
-
-/**
- * Sets the dependency range for a group of packages given a group of dependencies to update.
- * The changes are written to package.json. After the update, the packages are
- * reloaded so the in-memory data reflects the version changes.
- *
- * @param packagesToUpdate - A list of objects whose version should be updated.
- * @param dependencies - A list of objects that the packagesToUpdate depend on that should have updated ranges.
- * @param dependencyRange - The new version range to set for the packageToUpdate dependencies.
- */
-export async function setDependencyRange<P extends IPackage>(
-	packagesToUpdate: Iterable<P>,
-	dependencies: Iterable<P>,
-	dependencyRange: InterdependencyRange,
-): Promise<void> {
-	const dependencySet = new Set(Array.from(dependencies, (d) => d.name));
-	// collect the "save" promises to resolve in parallel
-	const savePromises: Promise<void>[] = [];
-
-	for (const pkg of packagesToUpdate) {
-		for (const { name: depName, depKind } of pkg.combinedDependencies) {
-			if (dependencySet.has(depName)) {
-				const depRange =
-					typeof dependencyRange === "string"
-						? dependencyRange
-						: dependencyRange instanceof semver.SemVer
-							? dependencyRange.version
-							: undefined;
-
-				// Check if depRange is defined
-				if (depRange === undefined) {
-					throw new Error(`Invalid dependency range: ${dependencyRange}`);
-				}
-
-				// Update the version in packageJson
-				if (depKind === "prod" && pkg.packageJson.dependencies !== undefined) {
-					pkg.packageJson.dependencies[depName] = depRange;
-				} else if (depKind === "dev" && pkg.packageJson.devDependencies !== undefined) {
-					pkg.packageJson.devDependencies[depName] = depRange;
-				} else if (depKind === "peer" && pkg.packageJson.peerDependencies !== undefined) {
-					pkg.packageJson.peerDependencies[depName] = depRange;
-				}
-			}
-		}
-		savePromises.push(pkg.savePackageJson());
-	}
-	await Promise.all(savePromises);
-
-	// Reload all packages to refresh the in-memory data
-	for (const pkg of packagesToUpdate) {
-		pkg.reload();
-	}
 }

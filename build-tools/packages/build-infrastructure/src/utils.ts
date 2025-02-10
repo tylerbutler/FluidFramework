@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import path from "node:path";
+import * as path from "node:path";
 
 /**
  * Traverses up the directory tree from the given starting directory, applying the callback function to each directory.
