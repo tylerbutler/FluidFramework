@@ -67,7 +67,7 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 	) {
 		// Handle configuration
 		if (infer) {
-			this.configuration = generateConfig(searchPath);
+			this.configuration = generateBuildProjectConfig(searchPath);
 			this.configFilePath = searchPath;
 			this.configurationSource = "INFERRED";
 			this.root = searchPath;
@@ -79,7 +79,7 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 				this.configurationSource = configFilePath;
 				this.root = path.resolve(path.dirname(configFilePath));
 			} catch {
-				this.configuration = generateConfig(searchPath);
+				this.configuration = generateBuildProjectConfig(searchPath);
 				this.configFilePath = searchPath;
 				this.configurationSource = "INFERRED";
 				this.root = searchPath;
@@ -87,7 +87,7 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 		}
 
 		if (this.configuration.buildProject ?? this.configuration.repoPackages === undefined) {
-			this.configuration = generateConfig(searchPath);
+			this.configuration = generateBuildProjectConfig(searchPath);
 			this.configFilePath = searchPath;
 			this.configurationSource = "INFERRED";
 			this.root = searchPath;
@@ -218,7 +218,7 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
  * automatically added to the config, and a single release group is created within the workspace. Both the workspace and
  * the release group will be named the "basename" of the workspace path.
  */
-function generateConfig(searchPath: string): BuildProjectConfig {
+export function generateBuildProjectConfig(searchPath: string): BuildProjectConfig {
 	const toReturn: BuildProjectConfig = {
 		version: 1,
 		buildProject: {
@@ -292,6 +292,14 @@ export function loadBuildProject<P extends IPackage>(
 	const repo = new BuildProject<P>(searchPath, infer, upstreamRemotePartialUrl);
 	return repo;
 }
+
+// export function loadBuildProjectFromConfig<P extends IPackage>(
+// 	config: BuildProjectConfig,
+// 	upstreamRemotePartialUrl?: string,
+// ): IBuildProject<P> {
+// 	const repo = new BuildProject<P>(searchPath, infer, upstreamRemotePartialUrl);
+// 	return repo;
+// }
 
 /**
  * Returns an object containing all the packages, release groups, and workspaces that a given set of packages depends
