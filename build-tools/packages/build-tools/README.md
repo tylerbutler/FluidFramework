@@ -30,9 +30,6 @@ Then either:
     version of it used in the root package (which is the `client` release group, but often used to build other as well).
     This will make scripts like `build:fast` use the linked version.
 
-NOTE: Using `fluid-build`'s `--symlink:full` does **NOT** symlink the version of build tools in the repo into the root package:
-the root package will still use the published build-tools package.
-
 ## `fluid-build`
 
 `fluid-build` is a build task scheduler. It support declarative task and dependencies definition, incremental
@@ -52,7 +49,7 @@ Options:
   -f --force                Force build and ignore dependency check on matched packages (all if package regexp is not specified)
   -? --help                 Print this message
      --install              Run npm install for all packages/monorepo. This skips a package if node_modules already exists: it can not be used to update in response to changes to the package.json.
-     --workerMemoryLimitMB  Memory limit for worker threads in MB
+     --workerMemoryLimitMB  Memory limit for worker threads in MiB
   -r --rebuild              Clean and build on matched packages (all if package regexp is not specified)
      --reinstall            Same as --uninstall --install.
   -g --releaseGroup         Release group to operate on
@@ -106,20 +103,6 @@ Clean and rebuild:
 fluid-build --rebuild merge     # clean and build packages matching 'merge' in any repo
 fluid-build --clean common      # cleaning packages containing 'common' in any repo
 ```
-
-Symlink commands to change the symlink to either limit to single monorepo (collection of packages managed by lerna), or cross monorepo
-
-```sh
-fluid-build --symlink:full    # switch to full link mode (cross monorepos)
-fluid-build                   # build
-```
-
-```sh
-fluid-build --symlink         # switch to isolate link mode (within monorepo)
-fluid-build                   # build
-```
-
-Note that --symlink\* changes any symlink, the tool will run the clean script for all the packages to make sure everything rebuilt every the next time.
 
 ### Task and dependency definition
 
@@ -234,40 +217,39 @@ like.
 `fluid-build` using the `debug` package to do traces for investigating and diagnosing problem. Below are some of the trace
 names `fluid-build` uses.
 
-### sail:init
+### fluid-build:init
 
 Trace the initialization of `fluid-build`, including root directory inference, package loading and selection (based on command line
 scopes).
 
-### sail:task:definition
+### fluid-build:task:definition
 
 Used to debug the logic that combines task and dependency definitions from the default in `fluidBuild.config.cjs` at the root
 of the
 repo and the local package's `package.json`. It will dump the full combined definition for each package.
 
-### sail:task:init\*
+### fluid-build:task:init\*
 
 These traces show the tasks and relationships in the build graph to diagnose task dependency and ordering problems.
 Debugging traces can be enabled for individual steps or for all of them.
 
--   `sail:task:init` - Trace the task that are created, to show what task is included
--   `sail:task:init:defdep` - Trace the task dependencies derived from expanding and resolving task definitions
--   `sail:task:init:dep` - Trace full build graph of leaf tasks (a single command invocation)
--   `sail:task:init:weight` - Weight assigned to each task (where higher weight is prioritized to run first)
+-   `fluid-build:task:init` - Trace the task that are created, to show what task is included
+-   `fluid-build:task:init:defdep` - Trace the task dependencies derived from expanding and resolving task definitions
+-   `fluid-build:task:init:dep` - Trace full build graph of leaf tasks (a single command invocation)
+-   `fluid-build:task:init:weight` - Weight assigned to each task (where higher weight is prioritized to run first)
 
-### sail:task:trigger
+### fluid-build:task:trigger
 
 Trace the reasons why each task is triggered. Useful to diagnose problems with incremental build.
 
-### sail:task:exec\*
+### fluid-build:task:exec\*
 
 These traces show the execution flow of the task, to show the task invocation in action.
 
--   `sail:task:exec` - Trace whether the task is skipped or, if it runs, the start and finish of the task
--   `sail:task:queue` - Trace when the task is queued after the dependent tasks are done
--   `sail:task:exec:wait` - Trace the wait time of a task in queue (the delay in execution after it is ready to be scheduled)
+-   `fluid-build:task:exec` - Trace whether the task is skipped or, if it runs, the start and finish of the task
+-   `fluid-build:task:queue` - Trace when the task is queued after the dependent tasks are done
+-   `fluid-build:task:exec:wait` - Trace the wait time of a task in queue (the delay in execution after it is ready to be scheduled)
 
-### Other sail:\* traces
+### Other fluid-build:\* traces
 
--   `sail:task:error` - Trace of detailed error messages on any operation in a task
--   `sail:symlink` - Trace the action of the `--symlink` switch
+-   `fluid-build:task:error` - Trace of detailed error messages on any operation in a task

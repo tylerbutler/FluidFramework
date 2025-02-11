@@ -23,7 +23,7 @@ import {
 // switch to regular import once building ESM
 const findUp = import("find-up");
 
-const traceInit = registerDebug("sail:init");
+const traceInit = registerDebug("fluid-build:init");
 
 async function isFluidRootPackage(dir: string) {
 	const filename = path.join(dir, "package.json");

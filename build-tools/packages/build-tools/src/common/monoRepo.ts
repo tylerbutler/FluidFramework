@@ -15,7 +15,7 @@ import { Package } from "./npmPackage";
 import { execWithErrorAsync, rimrafWithErrorAsync } from "./utils";
 
 import registerDebug from "debug";
-const traceInit = registerDebug("sail:init");
+const traceInit = registerDebug("fluid-build:init");
 
 export type PackageManager = "npm" | "pnpm" | "yarn";
 

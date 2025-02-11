@@ -7,7 +7,7 @@ import { parseISO } from "date-fns";
 import registerDebug from "debug";
 import { exec, execNoError } from "./utils";
 
-const traceGitRepo = registerDebug("sail:gitRepo");
+const traceGitRepo = registerDebug("fluid-build:gitRepo");
 
 /**
  * @deprecated Should not be used outside the build-tools package.

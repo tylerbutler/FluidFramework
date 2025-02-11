@@ -27,7 +27,7 @@ import {
 
 import { readFile } from "node:fs/promises";
 import registerDebug from "debug";
-const traceInit = registerDebug("sail:init");
+const traceInit = registerDebug("fluid-build:init");
 
 const { log, errorLog: error } = defaultLogger;
 

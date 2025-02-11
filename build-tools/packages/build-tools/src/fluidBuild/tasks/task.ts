@@ -12,10 +12,10 @@ import { BuildPackage, BuildResult } from "../buildGraph";
 import { options } from "../options";
 import { LeafTask } from "./leaf/leafTask";
 
-const traceTaskInit = registerDebug("sail:task:init");
-const traceTaskExec = registerDebug("sail:task:exec");
-const traceTaskExecWait = registerDebug("sail:task:exec:wait");
-const traceTaskDepTask = registerDebug("sail:task:init:dep:task");
+const traceTaskInit = registerDebug("fluid-build:task:init");
+const traceTaskExec = registerDebug("fluid-build:task:exec");
+const traceTaskExecWait = registerDebug("fluid-build:task:exec:wait");
+const traceTaskDepTask = registerDebug("fluid-build:task:init:dep:task");
 
 export interface TaskExec {
 	task: LeafTask;

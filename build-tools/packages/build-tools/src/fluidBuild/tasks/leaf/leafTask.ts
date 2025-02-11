@@ -20,12 +20,12 @@ import { options } from "../../options";
 import { Task, TaskExec } from "../task";
 
 const { log } = defaultLogger;
-const traceTaskTrigger = registerDebug("sail:task:trigger");
-const traceTaskCheck = registerDebug("sail:task:check");
-const traceTaskInitDep = registerDebug("sail:task:init:dep");
-const traceTaskInitWeight = registerDebug("sail:task:init:weight");
-const traceTaskQueue = registerDebug("sail:task:exec:queue");
-const traceError = registerDebug("sail:task:error");
+const traceTaskTrigger = registerDebug("fluid-build:task:trigger");
+const traceTaskCheck = registerDebug("fluid-build:task:check");
+const traceTaskInitDep = registerDebug("fluid-build:task:init:dep");
+const traceTaskInitWeight = registerDebug("fluid-build:task:init:weight");
+const traceTaskQueue = registerDebug("fluid-build:task:exec:queue");
+const traceError = registerDebug("fluid-build:task:error");
 
 interface TaskExecResult extends ExecAsyncResult {
 	worker?: boolean;
