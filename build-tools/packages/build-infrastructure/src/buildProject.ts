@@ -65,39 +65,35 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 		 */
 		public readonly upstreamRemotePartialUrl?: string,
 	) {
+		// Handle configuration
 		if (infer) {
 			this.configuration = generateConfig(searchPath);
 			this.configFilePath = searchPath;
 			this.configurationSource = "INFERRED";
+			this.root = searchPath;
 		} else {
 			try {
 				const { config, configFilePath } = getBuildProjectConfig(searchPath);
 				this.configuration = config;
 				this.configFilePath = configFilePath;
 				this.configurationSource = configFilePath;
+				this.root = path.resolve(path.dirname(configFilePath));
 			} catch {
 				this.configuration = generateConfig(searchPath);
 				this.configFilePath = searchPath;
 				this.configurationSource = "INFERRED";
+				this.root = searchPath;
 			}
 		}
-		this.root = path.resolve(path.dirname(this.configFilePath));
 
-		// Check for the buildProject config first
-		if (this.configuration.buildProject === undefined) {
-			// If there's no `buildProject` _and_ no `repoPackages`, then we need to error since there's no loadable config.
-			if (this.configuration.repoPackages === undefined) {
-				throw new Error(`Can't find configuration or load the default.`);
-			} else {
-				console.warn(
-					`The repoPackages setting is deprecated and will no longer be read in a future version. Use buildProject instead.`,
-				);
-				this._workspaces = loadWorkspacesFromLegacyConfig(
-					this.configuration.repoPackages,
-					this,
-				);
-			}
-		} else {
+		if (this.configuration.buildProject ?? this.configuration.repoPackages === undefined) {
+			this.configuration = generateConfig(searchPath);
+			this.configFilePath = searchPath;
+			this.configurationSource = "INFERRED";
+			this.root = searchPath;
+		}
+
+		if (this.configuration.buildProject !== undefined) {
 			this._workspaces = new WriteOnceMap<WorkspaceName, IWorkspace>(
 				Object.entries(this.configuration.buildProject.workspaces).map((entry) => {
 					const name = entry[0] as WorkspaceName;
@@ -106,6 +102,14 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 					return [name, ws];
 				}),
 			);
+		} else if (this.configuration.repoPackages !== undefined) {
+			console.warn(
+				`The repoPackages setting is deprecated and will no longer be read in a future version. Use buildProject instead.`,
+			);
+			this._workspaces = loadWorkspacesFromLegacyConfig(this.configuration.repoPackages, this);
+		} else {
+			// this._workspaces = this.configuration.buildProject.workspaces;
+			throw new Error("Error loading/generating configuration.");
 		}
 
 		const releaseGroups = new Map<ReleaseGroupName, IReleaseGroup>();
