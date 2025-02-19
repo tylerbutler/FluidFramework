@@ -106,13 +106,13 @@ function logWithTime(msg: string | Error, logFunc: ErrorLoggingFunction) {
 		if (secs.length === 1) {
 			secs = "0" + secs;
 		}
-		logFunc(chalk.yellow(`[${hours}:${mins}:${secs}] `) + msg + "\n");
+		logFunc(chalk.yellow(`[${hours}:${mins}:${secs}] `) + msg);
 	} else {
-		logFunc(msg + "\n");
+		logFunc(msg);
 	}
 	// For reasons that are not yet understood, the last line of multi-line log output is swallowed and not output to the
 	// stream, so this empty output compensates for that behavior.
-	// logFunc("");
+	logFunc("");
 }
 
 function log(msg: string): string {
