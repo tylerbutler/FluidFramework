@@ -16,7 +16,7 @@ import type { RequireExactlyOne } from "type-fest";
 /**
  * The minimum version of the BuildProject configuration currently supported.
  */
-export const BUILDPROJECT_CONFIG_VERSION = 1;
+export const BUILDPROJECT_CONFIG_MIN_VERSION = 1;
 
 export type BuildProjectConfig = BuildProjectConfigV1 | BuildProjectConfigV2;
 
@@ -280,9 +280,9 @@ export function getBuildProjectConfig(
 	const config = configResult.config as BuildProjectConfigV1;
 
 	// Only versions higher than the minimum are supported. If any other value is provided, throw an error.
-	if (config.version < BUILDPROJECT_CONFIG_VERSION) {
+	if (config.version < BUILDPROJECT_CONFIG_MIN_VERSION) {
 		throw new Error(
-			`Configuration version is not supported: ${config?.version}. Config version must be >= ${BUILDPROJECT_CONFIG_VERSION}.`,
+			`Configuration version is not supported: ${config?.version}. Config version must be >= ${BUILDPROJECT_CONFIG_MIN_VERSION}.`,
 		);
 	}
 

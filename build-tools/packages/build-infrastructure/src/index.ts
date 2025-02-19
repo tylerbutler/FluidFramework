@@ -29,7 +29,7 @@ export {
 	type BuildProjectConfig,
 	type BuildProjectConfigV1,
 	type BuildProjectConfigV2,
-	BUILDPROJECT_CONFIG_VERSION,
+	BUILDPROJECT_CONFIG_MIN_VERSION,
 	getBuildProjectConfig,
 	isV1Config,
 } from "./config.js";
