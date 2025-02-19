@@ -11,29 +11,23 @@ import {
 	type ReleaseGroupName,
 	isIPackage,
 } from "./types.js";
+import type { RequireExactlyOne } from "type-fest";
 
 /**
  * The version of the BuildProject configuration currently used.
  */
 export const BUILDPROJECT_CONFIG_VERSION = 1;
 
+export type BuildProjectConfig = BuildProjectConfigV1 | BuildProjectConfigV2;
+
 /**
  * Top-most configuration for BuildProject settings.
  */
-export interface BuildProjectConfig {
+export interface BuildProjectConfigBase {
 	/**
 	 * The version of the config.
 	 */
 	version: number;
-
-	/**
-	 * **BACK-COMPAT ONLY**
-	 *
-	 * A mapping of package or release group names to metadata about the package or release group.
-	 *
-	 * @deprecated Use the buildProject property instead.
-	 */
-	repoPackages?: IFluidBuildDirs;
 
 	/**
 	 * The layout of the build project into workspaces and release groups.
@@ -46,6 +40,61 @@ export interface BuildProjectConfig {
 			[name: string]: WorkspaceDefinition;
 		};
 	};
+}
+
+export interface BuildProjectConfigV1 extends BuildProjectConfigBase {
+	/**
+	 * The version of the config.
+	 */
+	version: 1;
+
+	/**
+	 * **BACK-COMPAT ONLY**
+	 *
+	 * A mapping of package or release group names to metadata about the package or release group.
+	 *
+	 * @deprecated Use the buildProject property instead.
+	 */
+	repoPackages?: IFluidBuildDirs;
+}
+
+interface BuildProjectConfigV2Base extends Partial<BuildProjectConfigBase> {
+	/**
+	 * The version of the config.
+	 */
+	version: 2;
+
+	/**
+	 * An array of glob strings. Any paths that match at least on of these globs will be excluded from the build project.
+	 * This setting is helpful if you need to exclude workspaces that are used for testing or that are not yet managed by
+	 * sail.
+	 */
+	excludeGlobs: string[];
+}
+
+/**
+ * Type guard to check if the input is a BuildProjectConfigV1.
+ *
+ * @param input - The input to check.
+ * @returns `true` if the input is a BuildProjectConfigV1; `false` otherwise.
+ */
+export function isV1Config(input: BuildProjectConfig): input is BuildProjectConfigV1 {
+	return input.version === 1;
+}
+
+export type BuildProjectConfigV2 = RequireExactlyOne<
+	BuildProjectConfigV2Base,
+	"excludeGlobs" | "buildProject"
+>;
+
+/**
+ * Type guard to check if the input is a BuildProjectConfigV2.
+ *
+ * @param input - The input to check.
+ * @returns `true` if the input is a BuildProjectConfigV2; `false` otherwise.
+ */
+export function isV2Config(input: BuildProjectConfig): input is BuildProjectConfigV2 {
+	return input.version === 1;
 }
 
 /**
@@ -219,7 +268,7 @@ const configExplorer = cosmiconfigSync(configName, {
 export function getBuildProjectConfig(
 	searchPath: string,
 	noCache = false,
-): { config: BuildProjectConfig; configFilePath: string } {
+): { config: BuildProjectConfigV1; configFilePath: string } {
 	if (noCache === true) {
 		configExplorer.clearCaches();
 	}
@@ -228,7 +277,7 @@ export function getBuildProjectConfig(
 	if (configResult === null || configResult === undefined) {
 		throw new Error("No BuildProject configuration found.");
 	}
-	const config = configResult.config as BuildProjectConfig;
+	const config = configResult.config as BuildProjectConfigV1;
 
 	// Only version 1 of the config is supported. If any other value is provided, throw an error.
 	if (config.version !== BUILDPROJECT_CONFIG_VERSION) {

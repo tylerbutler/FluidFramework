@@ -27,8 +27,11 @@ export {
 	type IFluidBuildDirs,
 	type IFluidBuildDirEntry,
 	type BuildProjectConfig,
+	type BuildProjectConfigV1,
+	type BuildProjectConfigV2,
 	BUILDPROJECT_CONFIG_VERSION,
 	getBuildProjectConfig,
+	isV1Config,
 } from "./config.js";
 export { NotInGitRepository } from "./errors.js";
 export {

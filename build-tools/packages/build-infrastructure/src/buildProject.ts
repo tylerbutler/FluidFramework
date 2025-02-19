@@ -12,6 +12,7 @@ import {
 	type BuildProjectConfig,
 	type ReleaseGroupDefinition,
 	getBuildProjectConfig,
+	isV1Config,
 } from "./config.js";
 import { NotInGitRepository } from "./errors.js";
 import { findGitRootSync } from "./git.js";
@@ -86,7 +87,11 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 			}
 		}
 
-		if (this.configuration.buildProject ?? this.configuration.repoPackages === undefined) {
+		if (!isV1Config(this.configuration)) {
+			throw new Error("unsupported config version");
+		}
+
+		if ((this.configuration.buildProject ?? this.configuration.repoPackages) === undefined) {
 			this.configuration = generateBuildProjectConfig(searchPath);
 			this.configFilePath = searchPath;
 			this.configurationSource = "INFERRED";
@@ -102,7 +107,10 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 					return [name, ws];
 				}),
 			);
-		} else if (this.configuration.repoPackages !== undefined) {
+		} else if (
+			isV1Config(this.configuration) &&
+			this.configuration.repoPackages !== undefined
+		) {
 			console.warn(
 				`The repoPackages setting is deprecated and will no longer be read in a future version. Use buildProject instead.`,
 			);
