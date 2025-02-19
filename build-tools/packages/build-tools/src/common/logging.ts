@@ -92,24 +92,27 @@ export const defaultLogger: Logger = {
 };
 
 function logWithTime(msg: string | Error, logFunc: ErrorLoggingFunction) {
-	if (!commonOptions.logtime) {
+	if (commonOptions.logtime) {
+		const date = new Date();
+		let hours = date.getHours().toString();
+		if (hours.length === 1) {
+			hours = "0" + hours;
+		}
+		let mins = date.getMinutes().toString();
+		if (mins.length === 1) {
+			mins = "0" + mins;
+		}
+		let secs = date.getSeconds().toString();
+		if (secs.length === 1) {
+			secs = "0" + secs;
+		}
+		logFunc(chalk.yellow(`[${hours}:${mins}:${secs}] `) + msg);
+	} else {
 		logFunc(msg);
-		return;
 	}
-	const date = new Date();
-	let hours = date.getHours().toString();
-	if (hours.length === 1) {
-		hours = "0" + hours;
-	}
-	let mins = date.getMinutes().toString();
-	if (mins.length === 1) {
-		mins = "0" + mins;
-	}
-	let secs = date.getSeconds().toString();
-	if (secs.length === 1) {
-		secs = "0" + secs;
-	}
-	logFunc(chalk.yellow(`[${hours}:${mins}:${secs}] `) + msg);
+	// For reasons that are not yet understood, the last line of multi-line log output is swallowed and not output to the
+	// stream, so this empty output compensates for that behavior.
+	logFunc("");
 }
 
 function log(msg: string): string {
@@ -139,6 +142,7 @@ function warning(msg: string | Error): string | Error {
 }
 
 function errorLog(msg: string | Error): string | Error {
+	console.error(msg);
 	logWithTime(`${chalk.red(`ERROR`)}: ${msg}`, console.error);
 	return msg;
 }
