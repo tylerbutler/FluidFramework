@@ -14,7 +14,7 @@ import {
 import type { RequireExactlyOne } from "type-fest";
 
 /**
- * The version of the BuildProject configuration currently used.
+ * The minimum version of the BuildProject configuration currently supported.
  */
 export const BUILDPROJECT_CONFIG_VERSION = 1;
 
@@ -268,7 +268,7 @@ const configExplorer = cosmiconfigSync(configName, {
 export function getBuildProjectConfig(
 	searchPath: string,
 	noCache = false,
-): { config: BuildProjectConfigV1; configFilePath: string } {
+): { config: BuildProjectConfig; configFilePath: string } {
 	if (noCache === true) {
 		configExplorer.clearCaches();
 	}
@@ -279,10 +279,10 @@ export function getBuildProjectConfig(
 	}
 	const config = configResult.config as BuildProjectConfigV1;
 
-	// Only version 1 of the config is supported. If any other value is provided, throw an error.
-	if (config.version !== BUILDPROJECT_CONFIG_VERSION) {
+	// Only versions higher than the minimum are supported. If any other value is provided, throw an error.
+	if (config.version < BUILDPROJECT_CONFIG_VERSION) {
 		throw new Error(
-			`Configuration version is not supported: ${config?.version}. Config version must be ${BUILDPROJECT_CONFIG_VERSION}.`,
+			`Configuration version is not supported: ${config?.version}. Config version must be >= ${BUILDPROJECT_CONFIG_VERSION}.`,
 		);
 	}
 

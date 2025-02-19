@@ -10,9 +10,11 @@ import { globSync } from "tinyglobby";
 
 import {
 	type BuildProjectConfig,
+	type BuildProjectConfigV2,
 	type ReleaseGroupDefinition,
 	getBuildProjectConfig,
 	isV1Config,
+	isV2Config,
 } from "./config.js";
 import { NotInGitRepository } from "./errors.js";
 import { findGitRootSync } from "./git.js";
@@ -87,17 +89,24 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 			}
 		}
 
-		if (!isV1Config(this.configuration)) {
-			throw new Error("unsupported config version");
-		}
-
-		if ((this.configuration.buildProject ?? this.configuration.repoPackages) === undefined) {
+		if (isV2Config(this.configuration) && this.configuration.excludeGlobs !== undefined) {
+			// TODO: refactor and consolidate all this logic. Maybe a single function that take a BuildProjectConfig and
+			// returns all the class properties that are set in these blocks. Then we can just set it once and move the logic
+			// to a function.
+			this.configuration = generateBuildProjectConfig(searchPath);
+			this.configFilePath = searchPath;
+			this.configurationSource = "INFERRED";
+			this.root = searchPath;
+		} else if (
+			(this.configuration.buildProject ?? this.configuration.repoPackages) === undefined
+		) {
 			this.configuration = generateBuildProjectConfig(searchPath);
 			this.configFilePath = searchPath;
 			this.configurationSource = "INFERRED";
 			this.root = searchPath;
 		}
 
+		// This will load both v1 and v2 configs with the buildProject setting.
 		if (this.configuration.buildProject !== undefined) {
 			this._workspaces = new WriteOnceMap<WorkspaceName, IWorkspace>(
 				Object.entries(this.configuration.buildProject.workspaces).map((entry) => {
@@ -225,10 +234,12 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
  * Generates a BuildProjectConfig by searching searchPath and below for workspaces. If any workspaces are found, they're
  * automatically added to the config, and a single release group is created within the workspace. Both the workspace and
  * the release group will be named the "basename" of the workspace path.
+ *
+ * Generated configs use the latest config version.
  */
-export function generateBuildProjectConfig(searchPath: string): BuildProjectConfig {
-	const toReturn: BuildProjectConfig = {
-		version: 1,
+export function generateBuildProjectConfig(searchPath: string): BuildProjectConfigV2 {
+	const toReturn: BuildProjectConfigV2 = {
+		version: 2,
 		buildProject: {
 			workspaces: {},
 		},
