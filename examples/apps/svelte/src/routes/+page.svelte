@@ -5,7 +5,7 @@ import { loadPuzzle, type PuzzleGrid } from "../helpers/puzzles";
 import Sudoku from "../Sudoku.svelte";
 
 let puzzle: PuzzleGrid = $state(new Map());
-loadPuzzle(0, puzzle);
+const solved = loadPuzzle(0, puzzle);
 
 let presence: Map<CoordinateString, boolean> = $state(new Map());
 

@@ -8,13 +8,13 @@ import sudoku from "sudokus";
 import { Coordinate, type CoordinateString } from "./coordinate";
 import { SudokuCell } from "./sudokuCell.svelte";
 
-// export type PuzzleGrid = Map<CoordinateString, SudokuCell>;
+export type PuzzleGrid = Map<CoordinateString, SudokuCell>;
 
 export type SudokuNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 // export type ValidSudokuValues = SudokuNumber | 0;
 
-type SudokuInputRow = [
+export type SudokuInputRow = [
 	SudokuNumber,
 	SudokuNumber,
 	SudokuNumber,
@@ -26,7 +26,7 @@ type SudokuInputRow = [
 	SudokuNumber,
 ];
 
-type SudokuInput = [
+export type SudokuInput = [
 	SudokuInputRow,
 	SudokuInputRow,
 	SudokuInputRow,
@@ -38,7 +38,7 @@ type SudokuInput = [
 	SudokuInputRow,
 ];
 
-type SudokuRow = [
+export type SudokuRow = [
 	SudokuCell,
 	SudokuCell,
 	SudokuCell,
@@ -49,7 +49,8 @@ type SudokuRow = [
 	SudokuCell,
 	SudokuCell,
 ];
-type SudokuGrid = [
+
+export type SudokuGrid = [
 	SudokuRow,
 	SudokuRow,
 	SudokuRow,
@@ -106,7 +107,7 @@ export const PUZZLES: SudokuInput[] = [
  * @param puzzleMap - The shared map that stores puzzle data.
  * @returns The solved puzzle as a 2-dimensional array.
  */
-export function loadPuzzle(index: number, puzzleMap: SudokuPuzzle): number[][] {
+export function loadPuzzle(index: number, puzzleMap: PuzzleGrid): number[][] {
 	const puzzleInput = PUZZLES[index];
 	const solution = sudoku.solve(puzzleInput) as unknown as SudokuInput;
 
@@ -114,7 +115,7 @@ export function loadPuzzle(index: number, puzzleMap: SudokuPuzzle): number[][] {
 		for (const col of PUZZLE_INDEXES) {
 			const key = Coordinate.asString(row, col);
 			const cell = new SudokuCell(puzzleInput[row][col], solution[row][col], key);
-			puzzleMap.grid[row][col] = cell;
+			puzzleMap.set(key,cell);
 		}
 	}
 	// for (const [row, rowData] of puzzleMap.grid.entries()) {
