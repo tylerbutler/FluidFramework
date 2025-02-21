@@ -1,7 +1,5 @@
 <script lang="ts">
 import { Coordinate, type CoordinateString } from "./helpers/coordinate";
-import { PUZZLE_INDEXES, type SudokuNumber } from "./helpers/puzzles";
-import { SudokuCell } from "./helpers/sudokuCell.svelte";
 import { type SudokuAppProps } from "./helpers/props";
 import Cell from "./Cell.svelte";
 
