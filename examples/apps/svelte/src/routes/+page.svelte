@@ -1,7 +1,7 @@
 <script lang="ts">
 import { SvelteMap } from "svelte/reactivity";
 import type { CoordinateString } from "../helpers/coordinate";
-import { loadPuzzle, type SudokuGrid, type SudokuPuzzle } from "../helpers/puzzles";
+import { loadPuzzle, type SudokuPuzzle } from "../helpers/puzzles";
 import Sudoku from "../Sudoku.svelte";
 
 let puzzle = $state<SudokuPuzzle>();

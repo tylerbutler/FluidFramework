@@ -39,25 +39,25 @@ export class Coordinate {
 
 	public static moveUp(coord: CoordinateString): CoordinateString {
 		const [row, column] = Coordinate.asArrayNumbers(coord);
-		const newRow = row - 1 < 0 ? 0 : row - 1;
+		const newRow = Math.max(row - 1, 0);
 		return Coordinate.asString(newRow, column);
 	}
 
 	public static moveDown(coord: CoordinateString): CoordinateString {
 		const [row, column] = Coordinate.asArrayNumbers(coord);
-		const newRow = row + 1 < 0 ? 0 : row + 1;
+		const newRow = Math.min(row + 1, 8);
 		return Coordinate.asString(newRow, column);
 	}
 
 	public static moveLeft(coord: CoordinateString): CoordinateString {
 		const [row, column] = Coordinate.asArrayNumbers(coord);
-		const newColumn = column - 1 < 0 ? 0 : column - 1;
+		const newColumn = Math.max(column - 1, 0);
 		return Coordinate.asString(row, newColumn);
 	}
 
 	public static moveRight(coord: CoordinateString): CoordinateString {
 		const [row, column] = Coordinate.asArrayNumbers(coord);
-		const newColumn = column + 1 > 9 ? 0 : column + 1;
+		const newColumn = Math.min(column + 1, 8);
 		return Coordinate.asString(row, newColumn);
 	}
 }

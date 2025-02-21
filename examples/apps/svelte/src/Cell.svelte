@@ -1,44 +1,50 @@
 <script lang="ts">
 import { Coordinate, type CoordinateString } from "./helpers/coordinate";
+import { isSudokuNumber, type SudokuNumber } from "./helpers/puzzles";
 import { SudokuCell } from "./helpers/sudokuCell.svelte";
-import { type SudokuAppProps } from "./helpers/props";
 
-// export let cell: SudokuCell;
-
-let { currentCell, coord = $bindable(), clientSessionId = "none" } = $props();
-
-// export let clientSessionId: string;
-// export let presence: Map<CoordinateString, boolean>;
+let {
+	cell,
+	// coord = $bindable(),
+	clientSessionId,
+	presence,
+	onUnknownKeyDown,
+}: {
+	cell: SudokuCell;
+	// coord: CoordinateString;
+	clientSessionId: string;
+	presence: Map<CoordinateString, boolean>;
+	onUnknownKeyDown: (keyString: string, coordIn: string) => void;
+} = $props();
 
 const coordinateDataAttributeName = "cellcoordinate";
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(`${clientSessionId}-${coord}`) as HTMLInputElement;
 
-// const handleInputFocus = (e: any) => {
-// 	const coord = e.target.dataset[coordinateDataAttributeName];
-// 	if (presence) {
-// 		if (coord !== undefined) {
-// 			presence.set(coord, false);
-// 		}
-// 	}
-// };
+const handleInputFocus = (e: any) => {
+	const coord = e.target.dataset[coordinateDataAttributeName];
+	if (presence) {
+		if (coord !== undefined) {
+			presence.set(coord, false);
+		}
+	}
+};
 
-// const handleInputBlur = (e: any) => {
-// 	const coord = e.target.dataset[coordinateDataAttributeName];
-// 	if (presence) {
-// 		if (coord !== undefined) {
-// 			presence.set(coord, true);
-// 		}
-// 	}
-// };
+const handleInputBlur = (e: any) => {
+	const coord = e.target.dataset[coordinateDataAttributeName];
+	if (presence) {
+		if (coord !== undefined) {
+			presence.set(coord, true);
+		}
+	}
+};
 
 const handleKeyDown = (e: any) => {
 	e.preventDefault();
 	let keyString = e.key;
 	let coord = e.currentTarget.dataset[coordinateDataAttributeName] as string;
 	coord = coord === undefined ? "" : coord;
-	const cell = puzzle.get(coord)!;
 
 	switch (keyString) {
 		case "Backspace":
@@ -61,27 +67,25 @@ const handleKeyDown = (e: any) => {
 			}
 			numericInput(keyString, coord);
 			return;
+		default:
+			onUnknownKeyDown(keyString, coord);
+			return;
 	}
 };
 
 const numericInput = (keyString: string, coord: string) => {
-	let valueToSet = Number(keyString);
-	valueToSet = Number.isNaN(valueToSet) ? 0 : valueToSet;
-	if (valueToSet >= 10 || valueToSet < 0) {
-		return;
-	}
+	const checkValue = Number(keyString);
+	const keyValue: SudokuNumber = isSudokuNumber(checkValue) ? checkValue : 0;
 
 	if (coord !== undefined) {
 		const cellInputElement = getCellInputElement(coord);
 		cellInputElement.value = keyString;
 
-		const toSet = puzzle.get(coord)!;
-		if (toSet.fixed === true) {
+		if (cell.fixed === true) {
 			return;
 		}
-		toSet.value = valueToSet;
-		toSet.isCorrect = valueToSet === toSet.correctValue;
-		puzzle.set(coord, toSet);
+		cell.value = keyValue;
+		cell.isCorrect = keyValue === cell.correctValue;
 	}
 };
 
@@ -146,17 +150,17 @@ function getCellBorderStyles(coord: CoordinateString) {
 }
 </script>
 
-<td class="sudoku-cell" style={getCellBorderStyles(coord)}>
+<td class="sudoku-cell" style={getCellBorderStyles(cell.coordinate)}>
 	<input
-		id={`${clientSessionId}-${coord}`}
-		class="sudoku-input {currentCellState}"
+		id={`${clientSessionId}-${cell.coordinate}`}
+		class="sudoku-input {SudokuCell.getState(cell)}"
 		type="text"
 		readOnly={true}
 		onfocus={handleInputFocus}
 		onblur={handleInputBlur}
 		onkeydown={handleKeyDown}
-			bind:value={currentCell.value}
+		value={SudokuCell.getDisplayString(cell)}
 		max={1}
-		data-cellcoordinate={coord}
+		data-cellcoordinate={cell.coordinate}
 	/>
 </td>

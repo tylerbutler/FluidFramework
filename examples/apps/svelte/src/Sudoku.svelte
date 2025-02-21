@@ -1,8 +1,6 @@
 <script lang="ts">
-import { Coordinate, type CoordinateString } from "./helpers/coordinate";
 import type { SudokuAppProps } from "./helpers/props";
-import { loadPuzzle, type SudokuRow } from "./helpers/puzzles";
-import type { SudokuCell } from "./helpers/sudokuCell.svelte";
+import { loadPuzzle, PUZZLES } from "./helpers/puzzles";
 
 import PuzzleTable from "./PuzzleTable.svelte";
 
@@ -20,11 +18,13 @@ const handleResetButton = () => {
 };
 
 const loadPuzzle1 = () => {
-	loadPuzzle(0, puzzle);
+	const puzzleInput = PUZZLES[0];
+	puzzle.loadPuzzle(puzzleInput);
 };
 
 const loadPuzzle2 = () => {
-	loadPuzzle(1, puzzle);
+	const puzzleInput = PUZZLES[0];
+	puzzle.loadPuzzle(puzzleInput);
 };
 
 function onThemeChange(e: any) {

@@ -12,6 +12,10 @@ import { SudokuCell } from "./sudokuCell.svelte";
 
 export type SudokuNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
+export function isSudokuNumber(input: number): input is SudokuNumber {
+	return input >= 0 && input <= 9;
+}
+
 // export type ValidSudokuValues = SudokuNumber | 0;
 
 export type SudokuInputRow = [
@@ -76,15 +80,20 @@ export type SudokuGrid = SudokuRow[];
 // 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
 // ];
 
-export interface SudokuPuzzle {
-	grid: SudokuGrid;
-}
+// export interface SudokuPuzzle {
+// 	grid: SudokuGrid;
+// }
 
-export class SudokuPuzzleImpl implements SudokuPuzzle {
+export class SudokuPuzzle {
 	public readonly grid: SudokuGrid = [];
 	private solution: SudokuInput;
 
 	constructor(readonly puzzleInput: SudokuInput) {
+		this.solution = sudoku.solve(puzzleInput) as unknown as SudokuInput;
+		this.loadPuzzle(puzzleInput);
+	}
+
+	public loadPuzzle(puzzleInput: SudokuInput) {
 		this.solution = sudoku.solve(puzzleInput) as unknown as SudokuInput;
 		for (const row of PUZZLE_INDEXES) {
 			const newRow: SudokuCell[] = [];
@@ -141,6 +150,6 @@ export const PUZZLES: SudokuInput[] = [
  */
 export function loadPuzzle(index: number): SudokuPuzzle {
 	const puzzleInput = PUZZLES[index];
-	const puzzle: SudokuPuzzle = new SudokuPuzzleImpl(puzzleInput);
+	const puzzle: SudokuPuzzle = new SudokuPuzzle(puzzleInput);
 	return puzzle;
 }
