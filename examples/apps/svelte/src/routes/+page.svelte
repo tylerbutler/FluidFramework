@@ -1,13 +1,13 @@
 <script lang="ts">
-import { SvelteMap as Map } from "svelte/reactivity";
+import { SvelteMap } from "svelte/reactivity";
 import type { CoordinateString } from "../helpers/coordinate";
-import { loadPuzzle, type PuzzleGrid } from "../helpers/puzzles";
+import { loadPuzzle, type SudokuGrid, type SudokuPuzzle } from "../helpers/puzzles";
 import Sudoku from "../Sudoku.svelte";
 
-let puzzle: PuzzleGrid = $state(new Map());
-const solved = loadPuzzle(0, puzzle);
+let puzzle = $state<SudokuPuzzle>();
+puzzle = loadPuzzle(0);
 
-let presence: Map<CoordinateString, boolean> = $state(new Map());
+let presence = $state<SvelteMap<CoordinateString, boolean>>(new SvelteMap());
 
 const clientSessionId = "local";
 </script>

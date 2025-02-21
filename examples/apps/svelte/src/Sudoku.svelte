@@ -1,7 +1,7 @@
 <script lang="ts">
-import type { CoordinateString } from "./helpers/coordinate";
+import { Coordinate, type CoordinateString } from "./helpers/coordinate";
 import type { SudokuAppProps } from "./helpers/props";
-import { loadPuzzle } from "./helpers/puzzles";
+import { loadPuzzle, type SudokuRow } from "./helpers/puzzles";
 import type { SudokuCell } from "./helpers/sudokuCell.svelte";
 
 import PuzzleTable from "./PuzzleTable.svelte";
@@ -10,12 +10,13 @@ const { puzzle, presence, clientSessionId }: SudokuAppProps = $props();
 let theme = $state("default");
 
 const handleResetButton = () => {
-	puzzle.grid.forEach((value: SudokuRow, key: CoordinateString) => {
-		if (!value.fixed && value.value !== 0) {
-			value.value = 0;
-			puzzle.set(key, value);
+	for (const row of puzzle.grid) {
+		for (const cell of row) {
+			if (!cell.fixed) {
+				cell.value = 0;
+			}
 		}
-	});
+	}
 };
 
 const loadPuzzle1 = () => {

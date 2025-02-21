@@ -5,7 +5,6 @@
 
 import sudoku from "sudokus";
 
-import type { Coordinate } from "./coordinate";
 import type { SudokuNumber } from "./puzzles";
 
 export const CellState = {
@@ -33,7 +32,7 @@ export class SudokuCell implements sudoku.Cell {
 	 */
 	public isCorrect = $state(false);
 
-	public value = $state(0);
+	public value = $state<SudokuNumber>(0);
 
 	/**
 	 * Creates a new SudokuCell instance.
@@ -58,7 +57,7 @@ export class SudokuCell implements sudoku.Cell {
 	}
 
 	// The following are static methods since TypeScript properties are functions and functions aren't JSONed, and we
-	// need to be manipulate the plain JavaScript objects after they've been JSONed.
+	// need to manipulate the plain JavaScript objects after they've been JSONed.
 
 	/**
 	 * Sets the isCorrect property on the cell and returns the cell.

@@ -5,10 +5,10 @@
 
 import sudoku from "sudokus";
 
-import { Coordinate, type CoordinateString } from "./coordinate";
+import { Coordinate } from "./coordinate";
 import { SudokuCell } from "./sudokuCell.svelte";
 
-export type PuzzleGrid = Map<CoordinateString, SudokuCell>;
+// export type PuzzleGrid = Map<CoordinateString, SudokuCell>;
 
 export type SudokuNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -38,40 +38,72 @@ export type SudokuInput = [
 	SudokuInputRow,
 ];
 
-export type SudokuRow = [
-	SudokuCell,
-	SudokuCell,
-	SudokuCell,
-	SudokuCell,
-	SudokuCell,
-	SudokuCell,
-	SudokuCell,
-	SudokuCell,
-	SudokuCell,
-];
+export type SudokuRow = SudokuCell[];
+// [
+// 	SudokuCell,
+// 	SudokuCell,
+// 	SudokuCell,
+// 	SudokuCell,
+// 	SudokuCell,
+// 	SudokuCell,
+// 	SudokuCell,
+// 	SudokuCell,
+// 	SudokuCell,
+// ];
 
-export type SudokuGrid = [
-	SudokuRow,
-	SudokuRow,
-	SudokuRow,
-	SudokuRow,
-	SudokuRow,
-	SudokuRow,
-	SudokuRow,
-	SudokuRow,
-	SudokuRow,
-];
+export type SudokuGrid = SudokuRow[];
+// [
+// 	SudokuRow,
+// 	SudokuRow,
+// 	SudokuRow,
+// 	SudokuRow,
+// 	SudokuRow,
+// 	SudokuRow,
+// 	SudokuRow,
+// 	SudokuRow,
+// 	SudokuRow,
+// ];
 
-export class SudokuPuzzle {
-	constructor(public readonly grid: SudokuGrid) {}
+// export const emptySudokuGrid: SudokuGrid = [
+// 	[undefined, 0, 0, 0, 0, 0, 0, 0, 0],
+// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
+// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
+// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
+// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
+// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
+// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
+// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
+// 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
+// ];
 
-	public at(x: SudokuNumber, y: SudokuNumber): SudokuCell {
-		return this.grid[x - 1][y - 1];
+export interface SudokuPuzzle {
+	grid: SudokuGrid;
+}
+
+export class SudokuPuzzleImpl implements SudokuPuzzle {
+	public readonly grid: SudokuGrid = [];
+	private solution: SudokuInput;
+
+	constructor(readonly puzzleInput: SudokuInput) {
+		this.solution = sudoku.solve(puzzleInput) as unknown as SudokuInput;
+		for (const row of PUZZLE_INDEXES) {
+			const newRow: SudokuCell[] = [];
+			for (const col of PUZZLE_INDEXES) {
+				const coordinate = Coordinate.asString(row, col);
+				const cell = new SudokuCell(
+					puzzleInput[row][col],
+					this.solution[row][col],
+					coordinate,
+				);
+				newRow.push(cell);
+			}
+			this.grid.push(newRow);
+		}
 	}
 }
 
 /**
- * An array of numbers 0-9 for convenient looping when building Sudoku grids.
+ * An array of numbers 0-8 for convenient looping when building Sudoku grids.
  */
 export const PUZZLE_INDEXES = Array.from(Array(9).keys());
 
@@ -104,29 +136,11 @@ export const PUZZLES: SudokuInput[] = [
  * Loads a puzzle into an ISharedMap.
  *
  * @param index - The index of the puzzle to load.
- * @param puzzleMap - The shared map that stores puzzle data.
+ * @param grid - The shared map that stores puzzle data.
  * @returns The solved puzzle as a 2-dimensional array.
  */
-export function loadPuzzle(index: number, puzzleMap: PuzzleGrid): number[][] {
+export function loadPuzzle(index: number): SudokuPuzzle {
 	const puzzleInput = PUZZLES[index];
-	const solution = sudoku.solve(puzzleInput) as unknown as SudokuInput;
-
-	for (const row of PUZZLE_INDEXES) {
-		for (const col of PUZZLE_INDEXES) {
-			const key = Coordinate.asString(row, col);
-			const cell = new SudokuCell(puzzleInput[row][col], solution[row][col], key);
-			puzzleMap.set(key,cell);
-		}
-	}
-	// for (const [row, rowData] of puzzleMap.grid.entries()) {
-	// 	for (const [col, cellData] of rowData.entries()) {
-	// 		const cell = new SudokuCell(
-	// 			puzzleInput[row][col],
-	// 			solution[row][col],
-	// 			Coordinate.asString(row, col),
-	// 		);
-	// 		cellData = cell;
-	// 	}
-	// }
-	return solution;
+	const puzzle: SudokuPuzzle = new SudokuPuzzleImpl(puzzleInput);
+	return puzzle;
 }

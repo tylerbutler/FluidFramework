@@ -32,8 +32,9 @@ export class Coordinate {
 	 *
 	 * @param coord - A coordinate string in the form returned by `Coordinate.asString()`.
 	 */
-	public static asArrayNumbers(coord: CoordinateString): number[] {
-		return Coordinate.asArray(coord).map(Number);
+	public static asArrayNumbers(coord: CoordinateString): [number, number] {
+		const decomposed = Coordinate.asArray(coord).map(Number);
+		return [decomposed[0], decomposed[1]];
 	}
 
 	public static moveUp(coord: CoordinateString): CoordinateString {

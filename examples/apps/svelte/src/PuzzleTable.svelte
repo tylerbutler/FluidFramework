@@ -1,10 +1,10 @@
 <script lang="ts">
 import { Coordinate, type CoordinateString } from "./helpers/coordinate";
-import { PUZZLE_INDEXES } from "./helpers/puzzles";
+import { PUZZLE_INDEXES, type SudokuNumber } from "./helpers/puzzles";
 import { SudokuCell } from "./helpers/sudokuCell.svelte";
 import { type SudokuAppProps } from "./helpers/props";
 
-const { puzzle = $bindable(), clientSessionId, presence }: SudokuAppProps = $props();
+const { puzzle, clientSessionId, presence }: SudokuAppProps = $props();
 
 const coordinateDataAttributeName = "cellcoordinate";
 
@@ -32,9 +32,10 @@ const handleInputBlur = (e: any) => {
 const handleKeyDown = (e: any) => {
 	e.preventDefault();
 	let keyString = e.key;
-	let coord = e.currentTarget.dataset[coordinateDataAttributeName] as string;
-	coord = coord === undefined ? "" : coord;
-	const cell = puzzle.get(coord)!;
+	const coord = (e.currentTarget.dataset[coordinateDataAttributeName] as string) ?? "";
+
+	const [row, column] = Coordinate.asArrayNumbers(coord);
+	const cell = puzzle.grid[row][column];
 
 	switch (keyString) {
 		case "Backspace":
@@ -74,13 +75,15 @@ const numericInput = (keyString: string, coord: string) => {
 		const cellInputElement = getCellInputElement(coord);
 		cellInputElement.value = keyString;
 
-		const toSet = puzzle.get(coord)!;
+		const [row, column] = Coordinate.asArrayNumbers(coord);
+
+		const toSet = puzzle.grid[row][column];
 		if (toSet.fixed === true) {
 			return;
 		}
-		toSet.value = valueToSet;
+		toSet.value = valueToSet as SudokuNumber;
 		toSet.isCorrect = valueToSet === toSet.correctValue;
-		puzzle.set(coord, toSet);
+		puzzle.grid[row][column] = toSet;
 	}
 };
 
@@ -182,7 +185,7 @@ $inspect(presence);
 		<tr>
 			{#each PUZZLE_INDEXES as column (column.toString())}
 			{@const coord = Coordinate.asString(row, column)}
-			{@const currentCell = puzzle.get(coord)!}
+			{@const currentCell = puzzle.grid[row][column]!}
 			{@const currentCellState = SudokuCell.getState(currentCell)}
 
 			<td class="sudoku-cell" style={getCellBorderStyles(coord)}>

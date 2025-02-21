@@ -15,23 +15,23 @@ const coordinateDataAttributeName = "cellcoordinate";
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(`${clientSessionId}-${coord}`) as HTMLInputElement;
 
-const handleInputFocus = (e: any) => {
-	const coord = e.target.dataset[coordinateDataAttributeName];
-	if (presence) {
-		if (coord !== undefined) {
-			presence.set(coord, false);
-		}
-	}
-};
+// const handleInputFocus = (e: any) => {
+// 	const coord = e.target.dataset[coordinateDataAttributeName];
+// 	if (presence) {
+// 		if (coord !== undefined) {
+// 			presence.set(coord, false);
+// 		}
+// 	}
+// };
 
-const handleInputBlur = (e: any) => {
-	const coord = e.target.dataset[coordinateDataAttributeName];
-	if (presence) {
-		if (coord !== undefined) {
-			presence.set(coord, true);
-		}
-	}
-};
+// const handleInputBlur = (e: any) => {
+// 	const coord = e.target.dataset[coordinateDataAttributeName];
+// 	if (presence) {
+// 		if (coord !== undefined) {
+// 			presence.set(coord, true);
+// 		}
+// 	}
+// };
 
 const handleKeyDown = (e: any) => {
 	e.preventDefault();
