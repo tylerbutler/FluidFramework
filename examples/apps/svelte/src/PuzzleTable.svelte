@@ -10,31 +10,6 @@ const coordinateDataAttributeName = "cellcoordinate";
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(`${clientSessionId}-${coord}`) as HTMLInputElement;
 
-// const handleInputFocus = (e: any) => {
-// 	const coord = e.target.dataset[coordinateDataAttributeName];
-// 	if (presence) {
-// 		if (coord !== undefined) {
-// 			presence.set(coord, false);
-// 		}
-// 	}
-// };
-
-// const handleInputBlur = (e: any) => {
-// 	const coord = e.target.dataset[coordinateDataAttributeName];
-// 	if (presence) {
-// 		if (coord !== undefined) {
-// 			presence.set(coord, true);
-// 		}
-// 	}
-// };
-
-// const handleKeyDown = (e: any) => {
-// 	e.preventDefault();
-// 	let keyString = e.key;
-// 	const coord = (e.currentTarget.dataset[coordinateDataAttributeName] as string) ?? "";
-// 	moveCell(keyString, coord);
-// };
-
 const moveCell = (keyString: string, coordIn: string) => {
 	const coord = coordIn;
 	let newCoord = coordIn;
@@ -70,7 +45,7 @@ const moveCell = (keyString: string, coordIn: string) => {
 			{#each puzzle.grid as row (row.toString())}
 				<tr>
 					{#each row as cell (cell.toString())}
-						<Cell {cell} {clientSessionId} {presence} onUnknownKeyDown={moveCell}></Cell>
+						<Cell {cell} {clientSessionId} {presence} onKeyDown={moveCell}></Cell>
 					{/each}
 				</tr>
 			{/each}

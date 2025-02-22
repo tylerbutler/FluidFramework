@@ -4,7 +4,7 @@
  */
 
 import type { CoordinateString } from "./coordinate";
-import type { SudokuPuzzle } from "./puzzles";
+import type { SudokuPuzzle } from "./sudokuPuzzle.svelte";
 
 export interface SudokuAppProps {
 	puzzle: SudokuPuzzle;

@@ -1,11 +1,15 @@
 <script lang="ts">
 import type { SudokuAppProps } from "./helpers/props";
-import { loadPuzzle, PUZZLES } from "./helpers/puzzles";
+import { PUZZLES } from "./helpers/constants";
 
 import PuzzleTable from "./PuzzleTable.svelte";
 
 const { puzzle, presence, clientSessionId }: SudokuAppProps = $props();
 let theme = $state("default");
+
+function onThemeChange(e: any) {
+	theme = e.target.value;
+}
 
 const handleResetButton = () => {
 	for (const row of puzzle.grid) {
@@ -16,25 +20,10 @@ const handleResetButton = () => {
 		}
 	}
 };
-
-const loadPuzzle1 = () => {
-	const puzzleInput = PUZZLES[0];
-	puzzle.loadPuzzle(puzzleInput);
-};
-
-const loadPuzzle2 = () => {
-	const puzzleInput = PUZZLES[0];
-	puzzle.loadPuzzle(puzzleInput);
-};
-
-function onThemeChange(e: any) {
-	theme = e.target.value;
-}
 </script>
 
 <div class={`sudoku ${theme}`}>
 	<div class="sudoku-wrapper">
-
 		<PuzzleTable {puzzle} {clientSessionId} {presence} />
 
 		<div class="sudoku-buttons">
@@ -56,8 +45,8 @@ function onThemeChange(e: any) {
 
 			<span class="sudoku-load">
 				Load:
-				<button onclick={loadPuzzle1}>Puzzle 1</button>
-				<button onclick={loadPuzzle2}>Puzzle 2</button>
+				<button onclick={() => puzzle.loadPuzzle(PUZZLES[0])}>Puzzle 1</button>
+				<button onclick={() => puzzle.loadPuzzle(PUZZLES[1])}>Puzzle 2</button>
 			</span>
 		</div>
 	</div>

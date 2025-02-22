@@ -1,6 +1,6 @@
 <script lang="ts">
 import { Coordinate, type CoordinateString } from "./helpers/coordinate";
-import { isSudokuNumber, type SudokuNumber } from "./helpers/puzzles";
+import { isSudokuNumber, type SudokuNumber } from "./types";
 import { SudokuCell } from "./helpers/sudokuCell.svelte";
 
 let {
@@ -8,13 +8,13 @@ let {
 	// coord = $bindable(),
 	clientSessionId,
 	presence,
-	onUnknownKeyDown,
+	onKeyDown,
 }: {
 	cell: SudokuCell;
 	// coord: CoordinateString;
 	clientSessionId: string;
 	presence: Map<CoordinateString, boolean>;
-	onUnknownKeyDown: (keyString: string, coordIn: string) => void;
+	onKeyDown: (keyString: string, coordIn: string) => void;
 } = $props();
 
 const coordinateDataAttributeName = "cellcoordinate";
@@ -68,7 +68,7 @@ const handleKeyDown = (e: any) => {
 			numericInput(keyString, coord);
 			return;
 		default:
-			onUnknownKeyDown(keyString, coord);
+			onKeyDown(keyString, coord);
 			return;
 	}
 };

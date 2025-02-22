@@ -4,8 +4,7 @@
  */
 
 import sudoku from "sudokus";
-
-import type { SudokuNumber } from "./puzzles";
+import type { SudokuNumber } from "../types";
 
 export const CellState = {
 	empty: "empty",

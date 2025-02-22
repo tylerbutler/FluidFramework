@@ -1,11 +1,10 @@
 <script lang="ts">
 import { SvelteMap } from "svelte/reactivity";
 import type { CoordinateString } from "../helpers/coordinate";
-import { loadPuzzle, type SudokuPuzzle } from "../helpers/puzzles";
 import Sudoku from "../Sudoku.svelte";
+import { loadIncludedPuzzle } from "../helpers/sudokuPuzzle.svelte";
 
-let puzzle = $state<SudokuPuzzle>();
-puzzle = loadPuzzle(0);
+let puzzle = loadIncludedPuzzle(0);
 
 let presence = $state<SvelteMap<CoordinateString, boolean>>(new SvelteMap());
 

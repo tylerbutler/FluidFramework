@@ -15,7 +15,7 @@
 		"build": "vite build",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"clean": "rimraf --glob nyc",
+		"clean": "rimraf --glob nyc .svelte-kit",
 		"dev": "vite dev",
 		"lint": "eslint .",
 		"preview": "vite preview",
@@ -27,21 +27,21 @@
 		"sudokus": "^1.0.2"
 	},
 	"devDependencies": {
-		"@eslint/compat": "^1.2.3",
-		"@sveltejs/adapter-static": "^3.0.6",
-		"@sveltejs/kit": "^2.0.0",
+		"@eslint/compat": "^1.2.7",
+		"@sveltejs/adapter-static": "^3.0.8",
+		"@sveltejs/kit": "^2.17.2",
 		"@sveltejs/vite-plugin-svelte": "^5.0.3",
 		"@types/sudokus": "^1.0.3",
 		"eslint": "~8.55.0",
-		"eslint-plugin-svelte": "~2.36.0",
-		"globals": "^15.0.0",
+		"eslint-plugin-svelte": "~2.46.1",
+		"globals": "^16.0.0",
 		"mdsvex": "^0.12.3",
 		"rimraf": "^4.4.0",
-		"svelte": "^5.0.0",
-		"svelte-check": "^4.0.0",
+		"svelte": "^5.20.2",
+		"svelte-check": "^4.1.4",
 		"typescript": "~5.4.5",
 		"typescript-eslint": "^8.0.0",
-		"vite": "^6.0.7",
+		"vite": "^6.1.1",
 		"vitest": "^2.1.8"
 	}
 }
