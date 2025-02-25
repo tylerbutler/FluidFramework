@@ -27,7 +27,7 @@ export const load: PageLoad = async () => {
 	const { containerId } = await createFluidContainer();
 
 	// Retrieve a reference to the presence APIs via the data object.
-	const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
+	// const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
 
 	return {
 		containerId,

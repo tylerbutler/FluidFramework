@@ -1,9 +1,16 @@
 <script lang="ts">
-import { Coordinate, type CoordinateString } from "./helpers/coordinate";
+import type { LatestValueManager } from "@fluidframework/presence/alpha";
+import { Coordinate, type CellCoordinate, type CoordinateString } from "./helpers/coordinate";
 import { type SudokuAppProps } from "./helpers/props";
 import Cell from "./Cell.svelte";
 
-const { puzzle, sessionClientId, presence }: SudokuAppProps = $props();
+const {
+	puzzle,
+	sessionClientId,
+	presenceValueManager,
+}: Omit<SudokuAppProps, "presence"> & {
+	readonly presenceValueManager: LatestValueManager<CellCoordinate>;
+} = $props();
 
 // const coordinateDataAttributeName = "cellcoordinate";
 
@@ -36,6 +43,7 @@ const moveCell = (keyString: string, coordIn: string) => {
 
 	const newCell = getCellInputElement(newCoord);
 	newCell.focus();
+	presenceValueManager.local = Coordinate.asArrayNumbers(newCoord);
 };
 </script>
 
@@ -45,7 +53,7 @@ const moveCell = (keyString: string, coordIn: string) => {
 			{#each puzzle.grid as row (row.toString())}
 				<tr>
 					{#each row as cell (cell.toString())}
-						<Cell {cell} {sessionClientId} {presence} onKeyDown={moveCell}></Cell>
+						<Cell {cell} {sessionClientId} onKeyDown={moveCell}></Cell>
 					{/each}
 				</tr>
 			{/each}
