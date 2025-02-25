@@ -3,11 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import type { CoordinateString } from "./coordinate";
+import type { IPresence, ISessionClient } from "@fluidframework/presence/alpha";
 import type { SudokuPuzzle } from "./sudokuPuzzle.svelte";
 
 export interface SudokuAppProps {
 	puzzle: SudokuPuzzle;
-	clientSessionId: string;
-	presence: Map<CoordinateString, boolean>;
+	presence: IPresence;
+	sessionClientId: ISessionClient;
 }

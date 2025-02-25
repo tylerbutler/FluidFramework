@@ -1,4 +1,5 @@
 <script lang="ts">
+import type { IPresence, ISessionClient } from "@fluidframework/presence/alpha";
 import { Coordinate, type CoordinateString } from "./helpers/coordinate";
 import { isSudokuNumber, type SudokuNumber } from "./types";
 import { SudokuCell } from "./helpers/sudokuCell.svelte";
@@ -6,21 +7,21 @@ import { SudokuCell } from "./helpers/sudokuCell.svelte";
 let {
 	cell,
 	// coord = $bindable(),
-	clientSessionId,
+	sessionClientId,
 	presence,
 	onKeyDown,
 }: {
 	cell: SudokuCell;
 	// coord: CoordinateString;
-	clientSessionId: string;
-	presence: Map<CoordinateString, boolean>;
+	sessionClientId: ISessionClient;
+	presence: IPresence;
 	onKeyDown: (keyString: string, coordIn: string) => void;
 } = $props();
 
 const coordinateDataAttributeName = "cellcoordinate";
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
-	document.getElementById(`${clientSessionId}-${coord}`) as HTMLInputElement;
+	document.getElementById(`${sessionClientId}-${coord}`) as HTMLInputElement;
 
 const handleInputFocus = (e: any) => {
 	const coord = e.target.dataset[coordinateDataAttributeName];
@@ -152,7 +153,7 @@ function getCellBorderStyles(coord: CoordinateString) {
 
 <td class="sudoku-cell" style={getCellBorderStyles(cell.coordinate)}>
 	<input
-		id={`${clientSessionId}-${cell.coordinate}`}
+		id={`${sessionClientId}-${cell.coordinate}`}
 		class="sudoku-input {SudokuCell.getState(cell)}"
 		type="text"
 		readOnly={true}

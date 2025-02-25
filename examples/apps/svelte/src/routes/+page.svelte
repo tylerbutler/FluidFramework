@@ -1,14 +1,16 @@
 <script lang="ts">
-import { SvelteMap } from "svelte/reactivity";
-import type { CoordinateString } from "../helpers/coordinate";
-import Sudoku from "../Sudoku.svelte";
-import { loadIncludedPuzzle } from "../helpers/sudokuPuzzle.svelte";
+	import type { PageProps } from "./$types";
+	// import Sudoku from "../Sudoku.svelte";
+	// import { loadIncludedPuzzle } from "../helpers/sudokuPuzzle.svelte";
+	import { redirect } from "@sveltejs/kit";
 
-let puzzle = loadIncludedPuzzle(0);
+	const { data }: PageProps = $props();
+	// const { presence, sessionClientId } = data;
+	const { containerId } = data;
 
-let presence = $state<SvelteMap<CoordinateString, boolean>>(new SvelteMap());
+	// let puzzle = loadIncludedPuzzle(0);
+	redirect(301, `/${containerId}`);
 
-const clientSessionId = "local";
 </script>
 
-<Sudoku {puzzle} {presence} {clientSessionId} />
+<!-- <Sudoku {puzzle} {presence} {sessionClientId} /> -->

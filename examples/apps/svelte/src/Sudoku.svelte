@@ -4,7 +4,7 @@ import { PUZZLES } from "./helpers/constants";
 
 import PuzzleTable from "./PuzzleTable.svelte";
 
-const { puzzle, presence, clientSessionId }: SudokuAppProps = $props();
+const { puzzle, presence, sessionClientId }: SudokuAppProps = $props();
 let theme = $state("default");
 
 function onThemeChange(e: any) {
@@ -24,7 +24,7 @@ const handleResetButton = () => {
 
 <div class={`sudoku ${theme}`}>
 	<div class="sudoku-wrapper">
-		<PuzzleTable {puzzle} {clientSessionId} {presence} />
+		<PuzzleTable {puzzle} {sessionClientId} {presence} />
 
 		<div class="sudoku-buttons">
 			<span class="sudoku-theme-select">

@@ -3,12 +3,12 @@ import { Coordinate, type CoordinateString } from "./helpers/coordinate";
 import { type SudokuAppProps } from "./helpers/props";
 import Cell from "./Cell.svelte";
 
-const { puzzle, clientSessionId, presence }: SudokuAppProps = $props();
+const { puzzle, sessionClientId, presence }: SudokuAppProps = $props();
 
-const coordinateDataAttributeName = "cellcoordinate";
+// const coordinateDataAttributeName = "cellcoordinate";
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
-	document.getElementById(`${clientSessionId}-${coord}`) as HTMLInputElement;
+	document.getElementById(`${sessionClientId}-${coord}`) as HTMLInputElement;
 
 const moveCell = (keyString: string, coordIn: string) => {
 	const coord = coordIn;
@@ -45,7 +45,7 @@ const moveCell = (keyString: string, coordIn: string) => {
 			{#each puzzle.grid as row (row.toString())}
 				<tr>
 					{#each row as cell (cell.toString())}
-						<Cell {cell} {clientSessionId} {presence} onKeyDown={moveCell}></Cell>
+						<Cell {cell} {sessionClientId} {presence} onKeyDown={moveCell}></Cell>
 					{/each}
 				</tr>
 			{/each}
