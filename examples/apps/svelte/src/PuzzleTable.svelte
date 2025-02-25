@@ -12,7 +12,6 @@
 	import { difference } from "./utils";
 	import uniqolor from "uniqolor";
 	import type { SudokuGrid } from "./types";
-	import { strict as assert } from "node:assert";
 
 	const {
 		grid,
@@ -73,7 +72,9 @@
 
 	const onRemoteCellChange = (coord: LatestValueClientData<CellCoordinate>) => {
 		console.debug("updated:", coord);
-		assert(typeof coord.value !== "string");
+		if(typeof coord.value === "string") {
+			throw new Error("Remote coordinate was a string!");
+		}
 		// const [r,c] = Coordinate.asArrayNumbers(coord.value);
 		const [r, c] = coord.value;
 		const row = grid[r];
