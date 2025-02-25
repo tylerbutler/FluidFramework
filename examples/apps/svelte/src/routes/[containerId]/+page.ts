@@ -1,6 +1,11 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
+import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
 import type { PageLoad } from "./$types";
 import { getFluidContainer } from "../../fluid/init";
-import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
 
 // disable SSR
 export const ssr = false;

@@ -1,6 +1,12 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
 import type { PageLoad } from "./$types";
 import { createFluidContainer } from "../fluid/init";
+import { redirect } from "@sveltejs/kit";
 
 // disable SSR
 export const ssr = false;
@@ -29,7 +35,9 @@ export const load: PageLoad = async () => {
 	// Retrieve a reference to the presence APIs via the data object.
 	// const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
 
-	return {
-		containerId,
-	};
+	// return {
+	// 	containerId,
+	// };
+	// return createFluidContainer();
+	redirect(301, `/${containerId}`);
 };
