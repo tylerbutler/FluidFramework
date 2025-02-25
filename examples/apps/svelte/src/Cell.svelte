@@ -1,5 +1,6 @@
 <script lang="ts">
-import type { IPresence, ISessionClient } from "@fluidframework/presence/alpha";
+import type { ISessionClient } from "@fluidframework/presence/alpha";
+import uniqolor from "uniqolor";
 import { Coordinate, type CoordinateString } from "./helpers/coordinate";
 import { isSudokuNumber, type SudokuNumber } from "./types";
 import { SudokuCell } from "./helpers/sudokuCell.svelte";
@@ -149,17 +150,32 @@ function getCellBorderStyles(coord: CoordinateString) {
 
 	return objectToCssString(styles);
 }
+
+// const additionalClasses = cell.selectedBySessionClientIds
+// 	.map((id) => `presence-${id}`)
+// 	.join(" ");
 </script>
+
+<!-- <style>
+	{#each cell.selectedBySessionClientIds as id}
+		.presence-{id} {
+			background-color: {uniqolor(id).dark ? "var(--themeDarker)" : "var(--themeLighter)"};
+		}
+	{/each}
+</style> -->
 
 <td class="sudoku-cell" style={getCellBorderStyles(cell.coordinate)}>
 	<input
-		id={`${sessionClientId}-${cell.coordinate}`}
+		id={`${sessionClientId.sessionId}-${cell.coordinate}`}
 		class="sudoku-input {SudokuCell.getState(cell)}"
 		type="text"
 		readOnly={true}
 		onkeydown={handleKeyDown}
 		value={SudokuCell.getDisplayString(cell)}
 		max={1}
+		style={cell.selectedBySessionClientIds.length > 0
+			? uniqolor(sessionClientId.sessionId).color
+			: ""}
 		data-cellcoordinate={cell.coordinate}
 	/>
 </td>

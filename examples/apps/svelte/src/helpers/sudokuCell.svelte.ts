@@ -5,6 +5,7 @@
 
 import sudoku from "sudokus";
 import type { SudokuNumber } from "../types";
+import type { ISessionClient } from "@fluidframework/presence/alpha";
 
 export const CellState = {
 	empty: "empty",
@@ -32,6 +33,8 @@ export class SudokuCell implements sudoku.Cell {
 	public isCorrect = $state(false);
 
 	public value = $state<SudokuNumber>(0);
+
+	public selectedBySessionClientIds = $state<ISessionClient[]>([]);
 
 	/**
 	 * Creates a new SudokuCell instance.

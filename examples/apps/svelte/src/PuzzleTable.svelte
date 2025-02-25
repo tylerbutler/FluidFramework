@@ -7,15 +7,15 @@ import Cell from "./Cell.svelte";
 const {
 	puzzle,
 	sessionClientId,
-	presenceValueManager,
+	selectionCoordinate,
 }: Omit<SudokuAppProps, "presence"> & {
-	readonly presenceValueManager: LatestValueManager<CellCoordinate>;
+	readonly selectionCoordinate: LatestValueManager<CellCoordinate>;
 } = $props();
 
 // const coordinateDataAttributeName = "cellcoordinate";
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
-	document.getElementById(`${sessionClientId}-${coord}`) as HTMLInputElement;
+	document.getElementById(`${sessionClientId.sessionId}-${coord}`) as HTMLInputElement;
 
 const moveCell = (keyString: string, coordIn: string) => {
 	const coord = coordIn;
@@ -43,8 +43,14 @@ const moveCell = (keyString: string, coordIn: string) => {
 
 	const newCell = getCellInputElement(newCoord);
 	newCell.focus();
-	presenceValueManager.local = Coordinate.asArrayNumbers(newCoord);
+	selectionCoordinate.local = Coordinate.asArrayNumbers(newCoord);
 };
+
+selectionCoordinate.events.on("updated", (coordinate) => {
+	// const selectedCell = getCellInputElement(Coordinate.fromCellCoordinate(data.value));
+	// selectedCell.classList.add("presence");
+	puzzle.grid[coordinate.value[0]][coordinate.value[1]].coordinate = 1;
+});
 </script>
 
 <div>

@@ -13,6 +13,8 @@ const appPresence = presence.getStates("v1:presence", {
 	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
 });
 
+const selectionCoordinate = appPresence.props.selectionCoordinate;
+
 let theme = $state("default");
 function onThemeChange(e: any) {
 	theme = e.target.value;
@@ -29,9 +31,11 @@ const handleResetButton = () => {
 };
 </script>
 
+<h1>Sudoku: {presence.getAttendees().size} attendees</h1>
+
 <div class={`sudoku ${theme}`}>
 	<div class="sudoku-wrapper">
-		<PuzzleTable {puzzle} {sessionClientId} presenceValueManager={appPresence.props.selectionCoordinate} />
+		<PuzzleTable {puzzle} {sessionClientId} {selectionCoordinate} />
 
 		<div class="sudoku-buttons">
 			<span class="sudoku-theme-select">

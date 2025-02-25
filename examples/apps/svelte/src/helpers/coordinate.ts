@@ -21,6 +21,9 @@ export class Coordinate {
 	public static asString = (row: number, column: number): CoordinateString =>
 		`${row},${column}`;
 
+	public static fromCellCoordinate = (
+		input: Readonly<CellCoordinate>,
+	): Readonly<CoordinateString> => Coordinate.asString(input[0], input[1]);
 	/**
 	 * Returns a 2-item array of individual coordinates as strings.
 	 *
