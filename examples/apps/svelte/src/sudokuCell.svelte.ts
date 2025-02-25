@@ -39,7 +39,7 @@ export class SudokuCell implements sudoku.Cell {
 	/**
 	 * True if the value in the cell is correct; false otherwise.
 	 */
-	public isCorrect = $state(false);
+	public isCorrect = $derived.by(() => this.value === this.correctValue);
 
 	public value = $state<SudokuNumber>(0);
 
@@ -51,7 +51,7 @@ export class SudokuCell implements sudoku.Cell {
 
 	public owner = $state("none");
 
-	public color = $derived(uniqolor(this.owner));
+	public color = $derived(uniqolor(this.owner).color);
 
 	/**
 	 * Creates a new SudokuCell instance.
@@ -68,7 +68,7 @@ export class SudokuCell implements sudoku.Cell {
 	) {
 		this.value = Number.isSafeInteger(value) ? value : 0;
 		this.fixed = this.value !== 0;
-		SudokuCell.setIsCorrect(this);
+		// SudokuCell.setIsCorrect(this);
 	}
 
 	public toString(): string {
@@ -81,15 +81,16 @@ export class SudokuCell implements sudoku.Cell {
 	/**
 	 * Sets the isCorrect property on the cell and returns the cell.
 	 */
-	public static setIsCorrect(cell: SudokuCell): SudokuCell {
-		cell.isCorrect = cell.fixed || cell.value === cell.correctValue;
-		return cell;
-	}
+	// public static setIsCorrect(cell: SudokuCell): SudokuCell {
+	// 	cell.isCorrect = cell.fixed || cell.value === cell.correctValue;
+	// 	return cell;
+	// }
 
 	/**
 	 * Returns a string representation of the cell's value suitable for display.
 	 */
 	public static getDisplayString(cell: SudokuCell): string {
+		$inspect(cell.color);
 		if (cell.fixed || cell.value !== 0) {
 			return cell.value.toString();
 		}

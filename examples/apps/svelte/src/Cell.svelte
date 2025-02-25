@@ -7,13 +7,13 @@ import { isSudokuNumber, type SudokuNumber } from "./types";
 import { SudokuCell } from "./sudokuCell.svelte";
 
 let {
-	cell,
+	cellData,
 	// coord = $bindable(),
 	currentSessionClient,
 	selectionManager,
 	onKeyDown,
 }: {
-	cell: SudokuCell;
+	cellData: SudokuCell;
 	// coord: CoordinateString;
 	currentSessionClient: ISessionClient;
 	readonly selectionManager: LatestValueManager<CellCoordinate>;
@@ -30,14 +30,14 @@ const handleInputFocus = (e: any) => {
 	const coord = e.target.dataset[coordinateDataAttributeName];
 	if (coord !== undefined) {
 		selectionManager.local = coord;
-		cell.owner = currentSessionClient.sessionId;
+		cellData.owner = currentSessionClient.sessionId;
 	}
 };
 
 const handleInputBlur = (e: any) => {
 	const coord = e.target.dataset[coordinateDataAttributeName];
 	if (coord !== undefined) {
-		cell.owner = "none";
+		cellData.owner = "none";
 	}
 };
 
@@ -63,7 +63,7 @@ const handleKeyDown = (e: any) => {
 		case "7":
 		case "8":
 		case "9":
-			if (cell.fixed) {
+			if (cellData.fixed) {
 				return;
 			}
 			numericInput(keyString, coord);
@@ -82,11 +82,10 @@ const numericInput = (keyString: string, coord: string) => {
 		const cellInputElement = getCellInputElement(coord);
 		cellInputElement.value = keyString;
 
-		if (cell.fixed === true) {
+		if (cellData.fixed === true) {
 			return;
 		}
-		cell.value = keyValue;
-		cell.isCorrect = keyValue === cell.correctValue;
+		cellData.value = keyValue;
 	}
 };
 
@@ -163,7 +162,7 @@ function getCellBorderStyles(coord: CoordinateString) {
 	{/each}
 </style> -->
 
-<td class="sudoku-cell" style={getCellBorderStyles(cell.coordinate)}>
+<td class="sudoku-cell" style={getCellBorderStyles(cellData.coordinate)}>
 	<!-- {#each cell.selectedBysessionClients as session} -->
 	 <!-- {#if cell.owners.size > 0}
 		<Tooltip
@@ -180,15 +179,15 @@ function getCellBorderStyles(coord: CoordinateString) {
 		Check out my tooltip
 	</Tooltip> -->
 	<input
-		id={cellCoordinateId(cell.coordinate)}
-		class="sudoku-input {SudokuCell.getState(cell)}"
+		id={cellCoordinateId(cellData.coordinate)}
+		class="sudoku-input {SudokuCell.getState(cellData)}"
 		type="text"
 		readOnly={true}
 		onfocus={handleInputFocus}
 		onblur={handleInputBlur}
 		onkeydown={handleKeyDown}
-		value={SudokuCell.getDisplayString(cell)}
+		value={SudokuCell.getDisplayString(cellData)}
 		max={1}
-		data-cellcoordinate={cell.coordinate}
+		data-cellcoordinate={cellData.coordinate}
 	/>
 </td>
