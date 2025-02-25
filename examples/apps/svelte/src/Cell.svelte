@@ -1,8 +1,8 @@
 <script lang="ts">
-import type { ISessionClient } from "@fluidframework/presence/alpha";
+import type { ISessionClient, LatestValueManager } from "@fluidframework/presence/alpha";
 import { Tooltip } from "@svelte-plugins/tooltips";
 import uniqolor from "uniqolor";
-import { Coordinate, type CoordinateString } from "./coordinate";
+import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
 import { isSudokuNumber, type SudokuNumber } from "./types";
 import { SudokuCell } from "./sudokuCell.svelte";
 
@@ -10,13 +10,13 @@ let {
 	cell,
 	// coord = $bindable(),
 	currentSessionClient,
-	// presence,
+	selectionManager,
 	onKeyDown,
 }: {
 	cell: SudokuCell;
 	// coord: CoordinateString;
 	currentSessionClient: ISessionClient;
-	// presence: IPresence;
+	readonly selectionManager: LatestValueManager<CellCoordinate>;
 	onKeyDown: (keyString: string, coordIn: string) => void;
 } = $props();
 
@@ -26,23 +26,20 @@ const cellCoordinateId = (c: CoordinateString) => `${currentSessionClient.sessio
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(cellCoordinateId(coord)) as HTMLInputElement;
 
-// const handleInputFocus = (e: any) => {
-// 	const coord = e.target.dataset[coordinateDataAttributeName];
-// 	if (presence) {
-// 		if (coord !== undefined) {
-// 			presence.set(coord, false);
-// 		}
-// 	}
-// };
+const handleInputFocus = (e: any) => {
+	const coord = e.target.dataset[coordinateDataAttributeName];
+		if (coord !== undefined) {
+			selectionManager.local = coord;
+			cell.owner = currentSessionClient.sessionId;
+		}
+};
 
-// const handleInputBlur = (e: any) => {
-// 	const coord = e.target.dataset[coordinateDataAttributeName];
-// 	if (presence) {
-// 		if (coord !== undefined) {
-// 			presence.set(coord, true);
-// 		}
-// 	}
-// };
+const handleInputBlur = (e: any) => {
+	const coord = e.target.dataset[coordinateDataAttributeName];
+		if (coord !== undefined) {
+			cell.owner = "none";
+	}
+};
 
 const handleKeyDown = (e: any) => {
 	e.preventDefault();
@@ -168,7 +165,7 @@ function getCellBorderStyles(coord: CoordinateString) {
 
 <td class="sudoku-cell" style={getCellBorderStyles(cell.coordinate)}>
 	<!-- {#each cell.selectedBysessionClients as session} -->
-	 {#if cell.owners.size > 0}
+	 <!-- {#if cell.owners.size > 0}
 		<Tooltip
 			position="top"
 			arrow={false}
@@ -176,7 +173,7 @@ function getCellBorderStyles(coord: CoordinateString) {
 			show={true}
 			style={{ style: { backgroundColor: `"${uniqolor([...cell.owners][0])}"` } }}
 		></Tooltip>
-		{/if}
+		{/if} -->
 			<!-- "color: {uniqolor(session.sessionId).color ? "var(--themeDarker)" : "var(--themeLighter)"}" -->
 	<!-- {/each} -->
 	<!-- <Tooltip content="Hello world!">
@@ -187,6 +184,8 @@ function getCellBorderStyles(coord: CoordinateString) {
 		class="sudoku-input {SudokuCell.getState(cell)}"
 		type="text"
 		readOnly={true}
+		onfocus={handleInputFocus}
+		onblur={handleInputBlur}
 		onkeydown={handleKeyDown}
 		value={SudokuCell.getDisplayString(cell)}
 		max={1}

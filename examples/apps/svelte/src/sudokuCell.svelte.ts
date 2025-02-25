@@ -7,6 +7,7 @@ import sudoku from "sudokus";
 import type { SudokuNumber } from "./types";
 import type { ISessionClient } from "@fluidframework/presence/alpha";
 import { SvelteSet } from "svelte/reactivity";
+import uniqolor from "uniqolor";
 
 export const CellState = {
 	empty: "empty",
@@ -17,12 +18,12 @@ export const CellState = {
 
 export type CellState = (typeof CellState)[keyof typeof CellState];
 
-export type HexColor = `#${string & { length: 6 }}`;
+// export type HexColor = `#${string & { length: 6 }}`;
 
-export interface CellSelected {
-	name: string;
-	color: HexColor;
-}
+// export interface CellSelected {
+// 	name: string;
+// 	color: HexColor;
+// }
 
 /**
  * The SudokuCell class is used to store data about a cell in the Sudoku grid. The class is intended to be
@@ -42,7 +43,15 @@ export class SudokuCell implements sudoku.Cell {
 
 	public value = $state<SudokuNumber>(0);
 
-	public owners = $state<SvelteSet<string>>(new SvelteSet());
+	// public owners = $state<SvelteSet<string>>(new SvelteSet());
+
+	// public colors = $derived.by(() => {
+	// 	return [...this.owners].slice(0, 2).map((o) => uniqolor(o));
+	// });
+
+	public owner = $state("none");
+
+	public color = $derived(uniqolor(this.owner));
 
 	/**
 	 * Creates a new SudokuCell instance.

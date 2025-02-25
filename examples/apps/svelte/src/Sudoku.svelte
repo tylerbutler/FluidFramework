@@ -10,11 +10,11 @@ const { puzzle, presence, sessionClient }: SudokuAppProps = $props();
 // We create a value manager within the workspace to track and share individual pieces of state.
 const appPresence = presence.getStates("v1:presence", {
 	// Create a Latest value manager to track the selection state.
-	// selectionCoordinate: Latest<CellCoordinate>([0, 0]),
+	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
 	selectionMap: LatestMap<string[], CoordinateString>(),
 });
 
-// const selectionCoordinate = appPresence.props.selectionCoordinate;
+const selectionManager = appPresence.props.selectionCoordinate;
 const selectionMap = appPresence.props.selectionMap;
 
 let theme = $state("default");
@@ -46,7 +46,7 @@ presence.events.on("attendeeDisconnected", () => updateTitle());
 
 <div class={`sudoku ${theme}`}>
 	<div class="sudoku-wrapper">
-		<PuzzleTable {puzzle} {sessionClient} {selectionMap} />
+		<PuzzleTable {puzzle} {sessionClient} {selectionManager} {selectionMap} />
 
 		<div class="sudoku-buttons">
 			<span class="sudoku-theme-select">
