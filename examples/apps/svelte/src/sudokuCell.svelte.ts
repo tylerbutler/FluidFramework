@@ -4,8 +4,9 @@
  */
 
 import sudoku from "sudokus";
-import type { SudokuNumber } from "../types";
+import type { SudokuNumber } from "./types";
 import type { ISessionClient } from "@fluidframework/presence/alpha";
+import { SvelteSet } from "svelte/reactivity";
 
 export const CellState = {
 	empty: "empty",
@@ -15,6 +16,13 @@ export const CellState = {
 } as const;
 
 export type CellState = (typeof CellState)[keyof typeof CellState];
+
+export type HexColor = `#${string & { length: 6 }}`;
+
+export interface CellSelected {
+    sessionClient: ISessionClient;
+    color: HexColor;
+}
 
 /**
  * The SudokuCell class is used to store data about a cell in the Sudoku grid. The class is intended to be
@@ -34,7 +42,7 @@ export class SudokuCell implements sudoku.Cell {
 
 	public value = $state<SudokuNumber>(0);
 
-	public selectedBySessionClientIds = $state<ISessionClient[]>([]);
+	public selectedBysessionClients = $state<SvelteSet<ISessionClient>>(new SvelteSet());
 
 	/**
 	 * Creates a new SudokuCell instance.

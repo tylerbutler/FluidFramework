@@ -8,9 +8,6 @@ import type { PageLoad } from "./$types";
 import { createFluidContainer } from "../fluid/init";
 import { redirect } from "@sveltejs/kit";
 
-// disable SSR
-export const ssr = false;
-
 // export const load: PageLoad = async () => {
 // 	const { containerId, container } = await createFluidContainer();
 
@@ -25,7 +22,7 @@ export const ssr = false;
 // 		container,
 // 		containerId,
 // 		presence,
-// 		sessionClientId: presence.getMyself(),
+// 		sessionClient: presence.getMyself(),
 // 	};
 // };
 

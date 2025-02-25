@@ -1,11 +1,11 @@
 <script lang="ts">
-import type { SudokuAppProps } from "./helpers/props";
+import type { SudokuAppProps } from "./props";
 import { PUZZLES } from "./constants";
 import PuzzleTable from "./PuzzleTable.svelte";
 import { Latest } from "@fluidframework/presence/alpha";
-import type { CellCoordinate } from "./helpers/coordinate";
+import type { CellCoordinate } from "./coordinate";
 
-const { puzzle, presence, sessionClientId }: SudokuAppProps = $props();
+const { puzzle, presence, sessionClient }: SudokuAppProps = $props();
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
 // We create a value manager within the workspace to track and share individual pieces of state.
 const appPresence = presence.getStates("v1:presence", {
@@ -35,7 +35,7 @@ const handleResetButton = () => {
 
 <div class={`sudoku ${theme}`}>
 	<div class="sudoku-wrapper">
-		<PuzzleTable {puzzle} {sessionClientId} {selectionCoordinate} />
+		<PuzzleTable {puzzle} {sessionClient} {selectionCoordinate} />
 
 		<div class="sudoku-buttons">
 			<span class="sudoku-theme-select">

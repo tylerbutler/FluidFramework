@@ -9,5 +9,5 @@ import type { SudokuPuzzle } from "./sudokuPuzzle.svelte";
 export interface SudokuAppProps {
 	puzzle: SudokuPuzzle;
 	presence: IPresence;
-	sessionClientId: ISessionClient;
+	sessionClient: ISessionClient;
 }

@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { isSudokuNumber, type SudokuNumber } from "../types";
+import { isSudokuNumber, type SudokuNumber } from "./types";
 
 /**
  * This type wrapper around string is useful within this codebase to differentiate functions that are expecting strings

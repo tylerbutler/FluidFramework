@@ -1,20 +1,20 @@
 <script lang="ts">
 import type { ISessionClient } from "@fluidframework/presence/alpha";
 import uniqolor from "uniqolor";
-import { Coordinate, type CoordinateString } from "./helpers/coordinate";
+import { Coordinate, type CoordinateString } from "./coordinate";
 import { isSudokuNumber, type SudokuNumber } from "./types";
-import { SudokuCell } from "./helpers/sudokuCell.svelte";
+import { SudokuCell } from "./sudokuCell.svelte";
 
 let {
 	cell,
 	// coord = $bindable(),
-	sessionClientId,
+	currentSessionClient,
 	// presence,
 	onKeyDown,
 }: {
 	cell: SudokuCell;
 	// coord: CoordinateString;
-	sessionClientId: ISessionClient;
+	currentSessionClient: ISessionClient;
 	// presence: IPresence;
 	onKeyDown: (keyString: string, coordIn: string) => void;
 } = $props();
@@ -22,7 +22,7 @@ let {
 const coordinateDataAttributeName = "cellcoordinate";
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
-	document.getElementById(`${sessionClientId}-${coord}`) as HTMLInputElement;
+	document.getElementById(`${currentSessionClient}-${coord}`) as HTMLInputElement;
 
 // const handleInputFocus = (e: any) => {
 // 	const coord = e.target.dataset[coordinateDataAttributeName];
@@ -151,13 +151,13 @@ function getCellBorderStyles(coord: CoordinateString) {
 	return objectToCssString(styles);
 }
 
-// const additionalClasses = cell.selectedBySessionClientIds
+// const additionalClasses = cell.selectedBysessionClients
 // 	.map((id) => `presence-${id}`)
 // 	.join(" ");
 </script>
 
 <!-- <style>
-	{#each cell.selectedBySessionClientIds as id}
+	{#each cell.selectedBysessionClients as id}
 		.presence-{id} {
 			background-color: {uniqolor(id).dark ? "var(--themeDarker)" : "var(--themeLighter)"};
 		}
@@ -166,15 +166,15 @@ function getCellBorderStyles(coord: CoordinateString) {
 
 <td class="sudoku-cell" style={getCellBorderStyles(cell.coordinate)}>
 	<input
-		id={`${sessionClientId.sessionId}-${cell.coordinate}`}
+		id={`${currentSessionClient.sessionId}-${cell.coordinate}`}
 		class="sudoku-input {SudokuCell.getState(cell)}"
 		type="text"
 		readOnly={true}
 		onkeydown={handleKeyDown}
 		value={SudokuCell.getDisplayString(cell)}
 		max={1}
-		style={cell.selectedBySessionClientIds.length > 0
-			? uniqolor(sessionClientId.sessionId).color
+		style={cell.selectedBysessionClients.size > 0
+			? uniqolor(currentSessionClient.sessionId).color
 			: ""}
 		data-cellcoordinate={cell.coordinate}
 	/>

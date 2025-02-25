@@ -1,7 +1,7 @@
 <script lang="ts">
-import type { PageProps } from "./$types";
-import Sudoku from "../../Sudoku.svelte";
-import { loadIncludedPuzzle } from "../../sudokuPuzzle.svelte";
+import type { PageProps } from "../$types";
+import Sudoku from "../../../Sudoku.svelte";
+import { loadIncludedPuzzle } from "../../../sudokuPuzzle.svelte";
 
 const { data }: PageProps = $props();
 const { presence, sessionClient } = data;

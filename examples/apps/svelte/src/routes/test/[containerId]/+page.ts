@@ -4,8 +4,8 @@
  */
 
 import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
-import type { PageLoad } from "./$types";
-import { getFluidContainer } from "../../fluid/init";
+import type { PageLoad } from "../$types";
+import { getFluidContainer } from "../../../fluid/init";
 
 // disable SSR
 export const ssr = false;
