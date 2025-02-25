@@ -28,16 +28,16 @@ const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 
 const handleInputFocus = (e: any) => {
 	const coord = e.target.dataset[coordinateDataAttributeName];
-		if (coord !== undefined) {
-			selectionManager.local = coord;
-			cell.owner = currentSessionClient.sessionId;
-		}
+	if (coord !== undefined) {
+		selectionManager.local = coord;
+		cell.owner = currentSessionClient.sessionId;
+	}
 };
 
 const handleInputBlur = (e: any) => {
 	const coord = e.target.dataset[coordinateDataAttributeName];
-		if (coord !== undefined) {
-			cell.owner = "none";
+	if (coord !== undefined) {
+		cell.owner = "none";
 	}
 };
 

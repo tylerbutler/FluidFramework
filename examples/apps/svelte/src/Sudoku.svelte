@@ -4,6 +4,7 @@ import { PUZZLES } from "./constants";
 import PuzzleTable from "./PuzzleTable.svelte";
 import { Latest, LatestMap, type ISessionClient } from "@fluidframework/presence/alpha";
 import type { CellCoordinate, CoordinateString } from "./coordinate";
+import { SudokuPuzzle } from "./sudokuPuzzle.svelte";
 
 const { puzzle, presence, sessionClient }: SudokuAppProps = $props();
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
@@ -46,7 +47,7 @@ presence.events.on("attendeeDisconnected", () => updateTitle());
 
 <div class={`sudoku ${theme}`}>
 	<div class="sudoku-wrapper">
-		<PuzzleTable {puzzle} {sessionClient} {selectionManager} {selectionMap} />
+		<PuzzleTable grid={puzzle.grid} {sessionClient} {selectionManager} {selectionMap} />
 
 		<div class="sudoku-buttons">
 			<span class="sudoku-theme-select">
@@ -67,8 +68,8 @@ presence.events.on("attendeeDisconnected", () => updateTitle());
 
 			<span class="sudoku-load">
 				Load:
-				<button onclick={() => puzzle.loadPuzzle(PUZZLES[0])}>Puzzle 1</button>
-				<button onclick={() => puzzle.loadPuzzle(PUZZLES[1])}>Puzzle 2</button>
+				<button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[0])}>Puzzle 1</button>
+				<button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[1])}>Puzzle 2</button>
 			</span>
 		</div>
 	</div>

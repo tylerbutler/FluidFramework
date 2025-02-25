@@ -6,7 +6,7 @@ import { loadIncludedPuzzle } from "../../../sudokuPuzzle.svelte";
 const { data }: PageProps = $props();
 const { presence, sessionClient } = data;
 
-let puzzle = loadIncludedPuzzle(0);
+let puzzle = $state(loadIncludedPuzzle(0));
 
 // let presence = $state<SvelteMap<CoordinateString, boolean>>(new SvelteMap());
 </script>

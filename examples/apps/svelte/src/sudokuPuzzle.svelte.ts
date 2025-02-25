@@ -13,20 +13,26 @@ export class SudokuPuzzle {
 	public grid: SudokuGrid = $state([]);
 
 	constructor(readonly puzzleInput: SudokuInput) {
-		this.loadPuzzle(puzzleInput);
+		SudokuPuzzle.loadPuzzle(this, puzzleInput);
 	}
 
-	public loadPuzzle(puzzleInput: SudokuInput): SudokuInput {
-		this.grid.length = 0; // Clean the grid; we're rebuilding it.
+	public static loadPuzzle(
+		existingPuzzle: SudokuPuzzle,
+		puzzleInput: SudokuInput,
+	): SudokuInput {
+		existingPuzzle.grid.length = 0; // Clean the grid; we're rebuilding it.
 		const solution = sudoku.solve(puzzleInput) as unknown as SudokuInput;
 		for (const row of PUZZLE_INDEXES) {
 			const newRow: SudokuCell[] = [];
 			for (const col of PUZZLE_INDEXES) {
-				const coordinate = Coordinate.asString(row, col);
-				const cell = new SudokuCell(puzzleInput[row][col], solution[row][col], coordinate);
+				const cell = new SudokuCell(
+					puzzleInput[row][col],
+					solution[row][col],
+					Coordinate.asString(row, col),
+				);
 				newRow.push(cell);
 			}
-			this.grid.push(newRow);
+			existingPuzzle.grid.push(newRow);
 		}
 		return solution;
 	}
@@ -42,5 +48,6 @@ export class SudokuPuzzle {
 export function loadIncludedPuzzle(index: number): SudokuPuzzle {
 	const puzzleInput = PUZZLES[index];
 	const puzzle = new SudokuPuzzle(puzzleInput);
+	$inspect(puzzle.grid);
 	return puzzle;
 }
