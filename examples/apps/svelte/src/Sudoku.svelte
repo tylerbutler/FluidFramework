@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { SudokuAppProps } from "./helpers/props";
-import { PUZZLES } from "./helpers/constants";
+import { PUZZLES } from "./constants";
 import PuzzleTable from "./PuzzleTable.svelte";
 import { Latest } from "@fluidframework/presence/alpha";
 import type { CellCoordinate } from "./helpers/coordinate";
