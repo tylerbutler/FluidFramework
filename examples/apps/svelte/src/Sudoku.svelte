@@ -1,41 +1,50 @@
 <script lang="ts">
-import type { SudokuAppProps } from "./props";
-import { PUZZLES } from "./constants";
-import PuzzleTable from "./PuzzleTable.svelte";
-import { Latest } from "@fluidframework/presence/alpha";
-import type { CellCoordinate } from "./coordinate";
+	import type { SudokuAppProps } from "./props";
+	import { PUZZLES } from "./constants";
+	import PuzzleTable from "./PuzzleTable.svelte";
+	import { Latest, LatestMap, type ISessionClient } from "@fluidframework/presence/alpha";
+	import type { CellCoordinate, CoordinateString } from "./coordinate";
 
-const { puzzle, presence, sessionClient }: SudokuAppProps = $props();
-// Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
-// We create a value manager within the workspace to track and share individual pieces of state.
-const appPresence = presence.getStates("v1:presence", {
-	// Create a Latest value manager to track the selection state.
-	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
-});
+	const { puzzle, presence, sessionClient }: SudokuAppProps = $props();
+	// Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
+	// We create a value manager within the workspace to track and share individual pieces of state.
+	const appPresence = presence.getStates("v1:presence", {
+		// Create a Latest value manager to track the selection state.
+		// selectionCoordinate: Latest<CellCoordinate>([0, 0]),
+		selectionMap: LatestMap<string[], CoordinateString>(),
+	});
 
-const selectionCoordinate = appPresence.props.selectionCoordinate;
+	// const selectionCoordinate = appPresence.props.selectionCoordinate;
+	const selectionMap = appPresence.props.selectionMap;
 
-let theme = $state("default");
-function onThemeChange(e: any) {
-	theme = e.target.value;
-}
+	let theme = $state("default");
+	function onThemeChange(e: any) {
+		theme = e.target.value;
+	}
 
-const handleResetButton = () => {
-	for (const row of puzzle.grid) {
-		for (const cell of row) {
-			if (!cell.fixed) {
-				cell.value = 0;
+	const handleResetButton = () => {
+		for (const row of puzzle.grid) {
+			for (const cell of row) {
+				if (!cell.fixed) {
+					cell.value = 0;
+				}
 			}
 		}
-	}
-};
+	};
+
+	let title = $state(`Sudoku: ${presence.getAttendees().size} attendees`);
+	const updateTitle = () => {
+		title = `Sudoku: ${presence.getAttendees().size} attendees`;
+	};
+	presence.events.on("attendeeJoined", () => updateTitle());
+	presence.events.on("attendeeDisconnected", () => updateTitle());
 </script>
 
-<h1>Sudoku: {presence.getAttendees().size} attendees</h1>
+<h1>{title}</h1>
 
 <div class={`sudoku ${theme}`}>
 	<div class="sudoku-wrapper">
-		<PuzzleTable {puzzle} {sessionClient} {selectionCoordinate} />
+		<PuzzleTable {puzzle} {sessionClient} {selectionMap}/>
 
 		<div class="sudoku-buttons">
 			<span class="sudoku-theme-select">

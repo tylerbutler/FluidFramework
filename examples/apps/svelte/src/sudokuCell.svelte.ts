@@ -20,8 +20,8 @@ export type CellState = (typeof CellState)[keyof typeof CellState];
 export type HexColor = `#${string & { length: 6 }}`;
 
 export interface CellSelected {
-    sessionClient: ISessionClient;
-    color: HexColor;
+	name: string;
+	color: HexColor;
 }
 
 /**
@@ -42,7 +42,7 @@ export class SudokuCell implements sudoku.Cell {
 
 	public value = $state<SudokuNumber>(0);
 
-	public selectedBysessionClients = $state<SvelteSet<ISessionClient>>(new SvelteSet());
+	public owners = $state<SvelteSet<string>>(new SvelteSet());
 
 	/**
 	 * Creates a new SudokuCell instance.

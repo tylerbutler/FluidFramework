@@ -5,10 +5,7 @@
 
 import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
 import type { PageLoad } from "./$types";
-import { getFluidContainer } from "../../fluid/init";
-
-// disable SSR
-export const ssr = false;
+import { getFluidContainer } from "../../../fluid/init";
 
 export const load: PageLoad = async ({ params }) => {
 	const container = await getFluidContainer(params.containerId);
@@ -21,8 +18,8 @@ export const load: PageLoad = async ({ params }) => {
 	// }
 
 	return {
-		container,
-		containerId: params.containerId,
+		// container,
+		// containerId: params.containerId,
 		presence,
 		sessionClient: presence.getMyself(),
 	};

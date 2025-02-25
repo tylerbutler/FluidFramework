@@ -36,5 +36,5 @@ export const load: PageLoad = async () => {
 	// 	containerId,
 	// };
 	// return createFluidContainer();
-	redirect(301, `/${containerId}`);
+	redirect(301, `/s/${containerId}`);
 };
