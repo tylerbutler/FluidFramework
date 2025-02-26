@@ -1344,6 +1344,9 @@ importers:
       eslint-plugin-svelte:
         specifier: ~2.46.1
         version: 2.46.1(eslint@8.55.0)(svelte@5.20.2)(ts-node@10.9.2(@types/node@22.10.1)(typescript@5.4.5))
+      flowbite-svelte-icons:
+        specifier: ^2.0.2
+        version: 2.0.2(svelte@5.20.2)(tailwind-merge@2.6.0)(tailwindcss@4.0.9)
       globals:
         specifier: ^16.0.0
         version: 16.0.0
@@ -23491,6 +23494,14 @@ packages:
   flatted@3.3.2:
     resolution: {integrity: sha512-AiwGJM8YcNOaobumgtng+6NHuOqC3A7MixFeDafM3X9cIUM+xUXoS5Vfgf+OihAYe20fxqNM9yPBXJzRtZ/4eA==}
 
+  flowbite-svelte-icons@2.0.2:
+    resolution: {integrity: sha512-Vkmduy2867Rk8R7TziPirsWkixJnToFBEXRaN4ouJabOx62NQjiBbHFe+HTaMOQmdp4FNMI2Nhtk2I2CQ8r3RQ==}
+    engines: {node: '>=18.0.0', npm: '>=7.0.0'}
+    peerDependencies:
+      svelte: ^5.0.0
+      tailwind-merge: ^2.3.0
+      tailwindcss: ^3.4.3
+
   fn.name@1.1.0:
     resolution: {integrity: sha512-GRnmB5gPyJpAhTQdSZTSp9uaPSvl09KoYcMQtsB9rQoOmzs9dH6ffeccH+Z+cv6P68Hu5bC6JjRh4Ah/mHSNRw==}
 
@@ -28273,6 +28284,9 @@ packages:
 
   tabster@8.2.0:
     resolution: {integrity: sha512-Gvplk/Yl/12aVFA6FPOqGcq31Qv8hbPfYO0N+6IxrRgRT6eSLsipT6gkZBYjyOwGsp6BD5XlZAuJgupfG/GHoA==}
+
+  tailwind-merge@2.6.0:
+    resolution: {integrity: sha512-P+Vu1qXfzediirmHOC3xKGAYeZtPcV9g76X+xg2FD4tYgR71ewMA35Y3sCz3zhiN/dwefRpJX0yBcgwi1fXNQA==}
 
   tailwindcss@3.4.16:
     resolution: {integrity: sha512-TI4Cyx7gDiZ6r44ewaJmt0o6BrMCT5aK5e0rmJ/G9Xq3w7CX/5VXl/zIPEJZFUK5VEqwByyhqNPycPlvcK4ZNw==}
@@ -39984,6 +39998,12 @@ snapshots:
 
   flatted@3.3.2: {}
 
+  flowbite-svelte-icons@2.0.2(svelte@5.20.2)(tailwind-merge@2.6.0)(tailwindcss@4.0.9):
+    dependencies:
+      svelte: 5.20.2
+      tailwind-merge: 2.6.0
+      tailwindcss: 4.0.9
+
   fn.name@1.1.0: {}
 
   follow-redirects@1.15.9(debug@4.3.7):
@@ -46068,6 +46088,8 @@ snapshots:
     dependencies:
       keyborg: 2.6.0
       tslib: 2.8.1
+
+  tailwind-merge@2.6.0: {}
 
   tailwindcss@3.4.16(ts-node@10.9.2(@types/node@18.19.67)(typescript@5.4.5)):
     dependencies:
