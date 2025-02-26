@@ -100,10 +100,10 @@ function getCellBorderStyles(coord: CoordinateString) {
 		borderLeft: "none",
 		borderRight: "none",
 		borderColor: "var(--neutralPrimaryAlt)",
-		paddingTop: 0,
-		paddingBottom: 0,
-		paddingLeft: 0,
-		paddingRight: 0,
+		paddingTop: "0",
+		paddingBottom: "0",
+		paddingLeft: "0",
+		paddingRight: "0",
 	};
 	const [row, col] = Coordinate.asArrayNumbers(coord);
 
@@ -112,13 +112,13 @@ function getCellBorderStyles(coord: CoordinateString) {
 		case 3:
 		case 6:
 			styles.borderTop = borderStyle;
-			styles.paddingTop = 4;
+			styles.paddingTop = "4px";
 			break;
 		case 2:
 		case 5:
 		case 8:
 			styles.borderBottom = borderStyle;
-			styles.paddingBottom = 4;
+			styles.paddingBottom = "4px";
 			break;
 		default: // Nothing
 	}
@@ -128,13 +128,13 @@ function getCellBorderStyles(coord: CoordinateString) {
 		case 3:
 		case 6:
 			styles.borderLeft = borderStyle;
-			styles.paddingLeft = 4;
+			styles.paddingLeft = "4px";
 			break;
 		case 2:
 		case 5:
 		case 8:
 			styles.borderRight = borderStyle;
-			styles.paddingRight = 4;
+			styles.paddingRight = "4px";
 			break;
 		default: // Nothing
 	}
@@ -158,14 +158,14 @@ function getCellBorderStyles(coord: CoordinateString) {
 	{/each}
 </style> -->
 
-<Tooltip
+<!-- <Tooltip
 action="prop"
 content={cellData.color}
 position="top"
 arrow={false}
 show={cellData.displayTooltip}
 theme="remote1"
->
+> -->
 <td class="sudoku-cell" style={getCellBorderStyles(cellData.coordinate)}>
 	<input
 		id={cellCoordinateId(cellData.coordinate)}
@@ -180,7 +180,6 @@ theme="remote1"
 		data-cellcoordinate={cellData.coordinate}
 	/>
 </td>
-</Tooltip>
 
 <style>
 	  :global(.tooltip.remote1) {
