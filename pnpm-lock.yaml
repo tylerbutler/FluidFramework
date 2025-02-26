@@ -1304,6 +1304,9 @@ importers:
       '@svelte-plugins/tooltips':
         specifier: beta
         version: 4.0.0-beta.1(svelte@5.20.2)
+      flowbite-svelte:
+        specifier: ^0.48.4
+        version: 0.48.4(rollup@4.34.8)(svelte@5.20.2)
       fluid-framework:
         specifier: workspace:~
         version: link:../../../packages/framework/fluid-framework
@@ -1347,9 +1350,6 @@ importers:
       flowbite:
         specifier: ^3.1.2
         version: 3.1.2(rollup@4.34.8)
-      flowbite-svelte:
-        specifier: ^0.48.4
-        version: 0.48.4(rollup@4.34.8)(svelte@5.20.2)
       flowbite-svelte-icons:
         specifier: ^2.0.2
         version: 2.0.2(svelte@5.20.2)(tailwind-merge@3.0.2)(tailwindcss@4.0.9)

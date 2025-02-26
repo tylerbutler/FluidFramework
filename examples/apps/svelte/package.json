@@ -26,6 +26,7 @@
 		"@fluidframework/presence": "workspace:~",
 		"@fluidframework/tinylicious-client": "workspace:~",
 		"@svelte-plugins/tooltips": "beta",
+		"flowbite-svelte": "^0.48.4",
 		"fluid-framework": "workspace:~",
 		"sudokus": "^1.0.2",
 		"svooltip": "^0.9.0",

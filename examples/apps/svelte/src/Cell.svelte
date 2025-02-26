@@ -4,6 +4,7 @@ import type { ISessionClient, LatestValueManager } from "@fluidframework/presenc
 import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
 import { isSudokuNumber, type SudokuNumber } from "./types";
 import { SudokuCell } from "./sudokuCell.svelte";
+import { Badge, Indicator } from 'flowbite-svelte';
 
 let {
 	cellData = $bindable(),
@@ -167,6 +168,9 @@ show={cellData.displayTooltip}
 theme="remote1"
 > -->
 <td class="sudoku-cell" style={getCellBorderStyles(cellData.coordinate)}>
+	<Indicator placement="top-right" color="blue">
+		<span class="text-white text-xs font-bold">8</span>
+	</Indicator>
 	<input
 		id={cellCoordinateId(cellData.coordinate)}
 		class="sudoku-input {cellData.status}"
