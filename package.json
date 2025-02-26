@@ -251,7 +251,9 @@
 				]
 			},
 			"build:readme": {
-				"dependsOn": []
+				"dependsOn": [
+					
+				]
 			},
 			"check:format": {
 				"dependsOn": [
@@ -405,6 +407,9 @@
 		},
 		"patchedDependencies": {
 			"@microsoft/api-extractor@7.47.8": "patches/@microsoft__api-extractor@7.47.8.patch"
-		}
+		},
+		"onlyBuiltDependencies": [
+			"esbuild"
+		]
 	}
 }
