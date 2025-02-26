@@ -1,4 +1,5 @@
 <script lang="ts">
+import { Tooltip } from "@svelte-plugins/tooltips";
 import type { ISessionClient, LatestValueManager } from "@fluidframework/presence/alpha";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
 import { isSudokuNumber, type SudokuNumber } from "./types";
@@ -147,10 +148,6 @@ function getCellBorderStyles(coord: CoordinateString) {
 
 	return objectToCssString(styles);
 }
-
-// const additionalClasses = cell.selectedBysessionClients
-// 	.map((id) => `presence-${id}`)
-// 	.join(" ");
 </script>
 
 <!-- <style>
@@ -161,22 +158,15 @@ function getCellBorderStyles(coord: CoordinateString) {
 	{/each}
 </style> -->
 
+<Tooltip
+action="prop"
+content={cellData.color}
+position="top"
+arrow={false}
+show={cellData.displayTooltip}
+theme="remote1"
+>
 <td class="sudoku-cell" style={getCellBorderStyles(cellData.coordinate)}>
-	<!-- {#each cell.selectedBysessionClients as session} -->
-	<!-- {#if cell.owners.size > 0}
-		<Tooltip
-			position="top"
-			arrow={false}
-			content={"user"}
-			show={true}
-			style={{ style: { backgroundColor: `"${uniqolor([...cell.owners][0])}"` } }}
-		></Tooltip>
-		{/if} -->
-	<!-- "color: {uniqolor(session.sessionId).color ? "var(--themeDarker)" : "var(--themeLighter)"}" -->
-	<!-- {/each} -->
-	<!-- <Tooltip content="Hello world!">
-		Check out my tooltip
-	</Tooltip> -->
 	<input
 		id={cellCoordinateId(cellData.coordinate)}
 		class="sudoku-input {cellData.status}"
@@ -190,3 +180,13 @@ function getCellBorderStyles(coord: CoordinateString) {
 		data-cellcoordinate={cellData.coordinate}
 	/>
 </td>
+</Tooltip>
+
+<style>
+	  :global(.tooltip.remote1) {
+    --tooltip-background-color: hotpink;
+    --tooltip-box-shadow: 0 1px 8px pink;
+		--tooltip-font-size: 10px;
+		--tooltip-padding: 1px;
+  }
+</style>

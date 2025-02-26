@@ -1,16 +1,13 @@
 <script lang="ts">
-import "svooltip/styles.css"; // Include default styling
 import type {
 	LatestMapValueManager,
 	LatestValueClientData,
 	LatestValueManager,
 } from "@fluidframework/presence/alpha";
-import { Tooltip } from "@svelte-plugins/tooltips";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
 import { type SudokuAppProps } from "./props";
 import Cell from "./Cell.svelte";
 import type { SudokuGrid } from "./types";
-import type { SudokuCell } from "./sudokuCell.svelte";
 
 const {
 	grid = $bindable(),
@@ -29,7 +26,7 @@ const {
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(`${sessionClient.sessionId}-${coord}`) as HTMLInputElement;
 
-const moveCell = (keyString: string, coordIn: CoordinateString):void => {
+const moveCell = (keyString: string, coordIn: CoordinateString): void => {
 	const coord = coordIn;
 	let newCoord = coordIn;
 	switch (keyString) {
@@ -116,21 +113,12 @@ selectionManager.events.on("updated", onRemoteCellChange);
 			{#each grid as row, r (row.toString())}
 				<tr>
 					{#each row as cell, c (cell.toString())}
-						<Tooltip
-							action="prop"
-							content={cell.color}
-							position="top"
-							arrow={false}
-							bind:show={cell.displayTooltip}
-							theme="remote1"
-						>
 							<Cell
 								bind:cellData={grid[r][c]}
 								currentSessionClient={sessionClient}
 								onKeyDown={moveCell}
 								{selectionManager}
 							></Cell>
-				</Tooltip>
 					{/each}
 				</tr>
 			{/each}
@@ -142,11 +130,4 @@ selectionManager.events.on("updated", onRemoteCellChange);
 	table {
 		border: none;
 	}
-
-  :global(.tooltip.remote1) {
-    --tooltip-background-color: hotpink;
-    --tooltip-box-shadow: 0 1px 8px pink;
-		--tooltip-font-size: 10px;
-		--tooltip-padding: 1px;
-  }
 </style>

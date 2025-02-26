@@ -3,7 +3,7 @@ import { setContext } from "svelte";
 import type { SudokuAppProps } from "./props";
 import { PUZZLES } from "./constants";
 import PuzzleTable from "./PuzzleTable.svelte";
-import { Latest, LatestMap, type ISessionClient } from "@fluidframework/presence/alpha";
+import { Latest, LatestMap } from "@fluidframework/presence/alpha";
 import type { CellCoordinate, CoordinateString } from "./coordinate";
 import { SudokuPuzzle } from "./sudokuPuzzle.svelte";
 
