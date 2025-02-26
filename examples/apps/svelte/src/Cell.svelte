@@ -29,7 +29,7 @@ const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 const handleInputFocus = (e: any) => {
 	const coord = e.target.dataset[coordinateDataAttributeName];
 	if (coord !== undefined) {
-		selectionManager.local = coord;
+		selectionManager.local = Coordinate.asArrayNumbers(coord);
 		cellData.owner = currentSessionClient.sessionId;
 	}
 };

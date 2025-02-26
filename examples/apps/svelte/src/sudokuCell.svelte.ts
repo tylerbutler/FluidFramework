@@ -91,6 +91,7 @@ export class SudokuCell implements sudoku.Cell {
 	 */
 	public static getDisplayString(cell: SudokuCell): string {
 		$inspect(cell.color);
+		$inspect(cell.owner);
 		if (cell.fixed || cell.value !== 0) {
 			return cell.value.toString();
 		}

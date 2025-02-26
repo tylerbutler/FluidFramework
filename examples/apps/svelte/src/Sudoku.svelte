@@ -1,4 +1,5 @@
 <script lang="ts">
+import { setContext } from "svelte";
 import type { SudokuAppProps } from "./props";
 import { PUZZLES } from "./constants";
 import PuzzleTable from "./PuzzleTable.svelte";
@@ -23,6 +24,8 @@ function onThemeChange(e: any) {
 	theme = e.target.value;
 }
 
+setContext("grid", puzzle.grid);
+
 const handleResetButton = () => {
 	for (const row of puzzle.grid) {
 		for (const cell of row) {
@@ -44,10 +47,11 @@ presence.events.on("attendeeDisconnected", () => updateTitle());
 </script>
 
 <h1>{title}</h1>
+<div>My session ID: {presence.getMyself().sessionId}</div>
 
 <div class={`sudoku ${theme}`}>
 	<div class="sudoku-wrapper">
-		<PuzzleTable grid={puzzle.grid} {sessionClient} {selectionManager} {selectionMap} />
+		<PuzzleTable bind:grid={puzzle.grid} {sessionClient} {selectionManager} {selectionMap} />
 
 		<div class="sudoku-buttons">
 			<span class="sudoku-theme-select">
@@ -68,8 +72,10 @@ presence.events.on("attendeeDisconnected", () => updateTitle());
 
 			<span class="sudoku-load">
 				Load:
-				<button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[0])}>Puzzle 1</button>
-				<button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[1])}>Puzzle 2</button>
+				<button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[0])}>Puzzle 1</button
+				>
+				<button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[1])}>Puzzle 2</button
+				>
 			</span>
 		</div>
 	</div>
