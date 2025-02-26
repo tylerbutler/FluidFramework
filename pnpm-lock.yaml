@@ -1302,14 +1302,17 @@ importers:
         specifier: workspace:~
         version: link:../../../packages/service-clients/tinylicious-client
       '@svelte-plugins/tooltips':
-        specifier: ^3.0.3
-        version: 3.0.3(svelte@5.20.2)
+        specifier: beta
+        version: 4.0.0-beta.1(svelte@5.20.2)
       fluid-framework:
         specifier: workspace:~
         version: link:../../../packages/framework/fluid-framework
       sudokus:
         specifier: ^1.0.2
         version: 1.0.2
+      svooltip:
+        specifier: ^0.9.0
+        version: 0.9.0(svelte@5.20.2)
       uniqolor:
         specifier: ^1.1.1
         version: 1.1.1
@@ -17659,6 +17662,9 @@ packages:
   '@floating-ui/dom@1.6.12':
     resolution: {integrity: sha512-NP83c0HjokcGVEMeoStg317VD9W7eDlGK7457dMBANbKA6GJZdc7rjujdgqzTaz93jkGgc5P/jeWbaCHnMNc+w==}
 
+  '@floating-ui/dom@1.6.13':
+    resolution: {integrity: sha512-umqzocjDgNRGTuO7Q8CU32dkHkECqI8ZdMZ5Swb6QAM0t5rnlrN3lGo1hdpscRd3WS8T6DKYK4ephgIH9iRh3w==}
+
   '@floating-ui/react-dom@2.1.2':
     resolution: {integrity: sha512-06okr5cgPzMNBy+Ycse2A6udMi4bqwW/zgBF/rwjcNqWkyr82Mcg8b0vjX8OJpZFy/FKjJmw6wV7t44kK6kW7A==}
     peerDependencies:
@@ -17667,6 +17673,9 @@ packages:
 
   '@floating-ui/utils@0.2.8':
     resolution: {integrity: sha512-kym7SodPp8/wloecOpcmSnWJsK7M0E5Wg8UcFA+uO4B9s5d0ywXOEro/8HM9x0rW+TljRzul/14UYz3TleT3ig==}
+
+  '@floating-ui/utils@0.2.9':
+    resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
 
   '@fluentui/date-time-utilities@8.6.9':
     resolution: {integrity: sha512-dgOlVm4nXBWDLqijmvn4iAtyv1hVpQZjN6p0So74BW+7ASUTkQGe3lf8PHV/OjBiXfZa4qwONvmTQBGCheNU0w==}
@@ -19930,10 +19939,10 @@ packages:
   '@streamparser/json@0.0.20':
     resolution: {integrity: sha512-VqAAkydywPpkw63WQhPVKCD3SdwXuihCUVZbbiY3SfSTGQyHmwRoq27y4dmJdZuJwd5JIlQoMPyGvMbUPY0RKQ==}
 
-  '@svelte-plugins/tooltips@3.0.3':
-    resolution: {integrity: sha512-Hs1N/c68yf3OavELTNWWC5W7esrbYp+p0ytRBxihuGXvoiP/TJ7yd5g8qQ8NeTv6ealuqJkBpGo1IrrT8Zy1+Q==}
+  '@svelte-plugins/tooltips@4.0.0-beta.1':
+    resolution: {integrity: sha512-MM32DeA6z8Wty9sQfWkCRSQm/t7kbD51gzsYrKuw06YeGsGTgKSyalwe/RQyjoM1Vro7Bpsrd6kPJ0ftIe3Zcg==}
     peerDependencies:
-      svelte: ^3.54.0 || ^4.0.0 || ^5.0.0-next.0
+      svelte: ^5.0.0
 
   '@sveltejs/adapter-node@5.2.12':
     resolution: {integrity: sha512-0bp4Yb3jKIEcZWVcJC/L1xXp9zzJS4hDwfb4VITAkfT4OVdkspSHsx7YhqJDbb2hgLl6R9Vs7VQR+fqIVOxPUQ==}
@@ -28062,6 +28071,11 @@ packages:
     resolution: {integrity: sha512-aYXJreNUiyTob0QOzRZeBXZMGeFZDch6SrSRV8QTncZb6zj0O3BEdUzPpojuHQ1pTvk+KX7I6rZCXPUf8pTPxA==}
     engines: {node: '>=18'}
 
+  svooltip@0.9.0:
+    resolution: {integrity: sha512-vBQZRj4xf+eLMMXSutyGQuZ1wJDzj39AQZotvoBajWKiDGBT11oL+/nX3hHj0QuS9K8oXVqdNqevfqFTKziE8A==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   swap-case@1.1.2:
     resolution: {integrity: sha512-BAmWG6/bx8syfc6qXPprof3Mn5vQgf5dwdUNJhsNqU9WdPt5P+ES/wQ5bxfijy8zwZgZZHslC3iAsxsuQMCzJQ==}
 
@@ -30329,7 +30343,7 @@ snapshots:
 
   '@floating-ui/core@1.6.8':
     dependencies:
-      '@floating-ui/utils': 0.2.8
+      '@floating-ui/utils': 0.2.9
 
   '@floating-ui/devtools@0.2.1(@floating-ui/dom@1.5.4)':
     dependencies:
@@ -30345,6 +30359,11 @@ snapshots:
       '@floating-ui/core': 1.6.8
       '@floating-ui/utils': 0.2.8
 
+  '@floating-ui/dom@1.6.13':
+    dependencies:
+      '@floating-ui/core': 1.6.8
+      '@floating-ui/utils': 0.2.9
+
   '@floating-ui/react-dom@2.1.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@floating-ui/dom': 1.6.12
@@ -30352,6 +30371,8 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
 
   '@floating-ui/utils@0.2.8': {}
+
+  '@floating-ui/utils@0.2.9': {}
 
   '@fluentui/date-time-utilities@8.6.9':
     dependencies:
@@ -35492,7 +35513,7 @@ snapshots:
 
   '@streamparser/json@0.0.20': {}
 
-  '@svelte-plugins/tooltips@3.0.3(svelte@5.20.2)':
+  '@svelte-plugins/tooltips@4.0.0-beta.1(svelte@5.20.2)':
     dependencies:
       svelte: 5.20.2
 
@@ -45705,6 +45726,11 @@ snapshots:
       locate-character: 3.0.0
       magic-string: 0.30.15
       zimmerframe: 1.1.2
+
+  svooltip@0.9.0(svelte@5.20.2):
+    dependencies:
+      '@floating-ui/dom': 1.6.13
+      svelte: 5.20.2
 
   swap-case@1.1.2:
     dependencies:

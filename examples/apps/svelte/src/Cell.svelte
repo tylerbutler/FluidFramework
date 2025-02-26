@@ -1,13 +1,11 @@
 <script lang="ts">
 import type { ISessionClient, LatestValueManager } from "@fluidframework/presence/alpha";
-import { Tooltip } from "@svelte-plugins/tooltips";
-import uniqolor from "uniqolor";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
 import { isSudokuNumber, type SudokuNumber } from "./types";
 import { SudokuCell } from "./sudokuCell.svelte";
 
 let {
-	cellData,
+	cellData = $bindable(),
 	// coord = $bindable(),
 	currentSessionClient,
 	selectionManager,
@@ -27,7 +25,7 @@ const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(cellCoordinateId(coord)) as HTMLInputElement;
 
 const handleInputFocus = (e: any) => {
-	const coord = e.target.dataset[coordinateDataAttributeName];
+	const coord: CoordinateString = e.target.dataset[coordinateDataAttributeName];
 	if (coord !== undefined) {
 		selectionManager.local = Coordinate.asArrayNumbers(coord);
 		cellData.owner = currentSessionClient.sessionId;
@@ -35,9 +33,10 @@ const handleInputFocus = (e: any) => {
 };
 
 const handleInputBlur = (e: any) => {
-	const coord = e.target.dataset[coordinateDataAttributeName];
+	const coord: CoordinateString = e.target.dataset[coordinateDataAttributeName];
 	if (coord !== undefined) {
-		cellData.owner = "none";
+		cellData.owner = "";
+		console.log(`cell ${coord} set to empty owner`);
 	}
 };
 
@@ -164,7 +163,7 @@ function getCellBorderStyles(coord: CoordinateString) {
 
 <td class="sudoku-cell" style={getCellBorderStyles(cellData.coordinate)}>
 	<!-- {#each cell.selectedBysessionClients as session} -->
-	 <!-- {#if cell.owners.size > 0}
+	<!-- {#if cell.owners.size > 0}
 		<Tooltip
 			position="top"
 			arrow={false}
@@ -173,14 +172,14 @@ function getCellBorderStyles(coord: CoordinateString) {
 			style={{ style: { backgroundColor: `"${uniqolor([...cell.owners][0])}"` } }}
 		></Tooltip>
 		{/if} -->
-			<!-- "color: {uniqolor(session.sessionId).color ? "var(--themeDarker)" : "var(--themeLighter)"}" -->
+	<!-- "color: {uniqolor(session.sessionId).color ? "var(--themeDarker)" : "var(--themeLighter)"}" -->
 	<!-- {/each} -->
 	<!-- <Tooltip content="Hello world!">
 		Check out my tooltip
 	</Tooltip> -->
 	<input
 		id={cellCoordinateId(cellData.coordinate)}
-		class="sudoku-input {SudokuCell.getState(cellData)}"
+		class="sudoku-input {cellData.status}"
 		type="text"
 		readOnly={true}
 		onfocus={handleInputFocus}

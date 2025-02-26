@@ -1,4 +1,5 @@
 <script lang="ts">
+import "svooltip/styles.css"; // Include default styling
 import type {
 	LatestMapValueManager,
 	LatestValueClientData,
@@ -9,6 +10,7 @@ import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordi
 import { type SudokuAppProps } from "./props";
 import Cell from "./Cell.svelte";
 import type { SudokuGrid } from "./types";
+import type { SudokuCell } from "./sudokuCell.svelte";
 
 const {
 	grid = $bindable(),
@@ -27,7 +29,7 @@ const {
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(`${sessionClient.sessionId}-${coord}`) as HTMLInputElement;
 
-const moveCell = (keyString: string, coordIn: CoordinateString) => {
+const moveCell = (keyString: string, coordIn: CoordinateString):void => {
 	const coord = coordIn;
 	let newCoord = coordIn;
 	switch (keyString) {
@@ -55,6 +57,8 @@ const moveCell = (keyString: string, coordIn: CoordinateString) => {
 	newCell.focus();
 
 	// Remove the owner from the old cell
+	const oldCell = getCellInputElement(coord);
+
 	// 	const oldOwners = selectionMap.local.get(coord);
 	// 	if (oldOwners !== undefined) {
 	// 		const newArray = oldOwners.filter((owner) => owner !== sessionClient.sessionId);
@@ -85,9 +89,9 @@ const onRemoteCellChange = (coord: LatestValueClientData<CellCoordinate>) => {
 };
 
 selectionManager.events.on("updated", onRemoteCellChange);
-selectionManager.events.on("localUpdated", (updated) =>
-	console.debug("localUpdated:", updated),
-);
+// selectionManager.events.on("localUpdated", (updated) =>
+// 	console.debug("localUpdated:", updated),
+// );
 
 // selectionMap.events.on("itemRemoved", (removedItem) => {
 // 	console.debug("itemRemoved:", removedItem.key, removedItem.client);
@@ -109,18 +113,19 @@ selectionManager.events.on("localUpdated", (updated) =>
 <div>
 	<table>
 		<tbody>
-			{#each grid as row (row.toString())}
+			{#each grid as row, r (row.toString())}
 				<tr>
-					{#each row as cell (cell.toString())}
-						<!-- {#if cell.owners.size > 0} -->
+					{#each row as cell, c (cell.toString())}
 						<Tooltip
-							style={{ style: { color: "blue", backgroundColor: `"${cell.color}"` } }}
+							action="prop"
+							content={cell.color}
 							position="top"
 							arrow={false}
-							show={true || cell.owner !== "none"}
+							bind:show={cell.displayTooltip}
+							theme="remote1"
 						>
 							<Cell
-								cellData={cell}
+								bind:cellData={grid[r][c]}
 								currentSessionClient={sessionClient}
 								onKeyDown={moveCell}
 								{selectionManager}
@@ -137,4 +142,11 @@ selectionManager.events.on("localUpdated", (updated) =>
 	table {
 		border: none;
 	}
+
+  :global(.tooltip.remote1) {
+    --tooltip-background-color: hotpink;
+    --tooltip-box-shadow: 0 1px 8px pink;
+		--tooltip-font-size: 10px;
+		--tooltip-padding: 1px;
+  }
 </style>

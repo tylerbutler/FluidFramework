@@ -36,22 +36,18 @@ export class SudokuCell implements sudoku.Cell {
 	 */
 	public readonly fixed: boolean;
 
+	public value = $state<SudokuNumber>(0);
+
+	public owner = $state("");
+
+	public color = $derived(uniqolor(this.owner).color);
+
+	public displayTooltip = $derived(this.owner !== "");
+
 	/**
 	 * True if the value in the cell is correct; false otherwise.
 	 */
 	public isCorrect = $derived.by(() => this.value === this.correctValue);
-
-	public value = $state<SudokuNumber>(0);
-
-	// public owners = $state<SvelteSet<string>>(new SvelteSet());
-
-	// public colors = $derived.by(() => {
-	// 	return [...this.owners].slice(0, 2).map((o) => uniqolor(o));
-	// });
-
-	public owner = $state("none");
-
-	public color = $derived(uniqolor(this.owner).color);
 
 	/**
 	 * Creates a new SudokuCell instance.
@@ -63,57 +59,44 @@ export class SudokuCell implements sudoku.Cell {
 	 */
 	public constructor(
 		value: SudokuNumber,
-		public readonly correctValue: SudokuNumber,
+		private readonly correctValue: SudokuNumber,
 		public readonly coordinate: string,
 	) {
 		this.value = Number.isSafeInteger(value) ? value : 0;
 		this.fixed = this.value !== 0;
-		// SudokuCell.setIsCorrect(this);
 	}
 
 	public toString(): string {
 		return `SudokuCell: ${JSON.stringify(this)}`;
 	}
 
-	// The following are static methods since TypeScript properties are functions and functions aren't JSONed, and we
-	// need to manipulate the plain JavaScript objects after they've been JSONed.
-
 	/**
-	 * Sets the isCorrect property on the cell and returns the cell.
+	 * Returns the appropriate CellState for the cell. This state can be used to render the cell differently.
 	 */
-	// public static setIsCorrect(cell: SudokuCell): SudokuCell {
-	// 	cell.isCorrect = cell.fixed || cell.value === cell.correctValue;
-	// 	return cell;
-	// }
+	public status: CellState = $derived.by(() => {
+		if (this.value === 0) {
+			return CellState.empty;
+		}
+
+		if (this.fixed) {
+			return CellState.fixed;
+		}
+
+		if (this.isCorrect) {
+			return CellState.correct;
+		}
+
+		return CellState.wrong;
+	});
 
 	/**
 	 * Returns a string representation of the cell's value suitable for display.
 	 */
 	public static getDisplayString(cell: SudokuCell): string {
-		$inspect(cell.color);
-		$inspect(cell.owner);
+		$inspect(cell);
 		if (cell.fixed || cell.value !== 0) {
 			return cell.value.toString();
 		}
 		return "";
-	}
-
-	/**
-	 * Returns the appropriate CellState for the cell. This state can be used to render the cell differently.
-	 */
-	public static getState(cell: SudokuCell): CellState {
-		if (cell.value === 0) {
-			return CellState.empty;
-		}
-
-		if (cell.fixed) {
-			return CellState.fixed;
-		}
-
-		if (cell.isCorrect) {
-			return CellState.correct;
-		}
-
-		return CellState.wrong;
 	}
 }

@@ -25,9 +25,10 @@
 	"dependencies": {
 		"@fluidframework/presence": "workspace:~",
 		"@fluidframework/tinylicious-client": "workspace:~",
-		"@svelte-plugins/tooltips": "^3.0.3",
+		"@svelte-plugins/tooltips": "beta",
 		"fluid-framework": "workspace:~",
 		"sudokus": "^1.0.2",
+		"svooltip": "^0.9.0",
 		"uniqolor": "^1.1.1"
 	},
 	"devDependencies": {
