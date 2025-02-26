@@ -1304,6 +1304,9 @@ importers:
       '@svelte-plugins/tooltips':
         specifier: beta
         version: 4.0.0-beta.1(svelte@5.20.2)
+      flowbite:
+        specifier: ^3.1.2
+        version: 3.1.2(rollup@4.34.8)
       flowbite-svelte:
         specifier: ^0.48.4
         version: 0.48.4(rollup@4.34.8)(svelte@5.20.2)
@@ -1313,6 +1316,9 @@ importers:
       sudokus:
         specifier: ^1.0.2
         version: 1.0.2
+      svelte-5-ui-lib:
+        specifier: ^0.12.2
+        version: 0.12.2(svelte@5.20.2)(tailwindcss@4.0.9)
       svooltip:
         specifier: ^0.9.0
         version: 0.9.0(svelte@5.20.2)
@@ -28250,6 +28256,12 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
+  svelte-5-ui-lib@0.12.2:
+    resolution: {integrity: sha512-94eOQx8891haCCTot+jjEeMLIANvAKpwFl0eS8AWXn/bVpFHtEWvcVgvB7WM+l2El4zDphUGiHEyReQHPdV4mA==}
+    peerDependencies:
+      svelte: ^5.0.0
+      tailwindcss: ^3.0.0
+
   svelte-check@4.1.4:
     resolution: {integrity: sha512-v0j7yLbT29MezzaQJPEDwksybTE2Ups9rUxEXy92T06TiA0cbqcO8wAOwNUVkFW6B0hsYHA+oAX3BS8b/2oHtw==}
     engines: {node: '>= 18.0.0'}
@@ -28349,8 +28361,20 @@ packages:
   tabster@8.2.0:
     resolution: {integrity: sha512-Gvplk/Yl/12aVFA6FPOqGcq31Qv8hbPfYO0N+6IxrRgRT6eSLsipT6gkZBYjyOwGsp6BD5XlZAuJgupfG/GHoA==}
 
+  tailwind-merge@2.5.4:
+    resolution: {integrity: sha512-0q8cfZHMu9nuYP/b5Shb7Y7Sh1B7Nnl5GqNr1U+n2p6+mybvRtayrQ+0042Z5byvTA8ihjlP8Odo8/VnHbZu4Q==}
+
+  tailwind-merge@2.6.0:
+    resolution: {integrity: sha512-P+Vu1qXfzediirmHOC3xKGAYeZtPcV9g76X+xg2FD4tYgR71ewMA35Y3sCz3zhiN/dwefRpJX0yBcgwi1fXNQA==}
+
   tailwind-merge@3.0.2:
     resolution: {integrity: sha512-l7z+OYZ7mu3DTqrL88RiKrKIqO3NcpEO8V/Od04bNpvk0kiIFndGEoqfuzvj4yuhRkHKjRkII2z+KS2HfPcSxw==}
+
+  tailwind-variants@0.3.1:
+    resolution: {integrity: sha512-krn67M3FpPwElg4FsZrOQd0U26o7UDH/QOkK8RNaiCCrr052f6YJPBUfNKnPo/s/xRzNPtv1Mldlxsg8Tb46BQ==}
+    engines: {node: '>=16.x', pnpm: '>=7.x'}
+    peerDependencies:
+      tailwindcss: '*'
 
   tailwindcss@3.4.16:
     resolution: {integrity: sha512-TI4Cyx7gDiZ6r44ewaJmt0o6BrMCT5aK5e0rmJ/G9Xq3w7CX/5VXl/zIPEJZFUK5VEqwByyhqNPycPlvcK4ZNw==}
@@ -46094,6 +46118,16 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
+  svelte-5-ui-lib@0.12.2(svelte@5.20.2)(tailwindcss@4.0.9):
+    dependencies:
+      '@floating-ui/dom': 1.6.13
+      apexcharts: 3.54.1
+      clsx: 2.1.1
+      svelte: 5.20.2
+      tailwind-merge: 2.6.0
+      tailwind-variants: 0.3.1(tailwindcss@4.0.9)
+      tailwindcss: 4.0.9
+
   svelte-check@4.1.4(picomatch@4.0.2)(svelte@5.20.2)(typescript@5.4.5):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
@@ -46235,7 +46269,16 @@ snapshots:
       keyborg: 2.6.0
       tslib: 2.8.1
 
+  tailwind-merge@2.5.4: {}
+
+  tailwind-merge@2.6.0: {}
+
   tailwind-merge@3.0.2: {}
+
+  tailwind-variants@0.3.1(tailwindcss@4.0.9):
+    dependencies:
+      tailwind-merge: 2.5.4
+      tailwindcss: 4.0.9
 
   tailwindcss@3.4.16(ts-node@10.9.2(@types/node@18.19.67)(typescript@5.4.5)):
     dependencies:
