@@ -1,10 +1,11 @@
 import tailwindcss from "@tailwindcss/vite";
 /*!
- * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
- * Licensed under the MIT License.
- */
+* Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+* Licensed under the MIT License.
+*/
 
 import { defineConfig } from "vitest/config";
+import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 
 export default defineConfig({
