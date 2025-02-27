@@ -5,13 +5,11 @@
 
 import sudoku from "sudokus";
 import type { SudokuNumber } from "./types";
-import type { ISessionClient } from "@fluidframework/presence/alpha";
-import { SvelteSet } from "svelte/reactivity";
 import uniqolor from "uniqolor";
 
 export const CellState = {
 	empty: "empty",
-	fixed: "fixed",
+	startingClue: "startingClue",
 	wrong: "wrong",
 	correct: "correct",
 } as const;
@@ -34,7 +32,7 @@ export class SudokuCell implements sudoku.Cell {
 	/**
 	 * True if the cell is one of the starting "clues" in the Sudoku; false otherwise.
 	 */
-	public readonly fixed: boolean;
+	public readonly startingClue: boolean;
 
 	public value = $state<SudokuNumber>(0);
 
@@ -63,7 +61,7 @@ export class SudokuCell implements sudoku.Cell {
 		public readonly coordinate: string,
 	) {
 		this.value = Number.isSafeInteger(value) ? value : 0;
-		this.fixed = this.value !== 0;
+		this.startingClue = this.value !== 0;
 	}
 
 	public toString(): string {
@@ -78,8 +76,8 @@ export class SudokuCell implements sudoku.Cell {
 			return CellState.empty;
 		}
 
-		if (this.fixed) {
-			return CellState.fixed;
+		if (this.startingClue) {
+			return CellState.startingClue;
 		}
 
 		if (this.isCorrect) {
@@ -94,7 +92,7 @@ export class SudokuCell implements sudoku.Cell {
 	 */
 	public static getDisplayString(cell: SudokuCell): string {
 		$inspect(cell);
-		if (cell.fixed || cell.value !== 0) {
+		if (cell.startingClue || cell.value !== 0) {
 			return cell.value.toString();
 		}
 		return "";

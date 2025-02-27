@@ -29,7 +29,7 @@ setContext("grid", puzzle.grid);
 const handleResetButton = () => {
 	for (const row of puzzle.grid) {
 		for (const cell of row) {
-			if (!cell.fixed) {
+			if (!cell.startingClue) {
 				cell.value = 0;
 			}
 		}
@@ -165,7 +165,7 @@ presence.events.on("attendeeDisconnected", () => updateTitle());
 	--sudoku-input-border-color: #a4262c;
 }
 
-.fixed {
+.startingClue {
 	--sudoku-input-bg: var(--neutralLighter);
 	--sudoku-input-fg: var(--neutralPrimary);
 	--sudoku-input-border-color: var(--neutralPrimary);

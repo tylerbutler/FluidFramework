@@ -64,7 +64,7 @@ const handleKeyDown = (e: any) => {
 		case "7":
 		case "8":
 		case "9":
-			if (cellData.fixed) {
+			if (cellData.startingClue) {
 				return;
 			}
 			numericInput(keyString, coord);
@@ -83,7 +83,7 @@ const numericInput = (keyString: string, coord: string) => {
 		const cellInputElement = getCellInputElement(coord);
 		cellInputElement.value = keyString;
 
-		if (cellData.fixed === true) {
+		if (cellData.startingClue === true) {
 			return;
 		}
 		cellData.value = keyValue;
@@ -228,8 +228,7 @@ theme="remote1"
 	--sudoku-input-border-color: #a4262c;
 }
 
-.fixed {
-	position: relative;
+.startingClue {
 	--sudoku-input-bg: var(--neutralLighter);
 	--sudoku-input-fg: var(--neutralPrimary);
 	--sudoku-input-border-color: var(--neutralPrimary);
