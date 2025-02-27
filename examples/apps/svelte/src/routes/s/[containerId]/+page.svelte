@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { PageProps } from "./$types";
-import { Alert } from 'flowbite-svelte';
+import { Alert } from "flowbite-svelte";
 import Sudoku from "../../../Sudoku.svelte";
 import { loadIncludedPuzzle } from "../../../sudokuPuzzle.svelte";
 
