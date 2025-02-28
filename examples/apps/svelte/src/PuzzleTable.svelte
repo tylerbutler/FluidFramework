@@ -71,19 +71,22 @@ const moveCell = (keyString: string, coordIn: CoordinateString): void => {
 };
 
 const onRemoteCellChange = (coord: LatestValueClientData<CellCoordinate>) => {
+	const [row, column] = coord.value;
+	grid[row][column].remoteOwners.add(coord.client.sessionId);
 	console.debug("remote selection update:", coord.value);
-	const [r, c] =
-		typeof coord.value === "string" ? Coordinate.asArrayNumbers(coord.value) : coord.value;
-	const row = grid[r];
-	const cell = row[c];
 
-	// const selectedCell = getCellInputElement(Coordinate.fromCellCoordinate(data.value));
-	// selectedCell.classList.add("presence");
-	if (cell !== undefined) {
-		console.debug("before:", grid[r][c].owner);
-		grid[r][c].owner = coord.client.sessionId;
-		console.debug("after:", grid[r][c].owner);
-	}
+	// const [r, c] =
+	// 	typeof coord.value === "string" ? Coordinate.asArrayNumbers(coord.value) : coord.value;
+	// const row = grid[r];
+	// const cell = row[c];
+
+	// // const selectedCell = getCellInputElement(Coordinate.fromCellCoordinate(data.value));
+	// // selectedCell.classList.add("presence");
+	// if (cell !== undefined) {
+	// 	console.debug("before:", grid[r][c].owner);
+	// 	grid[r][c].owner = coord.client.sessionId;
+	// 	console.debug("after:", grid[r][c].owner);
+	// }
 };
 
 selectionManager.events.on("updated", onRemoteCellChange);

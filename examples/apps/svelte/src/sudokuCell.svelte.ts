@@ -6,6 +6,7 @@
 import sudoku from "sudokus";
 import type { SudokuNumber } from "./types";
 import uniqolor from "uniqolor";
+import { SvelteSet } from "svelte/reactivity";
 
 export const CellState = {
 	empty: "empty",
@@ -36,11 +37,11 @@ export class SudokuCell implements sudoku.Cell {
 
 	public value = $state<SudokuNumber>(0);
 
-	public owner = $state("");
+	public remoteOwners: SvelteSet<string> = $state(new SvelteSet());
 
-	public color = $derived(uniqolor(this.owner).color);
+	// public color = $derived(uniqolor(this.owner).color);
 
-	public displayTooltip = $derived(this.owner !== "");
+	// public displayTooltip = $derived(this.owner !== "");
 
 	/**
 	 * True if the value in the cell is correct; false otherwise.
