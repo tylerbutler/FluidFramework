@@ -1,9 +1,9 @@
 <script lang="ts">
 import type { ISessionClient, LatestValueManager } from "@fluidframework/presence/alpha";
+import { Indicator, Input, TableBodyCell } from "svelte-5-ui-lib";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
 import { isSudokuNumber, type SudokuNumber } from "./types";
 import { SudokuCell } from "./sudokuCell.svelte";
-import { Indicator, Input, TableBodyCell } from "flowbite-svelte";
 
 let {
 	cellData = $bindable(),
@@ -197,22 +197,4 @@ style={getCellBorderStyles(cellData.coordinate)}
 		--tooltip-font-size: 10px;
 		--tooltip-padding: 1px;
   }
-
-.correct {
-	--sudoku-input-bg: #9bf49b;
-	--sudoku-input-fg: #073d07;
-	--sudoku-input-border-color: #0b6a0b;
-}
-
-.wrong {
-	--sudoku-input-bg: #e7999d;
-	--sudoku-input-fg: #a4262c;
-	--sudoku-input-border-color: #a4262c;
-}
-
-.startingClue {
-	--sudoku-input-bg: var(--neutralLighter);
-	--sudoku-input-fg: var(--neutralPrimary);
-	--sudoku-input-border-color: var(--neutralPrimary);
-}
 </style>

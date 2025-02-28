@@ -27,6 +27,7 @@
 		"@fluidframework/tinylicious-client": "workspace:~",
 		"@svelte-plugins/tooltips": "beta",
 		"flowbite": "^3.1.2",
+		"svelte-5-ui-lib": "^0.12.2",
 		"flowbite-svelte": "^0.48.4",
 		"fluid-framework": "workspace:~",
 		"sudokus": "^1.0.2",

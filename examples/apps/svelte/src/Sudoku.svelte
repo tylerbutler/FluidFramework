@@ -1,6 +1,6 @@
 <script lang="ts">
 import { Latest, LatestMap } from "@fluidframework/presence/alpha";
-import { Button, Heading, P } from "flowbite-svelte";
+import { Button, Heading, P } from "svelte-5-ui-lib";
 import { setContext } from "svelte";
 import type { SudokuAppProps } from "./props";
 import { PUZZLES } from "./constants";

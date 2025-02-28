@@ -1319,9 +1319,6 @@ importers:
       svelte-5-ui-lib:
         specifier: ^0.12.2
         version: 0.12.2(svelte@5.20.2)(tailwindcss@4.0.9)
-      svooltip:
-        specifier: ^0.9.0
-        version: 0.9.0(svelte@5.20.2)
       uniqolor:
         specifier: ^1.1.1
         version: 1.1.1
@@ -28311,11 +28308,6 @@ packages:
     resolution: {integrity: sha512-h5IS/hKkuVCbKSieR9uQCj9w+zLHoPh+ce19bBYyqF53g6mnPB8sAtIbe1s9dh2S2fCmYX2xel1Ln3PJBbK4kw==}
     engines: {node: '>= 0.8.0'}
 
-  svooltip@0.9.0:
-    resolution: {integrity: sha512-vBQZRj4xf+eLMMXSutyGQuZ1wJDzj39AQZotvoBajWKiDGBT11oL+/nX3hHj0QuS9K8oXVqdNqevfqFTKziE8A==}
-    peerDependencies:
-      svelte: ^5.0.0
-
   swap-case@1.1.2:
     resolution: {integrity: sha512-BAmWG6/bx8syfc6qXPprof3Mn5vQgf5dwdUNJhsNqU9WdPt5P+ES/wQ5bxfijy8zwZgZZHslC3iAsxsuQMCzJQ==}
 
@@ -46194,11 +46186,6 @@ snapshots:
   svg.select.js@3.0.1:
     dependencies:
       svg.js: 2.7.1
-
-  svooltip@0.9.0(svelte@5.20.2):
-    dependencies:
-      '@floating-ui/dom': 1.6.13
-      svelte: 5.20.2
 
   swap-case@1.1.2:
     dependencies:

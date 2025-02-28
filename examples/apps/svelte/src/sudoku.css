@@ -1,102 +1,17 @@
-:root {
-	--themePrimary: #038387;
-	--themeLighterAlt: #f0fafa;
-	--themeLighter: #c7ebec;
-	--themeLight: #9bd9db;
-	--themeTertiary: #4bb4b7;
-	--themeSecondary: #159196;
-	--themeDarkAlt: #02767a;
-	--themeDark: #026367;
-	--themeDarker: #02494c;
-	--neutralLighterAlt: #f8f8f8;
-	--neutralLighter: #f4f4f4;
-	--neutralLight: #eaeaea;
-	--neutralQuaternaryAlt: #dadada;
-	--neutralQuaternary: #d2d0ce;
-	--neutralTertiaryAlt: #c8c8c8;
-	--neutralTertiary: #bab8b7;
-	--neutralSecondary: #a3a2a0;
-	--neutralPrimaryAlt: #8d8b8a;
-	--neutralPrimary: #323130;
-	--neutralDark: #605e5d;
-	--fg: #494847;
-	--bg: #ffffff;
+.correct {
+	--sudoku-input-bg: #9bf49b;
+	--sudoku-input-fg: #073d07;
+	--sudoku-input-border-color: #0b6a0b;
 }
 
-/* Component Tokens */
-.sudoku {
-	--sudoku-bg: var(--bg);
-	--sudoku-fg: var(--fg);
-	--sudoku-cell-border-color: var(--fg);
-	--sudoku-input-bg-focus: var(--themeLighterAlt);
-	--sudoku-input-fg-focus: var(--themeDarker);
-	--sudoku-input-bg: var(--bg);
-	--sudoku-input-fg: var(--fg);
-	--sudoku-input-border-color: var(--neutralQuaternary);
-	--sudoku-input-border-color-focus: var(--themePrimary);
-	--sudoku-button-bg: var(--themePrimary);
-	--sudoku-button-bg-hover: var(--themeDarker);
-	--sudoku-button-fg: var(--themeLighterAlt);
-	--sudoku-button-border-hover: var(--themeLighter);
+.wrong {
+	--sudoku-input-bg: #e7999d;
+	--sudoku-input-fg: #a4262c;
+	--sudoku-input-border-color: #a4262c;
 }
 
-.sudoku-wrapper {
-	display: inline-block;
-}
-
-.sudoku {
-	height: 100%;
-	min-height: 447px;
-	display: inline-block;
-	justify-content: center;
-	padding: 10px;
-	background: var(--sudoku-bg);
-	color: var(--sudoku-fg);
-}
-
-.sudoku-theme-select {
-	display: flex;
-	align-items: center;
-	flex-grow: 2;
-}
-
-.sudoku-theme-select label {
-	display: block;
-	font-size: 14px;
-	margin-right: 6px;
-	color: var(--fg);
-}
-
-.sudoku-reset {
-	flex-grow: 1;
-}
-
-.sudoku-buttons {
-	display: flex;
-	margin-top: 8px;
-}
-
-.sudoku-load {
-	display: flex;
-	align-items: center;
-}
-
-.sudoku button {
-	background: var(--sudoku-button-bg);
-	color: var(--sudoku-button-fg);
-	border: none;
-	height: 32px;
-	padding: 0 4px;
-}
-
-.sudoku button:hover {
-	background: var(--sudoku-button-bg-hover);
-}
-
-.sudoku button:focus {
-	outline-color: var(--sudoku-button-border-hover);
-}
-
-.sudoku-load button {
-	margin-left: 8px;
+.startingClue {
+	--sudoku-input-bg: var(--neutralLighter);
+	--sudoku-input-fg: var(--neutralPrimary);
+	--sudoku-input-border-color: var(--neutralPrimary);
 }

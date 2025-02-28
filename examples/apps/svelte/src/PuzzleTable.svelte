@@ -4,7 +4,7 @@ import type {
 	LatestValueClientData,
 	LatestValueManager,
 } from "@fluidframework/presence/alpha";
-import { Table, TableBody, TableBodyRow } from "flowbite-svelte";
+import { Table, TableBody, TableBodyRow } from "svelte-5-ui-lib";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
 import { type SudokuAppProps } from "./props";
 import Cell from "./Cell.svelte";
@@ -108,25 +108,19 @@ selectionManager.events.on("updated", onRemoteCellChange);
 // });
 </script>
 
-	<Table class="h-full w-min">
-		<TableBody>
-			{#each grid as row, r (row.toString())}
-				<TableBodyRow>
-					{#each row as cell, c (cell.toString())}
-							<Cell
-								bind:cellData={grid[r][c]}
-								currentSessionClient={sessionClient}
-								onKeyDown={moveCell}
-								{selectionManager}
-							></Cell>
-					{/each}
-				</TableBodyRow>
-			{/each}
-			</TableBody>
-		</Table>
-
-<style>
-	table {
-		border: none;
-	}
-</style>
+<Table class="h-full w-min">
+	<TableBody>
+		{#each grid as row, r (row.toString())}
+			<TableBodyRow>
+				{#each row as cell, c (cell.toString())}
+					<Cell
+						bind:cellData={grid[r][c]}
+						currentSessionClient={sessionClient}
+						onKeyDown={moveCell}
+						{selectionManager}
+					></Cell>
+				{/each}
+			</TableBodyRow>
+		{/each}
+	</TableBody>
+</Table>
