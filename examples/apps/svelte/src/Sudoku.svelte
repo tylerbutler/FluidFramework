@@ -1,12 +1,13 @@
 <script lang="ts">
-import { Latest, LatestMap } from "@fluidframework/presence/alpha";
-import { Button, Darkmode, Heading, P } from "svelte-5-ui-lib";
+import { Latest, LatestMap, type ISessionClient } from "@fluidframework/presence/alpha";
+import { Badge, Button, Darkmode, Heading, Indicator, P } from "svelte-5-ui-lib";
 import { setContext } from "svelte";
 import type { SudokuAppProps } from "./props";
 import { PUZZLES } from "./constants";
 import PuzzleTable from "./PuzzleTable.svelte";
 import type { CellCoordinate, CoordinateString } from "./coordinate";
 import { SudokuPuzzle } from "./sudokuPuzzle.svelte";
+import { mapStringToColor } from "./colors";
 
 const { puzzle, presence, sessionClient }: SudokuAppProps = $props();
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
@@ -37,19 +38,65 @@ const handleResetButton = () => {
 	}
 };
 
-let title = $state(`Sudoku: ${presence.getAttendees().size} attendees`);
+let title = $state("Sudoku");
 const updateTitle = () => {
-	const playerCount = [...presence.getAttendees()].filter(
-		(c) => c.getConnectionStatus() === "Connected",
-	).length;
-	title = playerCount > 1 ? "Sudoku" : `Sudoku: ${playerCount} players`;
+	// const playerCount = [...presence.getAttendees()].filter(
+	// 	(c) => c.getConnectionStatus() === "Connected",
+	// ).length;
+	const playerCount = getConnectedUsers().length;
+	title = playerCount > 1 ? `Sudoku: ${playerCount} players` : "Sudoku";
 };
-presence.events.on("attendeeJoined", () => updateTitle());
-presence.events.on("attendeeDisconnected", () => updateTitle());
+
+const getConnectedUsers = () =>
+	[...presence.getAttendees()].filter((c) => c.getConnectionStatus() === "Connected");
+
+let connectedUsers = $state<string[]>([]);
+
+presence.events.on("attendeeJoined", () => {
+	connectedUsers = getConnectedUsers().map((c) => c.sessionId);
+	updateTitle();
+});
+presence.events.on("attendeeDisconnected", () => {
+	for (const row of puzzle.grid) {
+		for (const cell of row) {
+			cell.remoteOwners.delete(presence.getMyself().sessionId);
+		}
+	}
+	updateTitle();
+});
+
+// const isMe = (sessionClient: ISessionClient) => presence.getMyself() === sessionClient;
 </script>
 
 <Heading tag="h2">{title}</Heading>
-<P size="sm">My session ID: {presence.getMyself().sessionId}</P>
+
+<P>
+	<ul class="w-full max-w-sm divide-y divide-gray-200 dark:divide-gray-700">
+		{#key connectedUsers.length}
+			{#each connectedUsers as sessionId (sessionId)}
+				<li>
+					<div>
+						<Badge
+							color={mapStringToColor(sessionId)}
+							rounded
+							class="px-2.5 py-0.5"
+						>
+							<Indicator
+								color={mapStringToColor(sessionId)}
+								size="xl"
+								class="me-1"
+							></Indicator>
+							<!-- {isMe(attendee) ? `(me) ${attendee.sessionId}` : attendee.sessionId} -->
+							 {sessionId}
+						</Badge>
+					</div>
+				</li>
+				{:else}
+				<li><Badge>Disconnected</Badge></li>
+			{/each}
+		{/key}
+	</ul>
+</P>
 
 <P>
 	<div class={`inline-block h-max min-h-[447px] ${theme}`}>

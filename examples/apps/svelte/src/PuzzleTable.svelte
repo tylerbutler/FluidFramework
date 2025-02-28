@@ -1,6 +1,5 @@
 <script lang="ts">
 import type {
-	LatestMapValueManager,
 	LatestValueClientData,
 	LatestValueManager,
 } from "@fluidframework/presence/alpha";
@@ -14,15 +13,12 @@ const {
 	grid = $bindable(),
 	sessionClient,
 	selectionManager,
-	selectionMap,
+	// selectionMap,
 }: Omit<SudokuAppProps, "presence" | "puzzle"> & {
 	grid: SudokuGrid;
 	readonly selectionManager: LatestValueManager<CellCoordinate>;
-	readonly selectionMap: LatestMapValueManager<string[], CoordinateString>;
+	// readonly selectionMap: LatestMapValueManager<string[], CoordinateString>;
 } = $props();
-
-// const coordinateDataAttributeName = "cellcoordinate";
-// const grid = getContext<SudokuGrid>("grid");
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(`${sessionClient.sessionId}-${coord}`) as HTMLInputElement;
@@ -74,41 +70,9 @@ const onRemoteCellChange = (coord: LatestValueClientData<CellCoordinate>) => {
 	const [row, column] = coord.value;
 	grid[row][column].remoteOwners.add(coord.client.sessionId);
 	console.debug("remote selection update:", coord.value);
-
-	// const [r, c] =
-	// 	typeof coord.value === "string" ? Coordinate.asArrayNumbers(coord.value) : coord.value;
-	// const row = grid[r];
-	// const cell = row[c];
-
-	// // const selectedCell = getCellInputElement(Coordinate.fromCellCoordinate(data.value));
-	// // selectedCell.classList.add("presence");
-	// if (cell !== undefined) {
-	// 	console.debug("before:", grid[r][c].owner);
-	// 	grid[r][c].owner = coord.client.sessionId;
-	// 	console.debug("after:", grid[r][c].owner);
-	// }
 };
 
 selectionManager.events.on("updated", onRemoteCellChange);
-// selectionManager.events.on("localUpdated", (updated) =>
-// 	console.debug("localUpdated:", updated),
-// );
-
-// selectionMap.events.on("itemRemoved", (removedItem) => {
-// 	console.debug("itemRemoved:", removedItem.key, removedItem.client);
-// 	const coords = Coordinate.asArrayNumbers(removedItem.key);
-// 	grid[coords[0]][coords[1]].owners.clear();
-// });
-
-// selectionMap.events.on("itemUpdated", (updatedItem) => {
-// 	console.debug("itemUpdated:", updatedItem.key, updatedItem.value);
-// 	const coords = Coordinate.asArrayNumbers(updatedItem.key);
-// 	const newOwners = difference(
-// 		grid[coords[0]][coords[1]].owners,
-// 		new Set(...updatedItem.value),
-// 	);
-// 	grid[coords[0]][coords[1]].owners = new SvelteSet(newOwners);
-// });
 </script>
 
 <Table class="h-full w-min border-collapse">
