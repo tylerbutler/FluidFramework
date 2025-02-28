@@ -8,7 +8,7 @@ import type { SudokuInput } from "./types";
 /**
  * An array of numbers 0-8 for convenient looping when building Sudoku grids.
  */
-export const PUZZLE_INDEXES = Array.from(Array(3).keys());
+export const PUZZLE_INDEXES = Array.from(Array(9).keys());
 
 /**
  * Sudoku puzzles included as examples.

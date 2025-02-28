@@ -1,14 +1,12 @@
 <script lang="ts">
-import { Tooltip } from "@svelte-plugins/tooltips";
 import type { ISessionClient, LatestValueManager } from "@fluidframework/presence/alpha";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
 import { isSudokuNumber, type SudokuNumber } from "./types";
 import { SudokuCell } from "./sudokuCell.svelte";
-import { Badge, Indicator } from "flowbite-svelte";
+import { Indicator, Input, TableBodyCell } from "flowbite-svelte";
 
 let {
 	cellData = $bindable(),
-	// coord = $bindable(),
 	currentSessionClient,
 	selectionManager,
 	onKeyDown,
@@ -113,13 +111,13 @@ function getCellBorderStyles(coord: CoordinateString) {
 		case 3:
 		case 6:
 			styles.borderTop = borderStyle;
-			styles.paddingTop = "4px";
+			// styles.paddingTop = "4px";
 			break;
 		case 2:
 		case 5:
 		case 8:
 			styles.borderBottom = borderStyle;
-			styles.paddingBottom = "4px";
+			// styles.paddingBottom = "4px";
 			break;
 		default: // Nothing
 	}
@@ -129,13 +127,13 @@ function getCellBorderStyles(coord: CoordinateString) {
 		case 3:
 		case 6:
 			styles.borderLeft = borderStyle;
-			styles.paddingLeft = "4px";
+			// styles.paddingLeft = "4px";
 			break;
 		case 2:
 		case 5:
 		case 8:
 			styles.borderRight = borderStyle;
-			styles.paddingRight = "4px";
+			// styles.paddingRight = "4px";
 			break;
 		default: // Nothing
 	}
@@ -167,23 +165,30 @@ arrow={false}
 show={cellData.displayTooltip}
 theme="remote1"
 > -->
-<td class="sudoku-cell" style={getCellBorderStyles(cellData.coordinate)}>
-	<Indicator placement="top-right" color="blue">
-		<span class="text-white text-xs font-bold">8</span>
-	</Indicator>
-	<input
+<TableBodyCell
+class="h-[40px] w-[40px] p-0 box-border border-none"
+style={getCellBorderStyles(cellData.coordinate)}
+>
+	<div class="relative p-0 h-[38px] w-[38px]">
+	<Input
 		id={cellCoordinateId(cellData.coordinate)}
-		class="sudoku-input {cellData.status}"
+		class="p0 border box-border text-center rounded-none {cellData.status}"
 		type="text"
-		readOnly={true}
+		readonly={true}
 		onfocus={handleInputFocus}
 		onblur={handleInputBlur}
 		onkeydown={handleKeyDown}
 		value={SudokuCell.getDisplayString(cellData)}
 		max={1}
 		data-cellcoordinate={cellData.coordinate}
-	/>
-</td>
+	>
+</Input>
+{#if cellData.owner !== ""}
+	<Indicator border placement="top-right" color="blue" size="lg">
+	</Indicator>
+{/if}
+</div>
+</TableBodyCell>
 
 <style>
 	:global(.tooltip.remote1) {
@@ -193,29 +198,6 @@ theme="remote1"
 		--tooltip-padding: 1px;
   }
 
-	.sudoku-cell {
-	border-color: var(--sudoku-cell-border-color);
-	height: 40px;
-	width: 40px;
-	border: none;
-	box-sizing: border-box;
-}
-
-.sudoku-input {
-	box-sizing: border-box;
-	width: 38px;
-	height: 38px;
-	padding: 0;
-	font-size: 14px;
-	background: var(--sudoku-input-bg);
-	color: var(--sudoku-input-fg);
-	border-width: 1px;
-	border-style: solid;
-	border-color: var(--sudoku-input-border-color);
-	border-radius: 2px;
-	text-align: center;
-	font-family: Segoe UI Semibold;
-}
 .correct {
 	--sudoku-input-bg: #9bf49b;
 	--sudoku-input-fg: #073d07;
