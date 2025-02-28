@@ -110,7 +110,7 @@
 	--sudoku-input-border-color: var(--neutralPrimary);
 }
 
-/* .sudoku-reset {
+.sudoku-reset {
 	flex-grow: 1;
 }
 
@@ -165,7 +165,7 @@
 	border-radius: 2px;
 	text-align: center;
 	font-family: Segoe UI Semibold;
-} */
+}
 
 .sudoku-input:focus,
 .sudoku-input.presence {

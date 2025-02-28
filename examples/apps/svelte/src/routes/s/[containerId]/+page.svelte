@@ -1,6 +1,5 @@
 <script lang="ts">
 import type { PageProps } from "./$types";
-import { Alert } from "flowbite-svelte";
 import Sudoku from "../../../Sudoku.svelte";
 import { loadIncludedPuzzle } from "../../../sudokuPuzzle.svelte";
 
@@ -13,10 +12,5 @@ let puzzle = loadIncludedPuzzle(0);
 </script>
 
 <div class="p-8">
-  <Alert>
-    <span class="font-medium">Testing!</span>
-    Is it working?
-  </Alert>
+  <Sudoku {puzzle} {presence} {sessionClient} />
 </div>
-
-<Sudoku {puzzle} {presence} {sessionClient} />

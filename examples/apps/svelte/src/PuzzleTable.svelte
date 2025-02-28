@@ -108,7 +108,7 @@ selectionManager.events.on("updated", onRemoteCellChange);
 // });
 </script>
 
-<Table class="h-full w-min">
+<Table class="h-full w-min border-collapse">
 	<TableBody>
 		{#each grid as row, r (row.toString())}
 			<TableBodyRow>

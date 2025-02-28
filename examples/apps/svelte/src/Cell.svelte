@@ -9,13 +9,13 @@ let {
 	cellData = $bindable(),
 	currentSessionClient,
 	selectionManager,
-	onKeyDown,
+	onKeyDown, // classList,
 }: {
 	cellData: SudokuCell;
-	// coord: CoordinateString;
 	currentSessionClient: ISessionClient;
 	readonly selectionManager: LatestValueManager<CellCoordinate>;
 	onKeyDown: (keyString: string, coordIn: string) => void;
+	// classList: string[];
 } = $props();
 
 const coordinateDataAttributeName = "cellcoordinate";
@@ -91,33 +91,19 @@ const numericInput = (keyString: string, coord: string) => {
 /**
  * Returns CSS border properties to use when rendering a cell. This helps give the grid that authentic Sudoku look.
  */
-function getCellBorderStyles(coord: CoordinateString) {
-	const borderStyle = "solid medium";
-	const styles = {
-		borderTop: "none",
-		borderBottom: "none",
-		borderLeft: "none",
-		borderRight: "none",
-		borderColor: "var(--neutralPrimaryAlt)",
-		paddingTop: "0",
-		paddingBottom: "0",
-		paddingLeft: "0",
-		paddingRight: "0",
-	};
+function getCellBorderClasses(coord: CoordinateString) {
 	const [row, col] = Coordinate.asArrayNumbers(coord);
-
+	const classes: string[] = ["border-solid"];
 	switch (row) {
 		case 0:
 		case 3:
 		case 6:
-			styles.borderTop = borderStyle;
-			// styles.paddingTop = "4px";
+			classes.push("border-t-2 pt-[4px]");
 			break;
 		case 2:
 		case 5:
 		case 8:
-			styles.borderBottom = borderStyle;
-			// styles.paddingBottom = "4px";
+			classes.push("border-b-2 pb-[4px]");
 			break;
 		default: // Nothing
 	}
@@ -126,26 +112,38 @@ function getCellBorderStyles(coord: CoordinateString) {
 		case 0:
 		case 3:
 		case 6:
-			styles.borderLeft = borderStyle;
-			// styles.paddingLeft = "4px";
+			classes.push("border-l-2 pl-[4px]");
 			break;
 		case 2:
 		case 5:
 		case 8:
-			styles.borderRight = borderStyle;
-			// styles.paddingRight = "4px";
+			classes.push("border-r-2 pr-[4px]");
 			break;
 		default: // Nothing
 	}
 
-	// Converts an object to a CSS style declaration string
-	function objectToCssString(obj: Record<string, any>) {
-		return Object.entries(obj)
-			.map(([key, value]) => `${key.replace(/([A-Z])/g, "-$1").toLowerCase()}: ${value}`)
-			.join("; ");
-	}
+	return classes;
+}
 
-	return objectToCssString(styles);
+// const borderClasses = getCellBorderClasses(cellData.coordinate);
+function getCellInputClasses() {
+	switch (cellData.status) {
+		case "correct":
+			return ["border", "border-green-800", "bg-green-300"];
+		case "wrong":
+			return ["border", "border-red-800", "bg-red-300"];
+		case "startingClue":
+			return [
+				// "border-gray-400",
+				"bg-gray-100",
+				"italic",
+				"text-gray-500",
+			];
+		case "empty":
+		// intentional fallthrough
+		default:
+			return ["border"];
+	}
 }
 </script>
 
@@ -166,35 +164,36 @@ show={cellData.displayTooltip}
 theme="remote1"
 > -->
 <TableBodyCell
-class="h-[40px] w-[40px] p-0 box-border border-none"
-style={getCellBorderStyles(cellData.coordinate)}
+	class="h-[40px] w-[40px] p-0 box-border border-none m-[2px] {getCellBorderClasses(
+		cellData.coordinate,
+	).join(' ')}"
 >
 	<div class="relative p-0 h-[38px] w-[38px]">
-	<Input
-		id={cellCoordinateId(cellData.coordinate)}
-		class="p0 border box-border text-center rounded-none {cellData.status}"
-		type="text"
-		readonly={true}
-		onfocus={handleInputFocus}
-		onblur={handleInputBlur}
-		onkeydown={handleKeyDown}
-		value={SudokuCell.getDisplayString(cellData)}
-		max={1}
-		data-cellcoordinate={cellData.coordinate}
-	>
-</Input>
-{#if cellData.owner !== ""}
-	<Indicator border placement="top-right" color="blue" size="lg">
-	</Indicator>
-{/if}
-</div>
+		<Input
+			id={cellCoordinateId(cellData.coordinate)}
+			class="p-0 h-[38px] w-[38px] box-border text-center rounded-none {getCellInputClasses().join(
+				' ',
+			)}"
+			type="text"
+			readonly={true}
+			onfocus={handleInputFocus}
+			onblur={handleInputBlur}
+			onkeydown={handleKeyDown}
+			value={SudokuCell.getDisplayString(cellData)}
+			max={1}
+			data-cellcoordinate={cellData.coordinate}
+		></Input>
+		{#if cellData.owner !== "" && cellData.owner !== currentSessionClient.sessionId}
+			<Indicator border placement="top-center" color="green" size="lg"></Indicator>
+		{/if}
+	</div>
 </TableBodyCell>
 
 <style>
 	:global(.tooltip.remote1) {
-    --tooltip-background-color: hotpink;
-    --tooltip-box-shadow: 0 1px 8px pink;
+		--tooltip-background-color: hotpink;
+		--tooltip-box-shadow: 0 1px 8px pink;
 		--tooltip-font-size: 10px;
 		--tooltip-padding: 1px;
-  }
+	}
 </style>

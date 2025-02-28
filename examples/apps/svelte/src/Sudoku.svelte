@@ -1,6 +1,6 @@
 <script lang="ts">
 import { Latest, LatestMap } from "@fluidframework/presence/alpha";
-import { Button, Heading, P } from "svelte-5-ui-lib";
+import { Button, Darkmode, Heading, P } from "svelte-5-ui-lib";
 import { setContext } from "svelte";
 import type { SudokuAppProps } from "./props";
 import { PUZZLES } from "./constants";
@@ -39,47 +39,58 @@ const handleResetButton = () => {
 
 let title = $state(`Sudoku: ${presence.getAttendees().size} attendees`);
 const updateTitle = () => {
-	title = `Sudoku: ${
-		[...presence.getAttendees()].filter((c) => c.getConnectionStatus() === "Connected").length
-	} attendees`;
+	const playerCount = [...presence.getAttendees()].filter(
+		(c) => c.getConnectionStatus() === "Connected",
+	).length;
+	title = playerCount > 1 ? "Sudoku" : `Sudoku: ${playerCount} players`;
 };
 presence.events.on("attendeeJoined", () => updateTitle());
 presence.events.on("attendeeDisconnected", () => updateTitle());
 </script>
 
-<Heading>{title}</Heading>
+<Heading tag="h2">{title}</Heading>
 <P size="sm">My session ID: {presence.getMyself().sessionId}</P>
 
 <P>
-<div class={`inline-block h-max ${theme}`}>
-	<div class="inline-block min-h-[447px] p-[10px]">
-		<PuzzleTable bind:grid={puzzle.grid} {sessionClient} {selectionManager} {selectionMap} />
+	<div class={`inline-block h-max min-h-[447px] ${theme}`}>
+		<div class="inline-block h-max min-h-[447px]">
+			<PuzzleTable
+				bind:grid={puzzle.grid}
+				{sessionClient}
+				{selectionManager}
+				{selectionMap}
+			/>
 
-		<div class="display-flex">
-			<span class="display-flex grow-2 items-center">
-				<label for="theme-select">Theme: </label>
-				<select value={theme} onchange={onThemeChange} id="theme-select" name="theme">
-					<option aria-selected={theme === "default"} value="default">
-						Default Theme{" "}
-					</option>
-					<option aria-selected={theme === "dark-theme"} value="dark-theme">
-						Dark Theme
-					</option>
-				</select>
-			</span>
+			<div class="display-flex">
+				<span class="display-flex grow-2 items-center">
+					<label for="theme-select">Theme: </label>
+					<select value={theme} onchange={onThemeChange} id="theme-select" name="theme">
+						<option aria-selected={theme === "default"} value="default">
+							Default Theme{" "}
+						</option>
+						<option aria-selected={theme === "dark-theme"} value="dark-theme">
+							Dark Theme
+						</option>
+					</select>
+				</span>
 
-			<span class="grow-1">
-				<Button onclick={handleResetButton}>Reset</Button>
-			</span>
+				<span class="grow-1">
+					<Darkmode />
+				</span>
+				<span class="grow-1">
+					<Button onclick={handleResetButton}>Reset</Button>
+				</span>
 
-			<span class="display-flex items-center">
-				Load:
-				<Button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[0])}>Puzzle 1</Button
-				>
-				<Button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[1])}>Puzzle 2</Button
-				>
-			</span>
+				<span class="display-flex items-center">
+					Load:
+					<Button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[0])}
+						>Puzzle 1</Button
+					>
+					<Button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[1])}
+						>Puzzle 2</Button
+					>
+				</span>
+			</div>
 		</div>
 	</div>
-</div>
 </P>
