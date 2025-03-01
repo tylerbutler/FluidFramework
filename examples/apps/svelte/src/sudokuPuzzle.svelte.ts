@@ -7,7 +7,7 @@ import sudoku from "sudokus";
 import { Coordinate } from "./coordinate";
 import { PUZZLE_INDEXES, PUZZLES } from "./constants";
 import { SudokuCell } from "./sudokuCell.svelte";
-import type { SudokuGrid, SudokuInput } from "./types";
+import type { SudokuInput } from "./types";
 
 export class SudokuPuzzle {
 	public grid: SudokuGrid = $state([]);

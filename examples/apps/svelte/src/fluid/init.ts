@@ -4,7 +4,10 @@
  */
 
 import { TinyliciousClient } from "@fluidframework/tinylicious-client";
-import { containerSchema } from "./schema";
+import { containerSchema, type SudokuAppSchema } from "./schema";
+import { TreeViewConfiguration, type IFluidContainer } from "fluid-framework";
+import { SudokuCellData, SudokuGrid } from "./appData";
+import { PUZZLE_INDEXES } from "../constants";
 
 const client = new TinyliciousClient();
 
@@ -12,6 +15,8 @@ export async function createFluidContainer() {
 	// The client will create a new detached container using the schema
 	// A detached container will enable the app to modify the container before attaching it to the client
 	const { container } = await client.createContainer(containerSchema, "2");
+
+	// Populate the default data before we attach
 
 	// If the app is in a `createNew` state, and the container is detached, we attach the container.
 	// This uploads the container to the service and connects to the collaboration session.
@@ -29,4 +34,28 @@ export async function getFluidContainer(containerId: string) {
 	// collaboration session.
 	const { container } = await client.getContainer(containerId, containerSchema, "2");
 	return container;
+}
+
+const treeConfiguration = new TreeViewConfiguration({ schema: SudokuGrid });
+
+function initializeContainerData(container: IFluidContainer<SudokuAppSchema>) {
+	const appData = container.initialObjects.appData.viewWith(treeConfiguration);
+
+	const newGrid: SudokuCellData[][] = [];
+const newRow: SudokuCellData[] = [];
+for (const row of PUZZLE_INDEXES) {
+	for (const col of PUZZLE_INDEXES) {
+		const cell = new SudokuCellData({
+			coordinate: [row, col],
+			startingClue: false,
+			value: 0,
+		});
+		newRow.push(cell);
+	}
+	newGrid.push(newRow);
+}
+
+appData.initialize(
+	new SudokuGrid(newGrid),
+);
 }

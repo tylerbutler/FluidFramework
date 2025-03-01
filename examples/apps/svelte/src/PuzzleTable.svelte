@@ -7,7 +7,7 @@ import { Table, TableBody, TableBodyRow } from "svelte-5-ui-lib";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
 import { type SudokuAppProps } from "./props";
 import Cell from "./Cell.svelte";
-import type { SudokuGrid } from "./types";
+import type { SudokuGrid } from "./fluid/appData";
 
 const {
 	grid = $bindable(),

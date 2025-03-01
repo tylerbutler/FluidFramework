@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { SudokuCell } from "./sudokuCell.svelte";
+// import type { SudokuCell } from "./sudokuCell.svelte";
 
 export type SudokuNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -35,6 +35,6 @@ export type SudokuInput = [
 	SudokuInputRow,
 ];
 
-export type SudokuRow = SudokuCell[];
+// export type SudokuRow = SudokuCell[];
 
-export type SudokuGrid = SudokuRow[];
+// export type SudokuGrid = SudokuRow[];
