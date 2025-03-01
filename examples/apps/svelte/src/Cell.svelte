@@ -11,12 +11,13 @@ let {
 	currentSessionClient,
 	selectionManager,
 	onKeyDown,
-	// owners = $bindable(),
 }: {
+	// owners = $bindable(), // onLeaveCell,
 	cellData: SudokuCell;
 	readonly currentSessionClient: ISessionClient;
 	readonly selectionManager: LatestValueManager<CellCoordinate>;
 	onKeyDown: (keyString: string, coordIn: string) => void;
+	// onLeaveCell: (event: FocusEvent) => void;
 	// owners: SvelteSet<string>;
 } = $props();
 
@@ -34,8 +35,8 @@ const handleInputFocus = (e: any) => {
 	}
 };
 
-const handleInputBlur = (e: any) => {
-	// do nothing
+const handleInputBlur = (e: FocusEvent) => {
+	// onLeaveCell(e);
 };
 
 const handleKeyDown = (e: any) => {
@@ -183,23 +184,21 @@ function getPresenceIndicatorPosition(index: number) {
 			onfocus={handleInputFocus}
 			onblur={handleInputBlur}
 			onkeydown={handleKeyDown}
-			value={cellData.displayString}
+			value={cellData.getDisplayString()}
 			max={1}
 			data-cellcoordinate={cellData.coordinate}
 		></Input>
-		{#key cellData.remoteOwners.size}
+	{#key cellData.remoteOwners.size}
 		{#each cellData.remoteOwners as owner, index (owner)}
 			{#if index < 8}
-			<Indicator
-				color={mapStringToColor(owner)}
-				border={false}
-				size="lg"
-				placement={getPresenceIndicatorPosition(index)}
-			>
-				<!-- <span class="text-xs font-bold text-white">{index}</span> -->
-			</Indicator>
+				<Indicator
+					color={mapStringToColor(owner)}
+					border={false}
+					size="lg"
+					placement={getPresenceIndicatorPosition(index)}
+				></Indicator>
 			{/if}
 		{/each}
-		{/key}
+	{/key}
 	</div>
 </TableBodyCell>

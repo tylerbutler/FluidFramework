@@ -5,7 +5,7 @@
 
 import sudoku from "sudokus";
 import { Coordinate } from "./coordinate";
-import { EMPTY_PUZZLE, PUZZLE_INDEXES, PUZZLES } from "./constants";
+import { PUZZLE_INDEXES, PUZZLES } from "./constants";
 import { SudokuCell } from "./sudokuCell.svelte";
 import type { SudokuGrid, SudokuInput } from "./types";
 
@@ -14,6 +14,14 @@ export class SudokuPuzzle {
 
 	constructor(readonly puzzleInput: SudokuInput) {
 		SudokuPuzzle.loadPuzzle(this, puzzleInput);
+	}
+
+	removeAllOwnership(sessionId: string) {
+		for (const row of this.grid) {
+			for (const cell of row) {
+				cell.remoteOwners.delete(sessionId);
+			}
+		}
 	}
 
 	public static loadPuzzle(

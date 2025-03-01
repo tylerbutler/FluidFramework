@@ -51,33 +51,29 @@ const moveCell = (keyString: string, coordIn: CoordinateString): void => {
 	newCell.focus();
 
 	// Remove the owner from the old cell
-	const oldCell = getCellInputElement(coord);
-
-	// 	const oldOwners = selectionMap.local.get(coord);
-	// 	if (oldOwners !== undefined) {
-	// 		const newArray = oldOwners.filter((owner) => owner !== sessionClient.sessionId);
-	// 		selectionMap.local.set(coord, newArray);
-	// 	}
-
-	// 	selectionCoordinate.local = Coordinate.asArrayNumbers(newCoord);
-	// 	const owners = [...(selectionMap.local.get(newCoord) ?? [])];
-
-	// 	owners.push(sessionClient.sessionId);
-	// 	selectionMap.local.set(newCoord, owners);
+	const [oldRow, oldColumn] = Coordinate.asArrayNumbers(coord);
+	grid[oldRow][oldColumn].remoteOwners.delete(sessionClient.sessionId);
 };
 
 const onRemoteCellChange = (coord: LatestValueClientData<CellCoordinate>) => {
 	const [row, column] = coord.value;
+	// Add the session to the owners here; removal is done
 	grid[row][column].remoteOwners.add(coord.client.sessionId);
 	console.debug("remote selection update:", coord.value);
 };
 
 selectionManager.events.on("updated", onRemoteCellChange);
+
+const onLeaveCell = (event: FocusEvent) => {
+	const cell = event.currentTarget as HTMLInputElement;
+	const coord = cell.dataset.cellcoordinate as CoordinateString;
+	selectionManager.local = Coordinate.asArrayNumbers(coord);
+};
 </script>
 
 <Table class="h-full w-min border-collapse">
 	<TableBody>
-		{#each grid as row, r (row.toString())}
+		{#each grid as row, r (row.join(","))}
 			<TableBodyRow>
 				{#each row as cell, c (cell.toString())}
 					<Cell

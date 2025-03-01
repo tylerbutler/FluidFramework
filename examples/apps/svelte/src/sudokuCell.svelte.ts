@@ -39,7 +39,7 @@ export class SudokuCell implements sudoku.Cell {
 
 	public remoteOwners: SvelteSet<string> = $state(new SvelteSet());
 
-	public ownerCount = $derived(this.remoteOwners.size);
+	// public ownerCount = $derived(this.remoteOwners.size);
 
 	// public color = $derived(uniqolor(this.owner).color);
 
@@ -93,11 +93,19 @@ export class SudokuCell implements sudoku.Cell {
 	/**
 	 * Returns a string representation of the cell's value suitable for display.
 	 */
-	public displayString: string = $derived.by(() => {
+	// public displayString: string = $derived.by(() => {
+	// 	$inspect(this);
+	// 	if (this.startingClue || this.value !== 0) {
+	// 		return this.value.toString();
+	// 	}
+	// 	return "";
+	// });
+
+	public getDisplayString() {
 		$inspect(this);
 		if (this.startingClue || this.value !== 0) {
 			return this.value.toString();
 		}
 		return "";
-	});
+	}
 }

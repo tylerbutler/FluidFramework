@@ -1,7 +1,6 @@
 <script lang="ts">
 import { Latest, LatestMap, type ISessionClient } from "@fluidframework/presence/alpha";
 import { Badge, Button, Darkmode, Heading, Indicator, P } from "svelte-5-ui-lib";
-import { setContext } from "svelte";
 import type { SudokuAppProps } from "./props";
 import { PUZZLES } from "./constants";
 import PuzzleTable from "./PuzzleTable.svelte";
@@ -25,8 +24,6 @@ let theme = $state("default");
 function onThemeChange(e: any) {
 	theme = e.target.value;
 }
-
-setContext("grid", puzzle.grid);
 
 const handleResetButton = () => {
 	for (const row of puzzle.grid) {
@@ -56,12 +53,8 @@ presence.events.on("attendeeJoined", () => {
 	connectedUsers = getConnectedUsers().map((c) => c.sessionId);
 	updateTitle();
 });
-presence.events.on("attendeeDisconnected", () => {
-	for (const row of puzzle.grid) {
-		for (const cell of row) {
-			cell.remoteOwners.delete(presence.getMyself().sessionId);
-		}
-	}
+presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
+	puzzle.removeAllOwnership(attendee.sessionId);
 	updateTitle();
 });
 
@@ -75,7 +68,6 @@ presence.events.on("attendeeDisconnected", () => {
 		{#key connectedUsers.length}
 			{#each connectedUsers as sessionId (sessionId)}
 				<li>
-					<div>
 						<Badge
 							color={mapStringToColor(sessionId)}
 							rounded
@@ -83,13 +75,12 @@ presence.events.on("attendeeDisconnected", () => {
 						>
 							<Indicator
 								color={mapStringToColor(sessionId)}
-								size="xl"
+								size="lg"
 								class="me-1"
 							></Indicator>
 							<!-- {isMe(attendee) ? `(me) ${attendee.sessionId}` : attendee.sessionId} -->
 							 {sessionId}
 						</Badge>
-					</div>
 				</li>
 				{:else}
 				<li><Badge>Disconnected</Badge></li>
@@ -105,7 +96,6 @@ presence.events.on("attendeeDisconnected", () => {
 				bind:grid={puzzle.grid}
 				{sessionClient}
 				{selectionManager}
-				{selectionMap}
 			/>
 
 			<div class="display-flex">
