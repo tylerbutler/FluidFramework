@@ -6,11 +6,13 @@
 import sudoku from "sudokus";
 import { Coordinate } from "./coordinate";
 import { PUZZLE_INDEXES, PUZZLES } from "./constants";
-import { SudokuCell } from "./sudokuCell.svelte";
 import type { SudokuInput } from "./types";
+import type { SudokuAppData, SudokuGrid } from "./fluid/dataSchema";
+import { SudokuCellData } from "./SudokuCell/cellData.svelte";
+import { Tree } from "fluid-framework";
 
 export class SudokuPuzzle {
-	public grid: SudokuGrid = $state([]);
+	public grid: SudokuGrid = $state<SudokuGrid>({ grid: [] });
 
 	constructor(readonly puzzleInput: SudokuInput) {
 		SudokuPuzzle.loadPuzzle(this, puzzleInput);
@@ -25,22 +27,27 @@ export class SudokuPuzzle {
 	}
 
 	public static loadPuzzle(
-		existingPuzzle: SudokuPuzzle,
+		existingPuzzle: SudokuAppData,
 		puzzleInput: SudokuInput,
 	): SudokuInput {
-		existingPuzzle.grid.length = 0; // Clean the grid; we're rebuilding it.
+		// existingPuzzle.grid.length = 0; // Clean the grid; we're rebuilding it.
 		const solution = sudoku.solve(puzzleInput) as unknown as SudokuInput;
 		for (const row of PUZZLE_INDEXES) {
-			const newRow: SudokuCell[] = [];
+			// const newRow: SudokuCellData[] = [];
 			for (const col of PUZZLE_INDEXES) {
-				const cell = new SudokuCell(
-					puzzleInput[row][col],
-					solution[row][col],
-					Coordinate.asString(row, col),
-				);
-				newRow.push(cell);
+				const currentCell = existingPuzzle.grid[row][col];
+				Tree.runTransaction(currentCell, (prop) => {
+					prop.value =
+				});
+				const cell = new SudokuCellData({
+					value: puzzleInput[row][col],
+					correctValue: solution[row][col],
+					coordinate: [row, col],
+					startingClue: solution[row][col] === 0,
+				});
+				existingPuzzle.grid[row][col] = cell;
 			}
-			existingPuzzle.grid.push(newRow);
+			// existingPuzzle.grid.push(newRow);
 		}
 		return solution;
 	}

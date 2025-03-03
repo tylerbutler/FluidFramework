@@ -1384,6 +1384,97 @@ importers:
         specifier: ^3.0.7
         version: 3.0.7(@types/debug@4.1.12)(@types/node@22.10.1)(jiti@2.4.2)(jsdom@20.0.3)(less@3.12.2)(lightningcss@1.29.1)(sass@1.82.0)(terser@5.37.0)(yaml@2.6.1)
 
+  examples/apps/svelte2:
+    dependencies:
+      '@fluidframework/presence':
+        specifier: workspace:~
+        version: link:../../../packages/framework/presence
+      '@fluidframework/tinylicious-client':
+        specifier: workspace:~
+        version: link:../../../packages/service-clients/tinylicious-client
+      '@svelte-plugins/tooltips':
+        specifier: beta
+        version: 4.0.0-beta.1(svelte@5.20.2)
+      flowbite:
+        specifier: ^3.1.2
+        version: 3.1.2(rollup@4.34.8)
+      flowbite-svelte:
+        specifier: ^0.48.4
+        version: 0.48.4(rollup@4.34.8)(svelte@5.20.2)
+      fluid-framework:
+        specifier: workspace:~
+        version: link:../../../packages/framework/fluid-framework
+      sudokus:
+        specifier: ^1.0.2
+        version: 1.0.2
+      svelte-5-ui-lib:
+        specifier: ^0.12.2
+        version: 0.12.2(svelte@5.20.2)(tailwindcss@4.0.9)
+      uniqolor:
+        specifier: ^1.1.1
+        version: 1.1.1
+    devDependencies:
+      '@eslint/compat':
+        specifier: ^1.2.7
+        version: 1.2.7(eslint@8.55.0)
+      '@sveltejs/adapter-node':
+        specifier: ^5.2.12
+        version: 5.2.12(@sveltejs/kit@2.17.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.2)(vite@6.2.0(@types/node@22.10.1)(jiti@2.4.2)(less@3.12.2)(lightningcss@1.29.1)(sass@1.82.0)(terser@5.37.0)(yaml@2.6.1)))(svelte@5.20.2)(vite@6.2.0(@types/node@22.10.1)(jiti@2.4.2)(less@3.12.2)(lightningcss@1.29.1)(sass@1.82.0)(terser@5.37.0)(yaml@2.6.1)))
+      '@sveltejs/adapter-static':
+        specifier: ^3.0.8
+        version: 3.0.8(@sveltejs/kit@2.17.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.2)(vite@6.2.0(@types/node@22.10.1)(jiti@2.4.2)(less@3.12.2)(lightningcss@1.29.1)(sass@1.82.0)(terser@5.37.0)(yaml@2.6.1)))(svelte@5.20.2)(vite@6.2.0(@types/node@22.10.1)(jiti@2.4.2)(less@3.12.2)(lightningcss@1.29.1)(sass@1.82.0)(terser@5.37.0)(yaml@2.6.1)))
+      '@sveltejs/kit':
+        specifier: ^2.17.2
+        version: 2.17.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.2)(vite@6.2.0(@types/node@22.10.1)(jiti@2.4.2)(less@3.12.2)(lightningcss@1.29.1)(sass@1.82.0)(terser@5.37.0)(yaml@2.6.1)))(svelte@5.20.2)(vite@6.2.0(@types/node@22.10.1)(jiti@2.4.2)(less@3.12.2)(lightningcss@1.29.1)(sass@1.82.0)(terser@5.37.0)(yaml@2.6.1))
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^5.0.3
+        version: 5.0.3(svelte@5.20.2)(vite@6.2.0(@types/node@22.10.1)(jiti@2.4.2)(less@3.12.2)(lightningcss@1.29.1)(sass@1.82.0)(terser@5.37.0)(yaml@2.6.1))
+      '@tailwindcss/vite':
+        specifier: ^4.0.0
+        version: 4.0.9(vite@6.2.0(@types/node@22.10.1)(jiti@2.4.2)(less@3.12.2)(lightningcss@1.29.1)(sass@1.82.0)(terser@5.37.0)(yaml@2.6.1))
+      '@types/sudokus':
+        specifier: ^1.0.3
+        version: 1.0.3
+      eslint:
+        specifier: ~8.55.0
+        version: 8.55.0
+      eslint-plugin-svelte:
+        specifier: ~2.46.1
+        version: 2.46.1(eslint@8.55.0)(svelte@5.20.2)(ts-node@10.9.2(@types/node@22.10.1)(typescript@5.4.5))
+      flowbite-svelte-icons:
+        specifier: ^2.0.2
+        version: 2.0.2(svelte@5.20.2)(tailwind-merge@3.0.2)(tailwindcss@4.0.9)
+      globals:
+        specifier: ^16.0.0
+        version: 16.0.0
+      mdsvex:
+        specifier: ^0.12.3
+        version: 0.12.3(svelte@5.20.2)
+      rimraf:
+        specifier: ^4.4.0
+        version: 4.4.1
+      svelte:
+        specifier: ^5.20.2
+        version: 5.20.2
+      svelte-check:
+        specifier: ^4.1.4
+        version: 4.1.4(picomatch@4.0.2)(svelte@5.20.2)(typescript@5.4.5)
+      tailwindcss:
+        specifier: ^4.0.0
+        version: 4.0.9
+      typescript:
+        specifier: ~5.4.5
+        version: 5.4.5
+      typescript-eslint:
+        specifier: ^8.0.0
+        version: 8.24.1(eslint@8.55.0)(typescript@5.4.5)
+      vite:
+        specifier: ^6.2.0
+        version: 6.2.0(@types/node@22.10.1)(jiti@2.4.2)(less@3.12.2)(lightningcss@1.29.1)(sass@1.82.0)(terser@5.37.0)(yaml@2.6.1)
+      vitest:
+        specifier: ^3.0.7
+        version: 3.0.7(@types/debug@4.1.12)(@types/node@22.10.1)(jiti@2.4.2)(jsdom@20.0.3)(less@3.12.2)(lightningcss@1.29.1)(sass@1.82.0)(terser@5.37.0)(yaml@2.6.1)
+
   examples/apps/task-selection:
     dependencies:
       '@fluid-example/example-utils':

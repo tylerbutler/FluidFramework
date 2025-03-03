@@ -4,10 +4,11 @@
  */
 
 import { TinyliciousClient } from "@fluidframework/tinylicious-client";
-import { containerSchema, type SudokuAppSchema } from "./schema";
-import { TreeViewConfiguration, type IFluidContainer } from "fluid-framework";
-import { SudokuCellData, SudokuGrid } from "./appData";
+import { containerSchema, type SudokuAppSchema } from "./containerSchema";
+import { TreeViewConfiguration, type IFluidContainer, type TreeView } from "fluid-framework";
+import { SudokuGrid } from "./dataSchema";
 import { PUZZLE_INDEXES } from "../constants";
+import { SudokuCellData } from "../SudokuCell/cellData.svelte";
 
 const client = new TinyliciousClient();
 
@@ -38,24 +39,26 @@ export async function getFluidContainer(containerId: string) {
 
 const treeConfiguration = new TreeViewConfiguration({ schema: SudokuGrid });
 
-function initializeContainerData(container: IFluidContainer<SudokuAppSchema>) {
+function initializeContainerData(
+	container: IFluidContainer<SudokuAppSchema>,
+): TreeView<typeof SudokuGrid> {
 	const appData = container.initialObjects.appData.viewWith(treeConfiguration);
 
 	const newGrid: SudokuCellData[][] = [];
-const newRow: SudokuCellData[] = [];
-for (const row of PUZZLE_INDEXES) {
-	for (const col of PUZZLE_INDEXES) {
-		const cell = new SudokuCellData({
-			coordinate: [row, col],
-			startingClue: false,
-			value: 0,
-		});
-		newRow.push(cell);
+	const newRow: SudokuCellData[] = [];
+	for (const row of PUZZLE_INDEXES) {
+		for (const col of PUZZLE_INDEXES) {
+			const cell = new SudokuCellData({
+				coordinate: [row, col],
+				startingClue: false,
+				correctValue: 0,
+				value: 0,
+			});
+			newRow.push(cell);
+		}
+		newGrid.push(newRow);
 	}
-	newGrid.push(newRow);
-}
 
-appData.initialize(
-	new SudokuGrid(newGrid),
-);
+	appData.initialize(new SudokuGrid(newGrid));
+	return appData;
 }

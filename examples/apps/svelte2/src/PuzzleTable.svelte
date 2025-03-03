@@ -6,8 +6,9 @@ import type {
 import { Table, TableBody, TableBodyRow } from "svelte-5-ui-lib";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
 import { type SudokuAppProps } from "./props";
-import Cell from "./Cell.svelte";
-import type { SudokuGrid } from "./fluid/appData";
+import type { SudokuGrid } from "./fluid/dataSchema";
+import Cell from "./SudokuCell/Cell.svelte";
+import { Tree } from "fluid-framework";
 
 const {
 	grid = $bindable(),
@@ -52,13 +53,13 @@ const moveCell = (keyString: string, coordIn: CoordinateString): void => {
 
 	// Remove the owner from the old cell
 	const [oldRow, oldColumn] = Coordinate.asArrayNumbers(coord);
-	grid[oldRow][oldColumn].remoteOwners.delete(sessionClient.sessionId);
+	grid[oldRow][oldColumn].remoteOwners.delete(sessionClient);
 };
 
 const onRemoteCellChange = (coord: LatestValueClientData<CellCoordinate>) => {
 	const [row, column] = coord.value;
 	// Add the session to the owners here; removal is done
-	grid[row][column].remoteOwners.add(coord.client.sessionId);
+	grid[row][column].remoteOwners.add(coord.client);
 	console.debug("remote selection update:", coord.value);
 };
 

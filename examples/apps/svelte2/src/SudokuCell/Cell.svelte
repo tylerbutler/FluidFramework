@@ -1,25 +1,17 @@
 <script lang="ts">
 import type { ISessionClient, LatestValueManager } from "@fluidframework/presence/alpha";
 import { Indicator, Input, TableBodyCell, type ColorType } from "svelte-5-ui-lib";
-import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
-import { isSudokuNumber, type SudokuNumber } from "./types";
-import { SudokuCell } from "./sudokuCell.svelte";
-import { mapStringToColor } from "./colors";
+import { Coordinate, type CellCoordinate, type CoordinateString } from "../coordinate";
+import { isSudokuNumber, type SudokuNumber } from "../types";
+import { mapStringToColor } from "../colors";
+import type { CellComponentProps } from "./cellData.svelte";
 
 let {
 	cellData = $bindable(),
 	currentSessionClient,
 	selectionManager,
 	onKeyDown,
-}: {
-	// owners = $bindable(), // onLeaveCell,
-	cellData: SudokuCell;
-	readonly currentSessionClient: ISessionClient;
-	readonly selectionManager: LatestValueManager<CellCoordinate>;
-	onKeyDown: (keyString: string, coordIn: string) => void;
-	// onLeaveCell: (event: FocusEvent) => void;
-	// owners: SvelteSet<string>;
-} = $props();
+}: CellComponentProps = $props();
 
 const coordinateDataAttributeName = "cellcoordinate";
 const cellCoordinateId = (c: CoordinateString) => `${currentSessionClient.sessionId}-${c}`;
@@ -171,12 +163,12 @@ function getPresenceIndicatorPosition(index: number) {
 
 <TableBodyCell
 	class="h-[40px] w-[40px] p-0 box-border border-none m-[2px] {getCellBorderClasses(
-		cellData.coordinate,
+		cellData.coordinateString,
 	).join(' ')}"
 >
 	<div class="relative p-0 h-[38px] w-[38px]">
 		<Input
-			id={cellCoordinateId(cellData.coordinate)}
+			id={cellCoordinateId(cellData.coordinateString)}
 			class="p-0 h-[38px] w-[38px] box-border text-center rounded-none {getCellInputClasses().join(
 				' ',
 			)}"
@@ -184,15 +176,15 @@ function getPresenceIndicatorPosition(index: number) {
 			onfocus={handleInputFocus}
 			onblur={handleInputBlur}
 			onkeydown={handleKeyDown}
-			value={cellData.getDisplayString()}
+			value={cellData.displayString}
 			max={1}
-			data-cellcoordinate={cellData.coordinate}
+			data-cellcoordinate={cellData.coordinateString}
 		></Input>
 	{#key cellData.remoteOwners.size}
 		{#each cellData.remoteOwners as owner, index (owner)}
 			{#if index < 8}
 				<Indicator
-					color={mapStringToColor(owner)}
+					color={mapStringToColor(owner.sessionId)}
 					border={false}
 					size="lg"
 					placement={getPresenceIndicatorPosition(index)}

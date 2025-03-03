@@ -10,10 +10,9 @@ import {
 	TreeViewConfiguration,
 	type ContainerSchema,
 } from "fluid-framework";
-import { SudokuCellData, SudokuGrid } from "./appData";
+import { SudokuGrid } from "./dataSchema";
 import { PUZZLE_INDEXES } from "../constants";
 import { Coordinate } from "../coordinate";
-import type { SudokuCell } from "../sudokuCell.svelte";
 
 // Define the schema of the Fluid container.
 // This example uses the presence features only, so only that data object is added.
