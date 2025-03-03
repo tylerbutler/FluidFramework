@@ -1,0 +1,60 @@
+{
+	"name": "@fluid-examples/sudoku-svelte",
+	"version": "2.22.0",
+	"private": true,
+	"homepage": "https://fluidframework.com",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/microsoft/FluidFramework.git",
+		"directory": "examples/apps/svelte"
+	},
+	"license": "MIT",
+	"author": "Microsoft and contributors",
+	"type": "module",
+	"scripts": {
+		"build": "vite build",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"clean": "rimraf --glob nyc .svelte-kit",
+		"dev": "vite dev",
+		"lint": "eslint .",
+		"preview": "vite preview",
+		"test": "npm run test:unit -- --run",
+		"test:unit": "vitest"
+	},
+	"dependencies": {
+		"@fluidframework/presence": "workspace:~",
+		"@fluidframework/tinylicious-client": "workspace:~",
+		"@svelte-plugins/tooltips": "beta",
+		"flowbite": "^3.1.2",
+		"svelte-5-ui-lib": "^0.12.2",
+		"flowbite-svelte": "^0.48.4",
+		"fluid-framework": "workspace:~",
+		"sudokus": "^1.0.2",
+		"uniqolor": "^1.1.1"
+	},
+	"devDependencies": {
+		"@eslint/compat": "^1.2.7",
+		"@sveltejs/adapter-node": "^5.2.12",
+		"@sveltejs/adapter-static": "^3.0.8",
+		"@sveltejs/kit": "^2.17.2",
+		"@sveltejs/vite-plugin-svelte": "^5.0.3",
+		"@tailwindcss/vite": "^4.0.0",
+		"@types/sudokus": "^1.0.3",
+		"eslint": "~8.55.0",
+		"eslint-plugin-svelte": "~2.46.1",
+		"flowbite-svelte-icons": "^2.0.2",
+		"flowbite-svelte": "^0.48.4",
+		"flowbite": "^3.1.2",
+		"globals": "^16.0.0",
+		"mdsvex": "^0.12.3",
+		"rimraf": "^4.4.0",
+		"svelte": "^5.20.2",
+		"svelte-check": "^4.1.4",
+		"tailwindcss": "^4.0.0",
+		"typescript": "~5.4.5",
+		"typescript-eslint": "^8.0.0",
+		"vite": "^6.2.0",
+		"vitest": "^3.0.7"
+	}
+}

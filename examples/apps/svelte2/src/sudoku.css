@@ -1,0 +1,17 @@
+.correct {
+	background-color: #9bf49b;
+	color: #073d07;
+	border-color: #0b6a0b;
+}
+
+.wrong {
+	background-color: #e7999d;
+	color: #a4262c;
+	border-color: #a4262c;
+}
+
+.startingClue {
+	--sudoku-input-bg: var(--neutralLighter);
+	--sudoku-input-fg: var(--neutralPrimary);
+	--sudoku-input-border-color: var(--neutralPrimary);
+}
