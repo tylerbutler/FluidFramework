@@ -4,7 +4,7 @@ import { schemaFactory as sf } from "./schemaFactory";
 
 export class SudokuRow extends sf.array("SudokuRow", SudokuCellData) {}
 
-export class SudokuGrid extends sf.array("SudokuRow", SudokuRow) {}
+export class SudokuGrid extends sf.array("SudokuGrid", SudokuRow) {}
 
 /**
  * Main app data schema.
