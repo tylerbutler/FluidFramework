@@ -3,7 +3,6 @@
  * Licensed under the MIT License.
  */
 
-import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
 import type { PageLoad } from "./$types";
 import { createFluidContainer } from "../fluid/init";
 import { redirect } from "@sveltejs/kit";

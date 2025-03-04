@@ -70,11 +70,11 @@ const onLeaveCell = (event: FocusEvent) => {
 
 <Table class="h-full w-min border-collapse">
 	<TableBody>
-		{#each grid as row, r (row.join(","))}
+		{#each grid as row, rowIndex}
 			<TableBodyRow>
-				{#each row as cell, c (cell.coordinateString)}
+				{#each row as cell, colIndex (cell.coordinateString)}
 					<Cell
-						bind:cellData={grid[r][c]}
+						bind:cellData={grid[rowIndex][colIndex]}
 						currentSessionClient={sessionClient}
 						onKeyDown={moveCell}
 						{selectionManager}

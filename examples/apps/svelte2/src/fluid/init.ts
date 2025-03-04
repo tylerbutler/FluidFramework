@@ -4,9 +4,9 @@
  */
 
 import { TinyliciousClient } from "@fluidframework/tinylicious-client";
-import { containerSchema, type SudokuContainerSchema } from "./containerSchema";
-import { type IFluidContainer, type TreeView } from "fluid-framework";
-import { SudokuGrid, sudokuTreeConfiguration, type SudokuAppData } from "./dataSchema";
+import { containerSchema } from "./containerSchema";
+import type { TreeView } from "fluid-framework";
+import { SudokuGrid, SudokuRow, sudokuTreeConfiguration, type SudokuAppData } from "./dataSchema";
 import { PUZZLE_INDEXES } from "../constants";
 import { SudokuCellData } from "../SudokuCell/cellData.svelte";
 
@@ -18,7 +18,11 @@ export async function createFluidContainer() {
 	const { container } = await client.createContainer(containerSchema, "2");
 
 	// Populate the default data before we attach
-	const treeView = initializeContainerData(container);
+	console.log("viewWith");
+	const appData = container.initialObjects.appData.viewWith(sudokuTreeConfiguration);
+	console.log("appData init");
+	initializeContainerData(appData);
+	console.log("initializeContainerData succeeded");
 
 	// If the app is in a `createNew` state, and the container is detached, we attach the container.
 	// This uploads the container to the service and connects to the collaboration session.
@@ -38,14 +42,10 @@ export async function getFluidContainer(containerId: string) {
 	return container;
 }
 
-function initializeContainerData(
-	container: IFluidContainer<SudokuContainerSchema>,
-): TreeView<typeof SudokuAppData> {
-	const appData = container.initialObjects.appData.viewWith(sudokuTreeConfiguration);
-
-	const newGrid: SudokuCellData[][] = [];
-	const newRow: SudokuCellData[] = [];
+function initializeContainerData(appData: TreeView<typeof SudokuAppData>): void {
+	const newGridData: SudokuRow[] = [];
 	for (const row of PUZZLE_INDEXES) {
+		const newRowData: SudokuCellData[] = [];
 		for (const col of PUZZLE_INDEXES) {
 			const cell = new SudokuCellData({
 				coordinate: [row, col],
@@ -53,11 +53,11 @@ function initializeContainerData(
 				correctValue: 0,
 				value: 0,
 			});
-			newRow.push(cell);
+			newRowData.push(cell);
 		}
-		newGrid.push(newRow);
+		newGridData.push(new SudokuRow(newRowData));
 	}
 
-	appData.initialize({ grid: new SudokuGrid(newGrid) });
-	return appData;
+	const grid = new SudokuGrid(newGridData);
+	appData.initialize({ grid });
 }
