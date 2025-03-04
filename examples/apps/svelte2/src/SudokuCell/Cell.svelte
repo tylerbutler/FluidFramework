@@ -156,9 +156,14 @@ function getPresenceIndicatorPosition(index: number) {
 	}
 }
 
+// Tree.on(cellData._value, "nodeChanged", () => {
+// 	cellData.refreshReactiveProperties();
+// });
+
 Tree.on(cellData, "nodeChanged", () => {
 	cellData.refreshReactiveProperties();
 });
+cellData.refreshReactiveProperties();
 </script>
 
 <TableBodyCell

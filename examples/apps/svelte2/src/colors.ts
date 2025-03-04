@@ -8,7 +8,7 @@ export const colors = [
 	"green",
 	"emerald",
 	"teal",
-	"cyan",
+	// "cyan",
 	// "sky",
 	"blue",
 	"indigo",
@@ -16,7 +16,7 @@ export const colors = [
 	"purple",
 	// "fuchsia",
 	"pink",
-	"rose",
+	// "rose",
 ] as const;
 
 export type ColorType = (typeof colors)[number];

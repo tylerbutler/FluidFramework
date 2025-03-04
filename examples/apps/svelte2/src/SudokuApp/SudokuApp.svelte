@@ -79,7 +79,7 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 					</Badge>
 				</li>
 			{:else}
-				<li><Badge>Disconnected</Badge></li>
+				<li><Badge>No one else connected</Badge></li>
 			{/each}
 		{/key}
 	</ul>
@@ -90,35 +90,16 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 		<div class="inline-block h-max min-h-[447px]">
 			<PuzzleTable grid={data.grid} {sessionClient} {selectionManager} />
 
-			<div class="display-flex">
-				<span class="display-flex grow-2 items-center">
-					<label for="theme-select">Theme: </label>
-					<select value={theme} onchange={onThemeChange} id="theme-select" name="theme">
-						<option aria-selected={theme === "default"} value="default">
-							Default Theme{" "}
-						</option>
-						<option aria-selected={theme === "dark-theme"} value="dark-theme">
-							Dark Theme
-						</option>
-					</select>
-				</span>
-
-				<span class="grow-1">
-					<Darkmode />
-				</span>
+			<div class="flex">
 				<span class="grow-1">
 					<Button onclick={handleResetButton}>Reset</Button>
 				</span>
 
-				<span class="display-flex items-center">
-					Load:
-					<Button onclick={() => loadIncludedPuzzle(data, 0)}
-						>Puzzle 1</Button
-					>
-					<Button onclick={() => loadIncludedPuzzle(data, 1)}
-						>Puzzle 2</Button
-					>
-				</span>
+				<span class="grow-5">
+						<span>Load:</span>
+						<Button onclick={() => loadIncludedPuzzle(data, 0)}>Puzzle 1</Button>
+						<Button onclick={() => loadIncludedPuzzle(data, 1)}>Puzzle 2</Button>
+					</span>
 			</div>
 		</div>
 	</div>

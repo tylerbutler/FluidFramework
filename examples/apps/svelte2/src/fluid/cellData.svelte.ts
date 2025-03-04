@@ -129,7 +129,6 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData {
 
 	public displayString = $derived.by(() => {
 		if (this.startingClue || this.value !== 0) {
-			console.log(`displayString: ${this.value.toString()}`)
 			return this.value.toString();
 		}
 		return "";
