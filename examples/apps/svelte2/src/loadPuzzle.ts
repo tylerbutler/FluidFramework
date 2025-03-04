@@ -17,7 +17,7 @@ function loadPuzzle(existingPuzzle: SudokuAppData, puzzleInput: SudokuInput): Su
 			Tree.runTransaction(currentCell, (cell) => {
 				cell.value = puzzleInput[row][col];
 				cell.correctValue = solution[row][col];
-				cell.startingClue = solution[row][col] === 0;
+				cell.startingClue = puzzleInput[row][col] !== 0;
 			});
 		}
 	}

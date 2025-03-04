@@ -5,8 +5,7 @@ import SudokuApp from "../../../SudokuApp/SudokuApp.svelte";
 
 const { data }: PageProps = $props();
 const { appData, presence, sessionClient } = data;
-
-loadIncludedPuzzle(appData.root, 0);
+// loadIncludedPuzzle(appData.root.grid, 0);
 
 // let presence = $state<SvelteMap<CoordinateString, boolean>>(new SvelteMap());
 </script>

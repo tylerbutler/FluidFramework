@@ -64,7 +64,7 @@ const onLeaveCell = (event: FocusEvent) => {
 			<TableBodyRow>
 				{#each row as cell, colIndex (cell.coordinateString)}
 					<Cell
-						bind:cellData={grid[rowIndex][colIndex]}
+						cellData={grid[rowIndex][colIndex]}
 						currentSessionClient={sessionClient}
 						onKeyDown={moveCell}
 						{selectionManager}

@@ -2,8 +2,7 @@ import type { ISessionClient } from "@fluidframework/presence/alpha";
 import { SvelteSet } from "svelte/reactivity";
 import { Coordinate } from "../coordinate";
 import { schemaFactory as sf } from "./schemaFactory";
-import type { CellCoordinate } from "../coordinate";
-import type { SudokuNumber } from "../sudokuNumber";
+import { isSudokuNumber, type SudokuNumber } from "../sudokuNumber";
 import { Tree } from "fluid-framework";
 
 /**
@@ -36,7 +35,7 @@ export class CellPersistedData extends sf.object("CellPersistedData", {
 	 * True if the value in the cell is correct; false otherwise.
 	 */
 	public get isCorrect() {
-		return this._value === this._correctValue;
+		return !this._startingClue && this._value === this._correctValue;
 	}
 
 	public get coordinateString() {
@@ -89,7 +88,7 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData {
 		this._correctValue = v;
 	}
 
-	#startingClue: boolean = $state(true);
+	#startingClue: boolean = $state(false);
 	public get startingClue() {
 		return this.#startingClue;
 	}
@@ -97,20 +96,40 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData {
 		this._startingClue = clue;
 	}
 
-	#coordinate: CellCoordinate = $state([0, 0]);
-	public get coordinate() {
-		return this.#coordinate;
-	}
-	public set coordinate(c) {
-		Tree.runTransaction(this._coordinate, (coord) => {
-			coord.removeRange();
-			coord.insertAt(0, c[0]);
-			coord.insertAt(1, c[1]);
-		});
+	// #coordinate = [0, 0];
+	// public get coordinate() {
+	// 	return this.#coordinate;
+	// }
+
+	// public set coordinate(c) {
+	// 	Tree.runTransaction(this._coordinate, (coord) => {
+	// 		coord.removeRange();
+	// 		coord.insertAt(0, c[0]);
+	// 		coord.insertAt(1, c[1]);
+	// 	});
+	// }
+
+	public refreshReactiveProperties(): void {
+		if (!isSudokuNumber(this._value) || !isSudokuNumber(this._correctValue)) {
+			throw new Error(
+				`Value is not a valid sudoku number: ${this._value} or ${this._correctValue}`,
+			);
+		}
+		console.log(`Refreshing reactive properties for cell: ${this.coordinateString}`);
+		console.log(
+			`value: ${this._value} | correctValue: ${this._correctValue} | isCorrect: ${this.isCorrect} | startingClue: ${this._startingClue}`,
+		);
+		// console.log(`startingClue: ${this._startingClue}`);
+		this.#startingClue = this._startingClue;
+
+		this.#value = this._value as SudokuNumber;
+		// console.log(`correctValue: ${this._correctValue}`);
+		this.#correctValue = this._correctValue as SudokuNumber;
 	}
 
 	public displayString = $derived.by(() => {
 		if (this.startingClue || this.value !== 0) {
+			console.log(`displayString: ${this.value.toString()}`)
 			return this.value.toString();
 		}
 		return "";
@@ -120,6 +139,9 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData {
 	 * Returns the appropriate CellState for the cell. This state can be used to render the cell differently.
 	 */
 	public status = $derived.by(() => {
+		// console.log(
+		// 	`status for cell ${this.coordinateString}: value: ${this.value} | startingClue: ${this.startingClue} |`,
+		// );
 		if (this.value === 0) {
 			return CellState.empty;
 		}
@@ -128,7 +150,7 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData {
 			return CellState.startingClue;
 		}
 
-		if (this.isCorrect) {
+		if (this.isCorrect && !this.startingClue) {
 			return CellState.correct;
 		}
 

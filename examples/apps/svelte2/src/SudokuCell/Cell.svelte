@@ -6,12 +6,8 @@ import { Coordinate, type CoordinateString } from "../coordinate";
 import { type SudokuNumber, isSudokuNumber } from "../sudokuNumber";
 import type { CellComponentProps } from "./props";
 
-let {
-	cellData = $bindable(),
-	currentSessionClient,
-	selectionManager,
-	onKeyDown,
-}: CellComponentProps = $props();
+let { cellData, currentSessionClient, selectionManager, onKeyDown }: CellComponentProps =
+	$props();
 
 const coordinateDataAttributeName = "cellcoordinate";
 const cellCoordinateId = (c: CoordinateString) => `${currentSessionClient.sessionId}-${c}`;
@@ -119,10 +115,6 @@ function getCellBorderClasses(coord: CoordinateString) {
 // const borderClasses = getCellBorderClasses(cellData.coordinate);
 function getCellInputClasses() {
 	switch (cellData.status) {
-		case "correct":
-			return ["border", "border-green-800", "bg-green-300"];
-		case "wrong":
-			return ["border", "border-red-800", "bg-red-300"];
 		case "startingClue":
 			return [
 				// "border-gray-400",
@@ -130,6 +122,10 @@ function getCellInputClasses() {
 				"italic",
 				"text-gray-500",
 			];
+		case "correct":
+			return ["border", "border-green-800", "bg-green-300"];
+		case "wrong":
+			return ["border", "border-red-800", "bg-red-300"];
 		case "empty":
 		// intentional fallthrough
 		default:
@@ -161,7 +157,7 @@ function getPresenceIndicatorPosition(index: number) {
 }
 
 Tree.on(cellData, "nodeChanged", () => {
-	console.log("cellData", cellData);
+	cellData.refreshReactiveProperties();
 });
 </script>
 
@@ -184,17 +180,17 @@ Tree.on(cellData, "nodeChanged", () => {
 			max={1}
 			data-cellcoordinate={cellData.coordinateString}
 		></Input>
-	{#key cellData.remoteOwners.size}
-		{#each cellData.remoteOwners as owner, index (owner)}
-			{#if index < 8}
-				<Indicator
-					color={mapStringToColor(owner.sessionId)}
-					border={false}
-					size="lg"
-					placement={getPresenceIndicatorPosition(index)}
-				></Indicator>
-			{/if}
-		{/each}
-	{/key}
+		{#key cellData.remoteOwners.size}
+			{#each cellData.remoteOwners as owner, index (owner)}
+				{#if index < 8}
+					<Indicator
+						color={mapStringToColor(owner.sessionId)}
+						border={false}
+						size="lg"
+						placement={getPresenceIndicatorPosition(index)}
+					></Indicator>
+				{/if}
+			{/each}
+		{/key}
 	</div>
 </TableBodyCell>
