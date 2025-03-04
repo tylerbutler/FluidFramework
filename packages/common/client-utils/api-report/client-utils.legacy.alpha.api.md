@@ -4,7 +4,8 @@
 
 ```ts
 
-export { EventEmitter }
+// @public (undocumented)
+export const EventEmitter: typeof pkg.EventEmitter;
 
 // @alpha
 export type EventEmitterEventType = string;
