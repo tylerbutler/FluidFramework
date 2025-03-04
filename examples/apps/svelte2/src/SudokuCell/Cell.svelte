@@ -5,6 +5,7 @@ import { Coordinate, type CellCoordinate, type CoordinateString } from "../coord
 import { isSudokuNumber, type SudokuNumber } from "../types";
 import { mapStringToColor } from "../colors";
 import type { CellComponentProps } from "./cellData.svelte";
+import { Tree } from "fluid-framework";
 
 let {
 	cellData = $bindable(),
@@ -159,6 +160,11 @@ function getPresenceIndicatorPosition(index: number) {
 			throw new Error("Invalid index");
 	}
 }
+
+Tree.on(cellData, "nodeChanged", () => {
+	console.log("cellData", cellData);
+});
+
 </script>
 
 <TableBodyCell

@@ -69,17 +69,19 @@ export interface CellLocalData {
 export class SudokuCellData extends CellPersistedData implements CellLocalData, CellInterface {
 	public remoteOwners = $state(new SvelteSet<ISessionClient>());
 
-	public get displayString() {
+	// public persistedData = $state(CellPersistedData)
+
+	public displayString = $derived.by(()=>{
 		if (this.startingClue || this.value !== 0) {
 			return this.value.toString();
 		}
 		return "";
-	}
+	});
 
 	/**
 	 * Returns the appropriate CellState for the cell. This state can be used to render the cell differently.
 	 */
-	public get status(): CellState {
+	public status = $derived.by(()=> {
 		if (this.value === 0) {
 			return CellState.empty;
 		}
@@ -93,7 +95,7 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData, 
 		}
 
 		return CellState.wrong;
-	}
+	});
 
 	public get fixed() {
 		return this.startingClue;
@@ -101,11 +103,8 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData, 
 }
 
 export interface CellComponentProps {
-	// owners = $bindable(), // onLeaveCell,
 	cellData: SudokuCellData;
 	readonly currentSessionClient: ISessionClient;
 	readonly selectionManager: LatestValueManager<CellCoordinate>;
 	onKeyDown: (keyString: string, coordIn: string) => void;
-	// onLeaveCell: (event: FocusEvent) => void;
-	// owners: SvelteSet<string>;
 }

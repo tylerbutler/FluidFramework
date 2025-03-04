@@ -6,11 +6,15 @@
 import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
 import type { PageLoad } from "./$types";
 import { getFluidContainer } from "../../../fluid/init";
+import { sudokuTreeConfiguration } from "../../../fluid/dataSchema";
 
 export const load: PageLoad = async ({ params }) => {
 	const container = await getFluidContainer(params.containerId);
 
-	// // Retrieve a reference to the presence APIs via the data object.
+	// Get a view of the tree data from the container.
+	const appData = container.initialObjects.appData.viewWith(sudokuTreeConfiguration);
+
+	// Retrieve a reference to the presence APIs via the data object.
 	const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
 
 	// if (!containerId) {
@@ -18,8 +22,7 @@ export const load: PageLoad = async ({ params }) => {
 	// }
 
 	return {
-		// container,
-		// containerId: params.containerId,
+		appData,
 		presence,
 		sessionClient: presence.getMyself(),
 	};

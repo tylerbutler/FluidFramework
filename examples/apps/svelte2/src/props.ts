@@ -4,10 +4,10 @@
  */
 
 import type { IPresence, ISessionClient } from "@fluidframework/presence/alpha";
-import type { SudokuPuzzle } from "./sudokuPuzzle.svelte";
+import type { SudokuAppData } from "./fluid/dataSchema";
 
 export interface SudokuAppProps {
-	puzzle: SudokuPuzzle;
+	data: SudokuAppData;
 	presence: IPresence;
 	sessionClient: ISessionClient;
 }

@@ -2,13 +2,12 @@
 import { Latest, LatestMap, type ISessionClient } from "@fluidframework/presence/alpha";
 import { Badge, Button, Darkmode, Heading, Indicator, P } from "svelte-5-ui-lib";
 import type { SudokuAppProps } from "./props";
-import { PUZZLES } from "./constants";
-import PuzzleTable from "./PuzzleTable.svelte";
+import PuzzleTable from "./PuzzleTable/PuzzleTable.svelte";
 import type { CellCoordinate, CoordinateString } from "./coordinate";
-import { SudokuPuzzle } from "./sudokuPuzzle.svelte";
 import { mapStringToColor } from "./colors";
+import { loadIncludedPuzzle } from "./loadPuzzle";
 
-const { puzzle, presence, sessionClient }: SudokuAppProps = $props();
+const { data, presence, sessionClient }: SudokuAppProps = $props();
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
 // We create a value manager within the workspace to track and share individual pieces of state.
 const appPresence = presence.getStates("v1:presence", {
@@ -26,7 +25,7 @@ function onThemeChange(e: any) {
 }
 
 const handleResetButton = () => {
-	for (const row of puzzle.grid) {
+	for (const row of data.grid) {
 		for (const cell of row) {
 			if (!cell.startingClue) {
 				cell.value = 0;
@@ -54,7 +53,11 @@ presence.events.on("attendeeJoined", () => {
 	updateTitle();
 });
 presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
-	puzzle.removeAllOwnership(attendee.sessionId);
+	for (const row of data.grid) {
+		for (const cell of row) {
+			cell.remoteOwners.delete(attendee);
+		}
+	}
 	updateTitle();
 });
 
@@ -68,21 +71,14 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 		{#key connectedUsers.length}
 			{#each connectedUsers as sessionId (sessionId)}
 				<li>
-						<Badge
-							color={mapStringToColor(sessionId)}
-							rounded
-							class="px-2.5 py-0.5"
-						>
-							<Indicator
-								color={mapStringToColor(sessionId)}
-								size="lg"
-								class="me-1"
-							></Indicator>
-							<!-- {isMe(attendee) ? `(me) ${attendee.sessionId}` : attendee.sessionId} -->
-							 {sessionId}
-						</Badge>
+					<Badge color={mapStringToColor(sessionId)} rounded class="px-2.5 py-0.5">
+						<Indicator color={mapStringToColor(sessionId)} size="lg" class="me-1"
+						></Indicator>
+						<!-- {isMe(attendee) ? `(me) ${attendee.sessionId}` : attendee.sessionId} -->
+						{sessionId}
+					</Badge>
 				</li>
-				{:else}
+			{:else}
 				<li><Badge>Disconnected</Badge></li>
 			{/each}
 		{/key}
@@ -92,11 +88,7 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 <P>
 	<div class={`inline-block h-max min-h-[447px] ${theme}`}>
 		<div class="inline-block h-max min-h-[447px]">
-			<PuzzleTable
-				bind:grid={puzzle.grid}
-				{sessionClient}
-				{selectionManager}
-			/>
+			<PuzzleTable bind:grid={data.grid} {sessionClient} {selectionManager} />
 
 			<div class="display-flex">
 				<span class="display-flex grow-2 items-center">
@@ -120,10 +112,10 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 
 				<span class="display-flex items-center">
 					Load:
-					<Button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[0])}
+					<Button onclick={() => loadIncludedPuzzle(data, 0)}
 						>Puzzle 1</Button
 					>
-					<Button onclick={() => SudokuPuzzle.loadPuzzle(puzzle, PUZZLES[1])}
+					<Button onclick={() => loadIncludedPuzzle(data, 1)}
 						>Puzzle 2</Button
 					>
 				</span>

@@ -25,4 +25,4 @@ export const containerSchema = {
 	},
 } as const satisfies ContainerSchema;
 
-export type SudokuAppSchema = typeof containerSchema;
+export type SudokuContainerSchema = typeof containerSchema;

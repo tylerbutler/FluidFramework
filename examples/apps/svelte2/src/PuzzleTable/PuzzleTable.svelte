@@ -4,22 +4,18 @@ import type {
 	LatestValueManager,
 } from "@fluidframework/presence/alpha";
 import { Table, TableBody, TableBodyRow } from "svelte-5-ui-lib";
-import { Coordinate, type CellCoordinate, type CoordinateString } from "./coordinate";
-import { type SudokuAppProps } from "./props";
-import type { SudokuGrid } from "./fluid/dataSchema";
-import Cell from "./SudokuCell/Cell.svelte";
-import { Tree } from "fluid-framework";
+import { Coordinate, type CellCoordinate, type CoordinateString } from "../coordinate";
+import { type SudokuAppProps } from "../props";
+import type { SudokuGrid } from "../fluid/dataSchema";
+import Cell from "../SudokuCell/Cell.svelte";
+import type { PuzzleTableComponentProps } from "./props";
 
 const {
 	grid = $bindable(),
 	sessionClient,
 	selectionManager,
 	// selectionMap,
-}: Omit<SudokuAppProps, "presence" | "puzzle"> & {
-	grid: SudokuGrid;
-	readonly selectionManager: LatestValueManager<CellCoordinate>;
-	// readonly selectionMap: LatestMapValueManager<string[], CoordinateString>;
-} = $props();
+}: PuzzleTableComponentProps = $props();
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(`${sessionClient.sessionId}-${coord}`) as HTMLInputElement;
@@ -76,7 +72,7 @@ const onLeaveCell = (event: FocusEvent) => {
 	<TableBody>
 		{#each grid as row, r (row.join(","))}
 			<TableBodyRow>
-				{#each row as cell, c (cell.toString())}
+				{#each row as cell, c (cell.coordinateString)}
 					<Cell
 						bind:cellData={grid[r][c]}
 						currentSessionClient={sessionClient}
