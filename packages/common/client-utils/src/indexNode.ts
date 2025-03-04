@@ -17,7 +17,7 @@ export { gitHashFile, hashFile } from "./hashFileNode.js";
 
 export { fromBase64ToUtf8, fromUtf8ToBase64, toUtf8 } from "./base64EncodingNode.js";
 export { Uint8ArrayToArrayBuffer } from "./bufferShared.js";
-export { EventEmitter } from "./eventEmitter.js";
+export { EventEmitter } from "./eventEmitter.cjs";
 export { performanceNow } from "./performanceIsomorphic.js";
 export { type ITraceEvent, Trace } from "./trace.js";
 export {
