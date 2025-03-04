@@ -117,19 +117,10 @@ describe("presence-tracker", () => {
 		});
 
 		it("First client shows single client connected", async () => {
-			await page
-				// eslint-disable-next-line @typescript-eslint/dot-notation
-				.waitForFunction(() => window["fluidSessionAttendeeCount"] === 1, {
-					// While the expected state should be immediately true, this timeout
-					// appears to apply to the entire evaluation period which may not return
-					// in 50ms 6-9% of the time (even if the evaluation is a simple `true`).
-					// All evaluations of state when this fails have show an attendee count
-					// of 1. So use 100ms which appears reliable.
-					timeout: 100,
-				})
-				.catch(async () => {
-					await throwWithPageAttendeeData("Attendee count is not 1", page);
-				});
+			// eslint-disable-next-line @typescript-eslint/dot-notation, @typescript-eslint/no-unsafe-return
+			const attendeeCount = await page.evaluate(() => window["fluidSessionAttendeeCount"]);
+			expect(attendeeCount).toBe(1);
+
 			const elementHandle = await page.waitForFunction(() =>
 				document.getElementById("focus-div"),
 			);
