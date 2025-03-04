@@ -164,7 +164,6 @@ function getPresenceIndicatorPosition(index: number) {
 Tree.on(cellData, "nodeChanged", () => {
 	console.log("cellData", cellData);
 });
-
 </script>
 
 <TableBodyCell

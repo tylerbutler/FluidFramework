@@ -71,7 +71,7 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData, 
 
 	// public persistedData = $state(CellPersistedData)
 
-	public displayString = $derived.by(()=>{
+	public displayString = $derived.by(() => {
 		if (this.startingClue || this.value !== 0) {
 			return this.value.toString();
 		}
@@ -81,7 +81,7 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData, 
 	/**
 	 * Returns the appropriate CellState for the cell. This state can be used to render the cell differently.
 	 */
-	public status = $derived.by(()=> {
+	public status = $derived.by(() => {
 		if (this.value === 0) {
 			return CellState.empty;
 		}
