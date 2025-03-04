@@ -2,10 +2,10 @@
 import { Latest, LatestMap, type ISessionClient } from "@fluidframework/presence/alpha";
 import { Badge, Button, Darkmode, Heading, Indicator, P } from "svelte-5-ui-lib";
 import type { SudokuAppProps } from "./props";
-import PuzzleTable from "./PuzzleTable/PuzzleTable.svelte";
-import type { CellCoordinate, CoordinateString } from "./coordinate";
-import { mapStringToColor } from "./colors";
-import { loadIncludedPuzzle } from "./loadPuzzle";
+import PuzzleTable from "../SudokuGrid/SudokuGrid.svelte";
+import type { CellCoordinate, CoordinateString } from "../coordinate";
+import { mapStringToColor } from "../colors";
+import { loadIncludedPuzzle } from "../loadPuzzle";
 
 const { data, presence, sessionClient }: SudokuAppProps = $props();
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
@@ -88,7 +88,7 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 <P>
 	<div class={`inline-block h-max min-h-[447px] ${theme}`}>
 		<div class="inline-block h-max min-h-[447px]">
-			<PuzzleTable bind:grid={data.grid} {sessionClient} {selectionManager} />
+			<PuzzleTable grid={data.grid} {sessionClient} {selectionManager} />
 
 			<div class="display-flex">
 				<span class="display-flex grow-2 items-center">

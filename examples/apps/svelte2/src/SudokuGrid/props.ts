@@ -1,6 +1,6 @@
 import type { ISessionClient, LatestValueManager } from "@fluidframework/presence/alpha";
 import type { CellCoordinate } from "../coordinate";
-import type { SudokuAppData, SudokuGrid } from "../fluid/dataSchema";
+import type { SudokuGrid } from "../fluid/dataSchema";
 
 export interface PuzzleTableComponentProps {
 	grid: SudokuGrid;

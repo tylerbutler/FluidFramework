@@ -1,18 +1,10 @@
 import { TreeViewConfiguration } from "fluid-framework";
-import { SudokuCellData } from "../SudokuCell/cellData.svelte";
 import { schemaFactory as sf } from "./schemaFactory";
+import { SudokuCellData } from "./cellData.svelte";
 
-export class SudokuRow extends sf.array("SudokuRow", SudokuCellData) {
-	// public newSudokuRow(data: SudokuCellData[]): SudokuRow {
-	// 	return new SudokuRow(data);
-	// }
-}
+export class SudokuRow extends sf.array("SudokuRow", SudokuCellData) {}
 
-export class SudokuGrid extends sf.array("SudokuGrid", SudokuRow) {
-	// public newSudokuGrid(data: SudokuRow[]): SudokuGrid {
-	// 	return new SudokuGrid(data);
-	// }
-}
+export class SudokuGrid extends sf.array("SudokuGrid", SudokuRow) {}
 
 /**
  * Main app data schema.

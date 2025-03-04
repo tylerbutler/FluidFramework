@@ -1,21 +1,11 @@
 <script lang="ts">
-import type {
-	LatestValueClientData,
-	LatestValueManager,
-} from "@fluidframework/presence/alpha";
+import type { LatestValueClientData } from "@fluidframework/presence/alpha";
 import { Table, TableBody, TableBodyRow } from "svelte-5-ui-lib";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "../coordinate";
-import { type SudokuAppProps } from "../props";
-import type { SudokuGrid } from "../fluid/dataSchema";
 import Cell from "../SudokuCell/Cell.svelte";
 import type { PuzzleTableComponentProps } from "./props";
 
-const {
-	grid = $bindable(),
-	sessionClient,
-	selectionManager,
-	// selectionMap,
-}: PuzzleTableComponentProps = $props();
+const { grid, sessionClient, selectionManager }: PuzzleTableComponentProps = $props();
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(`${sessionClient.sessionId}-${coord}`) as HTMLInputElement;

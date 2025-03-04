@@ -5,8 +5,8 @@
 
 import sudoku from "sudokus";
 import { PUZZLE_INDEXES, PUZZLES } from "./constants";
-import type { SudokuInput } from "./types";
 import type { SudokuAppData } from "./fluid/dataSchema";
+import type { SudokuInput } from "./sudokuInput";
 import { Tree } from "fluid-framework";
 
 function loadPuzzle(existingPuzzle: SudokuAppData, puzzleInput: SudokuInput): SudokuInput {

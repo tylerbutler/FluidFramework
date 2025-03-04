@@ -1,11 +1,10 @@
 <script lang="ts">
-import type { ISessionClient, LatestValueManager } from "@fluidframework/presence/alpha";
-import { Indicator, Input, TableBodyCell, type ColorType } from "svelte-5-ui-lib";
-import { Coordinate, type CellCoordinate, type CoordinateString } from "../coordinate";
-import { isSudokuNumber, type SudokuNumber } from "../types";
-import { mapStringToColor } from "../colors";
-import type { CellComponentProps } from "./cellData.svelte";
 import { Tree } from "fluid-framework";
+import { Indicator, Input, TableBodyCell } from "svelte-5-ui-lib";
+import { mapStringToColor } from "../colors";
+import { Coordinate, type CoordinateString } from "../coordinate";
+import { type SudokuNumber, isSudokuNumber } from "../sudokuNumber";
+import type { CellComponentProps } from "./props";
 
 let {
 	cellData = $bindable(),

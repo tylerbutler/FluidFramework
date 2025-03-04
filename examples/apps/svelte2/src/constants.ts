@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { SudokuInput } from "./types";
+import type { SudokuInput } from "./sudokuInput";
 
 /**
  * An array of numbers 0-8 for convenient looping when building Sudoku grids.

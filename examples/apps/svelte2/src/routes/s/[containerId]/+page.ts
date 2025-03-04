@@ -7,8 +7,14 @@ import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
 import type { PageLoad } from "./$types";
 import { getFluidContainer } from "../../../fluid/init";
 import { sudokuTreeConfiguration } from "../../../fluid/dataSchema";
+import { error } from "@sveltejs/kit";
 
 export const load: PageLoad = async ({ params }) => {
+	if (!params.containerId) {
+		error(404, "Not found");
+	}
+
+	// Load the container based on the ID in the URL.
 	const container = await getFluidContainer(params.containerId);
 
 	// Get a view of the tree data from the container.
@@ -16,10 +22,6 @@ export const load: PageLoad = async ({ params }) => {
 
 	// Retrieve a reference to the presence APIs via the data object.
 	const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
-
-	// if (!containerId) {
-	// 	error(404, "Not found");
-	// }
 
 	return {
 		appData,

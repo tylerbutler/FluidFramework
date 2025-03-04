@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { PageProps } from "./$types";
-import Sudoku from "../../../Sudoku.svelte";
 import { loadIncludedPuzzle } from "../../../loadPuzzle";
+import SudokuApp from "../../../SudokuApp/SudokuApp.svelte";
 
 const { data }: PageProps = $props();
 const { appData, presence, sessionClient } = data;
@@ -12,5 +12,5 @@ loadIncludedPuzzle(appData.root, 0);
 </script>
 
 <div class="p-8">
-  <Sudoku data={appData.root} {presence} {sessionClient} />
+  <SudokuApp data={appData.root} {presence} {sessionClient} />
 </div>

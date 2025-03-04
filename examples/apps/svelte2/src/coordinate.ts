@@ -3,15 +3,18 @@
  * Licensed under the MIT License.
  */
 
-import { isSudokuNumber, type SudokuNumber } from "./types";
+import { isSudokuNumber, type SudokuNumber } from "./sudokuNumber";
+
+/**
+ * A [row, column] tuple designating the position of a cell within the SudokuGrid.
+ */
+export type CellCoordinate = [SudokuNumber, SudokuNumber];
 
 /**
  * This type wrapper around string is useful within this codebase to differentiate functions that are expecting strings
  * in a particular format - a CoordinateString - vs those that expect "any old string."
  */
 export type CoordinateString = string;
-
-export type CellCoordinate = [SudokuNumber, SudokuNumber];
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Coordinate {
@@ -24,22 +27,19 @@ export class Coordinate {
 	public static fromCellCoordinate = (
 		input: Readonly<CellCoordinate>,
 	): Readonly<CoordinateString> => Coordinate.asString(input[0], input[1]);
+
 	/**
 	 * Returns a 2-item array of individual coordinates as strings.
-	 *
-	 * @param coord - A coordinate string in the form returned by `Coordinate.asString()`.
 	 */
-	public static asArray(coord: CoordinateString): [string, string] {
+	private static asArray(coord: CoordinateString): [string, string] {
 		const arr = coord.split(",", 2);
 		return [arr[0], arr[1]];
 	}
 
 	/**
 	 * Returns a 2-item array of individual coordinates as numbers.
-	 *
-	 * @param coord - A coordinate string in the form returned by `Coordinate.asString()`.
 	 */
-	public static asArrayNumbers(coord: CoordinateString): [SudokuNumber, SudokuNumber] {
+	public static asArrayNumbers(coord: CoordinateString): CellCoordinate {
 		const decomposed = Coordinate.asArray(coord).map(Number);
 		if (!isSudokuNumber(decomposed[0]) || !isSudokuNumber(decomposed[1])) {
 			throw new Error(

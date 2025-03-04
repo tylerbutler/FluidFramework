@@ -6,9 +6,14 @@
 import { TinyliciousClient } from "@fluidframework/tinylicious-client";
 import { containerSchema } from "./containerSchema";
 import type { TreeView } from "fluid-framework";
-import { SudokuGrid, SudokuRow, sudokuTreeConfiguration, type SudokuAppData } from "./dataSchema";
+import {
+	SudokuGrid,
+	SudokuRow,
+	sudokuTreeConfiguration,
+	type SudokuAppData,
+} from "./dataSchema";
 import { PUZZLE_INDEXES } from "../constants";
-import { SudokuCellData } from "../SudokuCell/cellData.svelte";
+import { SudokuCellData } from "./cellData.svelte";
 
 const client = new TinyliciousClient();
 
@@ -48,10 +53,10 @@ function initializeContainerData(appData: TreeView<typeof SudokuAppData>): void 
 		const newRowData: SudokuCellData[] = [];
 		for (const col of PUZZLE_INDEXES) {
 			const cell = new SudokuCellData({
-				coordinate: [row, col],
-				startingClue: false,
-				correctValue: 0,
-				value: 0,
+				_coordinate: [row, col],
+				_startingClue: false,
+				_correctValue: 0,
+				_value: 0,
 			});
 			newRowData.push(cell);
 		}
