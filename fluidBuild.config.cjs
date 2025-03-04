@@ -176,22 +176,6 @@ module.exports = {
 			outputGlobs: ["package.json"],
 			gitignore: ["input", "output"],
 		},
-		"flub generate typetests": {
-			inputGlobs: [
-				"package.json",
-				"src/**",
-
-				// release group packages; while ** is supported, it is very slow, so these entries capture all the levels we
-				// have packages at today. Once we can upgrade to a later version of
-				// globby things might be faster.
-				"{azure,examples,experimental,packages}/*/*/package.json",
-				"{azure,examples,experimental,packages}/*/*/*/package.json",
-				"{azure,examples,experimental,packages}/*/*/*/*/package.json",
-				"tools/markdown-magic/package.json",
-			],
-			outputGlobs: ["package.json", "src/**/typetests/**"],
-			gitignore: ["input", "output"],
-		},
 		"jssm-viz": {
 			inputGlobs: ["src/**/*.fsl"],
 			outputGlobs: ["src/**/*.fsl.svg"],

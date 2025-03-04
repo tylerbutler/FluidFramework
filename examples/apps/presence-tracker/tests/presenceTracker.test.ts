@@ -74,18 +74,6 @@ describe("presence-tracker", () => {
 		session1id = "session1id needs reloaded";
 	});
 
-	async function throwWithPageAttendeeData(message: string, page: Page) {
-		const attendeeData = await page.evaluate(() => ({
-			/* eslint-disable @typescript-eslint/dot-notation */
-			attendeeCount: `${window["fluidSessionAttendeeCount"]}`,
-			attendees: window["fluidSessionAttendees"] ?? {},
-			attendeeJoinedCalled: `${window["fluidAttendeeJoinedCalled"]}`,
-			attendeeDisconnectedCalled: `${window["fluidAttendeeDisconnectedCalled"]}`,
-			/* eslint-enable @typescript-eslint/dot-notation */
-		}));
-		throw new Error(`${message} (${JSON.stringify(attendeeData)})`);
-	}
-
 	describe("Single client", () => {
 		it("Document is connected", async () => {
 			// Page's url should be updated to have document id
@@ -181,23 +169,28 @@ describe("presence-tracker", () => {
 			timeoutErrorMessage: string,
 		) {
 			/* Disabled for common window["foo"] access. */
+			/* eslint-disable @typescript-eslint/dot-notation */
 			await page
 				.waitForFunction(
-					// Note: this is a block disable instead of line suppression as Biome reformats comment away from line
-					/* eslint-disable @typescript-eslint/dot-notation */
 					(expectation) =>
 						(
 							window["fluidSessionAttendeeCheck"] as (
 								expected: Record<string, string>,
 							) => boolean
 						)(expectation),
-					/* eslint-enable @typescript-eslint/dot-notation */
 					{ timeout: 100 },
 					expected,
 				)
 				.catch(async () => {
-					await throwWithPageAttendeeData(timeoutErrorMessage, page);
+					const attendeeData = await page.evaluate(() => ({
+						attendeeCount: `${window["fluidSessionAttendeeCount"]}`,
+						attendees: window["fluidSessionAttendees"] ?? {},
+						attendeeJoinedCalled: `${window["fluidAttendeeJoinedCalled"]}`,
+						attendeeDisconnectedCalled: `${window["fluidAttendeeDisconnectedCalled"]}`,
+					}));
+					throw new Error(`${timeoutErrorMessage} (${JSON.stringify(attendeeData)})`);
 				});
+			/* eslint-enable @typescript-eslint/dot-notation */
 		}
 
 		it("Second client shows two clients connected", async () => {
