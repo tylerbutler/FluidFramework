@@ -21,10 +21,8 @@ export const load: PageLoad = async ({ params }) => {
 	const appData = container.initialObjects.appData.viewWith(sudokuTreeConfiguration);
 	for (const row of appData.root.grid) {
 		console.log(row.map((c) => c._value).join(" "));
-		// for (const cell of row) {
-
-		// }
 	}
+
 	// Retrieve a reference to the presence APIs via the data object.
 	const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
 

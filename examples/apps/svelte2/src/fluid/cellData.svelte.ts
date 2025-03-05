@@ -64,11 +64,17 @@ export interface CellLocalData {
 	/**
 	 * The list of clients that have the current cell selected. Excludes the current client.
 	 */
-	remoteOwners: Set<ISessionClient>;
+	remoteOwners: SvelteSet<ISessionClient>;
 }
 
 export class SudokuCellData extends CellPersistedData implements CellLocalData {
 	public remoteOwners = $state(new SvelteSet<ISessionClient>());
+	// public get remoteOwners() {
+	// 	return this.#remoteOwners;
+	// }
+	// public set remoteOwners(s) {
+	// 	this.#remoteOwners = s;
+	// }
 
 	#value: SudokuNumber = $state(0);
 	public set value(v) {
@@ -95,19 +101,6 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData {
 	public set startingClue(clue) {
 		this._startingClue = clue;
 	}
-
-	// #coordinate = [0, 0];
-	// public get coordinate() {
-	// 	return this.#coordinate;
-	// }
-
-	// public set coordinate(c) {
-	// 	Tree.runTransaction(this._coordinate, (coord) => {
-	// 		coord.removeRange();
-	// 		coord.insertAt(0, c[0]);
-	// 		coord.insertAt(1, c[1]);
-	// 	});
-	// }
 
 	public refreshReactiveProperties(): void {
 		if (!isSudokuNumber(this._value) || !isSudokuNumber(this._correctValue)) {

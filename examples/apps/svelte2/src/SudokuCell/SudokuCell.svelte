@@ -1,10 +1,10 @@
 <script lang="ts">
 import { Tree } from "fluid-framework";
-import { Indicator, Input, TableBodyCell } from "svelte-5-ui-lib";
-import { mapStringToColor } from "../colors";
+import { Input, TableBodyCell } from "svelte-5-ui-lib";
 import { Coordinate, type CoordinateString } from "../coordinate";
 import { type SudokuNumber, isSudokuNumber } from "../sudokuNumber";
 import type { CellComponentProps } from "./props";
+import CellPresence from "../CellPresence/CellPresence.svelte";
 
 let { cellData, currentSessionClient, selectionManager, onKeyDown }: CellComponentProps =
 	$props();
@@ -18,13 +18,18 @@ const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 const handleInputFocus = (e: any) => {
 	const coord: CoordinateString = e.target.dataset[coordinateDataAttributeName];
 	if (coord !== undefined) {
-		console.log(`Setting local coordinate to: ${coord}`);
 		selectionManager.local = Coordinate.asArrayNumbers(coord);
 	}
 };
 
 const handleInputBlur = (e: FocusEvent) => {
-	// onLeaveCell(e);
+	// Remove the owner from the old cell
+	cellData.remoteOwners.delete(currentSessionClient);
+
+	// 	const [oldRow, oldColumn] = Coordinate.asArrayNumbers(coord);
+	// console.log("removing owner from cell", oldRow, oldColumn);
+	// grid[oldRow][oldColumn].remoteOwners.delete(sessionClient);
+	console.log(cellData.remoteOwners);
 };
 
 const handleKeyDown = (e: any) => {
@@ -133,37 +138,12 @@ function getCellInputClasses() {
 	}
 }
 
-function getPresenceIndicatorPosition(index: number) {
-	switch (index) {
-		case 0:
-			return "top-right";
-		case 1:
-			return "top-center";
-		case 2:
-			return "top-left";
-		case 3:
-			return "center-right";
-		case 4:
-			return "center-left";
-		case 5:
-			return "bottom-right";
-		case 6:
-			return "bottom-center";
-		case 7:
-			return "bottom-left";
-		default:
-			throw new Error("Invalid index");
-	}
-}
-
-// Tree.on(cellData._value, "nodeChanged", () => {
-// 	cellData.refreshReactiveProperties();
-// });
-
 Tree.on(cellData, "nodeChanged", () => {
 	cellData.refreshReactiveProperties();
 });
 cellData.refreshReactiveProperties();
+
+// $inspect(cellData.remoteOwners).with(console.trace);
 </script>
 
 <TableBodyCell
@@ -185,17 +165,8 @@ cellData.refreshReactiveProperties();
 			max={1}
 			data-cellcoordinate={cellData.coordinateString}
 		></Input>
-		{#key cellData.remoteOwners.size}
-			{#each cellData.remoteOwners as owner, index (owner)}
-				{#if index < 8}
-					<Indicator
-						color={mapStringToColor(owner.sessionId)}
-						border={false}
-						size="lg"
-						placement={getPresenceIndicatorPosition(index)}
-					></Indicator>
-				{/if}
-			{/each}
-		{/key}
+		<CellPresence
+			bind:owners={cellData.remoteOwners}
+			></CellPresence>
 	</div>
 </TableBodyCell>
