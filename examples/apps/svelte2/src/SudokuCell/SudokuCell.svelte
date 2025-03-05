@@ -1,10 +1,12 @@
 <script lang="ts">
 import { Tree } from "fluid-framework";
 import { Input, TableBodyCell } from "svelte-5-ui-lib";
-import { Coordinate, type CoordinateString } from "../coordinate";
+import { Coordinate, type CellCoordinate, type CoordinateString } from "../coordinate";
 import { type SudokuNumber, isSudokuNumber } from "../sudokuNumber";
 import type { CellComponentProps } from "./props";
 import CellPresence from "../CellPresence/CellPresence.svelte";
+import type { ISessionClient, LatestValueClientData } from "@fluidframework/presence/alpha";
+import { SvelteMap } from "svelte/reactivity";
 
 let { cellData, currentSessionClient, selectionManager, onKeyDown }: CellComponentProps =
 	$props();
@@ -143,7 +145,18 @@ Tree.on(cellData, "nodeChanged", () => {
 });
 cellData.refreshReactiveProperties();
 
-// $inspect(cellData.remoteOwners).with(console.trace);
+const selectionMap = $state(new SvelteMap<ISessionClient, CellCoordinate>());
+
+const onRemoteCellChange = (coord: LatestValueClientData<CellCoordinate>) => {
+	const [row, column] = coord.value;
+	selectionMap.set(coord.client, [row, column]);
+
+	// Add the session to the owners here; removal is done elsewhere
+	// grid[row][column].remoteOwners.add(coord.client);
+	console.debug("remote selection update:", coord.value);
+};
+
+selectionManager.events.on("updated", onRemoteCellChange);
 </script>
 
 <TableBodyCell
@@ -167,6 +180,7 @@ cellData.refreshReactiveProperties();
 		></Input>
 		<CellPresence
 			owners={cellData.remoteOwners}
+			{selectionMap}
 			></CellPresence>
 	</div>
 </TableBodyCell>

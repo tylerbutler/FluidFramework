@@ -11,5 +11,6 @@ export interface CellComponentProps {
 	cellData: SudokuCellData;
 	readonly currentSessionClient: ISessionClient;
 	readonly selectionManager: LatestValueManager<CellCoordinate>;
+	// readonly selectionMap: Map<ISessionClient, CellCoordinate>;
 	onKeyDown: (keyString: string, coordIn: string) => void;
 }

@@ -3,7 +3,7 @@ import { Indicator } from "svelte-5-ui-lib";
 import type { CellPresenceProps } from "./props";
 import { mapStringToColor } from "../colors";
 
-const { owners = $bindable() }: CellPresenceProps = $props();
+const { owners = $bindable(), selectionMap, coordinate }: CellPresenceProps = $props();
 // const selectionMap = getContext<SvelteMap<ISessionClient, CellCoordinate>>('selectionMap');
 
 function getPresenceIndicatorPosition(index: number) {
@@ -30,9 +30,9 @@ function getPresenceIndicatorPosition(index: number) {
 }
 </script>
 
-{#each owners as owner, index (owner)}
+{#each selectionMap.entries() as [owner, cell], index (owner)}
 	<!-- {@debug owners} -->
-	{#if index < 8}
+	{#if index < 8 && owner.getConnectionStatus() === "Connected" && cell === coordinate}
 		<Indicator
 			color={mapStringToColor(owner.sessionId)}
 			border={false}
