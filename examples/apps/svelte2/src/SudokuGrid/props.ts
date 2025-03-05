@@ -2,7 +2,7 @@ import type { ISessionClient, LatestValueManager } from "@fluidframework/presenc
 import type { CellCoordinate } from "../coordinate";
 import type { SudokuGrid } from "../fluid/dataSchema";
 
-export interface PuzzleTableComponentProps {
+export interface SudokuGridComponentProps {
 	grid: SudokuGrid;
 	readonly sessionClient: ISessionClient;
 	readonly selectionManager: LatestValueManager<CellCoordinate>;

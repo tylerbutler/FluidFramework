@@ -166,7 +166,7 @@ cellData.refreshReactiveProperties();
 			data-cellcoordinate={cellData.coordinateString}
 		></Input>
 		<CellPresence
-			bind:owners={cellData.remoteOwners}
+			owners={cellData.remoteOwners}
 			></CellPresence>
 	</div>
 </TableBodyCell>

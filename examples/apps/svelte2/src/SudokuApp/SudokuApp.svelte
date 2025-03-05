@@ -1,9 +1,9 @@
 <script lang="ts">
-import { Latest, LatestMap, type ISessionClient } from "@fluidframework/presence/alpha";
-import { Badge, Button, Darkmode, Heading, Indicator, P } from "svelte-5-ui-lib";
+import { Latest, type ISessionClient } from "@fluidframework/presence/alpha";
+import { Badge, Button, Heading, Indicator, P } from "svelte-5-ui-lib";
 import type { SudokuAppProps } from "./props";
-import PuzzleTable from "../SudokuGrid/SudokuGrid.svelte";
-import type { CellCoordinate, CoordinateString } from "../coordinate";
+import SudokuGrid from "../SudokuGrid/SudokuGrid.svelte";
+import type { CellCoordinate } from "../coordinate";
 import { mapStringToColor } from "../colors";
 import { loadIncludedPuzzle } from "../loadPuzzle";
 
@@ -13,16 +13,9 @@ const { data, presence, sessionClient }: SudokuAppProps = $props();
 const appPresence = presence.getStates("v1:presence", {
 	// Create a Latest value manager to track the selection state.
 	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
-	selectionMap: LatestMap<string[], CoordinateString>(),
 });
 
 const selectionManager = appPresence.props.selectionCoordinate;
-const selectionMap = appPresence.props.selectionMap;
-
-let theme = $state("default");
-function onThemeChange(e: any) {
-	theme = e.target.value;
-}
 
 const handleResetButton = () => {
 	for (const row of data.grid) {
@@ -30,6 +23,7 @@ const handleResetButton = () => {
 			if (!cell.startingClue) {
 				cell.value = 0;
 			}
+			cell.remoteOwners.clear();
 		}
 	}
 };
@@ -86,9 +80,9 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 </P>
 
 <P>
-	<div class={`inline-block h-max min-h-[447px] ${theme}`}>
+	<div class="inline-block h-max min-h-[447px]">
 		<div class="inline-block h-max min-h-[447px]">
-			<PuzzleTable grid={data.grid} {sessionClient} {selectionManager} />
+			<SudokuGrid grid={data.grid} {sessionClient} {selectionManager} />
 
 			<div class="flex">
 				<span class="grow-1">

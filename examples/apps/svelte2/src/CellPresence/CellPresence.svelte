@@ -4,6 +4,7 @@ import type { CellPresenceProps } from "./props";
 import { mapStringToColor } from "../colors";
 
 const { owners = $bindable() }: CellPresenceProps = $props();
+// const selectionMap = getContext<SvelteMap<ISessionClient, CellCoordinate>>('selectionMap');
 
 function getPresenceIndicatorPosition(index: number) {
 	switch (index) {

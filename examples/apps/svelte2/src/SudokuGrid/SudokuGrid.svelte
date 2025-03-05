@@ -3,10 +3,10 @@ import type { ISessionClient, LatestValueClientData } from "@fluidframework/pres
 import { Table, TableBody, TableBodyRow } from "svelte-5-ui-lib";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "../coordinate";
 import Cell from "../SudokuCell/SudokuCell.svelte";
-import type { PuzzleTableComponentProps } from "./props";
+import type { SudokuGridComponentProps } from "./props";
 import { SvelteMap } from "svelte/reactivity";
 
-const { grid, sessionClient, selectionManager }: PuzzleTableComponentProps = $props();
+const { grid, sessionClient, selectionManager }: SudokuGridComponentProps = $props();
 
 let selectedCells = $state(new SvelteMap<CellCoordinate, Set<ISessionClient>>());
 
