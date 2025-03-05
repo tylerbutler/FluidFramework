@@ -1,3 +1,8 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 import { TreeViewConfiguration } from "fluid-framework";
 import { schemaFactory as sf } from "./schemaFactory";
 import { SudokuCellData } from "./cellData.svelte";

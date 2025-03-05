@@ -31,6 +31,7 @@ function getPresenceIndicatorPosition(index: number) {
 </script>
 
 {#each owners as owner, index (owner)}
+	<!-- {@debug owners} -->
 	{#if index < 8}
 		<Indicator
 			color={mapStringToColor(owner.sessionId)}

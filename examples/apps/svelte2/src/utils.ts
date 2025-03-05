@@ -1,3 +1,8 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 /**
  * Returns the difference between two sets. That is, it returns a Set containing the items in Set A that are not in Set
  * B.
