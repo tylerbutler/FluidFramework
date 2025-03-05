@@ -56,13 +56,13 @@ selectionManager.events.on("updated", onRemoteCellChange);
 selectionManager.events.on("localUpdated", (coord) => {
 	const [row, column] = coord.value;
 
-	for (const owners of selectedCells.values()) {
-		owners.delete(sessionClient);
-	}
+	// for (const owners of selectedCells.values()) {
+	// 	owners.delete(sessionClient);
+	// }
 
-	const clients = selectedCells.get([row, column]) ?? new Set<ISessionClient>();
-	clients.add(sessionClient);
-	selectedCells.set([row, column], clients);
+	// const clients = selectedCells.get([row, column]) ?? new Set<ISessionClient>();
+	// clients.add(sessionClient);
+	// selectedCells.set([row, column], clients);
 	console.debug("local selection update:", coord.value, grid[row][column].remoteOwners);
 });
 
