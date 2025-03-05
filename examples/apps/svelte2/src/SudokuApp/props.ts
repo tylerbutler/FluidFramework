@@ -7,7 +7,7 @@ import type { IPresence, ISessionClient } from "@fluidframework/presence/alpha";
 import type { SudokuAppData } from "../fluid/dataSchema";
 
 export interface SudokuAppProps {
-	data: SudokuAppData;
-	presence: IPresence;
-	sessionClient: ISessionClient;
+	readonly data: SudokuAppData;
+	readonly presence: IPresence;
+	readonly sessionClient: ISessionClient;
 }

@@ -8,7 +8,7 @@ import type { CellCoordinate } from "../coordinate";
 import type { SudokuGrid } from "../fluid/dataSchema";
 
 export interface SudokuGridComponentProps {
-	grid: SudokuGrid;
+	readonly grid: SudokuGrid;
 	readonly sessionClient: ISessionClient;
 	readonly selectionManager: LatestValueManager<CellCoordinate>;
 }

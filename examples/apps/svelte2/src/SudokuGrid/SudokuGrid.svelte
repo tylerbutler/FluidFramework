@@ -1,10 +1,8 @@
 <script lang="ts">
-import type { ISessionClient, LatestValueClientData } from "@fluidframework/presence/alpha";
 import { Table, TableBody, TableBodyRow } from "svelte-5-ui-lib";
-import { Coordinate, type CellCoordinate, type CoordinateString } from "../coordinate";
+import { Coordinate, type CoordinateString } from "../coordinate";
 import Cell from "../SudokuCell/SudokuCell.svelte";
 import type { SudokuGridComponentProps } from "./props";
-import { SvelteMap } from "svelte/reactivity";
 
 const { grid, sessionClient, selectionManager }: SudokuGridComponentProps = $props();
 

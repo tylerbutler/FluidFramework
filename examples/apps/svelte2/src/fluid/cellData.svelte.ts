@@ -5,7 +5,7 @@
 
 import type { ISessionClient } from "@fluidframework/presence/alpha";
 import { SvelteSet } from "svelte/reactivity";
-import { Coordinate } from "../coordinate";
+import { Coordinate, type CellCoordinate } from "../coordinate";
 import { schemaFactory as sf } from "./schemaFactory";
 import { isSudokuNumber, type SudokuNumber } from "../sudokuNumber";
 import { Tree } from "fluid-framework";
@@ -125,6 +125,9 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData {
 		this.#correctValue = this._correctValue as SudokuNumber;
 	}
 
+	public get coordinate(): CellCoordinate {
+		return Coordinate.asArrayNumbers(this.coordinateString);
+	}
 	public displayString = $derived.by(() => {
 		if (this.startingClue || this.value !== 0) {
 			return this.value.toString();

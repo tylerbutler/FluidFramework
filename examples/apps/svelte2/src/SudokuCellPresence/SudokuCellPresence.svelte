@@ -28,11 +28,22 @@ function getPresenceIndicatorPosition(index: number) {
 			throw new Error("Invalid index");
 	}
 }
+// {#each selectionMap.entries() as [owner, cell], index (owner)}
+// 	<!-- {@debug owners} -->
+// 	{#if index < 8 && owner.getConnectionStatus() === "Connected" && cell === coordinate}
+// 		<Indicator
+// 			color={mapStringToColor(owner.sessionId)}
+// 			border={false}
+// 			size="lg"
+// 			placement={getPresenceIndicatorPosition(index)}
+// 		></Indicator>
+// 	{/if}
+// {/each}
 </script>
 
-{#each selectionMap.entries() as [owner, cell], index (owner)}
+{#each owners as owner, index (owner.sessionId)}
 	<!-- {@debug owners} -->
-	{#if index < 8 && owner.getConnectionStatus() === "Connected" && cell === coordinate}
+	{#if index < 8 && owner.getConnectionStatus() === "Connected"}
 		<Indicator
 			color={mapStringToColor(owner.sessionId)}
 			border={false}
