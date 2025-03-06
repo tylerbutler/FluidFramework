@@ -66,6 +66,7 @@ presence.events.on("attendeeJoined", () => {
 
 presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 	selectionState.delete(attendee);
+	connectedUsers = getConnectedUsers().map((c) => c.sessionId);
 	updateTitle();
 });
 </script>
@@ -74,7 +75,6 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 
 <P>
 	<ul class="w-full max-w-sm divide-y divide-gray-200 dark:divide-gray-700">
-		{#key connectedUsers.length}
 			{#each connectedUsers as sessionId (sessionId)}
 				<li>
 					<Badge color={mapStringToColor(sessionId)} rounded class="px-2.5 py-0.5">
@@ -86,7 +86,6 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 			{:else}
 				<li><Badge>No one else connected</Badge></li>
 			{/each}
-		{/key}
 	</ul>
 </P>
 
@@ -111,8 +110,8 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 </P>
 <P>
 	<ul>
-	{#each selectionState as [session, selectedCell], index (session.sessionId)}
-		{#if index < 8 && session.getConnectionStatus() === "Connected"}
+	{#each selectionState as [session, selectedCell] (session.sessionId)}
+		{#if session.getConnectionStatus() === "Connected"}
 			<li>{session.sessionId}: {selectedCell}</li>
 		{/if}
 	{/each}

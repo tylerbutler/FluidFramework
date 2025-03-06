@@ -19,28 +19,6 @@ const cellCoordinateId = (c: CoordinateString) => `${currentSessionClient.sessio
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(cellCoordinateId(coord)) as HTMLInputElement;
 
-// const handleInputFocus = (e: any) => {
-// 	const coord: CoordinateString = e.target.dataset[coordinateDataAttributeName];
-// 	if (coord !== undefined) {
-// 		selectionManager.local = Coordinate.asArrayNumbers(coord);
-// 	}
-// };
-
-// const handleInputBlur = (e: FocusEvent) => {
-// 	// Remove the owner from the old cell
-// 	const entryIndex = cellData.remoteOwners.findIndex(
-// 			(owner) => owner === currentSessionClient,
-// 		);
-// 		if(entryIndex !== -1) {
-// 			cellData.remoteOwners.splice(entryIndex, 1);
-// 		}
-
-// 	// 	const [oldRow, oldColumn] = Coordinate.asArrayNumbers(coord);
-// 	// console.log("removing owner from cell", oldRow, oldColumn);
-// 	// grid[oldRow][oldColumn].remoteOwners.delete(sessionClient);
-// 	console.log($state.snapshot(cellData.remoteOwners));
-// };
-
 const handleKeyDown = (e: any) => {
 	e.preventDefault();
 	let keyString = e.key;
@@ -166,6 +144,6 @@ function getCellInputClasses() {
 			max={1}
 			data-cellcoordinate={cellData.coordinateString}
 		></Input>
-		<CellPresence />
+		<CellPresence coordinate={cellData.coordinate}/>
 	</div>
 </TableBodyCell>
