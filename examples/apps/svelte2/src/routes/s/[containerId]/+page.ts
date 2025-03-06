@@ -29,6 +29,5 @@ export const load: PageLoad = async ({ params }) => {
 	return {
 		appData,
 		presence,
-		sessionClient: presence.getMyself(),
 	};
 };

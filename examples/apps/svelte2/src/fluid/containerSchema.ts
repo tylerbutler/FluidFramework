@@ -4,18 +4,11 @@
  */
 
 import { ExperimentalPresenceManager } from "@fluidframework/presence/alpha";
-import {
-	SchemaFactory,
-	SharedTree,
-	TreeViewConfiguration,
-	type ContainerSchema,
-} from "fluid-framework";
-import { SudokuGrid } from "./dataSchema";
-import { PUZZLE_INDEXES } from "../constants";
-import { Coordinate } from "../coordinate";
+import { SharedTree, type ContainerSchema } from "fluid-framework";
 
-// Define the schema of the Fluid container.
-// This example uses the presence features only, so only that data object is added.
+/**
+ * The schema of the Fluid container.
+ */
 export const containerSchema = {
 	initialObjects: {
 		appData: SharedTree,
@@ -25,4 +18,5 @@ export const containerSchema = {
 	},
 } as const satisfies ContainerSchema;
 
+// unused
 export type SudokuContainerSchema = typeof containerSchema;

@@ -7,33 +7,12 @@ import type { PageLoad } from "./$types";
 import { createFluidContainer } from "../fluid/init";
 import { redirect } from "@sveltejs/kit";
 
-// export const load: PageLoad = async () => {
-// 	const { containerId, container } = await createFluidContainer();
-
-// 	// Retrieve a reference to the presence APIs via the data object.
-// 	const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
-
-// 	// if (!containerId) {
-// 	// 	error(404, "Not found");
-// 	// }
-
-// 	return {
-// 		container,
-// 		containerId,
-// 		presence,
-// 		sessionClient: presence.getMyself(),
-// 	};
-// };
-
 export const load: PageLoad = async () => {
 	const { containerId } = await createFluidContainer();
 
-	// Retrieve a reference to the presence APIs via the data object.
-	// const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
-
-	// return {
-	// 	containerId,
-	// };
-	// return createFluidContainer();
+	// Redirect to the session page with the newly created container's ID. Note that
+	// this is inefficient because it connects to a container then immediately disconnects
+	// and reconnects on the new page load. This could possibly be avoided using the History
+	// API to add a "fake" navigation.
 	redirect(301, `/s/${containerId}`);
 };

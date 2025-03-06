@@ -19,5 +19,3 @@ export class SudokuAppData extends sf.object("SudokuAppData", {
 }) {}
 
 export const sudokuTreeConfiguration = new TreeViewConfiguration({ schema: SudokuAppData });
-
-export interface SudokuAppDataInterface extends SudokuAppData {}

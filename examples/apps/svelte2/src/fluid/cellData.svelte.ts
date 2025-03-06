@@ -3,12 +3,9 @@
  * Licensed under the MIT License.
  */
 
-import type { ISessionClient } from "@fluidframework/presence/alpha";
-import { SvelteSet } from "svelte/reactivity";
 import { Coordinate, type CellCoordinate } from "../coordinate";
 import { schemaFactory as sf } from "./schemaFactory";
 import { isSudokuNumber, type SudokuNumber } from "../sudokuNumber";
-import { Tree } from "fluid-framework";
 
 /**
  * This class represents a Sudoku Cell's shared, persisted data, which is stored in a Fluid SharedTree.
@@ -48,14 +45,14 @@ export class CellPersistedData extends sf.object("CellPersistedData", {
 	}
 }
 
-export const CellState = {
+const CellState = {
 	empty: "empty",
 	startingClue: "startingClue",
 	wrong: "wrong",
 	correct: "correct",
 } as const;
 
-export type CellState = (typeof CellState)[keyof typeof CellState];
+type CellState = (typeof CellState)[keyof typeof CellState];
 
 /**
  * Represents the cell data that is local to each client.
@@ -66,21 +63,27 @@ export interface CellLocalData {
 	 */
 	readonly displayString: string;
 
+	value: SudokuNumber;
+
 	/**
-	 * The list of clients that have the current cell selected. Excludes the current client.
+	 * The correct value of the cell.
 	 */
-	// remoteOwners: ISessionClient[];
+	correctValue: SudokuNumber;
+
+	/**
+	 * True if the cell's value is provided as part of the starting clues for the puzzle; false otherwise.
+	 */
+	startingClue: boolean;
 }
 
+/**
+ * Encapsulates all Cell-related data, including persisted data stored in a SharedTree, ephemeral session-related data
+ * that typically comes from presence, and instance-local data. The data is accessed exclusively through properties.
+ *
+ * By convention, properties that are part of a SharedTree begin with an underscore and should not be accessed directly,
+ * despite being public.
+ */
 export class SudokuCellData extends CellPersistedData implements CellLocalData {
-	// public remoteOwners = $state<ISessionClient[]>([]);
-	// public get remoteOwners() {
-	// 	return this.#remoteOwners;
-	// }
-	// public set remoteOwners(s) {
-	// 	this.#remoteOwners = s;
-	// }
-
 	#value: SudokuNumber = $state(0);
 	public set value(v) {
 		// set the persisted data, which will trigger an event that will update the local data.

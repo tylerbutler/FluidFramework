@@ -144,6 +144,6 @@ function getCellInputClasses() {
 			max={1}
 			data-cellcoordinate={cellData.coordinateString}
 		></Input>
-		<CellPresence coordinate={cellData.coordinate}/>
+		<CellPresence coordinate={cellData.coordinate} />
 	</div>
 </TableBodyCell>

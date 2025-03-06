@@ -41,7 +41,8 @@ const moveCell = (keyString: string, coordIn: CoordinateString): void => {
 const onCellFocus = (e: any) => {
 	const coord: CoordinateString = e.target.dataset[coordinateDataAttributeName];
 	if (coord !== undefined) {
-		console.log(`local set to: ${coord}`);
+		// Sets the locally selected cell for the current client.
+		// On remote clients this will trigger and update event.
 		selectionManager.local = Coordinate.asArrayNumbers(coord);
 	}
 };
@@ -58,7 +59,6 @@ const onCellFocus = (e: any) => {
 						currentSessionClient={sessionClient}
 						onKeyDown={moveCell}
 						onFocus={onCellFocus}
-						{selectionManager}
 					></Cell>
 				{/each}
 			</TableBodyRow>

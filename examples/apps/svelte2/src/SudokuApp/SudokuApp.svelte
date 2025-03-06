@@ -11,6 +11,12 @@ import { setContext } from "svelte";
 
 const { data, presence, sessionClient }: SudokuAppProps = $props();
 
+/**
+ * Returns all the connected users that presence is tracking.
+ */
+const getConnectedUsers = () =>
+	[...presence.getAttendees()].filter((c) => c.getConnectionStatus() === "Connected");
+
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
 // We create a value manager within the workspace to track and share individual pieces of state.
 const appPresence = presence.getStates("v1:presence", {
@@ -23,39 +29,26 @@ const appPresence = presence.getStates("v1:presence", {
  */
 const selectionManager = appPresence.props.selectionCoordinate;
 
-// Create a local reactive state object to track the selection state
+/**
+ * A reactive map that tracks the selected cells for each client.
+ * The key is the session client, and the value is the selected cell coordinate.
+ */
 const selectionState = $state(new SvelteMap<ISessionClient, CellCoordinate>());
 
 // Wire up event handlers to update the selection state when the cell selection is updated
 selectionManager.events.on("updated", (coordinate) => {
 	// Update the selection state with the new coordinate
-	selectionState.set(sessionClient, coordinate.value);
+	selectionState.set(presence.getMyself(), coordinate.value);
 });
 
 // Pass the selection state to context so we can access it in the SudokuCell component
 setContext("selectionState", selectionState);
 
-const handleResetButton = () => {
-	for (const row of data.grid) {
-		for (const cell of row) {
-			if (!cell.startingClue) {
-				cell.value = 0;
-			}
-		}
-	}
-};
-
 let title = $state("Sudoku");
 const updateTitle = () => {
-	// const playerCount = [...presence.getAttendees()].filter(
-	// 	(c) => c.getConnectionStatus() === "Connected",
-	// ).length;
 	const playerCount = getConnectedUsers().length;
 	title = playerCount > 1 ? `Sudoku: ${playerCount} players` : "Sudoku";
 };
-
-const getConnectedUsers = () =>
-	[...presence.getAttendees()].filter((c) => c.getConnectionStatus() === "Connected");
 
 let connectedUsers = $state<string[]>([]);
 
@@ -69,6 +62,16 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 	connectedUsers = getConnectedUsers().map((c) => c.sessionId);
 	updateTitle();
 });
+
+const handleResetButton = () => {
+	for (const row of data.grid) {
+		for (const cell of row) {
+			if (!cell.startingClue) {
+				cell.value = 0;
+			}
+		}
+	}
+};
 </script>
 
 <Heading tag="h2">{title}</Heading>

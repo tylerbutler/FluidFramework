@@ -10,7 +10,6 @@ import type { SudokuCellData } from "../fluid/cellData.svelte";
 export interface CellComponentProps {
 	readonly cellData: SudokuCellData;
 	readonly currentSessionClient: ISessionClient;
-	readonly selectionManager: LatestValueManager<CellCoordinate>;
 	onKeyDown: (keyString: string, coordIn: string) => void;
 	onFocus: (e: FocusEvent) => void;
 }
