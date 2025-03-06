@@ -6,7 +6,6 @@
 import { Coordinate, type CellCoordinate, type CoordinateString } from "../coordinate";
 import { schemaFactory as sf } from "./schemaFactory";
 import { isSudokuNumber, type SudokuNumber } from "../sudokuNumber";
-import { Tree } from "fluid-framework";
 
 /**
  * This class represents a Sudoku Cell's shared, persisted data, which is stored in a Fluid SharedTree.
