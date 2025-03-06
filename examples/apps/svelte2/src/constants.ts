@@ -4,11 +4,12 @@
  */
 
 import type { SudokuInput } from "./sudokuInput";
+import type { SudokuNumber } from "./sudokuNumber";
 
 /**
  * An array of numbers 0-8 for convenient looping when building Sudoku grids.
  */
-export const PUZZLE_INDEXES = Array.from(Array(9).keys());
+export const PUZZLE_INDEXES = Array.from(Array(9).keys()) as SudokuNumber[];
 
 /**
  * Sudoku puzzles included as examples.

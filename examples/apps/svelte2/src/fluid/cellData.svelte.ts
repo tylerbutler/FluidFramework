@@ -3,9 +3,10 @@
  * Licensed under the MIT License.
  */
 
-import { Coordinate, type CellCoordinate } from "../coordinate";
+import { Coordinate, type CellCoordinate, type CoordinateString } from "../coordinate";
 import { schemaFactory as sf } from "./schemaFactory";
 import { isSudokuNumber, type SudokuNumber } from "../sudokuNumber";
+import { Tree } from "fluid-framework";
 
 /**
  * This class represents a Sudoku Cell's shared, persisted data, which is stored in a Fluid SharedTree.
@@ -40,7 +41,11 @@ export class CellPersistedData extends sf.object("CellPersistedData", {
 		return !this._startingClue && this._value === this._correctValue;
 	}
 
-	public get coordinateString() {
+	public get coordinate(): CellCoordinate {
+		return [this._coordinate[0], this._coordinate[1]] as CellCoordinate;
+	}
+
+	public get coordinateString(): CoordinateString {
 		return Coordinate.asString(this._coordinate[0], this._coordinate[1]);
 	}
 }
@@ -55,14 +60,17 @@ const CellState = {
 type CellState = (typeof CellState)[keyof typeof CellState];
 
 /**
- * Represents the cell data that is local to each client.
+ * Represents the public interface of a SudokuCell.
  */
-export interface CellLocalData {
+export interface SudokuCellDataPublic {
 	/**
 	 * Returns a string representation of the cell's value suitable for display.
 	 */
 	readonly displayString: string;
 
+	/**
+	 * The value stored in the cell. This should be a value between 0 and 9 inclusive. 0 represents an empty cell.
+	 */
 	value: SudokuNumber;
 
 	/**
@@ -83,6 +91,7 @@ export interface CellLocalData {
  * By convention, properties that are part of a SharedTree begin with an underscore and should not be accessed directly,
  * despite being public.
  */
+export class SudokuCellData extends CellPersistedData implements SudokuCellDataPublic {
 export class SudokuCellData extends CellPersistedData implements CellLocalData {
 	#value: SudokuNumber = $state(0);
 	public set value(v) {
@@ -116,21 +125,13 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData {
 				`Value is not a valid sudoku number: ${this._value} or ${this._correctValue}`,
 			);
 		}
-		console.log(`Refreshing reactive properties for cell: ${this.coordinateString}`);
-		console.log(
-			`value: ${this._value} | correctValue: ${this._correctValue} | isCorrect: ${this.isCorrect} | startingClue: ${this._startingClue}`,
-		);
-		// console.log(`startingClue: ${this._startingClue}`);
+		console.log(`Refreshing reactive properties for cell: ${this.coordinate}`);
+
 		this.#startingClue = this._startingClue;
-
-		this.#value = this._value as SudokuNumber;
-		// console.log(`correctValue: ${this._correctValue}`);
 		this.#correctValue = this._correctValue as SudokuNumber;
+		this.#value = this._value as SudokuNumber;
 	}
 
-	public get coordinate(): CellCoordinate {
-		return Coordinate.asArrayNumbers(this.coordinateString);
-	}
 	public displayString = $derived.by(() => {
 		if (this.startingClue || this.value !== 0) {
 			return this.value.toString();
@@ -142,9 +143,6 @@ export class SudokuCellData extends CellPersistedData implements CellLocalData {
 	 * Returns the appropriate CellState for the cell. This state can be used to render the cell differently.
 	 */
 	public status = $derived.by(() => {
-		// console.log(
-		// 	`status for cell ${this.coordinateString}: value: ${this.value} | startingClue: ${this.startingClue} |`,
-		// );
 		if (this.value === 0) {
 			return CellState.empty;
 		}

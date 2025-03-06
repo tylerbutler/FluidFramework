@@ -3,8 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { ISessionClient, LatestValueManager } from "@fluidframework/presence/alpha";
-import type { CellCoordinate } from "../coordinate";
+import type { ISessionClient } from "@fluidframework/presence/alpha";
 import type { SudokuCellData } from "../fluid/cellData.svelte";
 
 export interface CellComponentProps {
