@@ -26,12 +26,17 @@
 
 	const handleInputBlur = (e: FocusEvent) => {
 		// Remove the owner from the old cell
-		cellData.remoteOwners.delete(currentSessionClient);
+		const entryIndex = cellData.remoteOwners.findIndex(
+				(owner) => owner === currentSessionClient,
+			);
+			if(entryIndex !== -1) {
+				cellData.remoteOwners.splice(entryIndex, 1);
+			}
 
 		// 	const [oldRow, oldColumn] = Coordinate.asArrayNumbers(coord);
 		// console.log("removing owner from cell", oldRow, oldColumn);
 		// grid[oldRow][oldColumn].remoteOwners.delete(sessionClient);
-		console.log(cellData.remoteOwners);
+		console.log($state.snapshot(cellData.remoteOwners));
 	};
 
 	const handleKeyDown = (e: any) => {
@@ -148,10 +153,9 @@
 	const selectionMap = $state(new SvelteMap<ISessionClient, CellCoordinate>());
 
 	const onRemoteCellChange = (coord: LatestValueClientData<CellCoordinate>) => {
-		const [row, column] = coord.value;
-		selectionMap.set(coord.client, [row, column]);
-
 		// Add the session to the owners here; removal is done elsewhere
+		cellData.remoteOwners.push(coord.client);
+
 		// grid[row][column].remoteOwners.add(coord.client);
 		console.debug("remote selection update:", coord.value);
 	};

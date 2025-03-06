@@ -23,7 +23,7 @@ const handleResetButton = () => {
 			if (!cell.startingClue) {
 				cell.value = 0;
 			}
-			cell.remoteOwners.clear();
+			cell.remoteOwners = [];
 		}
 	}
 };
@@ -46,12 +46,19 @@ presence.events.on("attendeeJoined", () => {
 	connectedUsers = getConnectedUsers().map((c) => c.sessionId);
 	updateTitle();
 });
+
 presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 	for (const row of data.grid) {
 		for (const cell of row) {
-			cell.remoteOwners.delete(attendee);
+			const entryIndex = cell.remoteOwners.findIndex(
+				(owner) => owner === attendee,
+			);
+			if(entryIndex !== -1) {
+				cell.remoteOwners.splice(entryIndex, 1);
+			}
 		}
 	}
+
 	updateTitle();
 });
 
