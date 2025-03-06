@@ -18,7 +18,22 @@ const appPresence = presence.getStates("v1:presence", {
 	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
 });
 
+/**
+ * The selection manager tracks the currently selected cell for each connected client.
+ */
 const selectionManager = appPresence.props.selectionCoordinate;
+
+// Create a local reactive state object to track the selection state
+const selectionState = $state(new SvelteMap<ISessionClient, CellCoordinate>());
+
+// Wire up event handlers to update the selection state when the cell selection is updated
+selectionManager.events.on("updated", (coordinate) => {
+	// Update the selection state with the new coordinate
+	selectionState.set(sessionClient, coordinate.value);
+});
+
+// Pass the selection state to context so we can access it in the SudokuCell component
+setContext("selectionState", selectionState);
 
 const handleResetButton = () => {
 	for (const row of data.grid) {
@@ -50,17 +65,7 @@ presence.events.on("attendeeJoined", () => {
 });
 
 presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
-	for (const row of data.grid) {
-		for (const cell of row) {
-			const entryIndex = cell.remoteOwners.findIndex(
-				(owner) => owner === attendee,
-			);
-			if(entryIndex !== -1) {
-				cell.remoteOwners.splice(entryIndex, 1);
-			}
-		}
-	}
-
+	selectionState.delete(attendee);
 	updateTitle();
 });
 </script>

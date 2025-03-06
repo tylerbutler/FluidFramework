@@ -3,6 +3,7 @@ import { Table, TableBody, TableBodyRow } from "svelte-5-ui-lib";
 import { Coordinate, type CoordinateString } from "../coordinate";
 import Cell from "../SudokuCell/SudokuCell.svelte";
 import type { SudokuGridComponentProps } from "./props";
+import { coordinateDataAttributeName } from "../constants";
 
 const { grid, sessionClient, selectionManager }: SudokuGridComponentProps = $props();
 
@@ -36,6 +37,14 @@ const moveCell = (keyString: string, coordIn: CoordinateString): void => {
 	const newCell = getCellInputElement(newCoord);
 	newCell.focus();
 };
+
+const onCellFocus = (e: any) => {
+	const coord: CoordinateString = e.target.dataset[coordinateDataAttributeName];
+	if (coord !== undefined) {
+		console.log(`local set to: ${coord}`);
+		selectionManager.local = Coordinate.asArrayNumbers(coord);
+	}
+};
 </script>
 
 <div>
@@ -48,6 +57,7 @@ const moveCell = (keyString: string, coordIn: CoordinateString): void => {
 						cellData={grid[rowIndex][colIndex]}
 						currentSessionClient={sessionClient}
 						onKeyDown={moveCell}
+						onFocus={onCellFocus}
 						{selectionManager}
 					></Cell>
 				{/each}

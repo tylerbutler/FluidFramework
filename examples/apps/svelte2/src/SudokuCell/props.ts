@@ -12,4 +12,5 @@ export interface CellComponentProps {
 	readonly currentSessionClient: ISessionClient;
 	readonly selectionManager: LatestValueManager<CellCoordinate>;
 	onKeyDown: (keyString: string, coordIn: string) => void;
+	onFocus: (e: FocusEvent) => void;
 }

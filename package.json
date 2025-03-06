@@ -251,9 +251,7 @@
 				]
 			},
 			"build:readme": {
-				"dependsOn": [
-					
-				]
+				"dependsOn": []
 			},
 			"check:format": {
 				"dependsOn": [

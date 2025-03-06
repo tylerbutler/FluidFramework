@@ -42,20 +42,18 @@ function initializeContainerData(container: IFluidContainer<SudokuAppSchema>) {
 	const appData = container.initialObjects.appData.viewWith(treeConfiguration);
 
 	const newGrid: SudokuCellData[][] = [];
-const newRow: SudokuCellData[] = [];
-for (const row of PUZZLE_INDEXES) {
-	for (const col of PUZZLE_INDEXES) {
-		const cell = new SudokuCellData({
-			coordinate: [row, col],
-			startingClue: false,
-			value: 0,
-		});
-		newRow.push(cell);
+	const newRow: SudokuCellData[] = [];
+	for (const row of PUZZLE_INDEXES) {
+		for (const col of PUZZLE_INDEXES) {
+			const cell = new SudokuCellData({
+				coordinate: [row, col],
+				startingClue: false,
+				value: 0,
+			});
+			newRow.push(cell);
+		}
+		newGrid.push(newRow);
 	}
-	newGrid.push(newRow);
-}
 
-appData.initialize(
-	new SudokuGrid(newGrid),
-);
+	appData.initialize(new SudokuGrid(newGrid));
 }
