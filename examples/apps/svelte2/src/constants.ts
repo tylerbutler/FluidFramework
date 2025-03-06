@@ -49,3 +49,5 @@ export const EMPTY_PUZZLE: SudokuInput = [
 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
 ];
+
+export const coordinateDataAttributeName = "cellcoordinate";

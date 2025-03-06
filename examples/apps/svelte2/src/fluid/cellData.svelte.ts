@@ -69,11 +69,11 @@ export interface CellLocalData {
 	/**
 	 * The list of clients that have the current cell selected. Excludes the current client.
 	 */
-	remoteOwners: ISessionClient[];
+	// remoteOwners: ISessionClient[];
 }
 
 export class SudokuCellData extends CellPersistedData implements CellLocalData {
-	public remoteOwners = $state<ISessionClient[]>([]);
+	// public remoteOwners = $state<ISessionClient[]>([]);
 	// public get remoteOwners() {
 	// 	return this.#remoteOwners;
 	// }

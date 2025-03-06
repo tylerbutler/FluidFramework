@@ -8,7 +8,7 @@ import { isSudokuNumber, type SudokuNumber } from "./sudokuNumber";
 /**
  * A [row, column] tuple designating the position of a cell within the SudokuGrid.
  */
-export type CellCoordinate = [SudokuNumber, SudokuNumber];
+export type CellCoordinate = readonly [SudokuNumber, SudokuNumber];
 
 /**
  * This type wrapper around string is useful within this codebase to differentiate functions that are expecting strings
