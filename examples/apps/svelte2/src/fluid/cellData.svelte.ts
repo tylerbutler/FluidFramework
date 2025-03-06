@@ -94,14 +94,15 @@ export interface SudokuCellDataPublic {
  * remote changes.
  */
 export class SudokuCellData extends CellPersistedData implements SudokuCellDataPublic {
-	constructor(args: ConstructorParameters<typeof CellPersistedData>) {
-		super(...args);
-
+	/**
+	 * This property exists solely to wire up the tree to the reactive properties of the class.
+	 */
+	#wireReactiveProperties = (() => {
 		Tree.on(this, "nodeChanged", () => {
 			this.refreshReactiveProperties();
 		});
 		this.refreshReactiveProperties();
-	}
+	})();
 
 	#value: SudokuNumber = $state(0);
 	public set value(v) {
