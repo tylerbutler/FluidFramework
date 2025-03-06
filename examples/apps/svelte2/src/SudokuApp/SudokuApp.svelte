@@ -6,8 +6,11 @@ import SudokuGrid from "../SudokuGrid/SudokuGrid.svelte";
 import type { CellCoordinate } from "../coordinate";
 import { mapStringToColor } from "../colors";
 import { loadIncludedPuzzle } from "../loadPuzzle";
+import { SvelteMap } from "svelte/reactivity";
+import { setContext } from "svelte";
 
 const { data, presence, sessionClient }: SudokuAppProps = $props();
+
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
 // We create a value manager within the workspace to track and share individual pieces of state.
 const appPresence = presence.getStates("v1:presence", {
@@ -23,7 +26,6 @@ const handleResetButton = () => {
 			if (!cell.startingClue) {
 				cell.value = 0;
 			}
-			cell.remoteOwners = [];
 		}
 	}
 };
@@ -61,8 +63,6 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 
 	updateTitle();
 });
-
-// const isMe = (sessionClient: ISessionClient) => presence.getMyself() === sessionClient;
 </script>
 
 <Heading tag="h2">{title}</Heading>
@@ -75,7 +75,6 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 					<Badge color={mapStringToColor(sessionId)} rounded class="px-2.5 py-0.5">
 						<Indicator color={mapStringToColor(sessionId)} size="lg" class="me-1"
 						></Indicator>
-						<!-- {isMe(attendee) ? `(me) ${attendee.sessionId}` : attendee.sessionId} -->
 						{sessionId}
 					</Badge>
 				</li>
@@ -104,4 +103,13 @@ presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
 			</div>
 		</div>
 	</div>
+</P>
+<P>
+	<ul>
+	{#each selectionState as [session, selectedCell], index (session.sessionId)}
+		{#if index < 8 && session.getConnectionStatus() === "Connected"}
+			<li>{session.sessionId}: {selectedCell}</li>
+		{/if}
+	{/each}
+</ul>
 </P>
