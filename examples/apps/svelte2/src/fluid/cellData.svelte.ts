@@ -95,13 +95,12 @@ export interface SudokuCellDataPublic {
  */
 export class SudokuCellData extends CellPersistedData implements SudokuCellDataPublic {
 	/**
-	 * This property exists solely to wire up the tree to the reactive properties of the class.
+	 * This property exists solely to wire up the tree to the reactive properties of the class when it is instantiated.
 	 */
 	#wireReactiveProperties = (() => {
 		Tree.on(this, "nodeChanged", () => {
 			this.refreshReactiveProperties();
 		});
-		this.refreshReactiveProperties();
 	})();
 
 	#value: SudokuNumber = $state(0);
@@ -130,7 +129,7 @@ export class SudokuCellData extends CellPersistedData implements SudokuCellDataP
 		this._startingClue = clue;
 	}
 
-	public refreshReactiveProperties(): void {
+	private refreshReactiveProperties(): void {
 		if (!isSudokuNumber(this._value) || !isSudokuNumber(this._correctValue)) {
 			throw new Error(
 				`Value is not a valid sudoku number: ${this._value} or ${this._correctValue}`,
