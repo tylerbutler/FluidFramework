@@ -2,9 +2,15 @@
 import { Indicator } from "svelte-5-ui-lib";
 import type { CellPresenceProps } from "./props";
 import { mapStringToColor } from "../colors";
+import type { ISessionClient } from "@fluidframework/presence/alpha";
+import { getContext } from "svelte";
+import type { SvelteMap } from "svelte/reactivity";
+import type { CellCoordinate } from "../coordinate";
 
-const { owners = $bindable(), selectionMap, coordinate }: CellPresenceProps = $props();
+// const { coordinate }: CellPresenceProps = $props();
 // const selectionMap = getContext<SvelteMap<ISessionClient, CellCoordinate>>('selectionMap');
+
+const selectionState = getContext<SvelteMap<ISessionClient, CellCoordinate>>("selectionState");
 
 function getPresenceIndicatorPosition(index: number) {
 	switch (index) {
@@ -41,7 +47,7 @@ function getPresenceIndicatorPosition(index: number) {
 // {/each}
 </script>
 
-{#each owners as owner, index (owner.sessionId)}
+{#each selectionState as [owner], index (owner.sessionId)}
 	<!-- {@debug owners} -->
 	{#if index < 8 && owner.getConnectionStatus() === "Connected"}
 		<Indicator

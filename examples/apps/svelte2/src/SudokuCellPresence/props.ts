@@ -8,6 +8,6 @@ import type { CellCoordinate } from "../coordinate";
 
 export interface CellPresenceProps {
 	readonly coordinate: CellCoordinate;
-	readonly owners: ISessionClient[];
-	readonly selectionMap: Map<ISessionClient, CellCoordinate>;
+	// readonly owners: ISessionClient[];
+	// readonly selectionMap: Map<ISessionClient, CellCoordinate>;
 }
