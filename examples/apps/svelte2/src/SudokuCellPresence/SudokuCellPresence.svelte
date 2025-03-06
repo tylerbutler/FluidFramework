@@ -9,6 +9,7 @@ import { type CellCoordinate } from "../coordinate";
 
 const { coordinate }: CellPresenceProps = $props();
 
+// This could come from props as well.
 const selectionState = getContext<SvelteMap<ISessionClient, CellCoordinate>>("selectionState");
 
 function compareCells(cell1: CellCoordinate, cell2: CellCoordinate) {

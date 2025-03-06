@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import { Tree } from "fluid-framework";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "../coordinate";
 import { schemaFactory as sf } from "./schemaFactory";
 import { isSudokuNumber, type SudokuNumber } from "../sudokuNumber";
