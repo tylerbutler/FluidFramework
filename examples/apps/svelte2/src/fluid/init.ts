@@ -58,7 +58,6 @@ function initializeContainerData(appData: TreeView<typeof SudokuAppData>): void 
 				_correctValue: 0,
 				_value: 0,
 			});
-			cell.refreshReactiveProperties();
 			newRowData.push(cell);
 		}
 		newGridData.push(new SudokuRow(newRowData));

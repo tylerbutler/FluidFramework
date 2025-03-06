@@ -89,10 +89,20 @@ export interface SudokuCellDataPublic {
  * that typically comes from presence, and instance-local data. The data is accessed exclusively through properties.
  *
  * By convention, properties that are part of a SharedTree begin with an underscore and should not be accessed directly,
- * despite being public.
+ * despite being public. Instead, the properties of the SudokuCellDataPublic interface should be used. These properties
+ * are all reactive, meaning they can be used directly in component views and will be reactive to both local changes and
+ * remote changes.
  */
 export class SudokuCellData extends CellPersistedData implements SudokuCellDataPublic {
-export class SudokuCellData extends CellPersistedData implements CellLocalData {
+	constructor(args: ConstructorParameters<typeof CellPersistedData>) {
+		super(...args);
+
+		Tree.on(this, "nodeChanged", () => {
+			this.refreshReactiveProperties();
+		});
+		this.refreshReactiveProperties();
+	}
+
 	#value: SudokuNumber = $state(0);
 	public set value(v) {
 		// set the persisted data, which will trigger an event that will update the local data.

@@ -5,14 +5,8 @@ import { type SudokuNumber, isSudokuNumber } from "../sudokuNumber";
 import type { CellComponentProps } from "./props";
 import CellPresence from "../SudokuCellPresence/SudokuCellPresence.svelte";
 import { coordinateDataAttributeName } from "../constants";
-import { Tree } from "fluid-framework";
 
 let { cellData, currentSessionClient, onKeyDown, onFocus }: CellComponentProps = $props();
-
-Tree.on(cellData, "nodeChanged", () => {
-	cellData.refreshReactiveProperties();
-});
-cellData.refreshReactiveProperties();
 
 const cellCoordinateId = (c: CoordinateString) => `${currentSessionClient.sessionId}-${c}`;
 
