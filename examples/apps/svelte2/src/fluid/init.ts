@@ -13,7 +13,7 @@ import {
 	type SudokuAppData,
 } from "./dataSchema";
 import { PUZZLE_INDEXES } from "../constants";
-import { SudokuCellData } from "./cellData.svelte";
+import { SudokuCellData, type SudokuCellDataPublic } from "./cellData.svelte";
 
 const client = new TinyliciousClient();
 

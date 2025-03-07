@@ -6,8 +6,8 @@ import SudokuGrid from "../SudokuGrid/SudokuGrid.svelte";
 import type { CellCoordinate } from "../coordinate";
 import { mapStringToColor } from "../colors";
 import { loadIncludedPuzzle } from "../loadPuzzle";
-import { SvelteMap } from "svelte/reactivity";
 import { setContext } from "svelte";
+import { SelectionManager, SelectionManagerContextKey } from "../selectionManager.svelte";
 
 const { data, presence, sessionClient }: SudokuAppProps = $props();
 
@@ -20,48 +20,41 @@ const getConnectedUsers = () =>
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
 // We create a value manager within the workspace to track and share individual pieces of state.
 const appPresence = presence.getStates("v1:presence", {
-	// Create a Latest value manager to track the selection state.
+	// Create a Latest value manager to track the latest coordinate for each user.
 	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
 });
 
 /**
  * The selection manager tracks the currently selected cell for each connected client.
  */
-const selectionManager = appPresence.props.selectionCoordinate;
+const selectionManager = new SelectionManager(appPresence.props.selectionCoordinate);
 
-/**
- * A reactive map that tracks the selected cells for each client.
- * The key is the session client, and the value is the selected cell coordinate.
- */
-const selectionState = $state(new SvelteMap<ISessionClient, CellCoordinate>());
-
-// Wire up event handlers to update the selection state when the cell selection is updated
-selectionManager.events.on("updated", (coordinate) => {
-	// Update the selection state with the new coordinate
-	selectionState.set(presence.getMyself(), coordinate.value);
-});
-
-// Pass the selection state to context so we can access it in the SudokuCell component
-setContext("selectionState", selectionState);
-
-let title = $state("Sudoku");
-const updateTitle = () => {
-	const playerCount = getConnectedUsers().length;
-	title = playerCount > 1 ? `Sudoku: ${playerCount} players` : "Sudoku";
-};
+// Pass the selection state to context so we can access it in the SudokuCellPresence component
+setContext(SelectionManagerContextKey, selectionManager);
 
 let connectedUsers = $state<string[]>([]);
 
 presence.events.on("attendeeJoined", () => {
 	connectedUsers = getConnectedUsers().map((c) => c.sessionId);
-	updateTitle();
+	// updateTitle();
 });
 
-presence.events.on("attendeeDisconnected", (attendee: ISessionClient) => {
-	selectionState.delete(attendee);
+presence.events.on("attendeeDisconnected", (session: ISessionClient) => {
+	selectionManager.reactiveState.delete(session);
 	connectedUsers = getConnectedUsers().map((c) => c.sessionId);
-	updateTitle();
+	// updateTitle();
 });
+
+let title = $derived.by(() => {
+	const playerCount = connectedUsers.length;
+	return playerCount > 1 ? `Sudoku: ${playerCount} players` : "Sudoku";
+});
+
+// let title = $state("Sudoku");
+// const updateTitle = () => {
+// 	const playerCount = getConnectedUsers().length;
+// 	title = playerCount > 1 ? `Sudoku: ${playerCount} players` : "Sudoku";
+// };
 
 const handleResetButton = () => {
 	for (const row of data.grid) {
@@ -95,7 +88,7 @@ const handleResetButton = () => {
 <P>
 	<div class="inline-block h-max min-h-[447px]">
 		<div class="inline-block h-max min-h-[447px]">
-			<SudokuGrid grid={data.grid} {sessionClient} {selectionManager} />
+			<SudokuGrid grid={data.grid} {sessionClient} valueManager={selectionManager.valueManager}/>
 
 			<div class="flex">
 				<span class="grow-1">
@@ -113,7 +106,7 @@ const handleResetButton = () => {
 </P>
 <P>
 	<ul>
-	{#each selectionState as [session, selectedCell] (session.sessionId)}
+	{#each selectionManager.reactiveState as [session, selectedCell] (session.sessionId)}
 		{#if session.getConnectionStatus() === "Connected"}
 			<li>{session.sessionId}: {selectedCell}</li>
 		{/if}

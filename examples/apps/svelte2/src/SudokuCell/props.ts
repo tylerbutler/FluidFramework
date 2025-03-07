@@ -4,10 +4,10 @@
  */
 
 import type { ISessionClient } from "@fluidframework/presence/alpha";
-import type { SudokuCellData } from "../fluid/cellData.svelte";
+import type { SudokuCellDataPublic } from "../fluid/cellData.svelte";
 
 export interface CellComponentProps {
-	readonly cellData: SudokuCellData;
+	readonly cellData: SudokuCellDataPublic;
 	readonly currentSessionClient: ISessionClient;
 	onKeyDown: (keyString: string, coordIn: string) => void;
 	onFocus: (e: FocusEvent) => void;

@@ -50,17 +50,19 @@ export class CellPersistedData extends sf.object("CellPersistedData", {
 	}
 }
 
-const CellState = {
+const CellStatus = {
 	empty: "empty",
 	startingClue: "startingClue",
 	wrong: "wrong",
 	correct: "correct",
 } as const;
 
-type CellState = (typeof CellState)[keyof typeof CellState];
+type CellStatus = (typeof CellStatus)[keyof typeof CellStatus];
 
 /**
  * Represents the public interface of a SudokuCell.
+ *
+ * All properties should be reactive.
  */
 export interface SudokuCellDataPublic {
 	/**
@@ -82,6 +84,15 @@ export interface SudokuCellDataPublic {
 	 * True if the cell's value is provided as part of the starting clues for the puzzle; false otherwise.
 	 */
 	startingClue: boolean;
+
+	/**
+	 * The status of the cell.
+	 */
+	status: CellStatus;
+
+	coordinateString: CoordinateString;
+
+	coordinate: CellCoordinate;
 }
 
 /**
@@ -150,21 +161,21 @@ export class SudokuCellData extends CellPersistedData implements SudokuCellDataP
 	});
 
 	/**
-	 * Returns the appropriate CellState for the cell. This state can be used to render the cell differently.
+	 * Returns the appropriate CellStatus for the cell. This status can be used to render the cell differently.
 	 */
 	public status = $derived.by(() => {
 		if (this.value === 0) {
-			return CellState.empty;
+			return CellStatus.empty;
 		}
 
 		if (this.startingClue) {
-			return CellState.startingClue;
+			return CellStatus.startingClue;
 		}
 
 		if (this.isCorrect && !this.startingClue) {
-			return CellState.correct;
+			return CellStatus.correct;
 		}
 
-		return CellState.wrong;
+		return CellStatus.wrong;
 	});
 }

@@ -4,13 +4,13 @@ import type { CellPresenceProps } from "./props";
 import { mapStringToColor } from "../colors";
 import type { ISessionClient } from "@fluidframework/presence/alpha";
 import { getContext } from "svelte";
-import type { SvelteMap } from "svelte/reactivity";
 import { type CellCoordinate } from "../coordinate";
+import { SelectionManagerContextKey, type SelectionManager } from "../selectionManager.svelte";
 
 const { coordinate }: CellPresenceProps = $props();
 
 // This could come from props as well.
-const selectionState = getContext<SvelteMap<ISessionClient, CellCoordinate>>("selectionState");
+const { reactiveState } = getContext<SelectionManager>(SelectionManagerContextKey);
 
 function compareCells(cell1: CellCoordinate, cell2: CellCoordinate) {
 	return cell1[0] === cell2[0] && cell1[1] === cell2[1];
@@ -41,7 +41,7 @@ function getPresenceIndicatorPosition(index: number) {
 
 const presenceIndicators = $derived.by(() => {
 	const toRender: ISessionClient[] = [];
-	for (const [owner, cell] of selectionState.entries()) {
+	for (const [owner, cell] of reactiveState.entries()) {
 		if (
 			toRender.length < 8 &&
 			owner.getConnectionStatus() === "Connected" &&
