@@ -8,7 +8,7 @@ import { mapStringToColor } from "../colors";
 import { loadIncludedPuzzle } from "../loadPuzzle";
 import { setContext } from "svelte";
 import { SelectionManager, SelectionManagerContextKey } from "../selectionManager.svelte";
-import type { SudokuCellData } from "../fluid/cellData.svelte";
+import type { SudokuCellViewData } from "../fluid/cellData.svelte";
 
 const { data, presence, sessionClient }: SudokuAppProps = $props();
 
@@ -56,7 +56,7 @@ const title = $derived.by(() => {
 const onPuzzleReset = () => {
 	for (const row of data.grid) {
 		for (const cellInternal of row) {
-			const cell = cellInternal as SudokuCellData;
+			const cell = cellInternal as SudokuCellViewData;
 			if (!cell.startingClue) {
 				cell.value = 0;
 			}
@@ -88,7 +88,7 @@ const onPuzzleReset = () => {
 <P>
 	<div class="inline-block h-max min-h-[447px]">
 		<div class="inline-block h-max min-h-[447px]">
-			<SudokuGrid grid={data.grid} {sessionClient} valueManager={selectionManager.valueManager}/>
+			<SudokuGrid grid={data.grid} {sessionClient} />
 
 			<div class="flex">
 				<span class="grow-1">

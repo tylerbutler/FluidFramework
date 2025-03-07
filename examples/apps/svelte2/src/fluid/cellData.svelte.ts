@@ -59,12 +59,8 @@ const CellStatus = {
 
 type CellStatus = (typeof CellStatus)[keyof typeof CellStatus];
 
-/**
- * Represents the public interface of a SudokuCell.
- *
- * All properties should be reactive.
- */
-export interface SudokuCellData {
+// Unused
+export interface SudokuCellViewDataExplicit {
 	/**
 	 * Returns a string representation of the cell's value suitable for display.
 	 */
@@ -96,15 +92,29 @@ export interface SudokuCellData {
 }
 
 /**
+ * Utility type that excludes keys whose name begins with an underscore.
+ */
+type ExcludeUnderscoreProperties<T> = {
+	[K in keyof T as K extends `_${string}` ? never : K]: T[K];
+};
+
+/**
+ * Represents the SudokuCellData that is reactive and safe to use in templates (views).
+ *
+ * All properties are reactive.
+ */
+export type SudokuCellViewData = ExcludeUnderscoreProperties<SudokuCellDataInternal>;
+
+/**
  * Encapsulates all Cell-related data, including persisted data stored in a SharedTree, ephemeral session-related data
  * that typically comes from presence, and instance-local data. The data is accessed exclusively through properties.
  *
  * By convention, properties that are part of a SharedTree begin with an underscore and should not be accessed directly,
- * despite being public. Instead, the properties of the SudokuCellData interface should be used. These properties
+ * despite being public. Instead, the properties of the SudokuCellViewData interface should be used. These properties
  * are all reactive, meaning they can be used directly in component views and will be reactive to both local changes and
  * remote changes.
  */
-export class SudokuCellDataInternal extends CellPersistedData implements SudokuCellData {
+export class SudokuCellDataInternal extends CellPersistedData implements SudokuCellViewData {
 	/**
 	 * This property exists solely to wire up the tree to the reactive properties of
 	 * the class when it is instantiated.
@@ -141,19 +151,6 @@ export class SudokuCellDataInternal extends CellPersistedData implements SudokuC
 		this._startingClue = clue;
 	}
 
-	private refreshReactiveProperties(): void {
-		if (!isSudokuNumber(this._value) || !isSudokuNumber(this._correctValue)) {
-			throw new Error(
-				`Value is not a valid sudoku number: ${this._value} or ${this._correctValue}`,
-			);
-		}
-		console.log(`Refreshing reactive properties for cell: ${this.coordinate}`);
-
-		this.#startingClue = this._startingClue;
-		this.#correctValue = this._correctValue as SudokuNumber;
-		this.#value = this._value as SudokuNumber;
-	}
-
 	public displayString = $derived.by(() => {
 		if (this.startingClue || this.value !== 0) {
 			return this.value.toString();
@@ -179,4 +176,17 @@ export class SudokuCellDataInternal extends CellPersistedData implements SudokuC
 
 		return CellStatus.wrong;
 	});
+
+	private refreshReactiveProperties(): void {
+		if (!isSudokuNumber(this._value) || !isSudokuNumber(this._correctValue)) {
+			throw new Error(
+				`Value is not a valid sudoku number: ${this._value} or ${this._correctValue}`,
+			);
+		}
+		console.log(`Refreshing reactive properties for cell: ${this.coordinate}`);
+
+		this.#startingClue = this._startingClue;
+		this.#correctValue = this._correctValue as SudokuNumber;
+		this.#value = this._value as SudokuNumber;
+	}
 }

@@ -10,5 +10,4 @@ import type { SudokuGrid } from "../fluid/dataSchema";
 export interface SudokuGridComponentProps {
 	readonly grid: SudokuGrid;
 	readonly sessionClient: ISessionClient;
-	readonly valueManager: LatestValueManager<CellCoordinate>;
 }
