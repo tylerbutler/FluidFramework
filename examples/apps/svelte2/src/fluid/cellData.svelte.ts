@@ -108,7 +108,7 @@ export class SudokuCellData extends CellPersistedData implements SudokuCellDataP
 	/**
 	 * This property exists solely to wire up the tree to the reactive properties of the class when it is instantiated.
 	 */
-	 #wireReactiveProperties = (() => {
+	#wireReactiveProperties = (() => {
 		Tree.on(this, "nodeChanged", () => {
 			this.refreshReactiveProperties();
 		});

@@ -1404,6 +1404,9 @@ importers:
       fluid-framework:
         specifier: workspace:~
         version: link:../../../packages/framework/fluid-framework
+      ohash:
+        specifier: ^2.0.11
+        version: 2.0.11
       sudokus:
         specifier: ^1.0.2
         version: 1.0.2
@@ -26456,6 +26459,9 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
+  ohash@2.0.11:
+    resolution: {integrity: sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ==}
+
   on-exit-leak-free@2.1.2:
     resolution: {integrity: sha512-0eJJY6hXLGf1udHwfNftBqH+g73EU4B504nZeKpz1sYRKafAghwxEJunB2O7rDZkL4PGfsMVnTXZ2EjibbqcsA==}
     engines: {node: '>=14.0.0'}
@@ -43885,6 +43891,8 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
+
+  ohash@2.0.11: {}
 
   on-exit-leak-free@2.1.2: {}
 

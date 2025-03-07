@@ -16,7 +16,7 @@ export class SudokuGrid extends sf.array("SudokuGrid", SudokuRow) {}
  */
 export class SudokuAppData extends sf.object("SudokuAppData", {
 	grid: SudokuGrid,
-	// solutions: sf.map("solutions", SudokuGrid),
+	solutions: sf.map("solutions", sf.string),
 }) {}
 
 export const sudokuTreeConfiguration = new TreeViewConfiguration({ schema: SudokuAppData });

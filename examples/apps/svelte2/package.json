@@ -29,6 +29,7 @@
 		"flowbite": "^3.1.2",
 		"flowbite-svelte": "^0.48.4",
 		"fluid-framework": "workspace:~",
+		"ohash": "^2.0.11",
 		"sudokus": "^1.0.2",
 		"svelte-5-ui-lib": "^0.12.2",
 		"uniqolor": "^1.1.1"

@@ -64,5 +64,5 @@ function initializeContainerData(appData: TreeView<typeof SudokuAppData>): void 
 	}
 
 	const grid = new SudokuGrid(newGridData);
-	appData.initialize({ grid });
+	appData.initialize({ grid, solutions: {} });
 }

@@ -6,7 +6,12 @@ import type { CellComponentProps } from "./props";
 import CellPresence from "../SudokuCellPresence/SudokuCellPresence.svelte";
 import { coordinateDataAttributeName } from "../constants";
 
-const { cellData, currentSessionClient, onKeyDown: keyDownToParent, onFocus }: CellComponentProps = $props();
+const {
+	cellData,
+	currentSessionClient,
+	onKeyDown: keyDownToParent,
+	onFocus,
+}: CellComponentProps = $props();
 
 const cellCoordinateId = (c: CoordinateString) => `${currentSessionClient.sessionId}-${c}`;
 
