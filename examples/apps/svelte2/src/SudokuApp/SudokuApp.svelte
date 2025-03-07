@@ -32,31 +32,27 @@ const selectionManager = new SelectionManager(appPresence.props.selectionCoordin
 // Pass the selection state to context so we can access it in the SudokuCellPresence component
 setContext(SelectionManagerContextKey, selectionManager);
 
+/**
+ * A local reactive state variable to track the connected users.
+ */
 let connectedUsers = $state<string[]>([]);
 
 presence.events.on("attendeeJoined", () => {
 	connectedUsers = getConnectedUsers().map((c) => c.sessionId);
-	// updateTitle();
 });
 
 presence.events.on("attendeeDisconnected", (session: ISessionClient) => {
 	selectionManager.reactiveState.delete(session);
 	connectedUsers = getConnectedUsers().map((c) => c.sessionId);
-	// updateTitle();
 });
 
-let title = $derived.by(() => {
+// The title is derived from the connected users array, which is updated when users join or leave.
+const title = $derived.by(() => {
 	const playerCount = connectedUsers.length;
 	return playerCount > 1 ? `Sudoku: ${playerCount} players` : "Sudoku";
 });
 
-// let title = $state("Sudoku");
-// const updateTitle = () => {
-// 	const playerCount = getConnectedUsers().length;
-// 	title = playerCount > 1 ? `Sudoku: ${playerCount} players` : "Sudoku";
-// };
-
-const handleResetButton = () => {
+const onPuzzleReset = () => {
 	for (const row of data.grid) {
 		for (const cell of row) {
 			if (!cell.startingClue) {
@@ -72,15 +68,17 @@ const handleResetButton = () => {
 <P>
 	<ul class="w-full max-w-sm divide-y divide-gray-200 dark:divide-gray-700">
 			{#each connectedUsers as sessionId (sessionId)}
+			{@const isMe = sessionId === presence.getMyself().sessionId}
+			{@const sessionText = isMe ? `${sessionId} (me)` : sessionId}
 				<li>
 					<Badge color={mapStringToColor(sessionId)} rounded class="px-2.5 py-0.5">
 						<Indicator color={mapStringToColor(sessionId)} size="lg" class="me-1"
 						></Indicator>
-						{sessionId}
+						{sessionText}
 					</Badge>
 				</li>
 			{:else}
-				<li><Badge>No one else connected</Badge></li>
+				<li><Badge color="primary">No one else connected</Badge></li>
 			{/each}
 	</ul>
 </P>
@@ -92,7 +90,7 @@ const handleResetButton = () => {
 
 			<div class="flex">
 				<span class="grow-1">
-					<Button onclick={handleResetButton}>Reset</Button>
+					<Button onclick={onPuzzleReset}>Reset</Button>
 				</span>
 
 				<span class="grow-5">

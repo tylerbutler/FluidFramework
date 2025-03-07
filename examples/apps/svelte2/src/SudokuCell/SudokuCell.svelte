@@ -6,7 +6,7 @@ import type { CellComponentProps } from "./props";
 import CellPresence from "../SudokuCellPresence/SudokuCellPresence.svelte";
 import { coordinateDataAttributeName } from "../constants";
 
-let { cellData, currentSessionClient, onKeyDown, onFocus }: CellComponentProps = $props();
+const { cellData, currentSessionClient, onKeyDown: keyDownToParent, onFocus }: CellComponentProps = $props();
 
 const cellCoordinateId = (c: CoordinateString) => `${currentSessionClient.sessionId}-${c}`;
 
@@ -41,7 +41,7 @@ const handleKeyDown = (e: any) => {
 			numericInput(keyString, coord);
 			return;
 		default:
-			onKeyDown(keyString, coord);
+			keyDownToParent(keyString, coord);
 			return;
 	}
 };

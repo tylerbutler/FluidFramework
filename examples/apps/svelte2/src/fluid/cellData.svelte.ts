@@ -108,13 +108,13 @@ export class SudokuCellData extends CellPersistedData implements SudokuCellDataP
 	/**
 	 * This property exists solely to wire up the tree to the reactive properties of the class when it is instantiated.
 	 */
-	#wireReactiveProperties = (() => {
+	 #wireReactiveProperties = (() => {
 		Tree.on(this, "nodeChanged", () => {
 			this.refreshReactiveProperties();
 		});
 	})();
 
-	#value: SudokuNumber = $state(0);
+	#value: SudokuNumber = $state(this._value as SudokuNumber);
 	public set value(v) {
 		// set the persisted data, which will trigger an event that will update the local data.
 		this._value = v;
@@ -123,7 +123,7 @@ export class SudokuCellData extends CellPersistedData implements SudokuCellDataP
 		return this.#value;
 	}
 
-	#correctValue: SudokuNumber = $state(0);
+	#correctValue: SudokuNumber = $state(this._correctValue as SudokuNumber);
 	public get correctValue() {
 		return this.#correctValue;
 	}
@@ -132,7 +132,7 @@ export class SudokuCellData extends CellPersistedData implements SudokuCellDataP
 		this._correctValue = v;
 	}
 
-	#startingClue: boolean = $state(false);
+	#startingClue: boolean = $state(this._startingClue);
 	public get startingClue() {
 		return this.#startingClue;
 	}
