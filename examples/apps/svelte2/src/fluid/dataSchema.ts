@@ -5,9 +5,9 @@
 
 import { TreeViewConfiguration } from "fluid-framework";
 import { schemaFactory as sf } from "./schemaFactory";
-import { SudokuCellData } from "./cellData.svelte";
+import { SudokuCellDataInternal } from "./cellData.svelte";
 
-export class SudokuRow extends sf.array("SudokuRow", SudokuCellData) {}
+export class SudokuRow extends sf.array("SudokuRow", SudokuCellDataInternal) {}
 
 export class SudokuGrid extends sf.array("SudokuGrid", SudokuRow) {}
 

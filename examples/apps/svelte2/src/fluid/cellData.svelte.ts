@@ -64,7 +64,7 @@ type CellStatus = (typeof CellStatus)[keyof typeof CellStatus];
  *
  * All properties should be reactive.
  */
-export interface SudokuCellDataPublic {
+export interface SudokuCellData {
 	/**
 	 * Returns a string representation of the cell's value suitable for display.
 	 */
@@ -78,21 +78,21 @@ export interface SudokuCellDataPublic {
 	/**
 	 * The correct value of the cell.
 	 */
-	correctValue: SudokuNumber;
+	readonly correctValue: SudokuNumber;
 
 	/**
 	 * True if the cell's value is provided as part of the starting clues for the puzzle; false otherwise.
 	 */
-	startingClue: boolean;
+	readonly startingClue: boolean;
 
 	/**
 	 * The status of the cell.
 	 */
-	status: CellStatus;
+	readonly status: CellStatus;
 
-	coordinateString: CoordinateString;
+	readonly coordinateString: CoordinateString;
 
-	coordinate: CellCoordinate;
+	readonly coordinate: CellCoordinate;
 }
 
 /**
@@ -100,13 +100,14 @@ export interface SudokuCellDataPublic {
  * that typically comes from presence, and instance-local data. The data is accessed exclusively through properties.
  *
  * By convention, properties that are part of a SharedTree begin with an underscore and should not be accessed directly,
- * despite being public. Instead, the properties of the SudokuCellDataPublic interface should be used. These properties
+ * despite being public. Instead, the properties of the SudokuCellData interface should be used. These properties
  * are all reactive, meaning they can be used directly in component views and will be reactive to both local changes and
  * remote changes.
  */
-export class SudokuCellData extends CellPersistedData implements SudokuCellDataPublic {
+export class SudokuCellDataInternal extends CellPersistedData implements SudokuCellData {
 	/**
-	 * This property exists solely to wire up the tree to the reactive properties of the class when it is instantiated.
+	 * This property exists solely to wire up the tree to the reactive properties of
+	 * the class when it is instantiated.
 	 */
 	#wireReactiveProperties = (() => {
 		Tree.on(this, "nodeChanged", () => {
@@ -128,7 +129,7 @@ export class SudokuCellData extends CellPersistedData implements SudokuCellDataP
 		return this.#correctValue;
 	}
 	public set correctValue(v) {
-		// set the persisted data, which will trigger an event that will update the local data.
+		// set the persisted data in the shared tree, which will trigger an event that will update the local data.
 		this._correctValue = v;
 	}
 

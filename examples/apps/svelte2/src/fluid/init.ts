@@ -13,7 +13,7 @@ import {
 	type SudokuAppData,
 } from "./dataSchema";
 import { PUZZLE_INDEXES } from "../constants";
-import { SudokuCellData, type SudokuCellDataPublic } from "./cellData.svelte";
+import { SudokuCellDataInternal } from "./cellData.svelte";
 
 const client = new TinyliciousClient();
 
@@ -23,26 +23,16 @@ export async function createFluidContainer() {
 	const { container } = await client.createContainer(containerSchema, "2");
 
 	// Populate the default data before we attach
-	console.log("viewWith");
 	const appData = container.initialObjects.appData.viewWith(sudokuTreeConfiguration);
-	console.log("appData init");
 	initializeContainerData(appData);
-	console.log("initializeContainerData succeeded");
 
-	// If the app is in a `createNew` state, and the container is detached, we attach the container.
-	// This uploads the container to the service and connects to the collaboration session.
-	// The newly attached container is given a unique ID that can be used to access the container in another session
+	// Attach the container and return it along with its ID.
 	const containerId = await container.attach();
 	return { containerId, container };
-
-	// // Retrieve a reference to the presence APIs via the data object.
-	// const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
-	// return { containerId: containerIdToReturn, container, presence };
 }
 
 export async function getFluidContainer(containerId: string) {
-	// Use the unique container ID to fetch the container created earlier.  It will already be connected to the
-	// collaboration session.
+	// Use the unique container ID to fetch the container created earlier.
 	const { container } = await client.getContainer(containerId, containerSchema, "2");
 	return container;
 }
@@ -50,9 +40,9 @@ export async function getFluidContainer(containerId: string) {
 function initializeContainerData(appData: TreeView<typeof SudokuAppData>): void {
 	const newGridData: SudokuRow[] = [];
 	for (const row of PUZZLE_INDEXES) {
-		const newRowData: SudokuCellData[] = [];
+		const newRowData: SudokuCellDataInternal[] = [];
 		for (const col of PUZZLE_INDEXES) {
-			const cell = new SudokuCellData({
+			const cell = new SudokuCellDataInternal({
 				_coordinate: [row, col],
 				_startingClue: false,
 				_correctValue: 0,
