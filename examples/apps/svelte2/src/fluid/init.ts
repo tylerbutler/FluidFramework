@@ -15,7 +15,12 @@ import {
 import { PUZZLE_INDEXES } from "../constants";
 import { SudokuCellDataInternal } from "./cellData.svelte";
 
-const client = new TinyliciousClient();
+const client = new TinyliciousClient({
+	connection: {
+		port: 80,
+		domain: "https://levee.tylerbutler.com",
+	},
+});
 
 export async function createFluidContainer() {
 	// The client will create a new detached container using the schema
