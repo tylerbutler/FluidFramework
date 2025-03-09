@@ -17,8 +17,8 @@ import { SudokuCellDataInternal } from "./cellData.svelte";
 
 const client = new TinyliciousClient({
 	connection: {
-		port: 80,
 		domain: "https://levee.tylerbutler.com",
+		port: 80,
 	},
 });
 
