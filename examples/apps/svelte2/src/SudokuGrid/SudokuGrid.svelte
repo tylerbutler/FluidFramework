@@ -1,5 +1,5 @@
 <script lang="ts">
-import { El, Table, TableBody, TableRow } from "yesvelte";
+import { Table, TableBody, TableBodyRow } from "svelte-5-ui-lib";
 import { Coordinate, type CoordinateString } from "../coordinate";
 import Cell from "../SudokuCell/SudokuCell.svelte";
 import type { SudokuGridComponentProps } from "./props";
@@ -57,7 +57,7 @@ const onCellFocus = (e: any) => {
 <Table class="h-full w-min border-collapse">
 	<TableBody>
 		{#each grid as row, rowIndex}
-			<TableRow>
+			<TableBodyRow>
 				{#each row as cell, colIndex (cell.coordinateString)}
 					<Cell
 						cellData={grid[rowIndex][colIndex]}
@@ -66,7 +66,7 @@ const onCellFocus = (e: any) => {
 						onFocus={onCellFocus}
 					></Cell>
 				{/each}
-			</TableRow>
+			</TableBodyRow>
 		{/each}
 	</TableBody>
 </Table>
