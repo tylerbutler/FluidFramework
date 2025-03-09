@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Indicator } from "svelte-5-ui-lib";
+import { Badge } from "yesvelte";
 import type { CellPresenceProps } from "./props";
 import { mapStringToColor } from "../colors";
 import type { ISessionClient } from "@fluidframework/presence/alpha";
@@ -55,10 +55,9 @@ const presenceIndicators = $derived.by(() => {
 </script>
 
 {#each presenceIndicators as session, index (session.sessionId)}
-		<Indicator
+		<Badge
 			color={mapStringToColor(session.sessionId)}
 			border={false}
-			size="lg"
 			placement={getPresenceIndicatorPosition(index)}
-		></Indicator>
+		></Badge>
 {/each}

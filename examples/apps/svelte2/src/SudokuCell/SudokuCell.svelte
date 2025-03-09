@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Input, TableBodyCell } from "svelte-5-ui-lib";
+import { Input, TableCell } from "yesvelte";
 import { Coordinate, type CoordinateString } from "../coordinate";
 import { type SudokuNumber, isSudokuNumber } from "../sudokuNumber";
 import type { CellComponentProps } from "./props";
@@ -125,7 +125,7 @@ function getCellInputClasses() {
 }
 </script>
 
-<TableBodyCell
+<TableCell
 	class="h-[40px] w-[40px] p-0 box-border border-none m-[2px] {getCellBorderClasses(
 		cellData.coordinateString,
 	).join(' ')}"
@@ -145,4 +145,4 @@ function getCellInputClasses() {
 		></Input>
 		<CellPresence coordinate={cellData.coordinate} />
 	</div>
-</TableBodyCell>
+</TableCell>

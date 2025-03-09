@@ -1,6 +1,6 @@
 <script lang="ts">
 import { Latest, type ISessionClient } from "@fluidframework/presence/alpha";
-import { Badge, Button, Heading, Indicator, P } from "svelte-5-ui-lib";
+import { El, Badge, Button } from "yesvelte";
 import type { SudokuAppProps } from "./props";
 import SudokuGrid from "../SudokuGrid/SudokuGrid.svelte";
 import type { CellCoordinate } from "../coordinate";
@@ -65,17 +65,17 @@ const onPuzzleReset = () => {
 };
 </script>
 
-<Heading tag="h2">{title}</Heading>
+<El tag="h2">{title}</El>
 
-<P>
+<El tag="p">
 	<ul class="w-full max-w-sm divide-y divide-gray-200 dark:divide-gray-700">
 			{#each connectedUsers as sessionId (sessionId)}
 			{@const isMe = sessionId === presence.getMyself().sessionId}
 			{@const sessionText = isMe ? `${sessionId} (me)` : sessionId}
 				<li>
-					<Badge color={mapStringToColor(sessionId)} rounded class="px-2.5 py-0.5">
-						<Indicator color={mapStringToColor(sessionId)} size="lg" class="me-1"
-						></Indicator>
+					<Badge color={mapStringToColor(sessionId)} class="px-2.5 py-0.5">
+						<Badge color={mapStringToColor(sessionId)} size="lg" class="me-1"
+						></Badge>
 						{sessionText}
 					</Badge>
 				</li>
@@ -83,9 +83,9 @@ const onPuzzleReset = () => {
 				<li><Badge color="primary">No one else connected</Badge></li>
 			{/each}
 	</ul>
-</P>
+</El>
 
-<P>
+<El tag="p">
 	<div class="inline-block h-max min-h-[447px]">
 		<div class="inline-block h-max min-h-[447px]">
 			<SudokuGrid grid={data.grid} {sessionClient} />
@@ -103,8 +103,8 @@ const onPuzzleReset = () => {
 			</div>
 		</div>
 	</div>
-</P>
-<P>
+</El>
+<El tag="p">
 	<ul>
 	{#each selectionManager.reactiveState as [session, selectedCell] (session.sessionId)}
 		{#if session.getConnectionStatus() === "Connected"}
@@ -112,4 +112,4 @@ const onPuzzleReset = () => {
 		{/if}
 	{/each}
 </ul>
-</P>
+</El>
