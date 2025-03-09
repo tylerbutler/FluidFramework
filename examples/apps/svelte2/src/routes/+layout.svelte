@@ -1,12 +1,14 @@
 <script lang="ts">
+import { afterNavigate } from "$app/navigation";
+
 import "../app.css";
 import "../sudoku.css";
+
 let { children } = $props();
 
+afterNavigate(() => {
+	window.HSStaticMethods.autoInit();
+});
 </script>
-
-<svelte:head>
-    <link rel="stylesheet" href="https://unpkg.com/yesvelte@next/css/tabler.min.css" />
-</svelte:head>
 
 {@render children()}

@@ -73,7 +73,11 @@ const onPuzzleReset = () => {
 			{@const isMe = sessionId === presence.getMyself().sessionId}
 			{@const sessionText = isMe ? `${sessionId} (me)` : sessionId}
 				<li>
-					<Badge color={mapStringToColor(sessionId)} class="px-2.5 py-0.5">
+					<span class="inline-flex items-center gap-x-1.5 py-1.5 px-3 rounded-full text-xs font-medium bg-{color}-100 text-{color}-800 dark:bg-{color}-800/30 dark:text-{color}-500">
+						<span class="size-1.5 inline-block rounded-full bg-blue-800 dark:bg-blue-500"></span>
+						Badge
+					</span>
+					<Badge color={} class="px-2.5 py-0.5">
 						<Badge color={mapStringToColor(sessionId)} size="lg" class="me-1"
 						></Badge>
 						{sessionText}

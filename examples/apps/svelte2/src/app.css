@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
-@plugin 'flowbite/plugin';
+/* Preline UI */
+@import "./node_modules/preline/variants.css";
+
+/* @plugin 'flowbite/plugin'; */
 
 /* @custom-variant dark (&:where(.dark, .dark *)); */
 
