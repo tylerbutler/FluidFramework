@@ -1,3 +1,3 @@
-[build]
-	command = "pnpm run build"
-	publish = "examples/apps/svelte2/build"
+# [build]
+# 	command = "pnpm run build"
+# 	publish = "examples/apps/svelte2/build"

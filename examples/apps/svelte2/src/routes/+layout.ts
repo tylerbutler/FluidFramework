@@ -4,4 +4,4 @@
  */
 
 // disable SSR
-export const ssr = false;
+// export const ssr = false;
