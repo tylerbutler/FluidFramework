@@ -51,3 +51,7 @@ export const EMPTY_PUZZLE: SudokuInput = [
 ];
 
 export const coordinateDataAttributeName = "cellcoordinate";
+
+export const SelectionManagerContextKey = "SelectionManager";
+
+export const UserMetadataManagerContextKey = "UserMetadataManager";

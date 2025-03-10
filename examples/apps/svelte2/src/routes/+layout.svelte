@@ -3,7 +3,7 @@ import { Navbar, NavBrand, NavUl, NavLi, Heading, uiHelpers } from "svelte-5-ui-
 import UserButton from "clerk-sveltekit/client/UserButton.svelte";
 import SignedIn from "clerk-sveltekit/client/SignedIn.svelte";
 import SignedOut from "clerk-sveltekit/client/SignedOut.svelte";
-import logo from '$lib/assets/fluid-icon.svg';
+import logo from "$lib/assets/fluid-icon.svg";
 
 import { page } from "$app/state";
 

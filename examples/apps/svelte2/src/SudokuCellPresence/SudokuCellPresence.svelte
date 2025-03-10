@@ -5,7 +5,8 @@ import { mapStringToColor } from "../colors";
 import type { ISessionClient } from "@fluidframework/presence/alpha";
 import { getContext } from "svelte";
 import { type CellCoordinate } from "../coordinate";
-import { SelectionManagerContextKey, type SelectionManager } from "../selectionManager.svelte";
+import type { SelectionManager } from "../selectionManager.svelte";
+import { SelectionManagerContextKey } from "../constants";
 
 const { coordinate }: CellPresenceProps = $props();
 

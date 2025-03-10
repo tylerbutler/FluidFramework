@@ -38,6 +38,7 @@
 		"uniqolor": "^1.1.1"
 	},
 	"devDependencies": {
+		"@clerk/types": "^4.47.0",
 		"@eslint/compat": "^1.2.7",
 		"@sveltejs/adapter-netlify": "^4.4.2",
 		"@sveltejs/adapter-node": "^5.2.12",
