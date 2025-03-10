@@ -4,7 +4,6 @@ import { Badge, Button, Heading, Indicator, P } from "svelte-5-ui-lib";
 import type { SudokuAppProps } from "./props";
 import SudokuGrid from "../SudokuGrid/SudokuGrid.svelte";
 import type { CellCoordinate } from "../coordinate";
-import { mapStringToColor } from "../colors";
 import { loadIncludedPuzzle } from "../loadPuzzle";
 import { setContext } from "svelte";
 import { SelectionManager } from "../selectionManager.svelte";
@@ -16,6 +15,7 @@ import { UserMetadataManager } from "../userMetadataManager.svelte";
 const { data, presence, sessionClient, user: rawUser }: SudokuAppProps = $props();
 
 const user = new SudokuAppUser(rawUser?.fullName ?? presence.getMyself().sessionId);
+console.log(`user`, user);
 
 /**
  * Returns all the connected users that presence is tracking.
@@ -30,12 +30,13 @@ const appPresence = presence.getStates("v1:presence", {
 	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
 	userMetadata: Latest<SudokuAppUser>(user),
 });
+// appPresence.props.userMetadata.local = user;
 
 /**
  * The selection manager tracks the currently selected cell for each connected client.
  */
 const selectionManager = new SelectionManager(appPresence.props.selectionCoordinate);
-const userMetadata = new UserMetadataManager(appPresence.props.userMetadata);
+const userMetadata = new UserMetadataManager(appPresence.props.userMetadata, user);
 
 // Pass the selection state to context so we can access it in the SudokuCellPresence component
 setContext(SelectionManagerContextKey, selectionManager);
@@ -48,12 +49,14 @@ let connectedUsers = $state<ISessionClient[]>([]);
 
 presence.events.on("attendeeJoined", () => {
 	connectedUsers = getConnectedUsers();
+	console.log("attendeeJoined", user.fullName, user.color);
 	userMetadata.reactiveState.set(presence.getMyself(), user);
 });
 
 presence.events.on("attendeeDisconnected", (session: ISessionClient) => {
 	selectionManager.reactiveState.delete(session);
 	userMetadata.reactiveState.delete(session);
+	console.log("attendeeDisconnected", user.fullName, user.color);
 	connectedUsers = getConnectedUsers();
 });
 
@@ -81,8 +84,8 @@ const onPuzzleReset = () => {
 	<ul class="w-full max-w-sm divide-y divide-gray-200 dark:divide-gray-700">
 			{#each connectedUsers as session (session.sessionId)}
 			{@const metadata = userMetadata.reactiveState.get(session)}
-			{@const sessionStatus = session.getConnectionStatus()}
-			{#if sessionStatus === "Connected"}
+			<!-- {@debug metadata} -->
+			{#if connectedUsers.length > 1}
 				{@const isMe = session.sessionId === presence.getMyself().sessionId}
 				{@const sessionText = isMe ? `${metadata?.fullName} (me)` : (metadata?.fullName)}
 				<li>
@@ -92,9 +95,9 @@ const onPuzzleReset = () => {
 						{sessionText}
 					</Badge>
 				</li>
+			{/if}
 			{:else}
 				<li><Badge color="secondary">No one else connected</Badge></li>
-			{/if}
 			{/each}
 	</ul>
 </P>
