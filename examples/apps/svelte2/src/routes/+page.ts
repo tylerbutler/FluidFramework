@@ -4,15 +4,25 @@
  */
 
 import type { PageLoad } from "./$types";
-import { createFluidContainer } from "../fluid/init";
+import { authState, isLoggedIn } from "../authState.svelte";
+import { createClient } from "../authService.svelte";
 import { redirect } from "@sveltejs/kit";
 
 export const load: PageLoad = async () => {
-	const { containerId } = await createFluidContainer();
+	const authClient = await createClient();
+	if (
+		location.search.includes("state=") &&
+		(location.search.includes("code=") || location.search.includes("error="))
+	) {
+		await authClient.handleRedirectCallback();
+		window.history.replaceState({}, document.title, "/");
+	}
 
-	// Redirect to the session page with the newly created container's ID. Note that
-	// this is inefficient because it connects to a container then immediately disconnects
-	// and reconnects on the new page load. This could possibly be avoided using the History
-	// API to add a "fake" navigation.
-	redirect(301, `/s/${containerId}`);
+	if (!isLoggedIn()) {
+		redirect(302, "/login");
+	}
+
+	authState.user = await authClient.getUser();
+
+	redirect(301, `/create`);
 };

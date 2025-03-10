@@ -9,6 +9,7 @@ import { loadIncludedPuzzle } from "../loadPuzzle";
 import { setContext } from "svelte";
 import { SelectionManager, SelectionManagerContextKey } from "../selectionManager.svelte";
 import type { SudokuCellViewData } from "../fluid/cellData.svelte";
+import { authState } from "../authState.svelte";
 
 const { data, presence, sessionClient }: SudokuAppProps = $props();
 
@@ -103,6 +104,13 @@ const onPuzzleReset = () => {
 			</div>
 		</div>
 	</div>
+</P>
+<P>
+	<pre>
+		<code>
+				{JSON.stringify(authState.user, null, 2)}
+		</code>
+	</pre>
 </P>
 <P>
 	<ul>
