@@ -59,38 +59,6 @@ const CellStatus = {
 
 type CellStatus = (typeof CellStatus)[keyof typeof CellStatus];
 
-// Unused
-export interface SudokuCellViewDataExplicit {
-	/**
-	 * Returns a string representation of the cell's value suitable for display.
-	 */
-	readonly displayString: string;
-
-	/**
-	 * The value stored in the cell. This should be a value between 0 and 9 inclusive. 0 represents an empty cell.
-	 */
-	value: SudokuNumber;
-
-	/**
-	 * The correct value of the cell.
-	 */
-	readonly correctValue: SudokuNumber;
-
-	/**
-	 * True if the cell's value is provided as part of the starting clues for the puzzle; false otherwise.
-	 */
-	readonly startingClue: boolean;
-
-	/**
-	 * The status of the cell.
-	 */
-	readonly status: CellStatus;
-
-	readonly coordinateString: CoordinateString;
-
-	readonly coordinate: CellCoordinate;
-}
-
 /**
  * Utility type that excludes keys whose name begins with an underscore.
  */
