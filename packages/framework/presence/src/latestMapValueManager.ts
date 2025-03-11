@@ -36,12 +36,12 @@ import type { InternalUtilityTypes } from "@fluidframework/presence/internal/exp
 export interface LatestMapValueClientData<
 	T,
 	Keys extends string | number,
-	SpecificsessionClient extends ClientSessionId = ClientSessionId,
+	SpecificSessionClientId extends ClientSessionId = ClientSessionId,
 > {
 	/**
 	 * Associated client.
 	 */
-	client: ISessionClient<SpecificsessionClient>;
+	client: ISessionClient<SpecificSessionClientId>;
 
 	/**
 	 * @privateRemarks This could be regular map currently as no Map is
@@ -417,13 +417,13 @@ class LatestMapValueManagerImpl<
 		return items;
 	}
 
-	public update<SpecificsessionClient extends ClientSessionId>(
-		client: SpecificSessionClient<SpecificsessionClient>,
+	public update<SpecificSessionClientId extends ClientSessionId>(
+		client: SpecificSessionClient<SpecificSessionClientId>,
 		_received: number,
 		value: InternalTypes.MapValueState<T, string | number>,
 	): PostUpdateAction[] {
 		const allKnownStates = this.datastore.knownValues(this.key);
-		const clientSessionId: SpecificsessionClient = client.sessionId;
+		const clientSessionId: SpecificSessionClientId = client.sessionId;
 		const currentState = (allKnownStates.states[clientSessionId] ??=
 			// New client - prepare new client state directory
 			{
