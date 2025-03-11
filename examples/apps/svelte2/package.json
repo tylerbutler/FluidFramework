@@ -24,17 +24,18 @@
 	},
 	"dependencies": {
 		"@auth0/auth0-spa-js": "^2.1.3",
+		"@clerk/backend": "^1.25.1",
 		"@clerk/clerk-js": "^5.55.1",
 		"@fluidframework/presence": "workspace:~",
 		"@fluidframework/tinylicious-client": "workspace:~",
 		"@svelte-plugins/tooltips": "beta",
-		"clerk-sveltekit": "^0.4.2",
 		"flowbite": "^3.1.2",
 		"flowbite-svelte": "^0.48.4",
 		"fluid-framework": "workspace:~",
 		"ohash": "^2.0.11",
 		"sudokus": "^1.0.2",
 		"svelte-5-ui-lib": "^0.12.2",
+		"svelte-clerk": "^0.9.0",
 		"uniqolor": "^1.1.1"
 	},
 	"devDependencies": {

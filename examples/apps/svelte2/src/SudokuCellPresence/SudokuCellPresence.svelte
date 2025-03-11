@@ -2,16 +2,32 @@
 import { Indicator } from "svelte-5-ui-lib";
 import type { CellPresenceProps } from "./props";
 import { mapStringToColor } from "../colors";
-import type { ISessionClient } from "@fluidframework/presence/alpha";
+import type { IPresence, ISessionClient } from "@fluidframework/presence/alpha";
 import { getContext } from "svelte";
 import { type CellCoordinate } from "../coordinate";
 import type { SelectionManager } from "../selectionManager.svelte";
-import { SelectionManagerContextKey } from "../constants";
+import {
+	PresenceContextKey,
+	SelectionManagerContextKey,
+	UserMetadataManagerContextKey,
+} from "../constants";
+import type { UserMetadataManager } from "../userMetadataManager.svelte";
 
 const { coordinate }: CellPresenceProps = $props();
 
 // This could come from props as well.
-const { reactiveState } = getContext<SelectionManager>(SelectionManagerContextKey);
+const { reactiveState: cellSelection } = getContext<SelectionManager>(
+	SelectionManagerContextKey,
+);
+const { reactiveState: userMetadata } = getContext<UserMetadataManager>(
+	UserMetadataManagerContextKey,
+);
+const presence = getContext<IPresence>(PresenceContextKey);
+const user = userMetadata.get(presence.getMyself());
+
+// if (!user) {
+// 	throw new Error("User not found");
+// }
 
 function compareCells(cell1: CellCoordinate, cell2: CellCoordinate) {
 	return cell1[0] === cell2[0] && cell1[1] === cell2[1];
@@ -42,7 +58,7 @@ function getPresenceIndicatorPosition(index: number) {
 
 const presenceIndicators = $derived.by(() => {
 	const toRender: ISessionClient[] = [];
-	for (const [owner, cell] of reactiveState.entries()) {
+	for (const [owner, cell] of cellSelection.entries()) {
 		if (
 			toRender.length < 8 &&
 			owner.getConnectionStatus() === "Connected" &&
@@ -56,10 +72,10 @@ const presenceIndicators = $derived.by(() => {
 </script>
 
 {#each presenceIndicators as session, index (session.sessionId)}
-		<Indicator
-			color={mapStringToColor(session.sessionId)}
-			border={false}
-			size="lg"
-			placement={getPresenceIndicatorPosition(index)}
-		></Indicator>
+	<Indicator
+		color={user?.color}
+		border={false}
+		size="lg"
+		placement={getPresenceIndicatorPosition(index)}
+	></Indicator>
 {/each}

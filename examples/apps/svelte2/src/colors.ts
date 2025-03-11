@@ -22,6 +22,8 @@ export const colors = [
 	// "fuchsia",
 	"pink",
 	// "rose",
+	"primary",
+	"secondary",
 ] as const;
 
 export type ColorType = (typeof colors)[number];

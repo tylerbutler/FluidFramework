@@ -183,7 +183,7 @@ export class SudokuCellDataInternal extends CellPersistedData implements SudokuC
 				`Value is not a valid sudoku number: ${this._value} or ${this._correctValue}`,
 			);
 		}
-		console.log(`Refreshing reactive properties for cell: ${this.coordinate}`);
+		// console.log(`Refreshing reactive properties for cell: ${this.coordinate}`);
 
 		this.#startingClue = this._startingClue;
 		this.#correctValue = this._correctValue as SudokuNumber;

@@ -11,7 +11,7 @@ import { error } from "@sveltejs/kit";
 
 export const load: PageLoad = async ({ params }) => {
 	if (!params.containerId) {
-		error(404, "Not found");
+		error(404, "Fluid container not found");
 	}
 
 	// Load the container based on the ID in the URL.

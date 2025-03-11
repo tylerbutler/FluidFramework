@@ -1,12 +1,10 @@
 import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
-import { handleClerk } from "clerk-sveltekit/server";
-import { CLERK_SECRET_KEY } from "$env/static/private";
+import { withClerkHandler } from "svelte-clerk/server";
+import { AuthManager } from "./auth";
 
-export const handle: Handle = sequence(
-	handleClerk(CLERK_SECRET_KEY, {
-		debug: true,
-		protectedPaths: ["/s/"],
-		signInUrl: "/login",
-	}),
-);
+export const handle: Handle = sequence(withClerkHandler(), ({ event, resolve }) => {
+	event.locals.authManager = new AuthManager(event);
+
+	return resolve(event);
+});

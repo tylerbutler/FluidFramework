@@ -55,3 +55,7 @@ export const coordinateDataAttributeName = "cellcoordinate";
 export const SelectionManagerContextKey = "SelectionManager";
 
 export const UserMetadataManagerContextKey = "UserMetadataManager";
+
+export const PresenceContextKey = "PresenceContextKey";
+
+export const SudokuUserKey = "SudokuUserKey";
