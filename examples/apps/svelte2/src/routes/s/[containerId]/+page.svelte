@@ -10,7 +10,7 @@ import {
 	UserMetadataManagerContextKey,
 } from "../../../constants";
 import type { CellCoordinate } from "../../../coordinate";
-import { SudokuUser } from "../../../user.svelte";
+import { createNewUser, type SudokuUser } from "../../../user.svelte";
 import { UserMetadataManager } from "../../../userMetadataManager.svelte";
 import { SelectionManager } from "../../../selectionManager.svelte";
 import { setContext } from "svelte";
@@ -23,7 +23,7 @@ const { appData, presence, clerkUserProperties } = data;
 setContext(PresenceContextKey, presence);
 
 // This is an authed route so these properties should not be undefined.
-const sudokuUser = $state(new SudokuUser(clerkUserProperties!));
+const sudokuUser = createNewUser(clerkUserProperties!);
 
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
 // We create a value manager within the workspace to track and share individual pieces of state.
@@ -36,20 +36,20 @@ const presenceWorkspace = presence.getStates(PresenceWorkspaceAddress, {
 /**
  * The selection manager tracks the currently selected cell for each connected client.
  */
-const selectionManager = $state(
-	new SelectionManager(presence, presenceWorkspace.props.selectionCoordinate),
+const selectionManager = new SelectionManager(
+	presence,
+	presenceWorkspace.props.selectionCoordinate,
 );
 setContext(SelectionManagerContextKey, selectionManager);
 
-const userMetadataManager = $state(
-	new UserMetadataManager(
-		presence,
-		presenceWorkspace.props.userMetadata,
-		// svelte-ignore state_referenced_locally
-		sudokuUser,
-	),
+const userMetadataManager = new UserMetadataManager(
+	presence,
+	presenceWorkspace.props.userMetadata,
+	// svelte-ignore state_referenced_locally
+	// sudokuUser,
 );
 setContext(UserMetadataManagerContextKey, userMetadataManager);
+userMetadataManager.local = sudokuUser;
 
 // presence.events.on("attendeeJoined", () => {
 // 	userMetadataManager.valueManager.local = sudokuUser;
@@ -69,7 +69,9 @@ setContext(UserMetadataManagerContextKey, userMetadataManager);
 				{#each userMetadataManager.data as [session, metadata] (session.sessionId)}
 					{#if session.getConnectionStatus() === "Connected"}
 						{@const isMe = session.sessionId === presence.getMyself().sessionId}
-						{@const sessionText = `${metadata?.fullName} [${session.sessionId.slice(0,8)}]` + (isMe ? `(me)`: "")}
+						{@const sessionText =
+							`${metadata?.fullName} [${session.sessionId.slice(0, 8)}]` +
+							(isMe ? `(me)` : "")}
 						<li>
 							<Badge color={metadata?.color} rounded class="px-2.5 py-0.5">
 								<Indicator color={metadata?.color} size="lg" class="me-1"

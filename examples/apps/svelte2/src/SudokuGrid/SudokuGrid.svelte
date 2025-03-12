@@ -10,9 +10,7 @@ import type { SelectionManager } from "../selectionManager.svelte";
 const { grid, sessionClient }: SudokuGridComponentProps = $props();
 
 // This could come from props as well.
-const { valueManager: selectedCell } = getContext<SelectionManager>(
-	SelectionManagerContextKey,
-);
+const selectionManager = getContext<SelectionManager>(SelectionManagerContextKey);
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(`${sessionClient.sessionId}-${coord}`) as HTMLInputElement;
@@ -50,7 +48,7 @@ const onCellFocus = (e: any) => {
 	if (coord !== undefined) {
 		// Sets the locally selected cell for the current client.
 		// On remote clients this will trigger an update event.
-		selectedCell.local = Coordinate.asArrayNumbers(coord);
+		selectionManager.valueManager.local = Coordinate.asArrayNumbers(coord);
 	}
 };
 </script>

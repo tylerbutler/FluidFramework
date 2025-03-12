@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Badge, Button, Heading, Indicator, P } from "svelte-5-ui-lib";
+import { Badge, Button, Heading, Indicator, P, Secondary } from "svelte-5-ui-lib";
 import type { SudokuAppProps } from "./props";
 import SudokuGrid from "../SudokuGrid/SudokuGrid.svelte";
 import { loadIncludedPuzzle } from "../loadPuzzle";
@@ -24,7 +24,9 @@ const selectionManager = getContext<SelectionManager>(SelectionManagerContextKey
 // The title is derived from the connected users array, which is updated when users join or leave.
 const title = $derived.by(() => {
 	const playerCount = userMetadataManager.data.size;
-	return playerCount > 1 ? `Sudoku: ${playerCount} players` : "Sudoku";
+	return playerCount > 1
+		? `${playerCount} players (including me, ${userMetadataManager.local.fullName})`
+		: "";
 });
 
 const onPuzzleReset = () => {
@@ -40,32 +42,48 @@ const onPuzzleReset = () => {
 </script>
 
 <div>
-	<Heading tag="h2">{title}</Heading>
+	<Heading tag="h2">
+		Sudoku <Secondary class="ms-2">{title}</Secondary>
+	</Heading>
 
 	<div>
-			<div class="inline-block h-max min-h-[447px]">
-				<SudokuGrid grid={data.grid} {sessionClient} />
+		<div class="inline-block h-max min-h-[447px]">
+			<SudokuGrid grid={data.grid} {sessionClient} />
 
-				<div class="flex">
-					<span class="grow-1">
-						<Button onclick={onPuzzleReset}>Reset</Button>
-					</span>
+			<div class="flex">
+				<span class="grow-1">
+					<Button onclick={onPuzzleReset}>Reset</Button>
+				</span>
 
-					<span class="grow-5">
-						<span>Load:</span>
-						<Button onclick={() => loadIncludedPuzzle(data, 0)}>Puzzle 1</Button>
-						<Button onclick={() => loadIncludedPuzzle(data, 1)}>Puzzle 2</Button>
-					</span>
-				</div>
+				<span class="grow-5">
+					<span>Load:</span>
+					<Button onclick={() => loadIncludedPuzzle(data, 0)}>Puzzle 1</Button>
+					<Button onclick={() => loadIncludedPuzzle(data, 1)}>Puzzle 2</Button>
+				</span>
 			</div>
 		</div>
+	</div>
+	<hr/>
 	<div>
+		<h3>User metadata manager</h3>
+		<ul>
+			{#each userMetadataManager.allState as [session, userData] (session.sessionId)}
+				<li>
+					{session.sessionId.slice(0, 8)}: {session.getConnectionStatus()}
+					{userData.fullName} ({userData.color})
+				</li>
+			{/each}
+		</ul>
+	</div>
+	<hr />
+	<div>
+		<h3>Selection manager</h3>
 		<ul>
 			{#each selectionManager.data as [session, selectedCell] (session.sessionId)}
-				{#if session.getConnectionStatus() === "Connected"}
-					{@const user = userMetadataManager.data.get(session)}
-					<li>{session.sessionId} {user?.fullName}: {selectedCell}</li>
-				{/if}
+				<!-- {#if session.getConnectionStatus() === "Connected"} -->
+				{@const user = userMetadataManager.data.get(session)}
+				<li>{session.sessionId} {user?.fullName}: {selectedCell}</li>
+				<!-- {/if} -->
 			{/each}
 		</ul>
 	</div>

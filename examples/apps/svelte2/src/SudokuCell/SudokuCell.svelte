@@ -1,10 +1,11 @@
 <script lang="ts">
 import { Input, TableBodyCell } from "svelte-5-ui-lib";
-import { Coordinate, type CoordinateString } from "../coordinate";
+import { type CoordinateString } from "../coordinate";
 import { type SudokuNumber, isSudokuNumber } from "../sudokuNumber";
 import type { CellComponentProps } from "./props";
 import CellPresence from "../SudokuCellPresence/SudokuCellPresence.svelte";
 import { coordinateDataAttributeName } from "../constants";
+import { getCellBorderClasses, getCellInputClasses } from "./utils";
 
 const {
 	cellData,
@@ -65,64 +66,6 @@ const numericInput = (keyString: string, coord: string) => {
 		cellData.value = keyValue;
 	}
 };
-
-/**
- * Returns CSS border properties to use when rendering a cell. This helps give the grid that authentic Sudoku look.
- */
-function getCellBorderClasses(coord: CoordinateString) {
-	const [row, col] = Coordinate.asArrayNumbers(coord);
-	const classes: string[] = ["border-solid"];
-	switch (row) {
-		case 0:
-		case 3:
-		case 6:
-			classes.push("border-t-2 pt-[4px]");
-			break;
-		case 2:
-		case 5:
-		case 8:
-			classes.push("border-b-2 pb-[4px]");
-			break;
-		default: // Nothing
-	}
-
-	switch (col) {
-		case 0:
-		case 3:
-		case 6:
-			classes.push("border-l-2 pl-[4px]");
-			break;
-		case 2:
-		case 5:
-		case 8:
-			classes.push("border-r-2 pr-[4px]");
-			break;
-		default: // Nothing
-	}
-
-	return classes;
-}
-
-// const borderClasses = getCellBorderClasses(cellData.coordinate);
-function getCellInputClasses() {
-	switch (cellData.status) {
-		case "startingClue":
-			return [
-				// "border-gray-400",
-				"bg-gray-100",
-				"italic",
-				"text-gray-500",
-			];
-		case "correct":
-			return ["border", "border-green-800", "bg-green-300"];
-		case "wrong":
-			return ["border", "border-red-800", "bg-red-300"];
-		case "empty":
-		// intentional fallthrough
-		default:
-			return ["border"];
-	}
-}
 </script>
 
 <TableBodyCell
@@ -133,9 +76,9 @@ function getCellInputClasses() {
 	<div class="relative p-0 h-[38px] w-[38px]">
 		<Input
 			id={cellCoordinateId(cellData.coordinateString)}
-			class="p-0 h-[38px] w-[38px] box-border text-center rounded-none {getCellInputClasses().join(
-				' ',
-			)}"
+			class="p-0 h-[38px] w-[38px] box-border text-center rounded-none {getCellInputClasses(
+				cellData,
+			).join(' ')}"
 			readonly={true}
 			onfocus={onFocus}
 			onkeydown={handleKeyDown}

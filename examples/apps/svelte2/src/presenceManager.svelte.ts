@@ -29,5 +29,9 @@ export abstract class PresenceWorkspaceManager<T> {
 			// Update the selection state with the new coordinate
 			this.reactiveState.set(data.client, data.value as any);
 		});
+		// valueManager.events.on("localUpdated", (data) => {
+		// 	// Update the selection state with the new coordinate
+		// 	this.reactiveState.set(data.client, data.value as any);
+		// });
 	}
 }
