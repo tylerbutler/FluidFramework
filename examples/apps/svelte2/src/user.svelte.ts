@@ -3,8 +3,6 @@ import type { User } from "@clerk/backend";
 
 export interface ClerkUserProperties extends Pick<User, "id" | "fullName"> {}
 
-// export class ClerkUserProperties implements ClerkUserProperties {}
-
 export class SudokuUser implements ClerkUserProperties {
 	public id = $state("");
 	public fullName = $state("");
