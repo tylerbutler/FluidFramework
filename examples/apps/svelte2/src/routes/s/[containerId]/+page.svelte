@@ -23,7 +23,7 @@ const { appData, presence, clerkUserProperties } = data;
 setContext(PresenceContextKey, presence);
 
 // This is an authed route so these properties should not be undefined.
-const sudokuUser = new SudokuUser(clerkUserProperties!);
+const sudokuUser = $state(new SudokuUser(clerkUserProperties!));
 
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
 // We create a value manager within the workspace to track and share individual pieces of state.
@@ -36,17 +36,18 @@ const presenceWorkspace = presence.getStates(PresenceWorkspaceAddress, {
 /**
  * The selection manager tracks the currently selected cell for each connected client.
  */
-const selectionManager = new SelectionManager(
-	presence,
-	presenceWorkspace.props.selectionCoordinate,
+const selectionManager = $state(
+	new SelectionManager(presence, presenceWorkspace.props.selectionCoordinate),
 );
 setContext(SelectionManagerContextKey, selectionManager);
 
-const userMetadataManager = new UserMetadataManager(
-	presence,
-	presenceWorkspace.props.userMetadata,
-	// svelte-ignore state_referenced_locally
-	sudokuUser,
+const userMetadataManager = $state(
+	new UserMetadataManager(
+		presence,
+		presenceWorkspace.props.userMetadata,
+		// svelte-ignore state_referenced_locally
+		sudokuUser,
+	),
 );
 setContext(UserMetadataManagerContextKey, userMetadataManager);
 

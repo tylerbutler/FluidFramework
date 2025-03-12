@@ -14,6 +14,7 @@ export const load = async ({ locals }) => {
 		fullName: rawUser.fullName,
 	};
 
+	// A server load function must return JSON-serializable data
 	return {
 		// This property can now be extracted from the data passed to each page.
 		// We'll populate the presence data for the user during SudokuApp init.

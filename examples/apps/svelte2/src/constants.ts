@@ -58,6 +58,6 @@ export const UserMetadataManagerContextKey = "UserMetadataManager";
 
 export const PresenceContextKey = "PresenceContextKey";
 
-export const SudokuUserKey = "SudokuUserKey";
+export const SudokuUserContextKey = "SudokuUserContextKey";
 
 export const PresenceWorkspaceAddress = "v1:presence";

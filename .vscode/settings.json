@@ -112,6 +112,9 @@
 		"**/dist/*": true,
 		// exclude built `.next` folders (from NextJS' local dev server)
 		"**/.next/*": true,
+		// exclude built `.netlify` folders (from netlify local build artifacts)
+		"**/.netlify/**": true,
+		"**/.svelte-kit/**": true,
 		// exclude built `lib` folders but preserve ./common/lib
 		//   paths with packages container
 		"**/packages/**/lib/*": true,
@@ -120,6 +123,7 @@
 		"**/nyc/*": true,
 		"**/*.log": true,
 		"**/DS_Store": true,
+		"examples/apps/svelte*/build/**": true,
 	},
 	"search.followSymlinks": false,
 }
