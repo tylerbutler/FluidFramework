@@ -1,25 +1,15 @@
 <script lang="ts">
-import { Latest, type ISessionClient } from "@fluidframework/presence/alpha";
 import { Badge, Button, Heading, Indicator, P } from "svelte-5-ui-lib";
 import type { SudokuAppProps } from "./props";
 import SudokuGrid from "../SudokuGrid/SudokuGrid.svelte";
-import type { CellCoordinate } from "../coordinate";
 import { loadIncludedPuzzle } from "../loadPuzzle";
-import { getContext, setContext } from "svelte";
-import { SelectionManager } from "../selectionManager.svelte";
 import type { SudokuCellViewData } from "../fluid/cellData.svelte";
-import { SudokuAppUser, type SudokuUser } from "../user.svelte";
-import {
-	PresenceContextKey,
-	SelectionManagerContextKey,
-	SudokuUserKey,
-	UserMetadataManagerContextKey,
-} from "../constants";
-import { UserMetadataManager } from "../userMetadataManager.svelte";
+import { getContext } from "svelte";
+import type { UserMetadataManager } from "../userMetadataManager.svelte";
+import { SelectionManagerContextKey, UserMetadataManagerContextKey } from "../constants";
+import { SelectionManager } from "../selectionManager.svelte";
 
 const { data, presence, sessionClient }: SudokuAppProps = $props();
-
-const sudokuUser = getContext<SudokuAppUser>(SudokuUserKey);
 
 /**
  * Returns all the connected users that presence is tracking.
@@ -27,51 +17,13 @@ const sudokuUser = getContext<SudokuAppUser>(SudokuUserKey);
 const getConnectedUsers = () =>
 	[...presence.getAttendees()].filter((c) => c.getConnectionStatus() === "Connected");
 
-// Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
-// We create a value manager within the workspace to track and share individual pieces of state.
-const appPresence = presence.getStates("v1:presence", {
-	// Create a Latest value manager to track the latest coordinate for each user.
-	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
-	userMetadata: Latest<SudokuAppUser>(sudokuUser),
-});
-
-/**
- * The selection manager tracks the currently selected cell for each connected client.
- */
-const selectionManager = new SelectionManager(appPresence.props.selectionCoordinate);
-const userMetadata = new UserMetadataManager(
-	appPresence.props.userMetadata,
-	// svelte-ignore state_referenced_locally
-	sudokuUser,
-);
-
-// Pass the selection state to context so we can access it in the SudokuCellPresence component
-setContext(SelectionManagerContextKey, selectionManager);
-setContext(UserMetadataManagerContextKey, userMetadata);
-setContext(PresenceContextKey, presence);
-
-/**
- * A local reactive state variable to track the connected users.
- */
-let connectedUsers = $state<ISessionClient[]>([]);
-
-presence.events.on("attendeeJoined", () => {
-	connectedUsers = getConnectedUsers();
-	console.log("attendeeJoined", sudokuUser.fullName, sudokuUser.color);
-	userMetadata.valueManager.local = sudokuUser;
-});
-
-presence.events.on("attendeeDisconnected", (session: ISessionClient) => {
-	selectionManager.reactiveState.delete(session);
-	userMetadata.reactiveState.delete(session);
-	console.log("attendeeDisconnected", sudokuUser.fullName, sudokuUser.color);
-	connectedUsers = getConnectedUsers();
-	userMetadata.valueManager.local = sudokuUser;
-});
+const userMetadataManager = getContext<UserMetadataManager>(UserMetadataManagerContextKey);
+const selectionManager = getContext<SelectionManager>(SelectionManagerContextKey);
+// const sudokuUser = getContext<SudokuAppUser>(SudokuUserKey);
 
 // The title is derived from the connected users array, which is updated when users join or leave.
 const title = $derived.by(() => {
-	const playerCount = connectedUsers.length;
+	const playerCount = userMetadataManager.data.size;
 	return playerCount > 1 ? `Sudoku: ${playerCount} players` : "Sudoku";
 });
 
@@ -88,57 +40,35 @@ const onPuzzleReset = () => {
 </script>
 
 <div>
-<Heading tag="h2">{title}</Heading>
+	<Heading tag="h2">{title}</Heading>
 
-<P>
-	<ul class="w-full max-w-sm divide-y divide-gray-200 dark:divide-gray-700">
-		{#each connectedUsers as session (session.sessionId)}
-			{@const metadata = userMetadata.reactiveState.get(session)}
-			<!-- {@debug metadata} -->
-			{#if session.getConnectionStatus() === "Connected" && connectedUsers.length > 0}
-				{@const isMe = session.sessionId === presence.getMyself().sessionId}
-				{@const sessionText = isMe ? `${metadata?.fullName} (me)` : metadata?.fullName}
-				<li>
-					<Badge color={metadata?.color} rounded class="px-2.5 py-0.5">
-						<Indicator color={metadata?.color} size="lg" class="me-1"></Indicator>
-						{sessionText}
-					</Badge>
-				</li>
-			{/if}
-		{:else}
-			<li><Badge color="secondary">No one else connected</Badge></li>
-		{/each}
-	</ul>
-</P>
+	<div>
+			<div class="inline-block h-max min-h-[447px]">
+				<SudokuGrid grid={data.grid} {sessionClient} />
 
-<P>
-	<div class="inline-block h-max min-h-[447px]">
-		<div class="inline-block h-max min-h-[447px]">
-			<SudokuGrid grid={data.grid} {sessionClient} />
+				<div class="flex">
+					<span class="grow-1">
+						<Button onclick={onPuzzleReset}>Reset</Button>
+					</span>
 
-			<div class="flex">
-				<span class="grow-1">
-					<Button onclick={onPuzzleReset}>Reset</Button>
-				</span>
-
-				<span class="grow-5">
-					<span>Load:</span>
-					<Button onclick={() => loadIncludedPuzzle(data, 0)}>Puzzle 1</Button>
-					<Button onclick={() => loadIncludedPuzzle(data, 1)}>Puzzle 2</Button>
-				</span>
+					<span class="grow-5">
+						<span>Load:</span>
+						<Button onclick={() => loadIncludedPuzzle(data, 0)}>Puzzle 1</Button>
+						<Button onclick={() => loadIncludedPuzzle(data, 1)}>Puzzle 2</Button>
+					</span>
+				</div>
 			</div>
 		</div>
+	<div>
+		<ul>
+			{#each selectionManager.data as [session, selectedCell] (session.sessionId)}
+				{#if session.getConnectionStatus() === "Connected"}
+					{@const user = userMetadataManager.data.get(session)}
+					<li>{session.sessionId} {user?.fullName}: {selectedCell}</li>
+				{/if}
+			{/each}
+		</ul>
 	</div>
-</P>
-<P>
-	<ul>
-		{#each selectionManager.reactiveState as [session, selectedCell] (session.sessionId)}
-			{#if session.getConnectionStatus() === "Connected"}
-				<li>{session.sessionId}: {selectedCell}</li>
-			{/if}
-		{/each}
-	</ul>
-</P>
 </div>
 
 <!-- <pre><code>

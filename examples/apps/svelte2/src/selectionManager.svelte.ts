@@ -1,23 +1,16 @@
-import type { ISessionClient, LatestValueManager } from "@fluidframework/presence/alpha";
-import { SvelteMap } from "svelte/reactivity";
+import type { IPresence, LatestValueManager } from "@fluidframework/presence/alpha";
 import type { CellCoordinate } from "./coordinate";
+import { PresenceWorkspaceManager } from "./presenceManager.svelte";
 
-export type CellSelectionMap = SvelteMap<ISessionClient, CellCoordinate>;
-
-export class SelectionManager {
-	/**
-	 * A reactive map that tracks the selected cells for each client.
-	 * The key is the session client, and the value is the selected cell coordinate.
-	 */
-	public readonly reactiveState: CellSelectionMap = $state(
-		new SvelteMap<ISessionClient, CellCoordinate>(),
-	);
-
-	constructor(public readonly valueManager: LatestValueManager<CellCoordinate>) {
-		// Wire up event listener to update the reactive map when the remote users' cell selection is updated
-		valueManager.events.on("updated", (data) => {
+export class SelectionManager extends PresenceWorkspaceManager<CellCoordinate> {
+	constructor(
+		protected presence: IPresence,
+		public readonly valueManager: LatestValueManager<CellCoordinate>,
+	) {
+		super(presence, valueManager);
+		presence.events.on("attendeeDisconnected", (session) => {
 			// Update the selection state with the new coordinate
-			this.reactiveState.set(data.client, data.value);
+			this.reactiveState.delete(session);
 		});
 	}
 }

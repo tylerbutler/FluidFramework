@@ -1,29 +1,20 @@
 <script lang="ts">
 import { Indicator } from "svelte-5-ui-lib";
 import type { CellPresenceProps } from "./props";
-import { mapStringToColor } from "../colors";
-import type { IPresence, ISessionClient } from "@fluidframework/presence/alpha";
+import type { ISessionClient } from "@fluidframework/presence/alpha";
 import { getContext } from "svelte";
 import { type CellCoordinate } from "../coordinate";
 import type { SelectionManager } from "../selectionManager.svelte";
-import {
-	PresenceContextKey,
-	SelectionManagerContextKey,
-	UserMetadataManagerContextKey,
-} from "../constants";
+import { SelectionManagerContextKey, UserMetadataManagerContextKey } from "../constants";
 import type { UserMetadataManager } from "../userMetadataManager.svelte";
 
 const { coordinate }: CellPresenceProps = $props();
 
 // This could come from props as well.
-const { reactiveState: cellSelection } = getContext<SelectionManager>(
-	SelectionManagerContextKey,
-);
-const { reactiveState: userMetadata } = getContext<UserMetadataManager>(
-	UserMetadataManagerContextKey,
-);
-const presence = getContext<IPresence>(PresenceContextKey);
-const user = userMetadata.get(presence.getMyself());
+const { data: cellSelection } = getContext<SelectionManager>(SelectionManagerContextKey);
+const userMetadataManager = getContext<UserMetadataManager>(UserMetadataManagerContextKey);
+// const presence = getContext<IPresence>(PresenceContextKey);
+const user = userMetadataManager.getDataForCurrentUser();
 
 // if (!user) {
 // 	throw new Error("User not found");
