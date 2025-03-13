@@ -4,15 +4,15 @@
  */
 
 import type { PageLoad } from "./$types";
-import { createFluidContainer } from "../../fluid/init";
+import { createAttachedFluidContainer } from "../../fluid/init";
 import { redirect } from "@sveltejs/kit";
 
 export const load: PageLoad = async () => {
-	const { containerId } = await createFluidContainer();
+	const { containerId } = await createAttachedFluidContainer();
 
 	// Redirect to the session page with the newly created container's ID. Note that
 	// this is inefficient because it connects to a container then immediately disconnects
 	// and reconnects on the new page load. This could possibly be avoided using the History
 	// API to add a "fake" navigation.
-	redirect(301, `/s/${containerId}`);
+	redirect(308, `/s/${containerId}`);
 };

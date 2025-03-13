@@ -22,10 +22,12 @@ const client = new TinyliciousClient({
 	},
 });
 
-export async function createFluidContainer() {
+export async function createAttachedFluidContainer() {
 	// The client will create a new detached container using the schema
 	// A detached container will enable the app to modify the container before attaching it to the client
-	const { container } = await client.createContainer(containerSchema, "2");
+	const { container, services } = await client.createContainer(containerSchema, "2");
+
+	const serviceAudience = services.audience;
 
 	// Populate the default data before we attach
 	const appData = container.initialObjects.appData.viewWith(sudokuTreeConfiguration);
@@ -33,7 +35,7 @@ export async function createFluidContainer() {
 
 	// Attach the container and return it along with its ID.
 	const containerId = await container.attach();
-	return { containerId, container };
+	return { containerId, container, serviceAudience };
 }
 
 export async function getFluidContainer(containerId: string) {
