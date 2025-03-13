@@ -28,9 +28,9 @@ const sudokuUser = createNewUser(clerkUserProperties!);
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
 // We create a value manager within the workspace to track and share individual pieces of state.
 const presenceWorkspace = presence.getStates(PresenceWorkspaceAddress, {
-	// Create a Latest value manager to track the latest coordinate for each user.
-	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
 	userMetadata: Latest<SudokuUser>(sudokuUser),
+	// Tracks the latest coordinate for each user.
+	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
 });
 
 /**

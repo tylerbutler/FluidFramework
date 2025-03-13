@@ -5,17 +5,28 @@
 
 import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
 import type { PageLoad } from "./$types";
-import { getFluidContainer } from "../../../fluid/init";
+import { loadFluidContainer } from "../../../fluid/init";
 import { sudokuTreeConfiguration } from "../../../fluid/dataSchema";
 import { error } from "@sveltejs/kit";
+import { getContainerId, setContainerIdMapping } from "../../../containerIds";
+
+function notFound(): never {
+	error(404, "Fluid container not found");
+}
 
 export const load: PageLoad = async ({ params }) => {
-	if (!params.containerId) {
-		error(404, "Fluid container not found");
+	if (!params.pageId) {
+		notFound();
 	}
 
-	// Load the container based on the ID in the URL.
-	const container = await getFluidContainer(params.containerId);
+	const containerId = await getContainerId(params.pageId);
+	if(containerId === null) {
+		notFound();
+	}
+
+	await setContainerIdMapping(containerId, params.pageId)
+
+	const container = await loadFluidContainer(containerId);
 
 	// Get a view of the tree data from the container.
 	const appData = container.initialObjects.appData.viewWith(sudokuTreeConfiguration);

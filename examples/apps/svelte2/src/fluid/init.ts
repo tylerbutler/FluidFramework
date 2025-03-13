@@ -5,7 +5,7 @@
 
 import { TinyliciousClient } from "@fluidframework/tinylicious-client";
 import { containerSchema } from "./containerSchema";
-import type { TreeView } from "fluid-framework";
+import type { IFluidContainer, TreeView } from "fluid-framework";
 import {
 	SudokuGrid,
 	SudokuRow,
@@ -27,18 +27,34 @@ export async function createAttachedFluidContainer() {
 	// A detached container will enable the app to modify the container before attaching it to the client
 	const { container, services } = await client.createContainer(containerSchema, "2");
 
-	const serviceAudience = services.audience;
-
 	// Populate the default data before we attach
 	const appData = container.initialObjects.appData.viewWith(sudokuTreeConfiguration);
 	initializeContainerData(appData);
 
 	// Attach the container and return it along with its ID.
-	const containerId = await container.attach();
-	return { containerId, container, serviceAudience };
+	const { containerId } = await attachFluidContainer(container);
+	return { container, serviceAudience: services.audience, containerId };
 }
 
-export async function getFluidContainer(containerId: string) {
+export async function createFluidContainer() {
+	// The client will create a new detached container using the schema
+	// A detached container will enable the app to modify the container before attaching it to the client
+	const { container, services } = await client.createContainer(containerSchema, "2");
+
+	// Populate the default data before we attach
+	const appData = container.initialObjects.appData.viewWith(sudokuTreeConfiguration);
+	initializeContainerData(appData);
+
+	return { container, serviceAudience: services.audience };
+}
+
+export async function attachFluidContainer(container: IFluidContainer) {
+	// Attach the container and return it along with its ID.
+	const containerId = await container.attach();
+	return { containerId };
+}
+
+export async function loadFluidContainer(containerId: string) {
 	// Use the unique container ID to fetch the container created earlier.
 	const { container } = await client.getContainer(containerId, containerSchema, "2");
 	return container;
