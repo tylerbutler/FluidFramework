@@ -37,6 +37,12 @@ export type PresenceWorkspaceEntry<
 	TManager = unknown,
 > = InternalTypes.ManagerFactory<TKey, TValue, TManager>;
 
+/**
+ * A function that returns additional user metadata to the presence system. This can be provided when instatiating
+ * the presence system so that the metadata is available during join.
+ */
+export type PresenceUserMetadataProvider<U = unknown> = () => Promise<U>
+
 // #region PresenceStates
 
 /**

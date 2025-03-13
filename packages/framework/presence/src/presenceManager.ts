@@ -29,6 +29,7 @@ import type {
 	PresenceStates,
 	PresenceWorkspaceAddress,
 	PresenceStatesSchema,
+	PresenceUserMetadataProvider,
 } from "./types.js";
 
 import type {
@@ -56,7 +57,7 @@ class PresenceManager implements IPresence, PresenceExtensionInterface {
 
 	private readonly mc: MonitoringContext | undefined = undefined;
 
-	public constructor(runtime: IEphemeralRuntime, clientSessionId: ClientSessionId) {
+	public constructor(runtime: IEphemeralRuntime, clientSessionId: ClientSessionId, getUserMetadata?: PresenceUserMetadataProvider) {
 		const logger = runtime.logger;
 		if (logger) {
 			this.mc = createChildMonitoringContext({ logger, namespace: "Presence" });
@@ -187,7 +188,8 @@ function setupSubComponents(
  */
 export function createPresenceManager(
 	runtime: IEphemeralRuntime,
+	getUserMetadata?: PresenceUserMetadataProvider,
 	clientSessionId: ClientSessionId = createSessionId() as ClientSessionId,
 ): IPresence & PresenceExtensionInterface {
-	return new PresenceManager(runtime, clientSessionId);
+	return new PresenceManager(runtime, clientSessionId, getUserMetadata);
 }

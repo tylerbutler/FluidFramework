@@ -23,11 +23,8 @@ export const load: PageLoad = async ({ params }) => {
 		console.log(row.map((c) => c._value).join(" "));
 	}
 
-	// Retrieve a reference to the presence APIs via the data object.
-	const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
-
 	return {
 		appData,
-		presence,
+		container,
 	};
 };

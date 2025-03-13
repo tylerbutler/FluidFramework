@@ -107,6 +107,8 @@ export interface ISessionClient<
 	 *
 	 */
 	getConnectionStatus(): SessionClientStatus;
+
+	getUserId(): string;
 }
 
 /**
