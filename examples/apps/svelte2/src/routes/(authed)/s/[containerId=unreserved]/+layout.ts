@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
 import { error } from "@sveltejs/kit";
 import type { LayoutLoad } from "./$types";
 

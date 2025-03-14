@@ -14,16 +14,14 @@ import {
 } from "./dataSchema";
 import { PUZZLE_INDEXES } from "../constants";
 import { SudokuCellDataInternal } from "./cellData.svelte";
-import { HttpsTokenProvider } from "$lib/tokenProvider";
-import { base } from "$app/paths";
-import type { LeveeUser } from "$lib/server/generateLeveeToken";
+import type { ITokenProvider } from "@fluidframework/routerlicious-driver";
 
-export function initializeClient(userMetadata: LeveeUser) {
+export function initializeClient(tokenProvider: ITokenProvider) {
 	const client = new TinyliciousClient({
 		connection: {
 			domain: "https://levee.tylerbutler.com",
 			port: 80,
-			tokenProvider: new HttpsTokenProvider(`${base}`, userMetadata),
+			tokenProvider,
 		},
 	});
 	return client;

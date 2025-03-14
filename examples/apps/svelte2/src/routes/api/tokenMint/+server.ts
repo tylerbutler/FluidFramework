@@ -3,28 +3,36 @@ import type { RequestHandler } from "./$types";
 import { ScopeType } from "@fluidframework/driver-definitions/internal";
 import { LEVEE_TENANT_KEY } from "$env/static/private";
 import { generateLeveeToken } from "$lib/server/generateLeveeToken";
+import type { TokenArgs } from "$lib/tokenProvider";
 
-export const POST: RequestHandler = async ({ request, url, locals }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
 	locals.authManager.redirectIfNotAuthenticated();
 
-	// tenantId, documentId, userId and userName are required parameters
-	const tenantId = url.searchParams.get("tenantId");
-	const documentId = url.searchParams.get("documentId");
-	const userId = url.searchParams.get("userId");
-	const userName = url.searchParams.get("userName");
-	const scopes: ScopeType[] = url.searchParams.getAll("scopes") as ScopeType[];
+	const { tenantId, documentId, user }: TokenArgs = await request.json();
+
+	// const {id,
+	// 	username,
+	// 	fullName} = user;
 
 	if (!tenantId) {
-		error(400, "No tenantId provided in params");
+		error(400, "No tenantId provided");
 	}
 
-	if (!userId) {
-		error(400, "No userId provided in params");
+	if (!user) {
+		error(400, "No user provided");
 	}
 
-	if (!userName) {
-		error(400, "No userName provided in params");
+	if (!user.id) {
+		error(400, "No user.id provided");
 	}
+
+	// if (!userName) {
+	// 	error(400, "No userName provided in params");
+	// }
+
+	// if (!fullName) {
+	// 	error(400, "No userName provided in params");
+	// }
 
 	if (!LEVEE_TENANT_KEY) {
 		error(404, `No key found for the provided tenantId: ${tenantId}`);
@@ -33,8 +41,8 @@ export const POST: RequestHandler = async ({ request, url, locals }) => {
 	const token = generateLeveeToken(
 		tenantId,
 		LEVEE_TENANT_KEY,
-		scopes ?? [ScopeType.DocRead, ScopeType.DocWrite, ScopeType.SummaryWrite],
-		{ id: userId, userName },
+		[ScopeType.DocRead, ScopeType.DocWrite, ScopeType.SummaryWrite],
+		user,
 		documentId ?? undefined,
 	);
 

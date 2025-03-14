@@ -2,12 +2,8 @@
 import type { PageProps } from "./$types";
 import { SignedIn, SignedOut } from "svelte-clerk";
 import SudokuApp from "../../../../SudokuApp/SudokuApp.svelte";
+import { Latest } from "@fluidframework/presence/alpha";
 import {
-	acquirePresenceViaDataObject,
-	Latest,
-} from "@fluidframework/presence/alpha";
-import {
-	PresenceContextKey,
 	PresenceWorkspaceAddress,
 	SelectionManagerContextKey,
 	UserMetadataManagerContextKey,
@@ -20,18 +16,10 @@ import { setContext } from "svelte";
 import { Badge, Indicator } from "svelte-5-ui-lib";
 
 const { data }: PageProps = $props();
-const { appData, container, clerkUserProperties } = data;
+const { appData, clerkUserProperties, presence } = data;
 
 // This is an authed route so these properties should not be undefined.
 const sudokuUser = createNewUser(clerkUserProperties!);
-
-// Retrieve a reference to the presence APIs via the data object.
-const presence = acquirePresenceViaDataObject(container.initialObjects.presence, async () => {
-	return { userId: sudokuUser.id };
-});
-
-// Add presence to context for convenience
-setContext(PresenceContextKey, presence);
 
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
 // We create a value manager within the workspace to track and share individual pieces of state.

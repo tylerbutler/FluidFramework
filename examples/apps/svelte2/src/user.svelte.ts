@@ -3,7 +3,11 @@ import { mapStringToColor, type ColorType } from "./colors";
 import type { User } from "@clerk/backend";
 import { SudokuUserContextKey } from "./constants";
 
-export interface ClerkUserProperties extends Pick<User, "id" | "fullName"> {}
+export interface ClerkUserProperties extends Pick<User, "id" | "username" | "fullName"> {
+	name: string | null;
+}
+
+export type LeveeUser = ClerkUserProperties;
 
 // export class SudokuUser implements ClerkUserProperties {
 // 	public id = $state("");
@@ -29,7 +33,9 @@ export type SudokuUser = ClerkUserProperties & { color: ColorType };
 export const createNewUser = (props: ClerkUserProperties): SudokuUser => {
 	return {
 		id: props.id,
+		username: props.username,
 		fullName: props.fullName,
+		name: props.name,
 		color: mapStringToColor(props.id),
 	};
 };

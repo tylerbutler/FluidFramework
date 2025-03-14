@@ -5,10 +5,8 @@
 
 import { ScopeType, type ITokenClaims } from "@fluidframework/driver-definitions/internal";
 import { KJUR as jsrsasign } from "jsrsasign";
-import type { IUser } from "@fluidframework/driver-definitions";
 import { nanoid } from "nanoid";
-
-export type LeveeUser = IUser & { userName: string, fullName?: string };
+import type { LeveeUser } from "../../user.svelte";
 
 /**
  * Generates a {@link https://en.wikipedia.org/wiki/JSON_Web_Token | JSON Web Token} (JWT)

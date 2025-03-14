@@ -11,7 +11,9 @@ export const load = async ({ locals }) => {
 	}
 	const clerkUserProperties: ClerkUserProperties = {
 		id: rawUser.id,
+		username: rawUser.username,
 		fullName: rawUser.fullName,
+		name: rawUser.firstName,
 	};
 
 	// A server load function must return JSON-serializable data

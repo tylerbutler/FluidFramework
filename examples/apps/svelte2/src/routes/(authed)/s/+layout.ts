@@ -6,6 +6,7 @@
 import type { LayoutLoad } from "./$types";
 import { initializeClient } from "../../../fluid/init";
 import { redirect } from "@sveltejs/kit";
+import { HttpsTokenProvider } from "$lib/tokenProvider";
 
 export const ssr = false;
 
@@ -16,10 +17,9 @@ export const load: LayoutLoad = async ({ parent }) => {
 		redirect(307, "/login");
 	}
 
-	const client = initializeClient({
-		id: clerkUserProperties.id,
-		userName: clerkUserProperties.fullName ?? clerkUserProperties.id,
-	});
+	const tokenProvider = new HttpsTokenProvider("/api/tokenMint", clerkUserProperties);
+
+	const client = initializeClient(tokenProvider);
 
 	return {
 		client,
