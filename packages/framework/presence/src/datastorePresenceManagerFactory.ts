@@ -15,7 +15,6 @@ import type { SharedObjectKind } from "@fluidframework/shared-object-base";
 import { BasicDataStoreFactory, LoadableFluidObject } from "./datastoreSupport.js";
 import type { IPresence } from "./presence.js";
 import { createPresenceManager } from "./presenceManager.js";
-import type { PresenceUserMetadataProvider } from "./types.js";
 
 import type { IExtensionMessage } from "@fluidframework/presence/internal/container-definitions/internal";
 
@@ -35,11 +34,11 @@ class PresenceManagerDataObject extends LoadableFluidObject {
 	// instantiations and stand-up by Summarizer that has no actual use.
 	private _presenceManager: IPresence | undefined;
 
-	public presenceManager(getUserMetadata?: PresenceUserMetadataProvider): IPresence {
+	public presenceManager(): IPresence {
 		if (!this._presenceManager) {
 			// TODO: investigate if ContainerExtensionStore (path-based address routing for
 			// Signals) is readily detectable here and use that presence manager directly.
-			const manager = createPresenceManager(this.runtime, getUserMetadata);
+			const manager = createPresenceManager(this.runtime);
 			this.runtime.on("signal", (message: IInboundSignalMessage, local: boolean) => {
 				assertSignalMessageIsValid(message);
 				manager.processSignal("", message, local);
@@ -108,12 +107,11 @@ export const ExperimentalPresenceManager =
  *
  * @alpha
  */
-export function acquirePresenceViaDataObject<U = unknown>(
+export function acquirePresenceViaDataObject(
 	fluidLoadable: ExperimentalPresenceDO,
-	userMetadata?: PresenceUserMetadataProvider<U>,
 ): IPresence {
 	if (fluidLoadable instanceof PresenceManagerDataObject) {
-		return fluidLoadable.presenceManager(userMetadata);
+		return fluidLoadable.presenceManager();
 	}
 
 	throw new Error("Incompatible loadable; make sure to use ExperimentalPresenceManager");

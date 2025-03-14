@@ -27,8 +27,11 @@ export const load: LayoutLoad = async ({ params, parent }) => {
 		console.log(row.map((c) => c._value).join(" "));
 	}
 
+	// Retrieve a reference to the presence APIs via the data object.
+	const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
+
 	return {
 		appData,
-		container,
+		presence,
 	};
 };

@@ -43,7 +43,6 @@ class SessionClient implements ISessionClient {
 
 	public constructor(
 		public readonly sessionId: ClientSessionId,
-		private readonly userId: string,
 		public connectionId: ClientConnectionId | undefined = undefined,
 	) {}
 
@@ -58,9 +57,6 @@ class SessionClient implements ISessionClient {
 		return this.connectionStatus;
 	}
 
-	public getUserId(): string {
-		return;
-	}
 	public setConnected(): void {
 		this.connectionStatus = SessionClientStatus.Connected;
 	}

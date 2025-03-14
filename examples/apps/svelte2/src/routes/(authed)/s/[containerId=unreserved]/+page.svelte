@@ -5,7 +5,6 @@ import SudokuApp from "../../../../SudokuApp/SudokuApp.svelte";
 import {
 	acquirePresenceViaDataObject,
 	Latest,
-	type ISessionClient,
 } from "@fluidframework/presence/alpha";
 import {
 	PresenceContextKey,
