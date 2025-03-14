@@ -3,19 +3,23 @@
  * Licensed under the MIT License.
  */
 
-import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
-import type { PageLoad } from "./$types";
-import { getFluidContainer } from "../../../fluid/init";
-import { sudokuTreeConfiguration } from "../../../fluid/dataSchema";
 import { error } from "@sveltejs/kit";
+import type { LayoutLoad } from "./$types";
 
-export const load: PageLoad = async ({ params }) => {
+import { getFluidContainer } from "../../../../fluid/init";
+import { sudokuTreeConfiguration } from "../../../../fluid/dataSchema";
+
+// export const ssr = false;
+
+export const load: LayoutLoad = async ({ params, parent }) => {
 	if (!params.containerId) {
 		error(404, "Fluid container not found");
 	}
 
+	const { client } = await parent();
+
 	// Load the container based on the ID in the URL.
-	const container = await getFluidContainer(params.containerId);
+	const container = await getFluidContainer(client, params.containerId);
 
 	// Get a view of the tree data from the container.
 	const appData = container.initialObjects.appData.viewWith(sudokuTreeConfiguration);

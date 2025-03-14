@@ -1,18 +1,22 @@
 <script lang="ts">
 import type { PageProps } from "./$types";
 import { SignedIn, SignedOut } from "svelte-clerk";
-import SudokuApp from "../../../SudokuApp/SudokuApp.svelte";
-import { acquirePresenceViaDataObject, Latest, type ISessionClient } from "@fluidframework/presence/alpha";
+import SudokuApp from "../../../../SudokuApp/SudokuApp.svelte";
+import {
+	acquirePresenceViaDataObject,
+	Latest,
+	type ISessionClient,
+} from "@fluidframework/presence/alpha";
 import {
 	PresenceContextKey,
 	PresenceWorkspaceAddress,
 	SelectionManagerContextKey,
 	UserMetadataManagerContextKey,
-} from "../../../constants";
-import type { CellCoordinate } from "../../../coordinate";
-import { createNewUser, type SudokuUser } from "../../../user.svelte";
-import { UserMetadataManager } from "../../../userMetadataManager.svelte";
-import { SelectionManager } from "../../../selectionManager.svelte";
+} from "../../../../constants";
+import type { CellCoordinate } from "../../../../coordinate";
+import { createNewUser, type SudokuUser } from "../../../../user.svelte";
+import { UserMetadataManager } from "../../../../userMetadataManager.svelte";
+import { SelectionManager } from "../../../../selectionManager.svelte";
 import { setContext } from "svelte";
 import { Badge, Indicator } from "svelte-5-ui-lib";
 
@@ -22,10 +26,10 @@ const { appData, container, clerkUserProperties } = data;
 // This is an authed route so these properties should not be undefined.
 const sudokuUser = createNewUser(clerkUserProperties!);
 
-	// Retrieve a reference to the presence APIs via the data object.
-	const presence = acquirePresenceViaDataObject(container.initialObjects.presence, async () => {
-		return { userId: sudokuUser.id };
-	});
+// Retrieve a reference to the presence APIs via the data object.
+const presence = acquirePresenceViaDataObject(container.initialObjects.presence, async () => {
+	return { userId: sudokuUser.id };
+});
 
 // Add presence to context for convenience
 setContext(PresenceContextKey, presence);

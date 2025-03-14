@@ -59,7 +59,7 @@ class SessionClient implements ISessionClient {
 	}
 
 	public getUserId(): string {
-		return
+		return;
 	}
 	public setConnected(): void {
 		this.connectionStatus = SessionClientStatus.Connected;

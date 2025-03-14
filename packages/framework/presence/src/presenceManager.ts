@@ -57,7 +57,11 @@ class PresenceManager implements IPresence, PresenceExtensionInterface {
 
 	private readonly mc: MonitoringContext | undefined = undefined;
 
-	public constructor(runtime: IEphemeralRuntime, clientSessionId: ClientSessionId, getUserMetadata?: PresenceUserMetadataProvider) {
+	public constructor(
+		runtime: IEphemeralRuntime,
+		clientSessionId: ClientSessionId,
+		getUserMetadata?: PresenceUserMetadataProvider,
+	) {
 		const logger = runtime.logger;
 		if (logger) {
 			this.mc = createChildMonitoringContext({ logger, namespace: "Presence" });

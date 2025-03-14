@@ -111,7 +111,7 @@ export interface ValueElementMap<_TSchema extends PresenceStatesSchema> {
  * @internal
  */
 export type ClientUpdateEntry = InternalTypes.ValueDirectoryOrState<unknown> & {
-	clientUserId: string,
+	clientUserId: string;
 	ignoreUnmonitored?: true;
 };
 

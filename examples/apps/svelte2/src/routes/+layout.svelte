@@ -40,7 +40,7 @@ $effect(() => {
 
 		<NavUl {activeUrl}>
 			<SignedIn>
-				<NavLi href="/create">New Session</NavLi>
+				<NavLi href="/s/create">New Session</NavLi>
 				<NavLi><UserButton afterSignOutUrl="/" /></NavLi>
 			</SignedIn>
 			<SignedOut>

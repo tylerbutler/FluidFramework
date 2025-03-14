@@ -9,6 +9,8 @@ import { mdsvex } from "mdsvex";
 import netlifyAdapter from "@sveltejs/adapter-netlify";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
+// @ts-check
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	// Consult https://svelte.dev/docs/kit/integrations
@@ -19,6 +21,9 @@ const config = {
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 		adapter: netlifyAdapter(),
 		// adapter: staticAdapter(),
+		files: {
+			lib: "src/library",
+		},
 	},
 	extensions: [".svelte", ".svx"],
 };

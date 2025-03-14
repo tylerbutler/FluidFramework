@@ -16,6 +16,9 @@
 			"**/lib/*",
 			"**/*.done.build.log",
 			"**/.next", // NextJS
+			"**/.netlify", // Netlify
+			"**/.svelte-kit", // SvelteKit
+			"examples/apps/svelte2/build/**",
 
 			// test collateral
 			"**/_package.json",

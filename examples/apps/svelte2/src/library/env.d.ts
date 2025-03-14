@@ -1,4 +1,4 @@
-import type { AuthObject, User } from '@clerk/backend';
+import type { AuthObject, User } from "@clerk/backend";
 
 declare global {
 	namespace App {

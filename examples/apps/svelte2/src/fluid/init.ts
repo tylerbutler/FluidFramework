@@ -14,15 +14,22 @@ import {
 } from "./dataSchema";
 import { PUZZLE_INDEXES } from "../constants";
 import { SudokuCellDataInternal } from "./cellData.svelte";
+import { HttpsTokenProvider } from "$lib/tokenProvider";
+import { base } from "$app/paths";
+import type { LeveeUser } from "$lib/server/generateLeveeToken";
 
-const client = new TinyliciousClient({
-	connection: {
-		domain: "https://levee.tylerbutler.com",
-		port: 80,
-	},
-});
+export function initializeClient(userMetadata: LeveeUser) {
+	const client = new TinyliciousClient({
+		connection: {
+			domain: "https://levee.tylerbutler.com",
+			port: 80,
+			tokenProvider: new HttpsTokenProvider(`${base}`, userMetadata),
+		},
+	});
+	return client;
+}
 
-export async function createAttachedFluidContainer() {
+export async function createAttachedFluidContainer(client: TinyliciousClient) {
 	// The client will create a new detached container using the schema
 	// A detached container will enable the app to modify the container before attaching it to the client
 	const { container, services } = await client.createContainer(containerSchema, "2");
@@ -38,7 +45,7 @@ export async function createAttachedFluidContainer() {
 	return { containerId, container, serviceAudience };
 }
 
-export async function getFluidContainer(containerId: string) {
+export async function getFluidContainer(client: TinyliciousClient, containerId: string) {
 	// Use the unique container ID to fetch the container created earlier.
 	const { container } = await client.getContainer(containerId, containerSchema, "2");
 	return container;
