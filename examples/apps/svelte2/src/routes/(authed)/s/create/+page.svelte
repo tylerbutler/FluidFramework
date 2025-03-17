@@ -1,16 +1,23 @@
  <script lang="ts">
 import type { PageProps } from "./$types";
 import { createAttachedFluidContainer } from "../../../../fluid/init";
-import { redirect } from "@sveltejs/kit";
+import { isRedirect, redirect } from "@sveltejs/kit";
 
 const { data }: PageProps = $props();
 const { client } = data;
 
+let loadState = $state("Creating new Fluid container...");;
+let containerId = $state("");
+
 createAttachedFluidContainer(client)
-	.then(async ({ containerId, container }) => {
-		redirect(308, `/s/${containerId}`);
-	})
-	.catch((error) => {
-		console.error("Error creating container:", error, error.stack);
+	.then(async ({ containerId: id, container }) => {
+		loadState = "Loading Fluid container...";
+		containerId = id;
+		window.location.href = `/s/${id}`;
 	});
+
 </script>
+
+<div>
+	{loadState}
+</div>

@@ -4,7 +4,7 @@ import type { User } from "@clerk/backend";
 import { SudokuUserContextKey } from "./constants";
 
 export interface ClerkUserProperties extends Pick<User, "id" | "username" | "fullName"> {
-	name: string | null;
+	name: string;
 }
 
 export type LeveeUser = ClerkUserProperties;

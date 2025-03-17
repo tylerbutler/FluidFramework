@@ -51,6 +51,8 @@ $effect(() => {
 
 	<Heading tag="h2">Fluid Sudoku</Heading>
 
+	<div class="p-8">
 		{@render children()}
 	</div>
+</div>
 </ClerkProvider>

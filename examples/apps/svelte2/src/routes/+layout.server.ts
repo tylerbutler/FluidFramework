@@ -13,7 +13,7 @@ export const load = async ({ locals }) => {
 		id: rawUser.id,
 		username: rawUser.username,
 		fullName: rawUser.fullName,
-		name: rawUser.firstName,
+		name: rawUser.firstName ?? rawUser.id,
 	};
 
 	// A server load function must return JSON-serializable data
