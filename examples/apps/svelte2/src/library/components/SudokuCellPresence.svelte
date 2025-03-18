@@ -2,16 +2,13 @@
 import { Indicator } from "svelte-5-ui-lib";
 import type { CellPresenceProps, SelectionManager, UserMetadataManager } from "./props";
 import type { ISessionClient } from "@fluidframework/presence/alpha";
-import { getContext } from "svelte";
-import { SelectionManagerContextKey, UserMetadataManagerContextKey } from "$lib/constants";
 import { compareCells, getPresenceIndicatorPosition } from "./SudokuCellPresence.js";
+import { getSelectionManager, getUserMetadataManager } from "$lib/context";
 
 const { coordinate }: CellPresenceProps = $props();
 
-// This could come from props as well.
-const selectionManager = getContext<SelectionManager>(SelectionManagerContextKey);
-const userMetadataManager = getContext<UserMetadataManager>(UserMetadataManagerContextKey);
-// const presence = getContext<IPresence>(PresenceContextKey);
+const selectionManager = getSelectionManager();
+const userMetadataManager = getUserMetadataManager();
 const user = userMetadataManager.valueManager.local;
 
 // if (!user) {

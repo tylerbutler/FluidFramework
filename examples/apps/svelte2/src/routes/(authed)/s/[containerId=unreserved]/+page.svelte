@@ -10,9 +10,9 @@ import {
 } from "$lib/constants";
 import type { CellCoordinate } from "$lib/coordinate";
 import { createNewUser, type SudokuClientUser } from "$lib/components/User.svelte";
-import { setContext } from "svelte";
 import { Badge, Indicator } from "svelte-5-ui-lib";
 import { ReadonlyReactivePresenceWorkspace } from "$lib/components/ReadonlyReactivePresenceWorkspace";
+import { setSelectionManager, setUserMetadataManager } from "$lib/context";
 
 const { data }: PageProps = $props();
 const { appData, clerkUserProperties, presence } = data;
@@ -35,13 +35,13 @@ const selectionManager = ReadonlyReactivePresenceWorkspace.create(
 	presence,
 	presenceWorkspace.props.selectionCoordinate,
 );
-setContext(SelectionManagerContextKey, selectionManager);
+setSelectionManager(selectionManager);
 
 const userMetadataManager = ReadonlyReactivePresenceWorkspace.create(
 	presence,
 	presenceWorkspace.props.userMetadata,
 );
-setContext(UserMetadataManagerContextKey, userMetadataManager);
+setUserMetadataManager(userMetadataManager);
 userMetadataManager.valueManager.local = sudokuUser;
 
 // presence.events.on("attendeeJoined", () => {

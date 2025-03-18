@@ -2,14 +2,13 @@
 import { Table, TableBody, TableBodyRow } from "svelte-5-ui-lib";
 import { Coordinate, type CoordinateString } from "$lib/coordinate";
 import Cell from "./SudokuCell.svelte";
-import type { SelectionManager, SudokuGridComponentProps } from "./props";
-import { coordinateDataAttributeName, SelectionManagerContextKey } from "$lib/constants";
-import { getContext } from "svelte";
+import type { SudokuGridComponentProps } from "./props";
+import { coordinateDataAttributeName } from "$lib/constants";
+import { getSelectionManager } from "$lib/context";
 
 const { grid, sessionClient }: SudokuGridComponentProps = $props();
 
-// This could come from props as well.
-const selectionManager = getContext<SelectionManager>(SelectionManagerContextKey);
+const selectionManager = getSelectionManager();
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(`${sessionClient.sessionId}-${coord}`) as HTMLInputElement;

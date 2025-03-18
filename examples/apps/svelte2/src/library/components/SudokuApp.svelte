@@ -1,11 +1,10 @@
 <script lang="ts">
 import { Button, Heading, Secondary } from "svelte-5-ui-lib";
-import type { SelectionManager, SudokuAppProps, UserMetadataManager } from "./props";
+import type { SudokuAppProps } from "./props";
 import SudokuGrid from "$lib/components/SudokuGrid.svelte";
 import { loadIncludedPuzzle } from "$lib/loadPuzzle";
 import type { SudokuCellViewData } from "$lib/fluid/cellData.svelte";
-import { getContext } from "svelte";
-import { SelectionManagerContextKey, UserMetadataManagerContextKey } from "$lib/constants";
+import { getSelectionManager, getUserMetadataManager } from "$lib/context";
 
 const { data, presence, sessionClient }: SudokuAppProps = $props();
 
@@ -15,9 +14,8 @@ const { data, presence, sessionClient }: SudokuAppProps = $props();
 const getConnectedUsers = () =>
 	[...presence.getAttendees()].filter((c) => c.getConnectionStatus() === "Connected");
 
-const userMetadataManager = getContext<UserMetadataManager>(UserMetadataManagerContextKey);
-const selectionManager = getContext<SelectionManager>(SelectionManagerContextKey);
-// const sudokuUser = getContext<SudokuAppUser>(SudokuUserKey);
+const selectionManager = getSelectionManager();
+const userMetadataManager = getUserMetadataManager();
 
 // The title is derived from the connected users array, which is updated when users join or leave.
 const title = $derived.by(() => {
