@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import type { CellCoordinate } from "../coordinate";
+import type { CellCoordinate } from "$lib/coordinate";
 
 export interface CellPresenceProps {
 	readonly coordinate: CellCoordinate;

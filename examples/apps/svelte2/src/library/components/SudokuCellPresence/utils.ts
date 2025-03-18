@@ -1,4 +1,4 @@
-import type { CellCoordinate } from "../coordinate";
+import type { CellCoordinate } from "$lib/coordinate";
 
 export function compareCells(cell1: CellCoordinate, cell2: CellCoordinate) {
 	return cell1[0] === cell2[0] && cell1[1] === cell2[1];

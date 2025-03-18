@@ -1,5 +1,5 @@
 import { setContext, getContext } from "svelte";
-import { mapStringToColor, type ColorType } from "./colors";
+import { mapStringToColor, type ColorType } from "./library/colors";
 import type { User } from "@clerk/backend";
 import { SudokuUserContextKey } from "./constants";
 

@@ -4,7 +4,7 @@ import type { CellPresenceProps } from "./props";
 import type { ISessionClient } from "@fluidframework/presence/alpha";
 import { getContext } from "svelte";
 import type { SelectionManager } from "../selectionManager.svelte";
-import { SelectionManagerContextKey, UserMetadataManagerContextKey } from "../constants";
+import { SelectionManagerContextKey, UserMetadataManagerContextKey } from "$lib/constants";
 import type { UserMetadataManager } from "../userMetadataManager.svelte";
 import { compareCells, getPresenceIndicatorPosition } from "./utils";
 

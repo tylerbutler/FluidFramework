@@ -1,14 +1,14 @@
 <script lang="ts">
 import type { PageProps } from "./$types";
 import { SignedIn, SignedOut } from "svelte-clerk";
-import SudokuApp from "../../../../SudokuApp/SudokuApp.svelte";
+import SudokuApp from "$lib/components/SudokuApp/SudokuApp.svelte";
 import { Latest } from "@fluidframework/presence/alpha";
 import {
 	PresenceWorkspaceAddress,
 	SelectionManagerContextKey,
 	UserMetadataManagerContextKey,
-} from "../../../../constants";
-import type { CellCoordinate } from "../../../../coordinate";
+} from "$lib/constants";
+import type { CellCoordinate } from "$lib/coordinate";
 import { createNewUser, type SudokuUser } from "../../../../user.svelte";
 import { UserMetadataManager } from "../../../../userMetadataManager.svelte";
 import { SelectionManager } from "../../../../selectionManager.svelte";

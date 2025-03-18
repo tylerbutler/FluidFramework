@@ -1,10 +1,10 @@
 <script lang="ts">
 import { Input, TableBodyCell } from "svelte-5-ui-lib";
-import { type CoordinateString } from "../coordinate";
-import { type SudokuNumber, isSudokuNumber } from "../sudokuNumber";
+import { type CoordinateString } from "$lib/coordinate";
+import { type SudokuNumber, isSudokuNumber } from "$lib/sudokuNumber";
 import type { CellComponentProps } from "./props";
-import CellPresence from "../SudokuCellPresence/SudokuCellPresence.svelte";
-import { coordinateDataAttributeName } from "../constants";
+import CellPresence from "$lib/components/SudokuCellPresence/SudokuCellPresence.svelte";
+import { coordinateDataAttributeName } from "$lib/constants";
 import { getCellBorderClasses, getCellInputClasses } from "./utils";
 
 const {
