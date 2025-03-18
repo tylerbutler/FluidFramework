@@ -4,7 +4,7 @@
  */
 
 import type { ISessionClient } from "@fluidframework/presence/alpha";
-import type { SudokuCellViewData } from "../fluid/cellData.svelte";
+import type { SudokuCellViewData } from "$lib/fluid/cellData.svelte";
 
 export interface CellComponentProps {
 	readonly cellData: SudokuCellViewData;

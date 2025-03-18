@@ -1,5 +1,5 @@
+import type { SudokuCellViewData } from "$lib/fluid/cellData.svelte";
 import { type CoordinateString, Coordinate } from "../coordinate";
-import type { SudokuCellViewData } from "../fluid/cellData.svelte";
 
 /**
  * Returns CSS border properties to use when rendering a cell. This helps give the grid that authentic Sudoku look.

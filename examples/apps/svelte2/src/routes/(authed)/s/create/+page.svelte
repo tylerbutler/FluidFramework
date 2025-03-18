@@ -1,6 +1,6 @@
  <script lang="ts">
 import type { PageProps } from "./$types";
-import { createAttachedFluidContainer } from "../../../../fluid/init";
+import { createAttachedFluidContainer } from "$lib/fluid/init";
 
 const { data }: PageProps = $props();
 const { client } = data;

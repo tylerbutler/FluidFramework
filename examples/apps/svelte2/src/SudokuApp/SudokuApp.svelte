@@ -1,9 +1,9 @@
 <script lang="ts">
-import { Badge, Button, Heading, Indicator, P, Secondary } from "svelte-5-ui-lib";
+import { Button, Heading, Secondary } from "svelte-5-ui-lib";
 import type { SudokuAppProps } from "./props";
 import SudokuGrid from "../SudokuGrid/SudokuGrid.svelte";
 import { loadIncludedPuzzle } from "../loadPuzzle";
-import type { SudokuCellViewData } from "../fluid/cellData.svelte";
+import type { SudokuCellViewData } from "$lib/fluid/cellData.svelte";
 import { getContext } from "svelte";
 import type { UserMetadataManager } from "../userMetadataManager.svelte";
 import { SelectionManagerContextKey, UserMetadataManagerContextKey } from "../constants";
