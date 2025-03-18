@@ -9,9 +9,9 @@ import {
 	UserMetadataManagerContextKey,
 } from "$lib/constants";
 import type { CellCoordinate } from "$lib/coordinate";
-import { createNewUser, type SudokuUser } from "../../../../user.svelte";
-import { UserMetadataManager } from "../../../../userMetadataManager.svelte";
-import { SelectionManager } from "../../../../selectionManager.svelte";
+import { createNewUser, type SudokuUser } from "$lib/components/user.svelte";
+import { UserMetadataManager } from "$lib/components/userMetadataManager.svelte";
+import { SelectionManager } from "$lib/components/selectionManager.svelte";
 import { setContext } from "svelte";
 import { Badge, Indicator } from "svelte-5-ui-lib";
 

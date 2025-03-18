@@ -1,24 +1,13 @@
 import { setContext, getContext } from "svelte";
-import { mapStringToColor, type ColorType } from "./library/colors";
+import { mapStringToColor, type ColorType } from "$lib/colors";
 import type { User } from "@clerk/backend";
-import { SudokuUserContextKey } from "./constants";
+import { SudokuUserContextKey } from "$lib/constants";
 
 export interface ClerkUserProperties extends Pick<User, "id" | "username" | "fullName"> {
 	name: string;
 }
 
 export type LeveeUser = ClerkUserProperties;
-
-// export class SudokuUser implements ClerkUserProperties {
-// 	public id = $state("");
-// 	public fullName = $state("");
-// 	public color: ColorType = $derived.by(()=>mapStringToColor(this.id));
-
-// 	constructor({ id, fullName }: ClerkUserProperties) {
-// 		this.id = id;
-// 		this.fullName = fullName ?? "NO_FULL_NAME";
-// 	}
-// }
 
 export function setUserContext(user: SudokuUser) {
 	setContext(SudokuUserContextKey, user);

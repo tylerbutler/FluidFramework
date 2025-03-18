@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { isSudokuNumber, type SudokuNumber } from "./library/sudokuNumber";
+import { isSudokuNumber, type SudokuNumber } from "./sudokuNumber";
 
 export type SudokuInputRow = [
 	SudokuNumber,

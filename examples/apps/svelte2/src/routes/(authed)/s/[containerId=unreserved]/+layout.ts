@@ -7,8 +7,8 @@ import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
 import { error } from "@sveltejs/kit";
 import type { LayoutLoad } from "./$types";
 
-import { getFluidContainer } from "../../../../fluid/init";
-import { sudokuTreeConfiguration } from "../../../../fluid/dataSchema";
+import { getFluidContainer } from "$lib/fluid/init";
+import { sudokuTreeConfiguration } from "$lib/fluid/dataSchema";
 
 // export const ssr = false;
 

@@ -1,6 +1,6 @@
 import type { ITokenProvider, ITokenResponse } from "@fluidframework/routerlicious-driver";
 import { error } from "@sveltejs/kit";
-import type { LeveeUser } from "../user.svelte";
+import type { LeveeUser } from "$lib/components/user.svelte";
 
 export interface TokenArgs {
 	tenantId: string;

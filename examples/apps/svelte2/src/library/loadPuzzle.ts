@@ -4,9 +4,9 @@
  */
 
 import sudoku from "sudokus";
-import { PUZZLE_INDEXES, PUZZLES } from "./constants";
-import type { SudokuAppData } from "./fluid/dataSchema";
-import { SudokuInput } from "./sudokuInput";
+import { PUZZLE_INDEXES, PUZZLES } from "$lib/constants";
+import type { SudokuAppData } from "$lib/fluid/dataSchema";
+import { SudokuInput } from "$lib/sudokuInput";
 import { Tree } from "fluid-framework";
 import { digest } from "ohash";
 

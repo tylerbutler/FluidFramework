@@ -4,7 +4,7 @@
  */
 
 import type { LayoutLoad } from "./$types";
-import { initializeClient } from "../../../fluid/init";
+import { initializeClient } from "$lib/fluid/init";
 import { redirect } from "@sveltejs/kit";
 import { HttpsTokenProvider } from "$lib/tokenProvider";
 

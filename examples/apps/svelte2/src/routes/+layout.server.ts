@@ -1,5 +1,5 @@
 import { buildClerkProps } from "svelte-clerk/server";
-import type { ClerkUserProperties } from "../user.svelte.js";
+import type { ClerkUserProperties } from "$lib/components/user.svelte.js";
 
 export const load = async ({ locals }) => {
 	const rawUser = await locals.currentUser();

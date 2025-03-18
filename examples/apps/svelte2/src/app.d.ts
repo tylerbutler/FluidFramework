@@ -5,7 +5,7 @@
 
 /// <reference types="svelte-clerk/env" />
 
-import type { AuthManager } from "./auth";
+import type { AuthManager } from "./library/server/auth";
 
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces

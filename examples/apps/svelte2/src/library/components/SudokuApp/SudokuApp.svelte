@@ -2,12 +2,12 @@
 import { Button, Heading, Secondary } from "svelte-5-ui-lib";
 import type { SudokuAppProps } from "./props";
 import SudokuGrid from "$lib/components/SudokuGrid/SudokuGrid.svelte";
-import { loadIncludedPuzzle } from "../../../loadPuzzle";
+import { loadIncludedPuzzle } from "$lib/loadPuzzle";
 import type { SudokuCellViewData } from "$lib/fluid/cellData.svelte";
 import { getContext } from "svelte";
-import type { UserMetadataManager } from "../../../userMetadataManager.svelte";
+import type { UserMetadataManager } from "$lib/components/userMetadataManager.svelte";
 import { SelectionManagerContextKey, UserMetadataManagerContextKey } from "$lib/constants";
-import { SelectionManager } from "../../../selectionManager.svelte";
+import { SelectionManager } from "$lib/components/selectionManager.svelte";
 
 const { data, presence, sessionClient }: SudokuAppProps = $props();
 
