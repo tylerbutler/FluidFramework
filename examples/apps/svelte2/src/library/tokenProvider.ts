@@ -1,17 +1,17 @@
 import type { ITokenProvider, ITokenResponse } from "@fluidframework/routerlicious-driver";
 import { error } from "@sveltejs/kit";
-import type { LeveeUser } from "$lib/components/user.svelte";
+import type { LeveeServiceUser } from "$lib/components/User.svelte";
 
 export interface TokenArgs {
 	tenantId: string;
 	documentId: string;
-	user: LeveeUser;
+	user: LeveeServiceUser;
 }
 
 export class HttpsTokenProvider implements ITokenProvider {
 	constructor(
 		private readonly endpointUrl: string,
-		private readonly user: LeveeUser,
+		private readonly user: LeveeServiceUser,
 	) {}
 
 	public async fetchOrdererToken(

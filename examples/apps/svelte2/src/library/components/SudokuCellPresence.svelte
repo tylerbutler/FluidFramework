@@ -3,10 +3,10 @@ import { Indicator } from "svelte-5-ui-lib";
 import type { CellPresenceProps } from "./props";
 import type { ISessionClient } from "@fluidframework/presence/alpha";
 import { getContext } from "svelte";
-import type { SelectionManager } from "../selectionManager.svelte";
+import type { SelectionManager } from "./SelectionManager.svelte";
 import { SelectionManagerContextKey, UserMetadataManagerContextKey } from "$lib/constants";
-import type { UserMetadataManager } from "../userMetadataManager.svelte";
-import { compareCells, getPresenceIndicatorPosition } from "./utils";
+import type { UserMetadataManager } from "./UserMetadataManager.svelte";
+import { compareCells, getPresenceIndicatorPosition } from "./SudokuCellPresence.js";
 
 const { coordinate }: CellPresenceProps = $props();
 

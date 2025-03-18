@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { PageProps } from "./$types";
 import { SignedIn, SignedOut } from "svelte-clerk";
-import SudokuApp from "$lib/components/SudokuApp/SudokuApp.svelte";
+import SudokuApp from "$lib/components/SudokuApp.svelte";
 import { Latest } from "@fluidframework/presence/alpha";
 import {
 	PresenceWorkspaceAddress,
@@ -9,9 +9,9 @@ import {
 	UserMetadataManagerContextKey,
 } from "$lib/constants";
 import type { CellCoordinate } from "$lib/coordinate";
-import { createNewUser, type SudokuUser } from "$lib/components/user.svelte";
-import { UserMetadataManager } from "$lib/components/userMetadataManager.svelte";
-import { SelectionManager } from "$lib/components/selectionManager.svelte";
+import { createNewUser, type SudokuUser } from "$lib/components/User.svelte";
+import { UserMetadataManager } from "$lib/components/UserMetadataManager.svelte";
+import { SelectionManager } from "$lib/components/SelectionManager.svelte";
 import { setContext } from "svelte";
 import { Badge, Indicator } from "svelte-5-ui-lib";
 

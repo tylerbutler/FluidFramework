@@ -1,6 +1,6 @@
 import type { IPresence, LatestValueManager } from "@fluidframework/presence/alpha";
-import type { CellCoordinate } from "../coordinate";
-import { PresenceWorkspaceManager } from "./presenceManager.svelte";
+import type { CellCoordinate } from "$lib/coordinate";
+import { PresenceWorkspaceManager } from "./PresenceWorkspaceManager.svelte";
 
 export class SelectionManager extends PresenceWorkspaceManager<CellCoordinate> {
 	constructor(

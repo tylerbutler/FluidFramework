@@ -1,5 +1,5 @@
-import type { SudokuCellViewData } from "$lib/fluid/cellData.svelte";
 import { type CoordinateString, Coordinate } from "$lib/coordinate";
+import type { SudokuCellViewData } from "$lib/fluid/cellData.svelte";
 
 /**
  * Returns CSS border properties to use when rendering a cell. This helps give the grid that authentic Sudoku look.
@@ -38,7 +38,6 @@ export function getCellBorderClasses(coord: CoordinateString) {
 	return classes;
 }
 
-// const borderClasses = getCellBorderClasses(cellData.coordinate);
 export function getCellInputClasses(cellData: SudokuCellViewData) {
 	switch (cellData.status) {
 		case "startingClue":

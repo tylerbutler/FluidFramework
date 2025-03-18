@@ -6,7 +6,7 @@
 import { ScopeType, type ITokenClaims } from "@fluidframework/driver-definitions/internal";
 import { KJUR as jsrsasign } from "jsrsasign";
 import { nanoid } from "nanoid";
-import type { LeveeUser } from "$lib/components/user.svelte";
+import type { LeveeServiceUser } from "$lib/components/User.svelte";
 
 /**
  * Generates a {@link https://en.wikipedia.org/wiki/JSON_Web_Token | JSON Web Token} (JWT)
@@ -39,7 +39,7 @@ export function generateLeveeToken(
 	tenantId: string,
 	key: string,
 	scopes: ScopeType[],
-	user: LeveeUser,
+	user: LeveeServiceUser,
 	documentId?: string,
 	lifetime: number = 60 * 60,
 	// Naming intended to match `ITokenClaims.ver`

@@ -33,5 +33,8 @@ export abstract class PresenceWorkspaceManager<T> {
 		// 	// Update the selection state with the new coordinate
 		// 	this.reactiveState.set(data.client, data.value as any);
 		// });
+		presence.events.on("attendeeDisconnected", (session: ISessionClient) => {
+			this.reactiveState.delete(session);
+		});
 	}
 }

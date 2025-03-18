@@ -1,11 +1,11 @@
 <script lang="ts">
 import { Table, TableBody, TableBodyRow } from "svelte-5-ui-lib";
 import { Coordinate, type CoordinateString } from "$lib/coordinate";
-import Cell from "../SudokuCell/SudokuCell.svelte";
+import Cell from "./SudokuCell.svelte";
 import type { SudokuGridComponentProps } from "./props";
 import { coordinateDataAttributeName, SelectionManagerContextKey } from "$lib/constants";
 import { getContext } from "svelte";
-import type { SelectionManager } from "../selectionManager.svelte";
+import type { SelectionManager } from "./SelectionManager.svelte";
 
 const { grid, sessionClient }: SudokuGridComponentProps = $props();
 

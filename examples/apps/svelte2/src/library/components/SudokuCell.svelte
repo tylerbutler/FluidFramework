@@ -2,17 +2,17 @@
 import { Input, TableBodyCell } from "svelte-5-ui-lib";
 import { type CoordinateString } from "$lib/coordinate";
 import { type SudokuNumber, isSudokuNumber } from "$lib/sudokuNumber";
-import type { CellComponentProps } from "./props";
-import CellPresence from "$lib/components/SudokuCellPresence/SudokuCellPresence.svelte";
+import type { SudokuCellProps } from "./props";
+import CellPresence from "$lib/components/SudokuCellPresence.svelte";
 import { coordinateDataAttributeName } from "$lib/constants";
-import { getCellBorderClasses, getCellInputClasses } from "./utils";
+import { getCellBorderClasses, getCellInputClasses } from "./SudokuCell";
 
 const {
 	cellData,
 	currentSessionClient,
 	onKeyDown: keyDownToParent,
 	onFocus,
-}: CellComponentProps = $props();
+}: SudokuCellProps = $props();
 
 const cellCoordinateId = (c: CoordinateString) => `${currentSessionClient.sessionId}-${c}`;
 

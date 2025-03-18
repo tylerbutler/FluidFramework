@@ -7,7 +7,7 @@ export interface ClerkUserProperties extends Pick<User, "id" | "username" | "ful
 	name: string;
 }
 
-export type LeveeUser = ClerkUserProperties;
+export type LeveeServiceUser = ClerkUserProperties;
 
 export function setUserContext(user: SudokuUser) {
 	setContext(SudokuUserContextKey, user);
