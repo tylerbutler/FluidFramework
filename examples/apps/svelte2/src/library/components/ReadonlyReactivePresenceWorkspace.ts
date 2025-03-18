@@ -5,7 +5,7 @@ import type {
 } from "@fluidframework/presence/alpha";
 import { SvelteMap } from "svelte/reactivity";
 
-export class ReactivePresenceWorkspace<T extends object> {
+export class ReadonlyReactivePresenceWorkspace<T extends object> {
 	protected readonly reactiveState = $state(new SvelteMap<ISessionClient, T>());
 
 	public readonly unfilteredData = $derived(this.reactiveState);
@@ -42,7 +42,7 @@ export class ReactivePresenceWorkspace<T extends object> {
 	public static create<T extends object>(
 		presence: IPresence,
 		valueManager: LatestValueManager<T>,
-	): ReactivePresenceWorkspace<T> {
-		return new ReactivePresenceWorkspace<T>(presence, valueManager);
+	): ReadonlyReactivePresenceWorkspace<T> {
+		return new ReadonlyReactivePresenceWorkspace<T>(presence, valueManager);
 	}
 }

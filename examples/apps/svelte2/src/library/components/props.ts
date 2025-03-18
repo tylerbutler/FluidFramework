@@ -2,12 +2,12 @@ import type { CellCoordinate } from "$lib/coordinate";
 import type { SudokuCellViewData } from "$lib/fluid/cellData.svelte";
 import type { SudokuAppData, SudokuGrid } from "$lib/fluid/dataSchema";
 import type { IPresence, ISessionClient } from "@fluidframework/presence/alpha";
-import type { ReactivePresenceWorkspace } from "./PresenceWorkspaceManager.svelte";
+import type { ReadonlyReactivePresenceWorkspace } from "./ReadonlyReactivePresenceWorkspace";
 import type { SudokuClientUser } from "./User.svelte";
 
-export type SelectionManager = ReactivePresenceWorkspace<CellCoordinate>;
+export type SelectionManager = ReadonlyReactivePresenceWorkspace<CellCoordinate>;
 
-export type UserMetadataManager = ReactivePresenceWorkspace<SudokuClientUser>;
+export type UserMetadataManager = ReadonlyReactivePresenceWorkspace<SudokuClientUser>;
 
 export interface SudokuAppProps {
 	readonly data: SudokuAppData;

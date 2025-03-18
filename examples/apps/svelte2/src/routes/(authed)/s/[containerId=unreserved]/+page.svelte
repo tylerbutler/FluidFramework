@@ -12,7 +12,7 @@ import type { CellCoordinate } from "$lib/coordinate";
 import { createNewUser, type SudokuClientUser } from "$lib/components/User.svelte";
 import { setContext } from "svelte";
 import { Badge, Indicator } from "svelte-5-ui-lib";
-import { ReactivePresenceWorkspace } from "$lib/components/PresenceWorkspaceManager.svelte";
+import { ReadonlyReactivePresenceWorkspace } from "$lib/components/ReadonlyReactivePresenceWorkspace";
 
 const { data }: PageProps = $props();
 const { appData, clerkUserProperties, presence } = data;
@@ -31,13 +31,13 @@ const presenceWorkspace = presence.getStates(PresenceWorkspaceAddress, {
 /**
  * The selection manager tracks the currently selected cell for each connected client.
  */
-const selectionManager = ReactivePresenceWorkspace.create(
+const selectionManager = ReadonlyReactivePresenceWorkspace.create(
 	presence,
 	presenceWorkspace.props.selectionCoordinate,
 );
 setContext(SelectionManagerContextKey, selectionManager);
 
-const userMetadataManager = ReactivePresenceWorkspace.create(
+const userMetadataManager = ReadonlyReactivePresenceWorkspace.create(
 	presence,
 	presenceWorkspace.props.userMetadata,
 );
