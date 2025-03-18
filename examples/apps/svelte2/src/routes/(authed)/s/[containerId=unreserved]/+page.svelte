@@ -9,11 +9,10 @@ import {
 	UserMetadataManagerContextKey,
 } from "$lib/constants";
 import type { CellCoordinate } from "$lib/coordinate";
-import { createNewUser, type SudokuUser } from "$lib/components/User.svelte";
-import { UserMetadataManager } from "$lib/components/UserMetadataManager.svelte";
-import { SelectionManager } from "$lib/components/SelectionManager.svelte";
+import { createNewUser, type SudokuClientUser } from "$lib/components/User.svelte";
 import { setContext } from "svelte";
 import { Badge, Indicator } from "svelte-5-ui-lib";
+import { ReactivePresenceWorkspace } from "$lib/components/PresenceWorkspaceManager.svelte";
 
 const { data }: PageProps = $props();
 const { appData, clerkUserProperties, presence } = data;
@@ -26,26 +25,24 @@ const sudokuUser = createNewUser(clerkUserProperties!);
 const presenceWorkspace = presence.getStates(PresenceWorkspaceAddress, {
 	// Create a Latest value manager to track the latest coordinate for each user.
 	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
-	userMetadata: Latest<SudokuUser>(sudokuUser),
+	userMetadata: Latest<SudokuClientUser>(sudokuUser),
 });
 
 /**
  * The selection manager tracks the currently selected cell for each connected client.
  */
-const selectionManager = new SelectionManager(
+const selectionManager = ReactivePresenceWorkspace.create(
 	presence,
 	presenceWorkspace.props.selectionCoordinate,
 );
 setContext(SelectionManagerContextKey, selectionManager);
 
-const userMetadataManager = new UserMetadataManager(
+const userMetadataManager = ReactivePresenceWorkspace.create(
 	presence,
 	presenceWorkspace.props.userMetadata,
-	// svelte-ignore state_referenced_locally
-	// sudokuUser,
 );
 setContext(UserMetadataManagerContextKey, userMetadataManager);
-userMetadataManager.local = sudokuUser;
+userMetadataManager.valueManager.local = sudokuUser;
 
 // presence.events.on("attendeeJoined", () => {
 // 	userMetadataManager.valueManager.local = sudokuUser;

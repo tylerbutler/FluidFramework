@@ -1,13 +1,11 @@
 <script lang="ts">
 import { Button, Heading, Secondary } from "svelte-5-ui-lib";
-import type { SudokuAppProps } from "./props";
+import type { SelectionManager, SudokuAppProps, UserMetadataManager } from "./props";
 import SudokuGrid from "$lib/components/SudokuGrid.svelte";
 import { loadIncludedPuzzle } from "$lib/loadPuzzle";
 import type { SudokuCellViewData } from "$lib/fluid/cellData.svelte";
 import { getContext } from "svelte";
-import type { UserMetadataManager } from "$lib/components/UserMetadataManager.svelte";
 import { SelectionManagerContextKey, UserMetadataManagerContextKey } from "$lib/constants";
-import { SelectionManager } from "$lib/components/SelectionManager.svelte";
 
 const { data, presence, sessionClient }: SudokuAppProps = $props();
 
@@ -67,7 +65,7 @@ const onPuzzleReset = () => {
 	<div>
 		<h3>User metadata manager</h3>
 		<ul>
-			{#each userMetadataManager.allState as [session, userData] (session.sessionId)}
+			{#each userMetadataManager.unfilteredData as [session, userData] (session.sessionId)}
 				<li>
 					{session.sessionId.slice(0, 8)}: {session.getConnectionStatus()}
 					{userData.fullName} ({userData.color})

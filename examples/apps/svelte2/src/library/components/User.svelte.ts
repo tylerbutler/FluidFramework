@@ -9,17 +9,17 @@ export interface ClerkUserProperties extends Pick<User, "id" | "username" | "ful
 
 export type LeveeServiceUser = ClerkUserProperties;
 
-export function setUserContext(user: SudokuUser) {
+export function setUserContext(user: SudokuClientUser) {
 	setContext(SudokuUserContextKey, user);
 }
 
-export function getUserContext(): SudokuUser {
-	return getContext<SudokuUser>(SudokuUserContextKey);
+export function getUserContext(): SudokuClientUser {
+	return getContext<SudokuClientUser>(SudokuUserContextKey);
 }
 
-export type SudokuUser = ClerkUserProperties & { color: ColorType };
+export type SudokuClientUser = ClerkUserProperties & { color: ColorType };
 
-export const createNewUser = (props: ClerkUserProperties): SudokuUser => {
+export const createNewUser = (props: ClerkUserProperties): SudokuClientUser => {
 	return {
 		id: props.id,
 		username: props.username,

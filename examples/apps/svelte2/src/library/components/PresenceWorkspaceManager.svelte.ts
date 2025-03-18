@@ -5,8 +5,10 @@ import type {
 } from "@fluidframework/presence/alpha";
 import { SvelteMap } from "svelte/reactivity";
 
-export abstract class PresenceWorkspaceManager<T> {
+export class ReactivePresenceWorkspace<T extends object> {
 	protected readonly reactiveState = $state(new SvelteMap<ISessionClient, T>());
+
+	public readonly unfilteredData = $derived(this.reactiveState);
 
 	public readonly data = $derived.by(() => {
 		return new SvelteMap(
@@ -16,7 +18,7 @@ export abstract class PresenceWorkspaceManager<T> {
 		);
 	});
 
-	public getDataForCurrentUser() {
+	public get local() {
 		return this.valueManager.local;
 	}
 
@@ -26,7 +28,6 @@ export abstract class PresenceWorkspaceManager<T> {
 	) {
 		// Wire up event listener to update the reactive map when the remote users' data is updated
 		valueManager.events.on("updated", (data) => {
-			// Update the selection state with the new coordinate
 			this.reactiveState.set(data.client, data.value as any);
 		});
 		// valueManager.events.on("localUpdated", (data) => {
@@ -36,5 +37,12 @@ export abstract class PresenceWorkspaceManager<T> {
 		presence.events.on("attendeeDisconnected", (session: ISessionClient) => {
 			this.reactiveState.delete(session);
 		});
+	}
+
+	public static create<T extends object>(
+		presence: IPresence,
+		valueManager: LatestValueManager<T>,
+	): ReactivePresenceWorkspace<T> {
+		return new ReactivePresenceWorkspace<T>(presence, valueManager);
 	}
 }
