@@ -3,10 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { Tree } from "fluid-framework";
+import { Tree, type TreeNodeSchemaClass } from "fluid-framework";
 import { Coordinate, type CellCoordinate, type CoordinateString } from "../coordinate";
 import { schemaFactory as sf } from "./schemaFactory";
 import { isSudokuNumber, type SudokuNumber } from "../sudokuNumber";
+import type { ReplaceUnderscoreProperties } from "$lib/utilityTypes";
 
 /**
  * This class represents a Sudoku Cell's shared, persisted data, which is stored in a Fluid SharedTree.
@@ -60,18 +61,26 @@ const CellStatus = {
 type CellStatus = (typeof CellStatus)[keyof typeof CellStatus];
 
 /**
- * Utility type that excludes keys whose name begins with an underscore.
+ * Utility type to extract the second argument type.
  */
-type ExcludeUnderscoreProperties<T> = {
-	[K in keyof T as K extends `_${string}` ? never : K]: T[K];
-};
+type SecondArgument<T> = T extends (arg1: any, arg2: infer U, ...args: any[]) => any
+	? U
+	: never;
+
+/**
+ * Tyoe of an object schema that can be passed in to sf.object.
+ */
+type SchemaObject = SecondArgument<typeof sf.object>;
 
 /**
  * Represents the SudokuCellData that is reactive and safe to use in templates (views).
  *
  * All properties are reactive.
  */
-export type SudokuCellViewData = ExcludeUnderscoreProperties<SudokuCellDataInternal>;
+export type SudokuCellViewData = ReplaceUnderscoreProperties<CellPersistedData>;
+
+type SudokuCellDataDynamicType = CellPersistedData &
+	ReplaceUnderscoreProperties<CellPersistedData>;
 
 /**
  * Encapsulates all Cell-related data, including persisted data stored in a SharedTree, ephemeral session-related data

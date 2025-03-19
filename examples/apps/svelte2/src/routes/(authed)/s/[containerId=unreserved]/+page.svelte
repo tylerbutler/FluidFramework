@@ -31,13 +31,13 @@ const presenceWorkspace = presence.getStates(PresenceWorkspaceAddress, {
 /**
  * The selection manager tracks the currently selected cell for each connected client.
  */
-const selectionManager = ReadonlyReactivePresenceWorkspace.create(
+const selectionManager = new ReadonlyReactivePresenceWorkspace(
 	presence,
 	presenceWorkspace.props.selectionCoordinate,
 );
 setSelectionManager(selectionManager);
 
-const userMetadataManager = ReadonlyReactivePresenceWorkspace.create(
+const userMetadataManager = new ReadonlyReactivePresenceWorkspace(
 	presence,
 	presenceWorkspace.props.userMetadata,
 );
