@@ -1,5 +1,5 @@
-import { CoordinateString } from "$lib/coordinate";
-import { SudokuNumber } from "$lib/sudokuNumber";
+import type { CoordinateString } from "$lib/coordinate";
+import type { SudokuNumber } from "$lib/sudokuNumber";
 import { Tree } from "fluid-framework";
 import { schemaFactory as sf } from "./schemaFactory.js";
 import { CellData } from "./cellInput";
