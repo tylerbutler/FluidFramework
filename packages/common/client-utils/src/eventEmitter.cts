@@ -4,11 +4,4 @@
  */
 
 // TODO AB#7377 Provide Fluid EventEmitter using support in packages/dds/tree/src/events.
-// export { EventEmitter } from "events_pkg";
-
-import pkg from "events_pkg";
-
-/**
- * @public
- */
-export const { EventEmitter } = pkg;
+export { EventEmitter } from "events_pkg";

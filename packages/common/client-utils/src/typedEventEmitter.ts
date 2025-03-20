@@ -10,7 +10,7 @@ import type {
 	TransformedEvent,
 } from "@fluidframework/core-interfaces";
 
-import { EventEmitter } from "./eventEmitter.js";
+import { EventEmitter } from "./eventEmitter.cjs";
 
 /**
  * The event emitter polyfill and the node event emitter have different event types:
