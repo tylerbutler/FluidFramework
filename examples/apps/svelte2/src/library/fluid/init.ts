@@ -20,7 +20,7 @@ export function initializeClient(tokenProvider: ITokenProvider) {
 	const client = new TinyliciousClient({
 		connection: {
 			domain: "https://levee.tylerbutler.com",
-			port: 80,
+			port: 443,
 			tokenProvider,
 		},
 	});
