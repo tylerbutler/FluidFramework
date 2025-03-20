@@ -4,7 +4,8 @@
 
 ```ts
 
-export { EventEmitter }
+// @public (undocumented)
+export const EventEmitter: typeof pkg.EventEmitter;
 
 // (No @packageDocumentation comment for this package)
 
