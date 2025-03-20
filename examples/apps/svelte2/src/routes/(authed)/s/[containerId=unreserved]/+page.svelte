@@ -11,7 +11,7 @@ import {
 import type { CellCoordinate } from "$lib/coordinate";
 import { createNewUser, type SudokuClientUser } from "$lib/components/User.svelte";
 import { Badge, Indicator } from "svelte-5-ui-lib";
-import { ReadonlyReactivePresenceWorkspace } from "$lib/components/ReadonlyReactivePresenceWorkspace";
+import { ReadonlyReactivePresenceWorkspace } from "$lib/components/ReadonlyReactivePresenceWorkspace.svelte";
 import { setSelectionManager, setUserMetadataManager } from "$lib/context";
 
 const { data }: PageProps = $props();
