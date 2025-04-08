@@ -11,6 +11,6 @@
 		"moduleResolution": "node16",
 
 		"exactOptionalPropertyTypes": false,
-		"noUnusedLocals": false,
+		"noUnusedLocals": false, // Checked in lint instead so unused variables do not block compilation
 	},
 }
