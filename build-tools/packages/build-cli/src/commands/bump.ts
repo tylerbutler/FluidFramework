@@ -24,6 +24,7 @@ import {
 	isInterdependencyRange,
 } from "@fluid-tools/version-tools";
 
+import type { IPackage } from "@fluid-tools/build-infrastructure";
 import { findPackageOrReleaseGroup, packageOrReleaseGroupArg } from "../args.js";
 import { getDefaultInterdependencyRange } from "../config.js";
 import { bumpTypeFlag, checkFlags, skipCheckFlag, versionSchemeFlag } from "../flags.js";
@@ -166,7 +167,7 @@ export default class BumpCommand extends BaseCommand<typeof BumpCommand> {
 		let packageOrReleaseGroup: Package | MonoRepo;
 		let scheme: VersionScheme | undefined;
 		const exactVersion: semver.SemVer | null = semver.parse(flags.exact);
-		const updatedPackages: Package[] = [];
+		const updatedPackages: IPackage[] = [];
 
 		if (bumpType === undefined && exactVersion === null) {
 			this.error(`--exact value invalid: ${flags.exact}`);

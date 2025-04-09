@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { PackageJson } from "../common/npmPackage";
+import type { FluidBuildPackageJson } from "../common/npmPackage";
 import { isConcurrentlyCommand, parseConcurrentlyCommand } from "./parseCommands";
 
 /**
@@ -297,7 +297,7 @@ function getDirectlyCalledScripts(script: string, allScriptNames: string[]): str
  * @returns full task definitions for the package.
  */
 export function getTaskDefinitions(
-	json: PackageJson,
+	json: FluidBuildPackageJson,
 	globalTaskDefinitions: TaskDefinitions,
 	{ isReleaseGroupRoot }: { isReleaseGroupRoot: boolean },
 ): TaskDefinitions {

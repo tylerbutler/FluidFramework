@@ -16,6 +16,7 @@ import { command as execCommand } from "execa";
 import { inc } from "semver";
 import { CleanOptions } from "simple-git";
 
+import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import { checkFlags, releaseGroupFlag, semverFlag } from "../../flags.js";
 import { BaseCommand, DEFAULT_CHANGESET_PATH, loadChangesets } from "../../library/index.js";
 import { isReleaseGroup } from "../../releaseGroups.js";
@@ -138,12 +139,14 @@ export default class GenerateChangeLogCommand extends BaseCommand<
 		}
 
 		const monorepo =
-			releaseGroup === undefined ? undefined : context.repo.releaseGroups.get(releaseGroup);
+			releaseGroup === undefined
+				? undefined
+				: context.repo.releaseGroups.get(releaseGroup as ReleaseGroupName);
 		if (monorepo === undefined) {
 			this.error(`Release group ${releaseGroup} not found in repo config`, { exit: 1 });
 		}
 
-		const releaseGroupRoot = monorepo?.directory ?? gitRoot;
+		const releaseGroupRoot = monorepo.workspace.directory ?? gitRoot;
 
 		// Strips additional custom metadata from the source files before we call `changeset version`,
 		// because the changeset tools - like @changesets/cli - only work on canonical changesets.

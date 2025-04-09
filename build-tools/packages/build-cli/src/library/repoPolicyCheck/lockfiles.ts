@@ -49,7 +49,7 @@ export const handlers: Handler[] = [
 		match: lockFilePattern,
 		handler: async (file: string, root: string): Promise<string | undefined> => {
 			const flubConfig = getFlubConfig(root);
-			const repoConfig = getFluidBuildConfig(root);
+			const { config: repoConfig } = getFluidBuildConfig(root);
 			const knownPaths: string[] = getKnownPaths(flubConfig, repoConfig);
 
 			if (
@@ -63,7 +63,7 @@ export const handlers: Handler[] = [
 		},
 		resolver: (file: string, root: string): { resolved: boolean; message?: string } => {
 			const flubConfig = getFlubConfig(root);
-			const repoConfig = getFluidBuildConfig(root);
+			const { config: repoConfig } = getFluidBuildConfig(root);
 			const knownPaths: string[] = getKnownPaths(flubConfig, repoConfig);
 
 			if (

@@ -6,14 +6,11 @@
 import chalk from "picocolors";
 import { Spinner } from "picospinner";
 
-import { GitRepo } from "../common/gitRepo";
+import { Stopwatch } from "@fluid-tools/build-infrastructure";
 import { defaultLogger } from "../common/logging";
-import { Timer } from "../common/timer";
 import { BuildGraph, BuildResult } from "./buildGraph";
 import { commonOptions } from "./commonOptions";
-import { DEFAULT_FLUIDBUILD_CONFIG } from "./fluidBuildConfig";
 import { FluidRepoBuild } from "./fluidRepoBuild";
-import { getFluidBuildConfig, getResolvedFluidRoot } from "./fluidUtils";
 import { options, parseOptions } from "./options";
 
 const { log, errorLog: error, warning: warn } = defaultLogger;
@@ -21,23 +18,11 @@ const { log, errorLog: error, warning: warn } = defaultLogger;
 parseOptions(process.argv);
 
 async function main() {
-	const timer = new Timer(commonOptions.timer);
-	const resolvedRoot = await getResolvedFluidRoot(true);
-	const fluidConfig = getFluidBuildConfig(resolvedRoot, false);
-	const isDefaultConfig = fluidConfig === DEFAULT_FLUIDBUILD_CONFIG;
-	const suffix = isDefaultConfig
-		? ` (${chalk.yellowBright("inferred packages and tasks")})`
-		: "";
-	log(`Build Root: ${resolvedRoot}${suffix}`);
+	const timer = new Stopwatch(commonOptions.timer);
+	const repo = new FluidRepoBuild(process.cwd());
+	log(`Build Root: ${repo.root}`);
 
-	// Load the packages
-	const repo = new FluidRepoBuild({
-		repoRoot: resolvedRoot,
-		gitRepo: new GitRepo(resolvedRoot),
-		fluidBuildConfig: fluidConfig,
-	});
-
-	timer.time("Package scan completed");
+	timer.log("Package scan completed");
 
 	// Set matched package based on options filter
 	const matched = repo.setMatched(options);
@@ -52,7 +37,7 @@ async function main() {
 			error(`uninstall failed`);
 			process.exit(-8);
 		}
-		timer.time("Uninstall completed", true);
+		timer.log("Uninstall completed", true);
 
 		if (!options.install) {
 			let errorStep: string | undefined = undefined;
@@ -75,7 +60,7 @@ async function main() {
 			error(`Install failed`);
 			process.exit(-5);
 		}
-		timer.time("Install completed", true);
+		timer.log("Install completed", true);
 	}
 
 	let failureSummary = "";
@@ -96,19 +81,19 @@ async function main() {
 			process.exit(-11);
 		}
 		spinner.succeed("Build graph created.");
-		timer.time("Build graph creation completed");
+		timer.log("Build graph creation completed");
 
 		// Check install
 		if (!(await buildGraph.checkInstall())) {
 			error("Dependency not installed. Use --install to fix.");
 			process.exit(-10);
 		}
-		timer.time("Check install completed");
+		timer.log("Check install completed");
 
 		// Run the build
 		const buildResult = await buildGraph.build(timer);
 		const buildStatus = buildResultString(buildResult);
-		const elapsedTime = timer.time();
+		const elapsedTime = timer.log();
 		if (commonOptions.timer) {
 			const totalElapsedTime = buildGraph.totalElapsedTime;
 			const concurrency = buildGraph.totalElapsedTime / elapsedTime;

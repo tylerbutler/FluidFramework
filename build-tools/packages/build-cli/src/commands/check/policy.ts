@@ -184,7 +184,7 @@ export class CheckPolicy extends BaseCommand<typeof CheckPolicy> {
 		}
 
 		const filePathsToCheck: string[] = [];
-		const gitRoot = context.repo.resolvedRoot;
+		const gitRoot = context.repo.root;
 
 		if (this.flags.stdin) {
 			const stdInput = await readStdin();

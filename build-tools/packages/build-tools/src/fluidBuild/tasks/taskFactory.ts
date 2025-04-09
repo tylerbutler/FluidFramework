@@ -5,13 +5,18 @@
 
 import { getExecutableFromCommand } from "../../common/utils";
 import type { BuildContext } from "../buildContext";
-import { BuildPackage } from "../buildGraph";
+import { BuildGraphPackage } from "../buildGraph";
 import { isConcurrentlyCommand, parseConcurrentlyCommand } from "../parseCommands";
 import { GroupTask } from "./groupTask";
 import { ApiExtractorTask } from "./leaf/apiExtractorTask";
 import { BiomeTask } from "./leaf/biomeTasks";
 import { createDeclarativeTaskHandler } from "./leaf/declarativeTask";
-import { FlubCheckLayerTask, FlubCheckPolicyTask, FlubListTask } from "./leaf/flubTasks";
+import {
+	FlubCheckLayerTask,
+	FlubCheckPolicyTask,
+	FlubGenerateChangesetConfigTask,
+	FlubListTask,
+} from "./leaf/flubTasks";
 import { GenerateEntrypointsTask } from "./leaf/generateEntrypointsTask.js";
 import { type LeafTask, UnknownLeafTask } from "./leaf/leafTask";
 import { EsLintTask, TsLintTask } from "./leaf/lintTasks";
@@ -51,6 +56,7 @@ const executableToLeafTask: {
 	"api-extractor": ApiExtractorTask,
 	"flub check layers": FlubCheckLayerTask,
 	"flub check policy": FlubCheckPolicyTask,
+	"flub generate changeset-config": FlubGenerateChangesetConfigTask,
 	"flub generate entrypoints": GenerateEntrypointsTask,
 	"flub generate typetests": TypeValidationTask,
 	"fluid-type-test-generator": TypeValidationTask,
@@ -80,7 +86,7 @@ const executableToLeafTask: {
  */
 function getTaskForExecutable(
 	executable: string,
-	node: BuildPackage,
+	node: BuildGraphPackage,
 	context: BuildContext,
 ): TaskHandler {
 	const config = context.fluidBuildConfig;
@@ -103,7 +109,7 @@ function getTaskForExecutable(
 
 export class TaskFactory {
 	public static Create(
-		node: BuildPackage,
+		node: BuildGraphPackage,
 		command: string,
 		context: BuildContext,
 		pendingInitDep: Task[],
@@ -195,7 +201,7 @@ export class TaskFactory {
 	 * @returns the target task
 	 */
 	public static CreateTargetTask(
-		node: BuildPackage,
+		node: BuildGraphPackage,
 		context: BuildContext,
 		taskName: string | undefined,
 	) {
@@ -203,7 +209,7 @@ export class TaskFactory {
 	}
 
 	public static CreateTaskWithLifeCycle(
-		node: BuildPackage,
+		node: BuildGraphPackage,
 		context: BuildContext,
 		scriptTask: Task,
 		preScriptTask?: Task,

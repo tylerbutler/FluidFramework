@@ -14,6 +14,7 @@ import remarkGithub, { defaultBuildUrl } from "remark-github";
 import admonitions from "remark-github-beta-blockquote-admonitions";
 import remarkToc from "remark-toc";
 
+import type { ReleaseGroupName } from "@fluid-tools/build-infrastructure";
 import { type ReleaseNotesSection } from "../../config.js";
 import { releaseGroupFlag } from "../../flags.js";
 import {
@@ -102,7 +103,9 @@ export default class GenerateReleaseNotesCommand extends BaseCommand<
 		const context = await this.getContext();
 		const { flags, logger } = this;
 
-		const releaseGroup = context.repo.releaseGroups.get(flags.releaseGroup);
+		const releaseGroup = context.repo.releaseGroups.get(
+			flags.releaseGroup as ReleaseGroupName,
+		);
 		if (releaseGroup === undefined) {
 			this.error(`Unknown release group: ${flags.releaseGroup}`, { exit: 2 });
 		}
@@ -115,7 +118,7 @@ export default class GenerateReleaseNotesCommand extends BaseCommand<
 			);
 		}
 
-		const changesetDir = path.join(releaseGroup.directory, DEFAULT_CHANGESET_PATH);
+		const changesetDir = path.join(releaseGroup.workspace.directory, DEFAULT_CHANGESET_PATH);
 		const changesets = await loadChangesets(changesetDir, logger);
 
 		const { version } = releaseGroup;
@@ -248,7 +251,7 @@ export default class GenerateReleaseNotesCommand extends BaseCommand<
 			await processor.process(`${header}\n\n${intro}\n\n${body.toString()}\n\n${footer}`),
 		);
 
-		const outputPath = path.join(context.repo.resolvedRoot, flags.outFile);
+		const outputPath = path.join(context.repo.root, flags.outFile);
 		this.info(`Writing output file: ${outputPath}`);
 		await writeFile(
 			outputPath,
