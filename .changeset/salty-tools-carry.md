@@ -4,7 +4,7 @@
 "__section": tree
 ---
 
-Cleanup of several tree and schema alpha APIs for content import and export
+Cleanup of several tree and schema alpha APIs for content import and export.
 
 A new `TreeSchema` type has been introduced which extends `SimpleTreeSchema` but contains `TreeNodeSchema` instead of `SimpleNodeSchema`.
 
@@ -20,4 +20,4 @@ this makes it possible for `TreeViewConfigurationAlpha` to implement `TreeSchema
 `getJsonSchema` now takes in `ImplicitAllowedTypes` instead of `ImplicitFieldSchema` since it can't handle optional roots.
 `getJsonSchema` also takes in the new `TreeSchemaEncodingOptions` to provide options for how to handle stored keys vs property keys, and fields with defaults.
 
-Now that `getJsonSchema` takes in configuration options, its results are no longer cached.
+Now that `getJsonSchema` takess in configuration options, its results are no longer cached.
