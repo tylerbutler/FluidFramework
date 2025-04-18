@@ -3,7 +3,6 @@
  * Licensed under the MIT License.
  */
 
-import { StringBuilder } from "@rushstack/node-core-library";
 import chalk from "picocolors";
 
 // eslint-disable-next-line import/no-deprecated
@@ -120,23 +119,21 @@ export abstract class InstructionalPromptWriter {
 	protected abstract get log(): CommandLogger;
 
 	public async formatPrompt(data: InstructionalPrompt): Promise<string> {
-		const b = new StringBuilder();
+		const b: string[] = [];
 
-		b.append(chalk.green(chalk.underline(data.title)));
-		b.append("\n");
-		b.append("\n");
+		b.push(chalk.green(chalk.underline(data.title)), "\n", "\n");
 
 		for (const section of data.sections) {
-			b.append(chalk.white(chalk.underline(`${section.title}:`)));
-			b.append("\n");
-			b.append("\n");
-			b.append(indentString(section.message, 4));
-			b.append("\n");
-			b.append("\n");
+			b.push(
+				chalk.white(chalk.underline(`${section.title}:`)),
+				"\n",
+				"\n",
+				indentString(section.message, 4),
+				"\n",
+				"\n",
+			);
 			if (section.cmd !== undefined) {
-				b.append(indentString(chalk.cyan(`${section.cmd}`), 4));
-				b.append("\n");
-				b.append("\n");
+				b.push(indentString(chalk.cyan(`${section.cmd}`), 4), "\n", "\n");
 			}
 		}
 
