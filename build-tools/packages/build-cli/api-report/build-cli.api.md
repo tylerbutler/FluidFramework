@@ -5,6 +5,7 @@
 ```ts
 
 import { InterdependencyRange } from '@fluid-tools/version-tools';
+import type { RepoPolicy } from 'repopo';
 import { run } from '@oclif/core';
 import { VersionBumpType } from '@fluid-tools/version-tools';
 
@@ -38,6 +39,9 @@ export interface FlubConfig {
     releaseReport?: ReleaseReportConfig;
     version?: 1;
 }
+
+// @public (undocumented)
+export const fluidRepopoPolicies: RepoPolicy[];
 
 // @public
 export const knownReleaseGroups: readonly ["build-tools", "client", "server", "gitrest", "historian"];

@@ -97,6 +97,9 @@ importers:
       puppeteer:
         specifier: ^23.6.0
         version: 23.10.3(typescript@5.4.5)
+      repopo:
+        specifier: link:../tools-monorepo/packages/repopo
+        version: link:../tools-monorepo/packages/repopo
       rimraf:
         specifier: ^4.4.0
         version: 4.4.1

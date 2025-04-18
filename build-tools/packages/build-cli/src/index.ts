@@ -18,6 +18,7 @@ export type {
 	ReleaseReportConfig,
 	ScriptRequirement,
 } from "./config.js";
+export { fluidRepopoPolicies } from "./library/repoPolicyCheck/index.js";
 export type { knownReleaseGroups, ReleaseGroup, ReleasePackage } from "./releaseGroups.js";
 
 // Exported for use in config files.

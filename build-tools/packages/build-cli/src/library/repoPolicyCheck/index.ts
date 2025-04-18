@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+import type { RepoPolicy } from "repopo";
 import { type Handler } from "./common.js";
 import { handlers as copyrightFileHeaderHandlers } from "./copyrightFileHeader.js";
 import { handler as dockerfilePackageHandler } from "./dockerfilePackages.js";
@@ -12,6 +13,7 @@ import { handlers as lockfileHandlers } from "./lockfiles.js";
 import { handler as noJsFileHandler } from "./noJsFiles.js";
 import { handlers as npmPackageContentsHandlers } from "./npmPackages.js";
 import { handlers as pnpmHandlers } from "./pnpm.js";
+import { repopoAdapter } from "./repopoAdapter.js";
 import { handler as yamlTabsHandler } from "./spacesOverTabsInYaml.js";
 
 /**
@@ -30,3 +32,7 @@ export const policyHandlers: Handler[] = [
 ];
 
 export { type Handler } from "./common.js";
+
+export const fluidRepopoPolicies: RepoPolicy[] = policyHandlers.map((fluidHandler) =>
+	repopoAdapter(fluidHandler),
+);
