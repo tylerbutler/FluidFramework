@@ -8,6 +8,7 @@ import {
 	type PolicyFailure,
 	type PolicyFixResult,
 	type PolicyHandler,
+	type PolicyStandaloneResolver,
 	RepoPolicy,
 } from "repopo";
 import { Handler, readFile } from "./common.js";
@@ -27,25 +28,25 @@ export const repopoAdapter = (fluidPolicy: Handler): RepoPolicy => {
 			return true;
 		}
 
-		if (fix && fluidResolver !== undefined) {
-			const resolveResult = await fluidResolver(absFilePath, root);
-			if (resolveResult.resolved) {
-				const fixResult: PolicyFixResult = {
-					name,
-					file: repoRelFilePath,
-					resolved: true,
-					errorMessage: resolveResult.message,
-				};
-				return fixResult;
-			}
+		// if (fix && fluidResolver !== undefined) {
+		// 	const resolveResult = await fluidResolver(absFilePath, root);
+		// 	if (resolveResult.resolved) {
+		// 		const fixResult: PolicyFixResult = {
+		// 			name,
+		// 			file: repoRelFilePath,
+		// 			resolved: true,
+		// 			errorMessage: resolveResult.message,
+		// 		};
+		// 		return fixResult;
+		// 	}
 
-			const failResult: PolicyFailure = {
-				name,
-				file: repoRelFilePath,
-				errorMessage: resolveResult.message,
-			};
-			return failResult;
-		}
+		// 	const failResult: PolicyFailure = {
+		// 		name,
+		// 		file: repoRelFilePath,
+		// 		errorMessage: resolveResult.message,
+		// 	};
+		// 	return failResult;
+		// }
 
 		return {
 			name,
@@ -54,10 +55,46 @@ export const repopoAdapter = (fluidPolicy: Handler): RepoPolicy => {
 		} satisfies PolicyFailure;
 	};
 
+	const adaptedResolver: PolicyStandaloneResolver = async ({
+		file: repoRelFilePath,
+		root,
+	}): Promise<PolicyFixResult> => {
+		if (fluidResolver === undefined) {
+			return {
+				name,
+				file: repoRelFilePath,
+				resolved: false,
+			} satisfies PolicyFixResult;
+		}
+
+		// fluid resolvers expect absolute paths to the file
+		const absFilePath = pathResolve(root, repoRelFilePath);
+		const resolveResult = await fluidResolver(absFilePath, root);
+
+		if (resolveResult.resolved) {
+			const fixResult: PolicyFixResult = {
+				name,
+				file: repoRelFilePath,
+				resolved: true,
+				errorMessage: resolveResult.message,
+			};
+			return fixResult;
+		}
+
+		const failResult: PolicyFixResult = {
+			name,
+			file: repoRelFilePath,
+			errorMessage: resolveResult.message,
+			resolved: false,
+		};
+		return failResult;
+	};
+
 	const policy: RepoPolicy = {
 		name,
 		match,
 		handler: adaptedHandler,
+		resolver: adaptedResolver,
 	};
 
 	return policy;
