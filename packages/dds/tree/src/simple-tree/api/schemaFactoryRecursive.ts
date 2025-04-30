@@ -21,11 +21,11 @@ import type {
 	WithType,
 	TreeNode,
 } from "../core/index.js";
-import type { FieldSchemaAlphaUnsafe, ImplicitAllowedTypesUnsafe } from "./typesUnsafe.js";
+import type { FieldSchemaAlphaUnsafe, System_Unsafe } from "./typesUnsafe.js";
 
 export function createFieldSchemaUnsafe<
 	Kind extends FieldKind,
-	Types extends ImplicitAllowedTypesUnsafe,
+	Types extends System_Unsafe.ImplicitAllowedTypesUnsafe,
 	TCustomMetadata = unknown,
 >(
 	kind: Kind,
@@ -117,19 +117,26 @@ export function createFieldSchemaUnsafe<
  * Be very careful when declaring recursive schema.
  * Due to the removed extends clauses, subtle mistakes will compile just fine but cause strange errors when the schema is used.
  *
- * For example if the square brackets around the allowed types are forgotten:
+ * For example if a reference to a schema is malformed (in this case boxed inside an object):
  *
  * ```typescript
- * class Test extends sf.arrayRecursive("Test", () => Test) {} // Bad
+ * class Test extends sf.arrayRecursive("Test", [() => ({ Test })]) {} // Bad
  * ```
  * This schema will still compile, and some (but not all) usages of it may look like they work correctly while other usages will produce generally unintelligible compile errors.
  * This issue can be partially mitigated using {@link ValidateRecursiveSchema}:
  *
  * ```typescript
- * class Test extends sf.arrayRecursive("Test", () => Test) {} // Bad
+ * class Test extends sf.arrayRecursive("Test", [() => ({ Test })]) {} // Bad
  * {
  *     type _check = ValidateRecursiveSchema<typeof Test>; // Reports compile error due to invalid schema above.
  * }
+ * ```
+ *
+ * If your TypeScript configuration objects to this patten due to the unused local, you can use {@link allowUnused} to suppress the error:
+ *
+ * ```typescript
+ * class Test extends sf.arrayRecursive("Test", [() => ({ Test })]) {} // Bad
+ * allowUnused<ValidateRecursiveSchema<typeof Test>>(); // Reports compile error due to invalid schema above.
  * ```
  *
  * ## Object Schema
@@ -184,6 +191,19 @@ export type ValidateRecursiveSchema<
 > = true;
 
 /**
+ * Does nothing with the provided value, but appears to use it to make unused locals warnings and errors go away.
+ *
+ * @remarks
+ * When TypeScript is configured with "noUnusedLocals", it will produce an error if a local variable is declared but never used.
+ * When you want to have this check enabled, but not follow it for a specific variable, you can pass the type or value to this function.
+ *
+ * Instead of using this, consider disabling "noUnusedLocals" in your tsconfig.json file, and enabling a similar check via a linter.
+ * This will allow you to still have the check, but have more control over it, for example being able to suppress it, or enable patterns like allowing unused locals with an "_" prefix.
+ * @alpha
+ */
+export function allowUnused<T>(t?: T): void {}
+
+/**
  * Workaround for fixing errors resulting from an issue with recursive ArrayNode schema exports.
  * @remarks
  * Importing a recursive ArrayNode schema via a d.ts file can produce an error like
@@ -195,7 +215,7 @@ export type ValidateRecursiveSchema<
  *
  * This type always evaluates to `undefined` to ensure the dummy export (which doesn't exist at runtime) is typed correctly.
  *
- * [TypeScript Issue 59550](https://github.com/microsoft/TypeScript/issues/59550) tracks a suggestion which would make this workaround unnecessary.
+ * {@link https://github.com/microsoft/TypeScript/issues/59550|TypeScript Issue 59550} tracks a suggestion which would make this workaround unnecessary.
  *
  * @example Usage
  * Since recursive type handling in TypeScript is order dependent, putting just the right kind of usages of the type before the declarations can cause it to not hit this error.
