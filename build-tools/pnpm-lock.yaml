@@ -238,6 +238,9 @@ importers:
       replace-in-file:
         specifier: ^7.2.0
         version: 7.2.0
+      repopo:
+        specifier: link:../../../../tools-monorepo/packages/repopo
+        version: link:../../../../tools-monorepo/packages/repopo
       resolve.exports:
         specifier: ^2.0.2
         version: 2.0.2
@@ -374,9 +377,6 @@ importers:
       mocked-env:
         specifier: ^1.3.5
         version: 1.3.5
-      repopo:
-        specifier: link:../../../../tools-monorepo/packages/repopo
-        version: link:../../../../tools-monorepo/packages/repopo
       rimraf:
         specifier: ^4.4.1
         version: 4.4.1
@@ -7807,7 +7807,7 @@ snapshots:
       eslint-plugin-react-hooks: 4.6.0(eslint@8.57.0)
       eslint-plugin-tsdoc: 0.2.17
       eslint-plugin-unicorn: 48.0.1(eslint@8.57.0)
-      eslint-plugin-unused-imports: 3.0.0(@typescript-eslint/eslint-plugin@6.7.5(@typescript-eslint/parser@6.7.5(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)
+      eslint-plugin-unused-imports: 3.0.0(@typescript-eslint/eslint-plugin@6.7.5(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)
     transitivePeerDependencies:
       - eslint
       - eslint-import-resolver-node
@@ -11062,7 +11062,7 @@ snapshots:
       semver: 7.7.1
       strip-indent: 3.0.0
 
-  eslint-plugin-unused-imports@3.0.0(@typescript-eslint/eslint-plugin@6.7.5(@typescript-eslint/parser@6.7.5(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0):
+  eslint-plugin-unused-imports@3.0.0(@typescript-eslint/eslint-plugin@6.7.5(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0):
     dependencies:
       eslint: 8.57.0
       eslint-rule-composer: 0.3.0
