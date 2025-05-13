@@ -15,18 +15,19 @@ import {
 	createFieldSchema,
 	FieldKind,
 	normalizeAllowedTypes,
+	unannotateImplicitAllowedTypes,
 	type ImplicitAllowedTypes,
+	type ImplicitAnnotatedAllowedTypes,
 	type InsertableTreeNodeFromImplicitAllowedTypes,
 	type NodeSchemaMetadata,
 	type TreeNodeFromImplicitAllowedTypes,
+	type UnannotateImplicitAllowedTypes,
 } from "./schemaTypes.js";
 import {
 	getKernel,
 	type InnerNode,
 	NodeKind,
-	type TreeNodeSchemaBoth,
 	type TreeNodeSchema,
-	type WithType,
 	// eslint-disable-next-line import/no-deprecated
 	typeNameSymbol,
 	type TreeNode,
@@ -45,6 +46,7 @@ import { brand, count, type RestrictiveStringRecord } from "../util/index.js";
 import { TreeNodeValid, type MostDerivedData } from "./treeNodeValid.js";
 import type { ExclusiveMapTree } from "../core/index.js";
 import { getUnhydratedContext } from "./createContext.js";
+import type { MapNodeCustomizableSchema, MapNodePojoEmulationSchema } from "./mapNodeTypes.js";
 
 /**
  * A map of string keys to tree objects.
@@ -234,7 +236,7 @@ abstract class CustomMapNodeBase<const T extends ImplicitAllowedTypes> extends T
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function mapSchema<
 	TName extends string,
-	const T extends ImplicitAllowedTypes,
+	const T extends ImplicitAnnotatedAllowedTypes,
 	const ImplicitlyConstructable extends boolean,
 	const TCustomMetadata = unknown,
 >(
@@ -244,11 +246,19 @@ export function mapSchema<
 	useMapPrototype: boolean,
 	metadata?: NodeSchemaMetadata<TCustomMetadata>,
 ) {
-	const lazyChildTypes = new Lazy(() => normalizeAllowedTypes(info));
+	const lazyChildTypes = new Lazy(() =>
+		normalizeAllowedTypes(unannotateImplicitAllowedTypes(info)),
+	);
+	const lazyAllowedTypesIdentifiers = new Lazy(
+		() => new Set([...lazyChildTypes.value].map((type) => type.identifier)),
+	);
 
 	let unhydratedContext: Context;
 
-	class Schema extends CustomMapNodeBase<T> implements TreeMapNode<T> {
+	class Schema
+		extends CustomMapNodeBase<UnannotateImplicitAllowedTypes<T>>
+		implements TreeMapNode<UnannotateImplicitAllowedTypes<T>>
+	{
 		public static override prepareInstance<T2>(
 			this: typeof TreeNodeValid<T2>,
 			instance: TreeNodeValid<T2>,
@@ -271,6 +281,10 @@ export function mapSchema<
 			);
 		}
 
+		public static get allowedTypesIdentifiers(): ReadonlySet<string> {
+			return lazyAllowedTypesIdentifiers.value;
+		}
+
 		protected static override constructorCached: MostDerivedData | undefined = undefined;
 
 		protected static override oneTimeSetup<T2>(this: typeof TreeNodeValid<T2>): Context {
@@ -286,8 +300,7 @@ export function mapSchema<
 		public static get childTypes(): ReadonlySet<TreeNodeSchema> {
 			return lazyChildTypes.value;
 		}
-		public static readonly metadata: NodeSchemaMetadata<TCustomMetadata> | undefined =
-			metadata;
+		public static readonly metadata: NodeSchemaMetadata<TCustomMetadata> = metadata ?? {};
 
 		// eslint-disable-next-line import/no-deprecated
 		public get [typeNameSymbol](): TName {
@@ -297,16 +310,13 @@ export function mapSchema<
 			return Schema.constructorCached?.constructor as unknown as typeof schemaErased;
 		}
 	}
-	const schemaErased: TreeNodeSchemaBoth<
+	const schemaErased: MapNodeCustomizableSchema<
 		TName,
-		NodeKind.Map,
-		TreeMapNode<T> & WithType<TName, NodeKind.Map>,
-		MapNodeInsertableData<T>,
-		ImplicitlyConstructable,
 		T,
-		undefined,
+		ImplicitlyConstructable,
 		TCustomMetadata
-	> = Schema;
+	> &
+		MapNodePojoEmulationSchema<TName, T, ImplicitlyConstructable, TCustomMetadata> = Schema;
 	return schemaErased;
 }
 

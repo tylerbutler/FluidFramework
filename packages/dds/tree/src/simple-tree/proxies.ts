@@ -4,7 +4,7 @@
  */
 
 import { UsageError } from "@fluidframework/telemetry-utils/internal";
-
+import { fail } from "@fluidframework/core-utils/internal";
 import {
 	EmptyKey,
 	type IForestSubscription,
@@ -20,7 +20,7 @@ import {
 	type FlexTreeRequiredField,
 	type FlexTreeOptionalField,
 } from "../feature-libraries/index.js";
-import { type Mutable, fail, isReadonlyArray } from "../util/index.js";
+import { type Mutable, isReadonlyArray } from "../util/index.js";
 import {
 	getKernel,
 	type TreeNode,
@@ -167,7 +167,7 @@ function walkMapTree(
 	}
 }
 
-function bindProxies(proxies: RootedProxyPaths[], forest: IForestSubscription): void {
+function bindProxies(proxies: readonly RootedProxyPaths[], forest: IForestSubscription): void {
 	// Only subscribe to the event if there is at least one proxy tree to hydrate - this is not the case when inserting an empty array [].
 	if (proxies.length > 0) {
 		// Creating a new array emits one event per element in the array, so listen to the event once for each element

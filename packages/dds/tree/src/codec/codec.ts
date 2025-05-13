@@ -4,11 +4,11 @@
  */
 
 import { IsoBuffer, bufferToString } from "@fluid-internal/client-utils";
-import { assert } from "@fluidframework/core-utils/internal";
+import { assert, fail } from "@fluidframework/core-utils/internal";
 import type { Static, TAnySchema, TSchema } from "@sinclair/typebox";
 
 import type { ChangeEncodingContext } from "../core/index.js";
-import { type JsonCompatibleReadOnly, fail } from "../util/index.js";
+import type { JsonCompatibleReadOnly } from "../util/index.js";
 
 /**
  * Translates decoded data to encoded data.
@@ -350,6 +350,11 @@ export enum FluidClientVersion {
 	v2_1 = "v2_1",
 	/** Fluid Framework Client 2.2 and newer. */
 	v2_2 = "v2_2",
-	/** Fluid Framework Client 2.4 and newer. */
+	/** Fluid Framework Client 2.3 and newer. */
 	v2_3 = "v2_3",
 }
+
+/**
+ * The version of this code.
+ */
+export const currentVersion: FluidClientVersion = FluidClientVersion.v2_3;

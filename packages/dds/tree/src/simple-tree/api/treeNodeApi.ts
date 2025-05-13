@@ -3,11 +3,11 @@
  * Licensed under the MIT License.
  */
 
-import { assert, oob } from "@fluidframework/core-utils/internal";
+import { assert, oob, fail } from "@fluidframework/core-utils/internal";
 
 import { EmptyKey, rootFieldKey } from "../../core/index.js";
 import { type TreeStatus, isTreeValue, FieldKinds } from "../../feature-libraries/index.js";
-import { fail, extractFromOpaque } from "../../util/index.js";
+import { extractFromOpaque } from "../../util/index.js";
 import {
 	type TreeLeafValue,
 	type ImplicitFieldSchema,
@@ -32,7 +32,6 @@ import {
 	type TreeNodeSchema,
 	NodeKind,
 	type TreeNode,
-	type TreeChangeEvents,
 	tryGetTreeNodeSchema,
 	getOrCreateNodeFromInnerNode,
 	UnhydratedFlexTreeNode,
@@ -40,6 +39,7 @@ import {
 	getOrCreateInnerNode,
 } from "../core/index.js";
 import { isObjectNodeSchema } from "../objectNodeTypes.js";
+import type { TreeChangeEvents } from "./treeChangeEvents.js";
 
 /**
  * Provides various functions for analyzing {@link TreeNode}s.

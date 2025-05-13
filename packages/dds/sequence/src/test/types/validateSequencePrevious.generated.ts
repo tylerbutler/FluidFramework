@@ -274,6 +274,7 @@ declare type current_as_old_for_Interface_IInterval = requireAssignableTo<TypeOn
  * typeValidation.broken:
  * "Interface_IIntervalCollection": {"forwardCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type old_as_current_for_Interface_IIntervalCollection = requireAssignableTo<TypeOnly<old.IIntervalCollection<never>>, TypeOnly<current.IIntervalCollection<never>>>
 
 /*
@@ -283,6 +284,7 @@ declare type old_as_current_for_Interface_IIntervalCollection = requireAssignabl
  * typeValidation.broken:
  * "Interface_IIntervalCollection": {"backCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type current_as_old_for_Interface_IIntervalCollection = requireAssignableTo<TypeOnly<current.IIntervalCollection<never>>, TypeOnly<old.IIntervalCollection<never>>>
 
 /*
@@ -292,6 +294,7 @@ declare type current_as_old_for_Interface_IIntervalCollection = requireAssignabl
  * typeValidation.broken:
  * "Interface_IIntervalCollectionEvent": {"forwardCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type old_as_current_for_Interface_IIntervalCollectionEvent = requireAssignableTo<TypeOnly<old.IIntervalCollectionEvent<never>>, TypeOnly<current.IIntervalCollectionEvent<never>>>
 
 /*
@@ -301,6 +304,7 @@ declare type old_as_current_for_Interface_IIntervalCollectionEvent = requireAssi
  * typeValidation.broken:
  * "Interface_IIntervalCollectionEvent": {"backCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type current_as_old_for_Interface_IIntervalCollectionEvent = requireAssignableTo<TypeOnly<current.IIntervalCollectionEvent<never>>, TypeOnly<old.IIntervalCollectionEvent<never>>>
 
 /*
@@ -328,6 +332,7 @@ declare type current_as_old_for_Interface_InteriorSequencePlace = requireAssigna
  * typeValidation.broken:
  * "Interface_IntervalIndex": {"forwardCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type old_as_current_for_Interface_IntervalIndex = requireAssignableTo<TypeOnly<old.IntervalIndex<never>>, TypeOnly<current.IntervalIndex<never>>>
 
 /*
@@ -337,6 +342,7 @@ declare type old_as_current_for_Interface_IntervalIndex = requireAssignableTo<Ty
  * typeValidation.broken:
  * "Interface_IntervalIndex": {"backCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type current_as_old_for_Interface_IntervalIndex = requireAssignableTo<TypeOnly<current.IntervalIndex<never>>, TypeOnly<old.IntervalIndex<never>>>
 
 /*
@@ -346,6 +352,7 @@ declare type current_as_old_for_Interface_IntervalIndex = requireAssignableTo<Ty
  * typeValidation.broken:
  * "Interface_IOverlappingIntervalsIndex": {"forwardCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type old_as_current_for_Interface_IOverlappingIntervalsIndex = requireAssignableTo<TypeOnly<old.IOverlappingIntervalsIndex<never>>, TypeOnly<current.IOverlappingIntervalsIndex<never>>>
 
 /*
@@ -355,6 +362,7 @@ declare type old_as_current_for_Interface_IOverlappingIntervalsIndex = requireAs
  * typeValidation.broken:
  * "Interface_IOverlappingIntervalsIndex": {"backCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type current_as_old_for_Interface_IOverlappingIntervalsIndex = requireAssignableTo<TypeOnly<current.IOverlappingIntervalsIndex<never>>, TypeOnly<old.IOverlappingIntervalsIndex<never>>>
 
 /*
@@ -392,6 +400,60 @@ declare type old_as_current_for_Interface_ISequenceDeltaRange = requireAssignabl
  * "Interface_ISequenceDeltaRange": {"backCompat": false}
  */
 declare type current_as_old_for_Interface_ISequenceDeltaRange = requireAssignableTo<TypeOnly<current.ISequenceDeltaRange>, TypeOnly<old.ISequenceDeltaRange>>
+
+/*
+ * Validate forward compatibility by using the old type in place of the current type.
+ * If this test starts failing, it indicates a change that is not forward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "Interface_ISequenceIntervalCollection": {"forwardCompat": false}
+ */
+declare type old_as_current_for_Interface_ISequenceIntervalCollection = requireAssignableTo<TypeOnly<old.ISequenceIntervalCollection>, TypeOnly<current.ISequenceIntervalCollection>>
+
+/*
+ * Validate backward compatibility by using the current type in place of the old type.
+ * If this test starts failing, it indicates a change that is not backward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "Interface_ISequenceIntervalCollection": {"backCompat": false}
+ */
+declare type current_as_old_for_Interface_ISequenceIntervalCollection = requireAssignableTo<TypeOnly<current.ISequenceIntervalCollection>, TypeOnly<old.ISequenceIntervalCollection>>
+
+/*
+ * Validate forward compatibility by using the old type in place of the current type.
+ * If this test starts failing, it indicates a change that is not forward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "Interface_ISequenceIntervalCollectionEvents": {"forwardCompat": false}
+ */
+declare type old_as_current_for_Interface_ISequenceIntervalCollectionEvents = requireAssignableTo<TypeOnly<old.ISequenceIntervalCollectionEvents>, TypeOnly<current.ISequenceIntervalCollectionEvents>>
+
+/*
+ * Validate backward compatibility by using the current type in place of the old type.
+ * If this test starts failing, it indicates a change that is not backward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "Interface_ISequenceIntervalCollectionEvents": {"backCompat": false}
+ */
+declare type current_as_old_for_Interface_ISequenceIntervalCollectionEvents = requireAssignableTo<TypeOnly<current.ISequenceIntervalCollectionEvents>, TypeOnly<old.ISequenceIntervalCollectionEvents>>
+
+/*
+ * Validate forward compatibility by using the old type in place of the current type.
+ * If this test starts failing, it indicates a change that is not forward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "Interface_ISequenceOverlappingIntervalsIndex": {"forwardCompat": false}
+ */
+declare type old_as_current_for_Interface_ISequenceOverlappingIntervalsIndex = requireAssignableTo<TypeOnly<old.ISequenceOverlappingIntervalsIndex>, TypeOnly<current.ISequenceOverlappingIntervalsIndex>>
+
+/*
+ * Validate backward compatibility by using the current type in place of the old type.
+ * If this test starts failing, it indicates a change that is not backward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "Interface_ISequenceOverlappingIntervalsIndex": {"backCompat": false}
+ */
+declare type current_as_old_for_Interface_ISequenceOverlappingIntervalsIndex = requireAssignableTo<TypeOnly<current.ISequenceOverlappingIntervalsIndex>, TypeOnly<old.ISequenceOverlappingIntervalsIndex>>
 
 /*
  * Validate forward compatibility by using the old type in place of the current type.
@@ -436,6 +498,7 @@ declare type current_as_old_for_Interface_ISerializedInterval = requireAssignabl
  * typeValidation.broken:
  * "Interface_ISharedIntervalCollection": {"forwardCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type old_as_current_for_Interface_ISharedIntervalCollection = requireAssignableTo<TypeOnly<old.ISharedIntervalCollection<never>>, TypeOnly<current.ISharedIntervalCollection<never>>>
 
 /*
@@ -445,6 +508,7 @@ declare type old_as_current_for_Interface_ISharedIntervalCollection = requireAss
  * typeValidation.broken:
  * "Interface_ISharedIntervalCollection": {"backCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type current_as_old_for_Interface_ISharedIntervalCollection = requireAssignableTo<TypeOnly<current.ISharedIntervalCollection<never>>, TypeOnly<old.ISharedIntervalCollection<never>>>
 
 /*
@@ -599,6 +663,24 @@ declare type old_as_current_for_Interface_SequenceInterval = requireAssignableTo
  * "Interface_SequenceInterval": {"backCompat": false}
  */
 declare type current_as_old_for_Interface_SequenceInterval = requireAssignableTo<TypeOnly<current.SequenceInterval>, TypeOnly<old.SequenceInterval>>
+
+/*
+ * Validate forward compatibility by using the old type in place of the current type.
+ * If this test starts failing, it indicates a change that is not forward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "Interface_SequenceIntervalIndex": {"forwardCompat": false}
+ */
+declare type old_as_current_for_Interface_SequenceIntervalIndex = requireAssignableTo<TypeOnly<old.SequenceIntervalIndex>, TypeOnly<current.SequenceIntervalIndex>>
+
+/*
+ * Validate backward compatibility by using the current type in place of the old type.
+ * If this test starts failing, it indicates a change that is not backward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "Interface_SequenceIntervalIndex": {"backCompat": false}
+ */
+declare type current_as_old_for_Interface_SequenceIntervalIndex = requireAssignableTo<TypeOnly<current.SequenceIntervalIndex>, TypeOnly<old.SequenceIntervalIndex>>
 
 /*
  * Validate forward compatibility by using the old type in place of the current type.

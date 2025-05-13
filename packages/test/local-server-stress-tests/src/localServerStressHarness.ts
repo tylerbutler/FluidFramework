@@ -42,7 +42,7 @@ import {
 	createDetachedContainer,
 	loadExistingContainer,
 } from "@fluidframework/container-loader/internal";
-import type { FluidObject } from "@fluidframework/core-interfaces";
+import type { ConfigTypes, FluidObject, IErrorBase } from "@fluidframework/core-interfaces";
 import type { IChannel } from "@fluidframework/datastore-definitions/internal";
 import {
 	createLocalResolverCreateNewRequest,
@@ -53,7 +53,11 @@ import {
 	ILocalDeltaConnectionServer,
 	LocalDeltaConnectionServer,
 } from "@fluidframework/server-local-server";
-import { createChildLogger } from "@fluidframework/telemetry-utils/internal";
+import {
+	createChildLogger,
+	LoggingError,
+	wrapError,
+} from "@fluidframework/telemetry-utils/internal";
 import {
 	LocalCodeLoader,
 	timeoutPromise,
@@ -257,6 +261,8 @@ export interface LocalServerStressOptions {
 		numOpsBeforeAttach: number;
 	};
 
+	configurations?: Record<string, ConfigTypes> | undefined;
+
 	/**
 	 * Strategy for validating eventual consistency of DDSes.
 	 * In random mode, each generated operation has the specified probability to instead be a synchronization point
@@ -431,6 +437,7 @@ function mixinAddRemoveClient<TOperation extends BaseOperation>(
 				op.clientTag,
 				url,
 				state.seed,
+				options,
 			);
 			state.clients.push(newClient);
 			return state;
@@ -513,6 +520,7 @@ function mixinAttach<TOperation extends BaseOperation>(
 				"client-0",
 				url,
 				state.seed,
+				options,
 			);
 
 			return {
@@ -576,17 +584,20 @@ function mixinSynchronization<TOperation extends BaseOperation>(
 				if (client.container.closed || client.container.disposed === true) {
 					throw new Error(`Client ${client.tag} is closed`);
 				}
-				return client.container.connectionState !== ConnectionState.Disconnected;
+				return (
+					client.container.connectionState !== ConnectionState.Disconnected &&
+					!client.entryPoint.inStagingMode()
+				);
 			});
 
 			if (connectedClients.length > 0) {
 				await synchronizeClients([validationClient, ...connectedClients]);
 				for (const client of connectedClients) {
 					try {
-						await model.validateConsistency(validationClient, client);
+						await model.validateConsistency(client, validationClient);
 					} catch (error: unknown) {
 						if (error instanceof Error) {
-							error.message = `Comparing client ${validationClient.tag} vs client ${client.tag}\n${error.message}`;
+							error.message = `Comparing client ${client.tag} vs client ${validationClient.tag}\n${error.message}`;
 						}
 						throw error;
 					}
@@ -717,6 +728,7 @@ async function createDetachedClient(
 	codeDetails: IFluidCodeDetails,
 	tag: `client-${number}`,
 	seed: number,
+	options: LocalServerStressOptions,
 ): Promise<Client> {
 	const container = await createDetachedContainer({
 		codeLoader,
@@ -724,6 +736,9 @@ async function createDetachedClient(
 		urlResolver: new LocalResolver(),
 		codeDetails,
 		logger: createStressLogger(seed),
+		configProvider: {
+			getRawConfig: (name) => options.configurations?.[name],
+		},
 	});
 
 	const maybe: FluidObject<DefaultStressDataObject> | undefined =
@@ -744,6 +759,7 @@ async function loadClient(
 	tag: `client-${number}`,
 	url: string,
 	seed: number,
+	options: LocalServerStressOptions,
 ): Promise<Client> {
 	const container = await timeoutAwait(
 		loadExistingContainer({
@@ -752,6 +768,9 @@ async function loadClient(
 			urlResolver: new LocalResolver(),
 			codeLoader,
 			logger: createStressLogger(seed),
+			configProvider: {
+				getRawConfig: (name) => options.configurations?.[name],
+			},
 		}),
 		{
 			errorMsg: `Timed out waiting for client to load ${tag}`,
@@ -774,102 +793,64 @@ async function loadClient(
 }
 
 async function synchronizeClients(connectedClients: Client[]) {
-	const closeOrDispose = new Map<
-		Client,
-		{ error?: Error; rejects: ((reason?: any) => void)[] }
-	>();
-
-	const cleanUps: (() => void)[] = [];
-	for (const c of connectedClients) {
-		const rejector = (error) => {
-			const entry = closeOrDispose.get(c) ?? { rejects: [] };
-			entry.error ??= error;
-			closeOrDispose.set(c, entry);
-			entry.rejects.forEach((r) => r(entry.error));
-		};
-		c.container.once("closed", rejector);
-		c.container.once("disposed", rejector);
-		cleanUps.push(() => {
-			c.container.off("closed", rejector);
-			c.container.off("disposed", rejector);
-		});
-	}
-	try {
-		await Promise.all(
-			connectedClients.map(async (c) =>
-				timeoutPromise(
-					(resolve, reject) => {
-						const entry = closeOrDispose.get(c) ?? { rejects: [] };
-						closeOrDispose.set(c, entry);
-						if (entry.error) {
-							reject(entry.error);
-						} else if (c.container.connectionState !== ConnectionState.Connected) {
-							c.container.once("connected", () => resolve());
-							entry.rejects.push(reject);
-						} else {
-							resolve();
-						}
-					},
-					{
-						errorMsg: `Timed out waiting for client to connect ${c.tag}`,
-					},
-				),
-			),
-		);
-
-		await Promise.all(
-			connectedClients.map(async (c) =>
-				timeoutPromise(
-					(resolve, reject) => {
-						const entry = closeOrDispose.get(c) ?? { rejects: [] };
-						closeOrDispose.set(c, entry);
-						if (entry.error) {
-							reject(entry.error);
-						} else if (c.container.isDirty) {
-							c.container.once("saved", () => resolve());
-							entry.rejects.push(reject);
-						} else {
-							resolve();
-						}
-					},
-					{
-						errorMsg: `Timed out waiting for client to save ${c.tag}`,
-					},
-				),
-			),
-		);
-		const maxSeq = Math.max(
-			...connectedClients.map((c) => c.container.deltaManager.lastKnownSeqNumber),
-		);
-
-		const makeOpHandler = (c: Client, resolve: () => void, reject: (error) => void) => {
-			const entry = closeOrDispose.get(c) ?? { rejects: [] };
-			closeOrDispose.set(c, entry);
-			if (entry.error) {
-				reject(entry.error);
-			} else if (c.container.deltaManager.lastKnownSeqNumber < maxSeq) {
-				const handler = (msg) => {
-					if (msg.sequenceNumber >= maxSeq) {
-						c.container.off("op", handler);
-						resolve();
-					}
-				};
-				c.container.on("op", handler);
-				entry.rejects.push(reject);
-			} else {
-				resolve();
+	return timeoutPromise((resolve, reject) => {
+		const rejectHandler = (error?: IErrorBase | undefined) => {
+			const client = connectedClients.find(
+				(c) => c.container.closed || c.container.disposed === true,
+			);
+			if (client !== undefined) {
+				reject(
+					wrapError(
+						error,
+						(message) => new LoggingError(`${client.tag} closed or disposed: ${message}`),
+					),
+				);
+				off();
 			}
 		};
-		await Promise.all(
-			connectedClients.map(async (c) =>
-				timeoutPromise((resolve, reject) => makeOpHandler(c, resolve, reject), {
-					errorMsg: `Timed out waiting for client to catch up: ${c.tag} seq: ${maxSeq}`,
-				}),
-			),
-		);
-	} finally {
-		cleanUps.forEach((f) => f());
-	}
+		const resolveHandler = () => {
+			if (
+				connectedClients.every(
+					(c) =>
+						c.container.connectionState === ConnectionState.Connected &&
+						c.container.isDirty === false &&
+						c.container.deltaManager.lastSequenceNumber ===
+							connectedClients[0].container.deltaManager.lastSequenceNumber,
+				)
+			) {
+				resolve();
+				off();
+			}
+		};
+		// if you hit timeout issues in the
+		// stress tests, this can help to diagnose
+		// if the error is in synchronization, as it
+		// provides a place to break into the hung
+		// process by setting a breakpoint on
+		// resolveHandler
+		//
+		// const timeout = setInterval(() => {
+		// resolveHandler();
+		// }, 1000);
+		const off = () => {
+			// clearInterval(timeout);
+			for (const c of connectedClients) {
+				c.container.off("closed", rejectHandler);
+				c.container.off("disposed", rejectHandler);
+				c.container.off("connected", resolveHandler);
+				c.container.off("op", resolveHandler);
+				c.container.off("saved", resolveHandler);
+			}
+		};
+		for (const c of connectedClients) {
+			c.container.on("closed", rejectHandler);
+			c.container.on("disposed", rejectHandler);
+			c.container.on("connected", resolveHandler);
+			c.container.on("op", resolveHandler);
+			c.container.on("saved", resolveHandler);
+		}
+		resolveHandler();
+	});
 }
 
 /**
@@ -880,7 +861,8 @@ async function synchronizeClients(connectedClients: Client[]) {
 async function runTestForSeed<TOperation extends BaseOperation>(
 	model: LocalServerStressModel<TOperation>,
 	seed: number,
-	saveInfo?: SaveInfo,
+	options: LocalServerStressOptions,
+	saveInfo: SaveInfo | undefined,
 ): Promise<void> {
 	const random = makeRandom(seed);
 
@@ -901,6 +883,7 @@ async function runTestForSeed<TOperation extends BaseOperation>(
 		// we use tagging here, and not zero, as we will create client 0 after attach.
 		tag("client"),
 		seed,
+		options,
 	);
 
 	const initialState: LocalServerStressState = {
@@ -937,6 +920,9 @@ async function runTestForSeed<TOperation extends BaseOperation>(
 		if (operation.type === finalSynchronization.type) {
 			const { clients, validationClient } = state;
 			for (const client of clients) {
+				if (client.entryPoint.inStagingMode()) {
+					client.entryPoint.exitStagingMode(true);
+				}
 				if (client.container.connectionState === ConnectionState.Disconnected) {
 					client.container.connect();
 				}
@@ -1003,7 +989,7 @@ function runTest<TOperation extends BaseOperation>(
 
 		try {
 			// don't write to files in CI
-			await runTestForSeed(model, seed, inCi ? undefined : saveInfo);
+			await runTestForSeed(model, seed, options, inCi ? undefined : saveInfo);
 		} catch (error) {
 			if (!shouldMinimize || saveInfo === undefined) {
 				throw error;
@@ -1071,7 +1057,7 @@ export async function replayTest<TOperation extends BaseOperation>(
 		generatorFactory: () => generator,
 	};
 
-	await runTestForSeed(model, seed, saveInfo);
+	await runTestForSeed(model, seed, options, saveInfo);
 }
 
 /**
