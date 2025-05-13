@@ -2,7 +2,7 @@ import type { CellCoordinate } from "$lib/coordinate";
 import type { SudokuCellViewData } from "$lib/fluid/cellData.svelte";
 import type { SudokuAppData, SudokuGrid } from "$lib/fluid/dataSchema";
 import type { Presence, Attendee } from "@fluidframework/presence/alpha";
-import type { ReactiveStateWorkspace } from "./ReadonlyReactivePresenceWorkspace.svelte";
+import type { ReactiveStateWorkspace } from "./ReactiveStateWorkspace.svelte";
 import type { SudokuClientUser } from "./User.svelte";
 
 export type SelectionManager = ReactiveStateWorkspace<CellCoordinate>;
