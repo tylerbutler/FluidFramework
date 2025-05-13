@@ -63,9 +63,9 @@ const onPuzzleReset = () => {
 	<div>
 		<h3>User metadata manager</h3>
 		<ul>
-			{#each userMetadataManager.unfilteredData as [session, userData] (session.sessionId)}
+			{#each userMetadataManager.unfilteredData as [session, userData] (session.attendeeId)}
 				<li>
-					{session.sessionId.slice(0, 8)}: {session.getConnectionStatus()}
+					{session.attendeeId.slice(0, 8)}: {session.getConnectionStatus()}
 					{userData.fullName} ({userData.color})
 				</li>
 			{/each}
@@ -75,10 +75,10 @@ const onPuzzleReset = () => {
 	<div>
 		<h3>Selection manager</h3>
 		<ul>
-			{#each selectionManager.data as [session, selectedCell] (session.sessionId)}
+			{#each selectionManager.data as [session, selectedCell] (session.attendeeId)}
 				<!-- {#if session.getConnectionStatus() === "Connected"} -->
 				{@const user = userMetadataManager.data.get(session)}
-				<li>{session.sessionId} {user?.fullName}: {selectedCell}</li>
+				<li>{session.attendeeId} {user?.fullName}: {selectedCell}</li>
 				<!-- {/if} -->
 			{/each}
 		</ul>

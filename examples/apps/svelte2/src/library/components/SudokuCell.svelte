@@ -14,7 +14,7 @@ const {
 	onFocus,
 }: SudokuCellProps = $props();
 
-const cellCoordinateId = (c: CoordinateString) => `${currentSessionClient.sessionId}-${c}`;
+const cellCoordinateId = (c: CoordinateString) => `${currentSessionClient.attendeeId}-${c}`;
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
 	document.getElementById(cellCoordinateId(coord)) as HTMLInputElement;

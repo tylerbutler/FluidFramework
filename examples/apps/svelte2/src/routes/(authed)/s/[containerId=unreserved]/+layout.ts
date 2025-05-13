@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { acquirePresenceViaDataObject } from "@fluidframework/presence/alpha";
+import { getPresenceViaDataObject } from "@fluidframework/presence/alpha";
 import { error } from "@sveltejs/kit";
 import type { LayoutLoad } from "./$types";
 
@@ -29,7 +29,7 @@ export const load: LayoutLoad = async ({ params, parent }) => {
 	}
 
 	// Retrieve a reference to the presence APIs via the data object.
-	const presence = acquirePresenceViaDataObject(container.initialObjects.presence);
+	const presence = getPresenceViaDataObject(container.initialObjects.presence);
 
 	return {
 		appData,

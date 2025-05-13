@@ -1,7 +1,7 @@
 <script lang="ts">
 import { Indicator } from "svelte-5-ui-lib";
 import type { CellPresenceProps, SelectionManager, UserMetadataManager } from "./props";
-import type { ISessionClient } from "@fluidframework/presence/alpha";
+import type { Attendee } from "@fluidframework/presence/alpha";
 import { compareCells, getPresenceIndicatorPosition } from "./SudokuCellPresence.js";
 import { getSelectionManager, getUserMetadataManager } from "$lib/context";
 
@@ -16,7 +16,7 @@ const user = userMetadataManager.valueManager.local;
 // }
 
 const presenceIndicators = $derived.by(() => {
-	const toRender: ISessionClient[] = [];
+	const toRender: Attendee[] = [];
 	for (const [owner, cell] of selectionManager.data) {
 		if (
 			toRender.length < 8 &&
@@ -30,7 +30,7 @@ const presenceIndicators = $derived.by(() => {
 });
 </script>
 
-{#each presenceIndicators as session, index (session.sessionId)}
+{#each presenceIndicators as session, index (session.attendeeId)}
 	<Indicator
 		color={user?.color}
 		border={false}

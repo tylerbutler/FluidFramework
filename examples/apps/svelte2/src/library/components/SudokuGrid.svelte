@@ -11,7 +11,7 @@ const { grid, sessionClient }: SudokuGridComponentProps = $props();
 const selectionManager = getSelectionManager();
 
 const getCellInputElement = (coord: CoordinateString): HTMLInputElement =>
-	document.getElementById(`${sessionClient.sessionId}-${coord}`) as HTMLInputElement;
+	document.getElementById(`${sessionClient.attendeeId}-${coord}`) as HTMLInputElement;
 
 const moveCell = (keyString: string, coordIn: CoordinateString): void => {
 	const coord = coordIn;

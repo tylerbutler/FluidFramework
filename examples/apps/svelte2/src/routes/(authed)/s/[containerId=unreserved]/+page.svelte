@@ -2,7 +2,7 @@
 import type { PageProps } from "./$types";
 import { SignedIn, SignedOut } from "svelte-clerk";
 import SudokuApp from "$lib/components/SudokuApp.svelte";
-import { Latest } from "@fluidframework/presence/alpha";
+import { latest } from "@fluidframework/presence/alpha";
 import {
 	PresenceWorkspaceAddress,
 	SelectionManagerContextKey,
@@ -24,8 +24,8 @@ const sudokuUser = createNewUser(clerkUserProperties!);
 // We create a value manager within the workspace to track and share individual pieces of state.
 const presenceWorkspace = presence.getStates(PresenceWorkspaceAddress, {
 	// Create a Latest value manager to track the latest coordinate for each user.
-	selectionCoordinate: Latest<CellCoordinate>([0, 0]),
-	userMetadata: Latest<SudokuClientUser>(sudokuUser),
+	selectionCoordinate: latest<CellCoordinate>([0, 0]),
+	userMetadata: latest<SudokuClientUser>(sudokuUser),
 });
 
 /**
@@ -48,7 +48,7 @@ userMetadataManager.valueManager.local = sudokuUser;
 // 	userMetadataManager.valueManager.local = sudokuUser;
 // });
 
-// presence.events.on("attendeeDisconnected", (session: ISessionClient) => {
+// presence.events.on("attendeeDisconnected", (session: Attendee) => {
 // 	selectionManager..delete(session);
 // 	// probably unnecessary
 // 	userMetadataManager.valueManager.local = sudokuUser;
@@ -59,11 +59,11 @@ userMetadataManager.valueManager.local = sudokuUser;
 	<SignedIn>
 		<div>
 			<ul class="w-full max-w-sm divide-y divide-gray-200 dark:divide-gray-700">
-				{#each userMetadataManager.data as [session, metadata] (session.sessionId)}
+				{#each userMetadataManager.data as [session, metadata] (session.attendeeId)}
 					{#if session.getConnectionStatus() === "Connected"}
-						{@const isMe = session.sessionId === presence.getMyself().sessionId}
+						{@const isMe = session.attendeeId === presence.attendees.getMyself().attendeeId}
 						{@const sessionText =
-							`${metadata?.fullName} [${session.sessionId.slice(0, 8)}]` +
+							`${metadata?.fullName} [${session.attendeeId.slice(0, 8)}]` +
 							(isMe ? `(me)` : "")}
 						<li>
 							<Badge color={metadata?.color} rounded class="px-2.5 py-0.5">
@@ -79,7 +79,7 @@ userMetadataManager.valueManager.local = sudokuUser;
 			</ul>
 		</div>
 
-		<SudokuApp data={appData.root} {presence} sessionClient={presence.getMyself()} />
+		<SudokuApp data={appData.root} {presence} sessionClient={presence.attendees.getMyself()} />
 	</SignedIn>
 	<SignedOut>You need to be signed in.</SignedOut>
 </div>

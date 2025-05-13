@@ -1,12 +1,8 @@
-import type {
-	IPresence,
-	ISessionClient,
-	LatestValueManager,
-} from "@fluidframework/presence/alpha";
+import type { Presence, Attendee, LatestRaw } from "@fluidframework/presence/alpha";
 import { SvelteMap } from "svelte/reactivity";
 
 export class ReadonlyReactivePresenceWorkspace<T extends object> {
-	protected readonly reactiveState = $state(new SvelteMap<ISessionClient, T>());
+	protected readonly reactiveState = $state(new SvelteMap<Attendee, T>());
 
 	public readonly unfilteredData = $derived(this.reactiveState);
 
@@ -23,25 +19,25 @@ export class ReadonlyReactivePresenceWorkspace<T extends object> {
 	}
 
 	constructor(
-		protected presence: IPresence,
-		public readonly valueManager: LatestValueManager<T>,
+		protected presence: Presence,
+		public readonly valueManager: LatestRaw<T>,
 	) {
 		// Wire up event listener to update the reactive map when the remote users' data is updated
-		valueManager.events.on("updated", (data) => {
-			this.reactiveState.set(data.client, data.value as any);
+		valueManager.events.on("remoteUpdated", (data) => {
+			this.reactiveState.set(data.attendee, data.value as any);
 		});
 		// valueManager.events.on("localUpdated", (data) => {
 		// 	// Update the selection state with the new coordinate
 		// 	this.reactiveState.set(data.client, data.value as any);
 		// });
-		presence.events.on("attendeeDisconnected", (session: ISessionClient) => {
+		presence.attendees.events.on("attendeeDisconnected", (session: Attendee) => {
 			this.reactiveState.delete(session);
 		});
 	}
 
 	public static create<T extends object>(
-		presence: IPresence,
-		valueManager: LatestValueManager<T>,
+		presence: Presence,
+		valueManager: LatestRaw<T>,
 	): ReadonlyReactivePresenceWorkspace<T> {
 		return new ReadonlyReactivePresenceWorkspace<T>(presence, valueManager);
 	}
