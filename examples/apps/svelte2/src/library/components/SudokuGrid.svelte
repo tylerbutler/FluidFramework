@@ -46,7 +46,7 @@ const onCellFocus = (e: any) => {
 	if (coord !== undefined) {
 		// Sets the locally selected cell for the current client.
 		// On remote clients this will trigger an update event.
-		selectionManager.valueManager.local = Coordinate.asArrayNumbers(coord);
+		selectionManager.latest.local = Coordinate.asArrayNumbers(coord);
 	}
 };
 </script>

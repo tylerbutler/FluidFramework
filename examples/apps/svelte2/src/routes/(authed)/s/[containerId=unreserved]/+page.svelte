@@ -11,7 +11,7 @@ import {
 import type { CellCoordinate } from "$lib/coordinate";
 import { createNewUser, type SudokuClientUser } from "$lib/components/User.svelte";
 import { Badge, Indicator } from "svelte-5-ui-lib";
-import { ReadonlyReactivePresenceWorkspace } from "$lib/components/ReadonlyReactivePresenceWorkspace.svelte";
+import { ReactiveStateWorkspace } from "$lib/components/ReadonlyReactivePresenceWorkspace.svelte";
 import { setSelectionManager, setUserMetadataManager } from "$lib/context";
 
 const { data }: PageProps = $props();
@@ -22,27 +22,25 @@ const sudokuUser = createNewUser(clerkUserProperties!);
 
 // Get the states workspace for the presence data. This workspace will be created if it doesn't exist.
 // We create a value manager within the workspace to track and share individual pieces of state.
-const presenceWorkspace = presence.getStates(PresenceWorkspaceAddress, {
+const presenceWorkspace = presence.states.getWorkspace(PresenceWorkspaceAddress, {
 	// Create a Latest value manager to track the latest coordinate for each user.
-	selectionCoordinate: latest<CellCoordinate>([0, 0]),
-	userMetadata: latest<SudokuClientUser>(sudokuUser),
+	selectionCoordinate: latest<CellCoordinate>({ local: [0, 0] }),
+	userMetadata: latest<SudokuClientUser>({ local: sudokuUser }),
 });
 
 /**
  * The selection manager tracks the currently selected cell for each connected client.
  */
-const selectionManager = ReadonlyReactivePresenceWorkspace.create(
-	presence,
-	presenceWorkspace.props.selectionCoordinate,
+const selectionManager = new ReactiveStateWorkspace<CellCoordinate>(
+	presenceWorkspace.states.selectionCoordinate,
 );
 setSelectionManager(selectionManager);
 
-const userMetadataManager = ReadonlyReactivePresenceWorkspace.create(
-	presence,
-	presenceWorkspace.props.userMetadata,
+const userMetadataManager = new ReactiveStateWorkspace<SudokuClientUser>(
+	presenceWorkspace.states.userMetadata,
 );
 setUserMetadataManager(userMetadataManager);
-userMetadataManager.valueManager.local = sudokuUser;
+userMetadataManager.latest.local = sudokuUser;
 
 // presence.events.on("attendeeJoined", () => {
 // 	userMetadataManager.valueManager.local = sudokuUser;
@@ -56,30 +54,35 @@ userMetadataManager.valueManager.local = sudokuUser;
 </script>
 
 <div class="p-8">
-	<SignedIn>
-		<div>
-			<ul class="w-full max-w-sm divide-y divide-gray-200 dark:divide-gray-700">
-				{#each userMetadataManager.data as [session, metadata] (session.attendeeId)}
-					{#if session.getConnectionStatus() === "Connected"}
-						{@const isMe = session.attendeeId === presence.attendees.getMyself().attendeeId}
-						{@const sessionText =
-							`${metadata?.fullName} [${session.attendeeId.slice(0, 8)}]` +
-							(isMe ? `(me)` : "")}
-						<li>
-							<Badge color={metadata?.color} rounded class="px-2.5 py-0.5">
-								<Indicator color={metadata?.color} size="lg" class="me-1"
-								></Indicator>
-								{sessionText}
-							</Badge>
-						</li>
-					{/if}
-				{:else}
-					<li><Badge color="secondary">No one else connected</Badge></li>
-				{/each}
-			</ul>
-		</div>
+  <SignedIn>
+    <div>
+      <ul class="w-full max-w-sm divide-y divide-gray-200 dark:divide-gray-700">
+        {#each userMetadataManager.data as [session, metadata] (session.attendeeId)}
+          {#if session.getConnectionStatus() === "Connected"}
+            {@const isMe =
+              session.attendeeId === presence.attendees.getMyself().attendeeId}
+            {@const sessionText =
+              `${metadata?.fullName} [${session.attendeeId.slice(0, 8)}]` +
+              (isMe ? `(me)` : "")}
+            <li>
+              <Badge color={metadata?.color} rounded class="px-2.5 py-0.5">
+                <Indicator color={metadata?.color} size="lg" class="me-1"
+                ></Indicator>
+                {sessionText}
+              </Badge>
+            </li>
+          {/if}
+        {:else}
+          <li><Badge color="secondary">No one else connected</Badge></li>
+        {/each}
+      </ul>
+    </div>
 
-		<SudokuApp data={appData.root} {presence} sessionClient={presence.attendees.getMyself()} />
-	</SignedIn>
-	<SignedOut>You need to be signed in.</SignedOut>
+    <SudokuApp
+      data={appData.root}
+      {presence}
+      sessionClient={presence.attendees.getMyself()}
+    />
+  </SignedIn>
+  <SignedOut>You need to be signed in.</SignedOut>
 </div>

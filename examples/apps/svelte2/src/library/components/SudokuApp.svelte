@@ -12,7 +12,9 @@ const { data, presence, sessionClient }: SudokuAppProps = $props();
  * Returns all the connected users that presence is tracking.
  */
 const getConnectedUsers = () =>
-	[...presence.getAttendees()].filter((c) => c.getConnectionStatus() === "Connected");
+	[...presence.attendees.getAttendees()].filter(
+		(c) => c.getConnectionStatus() === "Connected",
+	);
 
 const selectionManager = getSelectionManager();
 const userMetadataManager = getUserMetadataManager();

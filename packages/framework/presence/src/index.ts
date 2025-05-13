@@ -45,8 +45,8 @@ export {
 	ExperimentalPresenceManager,
 } from "./datastorePresenceManagerFactory.js";
 
+export { latestMap } from "./latestMapValueManager.js";
 export type {
-	latestMap,
 	LatestMapArguments,
 	LatestMapRaw,
 	LatestMapClientData,
@@ -55,8 +55,8 @@ export type {
 	LatestMapItemUpdatedClientData,
 	StateMap,
 } from "./latestMapValueManager.js";
+export { latest } from "./latestValueManager.js";
 export type {
-	latest,
 	LatestArguments,
 	LatestRaw,
 	LatestRawEvents,

@@ -9,7 +9,7 @@ const { coordinate }: CellPresenceProps = $props();
 
 const selectionManager = getSelectionManager();
 const userMetadataManager = getUserMetadataManager();
-const user = userMetadataManager.valueManager.local;
+const user = userMetadataManager.local;
 
 // if (!user) {
 // 	throw new Error("User not found");
