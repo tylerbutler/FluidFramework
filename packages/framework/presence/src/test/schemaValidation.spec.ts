@@ -9,14 +9,7 @@ import { EventAndErrorTrackingLogger } from "@fluidframework/test-utils/internal
 import { describe, it, after, afterEach, before, beforeEach } from "mocha";
 import { useFakeTimers, type SinonFakeTimers } from "sinon";
 
-import {
-	StateFactory,
-	// type PresenceStates,
-	type StateSchemaValidator,
-	// SessionClientStatus,
-	// type ClientConnectionId,
-	// type ISessionClient,
-} from "../index.js";
+import { StateFactory, type StateSchemaValidator } from "../index.js";
 import type { createPresenceManager } from "../presenceManager.js";
 
 import { MockEphemeralRuntime } from "./mockEphemeralRuntime.js";
@@ -62,9 +55,15 @@ describe("Presence", () => {
 	describe("schema validation", () => {
 		let presence: ReturnType<typeof createPresenceManager>;
 		const afterCleanUp: (() => void)[] = [];
+		interface TestData {
+			num: number;
+		}
 
 		beforeEach(() => {
-			presence = prepareConnectedPresence(runtime, "sessionId-2", "client2", clock, logger);
+			presence = prepareConnectedPresence(runtime, "attendeeId-2", "client2", clock, logger);
+
+			// Pass a little time (to mimic reality)
+			clock.tick(10);
 		});
 
 		afterEach(() => {
@@ -74,17 +73,89 @@ describe("Presence", () => {
 			afterCleanUp.length = 0;
 		});
 
+		describe("multiple users", () => {
+			beforeEach(() => {});
+
+			it("connects", () => {
+				runtime.signalsExpected.push([
+					"Pres:DatastoreUpdate",
+					{
+						"avgLatency": 10,
+						"data": {
+							"system:presence": {
+								"clientToSessionId": {
+									"client2": {
+										"rev": 0,
+										"timestamp": initialTime,
+										"value": "attendeeId-2",
+									},
+								},
+							},
+						},
+						"isComplete": true,
+						"sendTimestamp": clock.now,
+					},
+				]);
+
+				presence.processSignal(
+					"",
+					{
+						type: "Pres:ClientJoin",
+						content: {
+							sendTimestamp: clock.now - 50,
+							avgLatency: 50,
+							data: {},
+							updateProviders: ["client2"],
+						},
+						clientId: "client4",
+					},
+					false,
+				);
+
+				// Join a second user
+				// const joinSignal = generateBasicClientJoin(initialTime + 50, {
+				// 	attendeeId: "attendeeId-3",
+				// 	clientConnectionId: "client3",
+				// 	updateProviders: ["client2"],
+				// });
+				// runtime.signalsExpected.push([joinSignal.type, joinSignal.content]);
+				// runtime.submitSignal(joinSignal.type, joinSignal.content);
+			});
+		});
+
 		describe("LatestValueManager", () => {
-			let validatorFunction: StateSchemaValidator<{ num: number }>;
+			let validatorFunction: StateSchemaValidator<TestData>;
 			let validatorSpy: ValidatorSpy;
 
 			beforeEach(() => {
 				// Ignore submitted signals
 				runtime.submitSignal = () => {};
 
-				[validatorFunction, validatorSpy] = createSpiedValidator<{ num: number }>(
+				[validatorFunction, validatorSpy] = createSpiedValidator<TestData>(
 					createNullValidator(),
 				);
+
+				assert.equal(validatorSpy.callCount, 0);
+			});
+
+			it("getRemote does not call validator", () => {
+				// Setup
+				// Configure a state workspace
+				const stateWorkspace = presence.states.getWorkspace("name:testStateWorkspace", {
+					count: StateFactory.latest({
+						local: { num: 0 } satisfies TestData,
+						validator: validatorFunction,
+						settings: { allowableUpdateLatencyMs: 0 },
+					}),
+				});
+
+				const { count } = stateWorkspace.states;
+
+				// Act & Verify
+				count.local = { num: 11 };
+
+				// Calling getRemote should not invoke the validator (only a value read will).
+				count.getRemote(presence.attendees.getMyself());
 
 				assert.equal(validatorSpy.callCount, 0);
 			});
@@ -94,7 +165,7 @@ describe("Presence", () => {
 				// Configure a state workspace
 				const stateWorkspace = presence.states.getWorkspace("name:testStateWorkspace", {
 					count: StateFactory.latest({
-						local: { num: 0 },
+						local: { num: 0 } satisfies TestData,
 						validator: validatorFunction,
 						settings: { allowableUpdateLatencyMs: 0 },
 					}),
@@ -103,18 +174,18 @@ describe("Presence", () => {
 				const { count } = stateWorkspace.states;
 
 				// Act & Verify
-				count.local = { num: 84 };
+				count.local = { num: 11 };
 
 				// Call getRemote instead of .local so that the validator is called.
 				const remoteData = count.getRemote(presence.attendees.getMyself());
 				const value = remoteData.value();
 
 				// Reading the data should cause the validator to get called once.
-				assert.equal(value?.num, 84);
+				assert.equal(value?.num, 11);
 				assert.equal(validatorSpy.callCount, 1);
 			});
 
-			it("validator is not called multiple times for the same data", () => {
+			it("calls validator only once for the same data", () => {
 				// Setup
 				// Configure a state workspace
 				const stateWorkspace = presence.states.getWorkspace("name:testStateWorkspace", {
@@ -126,18 +197,18 @@ describe("Presence", () => {
 				});
 
 				const { count } = stateWorkspace.states;
-				count.local = { num: 84 };
+				count.local = { num: 22 };
 
 				// Act & Verify
 				// Call getRemote instead of .local so that the validator is called.
 				const remoteData = count.getRemote(presence.attendees.getMyself());
 
 				// Reading the data should cause the validator to get called once.
-				assert.equal(remoteData.value()?.num, 84);
+				assert.equal(remoteData.value()?.num, 22);
 				assert.equal(validatorSpy.callCount, 1);
 
 				// Subsequent reads should not call the validator when there is no new data.
-				assert.equal(remoteData.value()?.num, 84);
+				assert.equal(remoteData.value()?.num, 22);
 				assert.equal(validatorSpy.callCount, 1);
 			});
 
@@ -166,9 +237,38 @@ describe("Presence", () => {
 				assert.equal(remoteData.value(), undefined);
 				assert.equal(spy.callCount, 1);
 			});
+
+			// FIXME: skipped test
+			it.skip("invalidates data on update", () => {
+				// Setup
+				// Configure a state workspace
+				const stateWorkspace = presence.states.getWorkspace("name:testStateWorkspace", {
+					count: StateFactory.latest({
+						local: { num: 0 },
+						validator: validatorFunction,
+						settings: { allowableUpdateLatencyMs: 0 },
+					}),
+				});
+
+				const { count } = stateWorkspace.states;
+				count.local = { num: 22 };
+
+				// Act & Verify
+				// Call getRemote instead of .local so that the validator is called.
+				const remoteData = count.getRemote(presence.attendees.getMyself());
+
+				// Reading the data should cause the validator to get called once.
+				assert.equal(remoteData.value()?.num, 22);
+				assert.equal(validatorSpy.callCount, 1);
+
+				count.local = { num: 33 };
+
+				// Validator will be called again because the value changed.
+				assert.equal(remoteData.value()?.num, 33, "Second value read failed");
+				assert.equal(validatorSpy.callCount, 2);
+			});
 		});
 
-		// FIXME: tests are failing
 		describe("LatestMapValueManager", () => {
 			let validatorFunction: StateSchemaValidator<{ num: number }>;
 			let validatorSpy: ValidatorSpy;
@@ -222,16 +322,16 @@ describe("Presence", () => {
 				const { count } = stateWorkspace.states;
 
 				// Act & Verify
-				count.local.set("key1", { num: 84 });
+				count.local.set("key1", { num: 22 });
 
 				const mapData = count.getRemote(presence.attendees.getMyself());
 
 				// Reading an individual map item's value should cause the validator to get called once.
-				assert.equal(mapData.get("key1")?.value()?.num, 84);
+				assert.equal(mapData.get("key1")?.value()?.num, 22);
 				assert.equal(validatorSpy.callCount, 1);
 			});
 
-			it("validator is not called multiple times for the same data", () => {
+			it("calls validator only once for the same key value", () => {
 				// Setup
 				// Configure a state workspace
 				const stateWorkspace = presence.states.getWorkspace("name:testStateWorkspace", {
@@ -243,7 +343,7 @@ describe("Presence", () => {
 				});
 
 				const { count } = stateWorkspace.states;
-				count.local.set("key1", { num: 84 });
+				count.local.set("key1", { num: 11 });
 
 				// Act & Verify
 				// Reading the data should cause the validator to get called once. Since this is a map, we need to read a key
@@ -256,7 +356,42 @@ describe("Presence", () => {
 				keyData = remoteData.get("key1")?.value();
 				keyData = remoteData.get("key1")?.value();
 				assert.equal(validatorSpy.callCount, 1);
-				assert.equal(keyData?.num, 84);
+				assert.equal(keyData?.num, 11);
+			});
+
+			it.skip("invalidates data when key is set", () => {
+				// Setup
+				// Configure a state workspace
+				const stateWorkspace = presence.states.getWorkspace("name:testStateWorkspace", {
+					count: StateFactory.latestMap({
+						local: { "key1": { num: 0 } satisfies TestData },
+						validator: validatorFunction,
+						settings: { allowableUpdateLatencyMs: 0 },
+					}),
+				});
+
+				const { count } = stateWorkspace.states;
+				count.local.set("key1", { num: 11 });
+
+				// Act & Verify
+				// Reading the data should cause the validator to get called once. Since this is a map, we need to read a key
+				// value to call the validator.
+				const remoteData = count.getRemote(presence.attendees.getMyself());
+
+				let keyData = remoteData.get("key1")?.value();
+
+				// Subsequent reads should not call the validator when there is no new data.
+				keyData = remoteData.get("key1")?.value();
+				keyData = remoteData.get("key1")?.value();
+				assert.equal(validatorSpy.callCount, 1);
+				assert.equal(keyData?.num, 11);
+
+				count.local.set("key1", { num: 22 });
+
+				keyData = remoteData.get("key1")?.value();
+				keyData = remoteData.get("key1")?.value();
+				assert.equal(validatorSpy.callCount, 2);
+				assert.equal(keyData?.num, 22);
 			});
 		});
 	});
