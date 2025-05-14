@@ -3,11 +3,7 @@ import type { PageProps } from "./$types";
 import { SignedIn, SignedOut } from "svelte-clerk";
 import SudokuApp from "$lib/components/SudokuApp.svelte";
 import { latest } from "@fluidframework/presence/alpha";
-import {
-	PresenceWorkspaceAddress,
-	SelectionManagerContextKey,
-	UserMetadataManagerContextKey,
-} from "$lib/constants";
+import { PresenceWorkspaceAddress } from "$lib/constants";
 import type { CellCoordinate } from "$lib/coordinate";
 import { createNewUser, type SudokuClientUser } from "$lib/components/User.svelte";
 import { Badge, Indicator } from "svelte-5-ui-lib";
@@ -24,8 +20,28 @@ const sudokuUser = createNewUser(clerkUserProperties!);
 // We create a value manager within the workspace to track and share individual pieces of state.
 const presenceWorkspace = presence.states.getWorkspace(PresenceWorkspaceAddress, {
 	// Create a Latest value manager to track the latest coordinate for each user.
-	selectionCoordinate: latest<CellCoordinate>({ local: [0, 0] }),
-	userMetadata: latest<SudokuClientUser>({ local: sudokuUser }),
+	selectionCoordinate: latest({
+		local: [0, 0],
+		validator: (data) => {
+			if (typeof data === "string") {
+				// If the data is a string, data is invalid.
+				return undefined;
+			}
+			if (!Array.isArray(data)) {
+				// If the data is not an array, data is invalid.
+				return undefined;
+			}
+			if (data.length !== 2) {
+				// If the data is not an array of length 2, data is invalid.
+				return undefined;
+			}
+			return data as unknown as CellCoordinate;
+		},
+	}),
+	userMetadata: latest({
+		local: sudokuUser,
+		validator: (data) => data as SudokuClientUser,
+	}),
 });
 
 /**

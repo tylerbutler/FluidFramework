@@ -1,8 +1,5 @@
-import type { Attendee, LatestClientData, LatestRaw } from "@fluidframework/presence/alpha";
+import type { Attendee, LatestRaw, Latest } from "@fluidframework/presence/alpha";
 import { SvelteMap } from "svelte/reactivity";
-
-// temporary type
-type Latest<T> = LatestRaw<T>;
 
 /**
  * A class that wraps a Fluid Framework presence state workspace in Svelte state so the data becomes reactive when used
@@ -10,7 +7,8 @@ type Latest<T> = LatestRaw<T>;
  */
 export class ReactiveStateWorkspace<
 	T extends object,
-	L extends LatestRaw<T> | Latest<T> = LatestRaw<T>,
+	// L extends LatestRaw<T> | Latest<T> = LatestRaw<T>,
+	// L extends Latest<T> = Latest<T>,
 > {
 	/**
 	 * Storage for the reactive state. The map is keyed by Attendee.
@@ -38,14 +36,19 @@ export class ReactiveStateWorkspace<
 		return this.latest.local;
 	}
 
-	constructor(public readonly latest: L) {
+	constructor(
+		public readonly latest: Latest<T> | LatestRaw<T>,
+		// public readonly latest: L,
+	) {
 		// Wire up event listener to update the reactive map when the remote users' data is updated
-		latest.events.on("remoteUpdated", (data: LatestClientData<T>) => {
+		latest.events.on("remoteUpdated", (data) => {
+			// FIXME: why is the cast needed?
 			this.reactiveState.set(data.attendee, data.value as T);
 		});
 
 		latest.events.on("localUpdated", (data) => {
 			// Update the selection state with the new coordinate
+			// FIXME: why is the cast needed?
 			this.reactiveState.set(latest.presence.attendees.getMyself(), data.value as T);
 		});
 
@@ -54,3 +57,16 @@ export class ReactiveStateWorkspace<
 		});
 	}
 }
+
+// export class ReactiveStateWorkspaceRaw<
+// 	T extends object,
+// 	// L extends LatestRaw<T> | Latest<T> = LatestRaw<T>,
+// 	// L extends Latest<T> = Latest<T>,
+// > extends ReactiveStateWorkspace<T> {
+// 	constructor(
+// 		public readonly latest: LatestRaw<T>,
+// 		// public readonly latest: L,
+// 	) {
+// 		super(latest);
+// 	}
+// }
