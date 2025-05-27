@@ -62,13 +62,13 @@
     "@fluidframework/common-definitions": "^0.20.1",
     "@fluidframework/common-utils": "^0.32.2",
     "@fluidframework/container-definitions": "^1.4.0",
-    "@fluidframework/container-runtime": "^1.4.0",
+    "@fluidframework/container-runtime": "workspace:~",
     "@fluidframework/core-interfaces": "^1.4.0",
     "@fluidframework/datastore": "^1.4.0",
     "@fluidframework/datastore-definitions": "^1.4.0",
-    "@fluidframework/request-handler": "^1.4.0",
+    "@fluidframework/request-handler": "workspace:~",
     "@fluidframework/runtime-definitions": "^1.4.0",
-    "@fluidframework/runtime-utils": "^1.4.0",
+    "@fluidframework/runtime-utils": "workspace:~",
     "@fluidframework/shared-object-base": "^1.4.0"
   },
   "devDependencies": {

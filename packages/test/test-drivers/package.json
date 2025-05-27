@@ -60,7 +60,7 @@
     "@fluidframework/driver-definitions": "^1.4.0",
     "@fluidframework/driver-utils": "^1.4.0",
     "@fluidframework/local-driver": "^1.4.0",
-    "@fluidframework/odsp-doclib-utils": "^1.4.0",
+    "@fluidframework/odsp-doclib-utils": "workspace:~",
     "@fluidframework/odsp-driver": "^1.4.0",
     "@fluidframework/odsp-driver-definitions": "^1.4.0",
     "@fluidframework/odsp-urlresolver": "^1.4.0",
@@ -71,7 +71,7 @@
     "@fluidframework/test-pairwise-generator": "^1.4.0",
     "@fluidframework/test-runtime-utils": "^1.4.0",
     "@fluidframework/tinylicious-driver": "^1.4.0",
-    "@fluidframework/tool-utils": "^1.4.0",
+    "@fluidframework/tool-utils": "workspace:~",
     "axios": "^0.28.0",
     "semver": "^7.3.4",
     "uuid": "^8.3.1"

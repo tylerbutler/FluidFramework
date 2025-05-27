@@ -51,13 +51,13 @@
     "temp-directory": "nyc/.nyc_output"
   },
   "dependencies": {
-    "@fluidframework/aqueduct": "^1.4.0",
+    "@fluidframework/aqueduct": "workspace:~",
     "@fluidframework/cell": "^1.4.0",
     "@fluidframework/common-definitions": "^0.20.1",
     "@fluidframework/common-utils": "^0.32.2",
     "@fluidframework/container-definitions": "^1.4.0",
     "@fluidframework/container-loader": "^1.4.0",
-    "@fluidframework/container-runtime": "^1.4.0",
+    "@fluidframework/container-runtime": "workspace:~",
     "@fluidframework/core-interfaces": "^1.4.0",
     "@fluidframework/counter": "^1.4.0",
     "@fluidframework/datastore-definitions": "^1.4.0",

@@ -42,8 +42,8 @@
     "webpack:dev": "webpack --env development"
   },
   "dependencies": {
-    "@fluid-example/multiview-coordinate-interface": "^1.4.0",
-    "@fluid-example/multiview-slider-coordinate-view": "^1.4.0",
+    "@fluid-example/multiview-coordinate-interface": "workspace:~",
+    "@fluid-example/multiview-slider-coordinate-view": "workspace:~",
     "react": "^16.10.2"
   },
   "devDependencies": {

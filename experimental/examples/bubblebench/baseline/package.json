@@ -42,9 +42,9 @@
     "webpack:dev": "webpack --env development"
   },
   "dependencies": {
-    "@fluid-example/bubblebench-common": "^1.4.0",
-    "@fluid-example/example-utils": "^1.4.0",
-    "@fluidframework/aqueduct": "^1.4.0",
+    "@fluid-example/bubblebench-common": "workspace:~",
+    "@fluid-example/example-utils": "workspace:~",
+    "@fluidframework/aqueduct": "workspace:~",
     "@fluidframework/common-definitions": "^0.20.1",
     "@fluidframework/container-definitions": "^1.4.0",
     "@fluidframework/core-interfaces": "^1.4.0",

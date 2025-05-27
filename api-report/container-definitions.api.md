@@ -314,7 +314,6 @@ export interface IErrorBase extends Partial<Error> {
 
 // @public
 export interface IFluidBrowserPackage extends IFluidPackage {
-    // (undocumented)
     fluid: {
         browser: IFluidBrowserPackageEnvironment;
         [environment: string]: IFluidPackageEnvironment;

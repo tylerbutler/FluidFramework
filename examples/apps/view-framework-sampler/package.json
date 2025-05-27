@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@fluid-experimental/get-container": "^1.4.0",
-    "@fluidframework/aqueduct": "^1.4.0",
+    "@fluidframework/aqueduct": "workspace:~",
     "@fluidframework/common-definitions": "^0.20.1",
     "css-loader": "^1.0.0",
     "react": "^16.10.2",
