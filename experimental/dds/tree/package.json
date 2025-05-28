@@ -71,6 +71,7 @@
     "@types/lru-cache": "^5.1.0",
     "@types/mocha": "^9.1.1",
     "@types/random-js": "^1.0.31",
+    "@types/uuid": "^8.3.0",
     "chai": "^4.2.0",
     "concurrently": "^6.2.0",
     "copyfiles": "^2.1.0",
