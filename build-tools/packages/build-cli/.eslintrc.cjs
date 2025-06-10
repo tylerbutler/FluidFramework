@@ -4,7 +4,7 @@
  */
 
 module.exports = {
-	plugins: ["@typescript-eslint"],
+	plugins: ["@typescript-eslint", "chai-friendly"],
 	extends: [
 		"oclif",
 		"oclif-typescript",
@@ -21,6 +21,12 @@ module.exports = {
 
 		// Catch unused variables in at lint time instead of compile time
 		"@typescript-eslint/no-unused-vars": "error",
+
+		// Superseded by chai-friendly/no-unused-expressions
+		"no-unused-expressions": "off",
+		"@typescript-eslint/no-unused-expressions": "off",
+
+		"chai-friendly/no-unused-expressions": "error",
 
 		// This rule is often triggered when using custom Flags, so disabling.
 		"object-shorthand": "off",

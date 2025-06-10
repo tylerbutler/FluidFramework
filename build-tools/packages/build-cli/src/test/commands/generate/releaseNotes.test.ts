@@ -29,16 +29,16 @@ async function testSnapshotMatch(
 
 	let expectedContent: string;
 	try {
-		expectedContent = await readFile(snapshotFile, "utf-8");
+		expectedContent = await readFile(snapshotFile, "utf8");
 	} catch {
 		// If snapshot doesn't exist, create it
-		await writeFile(snapshotFile, outputContent, "utf-8");
+		await writeFile(snapshotFile, outputContent, "utf8");
 		console.log(`Created new snapshot: ${snapshotFile}`);
 		return;
 	}
 
 	// Normalize line endings for cross-platform compatibility
-	const normalizeContent = (content: string) => content.replace(/\r\n/g, "\n").trim();
+	const normalizeContent = (content: string): string => content.replace(/\r\n/g, "\n").trim();
 
 	const normalizedOutput = normalizeContent(outputContent);
 	const normalizedExpected = normalizeContent(expectedContent);
@@ -46,7 +46,7 @@ async function testSnapshotMatch(
 	if (normalizedOutput !== normalizedExpected) {
 		// Write the actual output to a file for easy comparison
 		const actualFile = path.join(snapshotsDir, snapshotName.replace(".md", ".actual.md"));
-		await writeFile(actualFile, outputContent, "utf-8");
+		await writeFile(actualFile, outputContent, "utf8");
 
 		console.log(`Snapshot mismatch detected.`);
 		console.log(`Expected: ${snapshotFile}`);
@@ -75,7 +75,7 @@ describe("generate:releaseNotes", () => {
 	});
 
 	it("generates release notes with correct mdast structure", async () => {
-		const { stdout } = await runCommand(
+		await runCommand(
 			[
 				"generate:releaseNotes",
 				"--releaseGroup",
@@ -91,7 +91,7 @@ describe("generate:releaseNotes", () => {
 		);
 
 		// Verify the file was created
-		const outputContent = await readFile(testOutputFile, "utf-8");
+		const outputContent = await readFile(testOutputFile, "utf8");
 		expect(outputContent).to.not.be.empty;
 
 		// Parse the markdown to verify mdast structure
@@ -170,7 +170,7 @@ describe("generate:releaseNotes", () => {
 			},
 		);
 
-		const outputContent = await readFile(testOutputFile, "utf-8");
+		const outputContent = await readFile(testOutputFile, "utf8");
 		const mdastTree = fromMarkdown(outputContent);
 
 		let hasMainHeading = false;
@@ -200,7 +200,7 @@ describe("generate:releaseNotes", () => {
 			},
 		);
 
-		const outputContent = await readFile(testOutputFile, "utf-8");
+		const outputContent = await readFile(testOutputFile, "utf8");
 		const mdastTree = fromMarkdown(outputContent);
 
 		let hasHeadingLinks = false;
@@ -241,7 +241,7 @@ describe("generate:releaseNotes", () => {
 			},
 		);
 
-		const outputContent = await readFile(testOutputFile, "utf-8");
+		const outputContent = await readFile(testOutputFile, "utf8");
 		const mdastTree = fromMarkdown(outputContent);
 
 		// Verify the structure includes expected sections
@@ -296,7 +296,7 @@ describe("generate:releaseNotes", () => {
 			},
 		);
 
-		const outputContent = await readFile(testOutputFile, "utf-8");
+		const outputContent = await readFile(testOutputFile, "utf8");
 		const mdastTree = fromMarkdown(outputContent);
 
 		let hasStartBuildingHeading = false;
@@ -337,7 +337,7 @@ describe("generate:releaseNotes", () => {
 			},
 		);
 
-		const outputContent = await readFile(testOutputFile, "utf-8");
+		const outputContent = await readFile(testOutputFile, "utf8");
 
 		// Verify the markdown can be parsed without errors
 		expect(() => fromMarkdown(outputContent)).to.not.throw();
@@ -370,7 +370,7 @@ describe("generate:releaseNotes", () => {
 			},
 		);
 
-		const outputContent = await readFile(testOutputFile, "utf-8");
+		const outputContent = await readFile(testOutputFile, "utf8");
 
 		// The remark-toc plugin should generate a TOC after the "Contents" heading
 		expect(outputContent).to.include("## Contents");
@@ -396,7 +396,7 @@ describe("generate:releaseNotes", () => {
 			},
 		);
 
-		const outputContent = await readFile(testOutputFile, "utf-8");
+		const outputContent = await readFile(testOutputFile, "utf8");
 		await testSnapshotMatch(
 			outputContent,
 			"main-minor-release-notes.md",
@@ -421,7 +421,7 @@ describe("generate:releaseNotes", () => {
 			},
 		);
 
-		const outputContent = await readFile(testOutputFile, "utf-8");
+		const outputContent = await readFile(testOutputFile, "utf8");
 		await testSnapshotMatch(
 			outputContent,
 			"main-minor-release-notes-with-heading-links.md",
@@ -446,7 +446,7 @@ describe("generate:releaseNotes", () => {
 			},
 		);
 
-		const outputContent = await readFile(testOutputFile, "utf-8");
+		const outputContent = await readFile(testOutputFile, "utf8");
 		await testSnapshotMatch(
 			outputContent,
 			"main-minor-release-notes-exclude-h1.md",

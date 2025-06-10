@@ -3,6 +3,7 @@
  * Licensed under the MIT License.
  */
 
+// eslint-disable-next-line import/no-deprecated
 import { Package } from "@fluidframework/build-tools";
 import { runCommand } from "@oclif/test";
 import chai, { assert, expect } from "chai";
@@ -12,7 +13,9 @@ import { describe, it } from "mocha";
 chai.use(assertArrays);
 
 interface jsonOutput {
+	// eslint-disable-next-line import/no-deprecated
 	selected: Package[];
+	// eslint-disable-next-line import/no-deprecated
 	filtered: Package[];
 }
 

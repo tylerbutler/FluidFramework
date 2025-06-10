@@ -28,6 +28,7 @@ async function getContext(): Promise<Context> {
 	return context;
 }
 
+// eslint-disable-next-line import/no-deprecated
 async function getBuildToolsPackages(): Promise<Package[]> {
 	const context = await getContext();
 	// Use the build-tools packages as test cases. It's brittle, but functional. Ideally, we would have mocks for
@@ -36,6 +37,7 @@ async function getBuildToolsPackages(): Promise<Package[]> {
 	return packages;
 }
 
+// eslint-disable-next-line import/no-deprecated
 async function getClientPackages(): Promise<Package[]> {
 	const context = await getContext();
 	const packages = context.packagesInReleaseGroup("client");
