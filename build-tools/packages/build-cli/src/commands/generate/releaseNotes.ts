@@ -83,6 +83,12 @@ export default class GenerateReleaseNotesCommand extends BaseCommand<
 			description:
 				"Pass this flag to omit the top H1 heading. This is useful when the Markdown output will be used as part of another document.",
 		}),
+		changesetPath: Flags.directory({
+			required: false,
+			description:
+				"Use this path as the source of the changesets. Defaults to `RELEASE_GROUP_ROOT/.changeset`.",
+			exists: true,
+		}),
 		...BaseCommand.flags,
 	} as const;
 
@@ -115,7 +121,8 @@ export default class GenerateReleaseNotesCommand extends BaseCommand<
 			);
 		}
 
-		const changesetDir = path.join(releaseGroup.directory, DEFAULT_CHANGESET_PATH);
+		const changesetDir =
+			flags.changesetPath ?? path.join(releaseGroup.directory, DEFAULT_CHANGESET_PATH);
 		const changesets = await loadChangesets(changesetDir, logger);
 
 		const { version } = releaseGroup;

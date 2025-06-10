@@ -338,13 +338,15 @@ Generates release notes from individual changeset files.
 ```
 USAGE
   $ flub generate releaseNotes -g client|server|azure|build-tools|gitrest|historian -t major|minor --outFile <value>
-    [--json] [-v | --quiet] [--includeUnknown] [--headingLinks] [--excludeH1]
+    [--json] [-v | --quiet] [--includeUnknown] [--headingLinks] [--excludeH1] [--changesetPath <value>]
 
 FLAGS
   -g, --releaseGroup=<option>  (required) Name of a release group.
                                <options: client|server|azure|build-tools|gitrest|historian>
   -t, --releaseType=<option>   (required) The type of release for which the release notes are being generated.
                                <options: major|minor>
+      --changesetPath=<value>  Use this path as the source of the changesets. Defaults to
+                               `RELEASE_GROUP_ROOT/.changeset`.
       --excludeH1              Pass this flag to omit the top H1 heading. This is useful when the Markdown output will
                                be used as part of another document.
       --headingLinks           Pass this flag to output HTML anchor anchor tags inline for every heading. This is useful
