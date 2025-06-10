@@ -7,12 +7,56 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { runCommand } from "@oclif/test";
 import { expect } from "chai";
-import type { Heading, Html, Link, Paragraph, Root, Text } from "mdast";
+import { describe, it, beforeEach, afterEach } from "mocha";
 import { fromMarkdown } from "mdast-util-from-markdown";
-import { afterEach, beforeEach, describe, it } from "mocha";
 import { visit } from "unist-util-visit";
+import type { Heading, Html, Link, Paragraph, Text, Root } from "mdast";
 
 import { testRepoRoot } from "../../init.js";
+
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const snapshotsDir = path.resolve(__dirname, "../../data/releaseNotes/snapshots");
+
+/**
+ * Helper function to test snapshot matching for release notes
+ */
+async function testSnapshotMatch(
+	outputContent: string,
+	snapshotName: string,
+	errorMessage: string = "Generated release notes do not match snapshot"
+): Promise<void> {
+	const snapshotFile = path.join(snapshotsDir, snapshotName);
+	
+	let expectedContent: string;
+	try {
+		expectedContent = await readFile(snapshotFile, "utf-8");
+	} catch (error) {
+		// If snapshot doesn't exist, create it
+		await writeFile(snapshotFile, outputContent, "utf-8");
+		console.log(`Created new snapshot: ${snapshotFile}`);
+		return;
+	}
+
+	// Normalize line endings for cross-platform compatibility
+	const normalizeContent = (content: string) => content.replace(/\r\n/g, '\n').trim();
+	
+	const normalizedOutput = normalizeContent(outputContent);
+	const normalizedExpected = normalizeContent(expectedContent);
+
+	if (normalizedOutput !== normalizedExpected) {
+		// Write the actual output to a file for easy comparison
+		const actualFile = path.join(snapshotsDir, snapshotName.replace('.md', '.actual.md'));
+		await writeFile(actualFile, outputContent, "utf-8");
+		
+		console.log(`Snapshot mismatch detected.`);
+		console.log(`Expected: ${snapshotFile}`);
+		console.log(`Actual: ${actualFile}`);
+		console.log(`To update snapshot, replace the contents of the expected file with the actual file.`);
+	}
+
+	expect(normalizedOutput).to.equal(normalizedExpected, 
+		`${errorMessage}. Check the .actual.md file for differences.`);
+}
 
 describe("generate:releaseNotes", () => {
 	const testOutputFile = path.join(testRepoRoot, "TEST_RELEASE_NOTES.md");
@@ -330,5 +374,79 @@ describe("generate:releaseNotes", () => {
 		// Should contain links to the main sections
 		expect(outputContent).to.match(/- \[.*New Features.*\]\(#.*\)/);
 		expect(outputContent).to.match(/- \[.*Bug Fixes.*\]\(#.*\)/);
+	});
+
+	it("matches snapshot for consistent output format", async () => {
+		await runCommand(
+			[
+				"generate:releaseNotes",
+				"--releaseGroup",
+				"main",
+				"--releaseType",
+				"minor",
+				"--outFile",
+				"TEST_RELEASE_NOTES.md",
+			],
+			{
+				root: import.meta.url,
+			},
+		);
+
+		const outputContent = await readFile(testOutputFile, "utf-8");
+		await testSnapshotMatch(
+			outputContent,
+			"main-minor-release-notes.md",
+			"Generated release notes do not match snapshot"
+		);
+	});
+
+	it("matches snapshot with headingLinks flag", async () => {
+		await runCommand(
+			[
+				"generate:releaseNotes",
+				"--releaseGroup",
+				"main",
+				"--releaseType",
+				"minor",
+				"--outFile",
+				"TEST_RELEASE_NOTES.md",
+				"--headingLinks",
+			],
+			{
+				root: import.meta.url,
+			},
+		);
+
+		const outputContent = await readFile(testOutputFile, "utf-8");
+		await testSnapshotMatch(
+			outputContent,
+			"main-minor-release-notes-with-heading-links.md",
+			"Generated release notes with heading links do not match snapshot"
+		);
+	});
+
+	it("matches snapshot with excludeH1 flag", async () => {
+		await runCommand(
+			[
+				"generate:releaseNotes",
+				"--releaseGroup",
+				"main",
+				"--releaseType",
+				"minor",
+				"--outFile",
+				"TEST_RELEASE_NOTES.md",
+				"--excludeH1",
+			],
+			{
+				root: import.meta.url,
+			},
+		);
+
+		const outputContent = await readFile(testOutputFile, "utf-8");
+		await testSnapshotMatch(
+			outputContent,
+			"main-minor-release-notes-exclude-h1.md",
+			"Generated release notes without H1 do not match snapshot"
+		);
 	});
 });
