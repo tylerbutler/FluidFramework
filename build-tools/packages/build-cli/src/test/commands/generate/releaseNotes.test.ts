@@ -7,10 +7,10 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { runCommand } from "@oclif/test";
 import { expect } from "chai";
-import { describe, it, beforeEach, afterEach } from "mocha";
+import type { Heading, Html, Link, Paragraph } from "mdast";
 import { fromMarkdown } from "mdast-util-from-markdown";
+import { afterEach, describe, it } from "mocha";
 import { visit } from "unist-util-visit";
-import type { Heading, Html, Link, Paragraph, Text, Root } from "mdast";
 
 import { testRepoRoot } from "../../init.js";
 
@@ -23,14 +23,14 @@ const snapshotsDir = path.resolve(__dirname, "../../data/releaseNotes/snapshots"
 async function testSnapshotMatch(
 	outputContent: string,
 	snapshotName: string,
-	errorMessage: string = "Generated release notes do not match snapshot"
+	errorMessage: string = "Generated release notes do not match snapshot",
 ): Promise<void> {
 	const snapshotFile = path.join(snapshotsDir, snapshotName);
-	
+
 	let expectedContent: string;
 	try {
 		expectedContent = await readFile(snapshotFile, "utf-8");
-	} catch (error) {
+	} catch {
 		// If snapshot doesn't exist, create it
 		await writeFile(snapshotFile, outputContent, "utf-8");
 		console.log(`Created new snapshot: ${snapshotFile}`);
@@ -38,24 +38,28 @@ async function testSnapshotMatch(
 	}
 
 	// Normalize line endings for cross-platform compatibility
-	const normalizeContent = (content: string) => content.replace(/\r\n/g, '\n').trim();
-	
+	const normalizeContent = (content: string) => content.replace(/\r\n/g, "\n").trim();
+
 	const normalizedOutput = normalizeContent(outputContent);
 	const normalizedExpected = normalizeContent(expectedContent);
 
 	if (normalizedOutput !== normalizedExpected) {
 		// Write the actual output to a file for easy comparison
-		const actualFile = path.join(snapshotsDir, snapshotName.replace('.md', '.actual.md'));
+		const actualFile = path.join(snapshotsDir, snapshotName.replace(".md", ".actual.md"));
 		await writeFile(actualFile, outputContent, "utf-8");
-		
+
 		console.log(`Snapshot mismatch detected.`);
 		console.log(`Expected: ${snapshotFile}`);
 		console.log(`Actual: ${actualFile}`);
-		console.log(`To update snapshot, replace the contents of the expected file with the actual file.`);
+		console.log(
+			`To update snapshot, replace the contents of the expected file with the actual file.`,
+		);
 	}
 
-	expect(normalizedOutput).to.equal(normalizedExpected, 
-		`${errorMessage}. Check the .actual.md file for differences.`);
+	expect(normalizedOutput).to.equal(
+		normalizedExpected,
+		`${errorMessage}. Check the .actual.md file for differences.`,
+	);
 }
 
 describe("generate:releaseNotes", () => {
@@ -64,7 +68,7 @@ describe("generate:releaseNotes", () => {
 	afterEach(async () => {
 		// Clean up test output file
 		try {
-			await import("node:fs/promises").then((fs) => fs.unlink(testOutputFile));
+			await import("node:fs/promises").then(async (fs) => fs.unlink(testOutputFile));
 		} catch {
 			// Ignore if file doesn't exist
 		}
@@ -111,13 +115,13 @@ describe("generate:releaseNotes", () => {
 
 		visit(mdastTree, "heading", (node: Heading) => {
 			if (node.depth === 1 && node.children[0]?.type === "text") {
-				const text = (node.children[0] as Text).value;
+				const text = node.children[0].value;
 				if (text.includes("Fluid Framework v")) {
 					hasMainHeading = true;
 				}
 			}
 			if (node.depth === 2 && node.children[0]?.type === "text") {
-				const text = (node.children[0] as Text).value;
+				const text = node.children[0].value;
 				if (text === "Contents") {
 					hasContentsHeading = true;
 				}
@@ -126,7 +130,7 @@ describe("generate:releaseNotes", () => {
 				}
 			}
 			if (node.depth === 4 && node.children[0]?.type === "text") {
-				const text = (node.children[0] as Text).value;
+				const text = node.children[0].value;
 				if (text === "Change details") {
 					hasChangeDetails = true;
 				}
@@ -135,7 +139,7 @@ describe("generate:releaseNotes", () => {
 
 		visit(mdastTree, "link", (node: Link) => {
 			if (node.url === "#contents" && node.children[0]?.type === "text") {
-				const text = (node.children[0] as Text).value;
+				const text = node.children[0].value;
 				if (text === "⬆️ Table of contents") {
 					hasTocLinks = true;
 				}
@@ -204,7 +208,7 @@ describe("generate:releaseNotes", () => {
 
 		visit(mdastTree, "heading", (node: Heading) => {
 			if (node.children.length > 0 && node.children[0]?.type === "html") {
-				const htmlNode = node.children[0] as Html;
+				const htmlNode = node.children[0];
 				if (htmlNode.value.includes('<a id="')) {
 					hasHeadingLinks = true;
 				}
@@ -248,7 +252,7 @@ describe("generate:releaseNotes", () => {
 
 		visit(mdastTree, "heading", (node: Heading) => {
 			if (node.children[0]?.type === "text") {
-				const text = (node.children[0] as Text).value;
+				const text = node.children[0].value;
 				if (text === "🚀 New Features") {
 					foundFeatureSection = true;
 				}
@@ -263,7 +267,7 @@ describe("generate:releaseNotes", () => {
 
 		visit(mdastTree, "paragraph", (node: Paragraph) => {
 			if (node.children[0]?.type === "text") {
-				const text = (node.children[0] as Text).value;
+				const text = node.children[0].value;
 				if (text === "Affected packages:") {
 					foundAffectedPackages = true;
 				}
@@ -300,7 +304,7 @@ describe("generate:releaseNotes", () => {
 
 		visit(mdastTree, "heading", (node: Heading) => {
 			if (node.children[0]?.type === "text") {
-				const text = (node.children[0] as Text).value;
+				const text = node.children[0].value;
 				if (text.includes("Start Building Today")) {
 					hasStartBuildingHeading = true;
 				}
@@ -372,8 +376,8 @@ describe("generate:releaseNotes", () => {
 		expect(outputContent).to.include("## Contents");
 
 		// Should contain links to the main sections
-		expect(outputContent).to.match(/- \[.*New Features.*\]\(#.*\)/);
-		expect(outputContent).to.match(/- \[.*Bug Fixes.*\]\(#.*\)/);
+		expect(outputContent).to.match(/- \[.*New Features.*]\(#.*\)/);
+		expect(outputContent).to.match(/- \[.*Bug Fixes.*]\(#.*\)/);
 	});
 
 	it("matches snapshot for consistent output format", async () => {
@@ -396,7 +400,7 @@ describe("generate:releaseNotes", () => {
 		await testSnapshotMatch(
 			outputContent,
 			"main-minor-release-notes.md",
-			"Generated release notes do not match snapshot"
+			"Generated release notes do not match snapshot",
 		);
 	});
 
@@ -421,7 +425,7 @@ describe("generate:releaseNotes", () => {
 		await testSnapshotMatch(
 			outputContent,
 			"main-minor-release-notes-with-heading-links.md",
-			"Generated release notes with heading links do not match snapshot"
+			"Generated release notes with heading links do not match snapshot",
 		);
 	});
 
@@ -446,7 +450,7 @@ describe("generate:releaseNotes", () => {
 		await testSnapshotMatch(
 			outputContent,
 			"main-minor-release-notes-exclude-h1.md",
-			"Generated release notes without H1 do not match snapshot"
+			"Generated release notes without H1 do not match snapshot",
 		);
 	});
 });
