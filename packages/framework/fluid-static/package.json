@@ -60,7 +60,7 @@
     "@fluidframework/map": "^1.4.0",
     "@fluidframework/mocha-test-setup": "^1.4.0",
     "@fluidframework/sequence": "^1.4.0",
-    "@microsoft/api-extractor": "^7.22.2",
+    "@microsoft/api-extractor": "~7.22.2",
     "@rushstack/eslint-config": "^2.5.1",
     "@types/assert": "^1.5.1",
     "@types/mocha": "^9.1.1",
