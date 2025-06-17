@@ -125,7 +125,7 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 				const { config, configFilePath } = getBuildProjectConfig(searchPath);
 				configToUse = {
 					configuration: config,
-					configFilePath: configFilePath,
+					configFilePath,
 					configurationSource: configFilePath,
 					root: path.resolve(path.dirname(configFilePath)),
 				};
@@ -156,8 +156,6 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 
 		return configToUse;
 	}
-
-	private initializeConfig() {}
 
 	private inferConfigProps(searchPath: string): {
 		configuration: BuildProjectConfig;

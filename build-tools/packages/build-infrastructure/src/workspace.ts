@@ -9,6 +9,7 @@ import execa from "execa";
 import resolveWorkspacePkg from "resolve-workspace-root";
 import { globSync } from "tinyglobby";
 
+// eslint-disable-next-line import/no-named-as-default-member -- import is done this way for ESM/CJS interop
 const { getWorkspaceGlobs, resolveWorkspaceRoot } = resolveWorkspacePkg;
 
 import type { ReleaseGroupDefinition, WorkspaceDefinition } from "./config.js";
