@@ -38,10 +38,16 @@ import {
 	getPropertyKeyFromStoredKey,
 	treeNodeApi,
 	getIdentifierFromNode,
-	mapTreeFromNodeData,
+	unhydratedFlexTreeFromInsertable,
+	getOrCreateNodeFromInnerNode,
 } from "../simple-tree/index.js";
 import { extractFromOpaque, type JsonCompatible } from "../util/index.js";
-import type { CodecWriteOptions, ICodecOptions } from "../codec/index.js";
+import {
+	FluidClientVersion,
+	noopValidator,
+	type ICodecOptions,
+	type CodecWriteOptions,
+} from "../codec/index.js";
 import type { ITreeCursorSynchronous } from "../core/index.js";
 import {
 	cursorForMapTreeField,
@@ -57,8 +63,6 @@ import {
 } from "../feature-libraries/index.js";
 import { independentInitializedView, type ViewContent } from "./independentView.js";
 import { SchematizingSimpleTreeView, ViewSlot } from "./schematizingTreeView.js";
-import { currentVersion, noopValidator } from "../codec/index.js";
-import { createFromMapTree } from "../simple-tree/index.js";
 
 const identifier: TreeIdentifierUtils = (node: TreeNode): string | undefined => {
 	const nodeIdentifier = getIdentifierFromNode(node, "uncompressed");
@@ -370,8 +374,11 @@ export const TreeAlpha: TreeAlpha = {
 			? TreeFieldFromImplicitField<TSchema>
 			: TreeNode | TreeLeafValue | undefined
 	> {
-		const mapTree = mapTreeFromNodeData(data as InsertableField<UnsafeUnknownSchema>, schema);
-		const result = mapTree === undefined ? undefined : createFromMapTree(schema, mapTree);
+		const mapTree = unhydratedFlexTreeFromInsertable(
+			data as InsertableField<UnsafeUnknownSchema>,
+			schema,
+		);
+		const result = mapTree === undefined ? undefined : getOrCreateNodeFromInnerNode(mapTree);
 		return result as Unhydrated<
 			TSchema extends ImplicitFieldSchema
 				? TreeFieldFromImplicitField<TSchema>
@@ -460,7 +467,8 @@ export const TreeAlpha: TreeAlpha = {
 	): Unhydrated<TreeFieldFromImplicitField<TSchema>> {
 		const config = new TreeViewConfigurationAlpha({ schema });
 		const content: ViewContent = {
-			schema: extractPersistedSchema(config, currentVersion),
+			// Always use a v1 schema codec for consistency.
+			schema: extractPersistedSchema(config, FluidClientVersion.v2_0),
 			tree: compressedData,
 			idCompressor: options.idCompressor ?? createIdCompressor(),
 		};
