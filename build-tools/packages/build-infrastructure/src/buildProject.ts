@@ -10,11 +10,9 @@ import { globSync } from "tinyglobby";
 
 import {
 	type BuildProjectConfig,
-	type BuildProjectConfigV2,
 	type ReleaseGroupDefinition,
 	getBuildProjectConfig,
 	isV1Config,
-	isV2Config,
 } from "./config.js";
 import { NotInGitRepository } from "./errors.js";
 import { findGitRootSync } from "./git.js";
@@ -69,42 +67,11 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 		public readonly upstreamRemotePartialUrl?: string,
 	) {
 		// Handle configuration
-		if (infer) {
-			this.configuration = generateBuildProjectConfig(searchPath);
-			this.configFilePath = searchPath;
-			this.configurationSource = "INFERRED";
-			this.root = searchPath;
-		} else {
-			try {
-				const { config, configFilePath } = getBuildProjectConfig(searchPath);
-				this.configuration = config;
-				this.configFilePath = configFilePath;
-				this.configurationSource = configFilePath;
-				this.root = path.resolve(path.dirname(configFilePath));
-			} catch {
-				this.configuration = generateBuildProjectConfig(searchPath);
-				this.configFilePath = searchPath;
-				this.configurationSource = "INFERRED";
-				this.root = searchPath;
-			}
-		}
-
-		if (isV2Config(this.configuration) && this.configuration.excludeGlobs !== undefined) {
-			// TODO: refactor and consolidate all this logic. Maybe a single function that take a BuildProjectConfig and
-			// returns all the class properties that are set in these blocks. Then we can just set it once and move the logic
-			// to a function.
-			this.configuration = generateBuildProjectConfig(searchPath);
-			this.configFilePath = searchPath;
-			this.configurationSource = "INFERRED";
-			this.root = searchPath;
-		} else if (
-			(this.configuration.buildProject ?? this.configuration.repoPackages) === undefined
-		) {
-			this.configuration = generateBuildProjectConfig(searchPath);
-			this.configFilePath = searchPath;
-			this.configurationSource = "INFERRED";
-			this.root = searchPath;
-		}
+		const props = this.determineClassProps(searchPath, infer);
+		this.configFilePath = props.configFilePath;
+		this.configuration = props.configuration;
+		this.configurationSource = props.configurationSource;
+		this.root = props.root;
 
 		// This will load both v1 and v2 configs with the buildProject setting.
 		if (this.configuration.buildProject !== undefined) {
@@ -139,6 +106,71 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
 			}
 		}
 		this._releaseGroups = releaseGroups;
+	}
+
+	private determineClassProps(
+		searchPath: string,
+		infer = false,
+	): {
+		configuration: BuildProjectConfig;
+		configFilePath: string;
+		configurationSource: string;
+		root: string;
+	} {
+		const inferredConfig = this.inferConfigProps(searchPath);
+		let configToUse = inferredConfig;
+
+		if (!infer) {
+			try {
+				const { config, configFilePath } = getBuildProjectConfig(searchPath);
+				configToUse = {
+					configuration: config,
+					configFilePath: configFilePath,
+					configurationSource: configFilePath,
+					root: path.resolve(path.dirname(configFilePath)),
+				};
+			} catch {
+				configToUse = inferredConfig;
+			}
+		}
+
+		// If the config has an excludeGlobs setting,
+		// if (configToUse.configuration.excludeGlobs !== undefined) {
+		// 	// TODO: refactor and consolidate all this logic. Maybe a single function that take a BuildProjectConfig and
+		// 	// returns all the class properties that are set in these blocks. Then we can just set it once and move the logic
+		// 	// to a function.
+		// 	this.configuration = generateBuildProjectConfig(searchPath);
+		// 	this.configFilePath = searchPath;
+		// 	this.configurationSource = "INFERRED";
+		// 	this.root = searchPath;
+		// }
+		// If the config has no buildProject or repoPackages setting, use the inferred
+		// if (
+		// 	(configToUse.configuration.buildProject ?? configToUse.configuration.repoPackages) === undefined
+		// ) {
+		// 	this.configuration = generateBuildProjectConfig(searchPath);
+		// 	this.configFilePath = searchPath;
+		// 	this.configurationSource = "INFERRED";
+		// 	this.root = searchPath;
+		// }
+
+		return configToUse;
+	}
+
+	private initializeConfig() {}
+
+	private inferConfigProps(searchPath: string): {
+		configuration: BuildProjectConfig;
+		configFilePath: string;
+		configurationSource: string;
+		root: string;
+	} {
+		return {
+			configuration: generateBuildProjectConfig(searchPath),
+			configFilePath: searchPath,
+			configurationSource: "INFERRED",
+			root: searchPath,
+		};
 	}
 
 	private readonly _workspaces: Map<WorkspaceName, IWorkspace>;
@@ -237,9 +269,9 @@ export class BuildProject<P extends IPackage> implements IBuildProject<P> {
  *
  * Generated configs use the latest config version.
  */
-export function generateBuildProjectConfig(searchPath: string): BuildProjectConfigV2 {
-	const toReturn: BuildProjectConfigV2 = {
-		version: 2,
+export function generateBuildProjectConfig(searchPath: string): BuildProjectConfig {
+	const toReturn: BuildProjectConfig = {
+		version: 1,
 		buildProject: {
 			workspaces: {},
 		},

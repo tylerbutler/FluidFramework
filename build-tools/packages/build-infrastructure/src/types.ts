@@ -5,11 +5,7 @@
 
 import type { Agent, AgentName } from "package-manager-detector";
 import { SimpleGit } from "simple-git";
-import type {
-	Tagged as Opaque,
-	SetRequired,
-	PackageJson as StandardPackageJson,
-} from "type-fest";
+import type { Opaque, SetRequired, PackageJson as StandardPackageJson } from "type-fest";
 
 import type { BuildProjectConfig } from "./config.js";
 

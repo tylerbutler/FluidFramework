@@ -28,7 +28,7 @@ export {
 	type IFluidBuildDirEntry,
 	type BuildProjectConfig,
 	type BuildProjectConfigV1,
-	type BuildProjectConfigV2,
+	type BuildProjectConfigV1Base,
 	BUILDPROJECT_CONFIG_MIN_VERSION,
 	getBuildProjectConfig,
 	isV1Config,

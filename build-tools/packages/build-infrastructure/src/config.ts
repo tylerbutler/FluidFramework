@@ -4,8 +4,8 @@
  */
 
 import { cosmiconfigSync } from "cosmiconfig";
-
 import type { RequireExactlyOne } from "type-fest";
+
 import {
 	type IPackage,
 	type PackageName,
@@ -18,7 +18,7 @@ import {
  */
 export const BUILDPROJECT_CONFIG_MIN_VERSION = 1;
 
-export type BuildProjectConfig = BuildProjectConfigV1 | BuildProjectConfigV2;
+export type BuildProjectConfig = BuildProjectConfigV1;
 
 /**
  * Top-most configuration for BuildProject settings.
@@ -32,7 +32,7 @@ export interface BuildProjectConfigBase {
 	/**
 	 * The layout of the build project into workspaces and release groups.
 	 */
-	buildProject?: {
+	buildProject: {
 		workspaces: {
 			/**
 			 * A mapping of workspace name to folder containing a workspace config file (e.g. pnpm-workspace.yaml).
@@ -40,9 +40,16 @@ export interface BuildProjectConfigBase {
 			[name: string]: WorkspaceDefinition;
 		};
 	};
+
+	/**
+	 * An array of glob strings. Any paths that match at least one of these globs will be excluded from the build project.
+	 * This setting is helpful if you need to exclude workspaces that are used for testing or that are not yet managed by
+	 * sail.
+	 */
+	excludeGlobs: string[];
 }
 
-export interface BuildProjectConfigV1 extends BuildProjectConfigBase {
+export interface BuildProjectConfigV1Base extends Partial<BuildProjectConfigBase> {
 	/**
 	 * The version of the config.
 	 */
@@ -58,19 +65,10 @@ export interface BuildProjectConfigV1 extends BuildProjectConfigBase {
 	repoPackages?: IFluidBuildDirs;
 }
 
-interface BuildProjectConfigV2Base extends Partial<BuildProjectConfigBase> {
-	/**
-	 * The version of the config.
-	 */
-	version: 2;
-
-	/**
-	 * An array of glob strings. Any paths that match at least on of these globs will be excluded from the build project.
-	 * This setting is helpful if you need to exclude workspaces that are used for testing or that are not yet managed by
-	 * sail.
-	 */
-	excludeGlobs: string[];
-}
+export type BuildProjectConfigV1 = RequireExactlyOne<
+	BuildProjectConfigV1Base,
+	"buildProject" | "excludeGlobs" | "repoPackages"
+>;
 
 /**
  * Type guard to check if the input is a BuildProjectConfigV1.
@@ -79,21 +77,6 @@ interface BuildProjectConfigV2Base extends Partial<BuildProjectConfigBase> {
  * @returns `true` if the input is a BuildProjectConfigV1; `false` otherwise.
  */
 export function isV1Config(input: BuildProjectConfig): input is BuildProjectConfigV1 {
-	return input.version === 1;
-}
-
-export type BuildProjectConfigV2 = RequireExactlyOne<
-	BuildProjectConfigV2Base,
-	"excludeGlobs" | "buildProject"
->;
-
-/**
- * Type guard to check if the input is a BuildProjectConfigV2.
- *
- * @param input - The input to check.
- * @returns `true` if the input is a BuildProjectConfigV2; `false` otherwise.
- */
-export function isV2Config(input: BuildProjectConfig): input is BuildProjectConfigV2 {
 	return input.version === 1;
 }
 
@@ -277,7 +260,7 @@ export function getBuildProjectConfig(
 	if (configResult === null || configResult === undefined) {
 		throw new Error("No BuildProject configuration found.");
 	}
-	const config = configResult.config as BuildProjectConfigV1;
+	const config = configResult.config as BuildProjectConfig;
 
 	// Only versions higher than the minimum are supported. If any other value is provided, throw an error.
 	if (config.version < BUILDPROJECT_CONFIG_MIN_VERSION) {
