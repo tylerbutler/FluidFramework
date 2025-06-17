@@ -1,3 +1,8 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 /**
  * An error thrown when trying to update an element in a {@link WriteOnceMap} that has already been set.
  *

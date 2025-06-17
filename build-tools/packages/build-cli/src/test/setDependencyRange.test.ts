@@ -1,3 +1,21 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
+import assert from "node:assert";
+import {
+	type ReleaseGroupName,
+	type WorkspaceName,
+	loadBuildProject,
+} from "@fluid-tools/build-infrastructure";
+import { expect } from "chai";
+import { simpleGit } from "simple-git";
+
+import { testRepoRoot } from "./init.js";
+
+const git = simpleGit(testRepoRoot);
+
 describe("setDependencyRange", () => {
 	const repo = loadBuildProject(testRepoRoot);
 	const main = repo.releaseGroups.get("main" as ReleaseGroupName);

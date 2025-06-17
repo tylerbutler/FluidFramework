@@ -43,6 +43,17 @@ export const BUILDPROJECT_CONFIG_MIN_VERSION = 1;
 // @public (undocumented)
 export type BuildProjectConfig = BuildProjectConfigV1;
 
+// @public
+export interface BuildProjectConfigBase {
+    buildProject: {
+        workspaces: {
+            [name: string]: WorkspaceDefinition;
+        };
+    };
+    excludeGlobs: string[];
+    version: number;
+}
+
 // @public (undocumented)
 export type BuildProjectConfigV1 = RequireExactlyOne<BuildProjectConfigV1Base, "buildProject" | "excludeGlobs" | "repoPackages">;
 

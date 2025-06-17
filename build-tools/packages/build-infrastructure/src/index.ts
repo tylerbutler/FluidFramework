@@ -27,6 +27,7 @@ export {
 	type IFluidBuildDirs,
 	type IFluidBuildDirEntry,
 	type BuildProjectConfig,
+	type BuildProjectConfigBase,
 	type BuildProjectConfigV1,
 	type BuildProjectConfigV1Base,
 	BUILDPROJECT_CONFIG_MIN_VERSION,
