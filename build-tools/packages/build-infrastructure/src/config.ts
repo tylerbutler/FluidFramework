@@ -5,6 +5,7 @@
 
 import { cosmiconfigSync } from "cosmiconfig";
 
+import type { RequireExactlyOne } from "type-fest";
 import {
 	type IPackage,
 	type PackageName,
@@ -13,27 +14,20 @@ import {
 } from "./types.js";
 
 /**
- * The version of the BuildProject configuration currently used.
+ * The minimum version of the BuildProject configuration currently supported.
  */
-export const BUILDPROJECT_CONFIG_VERSION = 1;
+export const BUILDPROJECT_CONFIG_MIN_VERSION = 1;
+
+export type BuildProjectConfig = BuildProjectConfigV1 | BuildProjectConfigV2;
 
 /**
  * Top-most configuration for BuildProject settings.
  */
-export interface BuildProjectConfig {
+export interface BuildProjectConfigBase {
 	/**
 	 * The version of the config.
 	 */
-	version: typeof BUILDPROJECT_CONFIG_VERSION;
-
-	/**
-	 * **BACK-COMPAT ONLY**
-	 *
-	 * A mapping of package or release group names to metadata about the package or release group.
-	 *
-	 * @deprecated Use the buildProject property instead.
-	 */
-	repoPackages?: IFluidBuildDirs;
+	version: number;
 
 	/**
 	 * The layout of the build project into workspaces and release groups.
@@ -48,8 +42,63 @@ export interface BuildProjectConfig {
 	};
 }
 
+export interface BuildProjectConfigV1 extends BuildProjectConfigBase {
+	/**
+	 * The version of the config.
+	 */
+	version: 1;
+
+	/**
+	 * **BACK-COMPAT ONLY**
+	 *
+	 * A mapping of package or release group names to metadata about the package or release group.
+	 *
+	 * @deprecated Use the buildProject property instead.
+	 */
+	repoPackages?: IFluidBuildDirs;
+}
+
+interface BuildProjectConfigV2Base extends Partial<BuildProjectConfigBase> {
+	/**
+	 * The version of the config.
+	 */
+	version: 2;
+
+	/**
+	 * An array of glob strings. Any paths that match at least on of these globs will be excluded from the build project.
+	 * This setting is helpful if you need to exclude workspaces that are used for testing or that are not yet managed by
+	 * sail.
+	 */
+	excludeGlobs: string[];
+}
+
 /**
- * The definition of a workspace ih configuration.
+ * Type guard to check if the input is a BuildProjectConfigV1.
+ *
+ * @param input - The input to check.
+ * @returns `true` if the input is a BuildProjectConfigV1; `false` otherwise.
+ */
+export function isV1Config(input: BuildProjectConfig): input is BuildProjectConfigV1 {
+	return input.version === 1;
+}
+
+export type BuildProjectConfigV2 = RequireExactlyOne<
+	BuildProjectConfigV2Base,
+	"excludeGlobs" | "buildProject"
+>;
+
+/**
+ * Type guard to check if the input is a BuildProjectConfigV2.
+ *
+ * @param input - The input to check.
+ * @returns `true` if the input is a BuildProjectConfigV2; `false` otherwise.
+ */
+export function isV2Config(input: BuildProjectConfig): input is BuildProjectConfigV2 {
+	return input.version === 1;
+}
+
+/**
+ * The definition of a workspace in configuration.
  */
 export interface WorkspaceDefinition {
 	/**
@@ -228,12 +277,12 @@ export function getBuildProjectConfig(
 	if (configResult === null || configResult === undefined) {
 		throw new Error("No BuildProject configuration found.");
 	}
-	const config = configResult.config as BuildProjectConfig;
+	const config = configResult.config as BuildProjectConfigV1;
 
-	// Only version 1 of the config is supported. If any other value is provided, throw an error.
-	if (config.version !== BUILDPROJECT_CONFIG_VERSION) {
+	// Only versions higher than the minimum are supported. If any other value is provided, throw an error.
+	if (config.version < BUILDPROJECT_CONFIG_MIN_VERSION) {
 		throw new Error(
-			`Configuration version is not supported: ${config?.version}. Config version must be ${BUILDPROJECT_CONFIG_VERSION}.`,
+			`Configuration version is not supported: ${config?.version}. Config version must be >= ${BUILDPROJECT_CONFIG_MIN_VERSION}.`,
 		);
 	}
 

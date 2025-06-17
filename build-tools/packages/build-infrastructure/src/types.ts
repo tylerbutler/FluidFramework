@@ -5,7 +5,11 @@
 
 import type { Agent, AgentName } from "package-manager-detector";
 import { SimpleGit } from "simple-git";
-import type { Opaque, SetRequired, PackageJson as StandardPackageJson } from "type-fest";
+import type {
+	Tagged as Opaque,
+	SetRequired,
+	PackageJson as StandardPackageJson,
+} from "type-fest";
 
 import type { BuildProjectConfig } from "./config.js";
 
@@ -31,20 +35,21 @@ export interface PnpmPackageJsonFields {
  * All known package.json fields including those that are specific to build-infrastructure.
  * The `name`, `scripts`, and `version` fields are required, unlike standard package.json.
  */
-export type PackageJson = SetRequired<
-	Pick<
-		StandardPackageJson,
-		| "name"
-		| "scripts"
-		| "version"
-		| "dependencies"
-		| "devDependencies"
-		| "peerDependencies"
-		| "private"
-		| "type"
-	>,
-	"name" | "scripts" | "version"
-> &
+export type PackageJson = StandardPackageJson &
+	SetRequired<
+		Pick<
+			StandardPackageJson,
+			| "name"
+			| "scripts"
+			| "version"
+			| "dependencies"
+			| "devDependencies"
+			| "peerDependencies"
+			| "private"
+			| "type"
+		>,
+		"name" | "scripts" | "version"
+	> &
 	PnpmPackageJsonFields;
 
 /**
