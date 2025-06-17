@@ -9,10 +9,17 @@ import {
 	type WorkspaceName,
 	loadBuildProject,
 } from "@fluid-tools/build-infrastructure";
-import { expect } from "chai";
+import chai, { expect } from "chai";
+import assertArrays from "chai-arrays";
+import { describe, it } from "mocha";
+import { parse } from "semver";
 import { simpleGit } from "simple-git";
 
+import { setDependencyRange } from "../../src/library/setDependencyRange.js";
+
 import { testRepoRoot } from "./init.js";
+
+chai.use(assertArrays);
 
 const git = simpleGit(testRepoRoot);
 
@@ -36,7 +43,7 @@ describe("setDependencyRange", () => {
 	});
 
 	it("updates the dependency range to explicit version given group2 packages", async () => {
-		const version = semver.parse("2.0.0");
+		const version = parse("2.0.0");
 		assert(version !== null);
 		await setDependencyRange(mainPackages, group2Packages, version);
 
@@ -51,7 +58,7 @@ describe("setDependencyRange", () => {
 	});
 
 	it("updates the dependency range to explicit version given superset workspace", async () => {
-		const version = semver.parse("2.0.0");
+		const version = parse("2.0.0");
 		assert(version !== null);
 		await setDependencyRange(mainPackages, mainWorkspacePackages, version);
 
@@ -72,7 +79,7 @@ describe("setDependencyRange", () => {
 	});
 
 	it("updates the dependency range to explicit version given main packages", async () => {
-		const version = semver.parse("2.0.0");
+		const version = parse("2.0.0");
 		assert(version !== null);
 		await setDependencyRange(mainPackages, mainPackages, version);
 
