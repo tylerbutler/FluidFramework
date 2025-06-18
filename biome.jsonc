@@ -34,8 +34,6 @@
 			// test collateral
 			"!**/.changeset/**",
 			"!**/_package.json",
-			// "!**/test/localOdspSnapshots/**",
-			// "!**/test/telemetryExpectedOutputs/**",
 			"!**/snapshots/**/*.json",
 			"!**/snapshots/content",
 
@@ -53,38 +51,41 @@
 			"!**/*.hbs",
 
 			// Test json
+			"!build-tools/packages/build-infrastructure/src/test/data/biome/empty.jsonc",
 			"!build-tools/packages/build-tools/src/test/data/biome/empty.jsonc",
+			"!examples/apps/tree-cli-app/data/*.json",
 			"!experimental/dds/tree/src/test/documents/**",
 			"!packages/dds/map/src/test/mocha/snapshots/**/*.json",
 			"!packages/dds/matrix/src/test/results/**/*.json",
 			"!packages/dds/merge-tree/src/test/literature/**/*.txt",
 			"!packages/dds/merge-tree/src/test/results/**/*.json",
-			"!packages/dds/sequence/src/test/snapshots/**/*.json",
-			"!packages/dds/sequence/src/test/results/**/*.json",
 			"!packages/dds/sequence/src/test/fuzz/**/*.json",
-			"!packages/dds/tree/src/test/snapshots/**/*.json",
+			"!packages/dds/sequence/src/test/results/**/*.json",
+			"!packages/dds/sequence/src/test/snapshots/**/*.json",
 			"!packages/dds/tree/src/test/shared-tree/fuzz/failures/**/*.json",
+			"!packages/dds/tree/src/test/snapshots/**/*.json",
 			"!packages/drivers/odsp-driver/src/test/**/*.json",
 			"!packages/framework/attributor/src/test/attribution/documents/**/*.json",
 			"!packages/test/snapshots/content/**",
 			"!packages/tools/fluid-runner/src/test/localOdspSnapshots/**",
 			"!packages/tools/fluid-runner/src/test/telemetryExpectedOutputs/**",
 			"!tools/api-markdown-documenter/src/test/snapshots/**",
-			"!examples/apps/tree-cli-app/*.json",
 
-			"!**/data/**/*.json",
+			// Biome test data
+			"!**/test/data/biome/**",
 
-			// "!**/.gitignore",
-			// "!**/.npmignore",
-			// "!**/LICENSE",
-			// "!**/common/build/**",
-			// "!**/common/lib/**",
+			// Other data
+			// "!**/data/**/*.json",
 
 			// Generated bundle analysis files
 			"!**/bundleAnalysis/**",
 
 			// Generated oclif manifest files
 			"!**/oclif.manifest.json",
+
+			// oclif bin files
+			"!**/bin/dev.*js",
+			"!**/bin/run.*js",
 
 			// Test coverage reports
 			"!**/coverage/**",
@@ -105,33 +106,16 @@
 		"maxSize": 2097152
 	},
 	"assist": {
+		"enabled": false,
 		"actions": {
 			"source": {
 				"useSortedKeys": "off",
-				"organizeImports": {
-					"level": "on",
-					"options": {
-						"groups": [
-							":URL:",
-							":BLANK_LINE:",
-							[":BUN:", ":NODE:"],
-							":BLANK_LINE:",
-							[":PACKAGE:", ":PACKAGE_WITH_PROTOCOL:"],
-							":BLANK_LINE:",
-							["@fluid*/**"],
-							":BLANK_LINE:",
-							":PATH:",
-						]
-					}
-				}
+				"organizeImports": "off",
 			}
 		}
 	},
 	"linter": {
 		"enabled": false,
-		"rules": {
-			"recommended": true
-		}
 	},
 	"formatter": {
 		"enabled": true,
@@ -142,7 +126,7 @@
 	},
 	"javascript": {
 		"assist":{
-			"enabled": true,
+			"enabled": false,
 		},
 		"formatter": {
 			"arrowParentheses": "always",
@@ -155,7 +139,13 @@
 		}
 	},
 	"json": {
-		"assist": {"enabled": false},
+		"assist": {
+			"enabled": false
+		},
+		"parser": {
+			"allowComments": true,
+			"allowTrailingCommas": true
+		},
 		"formatter": {
 			"indentStyle": "tab"
 		}
@@ -166,8 +156,6 @@
 			// This configuration is used to format the @fluid-experimental/tree package, which uses different settings than
 			// most projects. This override is needed to ensure that the formatter is applied correctly when run from the root
 			// of the repo.
-			//
-			// This configuration should be kept up-to-date with the settings in `experimental/dds/tree/biome.jsonc`.
 			"includes": ["**/experimental/dds/tree/**"],
 			"formatter": {
 				"lineWidth": 120
@@ -180,10 +168,71 @@
 				}
 			}
 		},
+		// Enable import/export sorting for build-tools projects
+		{
+			"includes": ["build-tools/**"],
+			"assist": {
+				"enabled": false,
+				"actions": {
+					"recommended": true,
+					"source": {
+						"organizeImports": "on",
+						// "organizeImports": {
+						// 	"level": "on",
+						// 	"options": {
+						// 		"groups": [
+						// 			":URL:",
+						// 			":BLANK_LINE:",
+						// 			{ "type": true, "source": [":BUN:", ":NODE:"] },
+						// 			{ "type": false, "source": [":BUN:", ":NODE:"] },
+						// 			":BLANK_LINE:",
+						// 			{
+						// 				"type": true,
+						// 				"source": [
+						// 					":PACKAGE:",
+						// 					":PACKAGE_WITH_PROTOCOL:",
+						// 					"!@fluid*/**"
+						// 				]
+						// 			},
+						// 			{
+						// 				"type": false,
+						// 				"source": [
+						// 					":PACKAGE:",
+						// 					":PACKAGE_WITH_PROTOCOL:",
+						// 					"!@fluid*/**"
+						// 				]
+						// 			},
+						// 			":BLANK_LINE:",
+						// 			{ "type": true, "source": ["@fluidframework/**"] },
+						// 			{ "type": false, "source": ["@fluidframework/**"] },
+						// 			":BLANK_LINE:",
+						// 			{ "type": true, "source": ["@fluid-*/**"] },
+						// 			{ "type": false, "source": ["@fluid-*/**"] },
+						// 			":BLANK_LINE:",
+						// 			{ "type": true, "source": ["../**"] },
+						// 			{ "type": false, "source": ["../**"] },
+						// 			":BLANK_LINE:",
+						// 			{ "type": true, "source": ["./**"] },
+						// 			{ "type": false, "source": ["./**"] },
+						// 			":BLANK_LINE:",
+						// 			{ "type": true, "source": [":PATH:"] },
+						// 			{ "type": false, "source": [":PATH:"] }
+						// 		]
+						// 	}
+						// }
+					}
+				}
+			},
+		},
 		{
 			// JSONC WITH TRAILING COMMAS
 			// These JSONC files are known to support trailing commas.
-			"includes": ["biome.jsonc", "**/biome.jsonc", "**/.vscode/**/*.json", "**/tsconfig*.json"],
+			"includes": [
+				// "biome.jsonc",
+				// "**/biome.jsonc",
+				"**/.vscode/**/*.json",
+				"**/tsconfig*.json",
+			],
 			"json": {
 				"parser": {
 					"allowComments": true,
