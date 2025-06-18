@@ -1,28 +1,5 @@
 {
-	"root": false,
 	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-	"extends": ["../biome.jsonc"],
-	"assist": { "actions": { "source": { "organizeImports": "on" } } },
-	"formatter": {
-		"enabled": true
-	},
-	"files": {
-		"includes": ["**", "!**/packages/build-tools/src/test/data/biome/empty.jsonc"]
-	},
-	"linter": {
-		"rules": {
-			"style": {
-				"noParameterAssign": "error",
-				"useAsConstAssertion": "error",
-				"useDefaultParameterLast": "error",
-				"useEnumInitializers": "error",
-				"useSelfClosingElements": "error",
-				"useSingleVarDeclarator": "error",
-				"noUnusedTemplateLiteral": "error",
-				"useNumberNamespace": "error",
-				"noInferrableTypes": "error",
-				"noUselessElse": "error"
-			}
-		}
-	}
+	"extends": "//",
+	"assist": { "actions": { "source": { "organizeImports": "on" } } }
 }
