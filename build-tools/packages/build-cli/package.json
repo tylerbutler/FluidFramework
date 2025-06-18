@@ -143,7 +143,7 @@
 		"xml2js": "^0.5.0"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "~1.9.3",
+		"@biomejs/biome": "~2.0.0",
 		"@fluidframework/build-common": "^2.0.3",
 		"@fluidframework/eslint-config-fluid": "^5.7.4",
 		"@oclif/test": "^4.1.0",
