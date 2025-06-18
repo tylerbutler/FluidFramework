@@ -76,10 +76,8 @@ export const optional = new FieldKindWithEditor(
 
 export const valueFieldEditor: ValueFieldEditor = {
 	...optionalFieldEditor,
-	set: (ids: {
-		fill: ChangeAtomId;
-		detach: ChangeAtomId;
-	}): OptionalChangeset => optionalFieldEditor.set(false, ids),
+	set: (ids: { fill: ChangeAtomId; detach: ChangeAtomId }): OptionalChangeset =>
+		optionalFieldEditor.set(false, ids),
 };
 
 export const valueChangeHandler: FieldChangeHandler<OptionalChangeset, ValueFieldEditor> = {
