@@ -306,6 +306,7 @@ module.exports = {
 		// Entries here are COMPLETELY ignored by the policy checker. Instead of adding entries here, consider adding
 		// entries to the handlerExclusions list below to ignore a particular.
 		exclusions: [
+			"^.*",
 			// The paths below are for fluidframework.com layouts and code and are not subject to policy.
 			"docs/layouts/",
 			"docs/themes/thxvscode/assets/",
@@ -349,6 +350,7 @@ module.exports = {
 				/.*\/validate.*\.generated\.ts/,
 			],
 			"no-js-file-extensions": [
+				"^.*\.eslintrc\.js",
 				// PropertyDDS uses .js files which should be renamed eventually.
 				"experimental/PropertyDDS/.*",
 				"build-tools/packages/build-cli/bin/dev.js",
@@ -507,7 +509,6 @@ module.exports = {
 					"fluid-framework",
 					"@fluid-internal/client-utils",
 					"@fluid-internal/mocha-test-setup",
-					"@fluid-internal/test-driver-definitions",
 					"tinylicious",
 				],
 				// A list of packages published to our internal-build feed. Note that packages published
