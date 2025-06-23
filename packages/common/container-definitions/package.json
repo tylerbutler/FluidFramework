@@ -11,6 +11,38 @@
   "license": "MIT",
   "author": "Microsoft and contributors",
   "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/public.d.ts",
+        "default": "./lib/index.js"
+      },
+      "require": {
+        "types": "./dist/public.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./legacy": {
+      "import": {
+        "types": "./lib/legacy.d.ts",
+        "default": "./lib/index.js"
+      },
+      "require": {
+        "types": "./dist/legacy.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./internal": {
+      "import": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
   "main": "dist/index.js",
   "module": "lib/index.js",
   "types": "dist/index.d.ts",
@@ -27,7 +59,7 @@
     "build:docs": "api-extractor run --local",
     "build:esnext": "tsc --project ./tsconfig.esnext.json",
     "build:test": "npm run build:test:cjs",
-    "build:test:cjs": "fluid-tsc commonjs --project ./src/test/tsconfig.json",
+    "build:test:cjs": "fluid-tsc commonjs --project ./src/test/types/tsconfig.json",
     "check:are-the-types-wrong": "attw --pack .",
     "check:biome": "biome check .",
     "check:exports": "concurrently \"npm:check:exports:*\"",
