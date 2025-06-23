@@ -34,8 +34,8 @@
     "tsc": "tsc",
     "tsfmt": "tsfmt --verify",
     "tsfmt:fix": "tsfmt --replace",
-		"typetests:gen": "flub generate typetests --dir . -v",
-		"typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
+    "typetests:gen": "flub generate typetests --dir . -v",
+    "typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
   },
   "nyc": {
     "all": true,

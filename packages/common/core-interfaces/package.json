@@ -48,8 +48,8 @@
 		"test": "echo core-interfaces currently only has type tests",
 		"tsc": "fluid-tsc commonjs --project ./tsconfig.json && npm run place:cjs:package-stub",
 		"tsc:watch": "npm run place:cjs:package-stub && fluid-tsc commonjs --project ./tsconfig.json --watch",
-		"typetests:gen": "flub generate typetests --dir . -v",
-		"typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
+    "typetests:gen": "flub generate typetests --dir . -v",
+    "typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
   },
   "devDependencies": {
     "@fluidframework/build-common": "^0.24.0",

@@ -37,8 +37,8 @@
     "test:newsnapfiles": "node dist/test/createSnapshotFiles.js",
     "testfarm": "node dist/test/testFarm.js",
     "tsc": "tsc",
-		"typetests:gen": "flub generate typetests --dir . -v",
-		"typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
+    "typetests:gen": "flub generate typetests --dir . -v",
+    "typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
   },
   "nyc": {
     "all": true,

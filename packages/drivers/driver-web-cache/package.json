@@ -32,8 +32,8 @@
     "lint:fix": "npm run eslint:fix",
     "test": "jest",
     "tsc": "tsc",
-		"typetests:gen": "flub generate typetests --dir . -v",
-		"typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
+    "typetests:gen": "flub generate typetests --dir . -v",
+    "typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
   },
   "dependencies": {
     "@fluidframework/common-definitions": "^0.20.1",
