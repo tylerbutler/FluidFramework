@@ -2,20 +2,25 @@
 	"Definitions": {
 		"dotGroup": false,
 		"layers": {
-			"Base-Definitions": {
+			"Common-Definitions": {
 				"dotSameRank": true,
 				"packages": [
-					"@fluidframework/common-definitions",
-					"@fluidframework/core-interfaces",
-					"@fluidframework/gitresources"
+					"@fluidframework/gitresources",
+					"@fluidframework/common-definitions"
 				]
+			},
+			"Core-Interfaces": {
+				"packages": [
+					"@fluidframework/core-interfaces"
+				],
+				"deps": []
 			},
 			"Protocol-Definitions": {
 				"packages": [
 					"@fluidframework/protocol-definitions"
 				],
 				"deps": [
-					"@fluidframework/common-definitions"
+					"Common-Definitions"
 				]
 			},
 			"Driver-Definitions": {
@@ -46,7 +51,7 @@
 					"@fluidframework/common-utils"
 				],
 				"deps": [
-					"Base-Definitions"
+					"Common-Definitions"
 				]
 			},
 			"Protocol-Utils": {
@@ -74,7 +79,7 @@
 					"@fluidframework/view-interfaces"
 				],
 				"deps": [
-					"Base-Definitions"
+					"Common-Definitions"
 				]
 			},
 			"Other-Utils": {
@@ -104,7 +109,7 @@
 				],
 				"deps": [
 					"Base-Utils",
-					"Base-Definitions"
+					"Common-Definitions"
 				]
 			},
 			"Container-Utils": {
