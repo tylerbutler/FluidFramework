@@ -68,8 +68,8 @@
 			]
 		}
 	},
-	"typeValidation": {
-		"broken": {},
-		"entrypoint": "public"
-	}
+  "typeValidation": {
+    "broken": {},
+    "entrypoint": "public"
+  }
 }
