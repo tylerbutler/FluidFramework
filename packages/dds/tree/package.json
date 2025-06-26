@@ -25,7 +25,7 @@
     "build:esnext": "tsc --project ./tsconfig.esnext.json",
     "build:full": "npm run build",
     "build:full:compile": "npm run build:compile",
-    "build:test": "Echo temporarrily disabled",
+    "build:test": "tsc --project ./src/test/tsconfig.json",
     "ci:build:docs": "api-extractor run --typescript-compiler-folder ../../../node_modules/typescript && copyfiles -u 1 ./_api-extractor-temp/* ../../../_api-extractor-temp/",
     "clean": "rimraf dist lib *.tsbuildinfo *.build.log",
     "eslint": "eslint --format stylish src",
@@ -38,8 +38,8 @@
     "test:mocha": "mocha --recursive dist/test --exit -r node_modules/@fluidframework/mocha-test-setup -r source-map-support/register --unhandled-rejections=strict",
     "test:mocha:verbose": "cross-env FLUID_TEST_VERBOSE=1 npm run test:mocha",
     "tsc": "tsc",
-    "typetests:gen": "echo Temporarily disabled",
-    "typetests:prepare": "echo Temporarily disabled"
+    "typetests:gen": "flub generate typetests --dir . -v",
+    "typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
   },
   "nyc": {
     "all": true,
