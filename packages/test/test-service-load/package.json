@@ -22,7 +22,7 @@
     "build:full": "npm run build",
     "build:full:compile": "npm run build:compile",
     "build:genver": "gen-version",
-    "build:test": "echo Temporarily disabled - need prev package dependency",
+    "build:test": "tsc --project ./src/test/tsconfig.json",
     "clean": "rimraf dist lib *.tsbuildinfo *.build.log",
     "debug": "node --inspect-brk ./dist/nodeStressTest.js --debug",
     "debug:mini": "node --inspect-brk ./dist/nodeStressTest.js --debug --profile mini",
@@ -48,8 +48,8 @@
     "test:realsvc:tinylicious": "cross-env fluid__test__driver=t9s start-server-and-test start:tinylicious:test 7070 test:realsvc:tinylicious:run",
     "test:realsvc:tinylicious:run": "npm run test:realsvc:run",
     "tsc": "tsc",
-    "typetests:gen": "echo Temporarily disabled - need prev package dependency",
-    "typetests:prepare": "echo Temporarily disabled - need prev package dependency",
+    "typetests:gen": "flub generate typetests --generate --dir . --no-generateInName",Add commentMore actions
+    "typetests:prepare": "flub generate typetests --prepare --dir . --pin",
     "usePrereleaseDeps": "node ./scripts/usePrereleaseDeps.js"
   },
   "nyc": {

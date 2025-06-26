@@ -23,7 +23,7 @@
     "build:full": "npm run build",
     "build:full:compile": "npm run build:compile",
     "build:genver": "gen-version",
-    "build:test": "echo Typetest building temporarily disabled",
+    "build:test": "tsc --project ./src/test/tsconfig.json",
     "ci:build:docs": "api-extractor run --typescript-compiler-folder ../../../node_modules/typescript && copyfiles -u 1 ./_api-extractor-temp/* ../../../_api-extractor-temp/",
     "clean": "rimraf dist *.tsbuildinfo *.build.log",
     "eslint": "eslint --format stylish src",
@@ -36,7 +36,7 @@
     "test:mocha:verbose": "cross-env FLUID_TEST_VERBOSE=1 npm run test:mocha",
     "test:report": "npm test -- -- --reporter xunit --reporter-option output=nyc/mocha-junit-report.xml",
     "tsc": "tsc",
-    "typetests:gen": "echo Typetest generation temporarily disabled",
+    "typetests:gen": "flub generate typetests --dir . -v",
     "typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
   },
   "nyc": {
