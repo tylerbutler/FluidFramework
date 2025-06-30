@@ -28,8 +28,8 @@
     "lint": "npm run eslint",
     "lint:fix": "npm run eslint:fix",
     "tsc": "tsc",
-		"typetests:gen": "flub generate typetests --dir . -v",
-		"typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
+    "typetests:gen": "flub generate typetests --dir . -v",
+    "typetests:prepare": "flub typetests --dir . --reset --previous --normalize"
   },
   "nyc": {
     "all": true,
