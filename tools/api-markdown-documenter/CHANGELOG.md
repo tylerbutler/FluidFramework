@@ -14,6 +14,13 @@ It has been removed and is no longer used by the system.
 This type previously supported an unsafe escape hatch for text escaping.
 This support is no longer needed and has been removed.
 
+### `SpanNode` now requires formatting options
+
+This type's formatting options were previously optional, which encouraged using the type as general purpose grouping mechanism for children.
+This resulted in unnecessary hierarchy in the generated trees.
+
+Formatting options are now required when constructing `SpanNode`s.
+
 ### `LineBreakNode` removed from `BlockContent`
 
 Block Content items are implicitly separated by a line break, so allowing `LineBreakNode`s in that context is redundant.
@@ -30,6 +37,10 @@ Their `createFromPlainText` static factory functions have also been removed, as 
 
 Additionally, the structure of `ListNode` has been updated to utilize `ListItemNode`s as children to make it easier to group child contents within a single list entry.
 
+### `FencedCodeBlockNode` updated to only allow plain text and line breaks
+
+This matches the requirements for fenced code in Markdown and is all that was required by the system.
+
 ### `BlockQuoteNode` was removed
 
 This `DocumentationNode` implementation was not used by the library.
@@ -40,6 +51,17 @@ If this type is required, it can be re-introduced via the Documentation Domain's
 The `DocumentationNodeType` enum has been removed.
 Enumerations of supported node kinds in various contexts is now handled via type unions like `BlockContent` and `PhrasingContent`.
 String literal types makes typing much simpler to reason about, and more inline with `unist` patterns.
+
+### `TextFormatting` no longer permits *disabling* formatting
+
+This type previously allowed formatting to be disabled at lower scopes in the tree.
+E.g., some parent context could set `bold`, and a lower context could *unset* it.
+This functionality was unused, does not align with Markdown nor HTML, and made transformation logic more complicated than it strictly needs to be.
+
+This support has been removed.
+
+Additionally, the `toHtml` transformations no longer accept "rootFormatting" as an argument.
+Contents may be formatted using `SpanNode`s to introduce formatting to the tree instead.
 
 ## 0.20.0
 
