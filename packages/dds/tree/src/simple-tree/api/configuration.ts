@@ -15,13 +15,16 @@ import { UsageError } from "@fluidframework/telemetry-utils/internal";
 import {
 	type FieldSchemaAlpha,
 	type ImplicitFieldSchema,
-	evaluateLazySchema,
 	FieldKind,
-	isAnnotatedAllowedType,
-	markSchemaMostDerived,
 	normalizeFieldSchema,
-} from "../schemaTypes.js";
-import { NodeKind, type TreeNodeSchema } from "../core/index.js";
+} from "../fieldSchema.js";
+import {
+	NodeKind,
+	type TreeNodeSchema,
+	isAnnotatedAllowedType,
+	evaluateLazySchema,
+	markSchemaMostDerived,
+} from "../core/index.js";
 import { toStoredSchema } from "../toStoredSchema.js";
 import {
 	isArrayNodeSchema,
@@ -327,7 +330,7 @@ export function checkUnion(
 				break;
 			}
 			case NodeKind.Object: {
-				assert(isObjectNodeSchema(schema), "Expected object schema.");
+				assert(isObjectNodeSchema(schema), 0xbde /* Expected object schema. */);
 				objects.push(schema);
 				for (const key of schema.fields.keys()) {
 					getOrCreate(allObjectKeys, key, () => new Set()).add(schema);
@@ -335,17 +338,17 @@ export function checkUnion(
 				break;
 			}
 			case NodeKind.Array: {
-				assert(isArrayNodeSchema(schema), "Expected array schema.");
+				assert(isArrayNodeSchema(schema), 0xbdf /* Expected array schema. */);
 				arrays.push(schema);
 				break;
 			}
 			case NodeKind.Map: {
-				assert(isMapNodeSchema(schema), "Expected map schema.");
+				assert(isMapNodeSchema(schema), 0xbe0 /* Expected map schema. */);
 				maps.push(schema);
 				break;
 			}
 			case NodeKind.Record: {
-				assert(isRecordNodeSchema(schema), "Expected record schema.");
+				assert(isRecordNodeSchema(schema), 0xbe1 /* Expected record schema. */);
 				records.push(schema);
 				break;
 			}
