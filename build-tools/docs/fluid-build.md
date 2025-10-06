@@ -10,6 +10,8 @@ theme: gaia
     --color-highlight: #f96;
     --color-dimmed: #888;
   }
+
+  .extra-slide { display: none; }
 </style>
 
 <!-- _class: lead -->
@@ -25,7 +27,7 @@ July 30 2024
 
 ---
 
-<!-- _class: lead -->
+<!-- _class: lead extra-slide-->
 
 # beware
 
@@ -42,16 +44,6 @@ and **effect**.
 
 1. Ordering/scheduling build tasks correctly and efficiently
 2. Enabling incremental builds
-
----
-
-# Incremental builds
-
-Support for incremental builds can be done with all build systems, but it's easier with task and artifect-based systems
-
-An incremental build system is one that enables a part of the build to be executed once, and then only execute again if "something changed."
-
-The challenge is in the "something changed" part. A build system with perfect incremental behavior will have perfect knowledge of when "something changed."
 
 ---
 
@@ -72,6 +64,16 @@ The challenge is in the "something changed" part. A build system with perfect in
 1. Scripts
 2. Task-based **<-- fluid-build is here**
 3. Artifact-based
+
+---
+
+# Incremental builds
+
+Support for incremental builds can be done with all build systems, but it's easier with task and artifact-based systems
+
+An incremental build system is one that enables a part of the build to be executed once, and then only execute again if "something changed."
+
+The challenge is in the "something changed" part. A build system with perfect incremental behavior will have perfect knowledge of when "something changed."
 
 ---
 
