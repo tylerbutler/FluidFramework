@@ -449,6 +449,7 @@
       "core-js",
       "keytar",
       "msgpackr-extract",
+      "nx",
       "puppeteer",
       "unrs-resolver"
     ]

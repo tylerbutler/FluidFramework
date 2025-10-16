@@ -11,101 +11,290 @@
         "cacheableOperations": [
           "build",
           "compile",
+          "commonjs",
           "tsc",
           "build:esnext",
           "api",
+          "api-extractor:commonjs",
+          "api-extractor:esnext",
+          "build:api-reports",
+          "build:api-reports:current",
+          "build:api-reports:legacy",
+          "build:docs",
+          "build:test",
+          "build:test:cjs",
+          "build:test:esm",
+          "build:copy",
+          "build:genver",
+          "ts2esm",
+          "typetests:gen",
           "lint",
           "eslint",
+          "good-fences",
+          "depcruise",
+          "check:exports",
+          "check:release-tags",
+          "check:are-the-types-wrong",
+          "check:format",
+          "check:biome",
+          "check:prettier",
+          "format",
+          "format:biome",
+          "format:prettier",
+          "prettier",
           "test:unit",
+          "test:unit:cjs",
+          "test:unit:esm",
           "test:jest",
-          "test:mocha"
+          "test:mocha",
+          "test:mocha:cjs",
+          "test:mocha:esm",
+          "webpack"
         ]
       }
     }
   },
   "targetDefaults": {
+    "ci:build": {
+      "dependsOn": [
+        "compile",
+        "lint",
+        "ci:build:api-reports",
+        "ci:build:docs",
+        "build:manifest",
+        "build:readme"
+      ],
+      "outputs": []
+    },
+    "full": {
+      "dependsOn": ["build", "webpack"],
+      "outputs": []
+    },
     "build": {
-      "dependsOn": ["^build", "compile", "lint", "build:docs"],
-      "inputs": ["{projectRoot}/**/*", "!{projectRoot}/**/*.md"],
-      "outputs": ["{projectRoot}/dist", "{projectRoot}/lib"]
+      "dependsOn": [
+        "check:format",
+        "compile",
+        "lint",
+        "build:api-reports",
+        "build:docs",
+        "build:manifest",
+        "build:readme"
+      ],
+      "outputs": []
+    },
+    "build:full": {
+      "dependsOn": ["full"],
+      "outputs": []
     },
     "compile": {
-      "dependsOn": ["^compile", "tsc", "build:esnext", "build:test"],
-      "outputs": ["{projectRoot}/dist", "{projectRoot}/lib", "{projectRoot}/*.tsbuildinfo"]
+      "dependsOn": ["commonjs", "build:esnext", "api", "build:test", "build:copy"],
+      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/lib/**", "{projectRoot}/*.tsbuildinfo"]
+    },
+    "build:compile": {
+      "dependsOn": ["compile"],
+      "outputs": []
+    },
+    "commonjs": {
+      "dependsOn": ["tsc", "build:test"],
+      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/*.tsbuildinfo"]
+    },
+    "build:commonjs": {
+      "dependsOn": ["commonjs"],
+      "outputs": []
     },
     "tsc": {
-      "dependsOn": ["^tsc", "build:genver"],
+      "dependsOn": ["^tsc", "build:genver", "ts2esm"],
       "inputs": [
-        "{projectRoot}/src/**/*",
-        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/**/*",
         "!{projectRoot}/**/*.md",
-        "!{projectRoot}/**/*.test.ts"
+        "!{projectRoot}/**/*.test.ts",
+        "!{projectRoot}/**/*.spec.ts",
+        "!{projectRoot}/test/**",
+        "!{projectRoot}/tests/**"
       ],
-      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.tsbuildinfo"]
+      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/*.tsbuildinfo"]
     },
     "build:esnext": {
-      "dependsOn": ["^build:esnext", "build:genver"],
+      "dependsOn": ["^build:esnext", "build:genver", "ts2esm"],
       "inputs": [
-        "{projectRoot}/src/**/*",
-        "{projectRoot}/tsconfig.json",
+        "{projectRoot}/**/*",
         "!{projectRoot}/**/*.md",
-        "!{projectRoot}/**/*.test.ts"
+        "!{projectRoot}/**/*.test.ts",
+        "!{projectRoot}/**/*.spec.ts",
+        "!{projectRoot}/test/**",
+        "!{projectRoot}/tests/**"
       ],
-      "outputs": ["{projectRoot}/lib", "{projectRoot}/*.tsbuildinfo"]
+      "outputs": ["{projectRoot}/lib/**", "{projectRoot}/*.tsbuildinfo"]
+    },
+    "build:copy": {
+      "inputs": [
+        "{projectRoot}/src/**/*.json",
+        "{projectRoot}/src/**/*.txt",
+        "{projectRoot}/src/**/*.css",
+        "!{projectRoot}/src/**/*.test.*"
+      ],
+      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/lib/**"]
+    },
+    "build:genver": {
+      "inputs": ["{projectRoot}/package.json", "{workspaceRoot}/package.json"],
+      "outputs": ["{projectRoot}/src/packageVersion.ts"]
+    },
+    "ts2esm": {
+      "inputs": ["{projectRoot}/dist/**/*.js", "{projectRoot}/tsconfig.json"],
+      "outputs": ["{projectRoot}/lib/**"]
+    },
+    "typetests:gen": {
+      "inputs": ["{projectRoot}/package.json"],
+      "outputs": ["{projectRoot}/**/types/**/*.generated.ts"]
     },
     "api": {
-      "dependsOn": ["api-extractor:commonjs", "api-extractor:esnext"]
+      "dependsOn": ["api-extractor:commonjs", "api-extractor:esnext"],
+      "outputs": []
     },
     "api-extractor:commonjs": {
       "dependsOn": ["tsc"],
       "inputs": [
         "{projectRoot}/dist/**/*.d.ts",
         "{projectRoot}/api-extractor.json",
+        "{projectRoot}/api-extractor/**/*.json",
         "{projectRoot}/tsconfig.json"
       ],
-      "outputs": ["{projectRoot}/_api-extractor-temp", "{projectRoot}/*.api.json"]
+      "outputs": ["{projectRoot}/_api-extractor-temp/**", "{projectRoot}/*.api.json"]
     },
     "api-extractor:esnext": {
       "dependsOn": ["build:esnext"],
       "inputs": [
         "{projectRoot}/lib/**/*.d.ts",
         "{projectRoot}/api-extractor.json",
+        "{projectRoot}/api-extractor/**/*.json",
         "{projectRoot}/tsconfig.json"
       ],
-      "outputs": ["{projectRoot}/_api-extractor-temp", "{projectRoot}/*.api.json"]
+      "outputs": ["{projectRoot}/_api-extractor-temp/**", "{projectRoot}/*.api.json"]
     },
-    "lint": {
-      "dependsOn": ["eslint"]
+    "build:api-reports": {
+      "dependsOn": ["build:api-reports:current", "build:api-reports:legacy"],
+      "outputs": []
     },
-    "eslint": {
-      "dependsOn": ["^tsc"],
-      "inputs": [
-        "{projectRoot}/src/**/*.{ts,tsx,js,jsx}",
-        "{projectRoot}/.eslintrc.*",
-        "!{projectRoot}/**/*.md"
-      ]
+    "build:api-reports:current": {
+      "dependsOn": ["api-extractor:esnext"],
+      "outputs": ["{projectRoot}/*.api.md"]
+    },
+    "build:api-reports:legacy": {
+      "dependsOn": ["api-extractor:esnext"],
+      "outputs": ["{projectRoot}/*.api.md"]
+    },
+    "ci:build:api-reports": {
+      "dependsOn": ["ci:build:api-reports:current", "ci:build:api-reports:legacy"],
+      "outputs": []
+    },
+    "ci:build:api-reports:current": {
+      "dependsOn": ["api-extractor:esnext"],
+      "outputs": ["{projectRoot}/*.api.md"]
+    },
+    "ci:build:api-reports:legacy": {
+      "dependsOn": ["api-extractor:esnext"],
+      "outputs": ["{projectRoot}/*.api.md"]
+    },
+    "build:docs": {
+      "dependsOn": ["build:esnext"],
+      "outputs": ["{projectRoot}/_api-extractor-temp/**"]
+    },
+    "ci:build:docs": {
+      "dependsOn": ["build:esnext"],
+      "outputs": ["{projectRoot}/_api-extractor-temp/**"]
+    },
+    "build:readme": {
+      "dependsOn": ["compile"],
+      "outputs": ["{projectRoot}/README.md"]
+    },
+    "build:manifest": {
+      "dependsOn": ["compile"],
+      "outputs": ["{projectRoot}/oclif.manifest.json"]
+    },
+    "build:test": {
+      "dependsOn": ["typetests:gen", "tsc", "build:esnext"],
+      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/lib/**", "{projectRoot}/*.tsbuildinfo"]
+    },
+    "build:test:cjs": {
+      "dependsOn": ["typetests:gen", "tsc"],
+      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/*.tsbuildinfo"]
+    },
+    "build:test:esm": {
+      "dependsOn": ["typetests:gen", "build:esnext"],
+      "outputs": ["{projectRoot}/lib/**", "{projectRoot}/*.tsbuildinfo"]
     },
     "test:unit": {
-      "dependsOn": ["test:mocha", "test:jest"]
+      "dependsOn": ["test:mocha", "test:jest"],
+      "outputs": []
+    },
+    "test:unit:cjs": {
+      "dependsOn": ["test:mocha:cjs"],
+      "outputs": []
+    },
+    "test:unit:esm": {
+      "dependsOn": ["test:mocha:esm"],
+      "outputs": []
+    },
+    "test:cjs": {
+      "dependsOn": ["test:unit:cjs"],
+      "outputs": []
+    },
+    "test:esm": {
+      "dependsOn": ["test:unit:esm"],
+      "outputs": []
     },
     "test:jest": {
-      "dependsOn": ["compile"],
+      "dependsOn": ["build:compile"],
       "inputs": [
-        "{projectRoot}/src/test/**/*",
-        "{projectRoot}/**/*.test.{ts,tsx}",
-        "{projectRoot}/jest.config.*"
+        "{projectRoot}/**/*",
+        "{projectRoot}/src/test/**",
+        "{projectRoot}/**/*.test.ts",
+        "{projectRoot}/**/*.test.tsx",
+        "{projectRoot}/**/*.spec.ts",
+        "{projectRoot}/jest.config.*",
+        "!{projectRoot}/**/*.md"
       ],
-      "outputs": ["{projectRoot}/nyc"],
+      "outputs": ["{projectRoot}/nyc/**"],
       "cache": true
     },
     "test:mocha": {
       "dependsOn": ["build:test"],
       "inputs": [
-        "{projectRoot}/src/test/**/*",
-        "{projectRoot}/dist/test/**/*",
-        "{projectRoot}/.mocharc.*"
+        "{projectRoot}/**/*",
+        "{projectRoot}/src/test/**",
+        "{projectRoot}/dist/test/**",
+        "{projectRoot}/lib/test/**",
+        "{projectRoot}/.mocharc.cjs",
+        "{projectRoot}/.mocharc.js",
+        "!{projectRoot}/**/*.md"
       ],
-      "outputs": ["{projectRoot}/nyc"],
+      "outputs": ["{projectRoot}/nyc/**"],
+      "cache": true
+    },
+    "test:mocha:cjs": {
+      "dependsOn": ["build:test:cjs"],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/src/test/**",
+        "{projectRoot}/dist/test/**",
+        "{projectRoot}/.mocharc.cjs",
+        "{projectRoot}/.mocharc.js",
+        "!{projectRoot}/**/*.md"
+      ],
+      "outputs": ["{projectRoot}/nyc/**"],
+      "cache": true
+    },
+    "test:mocha:esm": {
+      "dependsOn": ["build:test:esm"],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/src/test/**",
+        "{projectRoot}/lib/test/**",
+        "{projectRoot}/.mocharc.cjs",
+        "{projectRoot}/.mocharc.mjs",
+        "!{projectRoot}/**/*.md"
+      ],
+      "outputs": ["{projectRoot}/nyc/**"],
       "cache": true
     },
     "test:realsvc": {
@@ -116,18 +305,246 @@
       "dependsOn": ["build:test"],
       "cache": false
     },
+    "lint": {
+      "dependsOn": [
+        "eslint",
+        "good-fences",
+        "depcruise",
+        "check:exports",
+        "check:release-tags"
+      ],
+      "outputs": []
+    },
+    "eslint": {
+      "dependsOn": ["^tsc"],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/src/**/*.ts",
+        "{projectRoot}/src/**/*.tsx",
+        "{projectRoot}/src/**/*.js",
+        "{projectRoot}/src/**/*.jsx",
+        "{projectRoot}/.eslintrc.cjs",
+        "{projectRoot}/.eslintrc.js",
+        "{projectRoot}/.eslintrc.json",
+        "!{projectRoot}/**/*.md"
+      ],
+      "outputs": []
+    },
+    "good-fences": {
+      "inputs": [
+        "{projectRoot}/src/**/*.ts",
+        "{projectRoot}/src/**/*.tsx",
+        "{projectRoot}/package.json",
+        "{projectRoot}/fence.json"
+      ],
+      "outputs": []
+    },
+    "depcruise": {
+      "inputs": [
+        "{projectRoot}/src/**/*.ts",
+        "{projectRoot}/src/**/*.tsx",
+        "{projectRoot}/.dependency-cruiser.js",
+        "{projectRoot}/.dependency-cruiser.cjs",
+        "{projectRoot}/package.json"
+      ],
+      "outputs": []
+    },
+    "check:exports": {
+      "dependsOn": ["^build:compile", "api"],
+      "outputs": []
+    },
+    "check:release-tags": {
+      "dependsOn": ["^build:compile", "tsc", "build:esnext"],
+      "outputs": []
+    },
+    "check:are-the-types-wrong": {
+      "dependsOn": ["^build:compile", "tsc", "build:esnext", "api"],
+      "outputs": []
+    },
+    "checks": {
+      "dependsOn": ["check:format"],
+      "outputs": []
+    },
+    "checks:fix": {
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/biome.jsonc",
+        "{workspaceRoot}/biome.jsonc"
+      ],
+      "outputs": []
+    },
+    "check:format": {
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/biome.jsonc",
+        "{projectRoot}/.prettierrc*",
+        "{workspaceRoot}/biome.jsonc",
+        "{workspaceRoot}/.prettierrc*"
+      ],
+      "outputs": []
+    },
+    "format": {
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/biome.jsonc",
+        "{projectRoot}/.prettierrc*",
+        "{workspaceRoot}/biome.jsonc",
+        "{workspaceRoot}/.prettierrc*"
+      ],
+      "outputs": []
+    },
+    "check:biome": {
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/biome.jsonc",
+        "{workspaceRoot}/biome.jsonc"
+      ],
+      "outputs": []
+    },
+    "check:prettier": {
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/.prettierrc*",
+        "{projectRoot}/.prettierignore",
+        "{workspaceRoot}/.prettierrc*",
+        "{workspaceRoot}/.prettierignore"
+      ],
+      "outputs": []
+    },
+    "format:biome": {
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/biome.jsonc",
+        "{workspaceRoot}/biome.jsonc"
+      ],
+      "outputs": []
+    },
+    "format:prettier": {
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/.prettierrc*",
+        "{projectRoot}/.prettierignore",
+        "{workspaceRoot}/.prettierrc*",
+        "{workspaceRoot}/.prettierignore"
+      ],
+      "outputs": []
+    },
+    "prettier": {
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/.prettierrc*",
+        "{workspaceRoot}/.prettierrc*"
+      ],
+      "outputs": []
+    },
+    "prettier:fix": {
+      "inputs": [
+        "{projectRoot}/src/**",
+        "{projectRoot}/.prettierrc*",
+        "{workspaceRoot}/.prettierrc*"
+      ],
+      "outputs": []
+    },
     "webpack": {
       "dependsOn": ["^tsc", "^build:esnext"],
       "inputs": [
-        "{projectRoot}/src/**/*.{ts,tsx,js,jsx}",
+        "{projectRoot}/**/*",
+        "{projectRoot}/src/**/*.ts",
+        "{projectRoot}/src/**/*.tsx",
+        "{projectRoot}/src/**/*.js",
+        "{projectRoot}/src/**/*.jsx",
         "{projectRoot}/webpack.config.js",
+        "{projectRoot}/webpack.config.*.js",
         "!{projectRoot}/**/*.md",
-        "!{projectRoot}/**/*.test.*"
+        "!{projectRoot}/**/*.test.*",
+        "!{projectRoot}/test/**"
       ],
-      "outputs": ["{projectRoot}/dist/**/*.bundle.js"]
+      "outputs": [
+        "{projectRoot}/dist/**/*.bundle.js",
+        "{projectRoot}/dist/**/*.bundle.js.map",
+        "!{projectRoot}/dist/test/**"
+      ]
+    },
+    "webpack:profile": {
+      "dependsOn": ["^tsc", "^build:esnext"],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{projectRoot}/src/**",
+        "{projectRoot}/webpack.config.js",
+        "!{projectRoot}/**/*.md"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/**/*.bundle.js",
+        "{projectRoot}/dist/**/*.bundle.js.map",
+        "{projectRoot}/webpack-stats.json"
+      ]
     },
     "clean": {
       "cache": false
+    },
+    "flub check buildversion": {
+      "inputs": [
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/*/package.json",
+        "{workspaceRoot}/tools/markdown-magic/package.json"
+      ],
+      "outputs": ["{workspaceRoot}/package.json"]
+    },
+    "jssm-viz": {
+      "inputs": ["{projectRoot}/src/**/*.fsl"],
+      "outputs": ["{projectRoot}/src/**/*.fsl.svg"]
+    },
+    "markdown-magic": {
+      "outputs": [
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*.md",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/*.md",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/*/*.md",
+        "{workspaceRoot}/tools/markdown-magic/**/*.md"
+      ]
+    },
+    "oclif manifest": {
+      "inputs": ["{projectRoot}/package.json", "{projectRoot}/src/**"],
+      "outputs": ["{projectRoot}/oclif.manifest.json"]
+    },
+    "oclif readme": {
+      "inputs": ["{projectRoot}/package.json", "{projectRoot}/src/**"],
+      "outputs": ["{projectRoot}/README.md", "{projectRoot}/docs/**"]
+    },
+    "syncpack lint-semver-ranges": {
+      "inputs": [
+        "{workspaceRoot}/syncpack.config.cjs",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/*/package.json",
+        "{workspaceRoot}/tools/markdown-magic/package.json"
+      ],
+      "outputs": [
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/*/package.json",
+        "{workspaceRoot}/tools/markdown-magic/package.json"
+      ]
+    },
+    "syncpack list-mismatches": {
+      "inputs": [
+        "{workspaceRoot}/syncpack.config.cjs",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/*/package.json",
+        "{workspaceRoot}/tools/markdown-magic/package.json"
+      ],
+      "outputs": [
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/package.json",
+        "{workspaceRoot}/{azure,examples,experimental,packages}/*/*/*/*/package.json",
+        "{workspaceRoot}/tools/markdown-magic/package.json"
+      ]
     }
   },
   "namedInputs": {
