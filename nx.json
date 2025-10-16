@@ -1,0 +1,143 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "extends": "nx/presets/npm.json",
+  "affected": {
+    "defaultBase": "main"
+  },
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx/tasks-runners/default",
+      "options": {
+        "cacheableOperations": [
+          "build",
+          "compile",
+          "tsc",
+          "build:esnext",
+          "api",
+          "lint",
+          "eslint",
+          "test:unit",
+          "test:jest",
+          "test:mocha"
+        ]
+      }
+    }
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build", "compile", "lint", "build:docs"],
+      "inputs": ["{projectRoot}/**/*", "!{projectRoot}/**/*.md"],
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/lib"]
+    },
+    "compile": {
+      "dependsOn": ["^compile", "tsc", "build:esnext", "build:test"],
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/lib", "{projectRoot}/*.tsbuildinfo"]
+    },
+    "tsc": {
+      "dependsOn": ["^tsc", "build:genver"],
+      "inputs": [
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/tsconfig.json",
+        "!{projectRoot}/**/*.md",
+        "!{projectRoot}/**/*.test.ts"
+      ],
+      "outputs": ["{projectRoot}/dist", "{projectRoot}/*.tsbuildinfo"]
+    },
+    "build:esnext": {
+      "dependsOn": ["^build:esnext", "build:genver"],
+      "inputs": [
+        "{projectRoot}/src/**/*",
+        "{projectRoot}/tsconfig.json",
+        "!{projectRoot}/**/*.md",
+        "!{projectRoot}/**/*.test.ts"
+      ],
+      "outputs": ["{projectRoot}/lib", "{projectRoot}/*.tsbuildinfo"]
+    },
+    "api": {
+      "dependsOn": ["api-extractor:commonjs", "api-extractor:esnext"]
+    },
+    "api-extractor:commonjs": {
+      "dependsOn": ["tsc"],
+      "inputs": [
+        "{projectRoot}/dist/**/*.d.ts",
+        "{projectRoot}/api-extractor.json",
+        "{projectRoot}/tsconfig.json"
+      ],
+      "outputs": ["{projectRoot}/_api-extractor-temp", "{projectRoot}/*.api.json"]
+    },
+    "api-extractor:esnext": {
+      "dependsOn": ["build:esnext"],
+      "inputs": [
+        "{projectRoot}/lib/**/*.d.ts",
+        "{projectRoot}/api-extractor.json",
+        "{projectRoot}/tsconfig.json"
+      ],
+      "outputs": ["{projectRoot}/_api-extractor-temp", "{projectRoot}/*.api.json"]
+    },
+    "lint": {
+      "dependsOn": ["eslint"]
+    },
+    "eslint": {
+      "dependsOn": ["^tsc"],
+      "inputs": [
+        "{projectRoot}/src/**/*.{ts,tsx,js,jsx}",
+        "{projectRoot}/.eslintrc.*",
+        "!{projectRoot}/**/*.md"
+      ]
+    },
+    "test:unit": {
+      "dependsOn": ["test:mocha", "test:jest"]
+    },
+    "test:jest": {
+      "dependsOn": ["compile"],
+      "inputs": [
+        "{projectRoot}/src/test/**/*",
+        "{projectRoot}/**/*.test.{ts,tsx}",
+        "{projectRoot}/jest.config.*"
+      ],
+      "outputs": ["{projectRoot}/nyc"],
+      "cache": true
+    },
+    "test:mocha": {
+      "dependsOn": ["build:test"],
+      "inputs": [
+        "{projectRoot}/src/test/**/*",
+        "{projectRoot}/dist/test/**/*",
+        "{projectRoot}/.mocharc.*"
+      ],
+      "outputs": ["{projectRoot}/nyc"],
+      "cache": true
+    },
+    "test:realsvc": {
+      "dependsOn": ["build:test"],
+      "cache": false
+    },
+    "test:stress": {
+      "dependsOn": ["build:test"],
+      "cache": false
+    },
+    "webpack": {
+      "dependsOn": ["^tsc", "^build:esnext"],
+      "inputs": [
+        "{projectRoot}/src/**/*.{ts,tsx,js,jsx}",
+        "{projectRoot}/webpack.config.js",
+        "!{projectRoot}/**/*.md",
+        "!{projectRoot}/**/*.test.*"
+      ],
+      "outputs": ["{projectRoot}/dist/**/*.bundle.js"]
+    },
+    "clean": {
+      "cache": false
+    }
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.spec.ts",
+      "!{projectRoot}/**/*.test.ts",
+      "!{projectRoot}/test/**/*",
+      "!{projectRoot}/tests/**/*"
+    ]
+  }
+}
