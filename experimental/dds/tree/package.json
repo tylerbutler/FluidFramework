@@ -27,8 +27,6 @@
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"scripts": {
-		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
 		"build:docs": "api-extractor run --local",
 		"build:esnext": "tsc --project ./tsconfig.esnext.json",
 		"check:are-the-types-wrong": "attw --pack .",
@@ -46,8 +44,6 @@
 		"eslint:fix": "eslint src --fix",
 		"format": "npm run format:biome",
 		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"pack:tests": "tar -cf ./experimental-tree.test-files.tar ./src/test ./dist/test ./lib/test",
 		"perf": "cross-env FLUID_TEST_VERBOSE=1 mocha --perfMode --fgrep @Benchmark --fgrep @ExecutionTime --reporter @fluid-tools/benchmark/dist/MochaReporter.js --timeout 30000",
 		"perf:measure": "npm run perf -- --fgrep @Measurement",

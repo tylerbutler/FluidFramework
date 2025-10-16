@@ -13,8 +13,6 @@
 	"sideEffects": false,
 	"type": "module",
 	"scripts": {
-		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
 		"build:genver": "gen-version",
 		"build:test": "npm run build:test:esm",
 		"build:test:esm": "tsc --project ./src/test/tsconfig.json",
@@ -25,8 +23,6 @@
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
 		"format": "npm run format:biome",
 		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"start:tinylicious:test": "tinylicious > tinylicious.log 2>&1",
 		"test": "npm run test:realsvc",
 		"test:benchmark:report": "mocha --config src/test/benchmark/.mocharc.time.cjs -- --driver=local --e2eConfigFile=src/test/benchmark/e2eDocsConfig.json",
@@ -148,15 +144,6 @@
 		"nock": "^13.3.3",
 		"rimraf": "^4.4.0",
 		"typescript": "~5.4.5"
-	},
-	"fluidBuild": {
-		"tasks": {
-			"build:test:esm": [
-				"^build:esnext",
-				"build:genver",
-				"^tsc"
-			]
-		}
 	},
 	"typeValidation": {
 		"disabled": true

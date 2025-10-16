@@ -13,8 +13,6 @@
 	"sideEffects": false,
 	"type": "module",
 	"scripts": {
-		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
 		"build:test": "tsc --project ./src/test/tsconfig.json",
 		"check:biome": "biome check .",
 		"check:format": "npm run check:biome",
@@ -23,8 +21,6 @@
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
 		"format": "npm run format:biome",
 		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"test": "npm run test:realsvc:odsp",
 		"test:coverage": "c8 npm test",
 		"test:realsvc:odsp": "npm run test:realsvc:odsp:run -- --driver=odsp --odspEndpointName=odsp",
@@ -88,15 +84,6 @@
 		"nock": "^13.3.3",
 		"rimraf": "^4.4.0",
 		"typescript": "~5.4.5"
-	},
-	"fluidBuild": {
-		"tasks": {
-			"build:test": [
-				"^api-extractor:esnext",
-				"^build:esnext",
-				"^tsc"
-			]
-		}
 	},
 	"typeValidation": {
 		"disabled": true

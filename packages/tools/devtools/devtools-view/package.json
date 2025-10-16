@@ -28,8 +28,6 @@
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"scripts": {
-		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
 		"build:docs": "api-extractor run --local",
 		"build:esnext": "fluid-tsc module --project ./tsconfig.esm.json && copyfiles -f ../../../../common/build/build-common/src/esm/package.json ./lib",
 		"build:test": "concurrently npm:build:test:cjs npm:build:test:esm",
@@ -47,8 +45,6 @@
 		"format-and-build": "npm run format && npm run build",
 		"format-and-compile": "npm run format && npm run build:compile",
 		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"rebuild": "npm run clean && npm run build",
 		"test": "npm run test:jest",
 		"test:coverage": "npm run test:jest:coverage",
@@ -132,13 +128,6 @@
 				],
 				"library": "main"
 			}
-		}
-	},
-	"fluidBuild": {
-		"tasks": {
-			"check:exports": [
-				"build:esnext"
-			]
 		}
 	},
 	"typeValidation": {

@@ -13,9 +13,6 @@
 	"sideEffects": false,
 	"type": "module",
 	"scripts": {
-		"build": "fluid-build . --task build",
-		"build:commonjs": "fluid-build . --task commonjs",
-		"build:compile": "fluid-build . --task compile",
 		"build:esnext": "tsc --project ./tsconfig.json",
 		"build:genver": "gen-version",
 		"build:test": "npm run build:test:esm && npm run build:test:cjs",
@@ -32,8 +29,6 @@
 		"format": "npm run format:biome",
 		"format:biome": "biome check . --write",
 		"full": "node ./dist/main.js --profile full",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"start": "node ./dist/main.js",
 		"start:frs": "node ./dist/main.js --driver routerlicious --driverEndpoint frs --profile ci_frs",
 		"start:frs:canary": "node ./dist/main.js --driver routerlicious --driverEndpoint frsCanary --profile ci_frs",

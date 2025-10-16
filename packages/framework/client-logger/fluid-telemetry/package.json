@@ -47,12 +47,8 @@
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"scripts": {
-		"api": "fluid-build . --task api",
 		"api-extractor:commonjs": "flub generate entrypoints --outFileLegacyBeta legacy --outDir ./dist",
 		"api-extractor:esnext": "flub generate entrypoints --outFileLegacyBeta legacy --outDir ./lib --node10TypeCompat",
-		"build": "fluid-build . --task build",
-		"build:commonjs": "fluid-build . --task commonjs",
-		"build:compile": "fluid-build . --task compile",
 		"build:docs": "api-extractor run --local",
 		"build:esnext": "tsc --project ./tsconfig.json",
 		"check:are-the-types-wrong": "attw --pack .",
@@ -72,8 +68,6 @@
 		"format-and-build": "npm run format && npm run build",
 		"format-and-compile": "npm run format && npm run build:compile",
 		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"start:tinylicious:test": "tinylicious > tinylicious.log 2>&1",
 		"test": "start-server-and-test start:tinylicious:test 7070 test:mocha:all",
 		"test:mocha": "npm run test:mocha:esm:unit && echo skipping cjs to avoid overhead - npm run test:mocha:cjs:unit",
@@ -124,18 +118,6 @@
 		"tinylicious": "^7.0.0",
 		"tslib": "^1.10.0",
 		"typescript": "~5.4.5"
-	},
-	"fluidBuild": {
-		"tasks": {
-			"build:esnext": [
-				"...",
-				"typetests:gen"
-			],
-			"tsc": [
-				"...",
-				"typetests:gen"
-			]
-		}
 	},
 	"typeValidation": {
 		"disabled": true

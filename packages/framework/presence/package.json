@@ -41,12 +41,8 @@
 		"!**/test/**"
 	],
 	"scripts": {
-		"api": "fluid-build . --task api",
 		"api-extractor:commonjs": "flub generate entrypoints --outFileLegacyBeta legacy --outDir ./dist",
 		"api-extractor:esnext": "flub generate entrypoints --outFileLegacyBeta legacy --outDir ./lib",
-		"build": "fluid-build . --task build",
-		"build:commonjs": "fluid-build . --task commonjs",
-		"build:compile": "fluid-build . --task compile",
 		"build:docs": "api-extractor run --local",
 		"build:esnext": "npm run build:esnext:main && npm run build:esnext:experimental",
 		"build:esnext:experimental": "tsc --project ./tsconfig.json",
@@ -69,8 +65,6 @@
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
 		"format": "npm run format:biome",
 		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"test": "npm run test:mocha",
 		"test:coverage": "c8 npm test",
 		"test:mocha": "npm run test:mocha:esm && npm run test:mocha:cjs",
@@ -145,31 +139,6 @@
 		"rimraf": "^4.4.0",
 		"sinon": "^18.0.1",
 		"typescript": "~5.4.5"
-	},
-	"fluidBuild": {
-		"tasks": {
-			"build:esnext:experimental": [
-				"build:esnext:main"
-			],
-			"build:esnext:main": [
-				"^api",
-				"^build:esnext"
-			],
-			"check:exports:bundle-release-tags": [
-				"build:esnext"
-			],
-			"eslint": [
-				"build:esnext",
-				"^build:test:esm"
-			],
-			"tsc:experimental": [
-				"tsc:main"
-			],
-			"tsc:main": [
-				"^api",
-				"^tsc"
-			]
-		}
 	},
 	"typeValidation": {
 		"disabled": true

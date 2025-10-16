@@ -29,6 +29,7 @@ let odspAccessToken: string | undefined;
 
 const app = express();
 const compiler = webpack(config);
+assert(compiler !== null, "webpack compiler should be created successfully");
 
 app.use(
 	// eslint-disable-next-line @typescript-eslint/no-misused-promises

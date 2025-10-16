@@ -13,9 +13,7 @@
 	"author": "Microsoft and contributors",
 	"type": "module",
 	"scripts": {
-		"build": "fluid-build . --task build",
 		"build-and-test": "npm run build && npm run test",
-		"build:compile": "fluid-build . --task compile",
 		"build:esnext": "tsc --project ./tsconfig.json",
 		"build:test": "npm run build:test:esm && npm run build:test:cjs",
 		"build:test:cjs": "fluid-tsc commonjs --project ./e2e-tests/tsconfig.cjs.json",
@@ -31,8 +29,6 @@
 		"format-and-compile": "npm run format && npm run build:compile",
 		"format:biome": "biome check . --write",
 		"good-fences": "gf",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"rebuild": "npm run clean && npm run build",
 		"start:client:test": "webpack serve --config webpack.test.cjs",
 		"test": "concurrently npm:test:mocha npm:test:jest",

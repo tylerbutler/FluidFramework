@@ -20,8 +20,6 @@
 		"eslint:fix": "eslint --format stylish index.js --fix --fix-type problem,suggestion,layout",
 		"format": "npm run format:biome",
 		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"start": "pm2 start -n azure-local-service index.js",
 		"start:debug": "node --inspect=0.0.0.0:9229 index.js",
 		"stop": "pm2 stop azure-local-service",

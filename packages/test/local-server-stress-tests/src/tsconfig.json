@@ -6,5 +6,6 @@
 		"types": ["mocha", "node"],
 		"noUncheckedIndexedAccess": false,
 		"exactOptionalPropertyTypes": false,
+		"customConditions": ["allow-ff-test-exports"],
 	},
 }

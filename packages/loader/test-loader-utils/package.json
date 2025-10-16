@@ -27,8 +27,6 @@
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"scripts": {
-		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
 		"build:docs": "api-extractor run --local",
 		"build:esnext": "tsc --project ./tsconfig.json",
 		"check:are-the-types-wrong": "attw --pack .",
@@ -44,8 +42,6 @@
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
 		"format": "npm run format:biome",
 		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"tsc": "fluid-tsc commonjs --project ./tsconfig.cjs.json && copyfiles -f ../../../common/build/build-common/src/cjs/package.json ./dist"
 	},
 	"dependencies": {
@@ -67,22 +63,6 @@
 		"eslint": "~8.55.0",
 		"rimraf": "^4.4.0",
 		"typescript": "~5.4.5"
-	},
-	"fluidBuild": {
-		"tasks": {
-			"check:exports:cjs:index": [
-				"...",
-				"tsc"
-			],
-			"check:exports:esm:index": [
-				"...",
-				"build:esnext"
-			],
-			"check:exports:bundle-release-tags": [
-				"...",
-				"build:esnext"
-			]
-		}
 	},
 	"typeValidation": {
 		"disabled": true

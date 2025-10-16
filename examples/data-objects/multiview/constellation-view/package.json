@@ -23,8 +23,6 @@
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"scripts": {
-		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
 		"build:copy": "copyfiles -u 1 \"src/**/*.css\" lib/",
 		"build:esnext": "tsc --project ./tsconfig.json",
 		"check:biome": "biome check .",
@@ -33,9 +31,7 @@
 		"eslint": "eslint --format stylish src",
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
 		"format": "npm run format:biome",
-		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format"
+		"format:biome": "biome check . --write"
 	},
 	"dependencies": {
 		"@fluid-example/multiview-coordinate-interface": "workspace:~",
@@ -61,20 +57,6 @@
 				],
 				"library": "main"
 			}
-		}
-	},
-	"fluidBuild": {
-		"tasks": {
-			"eslint": [
-				"@fluid-example/multiview-coordinate-interface#build:esnext",
-				"@fluid-example/multiview-slider-coordinate-view#build:esnext",
-				"^tsc"
-			],
-			"build:esnext": [
-				"@fluid-example/multiview-coordinate-interface#build:esnext",
-				"@fluid-example/multiview-slider-coordinate-view#build:esnext",
-				"^tsc"
-			]
 		}
 	},
 	"typeValidation": {

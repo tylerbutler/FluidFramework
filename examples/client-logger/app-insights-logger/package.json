@@ -14,8 +14,6 @@
 	"sideEffects": false,
 	"type": "module",
 	"scripts": {
-		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
 		"build:esnext": "tsc --project ./tsconfig.json",
 		"check:biome": "biome check .",
 		"check:format": "npm run check:biome",
@@ -26,8 +24,6 @@
 		"format-and-build": "npm run format && npm run build",
 		"format-and-compile": "npm run format && npm run build:compile",
 		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"start": "start-server-and-test start:tinylicious 7070 start:test-app:client",
 		"start:test-app:client": "webpack serve --config webpack.config.cjs",
 		"start:tinylicious": "tinylicious",

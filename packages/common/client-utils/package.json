@@ -55,14 +55,11 @@
 	"main": "lib/indexBrowser.js",
 	"types": "lib/indexBrowser.d.ts",
 	"scripts": {
-		"build": "fluid-build . --task build",
 		"build:api-reports": "concurrently \"npm:build:api-reports:browser:*\" && concurrently \"npm:build:api-reports:node:*\"",
 		"build:api-reports:browser:current": "api-extractor run --local --config api-extractor/api-extractor-report-browser.current.json",
 		"build:api-reports:browser:legacy": "api-extractor run --local --config api-extractor/api-extractor-report-browser.legacy.json",
 		"build:api-reports:node:current": "npm run ci:build:api-reports:node:current",
 		"build:api-reports:node:legacy": "npm run ci:build:api-reports:node:legacy",
-		"build:commonjs": "fluid-build . --task commonjs",
-		"build:compile": "fluid-build . --task compile",
 		"build:docs": "api-extractor run --local --config api-extractor/api-extractor-model-browser.json",
 		"build:esnext": "tsc --project ./tsconfig.json",
 		"build:exports:browser": "flub generate entrypoints --outFileLegacyBeta legacy --outFilePrefix {@unscopedPackageName}.browser. --mainEntrypoint ./src/indexBrowser.ts --outDir ./lib",
@@ -97,8 +94,6 @@
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
 		"format": "npm run format:biome",
 		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"test": "npm run test:mocha && npm run test:jest",
 		"test:coverage": "c8 npm test",
 		"test:jest": "jest --ci",
@@ -177,86 +172,6 @@
 		"ts-jest": "^29.1.1",
 		"ts-node": "^10.9.1",
 		"typescript": "~5.4.5"
-	},
-	"fluidBuild": {
-		"tasks": {
-			"eslint": [
-				"tsc",
-				"build:esnext",
-				"build:test:mocha:esm",
-				"build:test:jest",
-				"build:test:types"
-			],
-			"build:api-reports:browser:current": [
-				"build:exports:browser"
-			],
-			"build:api-reports:browser:legacy": [
-				"build:exports:browser"
-			],
-			"build:api-reports:node:current": [
-				"build:api-reports:browser:current"
-			],
-			"build:api-reports:node:legacy": [
-				"build:api-reports:browser:legacy"
-			],
-			"build:exports:browser": [
-				"build:esnext"
-			],
-			"build:exports:node": [
-				"build:esnext"
-			],
-			"check:exports:bundle-release-tags": [
-				"build:exports:browser"
-			],
-			"check:exports:cjs:indexBrowser": [
-				"tsc"
-			],
-			"check:exports:cjs:indexNode": [
-				"tsc"
-			],
-			"check:exports:esm:browser:current": [
-				"build:exports:browser"
-			],
-			"check:exports:esm:browser:legacy": [
-				"build:exports:browser"
-			],
-			"check:exports:esm:indexBrowser": [
-				"build:esnext"
-			],
-			"check:exports:esm:indexNode": [
-				"build:exports:node"
-			],
-			"check:exports:esm:node:current": [
-				"build:exports:node"
-			],
-			"check:exports:esm:node:legacy": [
-				"build:exports:node"
-			],
-			"build:test:jest": [
-				"tsc"
-			],
-			"build:test:mocha:cjs": [
-				"tsc"
-			],
-			"build:test:mocha:esm": [
-				"build:esnext"
-			],
-			"build:test:types": [
-				"build:esnext"
-			],
-			"ci:build:api-reports:browser:current": [
-				"build:exports:browser"
-			],
-			"ci:build:api-reports:browser:legacy": [
-				"build:exports:browser"
-			],
-			"ci:build:api-reports:node:current": [
-				"build:exports:node"
-			],
-			"ci:build:api-reports:node:legacy": [
-				"build:exports:node"
-			]
-		}
 	},
 	"typeValidation": {
 		"broken": {},

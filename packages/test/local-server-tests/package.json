@@ -14,8 +14,6 @@
 	"sideEffects": false,
 	"type": "commonjs",
 	"scripts": {
-		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
 		"build:test": "tsc --project ./src/test/tsconfig.json",
 		"check:biome": "biome check .",
 		"check:format": "npm run check:biome",
@@ -24,8 +22,6 @@
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
 		"format": "npm run format:biome",
 		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
-		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"test": "npm run test:mocha",
 		"test:coverage": "c8 npm test",
 		"test:mocha": "mocha \"lib/test/**/*.spec.*js\"",
@@ -96,14 +92,6 @@
 		"sinon": "^18.0.1",
 		"ts-loader": "^9.5.1",
 		"typescript": "~5.4.5"
-	},
-	"fluidBuild": {
-		"tasks": {
-			"build:test": [
-				"^tsc",
-				"^api-extractor:commonjs"
-			]
-		}
 	},
 	"typeValidation": {
 		"disabled": true
