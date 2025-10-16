@@ -25,6 +25,18 @@ const FLUID_BUILD_SCRIPTS = [
 	"lint:fix",
 ];
 
+// Nx wrapper scripts to add to individual packages for developer ease
+const NX_WRAPPER_SCRIPTS: Record<string, string> = {
+	build: "nx build",
+	compile: "nx compile",
+	lint: "nx lint",
+	"lint:fix": "nx lint:fix",
+	test: "nx test",
+	"test:mocha": "nx test:mocha",
+	"test:jest": "nx test:jest",
+	clean: "nx clean",
+};
+
 /**
  * Update root package.json with nx dependencies
  */
@@ -128,13 +140,31 @@ async function updateSinglePackageJson(filePath: string): Promise<boolean> {
 		modified = true;
 	}
 
-	// Remove fluid-build script references
-	if (packageJson.scripts) {
-		for (const scriptName of FLUID_BUILD_SCRIPTS) {
-			if (packageJson.scripts[scriptName]?.includes("fluid-build")) {
+	// Initialize scripts if not present
+	if (!packageJson.scripts) {
+		packageJson.scripts = {};
+	}
+
+	// Replace fluid-build script references with nx wrappers
+	for (const scriptName of FLUID_BUILD_SCRIPTS) {
+		if (packageJson.scripts[scriptName]?.includes("fluid-build")) {
+			// Replace with nx wrapper if we have one defined
+			if (NX_WRAPPER_SCRIPTS[scriptName]) {
+				packageJson.scripts[scriptName] = NX_WRAPPER_SCRIPTS[scriptName];
+				modified = true;
+			} else {
+				// Delete if no wrapper defined
 				delete packageJson.scripts[scriptName];
 				modified = true;
 			}
+		}
+	}
+
+	// Add nx wrapper scripts for common tasks (if not already present)
+	for (const [scriptName, scriptCommand] of Object.entries(NX_WRAPPER_SCRIPTS)) {
+		if (!packageJson.scripts[scriptName]) {
+			packageJson.scripts[scriptName] = scriptCommand;
+			modified = true;
 		}
 	}
 

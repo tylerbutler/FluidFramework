@@ -94,12 +94,18 @@ After applying the overlay:
 For all packages in `azure/`, `examples/`, `experimental/`, and `packages/`:
 
 - Removes `fluidBuild` configuration section
-- Removes scripts that invoke `fluid-build`:
-  - `build`
-  - `build:commonjs`
-  - `build:compile`
-  - `lint`
-  - `lint:fix`
+- Replaces scripts that invoke `fluid-build` with nx wrapper scripts:
+  - `build` → `nx build`
+  - `compile` → `nx compile`
+  - `lint` → `nx lint`
+  - `lint:fix` → `nx lint:fix`
+- Adds nx wrapper scripts for common tasks:
+  - `test` → `nx test`
+  - `test:mocha` → `nx test:mocha`
+  - `test:jest` → `nx test:jest`
+  - `clean` → `nx clean`
+
+This allows developers to continue using familiar commands like `pnpm build` from within package directories, which will delegate to nx for orchestration and caching.
 
 ## Maintaining the Overlay
 
