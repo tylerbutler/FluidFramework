@@ -11,8 +11,12 @@
   "author": "Microsoft and contributors",
   "scripts": {
     "build": "turbo run build",
-    "build:nx": "nx run-many -t build",
+    "build:nx": "nx run-many -t check:format compile lint build:api-reports build:docs build:manifest build:readme",
     "build:legacy": "fluid-build --task build",
+    "ci:build:nx": "nx run-many -t compile lint ci:build:api-reports ci:build:docs build:manifest build:readme",
+    "full:nx": "nx run-many -t check:format compile lint build:api-reports build:docs build:manifest build:readme webpack",
+    "compile:nx": "nx run-many -t commonjs build:esnext api build:test build:copy",
+    "lint:nx": "nx run-many -t eslint good-fences depcruise check:exports check:release-tags",
     "build-and-test": "turbo run test:unit test:mocha test:jest",
     "build-and-test:nx": "nx run-many -t test:unit test:mocha test:jest",
     "build-and-test:legacy": "fluid-build --task test --worker",

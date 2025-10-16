@@ -4,10 +4,25 @@
   "affected": {
     "defaultBase": "main"
   },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/**/*.spec.ts",
+      "!{projectRoot}/**/*.test.ts",
+      "!{projectRoot}/test/**/*",
+      "!{projectRoot}/tests/**/*"
+    ],
+    "sharedGlobals": [
+      "{workspaceRoot}/pnpm-lock.yaml",
+      "{workspaceRoot}/package.json"
+    ]
+  },
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx/tasks-runners/default",
       "options": {
+        "parallel": 8,
         "cacheableOperations": [
           "build",
           "compile",
@@ -72,6 +87,7 @@
     },
     "build": {
       "dependsOn": [
+        "^build",
         "check:format",
         "compile",
         "lint",
@@ -80,7 +96,8 @@
         "build:manifest",
         "build:readme"
       ],
-      "outputs": []
+      "outputs": [],
+      "cache": true
     },
     "build:full": {
       "dependsOn": ["full"],
@@ -457,7 +474,9 @@
         "{projectRoot}/webpack.config.*.js",
         "!{projectRoot}/**/*.md",
         "!{projectRoot}/**/*.test.*",
-        "!{projectRoot}/test/**"
+        "!{projectRoot}/test/**",
+        {"env": "NODE_ENV"},
+        {"env": "WEBPACK_BUNDLE_ANALYZER"}
       ],
       "outputs": [
         "{projectRoot}/dist/**/*.bundle.js",
@@ -546,15 +565,5 @@
         "{workspaceRoot}/tools/markdown-magic/package.json"
       ]
     }
-  },
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*"],
-    "production": [
-      "default",
-      "!{projectRoot}/**/*.spec.ts",
-      "!{projectRoot}/**/*.test.ts",
-      "!{projectRoot}/test/**/*",
-      "!{projectRoot}/tests/**/*"
-    ]
   }
 }
