@@ -1,3 +1,8 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 #!/usr/bin/env node
 /**
  * Nx Overlay Script
@@ -17,7 +22,11 @@
 import { Command } from "commander";
 import * as path from "node:path";
 import { copyNxConfigFiles, isNxConfigured } from "./config-files.js";
-import { updateRootPackageJson, updatePackageJsonFiles, needsPackageJsonUpdates } from "./package-json.js";
+import {
+	updateRootPackageJson,
+	updatePackageJsonFiles,
+	needsPackageJsonUpdates,
+} from "./package-json.js";
 import { updateGitignore, needsGitignoreUpdate } from "./gitignore.js";
 
 interface OverlayOptions {
@@ -88,7 +97,9 @@ async function performDryRun(repoRoot: string): Promise<void> {
 		}
 	}
 
-	console.log("\n📦 Package.json files - Would scan and update files with fluidBuild sections");
+	console.log(
+		"\n📦 Package.json files - Would scan and update files with fluidBuild sections",
+	);
 
 	if (changesNeeded) {
 		console.log("\n💡 Run without --dry-run to apply these changes");

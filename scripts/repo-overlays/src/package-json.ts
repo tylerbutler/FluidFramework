@@ -1,3 +1,8 @@
+/*!
+ * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
+ * Licensed under the MIT License.
+ */
+
 /**
  * Module for updating package.json files for nx
  */
@@ -21,17 +26,27 @@ const FLUID_BUILD_SCRIPTS = [
 	"build",
 	"build:commonjs",
 	"build:compile",
+	"build:lint",
+	"build:api",
+	"build:docs",
 	"lint",
 	"lint:fix",
+	"test",
+	"test:unit",
 ];
 
 // Nx wrapper scripts to add to individual packages for developer ease
 const NX_WRAPPER_SCRIPTS: Record<string, string> = {
 	build: "nx build",
 	compile: "nx compile",
+	"build:compile": "nx build:compile",
+	"build:lint": "nx build:lint",
+	"build:api": "nx build:api",
+	"build:docs": "nx build:docs",
 	lint: "nx lint",
 	"lint:fix": "nx lint:fix",
 	test: "nx test",
+	"test:unit": "nx test:unit",
 	"test:mocha": "nx test:mocha",
 	"test:jest": "nx test:jest",
 	clean: "nx clean",
