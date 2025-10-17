@@ -52,6 +52,22 @@ const NX_WRAPPER_SCRIPTS: Record<string, string> = {
 	clean: "nx clean",
 };
 
+// Root package.json nx scripts based on actual nx.json task names
+// Note: These use the actual target names from nx.json, not the old fluid-build task names
+const ROOT_NX_SCRIPTS: Record<string, string> = {
+	"build-and-test:nx": "nx run-many -t test:unit",
+	"build:compile:nx": "nx run-many -t build:compile",
+	"build:nx": "nx run-many -t check:format build:compile build:lint build:api build:docs build:manifest build:readme",
+	"ci:build:nx": "nx run-many -t build:compile build:lint build:api build:docs build:manifest build:readme",
+	"compile:nx": "nx run-many -t tsc esnext copy-files",
+	"full:nx": "nx run-many -t check:format build:compile build:lint build:api build:docs build:manifest build:readme webpack",
+	"lint:nx": "nx run-many -t lint",
+	"tsc:nx": "nx run-many -t tsc",
+};
+
+// Override mode - set to true to replace existing scripts that differ
+const OVERRIDE_EXISTING_SCRIPTS = false;
+
 /**
  * Update root package.json with nx dependencies
  */
@@ -89,6 +105,31 @@ export async function updateRootPackageJson(repoRoot: string): Promise<void> {
 			console.log("  ✅ Added nx to onlyBuiltDependencies");
 		} else {
 			console.log("  ℹ️  nx already in onlyBuiltDependencies");
+		}
+	}
+
+	// Add nx scripts to root package.json if not present
+	if (!packageJson.scripts) {
+		packageJson.scripts = {};
+	}
+
+	for (const [scriptName, scriptCommand] of Object.entries(ROOT_NX_SCRIPTS)) {
+		if (!packageJson.scripts[scriptName]) {
+			packageJson.scripts[scriptName] = scriptCommand;
+			modified = true;
+			console.log(`  ✅ Added script: ${scriptName}`);
+		} else if (packageJson.scripts[scriptName] !== scriptCommand) {
+			if (OVERRIDE_EXISTING_SCRIPTS) {
+				packageJson.scripts[scriptName] = scriptCommand;
+				modified = true;
+				console.log(`  ✅ Updated script: ${scriptName}`);
+			} else {
+				console.log(`  ⚠️  Script "${scriptName}" exists but differs from expected`);
+				console.log(`     Current:  ${packageJson.scripts[scriptName]}`);
+				console.log(`     Expected: ${scriptCommand}`);
+			}
+		} else {
+			console.log(`  ℹ️  Script "${scriptName}" already correct`);
 		}
 	}
 
@@ -212,6 +253,17 @@ export async function needsPackageJsonUpdates(repoRoot: string): Promise<boolean
 			packageJson.pnpm?.onlyBuiltDependencies &&
 			!packageJson.pnpm.onlyBuiltDependencies.includes("nx")
 		) {
+			return true;
+		}
+
+		// Check if any nx scripts are missing
+		if (packageJson.scripts) {
+			for (const scriptName of Object.keys(ROOT_NX_SCRIPTS)) {
+				if (!packageJson.scripts[scriptName]) {
+					return true;
+				}
+			}
+		} else {
 			return true;
 		}
 
