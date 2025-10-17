@@ -35,9 +35,9 @@ import {
 	MapNodeStoredSchema,
 	ObjectNodeStoredSchema,
 	RevisionTagCodec,
+	type SchemaFormatVersion,
 	SchemaVersion,
 	type TreeFieldStoredSchema,
-	type TreeNodeSchemaIdentifier,
 	type TreeNodeStoredSchema,
 	type TreeStoredSchema,
 	TreeStoredSchemaRepository,
@@ -54,6 +54,7 @@ import {
 	TreeCompressionStrategy,
 	buildChunkedForest,
 	buildForest,
+	defaultIncrementalEncodingPolicy,
 	defaultSchemaPolicy,
 	getCodecTreeForFieldBatchFormat,
 	getCodecTreeForForestFormat,
@@ -63,6 +64,7 @@ import {
 	makeMitigatedChangeFamily,
 	makeSchemaCodec,
 	makeTreeChunker,
+	type IncrementalEncodingPolicy,
 	type FieldBatchFormatVersion,
 	type ForestFormatVersion,
 	type TreeCompressionStrategyPrivate,
@@ -105,6 +107,7 @@ import type { SharedTreeChange } from "./sharedTreeChangeTypes.js";
 import type { SharedTreeEditBuilder } from "./sharedTreeEditBuilder.js";
 import { type TreeCheckout, type BranchableTree, createTreeCheckout } from "./treeCheckout.js";
 import {
+	brand,
 	type Breakable,
 	breakingClass,
 	type JsonCompatible,
@@ -179,7 +182,7 @@ export interface ITreePrivate extends ITreeInternal {
  */
 interface ExplicitCodecVersions extends ExplicitCoreCodecVersions {
 	forest: ForestFormatVersion;
-	schema: SchemaVersion;
+	schema: SchemaFormatVersion;
 	detachedFieldIndex: DetachedFieldIndexFormatVersion;
 	fieldBatch: FieldBatchFormatVersion;
 }
@@ -187,27 +190,69 @@ interface ExplicitCodecVersions extends ExplicitCoreCodecVersions {
 const formatVersionToTopLevelCodecVersions = new Map<number, ExplicitCodecVersions>([
 	[
 		1,
-		{ forest: 1, schema: 1, detachedFieldIndex: 1, editManager: 1, message: 1, fieldBatch: 1 },
+		{
+			forest: brand(1),
+			schema: brand(1),
+			detachedFieldIndex: brand(1),
+			editManager: brand(1),
+			message: brand(1),
+			fieldBatch: brand(1),
+		},
 	],
 	[
 		2,
-		{ forest: 1, schema: 1, detachedFieldIndex: 1, editManager: 2, message: 2, fieldBatch: 1 },
+		{
+			forest: brand(1),
+			schema: brand(1),
+			detachedFieldIndex: brand(1),
+			editManager: brand(2),
+			message: brand(2),
+			fieldBatch: brand(1),
+		},
 	],
 	[
 		3,
-		{ forest: 1, schema: 1, detachedFieldIndex: 1, editManager: 3, message: 3, fieldBatch: 1 },
+		{
+			forest: brand(1),
+			schema: brand(1),
+			detachedFieldIndex: brand(1),
+			editManager: brand(3),
+			message: brand(3),
+			fieldBatch: brand(1),
+		},
 	],
 	[
 		4,
-		{ forest: 1, schema: 1, detachedFieldIndex: 1, editManager: 4, message: 4, fieldBatch: 1 },
+		{
+			forest: brand(1),
+			schema: brand(1),
+			detachedFieldIndex: brand(1),
+			editManager: brand(4),
+			message: brand(4),
+			fieldBatch: brand(1),
+		},
 	],
 	[
 		5,
-		{ forest: 1, schema: 2, detachedFieldIndex: 1, editManager: 4, message: 4, fieldBatch: 1 },
+		{
+			forest: brand(1),
+			schema: brand(2),
+			detachedFieldIndex: brand(1),
+			editManager: brand(4),
+			message: brand(4),
+			fieldBatch: brand(1),
+		},
 	],
 	[
 		100, // SharedTreeFormatVersion.vSharedBranches
-		{ forest: 1, schema: 2, detachedFieldIndex: 1, editManager: 5, message: 5, fieldBatch: 1 },
+		{
+			forest: brand(1),
+			schema: brand(2),
+			detachedFieldIndex: brand(1),
+			editManager: brand(5),
+			message: brand(5),
+			fieldBatch: brand(1),
+		},
 	],
 ]);
 
@@ -254,6 +299,7 @@ export class SharedTreeKernel
 		serializer: IFluidSerializer,
 		submitLocalMessage: (content: unknown, localOpMetadata?: unknown) => void,
 		lastSequenceNumber: () => number | undefined,
+		initialSequenceNumber: number,
 		private readonly logger: ITelemetryLoggerExt | undefined,
 		idCompressor: IIdCompressor,
 		optionsParam: SharedTreeOptionsInternal,
@@ -261,7 +307,13 @@ export class SharedTreeKernel
 		const options = { ...defaultSharedTreeOptions, ...optionsParam };
 		const codecVersions = getCodecVersions(options.formatVersion);
 		const schema = new TreeStoredSchemaRepository();
-		const forest = buildConfiguredForest(breaker, options.forest, schema, idCompressor);
+		const forest = buildConfiguredForest(
+			breaker,
+			options.forest,
+			schema,
+			idCompressor,
+			options.shouldEncodeIncrementally,
+		);
 		const revisionTagCodec = new RevisionTagCodec(idCompressor);
 		const removedRoots = makeDetachedFieldIndex(
 			"repair",
@@ -295,7 +347,8 @@ export class SharedTreeKernel
 			encoderContext,
 			options,
 			idCompressor,
-			options.shouldEncodeFieldIncrementally,
+			initialSequenceNumber,
+			options.shouldEncodeIncrementally,
 		);
 		const removedRootsSummarizer = new DetachedFieldIndexSummarizer(removedRoots);
 		const innerChangeFamily = new SharedTreeChangeFamily(
@@ -660,16 +713,12 @@ export type SharedTreeFormatVersion = typeof SharedTreeFormatVersion;
  * Once an entry is defined and used in production, it cannot be changed.
  * This is because the format for SharedTree changes are not explicitly versioned.
  */
-export const changeFormatVersionForEditManager: DependentFormatVersion<
-	EditManagerFormatVersion,
-	SharedTreeChangeFormatVersion
-> = DependentFormatVersion.fromPairs([
-	// [EditManagerFormatVersion, SharedTreeChangeFormatVersion]
-	[1, 1],
-	[2, 2],
-	[3, 3],
-	[4, 4],
-	[5, 4],
+export const changeFormatVersionForEditManager = DependentFormatVersion.fromPairs([
+	[brand<EditManagerFormatVersion>(1), brand<SharedTreeChangeFormatVersion>(1)],
+	[brand<EditManagerFormatVersion>(2), brand<SharedTreeChangeFormatVersion>(2)],
+	[brand<EditManagerFormatVersion>(3), brand<SharedTreeChangeFormatVersion>(3)],
+	[brand<EditManagerFormatVersion>(4), brand<SharedTreeChangeFormatVersion>(4)],
+	[brand<EditManagerFormatVersion>(5), brand<SharedTreeChangeFormatVersion>(4)],
 ]);
 
 /**
@@ -678,16 +727,13 @@ export const changeFormatVersionForEditManager: DependentFormatVersion<
  * Once an entry is defined and used in production, it cannot be changed.
  * This is because the format for SharedTree changes are not explicitly versioned.
  */
-export const changeFormatVersionForMessage: DependentFormatVersion<
-	MessageFormatVersion,
-	SharedTreeChangeFormatVersion
-> = DependentFormatVersion.fromPairs([
-	[undefined, 1],
-	[1, 1],
-	[2, 2],
-	[3, 3],
-	[4, 4],
-	[5, 4],
+export const changeFormatVersionForMessage = DependentFormatVersion.fromPairs([
+	[brand<MessageFormatVersion>(undefined), brand<SharedTreeChangeFormatVersion>(1)],
+	[brand<MessageFormatVersion>(1), brand<SharedTreeChangeFormatVersion>(1)],
+	[brand<MessageFormatVersion>(2), brand<SharedTreeChangeFormatVersion>(2)],
+	[brand<MessageFormatVersion>(3), brand<SharedTreeChangeFormatVersion>(3)],
+	[brand<MessageFormatVersion>(4), brand<SharedTreeChangeFormatVersion>(4)],
+	[brand<MessageFormatVersion>(5), brand<SharedTreeChangeFormatVersion>(4)],
 ]);
 
 function getCodecTreeForEditManagerFormat(version: EditManagerFormatVersion): CodecTree {
@@ -757,16 +803,11 @@ export interface SharedTreeOptionsInternal
 		Partial<SharedTreeFormatOptionsInternal> {
 	disposeForksAfterTransaction?: boolean;
 	/**
-	 * Returns whether a field should be incrementally encoded.
-	 * @param nodeIdentifier - The identifier of the node containing the field.
-	 * @param fieldKey - The key of the field to check.
+	 * Returns whether a node / field should be incrementally encoded.
 	 * @remarks
-	 * The policy for which fields should get incremental encoding should eventually be specified some other way.
+	 * See {@link IncrementalEncodingPolicy}.
 	 */
-	shouldEncodeFieldIncrementally?(
-		nodeIdentifier: TreeNodeSchemaIdentifier,
-		fieldKey: FieldKey,
-	): boolean;
+	shouldEncodeIncrementally?: IncrementalEncodingPolicy;
 }
 /**
  * Configuration options for SharedTree's internal tree storage.
@@ -845,8 +886,17 @@ export const ForestTypeReference = toForestType(
  * @beta
  */
 export const ForestTypeOptimized = toForestType(
-	(breaker: Breakable, schema: TreeStoredSchemaSubscription, idCompressor: IIdCompressor) =>
-		buildChunkedForest(makeTreeChunker(schema, defaultSchemaPolicy), undefined, idCompressor),
+	(
+		breaker: Breakable,
+		schema: TreeStoredSchemaSubscription,
+		idCompressor: IIdCompressor,
+		shouldEncodeIncrementally: IncrementalEncodingPolicy,
+	) =>
+		buildChunkedForest(
+			makeTreeChunker(schema, defaultSchemaPolicy, shouldEncodeIncrementally),
+			undefined,
+			idCompressor,
+		),
 );
 
 /**
@@ -867,6 +917,7 @@ type ForestFactory = (
 	breaker: Breakable,
 	schema: TreeStoredSchemaSubscription,
 	idCompressor: IIdCompressor,
+	shouldEncodeIncrementally: IncrementalEncodingPolicy,
 ) => IEditableForest;
 
 function toForestType(factory: ForestFactory): ForestType {
@@ -881,23 +932,24 @@ export function buildConfiguredForest(
 	factory: ForestType,
 	schema: TreeStoredSchemaSubscription,
 	idCompressor: IIdCompressor,
+	shouldEncodeIncrementally: IncrementalEncodingPolicy,
 ): IEditableForest {
-	return (factory as unknown as ForestFactory)(breaker, schema, idCompressor);
+	return (factory as unknown as ForestFactory)(
+		breaker,
+		schema,
+		idCompressor,
+		shouldEncodeIncrementally,
+	);
 }
 
 export const defaultSharedTreeOptions: Required<SharedTreeOptionsInternal> = {
 	jsonValidator: FormatValidatorNoOp,
-	oldestCompatibleClient: FluidClientVersion.v2_0,
+	minVersionForCollab: FluidClientVersion.v2_0,
 	forest: ForestTypeReference,
 	treeEncodeType: TreeCompressionStrategy.Compressed,
 	formatVersion: SharedTreeFormatVersion.v3,
 	disposeForksAfterTransaction: true,
-	shouldEncodeFieldIncrementally: (
-		nodeIdentifier: TreeNodeSchemaIdentifier,
-		fieldKey: FieldKey,
-	): boolean => {
-		return false;
-	},
+	shouldEncodeIncrementally: defaultIncrementalEncodingPolicy,
 };
 
 function exportSimpleFieldSchemaStored(schema: TreeFieldStoredSchema): SimpleFieldSchema {
