@@ -1,9 +1,9 @@
+#!/usr/bin/env node
 /*!
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
 
-#!/usr/bin/env node
 /**
  * Nx Overlay Script
  *
@@ -15,8 +15,9 @@
  *   pnpm tsx scripts/repo-overlays/src/index.ts [options]
  *
  * Options:
- *   --dry-run    Show what would be changed without making changes
- *   --help       Show this help message
+ *   --repo-dir <path>  Path to the repository directory (defaults to two levels up from this script)
+ *   --dry-run          Show what would be changed without making changes
+ *   --help             Show this help message
  */
 
 import { Command } from "commander";
@@ -31,6 +32,7 @@ import { updateGitignore, needsGitignoreUpdate } from "./gitignore.js";
 
 interface OverlayOptions {
 	dryRun: boolean;
+	repoDir?: string;
 }
 
 async function main(): Promise<void> {
@@ -40,6 +42,7 @@ async function main(): Promise<void> {
 		.name("apply-nx-overlay")
 		.description("Apply nx build system configuration to the repository")
 		.version("1.0.0")
+		.option("--repo-dir <path>", "Path to the repository directory")
 		.option("--dry-run", "Show what would be changed without making changes", false)
 		.option("-h, --help", "Display help information");
 
@@ -47,8 +50,10 @@ async function main(): Promise<void> {
 
 	const options = program.opts<OverlayOptions>();
 
-	// Repo root is two levels up from this script
-	const repoRoot = path.resolve(__dirname, "../../..");
+	// Use provided repo directory or default to two levels up from this script
+	const repoRoot = options.repoDir
+		? path.resolve(options.repoDir)
+		: path.resolve(__dirname, "../../..");
 
 	console.log("🚀 Nx Overlay Script");
 	console.log(`📁 Repository root: ${repoRoot}`);

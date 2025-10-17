@@ -42,6 +42,12 @@ cd scripts/repo-overlays
 pnpm run apply:dry-run
 ```
 
+To target a specific repository directory:
+
+```bash
+pnpm tsx scripts/repo-overlays/src/index.ts --repo-dir /path/to/repo --dry-run
+```
+
 ### Apply Changes
 
 Apply the nx overlay to the repository:
@@ -55,6 +61,12 @@ Or from within the overlay directory:
 ```bash
 cd scripts/repo-overlays
 pnpm run apply
+```
+
+To target a specific repository directory:
+
+```bash
+pnpm tsx scripts/repo-overlays/src/index.ts --repo-dir /path/to/repo
 ```
 
 ### Post-Apply Steps
