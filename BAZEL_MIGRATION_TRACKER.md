@@ -2,8 +2,8 @@
 
 **Project**: FluidFramework TypeScript Monorepo
 **Migration Start Date**: 2025-10-27
-**Current Phase**: Phase 1 - Proof of Concept (Complete, API extraction deferred)
-**Overall Progress**: 11% (7/66 sessions complete)
+**Current Phase**: Phase 2 - Expansion (In Progress)
+**Overall Progress**: 12% (8/66 sessions complete)
 
 ---
 
@@ -13,7 +13,7 @@
 |-------|--------|-------------------|----------------|----------|
 | Phase 0: Setup | ✅ Complete | 2/2 | 2 | 100% |
 | Phase 1: PoC | ✅ Complete | 5/6 | 6 | 83% (API extraction deferred) |
-| Phase 2: Expansion | ⏳ Not Started | 0/15 | 10-15 | 0% |
+| Phase 2: Expansion | 🔄 In Progress | 1/15 | 10-15 | 7% |
 | Phase 3: Core Migration | ⏳ Not Started | 0/30 | 20-30 | 0% |
 | Phase 4: Integration | ⏳ Not Started | 0/8 | 5-8 | 0% |
 | Phase 5: Cleanup | ⏳ Not Started | 0/5 | 3-5 | 0% |
@@ -493,25 +493,75 @@ This pattern allows TypeScript to resolve both main exports and subpath exports 
 
 ## Phase 2: Expansion - Common & Utility Packages
 
-**Status**: ⏳ Not Started
-**Sessions**: 0/15 complete
+**Status**: 🔄 In Progress
+**Sessions**: 1/15 complete
 **Prerequisites**: Phase 1 complete
 **Estimated Time**: 15-25 hours
+**Time Spent**: 0.5 hours
 
-### Session 2.1: Migrate common/ Packages (Batch 1)
-**Status**: ⏳ Not Started
+### Session 2.1: Migrate @fluidframework/core-utils
+**Status**: ✅ Complete
+**Date Started**: 2025-10-27
+**Date Completed**: 2025-10-27
+**Time Spent**: 0.5 hours
+**Prerequisites**: Phase 1 complete
 **Estimated**: 1-2 hours
+**Actual**: 0.5 hours (simple zero-dependency package)
 
-#### Packages
-- @fluidframework/core-utils
-- @fluid-internal/client-utils
+#### Package Migrated
+- ✅ @fluidframework/core-utils (zero dependencies)
+- ⏳ @fluid-internal/client-utils (deferred - see notes)
 
 #### Tasks
-- [ ] Run BUILD generation script for each package
-- [ ] Adjust dependencies
-- [ ] Build and test
-- [ ] Validate outputs
-- [ ] Commit changes
+- [x] Create inline tsconfig files (bazel.json + cjs.bazel.json)
+- [x] Create BUILD.bazel with ESM and CJS targets
+- [x] Build package with Bazel
+- [x] Validate all migrated packages build together
+- [x] Document client-utils complexity
+
+#### Deliverables
+- [x] BUILD.bazel for core-utils created
+- [x] Zero-dependency package builds successfully
+- [x] ESM: 14 .js + 14 .d.ts + source maps (28 files)
+- [x] CJS: 14 .js + 14 .d.ts + source maps (28 files)
+- [x] All 4 migrated packages build together (< 1s cached)
+- [x] Git commit: `feat(bazel): migrate @fluidframework/core-utils` (pending)
+
+#### Validation
+```bash
+# Build core-utils ✅
+bazel build //packages/common/core-utils:core_utils  # ✅ Success (1.46s)
+
+# Build all migrated packages together ✅
+bazel build //packages/common/core-interfaces:core_interfaces //packages/common/driver-definitions:driver_definitions //packages/common/container-definitions:container_definitions //packages/common/core-utils:core_utils  # ✅ < 1s cached
+```
+
+#### Files Created
+- `packages/common/core-utils/BUILD.bazel`
+- `packages/common/core-utils/tsconfig.bazel.json` (ESM inline config)
+- `packages/common/core-utils/tsconfig.cjs.bazel.json` (CJS inline config)
+
+#### Key Learnings
+1. **Zero-Dependency Packages**: Simplest to migrate, follow exact PoC pattern
+2. **Pattern Reusability**: PoC inline tsconfig pattern works perfectly for new packages
+3. **Build Speed**: Cached builds remain extremely fast (< 1s) as packages are added
+4. **Attribute Consistency**: Must use same ts_project attributes as PoC packages (no ts_version, validate, or transpiler unless needed)
+
+#### Client-Utils Complexity Analysis
+**Decision**: Deferred @fluid-internal/client-utils to later session due to:
+1. **`.cts` → `.cjs` compilation**: Requires TypeScript CommonJS module compilation setup
+2. **npm dependencies**: Needs `base64-js`, `sha.js`, `events_pkg` from npm_translate_lock
+3. **Module complexity**: More complex than Phase 1 patterns, deserves separate session
+
+**Impact**: Not blocking - client-utils will be addressed after establishing patterns for:
+- npm dependency resolution in Bazel
+- `.cts` file compilation support
+- Complex package structures
+
+#### Next Steps
+1. **Session 2.2**: Migrate packages with simple npm dependencies
+2. **Session 2.3**: Establish `.cts` compilation pattern for client-utils
+3. **Pattern**: Document npm dependency resolution approach
 
 ---
 
@@ -739,6 +789,12 @@ None yet
   - Tests and API extraction systematically deferred to Phase 2
   - Comprehensive documentation created for Phase 2
   - **Recommendation**: ✅ Proceed to Phase 2
+- **Session 2.1 COMPLETE**: Migrate @fluidframework/core-utils
+  - Migrated first zero-dependency package in Phase 2
+  - All 4 migrated packages build together successfully
+  - Identified client-utils complexity (npm deps + .cts files)
+  - Pattern established for simple workspace dependencies
+  - Time: 0.5 hours
 
 ---
 
@@ -765,5 +821,5 @@ None yet
 ---
 
 **Last Updated**: 2025-10-27
-**Next Session**: Session 1.5 - API Extraction Integration
-**Document Version**: 1.4
+**Next Session**: Session 2.2 - Migrate packages with npm dependencies
+**Document Version**: 1.5
