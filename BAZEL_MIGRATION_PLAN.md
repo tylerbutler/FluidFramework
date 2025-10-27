@@ -23,7 +23,7 @@ Based on project requirements:
 1. **Version Management**: Use **Bazelisk** (not direct Bazel)
    - Automatic version consistency via `.bazelversion` file
    - See `BAZEL_VS_BAZELISK.md` for detailed explanation
-   - Target version: **Bazel 7.4.1**
+   - Target version: **Bazel 8.4.2** (LTS release with better performance and Bzlmod)
 
 2. **API Extraction**: Integrated into Bazel build as targets
    - API reports generated as build outputs
@@ -56,12 +56,12 @@ Based on project requirements:
 
 2. Create `.bazelversion` file to pin Bazel version
    ```bash
-   echo "7.4.1" > .bazelversion
+   echo "8.4.2" > .bazelversion
    ```
 
 3. Verify Bazelisk installation
    ```bash
-   bazel version  # Downloads Bazel 7.4.1 on first run
+   bazel version  # Downloads Bazel 8.4.2 on first run
    ```
 
 4. Create migration tooling structure
@@ -108,17 +108,17 @@ Based on project requirements:
 
 **Deliverables**:
 - ✅ Bazelisk installed and verified
-- ✅ `.bazelversion` file created (7.4.1)
-- ✅ Bazel 7.4.1 downloaded and working
+- ✅ `.bazelversion` file created (8.4.2)
+- ✅ Bazel 8.4.2 downloaded and working
 - ✅ `bazel-migration/` directory structure created
 - ✅ TypeScript tooling initialized
 - ✅ Git commit: `chore(bazel): initialize Bazelisk and migration tooling`
 
 **Validation**:
 ```bash
-bazel version  # Should show: "Build label: 7.4.1"
-cat .bazelversion  # Should show: "7.4.1"
-cd bazel-migration && pnpm install && pnpm tsc  # Should compile successfully
+bazel version  # Should show: "Build label: 8.4.2"
+cat .bazelversion  # Should show: "8.4.2"
+cd bazel-migration && npm install && npm run build  # Should compile successfully
 ```
 
 ---
