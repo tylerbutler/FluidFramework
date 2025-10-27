@@ -1,0 +1,69 @@
+# WORKSPACE.bazel for FluidFramework monorepo
+# Bazel workspace configuration for TypeScript/JavaScript monorepo migration
+
+workspace(name = "fluidframework")
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# Aspect Rules JS - High-performance Bazel rules for JavaScript
+# Version: 2.4.0 (latest as of 2025-07-15, compatible with Bazel 8)
+# SHA256 provided by Bazel on first download
+http_archive(
+    name = "aspect_rules_js",
+    sha256 = "961393890a58de989ad7aa36ce147fc9b15a77c8144454889bf068bdd12c5165",
+    strip_prefix = "rules_js-2.4.0",
+    url = "https://github.com/aspect-build/rules_js/releases/download/v2.4.0/rules_js-v2.4.0.tar.gz",
+)
+
+# Aspect Rules TS - Bazel rules for TypeScript
+# Version: 3.6.3 (compatible with Bazel 8)
+# SHA256 provided by Bazel on first download
+http_archive(
+    name = "aspect_rules_ts",
+    sha256 = "09af62a0d46918d815b5f48b5ed0f5349b62c15fc42fcc3fef5c246504ff8d99",
+    strip_prefix = "rules_ts-3.6.3",
+    url = "https://github.com/aspect-build/rules_ts/releases/download/v3.6.3/rules_ts-v3.6.3.tar.gz",
+)
+
+##############
+# rules_js setup
+##############
+
+load("@aspect_rules_js//js:repositories.bzl", "rules_js_dependencies")
+
+rules_js_dependencies()
+
+load("@aspect_rules_js//js:toolchains.bzl", "DEFAULT_NODE_VERSION", "rules_js_register_toolchains")
+
+rules_js_register_toolchains(node_version = DEFAULT_NODE_VERSION)
+
+##############
+# rules_ts setup
+##############
+
+load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
+
+# TypeScript version matches the project's version (5.4.5)
+rules_ts_dependencies(
+    ts_version_from = "//:package.json",
+)
+
+##############
+# npm dependencies setup
+##############
+
+load("@aspect_rules_js//npm:repositories.bzl", "npm_translate_lock")
+
+npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//:pnpm-lock.yaml",
+    # Temporarily disabled until all node_modules are in .bazelignore
+    # verify_node_modules_ignored = "//:.bazelignore",
+    # Link node_modules as a convenience for local development
+    # This allows IDEs to resolve imports properly
+    # npmrc = "//:.npmrc",
+)
+
+load("@npm//:repositories.bzl", "npm_repositories")
+
+npm_repositories()

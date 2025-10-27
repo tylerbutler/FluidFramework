@@ -1,0 +1,28 @@
+# Root BUILD.bazel for FluidFramework monorepo
+# This file marks the root of the Bazel workspace
+
+# Export package.json and pnpm-lock.yaml for workspace setup
+exports_files([
+    "package.json",
+    "pnpm-lock.yaml",
+    ".npmrc",
+])
+
+# Root package configuration
+package(default_visibility = ["//visibility:public"])
+
+# Convenience targets will be added here as packages are migrated:
+# - //...all_packages - builds all migrated packages
+# - //:build - alias for all_packages
+# - //:test - runs all tests
+# - //:lint - runs all linters
+#
+# Example (to be added in Phase 4):
+# filegroup(
+#     name = "all_packages",
+#     srcs = [
+#         "//packages/common/...",
+#         "//packages/dds/...",
+#         # ... other categories
+#     ],
+# )

@@ -1,0 +1,131 @@
+# .bazelrc - Bazel configuration for FluidFramework monorepo
+# Optimized settings for TypeScript/JavaScript builds with remote caching
+
+##############
+# Common Build Settings
+##############
+
+# Use WORKSPACE.bazel for dependency management (not Bzlmod)
+common --noenable_bzlmod
+common --enable_workspace
+
+# Enable platform-specific configuration
+build --enable_platform_specific_config
+
+# Strict action environment for reproducibility
+build --incompatible_strict_action_env
+
+# Enable build event protocol for better build insights
+build --build_event_json_file=bazel-build-events.json
+
+##############
+# TypeScript/JavaScript Settings
+##############
+
+# Skip lib check for faster compilation (matching tsconfig settings)
+build --@aspect_rules_ts//ts:skipLibCheck=always
+
+# Use tsc as the default transpiler (not swc) for compatibility
+build --@aspect_rules_ts//ts:default_to_tsc_transpiler
+
+##############
+# Performance Optimization
+##############
+
+# Use all available CPU cores for parallel builds
+build --jobs=auto
+
+# Limit worker instances to prevent memory exhaustion
+build --worker_max_instances=4
+
+# Enable persistent workers for faster incremental builds
+build --worker_sandboxing
+
+# Strategy for faster builds
+build --strategy=TypeScriptCompile=worker
+
+##############
+# Caching Configuration
+##############
+
+# Local disk cache as fallback
+build --disk_cache=~/.cache/bazel
+
+# Remote cache configuration (initially disabled, enabled per config below)
+# For development: read from cache but don't upload
+# For CI: read and upload to cache
+#
+# To enable remote cache, set BAZEL_REMOTE_CACHE_URL environment variable
+# Example: export BAZEL_REMOTE_CACHE_URL=http://localhost:8080
+#
+# Remote cache will be configured in sub-configs below
+
+##############
+# Output Settings
+##############
+
+# Show timestamps for build steps
+build --show_timestamps
+
+# Colorized output for better readability
+build --color=yes
+
+# Show detailed progress information
+build --progress_report_interval=5
+
+##############
+# Test Settings
+##############
+
+# Only show test output on errors (not success)
+test --test_output=errors
+
+# Detailed test summary
+test --test_summary=detailed
+
+# Test verbosity
+test --test_verbose_timeout_warnings
+
+##############
+# Configuration Profiles
+##############
+
+# Development profile (default for local development)
+# Reads from remote cache but doesn't upload (saves bandwidth)
+build:dev --remote_cache=${BAZEL_REMOTE_CACHE_URL:-}
+build:dev --remote_upload_local_results=false
+build:dev --experimental_remote_cache_compression
+
+# CI profile (for continuous integration)
+# Reads from and uploads to remote cache
+build:ci --remote_cache=${BAZEL_REMOTE_CACHE_URL}
+build:ci --remote_upload_local_results=true
+build:ci --experimental_remote_cache_compression
+build:ci --experimental_remote_cache_async
+
+# Fast profile (skip remote cache, disk cache only)
+build:fast --noremote_upload_local_results
+build:fast --noremote_accept_cached
+
+# Debug profile (more verbose output)
+build:debug --subcommands
+build:debug --verbose_failures
+build:debug --sandbox_debug
+
+##############
+# Platform-Specific Settings
+##############
+
+# Linux-specific settings
+build:linux --copt=-fdiagnostics-color=always
+
+# macOS-specific settings
+build:macos --copt=-fcolor-diagnostics
+
+# Windows-specific settings
+build:windows --enable_runfiles
+
+##############
+# Try to import user-specific settings
+##############
+try-import %workspace%/.bazelrc.user
