@@ -1,0 +1,24 @@
+services:
+  bazel-remote:
+    image: buchgr/bazel-remote-cache:latest
+    container_name: bazel-remote
+    ports:
+      - "8080:8080"
+      - "9092:9092"  # gRPC port
+    volumes:
+      - ./bazel-cache:/data
+    environment:
+      - BAZEL_REMOTE_DIR=/data
+      - BAZEL_REMOTE_MAX_SIZE=50  # 50GB cache size
+      - BAZEL_REMOTE_HTTP_ADDRESS=0.0.0.0:8080
+      - BAZEL_REMOTE_GRPC_ADDRESS=0.0.0.0:9092
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"  # Run as current user to avoid permission issues
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/status"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+# Networks are automatically created by docker-compose

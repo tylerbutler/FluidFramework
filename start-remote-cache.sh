@@ -29,11 +29,13 @@ else
     # Create cache directory
     mkdir -p .bazel-cache
 
-    # Start container
+    # Start container with max_size parameter (50GB cache)
     docker run -d \
         --name bazel-remote \
         -p 8080:8080 \
         -v "$(pwd)/.bazel-cache:/data" \
+        -e BAZEL_REMOTE_DIR=/data \
+        -e BAZEL_REMOTE_MAX_SIZE=50 \
         buchgr/bazel-remote-cache:latest
 
     echo "✅ Container created and started on http://localhost:8080"

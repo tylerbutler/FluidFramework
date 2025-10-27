@@ -2,7 +2,27 @@
 
 ## Quick Start (For Developers)
 
-### Easy Way (Using Script)
+### Recommended: Using Docker Compose
+
+```bash
+# 1. Start Docker daemon (if not running)
+sudo service docker start
+
+# 2. Start cache server with docker-compose
+docker compose up -d
+
+# 3. Verify it's running
+curl http://localhost:8080/status
+
+# 4. Enable remote cache and build
+export BAZEL_REMOTE_CACHE_URL=http://localhost:8080
+bazel build --config=dev //...
+
+# To stop the cache server:
+docker compose down
+```
+
+### Alternative: Using Script
 
 ```bash
 # 1. Start Docker daemon (if not running)
@@ -143,8 +163,10 @@ The disk cache provides:
 - ✅ `.bazelrc` configured with remote cache support
 - ✅ Disk cache enabled as fallback
 - ✅ **Docker installed** (v28.5.1)
-- ❌ **Docker daemon not running** (requires `sudo service docker start`)
-- ⏳ Remote cache server not yet running (pending Docker daemon start)
+- ✅ **Docker daemon running**
+- ✅ **Remote cache server running** on http://localhost:8080
+- ✅ **docker-compose.yml** configured for easy management
+- ✅ Cache server tested and responding (50GB max cache size)
 
 ## Next Steps
 
