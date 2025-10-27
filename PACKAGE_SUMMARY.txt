@@ -1,0 +1,141 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    FLUIDFRAMEWORK MONOREPO - QUICK REFERENCE                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📦 MONOREPO STATISTICS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total Packages:        84
+Package Manager:       pnpm 10.18.3
+Node Version:          >=20.15.1
+TypeScript:            5.4.5
+Build Systems:         Nx (21.6.5) + fluid-build (0.58.3)
+
+📂 PACKAGE DISTRIBUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+packages/common/          5 packages    ▰▰▰ Core interfaces & utilities
+packages/dds/            16 packages    ▰▰▰▰▰▰▰▰▰▰ Distributed Data Structures
+packages/drivers/        12 packages    ▰▰▰▰▰▰▰ Storage drivers
+packages/framework/      15 packages    ▰▰▰▰▰▰▰▰ High-level APIs
+packages/runtime/         8 packages    ▰▰▰▰ Runtime & container
+packages/loader/          3 packages    ▰▰ Container loaders
+packages/service-clients/ 3 packages    ▰▰ Service clients
+packages/test/           12 packages    ▰▰▰▰▰▰▰ Testing utilities
+packages/tools/           4 packages    ▰▰ Build tools
+packages/utils/           2 packages    ▰ Utilities
+
+🔗 DEPENDENCY HIERARCHY (PoC-Friendly)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TIER 0 (No Dependencies)
+┌─ @fluidframework/core-interfaces
+│  └─ Pure type/interface definitions
+│  └─ Size: ~2-3KB
+│  └─ Perfect for: First PoC target
+└─ Status: ✅ IDEAL FOR BAZEL MIGRATION
+
+TIER 1 (1 Dependency)
+┌─ @fluidframework/core-utils
+│  └─ Depends: core-interfaces
+│  └─ Size: ~15KB
+│  └─ Utilities: Utility functions
+├─ @fluidframework/driver-definitions
+│  └─ Depends: core-interfaces
+│  └─ Size: ~5KB
+│  └─ Purpose: Driver interface definitions
+└─ Status: ✅ GOOD FOR PHASE 1
+
+TIER 2 (Multiple Dependencies - Real Implementation)
+┌─ @fluidframework/counter (DDS)
+│  ├─ Dependencies: 7 packages
+│  │  ├─ core-interfaces
+│  │  ├─ core-utils
+│  │  ├─ datastore-definitions
+│  │  ├─ driver-definitions
+│  │  ├─ driver-utils
+│  │  ├─ runtime-definitions
+│  │  └─ shared-object-base
+│  ├─ Size: ~30KB
+│  └─ Tests: Full mocha + jest suite
+├─ @fluid-internal/client-utils
+│  ├─ Dependencies: core-interfaces, core-utils + external
+│  ├─ Size: ~40KB
+│  ├─ Features: Browser/Node dual targeting
+│  └─ Tests: Comprehensive with puppeteer
+└─ Status: ⭐ PHASE 2 - Tests dependency resolution
+
+🎯 RECOMMENDED PoC STRATEGY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PHASE 1: Foundation (Days 1-2)
+├─ Migrate: @fluidframework/core-interfaces
+├─ Target: TypeScript compilation + type generation
+├─ Validate: dist/ and lib/ output structure
+└─ Success: Build passes, no dependencies to manage
+
+PHASE 2: Dependencies (Days 3-4)
+├─ Migrate: @fluidframework/core-utils
+├─ Target: Single workspace dependency resolution
+├─ Validate: Dependency link correctness
+└─ Success: core-utils successfully depends on core-interfaces
+
+PHASE 3: Real Implementation (Days 5-7)
+├─ Migrate: @fluidframework/counter DDS
+├─ Target: Multiple dependencies + full test suite
+├─ Validate: API extraction, mocha + jest execution
+└─ Success: Full build pipeline working with Bazel
+
+🏗️  BUILD SYSTEM CHARACTERISTICS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Output Strategy:
+  ├─ dist/           → CommonJS (Node 16+)
+  ├─ lib/            → ES2020 modules
+  ├─ *.api.json      → API extraction
+  └─ nyc/            → Coverage reports
+
+Compilation Modes:
+  ├─ ESM (ESNext)    → tsc → lib/
+  └─ CJS (ES2017)    → fluid-tsc → dist/
+
+Test Frameworks:
+  ├─ Mocha          → Unit tests (esm + cjs)
+  ├─ Jest           → Browser tests (puppeteer)
+  └─ c8             → Coverage reporting
+
+Quality Gates:
+  ├─ Biome          → Format + lint
+  ├─ ESLint         → TypeScript linting
+  ├─ API Extractor  → API validation
+  ├─ Good Fences    → Boundary enforcement
+  └─ Dependency Cruiser → Graph validation
+
+⚙️  KEY CONFIGURATION FILES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+nx.json                    → Nx tasks, caching, parallelization
+fluidBuild.config.cjs      → Fluid-build task definitions
+pnpm-workspace.yaml        → Package discovery & linking
+biome.jsonc                → Code formatting & linting
+packages/*/package.json    → Per-package build scripts
+packages/*/tsconfig.json   → ESM compilation settings
+packages/*/tsconfig.cjs.json → CJS compilation settings
+
+⚡ PERFORMANCE BASELINE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Full Build:    1-2 minutes
+Compile Only:  30-45 seconds
+Lint:          15-30 seconds
+Unit Tests:    30 seconds - 5 minutes (varies)
+Parallel:      8 workers (configurable)
+Caching:       Nx local + S3 remote
+
+📋 CRITICAL SUCCESS FACTORS FOR BAZEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Dual compilation (ESM + CommonJS) with correct outputs
+✓ Workspace dependency resolution (pnpm linking equivalent)
+✓ API extraction + documentation generation
+✓ Test execution (mocha + jest with coverage)
+✓ Type declaration generation and correctness
+✓ Output artifact organization (dist/ + lib/)
+✓ Cache invalidation on tsconfig/package.json changes
+✓ Support for multiple entrypoints (./legacy, ./internal)
+

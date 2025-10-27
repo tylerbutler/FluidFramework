@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Read(//home/tylerbu/code/FluidWorkspace/**)",
+      "Bash(for dir in /home/tylerbu/code/FluidWorkspace/main/packages/*/)",
+      "Bash(do if [ -f \"$dir/package.json\" ])",
+      "Bash(then basename \"$dir\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(do for subdir in \"$dir\"*/)",
+      "Bash(do if [ -f \"$subdir/package.json\" ])",
+      "Bash(for category in common dds drivers framework loader runtime service-clients test tools utils)",
+      "Bash(do echo \"=== $category ===\")",
+      "Bash(while read f)",
+      "Bash(do grep -q '\"\"\"\"dependencies\"\"\"\"' \"$f\")",
+      "Bash(echo:*)",
+      "Bash(tee:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
