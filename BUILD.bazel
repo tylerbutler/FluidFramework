@@ -1,6 +1,11 @@
 # Root BUILD.bazel for FluidFramework monorepo
 # This file marks the root of the Bazel workspace
 
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+# Link all npm packages to make them available as dependencies
+npm_link_all_packages(name = "node_modules")
+
 # Export package.json and pnpm-lock.yaml for workspace setup
 exports_files([
     "package.json",

@@ -5,6 +5,14 @@ load("@aspect_rules_js//js:defs.bzl", "js_library")
 
 package(default_visibility = ["//visibility:public"])
 
+# Export the raw JSON files so they can be accessed via relative paths
+exports_files([
+    "tsconfig.base.json",
+    "tsconfig.node16.json",
+    "tsconfig.test.node16.json",
+    "tsconfig.bundler.json",
+])
+
 # Wrap tsconfig files in js_library targets so they can be used cross-package
 js_library(
     name = "tsconfig_base",

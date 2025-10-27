@@ -17,11 +17,13 @@ ts_project(
         ],
     ),
     declaration = True,
+    declaration_map = True,
+    source_map = True,
+    composite = True,
+    incremental = True,
     out_dir = "lib",
     root_dir = "src",
-    tsconfig = ":tsconfig.json",
-    deps = ["//common/build/build-common:tsconfig_node16"],
-    validate = False,  # Temporarily disabled for PoC - tsconfig extends path issues
+    tsconfig = ":tsconfig.bazel.json",
 )
 
 # CommonJS compilation
@@ -33,13 +35,15 @@ ts_project(
             "src/test/**",
             "src/cjs/**",
         ],
-    ) + [":tsconfig.json"],  # CJS config extends this
+    ),
     declaration = True,
+    declaration_map = True,
+    source_map = True,
+    composite = True,
+    incremental = True,
     out_dir = "dist",
     root_dir = "src",
-    tsconfig = ":tsconfig.cjs.json",
-    deps = ["//common/build/build-common:tsconfig_node16"],
-    validate = False,  # Temporarily disabled for PoC - tsconfig extends path issues
+    tsconfig = ":tsconfig.cjs.bazel.json",
 )
 
 # Test compilation (ESM)
@@ -47,14 +51,15 @@ ts_project(
     name = "core_interfaces_test",
     srcs = glob(["src/test/**/*.ts"]),
     declaration = False,
+    source_map = True,
+    incremental = True,
     out_dir = "lib/test",
-    root_dir = "src",
-    tsconfig = "src/test/tsconfig.json",
+    root_dir = "src/test",
+    tsconfig = "src/test/tsconfig.bazel.json",
+    transpiler = "tsc",
     deps = [
         ":core_interfaces_esm",
-        "//common/build/build-common:tsconfig_test_node16",
-        "@npm//mocha",
-        "@npm//@types/mocha",
+        "//:node_modules/mocha",
     ],
 )
 

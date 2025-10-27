@@ -75,7 +75,6 @@ npm_translate_lock(
     # Temporarily disabled until all node_modules are in .bazelignore
     # verify_node_modules_ignored = "//:.bazelignore",
     # Link node_modules as a convenience for local development
-    # This allows IDEs to resolve imports properly
     # npmrc = "//:.npmrc",
 )
 

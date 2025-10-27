@@ -58,3 +58,7 @@ build_output_archive
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 bazel-cache/
+
+# Bazel build outputs
+bazel-*
+*.bazel-build-events.json

@@ -177,53 +177,98 @@ node dist/generate-build-file.js packages/common/core-interfaces  # Creates BUIL
 ---
 
 ### Session 1.2: Migrate @fluidframework/core-interfaces
-**Status**: ✅ Complete (with deferred test work)
+**Status**: ✅ Complete (production build), ⚠️ Tests deferred to Phase 2
 **Date Started**: 2025-10-27
 **Date Completed**: 2025-10-27
-**Time Spent**: 1 hour
+**Time Spent**: 2.5 hours
 **Prerequisites**: Session 1.1 complete
 **Estimated**: 1-2 hours
+**Actual**: 2.5 hours (test investigation took longer than expected)
 
 #### Tasks
 - [x] Generate package mapping (94 packages mapped)
 - [x] Create BUILD.bazel for core-interfaces
-- [x] Build package with Bazel (ESM + CJS)
-- [~] Run tests (deferred - npm integration needs configuration)
+- [x] Build package with Bazel (ESM + CJS) **WITH FULL VALIDATION**
+- [~] Run tests (BLOCKED - deferred to Phase 2, see BAZEL_MIGRATION_ISSUES.md)
 - [~] Create output validation script (deferred to later session)
 
 #### Deliverables
-- [x] BUILD.bazel for core-interfaces created and working
-- [x] Package builds successfully with Bazel (ESM: 25 files, CJS: 25 files)
-- [~] Tests configuration (mocha binary loading needs npm_translate_lock investigation)
-- [x] BUILD.bazel for common/build/build-common (tsconfig dependencies)
-- [x] Git commit: `feat(bazel): migrate @fluidframework/core-interfaces to Bazel`
+- [x] BUILD.bazel for core-interfaces with complete ts_project configuration
+- [x] Package builds successfully with full TypeScript validation enabled
+  - ESM: 25 .js + 25 .d.ts + 50 source maps = 100 files
+  - CJS: 25 .js + 25 .d.ts + 50 source maps = 100 files
+- [x] Inline tsconfig files (no extends) - **validated and working**
+- [x] BUILD.bazel for common/build/build-common (tsconfig exports)
+- [x] npm_link_all_packages setup in root BUILD.bazel
+- [x] BAZEL_MIGRATION_ISSUES.md - comprehensive issue tracking
+- [x] SESSION_1.2_SUMMARY.md - detailed session documentation
+- [~] Test compilation (652 errors, module resolution issues, OOM with path mappings)
+- [ ] Git commit: `feat(bazel): migrate @fluidframework/core-interfaces production build`
 
 #### Validation
 ```bash
-bazel build //packages/common/core-interfaces:core_interfaces  # ✅ Success
-ls bazel-bin/packages/common/core-interfaces/lib/*.js  # ✅ 25 ESM files
-ls bazel-bin/packages/common/core-interfaces/dist/*.js  # ✅ 25 CJS files
+# Production builds ✅
+bazel build //packages/common/core-interfaces:core_interfaces_esm  # ✅ Success with validation
+bazel build //packages/common/core-interfaces:core_interfaces_cjs  # ✅ Success with validation
+bazel build //packages/common/core-interfaces:core_interfaces      # ✅ Both builds
+ls bazel-bin/packages/common/core-interfaces/lib/*.js   # ✅ 25 ESM files + maps
+ls bazel-bin/packages/common/core-interfaces/lib/*.d.ts # ✅ 25 declaration files
+ls bazel-bin/packages/common/core-interfaces/dist/*.js  # ✅ 25 CJS files + maps
+ls bazel-bin/packages/common/core-interfaces/dist/*.d.ts # ✅ 25 declaration files
+
+# Test compilation ❌
+bazel build //packages/common/core-interfaces:core_interfaces_test  # ❌ 652 module resolution errors
 ```
 
-#### Notes
-- **TypeScript Version**: Fixed WORKSPACE.bazel to use exact version `5.4.5` (not semver range)
-- **rules_shell**: Added dependency for TypeScript toolchain
-- **tsconfig Dependencies**: Created js_library targets in common/build/build-common for shared tsconfig files
-- **tsconfig Validation**: Disabled temporarily (`validate = False`) due to tsconfig extends path resolution in sandbox
-- **CJS Build**: Required adding `:tsconfig.json` to srcs since tsconfig.cjs.json extends it
-- **Test Configuration**: Mocha test runner configuration needs npm_translate_lock investigation (deferred to Session 1.3)
+#### Critical Issues Resolved
+1. **TypeScript Version**: `ts_version = "5.4.5"` (exact version, not semver range)
+2. **rules_shell**: Added http_archive for toolchain dependency
+3. **tsconfig extends**: Created inline tsconfig files - **VALIDATION NOW ENABLED** ✅
+4. **npm Package Linking**: Added `npm_link_all_packages` to root BUILD.bazel
+5. **ts_project Attributes**: Added all compiler options to match tsconfig (composite, declaration_map, etc.)
+6. **@types/mocha**: Created minimal mocha.d.ts workaround (temporary)
 
-#### Issues Encountered
-- **TypeScript semver range**: `ts_version_from` doesn't support `~5.4.5`, fixed with `ts_version = "5.4.5"`
-- **Missing rules_shell**: rules_ts requires rules_shell for toolchain, added to WORKSPACE.bazel
-- **tsconfig extends**: Sandbox can't resolve relative paths outside package, disabled validation for PoC
-- **Mocha binary not found**: `@npm//:mocha/package_json.bzl` loading fails, needs npm workspace investigation
-- **SHA256 mismatch**: rules_shell initial SHA was incorrect, corrected to actual value
+#### Known Issues (Documented in BAZEL_MIGRATION_ISSUES.md)
+1. **Test Compilation BLOCKED** - Module resolution for package-name imports
+   - TypeScript path mappings cause OOM (out of memory) errors
+   - Without path mappings: 652 errors across 15 test files
+   - **Decision**: Defer to Phase 2 for systematic test architecture design
+2. **@types Packages**: npm_translate_lock doesn't expose @types/* as Bazel targets
+3. **pnpm Version Mismatch**: Cannot use `update_pnpm_lock = True` (requires pnpm 10, have 8.15.9)
+4. **Node Version Mismatch**: Workspace expects >=20.15.1, have 18.20.8
+
+#### Architecture Decisions
+- **Inline tsconfig**: Use self-contained tsconfig files without extends for Bazel reliability
+- **Full Validation**: Never disable validation (`validate = False`) - work through issues properly
+- **Test Deferral**: Production build quality over partial test support - address tests systematically
+- **Workaround Documentation**: All temporary solutions documented in BAZEL_MIGRATION_ISSUES.md
+
+#### Files Modified
+- `WORKSPACE.bazel` - TypeScript version, rules_shell
+- `BUILD.bazel` - npm_link_all_packages
+- `common/build/build-common/BUILD.bazel` - tsconfig exports
+- `packages/common/core-interfaces/BUILD.bazel` - complete ts_project setup
+
+#### Files Created
+- `packages/common/core-interfaces/tsconfig.bazel.json` - ESM config (inline)
+- `packages/common/core-interfaces/tsconfig.cjs.bazel.json` - CJS config (inline)
+- `packages/common/core-interfaces/src/test/tsconfig.bazel.json` - test config
+- `packages/common/core-interfaces/src/test/mocha.d.ts` - temporary mocha types
+- `BAZEL_MIGRATION_ISSUES.md` - comprehensive issue tracker
+- `SESSION_1.2_SUMMARY.md` - detailed session documentation
+
+#### Key Learnings
+1. **Work Through Issues**: User feedback: "work through these issues, not skip them" - led to proper solutions
+2. **TypeScript Path Mappings**: Can cause severe memory issues at scale - use cautiously
+3. **Bazel Sandbox**: Strict isolation requires self-contained configs
+4. **Test Complexity**: Test module resolution is a hard problem deserving systematic design
+5. **Documentation Value**: Tracking issues and decisions is crucial for long migrations
 
 #### Next Steps
-- Session 1.3: Investigate npm_translate_lock configuration for test dependencies
-- Consider alternative: inline tsconfig settings instead of extends for Bazel builds
-- Re-enable tsconfig validation once extends issue is resolved
+1. **Immediate**: Create output validation script, commit working builds
+2. **Phase 2**: Design test architecture for module resolution
+3. **Phase 2**: Investigate npm_translate_lock @types package support
+4. **Future**: Bzlmod migration (WORKSPACE deprecated in Bazel 9)
 
 ---
 
