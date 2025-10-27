@@ -1,14 +1,67 @@
 # Remote Cache Setup for Bazel
 
+## Quick Start (For Developers)
+
+### Easy Way (Using Script)
+
+```bash
+# 1. Start Docker daemon (if not running)
+sudo service docker start
+
+# 2. Run the startup script
+./start-remote-cache.sh
+
+# 3. Enable remote cache and build
+export BAZEL_REMOTE_CACHE_URL=http://localhost:8080
+bazel build --config=dev //...
+```
+
+### Manual Way
+
+```bash
+# 1. Start Docker daemon (if not running)
+sudo service docker start
+
+# 2. Start bazel-remote cache server
+docker run -d --name bazel-remote -p 8080:8080 \
+  -v $(pwd)/.bazel-cache:/data buchgr/bazel-remote-cache:latest
+
+# 3. Enable remote cache and use dev config
+export BAZEL_REMOTE_CACHE_URL=http://localhost:8080
+bazel build --config=dev //...
+```
+
+That's it! Your builds will now use the remote cache.
+
+---
+
 ## Overview
 
-Remote caching is configured but not yet enabled. The `.bazelrc` file is prepared to use remote caching via the `BAZEL_REMOTE_CACHE_URL` environment variable.
+Remote caching is configured in `.bazelrc` but not yet enabled. The configuration uses the `BAZEL_REMOTE_CACHE_URL` environment variable to point to a cache server.
 
 ## Option 1: bazel-remote (Docker) - Recommended for PoC
 
 **Prerequisites**: Docker installed and running
 
+### WSL/Linux: Start Docker Daemon First
+
 ```bash
+# Check if Docker daemon is running
+docker ps
+
+# If you get "Cannot connect to Docker daemon", start it:
+sudo service docker start
+
+# Or use systemd if available:
+sudo systemctl start docker
+```
+
+### Start bazel-remote Cache Server
+
+```bash
+# Create directory for cache storage
+mkdir -p .bazel-cache
+
 # Start bazel-remote cache server
 docker run -d \
   --name bazel-remote \
@@ -89,8 +142,9 @@ The disk cache provides:
 
 - ✅ `.bazelrc` configured with remote cache support
 - ✅ Disk cache enabled as fallback
-- ❌ **Docker not available** on this system
-- ⏳ Remote cache server not yet running
+- ✅ **Docker installed** (v28.5.1)
+- ❌ **Docker daemon not running** (requires `sudo service docker start`)
+- ⏳ Remote cache server not yet running (pending Docker daemon start)
 
 ## Next Steps
 
