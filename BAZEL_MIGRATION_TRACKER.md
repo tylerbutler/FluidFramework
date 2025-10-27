@@ -3,7 +3,7 @@
 **Project**: FluidFramework TypeScript Monorepo
 **Migration Start Date**: 2025-10-27
 **Current Phase**: Phase 2 - Expansion (In Progress)
-**Overall Progress**: 12% (8/66 sessions complete)
+**Overall Progress**: 14% (9/66 sessions complete)
 
 ---
 
@@ -494,10 +494,10 @@ This pattern allows TypeScript to resolve both main exports and subpath exports 
 ## Phase 2: Expansion - Common & Utility Packages
 
 **Status**: 🔄 In Progress
-**Sessions**: 1/15 complete
+**Sessions**: 2/15 complete
 **Prerequisites**: Phase 1 complete
 **Estimated Time**: 15-25 hours
-**Time Spent**: 0.5 hours
+**Time Spent**: 1.5 hours
 
 ### Session 2.1: Migrate @fluidframework/core-utils
 **Status**: ✅ Complete
@@ -565,9 +565,74 @@ bazel build //packages/common/core-interfaces:core_interfaces //packages/common/
 
 ---
 
-### Sessions 2.2-2.15
+### Session 2.2: npm Dependency Pattern Investigation
+**Status**: ✅ Complete (Investigation & Documentation)
+**Date Started**: 2025-10-27
+**Date Completed**: 2025-10-27
+**Time Spent**: 1 hour
+**Prerequisites**: Session 2.1 complete
+**Estimated**: 1-2 hours
+**Actual**: 1 hour (investigation only, no package migrated)
+
+#### Package Assessed
+- ⏳ @fluid-internal/client-utils (deferred - too complex for pattern establishment)
+
+#### Tasks
+- [x] Investigate client-utils npm dependencies
+- [x] Discover aspect_rules_js npm package target naming pattern
+- [x] Identify TypeScript module resolution issues in Bazel sandbox
+- [x] Document `.cts` file compilation complexity
+- [x] Clean up uncommitted files
+- [x] Document findings for future reference
+
+#### Deliverables
+- [x] SESSION_2.2_NOTES.md - comprehensive investigation documentation
+- [x] npm package target naming pattern documented
+- [x] TypeScript module resolution issue identified
+- [x] Strategic decision: defer client-utils to later session
+- [x] Git commit: `docs(bazel): document Session 2.2 npm dependency investigation` ✅
+
+#### Key Discoveries
+
+**npm Package Target Naming**:
+```python
+# Correct format for Bazel targets:
+"//:.aspect_rules_js/node_modules/<package-name>@<version>"
+"//:.aspect_rules_js/node_modules/@types+<package>@<version>"
+```
+
+**How to find npm package targets**:
+```bash
+bazel query '//:all' | grep "node_modules/<package-name>"
+```
+
+#### Issues Identified
+
+1. **TypeScript Module Resolution**: `ts_project` doesn't automatically resolve npm dependencies in Bazel sandbox
+   - Root cause: node_modules not physically present
+   - Needs investigation of aspect_rules_ts npm dependency handling
+
+2. **`.cts` File Complexity**: client-utils uses `.cts` → `.cjs` compilation
+   - Requires separate investigation
+   - Different from standard ESM compilation
+
+#### Strategic Decision
+
+**Defer client-utils** to later session because:
+- Combines two hard problems (npm deps + .cts files)
+- Need to establish npm dependency pattern with simpler package first
+- Session time better spent on incremental progress
+
+#### Next Steps
+1. **Session 2.3**: Find package with simple npm dependencies (no .cts files)
+2. **Session 2.4+**: Return to client-utils with established patterns
+3. **Pattern**: Test TypeScript module resolution solutions on simpler package
+
+---
+
+### Sessions 2.3-2.15
 **Status**: ⏳ Not Started
-**Note**: Will be detailed as Phase 1 completes
+**Note**: Will be detailed as sessions progress
 
 ---
 
@@ -714,8 +779,8 @@ None yet
 | Milestone | Target Date | Status | Actual Date |
 |-----------|-------------|--------|-------------|
 | Phase 0 Complete | TBD | ✅ Complete | 2025-10-27 |
-| Phase 1 Complete (PoC) | TBD | 🔄 In Progress | - |
-| Phase 2 Complete | TBD | ⏳ Not Started | - |
+| Phase 1 Complete (PoC) | TBD | ✅ Complete | 2025-10-27 |
+| Phase 2 Complete | TBD | 🔄 In Progress | - |
 | Phase 3 Complete | TBD | ⏳ Not Started | - |
 | Phase 4 Complete | TBD | ⏳ Not Started | - |
 | Phase 5 Complete | TBD | ⏳ Not Started | - |
@@ -795,6 +860,14 @@ None yet
   - Identified client-utils complexity (npm deps + .cts files)
   - Pattern established for simple workspace dependencies
   - Time: 0.5 hours
+- **Session 2.2 COMPLETE**: npm Dependency Pattern Investigation
+  - Investigated @fluid-internal/client-utils migration
+  - Discovered aspect_rules_js npm package target naming pattern
+  - Identified TypeScript module resolution issue in Bazel sandbox
+  - Documented `.cts` file compilation complexity
+  - Strategic decision: defer client-utils to later session
+  - Created SESSION_2.2_NOTES.md with comprehensive investigation findings
+  - Time: 1 hour (investigation + documentation)
 
 ---
 
@@ -821,5 +894,5 @@ None yet
 ---
 
 **Last Updated**: 2025-10-27
-**Next Session**: Session 2.2 - Migrate packages with npm dependencies
-**Document Version**: 1.5
+**Next Session**: Session 2.3 - Establish npm dependency pattern with simpler package
+**Document Version**: 1.6
