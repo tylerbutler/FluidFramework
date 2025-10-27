@@ -14,17 +14,15 @@
 	"sideEffects": false,
 	"type": "module",
 	"scripts": {
+		"biome-check": "biome check .",
+		"biome-format": "biome check . --write",
 		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
-		"build:esnext": "tsc --project ./tsconfig.json",
-		"check:biome": "biome check .",
-		"check:format": "npm run check:biome",
+		"check:format": "npm run biome-check",
 		"clean": "rimraf --glob dist lib next-env.d.ts \"**/*.tsbuildinfo\" \"**/*.build.log\" _api-extractor-temp nyc",
 		"eslint": "eslint --format stylish src",
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
-		"format": "npm run format:biome",
-		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
+		"esnext": "tsc --project ./tsconfig.json",
+		"format": "npm run biome-format",
 		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"start": "next dev",
 		"start:server": "tinylicious"
@@ -67,6 +65,16 @@
 		"typechat": "^0.1.1",
 		"typescript": "~5.4.5",
 		"uuid": "^11.1.0"
+	},
+	"nx": {
+		"targets": {
+			"build:compile": {},
+			"build:lint": {},
+			"test-build-esm": {},
+			"lint": {},
+			"checks": {},
+			"full": {}
+		}
 	},
 	"typeValidation": {
 		"disabled": true

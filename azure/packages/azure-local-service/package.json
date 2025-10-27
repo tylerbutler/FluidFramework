@@ -13,14 +13,13 @@
 	"type": "module",
 	"bin": "index.js",
 	"scripts": {
-		"check:biome": "biome check .",
-		"check:format": "npm run check:biome",
+		"biome-check": "biome check .",
+		"biome-format": "biome check . --write",
+		"check:format": "npm run biome-check",
 		"clean": "rimraf --glob dist lib \"**/*.tsbuildinfo\" \"**/*.build.log\" _api-extractor-temp",
 		"eslint": "eslint --format stylish index.js",
 		"eslint:fix": "eslint --format stylish index.js --fix --fix-type problem,suggestion,layout",
-		"format": "npm run format:biome",
-		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
+		"format": "npm run biome-format",
 		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"start": "pm2 start -n azure-local-service index.js",
 		"start:debug": "node --inspect=0.0.0.0:9229 index.js",
@@ -39,6 +38,13 @@
 		"eslint-config-prettier": "~10.1.8",
 		"pm2": "^5.4.2",
 		"rimraf": "^4.4.0"
+	},
+	"nx": {
+		"targets": {
+			"build:lint": {},
+			"lint": {},
+			"checks": {}
+		}
 	},
 	"typeValidation": {
 		"disabled": true

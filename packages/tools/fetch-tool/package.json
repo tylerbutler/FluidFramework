@@ -15,17 +15,15 @@
 		"fluid-fetch": "bin/fluid-fetch"
 	},
 	"scripts": {
+		"biome-check": "biome check .",
+		"biome-format": "biome check . --write",
 		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
-		"build:esnext": "tsc --project ./tsconfig.json",
-		"check:biome": "biome check .",
-		"check:format": "npm run check:biome",
+		"check:format": "npm run biome-check",
 		"clean": "rimraf --glob dist \"**/*.tsbuildinfo\" \"**/*.build.log\" lib",
 		"eslint": "eslint --format stylish src",
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
-		"format": "npm run format:biome",
-		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
+		"esnext": "tsc --project ./tsconfig.json",
+		"format": "npm run biome-format",
 		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"tsc": "fluid-tsc commonjs --project ./tsconfig.cjs.json && copyfiles -f ../../../common/build/build-common/src/cjs/package.json ./dist"
 	},
@@ -59,6 +57,17 @@
 		"eslint": "~8.57.1",
 		"rimraf": "^4.4.0",
 		"typescript": "~5.4.5"
+	},
+	"nx": {
+		"targets": {
+			"build:compile": {},
+			"build:lint": {},
+			"test-build-cjs": {},
+			"test-build-esm": {},
+			"lint": {},
+			"checks": {},
+			"full": {}
+		}
 	},
 	"typeValidation": {
 		"broken": {},

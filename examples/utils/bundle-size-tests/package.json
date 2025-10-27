@@ -13,25 +13,23 @@
 	"author": "Microsoft and contributors",
 	"type": "module",
 	"scripts": {
+		"biome-check": "biome check .",
+		"biome-format": "biome check . --write",
 		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
-		"build:esnext": "tsc --project ./tsconfig.json",
-		"build:test": "npm run build:test:esm",
-		"build:test:esm": "tsc --project ./src/test/tsconfig.json",
-		"check:biome": "biome check .",
-		"check:format": "npm run check:biome",
+		"build:test": "npm run tsc-test-esm",
+		"check:format": "npm run biome-check",
 		"clean": "rimraf --glob build dist lib bundleAnalysis \"**/*.tsbuildinfo\" \"**/*.build.log\" nyc",
 		"eslint": "eslint --format stylish src",
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
+		"esnext": "tsc --project ./tsconfig.json",
 		"explore:tree": "fluid-build . --task webpack && source-map-explorer ./build/sharedTree.js --html bundleAnalysis/reportTree.html",
-		"format": "npm run format:biome",
-		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
+		"format": "npm run biome-format",
 		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"prepack": "npm run webpack",
 		"test": "npm run test:mocha",
 		"test:mocha": "npm run test:mocha:esm",
 		"test:mocha:esm": "mocha",
+		"tsc-test-esm": "tsc --project ./src/test/tsconfig.json",
 		"webpack": "webpack",
 		"webpack:profile": "npm run webpack"
 	},
@@ -78,19 +76,14 @@
 	"comments": [
 		"@cerner/duplicate-package-checker-webpack-plugin is pinned since newer version (2.3 through 2.6) refuse to work on NodeJS other than 10 || 12 || 14 due to https://github.com/cerner/terra-toolkit/issues/828"
 	],
-	"fluidBuild": {
-		"tasks": {
-			"build:test": [
-				"...",
-				"webpack"
-			],
-			"webpack": [
-				"^build:esnext"
-			],
-			"test:mocha:esm": [
-				"...",
-				"webpack"
-			]
+	"nx": {
+		"targets": {
+			"build:compile": {},
+			"build:lint": {},
+			"test-build-esm": {},
+			"lint": {},
+			"checks": {},
+			"full": {}
 		}
 	},
 	"typeValidation": {

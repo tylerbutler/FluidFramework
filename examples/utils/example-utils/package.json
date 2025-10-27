@@ -28,21 +28,19 @@
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
 	"scripts": {
+		"api-extractor": "api-extractor run --local",
+		"api-extractor-ci-docs": "api-extractor run",
+		"attw": "attw --pack .",
+		"biome-check": "biome check .",
+		"biome-format": "biome check . --write",
 		"build": "fluid-build . --task build",
-		"build:compile": "fluid-build . --task compile",
-		"build:docs": "api-extractor run --local",
-		"build:esnext": "tsc --project ./tsconfig.json",
-		"check:are-the-types-wrong": "attw --pack .",
-		"check:biome": "biome check .",
 		"check:exports": "api-extractor run --config ./api-extractor-lint.json",
-		"check:format": "npm run check:biome",
-		"ci:build:docs": "api-extractor run",
+		"check:format": "npm run biome-check",
 		"clean": "rimraf --glob dist lib \"**/*.tsbuildinfo\" \"**/*.build.log\" _api-extractor-temp",
 		"eslint": "eslint --format stylish src",
 		"eslint:fix": "eslint --format stylish src --fix --fix-type problem,suggestion,layout",
-		"format": "npm run format:biome",
-		"format:biome": "biome check . --write",
-		"lint": "fluid-build . --task lint",
+		"esnext": "tsc --project ./tsconfig.json",
+		"format": "npm run biome-format",
 		"lint:fix": "fluid-build . --task eslint:fix --task format",
 		"tsc": "fluid-tsc commonjs --project ./tsconfig.cjs.json && copyfiles -f ../../../common/build/build-common/src/cjs/package.json ./dist"
 	},
@@ -90,11 +88,15 @@
 		"rimraf": "^4.4.0",
 		"typescript": "~5.4.5"
 	},
-	"fluidBuild": {
-		"tasks": {
-			"check:exports": [
-				"build:esnext"
-			]
+	"nx": {
+		"targets": {
+			"build:compile": {},
+			"build:lint": {},
+			"test-build-cjs": {},
+			"test-build-esm": {},
+			"lint": {},
+			"checks": {},
+			"full": {}
 		}
 	},
 	"typeValidation": {
