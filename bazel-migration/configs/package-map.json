@@ -1,0 +1,472 @@
+{
+  "@fluidframework/tool-utils": {
+    "name": "@fluidframework/tool-utils",
+    "path": "packages/utils/tool-utils",
+    "bazelTarget": "//packages/utils/tool-utils:fluidframework_tool_utils"
+  },
+  "@fluidframework/telemetry-utils": {
+    "name": "@fluidframework/telemetry-utils",
+    "path": "packages/utils/telemetry-utils",
+    "bazelTarget": "//packages/utils/telemetry-utils:fluidframework_telemetry_utils"
+  },
+  "@fluidframework/odsp-doclib-utils": {
+    "name": "@fluidframework/odsp-doclib-utils",
+    "path": "packages/utils/odsp-doclib-utils",
+    "bazelTarget": "//packages/utils/odsp-doclib-utils:fluidframework_odsp_doclib_utils"
+  },
+  "@fluid-internal/replay-tool": {
+    "name": "@fluid-internal/replay-tool",
+    "path": "packages/tools/replay-tool",
+    "bazelTarget": "//packages/tools/replay-tool:fluid_internal_replay_tool"
+  },
+  "@fluidframework/fluid-runner": {
+    "name": "@fluidframework/fluid-runner",
+    "path": "packages/tools/fluid-runner",
+    "bazelTarget": "//packages/tools/fluid-runner:fluidframework_fluid_runner"
+  },
+  "@fluid-tools/fetch-tool": {
+    "name": "@fluid-tools/fetch-tool",
+    "path": "packages/tools/fetch-tool",
+    "bazelTarget": "//packages/tools/fetch-tool:fluid_tools_fetch_tool"
+  },
+  "@fluid-private/changelog-generator-wrapper": {
+    "name": "@fluid-private/changelog-generator-wrapper",
+    "path": "packages/tools/changelog-generator-wrapper",
+    "bazelTarget": "//packages/tools/changelog-generator-wrapper:fluid_private_changelog_generator_wrapper"
+  },
+  "@types/jest-environment-puppeteer": {
+    "name": "@types/jest-environment-puppeteer",
+    "path": "packages/test/types_jest-environment-puppeteer",
+    "bazelTarget": "//packages/test/types_jest-environment-puppeteer:types_jest_environment_puppeteer"
+  },
+  "@fluid-private/test-version-utils": {
+    "name": "@fluid-private/test-version-utils",
+    "path": "packages/test/test-version-utils",
+    "bazelTarget": "//packages/test/test-version-utils:fluid_private_test_version_utils"
+  },
+  "@fluidframework/test-utils": {
+    "name": "@fluidframework/test-utils",
+    "path": "packages/test/test-utils",
+    "bazelTarget": "//packages/test/test-utils:fluidframework_test_utils"
+  },
+  "@fluid-internal/test-service-load": {
+    "name": "@fluid-internal/test-service-load",
+    "path": "packages/test/test-service-load",
+    "bazelTarget": "//packages/test/test-service-load:fluid_internal_test_service_load"
+  },
+  "@fluid-private/test-pairwise-generator": {
+    "name": "@fluid-private/test-pairwise-generator",
+    "path": "packages/test/test-pairwise-generator",
+    "bazelTarget": "//packages/test/test-pairwise-generator:fluid_private_test_pairwise_generator"
+  },
+  "@fluid-private/test-end-to-end-tests": {
+    "name": "@fluid-private/test-end-to-end-tests",
+    "path": "packages/test/test-end-to-end-tests",
+    "bazelTarget": "//packages/test/test-end-to-end-tests:fluid_private_test_end_to_end_tests"
+  },
+  "@fluid-private/test-drivers": {
+    "name": "@fluid-private/test-drivers",
+    "path": "packages/test/test-drivers",
+    "bazelTarget": "//packages/test/test-drivers:fluid_private_test_drivers"
+  },
+  "@fluid-internal/test-driver-definitions": {
+    "name": "@fluid-internal/test-driver-definitions",
+    "path": "packages/test/test-driver-definitions",
+    "bazelTarget": "//packages/test/test-driver-definitions:fluid_internal_test_driver_definitions"
+  },
+  "@fluid-private/stochastic-test-utils": {
+    "name": "@fluid-private/stochastic-test-utils",
+    "path": "packages/test/stochastic-test-utils",
+    "bazelTarget": "//packages/test/stochastic-test-utils:fluid_private_stochastic_test_utils"
+  },
+  "@fluid-internal/test-snapshots": {
+    "name": "@fluid-internal/test-snapshots",
+    "path": "packages/test/snapshots",
+    "bazelTarget": "//packages/test/snapshots:fluid_internal_test_snapshots"
+  },
+  "@fluid-internal/mocha-test-setup": {
+    "name": "@fluid-internal/mocha-test-setup",
+    "path": "packages/test/mocha-test-setup",
+    "bazelTarget": "//packages/test/mocha-test-setup:fluid_internal_mocha_test_setup"
+  },
+  "@fluid-internal/local-server-tests": {
+    "name": "@fluid-internal/local-server-tests",
+    "path": "packages/test/local-server-tests",
+    "bazelTarget": "//packages/test/local-server-tests:fluid_internal_local_server_tests"
+  },
+  "@fluid-internal/local-server-stress-tests": {
+    "name": "@fluid-internal/local-server-stress-tests",
+    "path": "packages/test/local-server-stress-tests",
+    "bazelTarget": "//packages/test/local-server-stress-tests:fluid_internal_local_server_stress_tests"
+  },
+  "@fluid-internal/functional-tests": {
+    "name": "@fluid-internal/functional-tests",
+    "path": "packages/test/functional-tests",
+    "bazelTarget": "//packages/test/functional-tests:fluid_internal_functional_tests"
+  },
+  "@fluidframework/tinylicious-client": {
+    "name": "@fluidframework/tinylicious-client",
+    "path": "packages/service-clients/tinylicious-client",
+    "bazelTarget": "//packages/service-clients/tinylicious-client:fluidframework_tinylicious_client"
+  },
+  "@fluidframework/odsp-client": {
+    "name": "@fluidframework/odsp-client",
+    "path": "packages/service-clients/odsp-client",
+    "bazelTarget": "//packages/service-clients/odsp-client:fluidframework_odsp_client"
+  },
+  "@fluidframework/azure-client": {
+    "name": "@fluidframework/azure-client",
+    "path": "packages/service-clients/azure-client",
+    "bazelTarget": "//packages/service-clients/azure-client:fluidframework_azure_client"
+  },
+  "@fluidframework/test-runtime-utils": {
+    "name": "@fluidframework/test-runtime-utils",
+    "path": "packages/runtime/test-runtime-utils",
+    "bazelTarget": "//packages/runtime/test-runtime-utils:fluidframework_test_runtime_utils"
+  },
+  "@fluidframework/runtime-utils": {
+    "name": "@fluidframework/runtime-utils",
+    "path": "packages/runtime/runtime-utils",
+    "bazelTarget": "//packages/runtime/runtime-utils:fluidframework_runtime_utils"
+  },
+  "@fluidframework/runtime-definitions": {
+    "name": "@fluidframework/runtime-definitions",
+    "path": "packages/runtime/runtime-definitions",
+    "bazelTarget": "//packages/runtime/runtime-definitions:fluidframework_runtime_definitions"
+  },
+  "@fluidframework/id-compressor": {
+    "name": "@fluidframework/id-compressor",
+    "path": "packages/runtime/id-compressor",
+    "bazelTarget": "//packages/runtime/id-compressor:fluidframework_id_compressor"
+  },
+  "@fluidframework/datastore-definitions": {
+    "name": "@fluidframework/datastore-definitions",
+    "path": "packages/runtime/datastore-definitions",
+    "bazelTarget": "//packages/runtime/datastore-definitions:fluidframework_datastore_definitions"
+  },
+  "@fluidframework/datastore": {
+    "name": "@fluidframework/datastore",
+    "path": "packages/runtime/datastore",
+    "bazelTarget": "//packages/runtime/datastore:fluidframework_datastore"
+  },
+  "@fluidframework/container-runtime-definitions": {
+    "name": "@fluidframework/container-runtime-definitions",
+    "path": "packages/runtime/container-runtime-definitions",
+    "bazelTarget": "//packages/runtime/container-runtime-definitions:fluidframework_container_runtime_definitions"
+  },
+  "@fluidframework/container-runtime": {
+    "name": "@fluidframework/container-runtime",
+    "path": "packages/runtime/container-runtime",
+    "bazelTarget": "//packages/runtime/container-runtime:fluidframework_container_runtime"
+  },
+  "@fluid-private/test-loader-utils": {
+    "name": "@fluid-private/test-loader-utils",
+    "path": "packages/loader/test-loader-utils",
+    "bazelTarget": "//packages/loader/test-loader-utils:fluid_private_test_loader_utils"
+  },
+  "@fluidframework/driver-utils": {
+    "name": "@fluidframework/driver-utils",
+    "path": "packages/loader/driver-utils",
+    "bazelTarget": "//packages/loader/driver-utils:fluidframework_driver_utils"
+  },
+  "@fluidframework/container-loader": {
+    "name": "@fluidframework/container-loader",
+    "path": "packages/loader/container-loader",
+    "bazelTarget": "//packages/loader/container-loader:fluidframework_container_loader"
+  },
+  "@fluidframework/undo-redo": {
+    "name": "@fluidframework/undo-redo",
+    "path": "packages/framework/undo-redo",
+    "bazelTarget": "//packages/framework/undo-redo:fluidframework_undo_redo"
+  },
+  "@fluidframework/tree-agent-ses": {
+    "name": "@fluidframework/tree-agent-ses",
+    "path": "packages/framework/tree-agent-ses",
+    "bazelTarget": "//packages/framework/tree-agent-ses:fluidframework_tree_agent_ses"
+  },
+  "@fluidframework/tree-agent-langchain": {
+    "name": "@fluidframework/tree-agent-langchain",
+    "path": "packages/framework/tree-agent-langchain",
+    "bazelTarget": "//packages/framework/tree-agent-langchain:fluidframework_tree_agent_langchain"
+  },
+  "@fluidframework/tree-agent": {
+    "name": "@fluidframework/tree-agent",
+    "path": "packages/framework/tree-agent",
+    "bazelTarget": "//packages/framework/tree-agent:fluidframework_tree_agent"
+  },
+  "@fluidframework/synthesize": {
+    "name": "@fluidframework/synthesize",
+    "path": "packages/framework/synthesize",
+    "bazelTarget": "//packages/framework/synthesize:fluidframework_synthesize"
+  },
+  "@fluidframework/request-handler": {
+    "name": "@fluidframework/request-handler",
+    "path": "packages/framework/request-handler",
+    "bazelTarget": "//packages/framework/request-handler:fluidframework_request_handler"
+  },
+  "@fluidframework/react": {
+    "name": "@fluidframework/react",
+    "path": "packages/framework/react",
+    "bazelTarget": "//packages/framework/react:fluidframework_react"
+  },
+  "@fluidframework/presence": {
+    "name": "@fluidframework/presence",
+    "path": "packages/framework/presence",
+    "bazelTarget": "//packages/framework/presence:fluidframework_presence"
+  },
+  "@fluid-experimental/oldest-client-observer": {
+    "name": "@fluid-experimental/oldest-client-observer",
+    "path": "packages/framework/oldest-client-observer",
+    "bazelTarget": "//packages/framework/oldest-client-observer:fluid_experimental_oldest_client_observer"
+  },
+  "@fluidframework/fluid-static": {
+    "name": "@fluidframework/fluid-static",
+    "path": "packages/framework/fluid-static",
+    "bazelTarget": "//packages/framework/fluid-static:fluidframework_fluid_static"
+  },
+  "fluid-framework": {
+    "name": "fluid-framework",
+    "path": "packages/framework/fluid-framework",
+    "bazelTarget": "//packages/framework/fluid-framework:fluid_framework"
+  },
+  "@fluid-experimental/dds-interceptions": {
+    "name": "@fluid-experimental/dds-interceptions",
+    "path": "packages/framework/dds-interceptions",
+    "bazelTarget": "//packages/framework/dds-interceptions:fluid_experimental_dds_interceptions"
+  },
+  "@fluid-experimental/data-object-base": {
+    "name": "@fluid-experimental/data-object-base",
+    "path": "packages/framework/data-object-base",
+    "bazelTarget": "//packages/framework/data-object-base:fluid_experimental_data_object_base"
+  },
+  "@fluid-experimental/attributor": {
+    "name": "@fluid-experimental/attributor",
+    "path": "packages/framework/attributor",
+    "bazelTarget": "//packages/framework/attributor:fluid_experimental_attributor"
+  },
+  "@fluidframework/aqueduct": {
+    "name": "@fluidframework/aqueduct",
+    "path": "packages/framework/aqueduct",
+    "bazelTarget": "//packages/framework/aqueduct:fluidframework_aqueduct"
+  },
+  "@fluidframework/ai-collab": {
+    "name": "@fluidframework/ai-collab",
+    "path": "packages/framework/ai-collab",
+    "bazelTarget": "//packages/framework/ai-collab:fluidframework_ai_collab"
+  },
+  "@fluidframework/agent-scheduler": {
+    "name": "@fluidframework/agent-scheduler",
+    "path": "packages/framework/agent-scheduler",
+    "bazelTarget": "//packages/framework/agent-scheduler:fluidframework_agent_scheduler"
+  },
+  "@fluidframework/tinylicious-driver": {
+    "name": "@fluidframework/tinylicious-driver",
+    "path": "packages/drivers/tinylicious-driver",
+    "bazelTarget": "//packages/drivers/tinylicious-driver:fluidframework_tinylicious_driver"
+  },
+  "@fluidframework/routerlicious-urlresolver": {
+    "name": "@fluidframework/routerlicious-urlresolver",
+    "path": "packages/drivers/routerlicious-urlResolver",
+    "bazelTarget": "//packages/drivers/routerlicious-urlResolver:fluidframework_routerlicious_urlresolver"
+  },
+  "@fluidframework/routerlicious-driver": {
+    "name": "@fluidframework/routerlicious-driver",
+    "path": "packages/drivers/routerlicious-driver",
+    "bazelTarget": "//packages/drivers/routerlicious-driver:fluidframework_routerlicious_driver"
+  },
+  "@fluidframework/replay-driver": {
+    "name": "@fluidframework/replay-driver",
+    "path": "packages/drivers/replay-driver",
+    "bazelTarget": "//packages/drivers/replay-driver:fluidframework_replay_driver"
+  },
+  "@fluidframework/odsp-urlresolver": {
+    "name": "@fluidframework/odsp-urlresolver",
+    "path": "packages/drivers/odsp-urlResolver",
+    "bazelTarget": "//packages/drivers/odsp-urlResolver:fluidframework_odsp_urlresolver"
+  },
+  "@fluidframework/odsp-driver-definitions": {
+    "name": "@fluidframework/odsp-driver-definitions",
+    "path": "packages/drivers/odsp-driver-definitions",
+    "bazelTarget": "//packages/drivers/odsp-driver-definitions:fluidframework_odsp_driver_definitions"
+  },
+  "@fluidframework/odsp-driver": {
+    "name": "@fluidframework/odsp-driver",
+    "path": "packages/drivers/odsp-driver",
+    "bazelTarget": "//packages/drivers/odsp-driver:fluidframework_odsp_driver"
+  },
+  "@fluidframework/local-driver": {
+    "name": "@fluidframework/local-driver",
+    "path": "packages/drivers/local-driver",
+    "bazelTarget": "//packages/drivers/local-driver:fluidframework_local_driver"
+  },
+  "@fluidframework/file-driver": {
+    "name": "@fluidframework/file-driver",
+    "path": "packages/drivers/file-driver",
+    "bazelTarget": "//packages/drivers/file-driver:fluidframework_file_driver"
+  },
+  "@fluidframework/driver-web-cache": {
+    "name": "@fluidframework/driver-web-cache",
+    "path": "packages/drivers/driver-web-cache",
+    "bazelTarget": "//packages/drivers/driver-web-cache:fluidframework_driver_web_cache"
+  },
+  "@fluidframework/driver-base": {
+    "name": "@fluidframework/driver-base",
+    "path": "packages/drivers/driver-base",
+    "bazelTarget": "//packages/drivers/driver-base:fluidframework_driver_base"
+  },
+  "@fluidframework/debugger": {
+    "name": "@fluidframework/debugger",
+    "path": "packages/drivers/debugger",
+    "bazelTarget": "//packages/drivers/debugger:fluidframework_debugger"
+  },
+  "@fluidframework/tree": {
+    "name": "@fluidframework/tree",
+    "path": "packages/dds/tree",
+    "bazelTarget": "//packages/dds/tree:fluidframework_tree"
+  },
+  "@fluid-private/test-dds-utils": {
+    "name": "@fluid-private/test-dds-utils",
+    "path": "packages/dds/test-dds-utils",
+    "bazelTarget": "//packages/dds/test-dds-utils:fluid_private_test_dds_utils"
+  },
+  "@fluidframework/task-manager": {
+    "name": "@fluidframework/task-manager",
+    "path": "packages/dds/task-manager",
+    "bazelTarget": "//packages/dds/task-manager:fluidframework_task_manager"
+  },
+  "@fluidframework/shared-summary-block": {
+    "name": "@fluidframework/shared-summary-block",
+    "path": "packages/dds/shared-summary-block",
+    "bazelTarget": "//packages/dds/shared-summary-block:fluidframework_shared_summary_block"
+  },
+  "@fluidframework/shared-object-base": {
+    "name": "@fluidframework/shared-object-base",
+    "path": "packages/dds/shared-object-base",
+    "bazelTarget": "//packages/dds/shared-object-base:fluidframework_shared_object_base"
+  },
+  "@fluidframework/sequence": {
+    "name": "@fluidframework/sequence",
+    "path": "packages/dds/sequence",
+    "bazelTarget": "//packages/dds/sequence:fluidframework_sequence"
+  },
+  "@fluidframework/register-collection": {
+    "name": "@fluidframework/register-collection",
+    "path": "packages/dds/register-collection",
+    "bazelTarget": "//packages/dds/register-collection:fluidframework_register_collection"
+  },
+  "@fluid-experimental/pact-map": {
+    "name": "@fluid-experimental/pact-map",
+    "path": "packages/dds/pact-map",
+    "bazelTarget": "//packages/dds/pact-map:fluid_experimental_pact_map"
+  },
+  "@fluidframework/ordered-collection": {
+    "name": "@fluidframework/ordered-collection",
+    "path": "packages/dds/ordered-collection",
+    "bazelTarget": "//packages/dds/ordered-collection:fluidframework_ordered_collection"
+  },
+  "@fluidframework/merge-tree": {
+    "name": "@fluidframework/merge-tree",
+    "path": "packages/dds/merge-tree",
+    "bazelTarget": "//packages/dds/merge-tree:fluidframework_merge_tree"
+  },
+  "@fluidframework/matrix": {
+    "name": "@fluidframework/matrix",
+    "path": "packages/dds/matrix",
+    "bazelTarget": "//packages/dds/matrix:fluidframework_matrix"
+  },
+  "@fluidframework/map": {
+    "name": "@fluidframework/map",
+    "path": "packages/dds/map",
+    "bazelTarget": "//packages/dds/map:fluidframework_map"
+  },
+  "@fluidframework/legacy-dds": {
+    "name": "@fluidframework/legacy-dds",
+    "path": "packages/dds/legacy-dds",
+    "bazelTarget": "//packages/dds/legacy-dds:fluidframework_legacy_dds"
+  },
+  "@fluid-experimental/ink": {
+    "name": "@fluid-experimental/ink",
+    "path": "packages/dds/ink",
+    "bazelTarget": "//packages/dds/ink:fluid_experimental_ink"
+  },
+  "@fluidframework/counter": {
+    "name": "@fluidframework/counter",
+    "path": "packages/dds/counter",
+    "bazelTarget": "//packages/dds/counter:fluidframework_counter"
+  },
+  "@fluidframework/cell": {
+    "name": "@fluidframework/cell",
+    "path": "packages/dds/cell",
+    "bazelTarget": "//packages/dds/cell:fluidframework_cell"
+  },
+  "@fluidframework/driver-definitions": {
+    "name": "@fluidframework/driver-definitions",
+    "path": "packages/common/driver-definitions",
+    "bazelTarget": "//packages/common/driver-definitions:fluidframework_driver_definitions"
+  },
+  "@fluidframework/core-utils": {
+    "name": "@fluidframework/core-utils",
+    "path": "packages/common/core-utils",
+    "bazelTarget": "//packages/common/core-utils:fluidframework_core_utils"
+  },
+  "@fluidframework/core-interfaces": {
+    "name": "@fluidframework/core-interfaces",
+    "path": "packages/common/core-interfaces",
+    "bazelTarget": "//packages/common/core-interfaces:fluidframework_core_interfaces"
+  },
+  "@fluidframework/container-definitions": {
+    "name": "@fluidframework/container-definitions",
+    "path": "packages/common/container-definitions",
+    "bazelTarget": "//packages/common/container-definitions:fluidframework_container_definitions"
+  },
+  "@fluid-internal/client-utils": {
+    "name": "@fluid-internal/client-utils",
+    "path": "packages/common/client-utils",
+    "bazelTarget": "//packages/common/client-utils:fluid_internal_client_utils"
+  },
+  "@fluid-internal/devtools-view": {
+    "name": "@fluid-internal/devtools-view",
+    "path": "packages/tools/devtools/devtools-view",
+    "bazelTarget": "//packages/tools/devtools/devtools-view:fluid_internal_devtools_view"
+  },
+  "@fluid-private/devtools-test-app": {
+    "name": "@fluid-private/devtools-test-app",
+    "path": "packages/tools/devtools/devtools-test-app",
+    "bazelTarget": "//packages/tools/devtools/devtools-test-app:fluid_private_devtools_test_app"
+  },
+  "@fluidframework/devtools-core": {
+    "name": "@fluidframework/devtools-core",
+    "path": "packages/tools/devtools/devtools-core",
+    "bazelTarget": "//packages/tools/devtools/devtools-core:fluidframework_devtools_core"
+  },
+  "@fluid-internal/devtools-browser-extension": {
+    "name": "@fluid-internal/devtools-browser-extension",
+    "path": "packages/tools/devtools/devtools-browser-extension",
+    "bazelTarget": "//packages/tools/devtools/devtools-browser-extension:fluid_internal_devtools_browser_extension"
+  },
+  "@fluidframework/devtools": {
+    "name": "@fluidframework/devtools",
+    "path": "packages/tools/devtools/devtools",
+    "bazelTarget": "//packages/tools/devtools/devtools:fluidframework_devtools"
+  },
+  "@fluid-experimental/odsp-end-to-end-tests": {
+    "name": "@fluid-experimental/odsp-end-to-end-tests",
+    "path": "packages/service-clients/end-to-end-tests/odsp-client",
+    "bazelTarget": "//packages/service-clients/end-to-end-tests/odsp-client:fluid_experimental_odsp_end_to_end_tests"
+  },
+  "@fluidframework/azure-end-to-end-tests": {
+    "name": "@fluidframework/azure-end-to-end-tests",
+    "path": "packages/service-clients/end-to-end-tests/azure-client",
+    "bazelTarget": "//packages/service-clients/end-to-end-tests/azure-client:fluidframework_azure_end_to_end_tests"
+  },
+  "@fluidframework/fluid-telemetry": {
+    "name": "@fluidframework/fluid-telemetry",
+    "path": "packages/framework/client-logger/fluid-telemetry",
+    "bazelTarget": "//packages/framework/client-logger/fluid-telemetry:fluidframework_fluid_telemetry"
+  },
+  "@fluidframework/app-insights-logger": {
+    "name": "@fluidframework/app-insights-logger",
+    "path": "packages/framework/client-logger/app-insights-logger",
+    "bazelTarget": "//packages/framework/client-logger/app-insights-logger:fluidframework_app_insights_logger"
+  }
+}
