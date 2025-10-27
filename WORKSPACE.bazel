@@ -5,6 +5,20 @@ workspace(name = "fluidframework")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+# rules_shell - Required by rules_ts for shell toolchain
+http_archive(
+    name = "rules_shell",
+    sha256 = "3e114424a5c7e4fd43e0133cc6ecdfe54e45ae8affa14fadd839f29901424043",
+    strip_prefix = "rules_shell-0.4.0",
+    url = "https://github.com/bazelbuild/rules_shell/releases/download/v0.4.0/rules_shell-v0.4.0.tar.gz",
+)
+
+load("@rules_shell//shell:repositories.bzl", "rules_shell_dependencies", "rules_shell_toolchains")
+
+rules_shell_dependencies()
+
+rules_shell_toolchains()
+
 # Aspect Rules JS - High-performance Bazel rules for JavaScript
 # Version: 2.4.0 (latest as of 2025-07-15, compatible with Bazel 8)
 # SHA256 provided by Bazel on first download
@@ -43,9 +57,10 @@ rules_js_register_toolchains(node_version = DEFAULT_NODE_VERSION)
 
 load("@aspect_rules_ts//ts:repositories.bzl", "rules_ts_dependencies")
 
-# TypeScript version matches the project's version (5.4.5)
+# TypeScript version must be exact (no semver ranges)
+# Using 5.4.5 to match project's typescript@~5.4.5
 rules_ts_dependencies(
-    ts_version_from = "//:package.json",
+    ts_version = "5.4.5",
 )
 
 ##############

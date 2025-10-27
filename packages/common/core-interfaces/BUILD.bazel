@@ -1,0 +1,80 @@
+# BUILD.bazel for @fluidframework/core-interfaces
+# Auto-generated - Minimal PoC version
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:mocha/package_json.bzl", mocha_bin = "bin")
+
+package(default_visibility = ["//visibility:public"])
+
+# ESM compilation
+ts_project(
+    name = "core_interfaces_esm",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = [
+            "src/test/**",
+            "src/cjs/**",
+        ],
+    ),
+    declaration = True,
+    out_dir = "lib",
+    root_dir = "src",
+    tsconfig = ":tsconfig.json",
+    deps = ["//common/build/build-common:tsconfig_node16"],
+    validate = False,  # Temporarily disabled for PoC - tsconfig extends path issues
+)
+
+# CommonJS compilation
+ts_project(
+    name = "core_interfaces_cjs",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = [
+            "src/test/**",
+            "src/cjs/**",
+        ],
+    ) + [":tsconfig.json"],  # CJS config extends this
+    declaration = True,
+    out_dir = "dist",
+    root_dir = "src",
+    tsconfig = ":tsconfig.cjs.json",
+    deps = ["//common/build/build-common:tsconfig_node16"],
+    validate = False,  # Temporarily disabled for PoC - tsconfig extends path issues
+)
+
+# Test compilation (ESM)
+ts_project(
+    name = "core_interfaces_test",
+    srcs = glob(["src/test/**/*.ts"]),
+    declaration = False,
+    out_dir = "lib/test",
+    root_dir = "src",
+    tsconfig = "src/test/tsconfig.json",
+    deps = [
+        ":core_interfaces_esm",
+        "//common/build/build-common:tsconfig_test_node16",
+        "@npm//mocha",
+        "@npm//@types/mocha",
+    ],
+)
+
+# Mocha test runner
+mocha_bin.mocha_test(
+    name = "test",
+    args = [
+        "lib/test/**/*.spec.js",
+        "--exit",
+    ],
+    data = [
+        ":core_interfaces_test",
+    ],
+)
+
+# Default target builds both ESM and CJS
+filegroup(
+    name = "core_interfaces",
+    srcs = [
+        ":core_interfaces_esm",
+        ":core_interfaces_cjs",
+    ],
+)

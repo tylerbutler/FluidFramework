@@ -1,7 +1,6 @@
-{
-  "@fluidframework/tool-utils": {
-    "name": "@fluidframework/tool-utils",
-    "path": "packages/utils/tool-utils",
+✅ Generated package map with 94 packages
+   Output: bazel-migration/configs/package-map.json
+ages/utils/tool-utils",
     "bazelTarget": "//packages/utils/tool-utils:fluidframework_tool_utils"
   },
   "@fluidframework/telemetry-utils": {

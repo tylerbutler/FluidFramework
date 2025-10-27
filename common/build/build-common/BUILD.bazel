@@ -1,0 +1,30 @@
+# BUILD.bazel for common/build/build-common
+# Exports shared TypeScript configuration files
+
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Wrap tsconfig files in js_library targets so they can be used cross-package
+js_library(
+    name = "tsconfig_base",
+    srcs = ["tsconfig.base.json"],
+)
+
+js_library(
+    name = "tsconfig_node16",
+    srcs = ["tsconfig.node16.json"],
+    deps = [":tsconfig_base"],
+)
+
+js_library(
+    name = "tsconfig_test_node16",
+    srcs = ["tsconfig.test.node16.json"],
+    deps = [":tsconfig_base"],
+)
+
+js_library(
+    name = "tsconfig_bundler",
+    srcs = ["tsconfig.bundler.json"],
+    deps = [":tsconfig_base"],
+)
