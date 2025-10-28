@@ -1,0 +1,27 @@
+{
+	"compilerOptions": {
+		"composite": true,
+		"declaration": true,
+		"declarationMap": true,
+		"esModuleInterop": true,
+		"incremental": true,
+		"inlineSources": true,
+		"jsx": "react",
+		"lib": ["ES2020", "DOM", "DOM.Iterable"],
+		"module": "Node16",
+		"moduleResolution": "Node16",
+		"noImplicitAny": false,
+		"noUnusedLocals": true,
+		"pretty": true,
+		"sourceMap": true,
+		"strict": true,
+		"target": "ES2021",
+		"types": [],
+		"exactOptionalPropertyTypes": true,
+		"noUncheckedIndexedAccess": true,
+		"rootDir": "./src",
+		"outDir": "./dist"
+	},
+	"include": ["src/**/*"],
+	"exclude": ["src/test/**/*"]
+}
