@@ -3,7 +3,7 @@
 **Project**: FluidFramework TypeScript Monorepo
 **Migration Start Date**: 2025-10-27
 **Current Phase**: Phase 2 - Expansion (In Progress)
-**Overall Progress**: 27% (18/66 sessions complete)
+**Overall Progress**: 24% (18/69 sessions complete)
 
 ---
 
@@ -13,7 +13,7 @@
 |-------|--------|-------------------|----------------|----------|
 | Phase 0: Setup | ✅ Complete | 2/2 | 2 | 100% |
 | Phase 1: PoC | ✅ Complete | 5/6 | 6 | 83% (API extraction deferred) |
-| Phase 2: Expansion | 🔄 In Progress | 11/15 | 10-15 | 73% |
+| Phase 2: Expansion | 🔄 In Progress | 11/18 | 15-18 | 61% |
 | Phase 3: Core Migration | ⏳ Not Started | 0/30 | 20-30 | 0% |
 | Phase 4: Integration | ⏳ Not Started | 0/8 | 5-8 | 0% |
 | Phase 5: Cleanup | ⏳ Not Started | 0/5 | 3-5 | 0% |
@@ -494,10 +494,15 @@ This pattern allows TypeScript to resolve both main exports and subpath exports 
 ## Phase 2: Expansion - Common & Utility Packages
 
 **Status**: 🔄 In Progress
-**Sessions**: 11/15 complete
+**Sessions**: 11/18 complete (11 packages + 0 tooling)
 **Prerequisites**: Phase 1 complete
-**Estimated Time**: 15-25 hours
+**Estimated Time**: 19-29 hours
 **Time Spent**: 10 hours
+
+**Phase 2 Structure**:
+- **Sessions 2.1-2.11**: Package compilation migrations (11 complete)
+- **Sessions 2.12-2.14**: Tooling integration (Biome, Mocha, API Extractor) (0 complete)
+- **Sessions 2.15-2.18**: Remaining packages with full tooling (0 complete)
 
 ### Session 2.1: Migrate @fluidframework/core-utils
 **Status**: ✅ Complete
@@ -1442,13 +1447,212 @@ bazel build //packages/common/core-interfaces:core_interfaces \
 
 ---
 
-### Sessions 2.12-2.15
+### Session 2.12: Tooling Integration - Biome (Lint/Format)
+**Status**: ⏳ Not Started
+**Date Started**: TBD
+**Date Completed**: TBD
+**Time Spent**: 0 hours
+**Prerequisites**: Session 2.11 complete
+**Estimated**: 1 hour
+
+#### Goal
+Establish Biome linting and formatting integration pattern using core-interfaces as reference.
+
+#### Reference Package
+- **Package**: @fluidframework/core-interfaces
+- **Why**: Small (3 files), simple, already has Biome configured, perfect example
+
+#### Tasks
+- [ ] Add js_run_binary rule for biome_check
+- [ ] Add js_run_binary rule for biome_format
+- [ ] Configure chdir and args for proper execution
+- [ ] Validate against `pnpm run biome-check` output
+- [ ] Document pattern in migration tracker
+
+#### Deliverables
+- [ ] `biome_check` target in packages/common/core-interfaces/BUILD.bazel
+- [ ] `biome_format` target in packages/common/core-interfaces/BUILD.bazel
+- [ ] Pattern documentation for future packages
+- [ ] Git commit: `feat(bazel): add Biome lint/format integration (Session 2.12)`
+
+#### Expected Pattern
+```python
+load("@aspect_rules_js//js:defs.bzl", "js_run_binary")
+
+js_run_binary(
+    name = "biome_check",
+    tool = ":node_modules/@biomejs/biome",
+    args = ["check", "."],
+    chdir = package_name(),
+)
+
+js_run_binary(
+    name = "biome_format",
+    tool = ":node_modules/@biomejs/biome",
+    args = ["check", ".", "--write"],
+    chdir = package_name(),
+)
+```
+
+#### Why Now
+- Linting/formatting is essential for code quality
+- Establishes pattern before Phase 3 mass migration
+- Validates aspect_rules_js js_run_binary integration
+- Simple enough to debug and document clearly
+
+---
+
+### Session 2.13: Tooling Integration - Mocha Tests
+**Status**: ⏳ Not Started
+**Date Started**: TBD
+**Date Completed**: TBD
+**Time Spent**: 0 hours
+**Prerequisites**: Session 2.12 complete
+**Estimated**: 1-2 hours
+
+#### Goal
+Establish Mocha test integration pattern with test compilation and execution.
+
+#### Reference Package
+- **Package**: @fluidframework/core-interfaces
+- **Why**: Has test files, simple test setup, good example
+
+#### Tasks
+- [ ] Create tsconfig.test.json for test compilation
+- [ ] Add ts_project target for test compilation
+- [ ] Add mocha_test rule for test execution
+- [ ] Configure test dependencies (@types/mocha, mocha, etc.)
+- [ ] Run tests: `bazel test //packages/common/core-interfaces:test`
+- [ ] Validate test output matches pnpm test results
+- [ ] Document test pattern
+
+#### Deliverables
+- [ ] Test compilation target in BUILD.bazel
+- [ ] Mocha test execution target in BUILD.bazel
+- [ ] tsconfig.test.json configuration
+- [ ] Test pattern documentation
+- [ ] Git commit: `feat(bazel): add Mocha test integration (Session 2.13)`
+
+#### Expected Pattern
+```python
+load("@npm//:mocha/package_json.bzl", mocha_bin = "bin")
+
+ts_project(
+    name = "core_interfaces_test",
+    srcs = glob(["src/test/**/*.ts"]),
+    composite = True,
+    declaration = True,
+    out_dir = "lib/test",
+    tsconfig = ":tsconfig.test.json",
+    deps = [
+        ":core_interfaces_esm",
+        ":node_modules/@types/mocha",
+        ":node_modules/@types/node",
+        ":node_modules/mocha",
+    ],
+)
+
+mocha_bin.mocha_test(
+    name = "test",
+    args = ["lib/test/**/*.spec.js"],
+    data = [":core_interfaces_test"],
+)
+```
+
+#### Why Now
+- Testing is critical for validation and CI
+- Need test patterns before Phase 3
+- Ensures all packages have working tests from migration start
+
+---
+
+### Session 2.14: Tooling Integration - API Extractor
+**Status**: ⏳ Not Started
+**Date Started**: TBD
+**Date Completed**: TBD
+**Time Spent**: 0 hours
+**Prerequisites**: Session 2.13 complete
+**Estimated**: 2 hours
+
+#### Goal
+Establish API Extractor integration for API report generation and validation.
+
+#### Reference Package
+- **Package**: @fluidframework/core-interfaces
+- **Why**: Has api-extractor.json, simple API surface, FluidFramework-specific
+
+#### Tasks
+- [ ] Create js_run_binary rule for api_extractor
+- [ ] Configure api-extractor.json paths for Bazel
+- [ ] Generate API reports (.api.md files)
+- [ ] Create check_api target for validation
+- [ ] Validate against existing api-extractor output
+- [ ] Document API extraction pattern
+- [ ] Handle api-extractor.json configuration
+
+#### Deliverables
+- [ ] `api_extractor` target in BUILD.bazel
+- [ ] `check_api` validation target in BUILD.bazel
+- [ ] API extraction pattern documentation
+- [ ] Git commit: `feat(bazel): add API Extractor integration (Session 2.14)`
+
+#### Expected Pattern
+```python
+js_run_binary(
+    name = "api_extractor",
+    tool = ":node_modules/@microsoft/api-extractor",
+    args = [
+        "run",
+        "--local",
+        "--config",
+        "$(location api-extractor.json)",
+    ],
+    srcs = [
+        ":core_interfaces_esm",
+        "api-extractor.json",
+        "tsconfig.json",
+    ] + glob(["*.api.md"]),
+    chdir = package_name(),
+)
+
+js_run_binary(
+    name = "check_api",
+    tool = ":node_modules/@microsoft/api-extractor",
+    args = [
+        "run",
+        "--config",
+        "$(location api-extractor.json)",
+    ],
+    srcs = [
+        ":core_interfaces_esm",
+        "api-extractor.json",
+        "tsconfig.json",
+    ] + glob(["*.api.md"]),
+    chdir = package_name(),
+)
+```
+
+#### Why Now
+- API extraction is core to FluidFramework release process
+- Complex enough to need early validation
+- Establishes pattern before Phase 3 mass migration
+- Critical for breaking change detection
+
+---
+
+### Sessions 2.15-2.18: Continue Package Migrations with Full Tooling
 **Status**: ⏳ Not Started
 **Note**: Will be detailed as sessions progress
 
+**New Approach**: Each package migration now includes:
+- Compilation (ESM + CJS) ✅ Already established
+- Biome linting/formatting ✅ Session 2.12
+- Mocha tests ✅ Session 2.13
+- API extraction ✅ Session 2.14
+
 **Preliminary Plan**:
-- **Session 2.12**: Fix and migrate @fluidframework/container-loader
-- **Session 2.13+**: Continue with remaining drivers or expand to other categories
+- **Session 2.15**: Fix and migrate @fluidframework/container-loader (with full tooling)
+- **Session 2.16+**: Continue with remaining drivers or expand to other categories
 
 ---
 

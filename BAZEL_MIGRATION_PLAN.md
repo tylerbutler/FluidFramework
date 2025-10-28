@@ -1070,7 +1070,7 @@ Per requirements, API extraction must be part of the build process.
 
 ---
 
-## Phase 2: Expansion - Common & Utility Packages (10-15 sessions, 15-25 hours)
+## Phase 2: Expansion - Common & Utility Packages + Tooling Integration (15-18 sessions, 19-29 hours)
 
 ### Session 2.1-2.5: Migrate Remaining common/ Packages
 **Time per session**: 1-2 hours
@@ -1096,10 +1096,177 @@ Per requirements, API extraction must be part of the build process.
 
 Target high-value utility packages with minimal dependencies first.
 
-### Session 2.11-2.15: Migrate test/ and tools/ Packages
+### Session 2.11: Parallel Migration - Multiple Packages
+**Time**: 1-2 hours
+**Status**: ✅ Complete
+
+Migrate 3-4 packages simultaneously using parallel agent execution.
+
+### Session 2.12: Tooling Integration - Biome (Lint/Format)
+**Time**: 1 hour
+**Reference Package**: @fluidframework/core-interfaces
+
+Establish Biome integration pattern for linting and formatting.
+
+**Tasks**:
+1. Add biome rules to BUILD.bazel
+2. Create `biome_check` target for validation
+3. Create `biome_format` target for auto-formatting
+4. Validate against existing `pnpm run biome-check` output
+5. Document pattern for future packages
+
+**Deliverables**:
+```python
+load("@aspect_rules_js//js:defs.bzl", "js_run_binary")
+
+js_run_binary(
+    name = "biome_check",
+    tool = ":node_modules/@biomejs/biome",
+    args = ["check", "."],
+    chdir = package_name(),
+)
+
+js_run_binary(
+    name = "biome_format",
+    tool = ":node_modules/@biomejs/biome",
+    args = ["check", ".", "--write"],
+    chdir = package_name(),
+)
+```
+
+**Usage**:
+```bash
+bazel run //packages/common/core-interfaces:biome_check
+bazel run //packages/common/core-interfaces:biome_format
+```
+
+**Why Now**: Establishes linting/formatting patterns early, validates aspect_rules_js integration.
+
+---
+
+### Session 2.13: Tooling Integration - Mocha Tests
+**Time**: 1-2 hours
+**Reference Package**: @fluidframework/core-interfaces
+
+Establish Mocha test integration pattern.
+
+**Tasks**:
+1. Create ts_project target for test compilation
+2. Add mocha_test rule for test execution
+3. Configure test dependencies (mocha, test utilities)
+4. Run tests: `bazel test //packages/common/core-interfaces:test`
+5. Validate test output matches pnpm test results
+6. Document test pattern
+
+**Deliverables**:
+```python
+load("@npm//:mocha/package_json.bzl", mocha_bin = "bin")
+
+# Compile tests
+ts_project(
+    name = "core_interfaces_test",
+    srcs = glob(["src/test/**/*.ts"]),
+    composite = True,
+    declaration = True,
+    out_dir = "lib/test",
+    tsconfig = ":tsconfig.test.json",
+    deps = [
+        ":core_interfaces_esm",
+        ":node_modules/@types/mocha",
+        ":node_modules/@types/node",
+        ":node_modules/mocha",
+    ],
+)
+
+# Run tests
+mocha_bin.mocha_test(
+    name = "test",
+    args = ["lib/test/**/*.spec.js"],
+    data = [":core_interfaces_test"],
+)
+```
+
+**Usage**:
+```bash
+bazel test //packages/common/core-interfaces:test
+bazel test //packages/common/core-interfaces:test --test_output=all
+```
+
+**Why Now**: Testing is critical for validation. Need test patterns before Phase 3.
+
+---
+
+### Session 2.14: Tooling Integration - API Extractor
+**Time**: 2 hours
+**Reference Package**: @fluidframework/core-interfaces
+
+Establish API Extractor integration pattern (FluidFramework-specific).
+
+**Tasks**:
+1. Create api-extractor rule using js_run_binary
+2. Configure API extraction with proper paths
+3. Generate API reports (.api.md files)
+4. Validate against existing api-extractor output
+5. Document API extraction pattern
+6. Handle api-extractor.json configuration
+
+**Deliverables**:
+```python
+js_run_binary(
+    name = "api_extractor",
+    tool = ":node_modules/@microsoft/api-extractor",
+    args = [
+        "run",
+        "--local",
+        "--config",
+        "$(location api-extractor.json)",
+    ],
+    srcs = [
+        ":core_interfaces_esm",
+        "api-extractor.json",
+        "tsconfig.json",
+    ] + glob(["*.api.md"]),
+    chdir = package_name(),
+)
+
+# API validation target
+js_run_binary(
+    name = "check_api",
+    tool = ":node_modules/@microsoft/api-extractor",
+    args = [
+        "run",
+        "--config",
+        "$(location api-extractor.json)",
+    ],
+    srcs = [
+        ":core_interfaces_esm",
+        "api-extractor.json",
+        "tsconfig.json",
+    ] + glob(["*.api.md"]),
+    chdir = package_name(),
+)
+```
+
+**Usage**:
+```bash
+bazel run //packages/common/core-interfaces:api_extractor
+bazel run //packages/common/core-interfaces:check_api
+```
+
+**Why Now**: API extraction is core to FluidFramework. Need pattern before mass migration.
+
+---
+
+### Session 2.15+: Continue Package Migrations with Full Tooling
 **Time per session**: 1-2 hours
 
-Special handling for packages that are dev/build utilities.
+Continue migrating remaining Phase 2 packages, now using complete tooling patterns:
+- Compilation (ESM + CJS)
+- Biome linting/formatting
+- Mocha tests
+- API extraction
+
+Each package migration now includes full tooling setup from the start.
 
 ---
 
