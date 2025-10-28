@@ -5,4 +5,6 @@ package(default_visibility = ["//visibility:public"])
 exports_files([
     "run-biome.sh",
     "biome-check.sh",
+    "run-flub-entrypoints.sh",
+    "run-api-extractor.sh",
 ])

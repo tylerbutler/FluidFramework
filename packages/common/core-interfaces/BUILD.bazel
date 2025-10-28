@@ -81,6 +81,69 @@ mocha_bin.mocha_test(
     ],
 )
 
+# ============================================================================
+# API Extraction Targets (Session 2.14)
+# ============================================================================
+# API extraction workflow:
+# 1. Build TypeScript (core_interfaces_esm) generates .d.ts files in lib/
+# 2. flub generate entrypoints creates lib/public.d.ts and lib/legacy.d.ts
+# 3. API Extractor runs on the entrypoint files to generate API reports
+#
+# These are `bazel run` targets that execute in the workspace directory.
+# They modify source files in-place (similar to format targets).
+
+# Generate entrypoint files (public.d.ts, legacy.d.ts) using flub
+# Run with: bazel run //packages/common/core-interfaces:generate_entrypoints
+sh_binary(
+    name = "generate_entrypoints",
+    srcs = ["//tools/bazel:run-flub-entrypoints.sh"],
+    args = [
+        "packages/common/core-interfaces",
+        "lib",
+    ],
+    data = [
+        ":core_interfaces_esm",
+        "//tools/bazel:run-flub-entrypoints.sh",
+    ],
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor for current API reports
+# Run with: bazel run //packages/common/core-interfaces:api_reports_current
+sh_binary(
+    name = "api_reports_current",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/common/core-interfaces",
+        "api-extractor/api-extractor.current.json",
+    ],
+    data = [
+        ":core_interfaces_esm",
+        "api-extractor/api-extractor.current.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"]),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor for legacy API reports
+# Run with: bazel run //packages/common/core-interfaces:api_reports_legacy
+sh_binary(
+    name = "api_reports_legacy",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/common/core-interfaces",
+        "api-extractor/api-extractor.legacy.json",
+    ],
+    data = [
+        ":core_interfaces_esm",
+        "api-extractor/api-extractor.legacy.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"]),
+    tags = ["api-extraction"],
+)
+
 # Default target builds both ESM and CJS
 filegroup(
     name = "core_interfaces",
