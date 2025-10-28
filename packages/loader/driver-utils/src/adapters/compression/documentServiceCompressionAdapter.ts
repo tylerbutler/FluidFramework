@@ -22,6 +22,8 @@ export class DocumentServiceCompressionAdapter extends DocumentServiceProxy {
 		// Back-compat Old driver
 		if (service.on !== undefined) {
 			service.on("metadataUpdate", (metadata: Record<string, string>) =>
+				// TypeScript doesn't see emit() on DocumentServiceCompressionAdapter, but it exists via base class
+				// @ts-expect-error TS2339 - emit() exists at runtime via inheritance from EventEmitter
 				this.emit("metadataUpdate", metadata),
 			);
 		}

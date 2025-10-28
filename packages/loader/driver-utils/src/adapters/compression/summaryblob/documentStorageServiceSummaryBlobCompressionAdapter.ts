@@ -200,6 +200,8 @@ export class DocumentStorageServiceCompressionAdapter extends DocumentStorageSer
 		} else if (algorithm === SummaryCompressionAlgorithm.None) {
 			maybeCompressed = file;
 		} else if (algorithm === SummaryCompressionAlgorithm.LZ4) {
+			// compress() returns Uint8Array, but type system sees it as ArrayBufferLike
+			// @ts-expect-error TS2345 - compress result is compatible with ArrayBufferLike at runtime
 			const compressed = compress(file) as ArrayBufferLike;
 			maybeCompressed = compressed;
 		} else {

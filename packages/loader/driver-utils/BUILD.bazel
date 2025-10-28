@@ -1,0 +1,73 @@
+# BUILD.bazel for @fluidframework/driver-utils
+# Auto-generated for Bazel migration - Session 2.8
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+package(default_visibility = ["//visibility:public"])
+
+# Link npm packages for this workspace package
+npm_link_all_packages(name = "node_modules")
+
+# ESM compilation
+ts_project(
+    name = "driver_utils_esm",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**"],
+    ),
+    declaration = True,
+    declaration_map = True,
+    source_map = True,
+    composite = True,
+    resolve_json_module = True,
+    out_dir = "lib",
+    root_dir = "src",
+    tsconfig = ":tsconfig.bazel.json",
+    deps = [
+        ":node_modules/axios",
+        ":node_modules/lz4js",
+        ":node_modules/uuid",
+        "//packages/common/client-utils:client_utils_esm",
+        "//packages/common/core-interfaces:core_interfaces_esm",
+        "//packages/common/core-utils:core_utils_esm",
+        "//packages/common/driver-definitions:driver_definitions_esm",
+        "//packages/utils/telemetry-utils:telemetry_utils_esm",
+    ],
+)
+
+# CommonJS compilation
+ts_project(
+    name = "driver_utils_cjs",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**"],
+    ),
+    declaration = True,
+    declaration_map = True,
+    source_map = True,
+    composite = True,
+    resolve_json_module = True,
+    out_dir = "dist",
+    root_dir = "src",
+    tsconfig = ":tsconfig.cjs.bazel.json",
+    deps = [
+        ":node_modules/axios",
+        ":node_modules/lz4js",
+        ":node_modules/uuid",
+        "//packages/common/client-utils:client_utils_cjs",
+        "//packages/common/core-interfaces:core_interfaces_cjs",
+        "//packages/common/core-utils:core_utils_cjs",
+        "//packages/common/driver-definitions:driver_definitions_cjs",
+        "//packages/utils/telemetry-utils:telemetry_utils_cjs",
+    ],
+)
+
+# Default target builds both ESM and CJS
+filegroup(
+    name = "driver_utils",
+    srcs = [
+        ":driver_utils_esm",
+        ":driver_utils_cjs",
+    ],
+)

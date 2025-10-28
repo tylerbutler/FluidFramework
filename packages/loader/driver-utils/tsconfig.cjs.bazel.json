@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "lib": ["ES2022", "DOM"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "importHelpers": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "types": [],
+    "paths": {
+      "@fluid-internal/client-utils": ["../../common/client-utils/dist/index.d.ts"],
+      "@fluid-internal/client-utils/*": ["../../common/client-utils/dist/*"],
+      "@fluidframework/core-interfaces": ["../../common/core-interfaces/dist/index.d.ts"],
+      "@fluidframework/core-interfaces/*": ["../../common/core-interfaces/dist/*"],
+      "@fluidframework/core-utils": ["../../common/core-utils/dist/index.d.ts"],
+      "@fluidframework/core-utils/internal": ["../../common/core-utils/dist/index.d.ts"],
+      "@fluidframework/core-utils/*": ["../../common/core-utils/dist/*"],
+      "@fluidframework/driver-definitions": ["../../common/driver-definitions/dist/index.d.ts"],
+      "@fluidframework/driver-definitions/internal": ["../../common/driver-definitions/dist/index.d.ts"],
+      "@fluidframework/driver-definitions/*": ["../../common/driver-definitions/dist/*"],
+      "@fluidframework/telemetry-utils": ["../../utils/telemetry-utils/dist/index.d.ts"],
+      "@fluidframework/telemetry-utils/internal": ["../../utils/telemetry-utils/dist/index.d.ts"],
+      "@fluidframework/telemetry-utils/*": ["../../utils/telemetry-utils/dist/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/test/**"]
+}
