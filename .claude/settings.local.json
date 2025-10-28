@@ -47,7 +47,19 @@
       "Read(//home/tylerbu/.cache/bazel/_bazel_tylerbu/**)",
       "Read(//home/tylerbu/.cache/bazel/**)",
       "Bash(bazel sync:*)",
-      "Bash(1)"
+      "Bash(1)",
+      "Bash(bazel clean:*)",
+      "Bash(time bazel build:*)",
+      "Bash(for dir in /home/tylerbu/code/FluidWorkspace/bazel-init/packages/common/*/)",
+      "Bash(for dir in packages/common/*/)",
+      "Bash(jq:*)",
+      "Bash(for dir in packages/dds/*/)",
+      "Bash(find:*)",
+      "Bash(while read dir)",
+      "Bash(do jq -r '.name' \"$dir/package.json\")",
+      "Bash(for dir in packages/utils/*/)",
+      "Bash(bazel run:*)",
+      "WebFetch(domain:docs.aspect.build)"
     ],
     "deny": [],
     "ask": []

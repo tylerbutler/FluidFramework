@@ -1,0 +1,112 @@
+# BUILD.bazel for @fluid-internal/client-utils
+# Auto-generated with manual adjustments for npm dependencies and .cts compilation
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+package(default_visibility = ["//visibility:public"])
+
+# Link npm packages for this package
+npm_link_all_packages(name = "node_modules")
+
+# .cts → .cjs compilation (must build first, needed by ESM and CJS)
+# TypeScript automatically outputs .cjs for .cts files
+ts_project(
+    name = "client_utils_cts",
+    srcs = glob(["src/**/*.cts"]),
+    declaration = True,
+    declaration_map = True,
+    composite = True,
+    incremental = True,
+    source_map = True,
+    out_dir = "lib",  # Output to lib/ for ESM imports
+    root_dir = "src",
+    tsconfig = ":tsconfig.cts.bazel.json",
+    deps = [
+        ":node_modules/events_pkg",
+    ],
+)
+
+# ESM compilation
+ts_project(
+    name = "client_utils_esm",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = [
+            "src/test/**",
+            "src/**/*.cts",  # Exclude .cts files from ESM build
+        ],
+    ),
+    declaration = True,
+    declaration_map = True,
+    composite = True,
+    incremental = True,
+    source_map = True,
+    out_dir = "lib",
+    root_dir = "src",
+    tsconfig = ":tsconfig.bazel.json",
+    deps = [
+        ":client_utils_cts",  # Depend on .cts compilation output
+        ":node_modules/base64-js",
+        ":node_modules/buffer",
+        ":node_modules/events_pkg",
+        ":node_modules/sha.js",
+        "//packages/common/core-interfaces:core_interfaces_esm",
+        "//packages/common/core-utils:core_utils_esm",
+    ],
+)
+
+# .cts → .cjs compilation for CJS build (to dist/)
+ts_project(
+    name = "client_utils_cts_cjs",
+    srcs = glob(["src/**/*.cts"]),
+    declaration = True,
+    declaration_map = True,
+    composite = True,
+    incremental = True,
+    source_map = True,
+    out_dir = "dist",  # Output to dist/ for CJS imports
+    root_dir = "src",
+    tsconfig = ":tsconfig.cts.bazel.json",
+    deps = [
+        ":node_modules/events_pkg",
+    ],
+)
+
+# CommonJS compilation
+ts_project(
+    name = "client_utils_cjs",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = [
+            "src/test/**",
+            "src/**/*.cts",  # Exclude .cts files from CJS build
+        ],
+    ),
+    declaration = True,
+    declaration_map = True,
+    composite = True,
+    incremental = True,
+    source_map = True,
+    out_dir = "dist",
+    root_dir = "src",
+    tsconfig = ":tsconfig.cjs.bazel.json",
+    deps = [
+        ":client_utils_cts_cjs",  # Depend on .cts compilation output
+        ":node_modules/base64-js",
+        ":node_modules/buffer",
+        ":node_modules/events_pkg",
+        ":node_modules/sha.js",
+        "//packages/common/core-interfaces:core_interfaces_cjs",
+        "//packages/common/core-utils:core_utils_cjs",
+    ],
+)
+
+# Default target builds both ESM and CJS
+filegroup(
+    name = "client_utils",
+    srcs = [
+        ":client_utils_esm",
+        ":client_utils_cjs",
+    ],
+)

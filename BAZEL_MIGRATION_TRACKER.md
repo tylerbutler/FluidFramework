@@ -3,7 +3,7 @@
 **Project**: FluidFramework TypeScript Monorepo
 **Migration Start Date**: 2025-10-27
 **Current Phase**: Phase 2 - Expansion (In Progress)
-**Overall Progress**: 15% (10/66 sessions complete)
+**Overall Progress**: 17% (11/66 sessions complete)
 
 ---
 
@@ -13,7 +13,7 @@
 |-------|--------|-------------------|----------------|----------|
 | Phase 0: Setup | ✅ Complete | 2/2 | 2 | 100% |
 | Phase 1: PoC | ✅ Complete | 5/6 | 6 | 83% (API extraction deferred) |
-| Phase 2: Expansion | 🔄 In Progress | 3/15 | 10-15 | 20% |
+| Phase 2: Expansion | 🔄 In Progress | 4/15 | 10-15 | 27% |
 | Phase 3: Core Migration | ⏳ Not Started | 0/30 | 20-30 | 0% |
 | Phase 4: Integration | ⏳ Not Started | 0/8 | 5-8 | 0% |
 | Phase 5: Cleanup | ⏳ Not Started | 0/5 | 3-5 | 0% |
@@ -494,10 +494,10 @@ This pattern allows TypeScript to resolve both main exports and subpath exports 
 ## Phase 2: Expansion - Common & Utility Packages
 
 **Status**: 🔄 In Progress
-**Sessions**: 3/15 complete
+**Sessions**: 4/15 complete
 **Prerequisites**: Phase 1 complete
 **Estimated Time**: 15-25 hours
-**Time Spent**: 3.0 hours
+**Time Spent**: 4.5 hours
 
 ### Session 2.1: Migrate @fluidframework/core-utils
 **Status**: ✅ Complete
@@ -714,7 +714,119 @@ bazel build //packages/common/core-utils:core_utils_cjs
 
 ---
 
-### Sessions 2.4-2.15
+### Session 2.4: Establish .cts Compilation Pattern with Client-Utils
+**Status**: ✅ Complete
+**Date Started**: 2025-10-27
+**Date Completed**: 2025-10-27
+**Time Spent**: 1.5 hours
+**Prerequisites**: Session 2.3 complete
+**Estimated**: 1-2 hours
+
+#### Package Migrated
+- ✅ @fluid-internal/client-utils (.cts files + npm dependencies)
+
+#### Tasks
+- [x] Analyze client-utils package structure
+- [x] Create BUILD.bazel with npm dependencies (base64-js, buffer, events_pkg, sha.js)
+- [x] Solve .cts → .cjs compilation pattern
+- [x] Create inline tsconfig files with rootDirs configuration
+- [x] Build and validate (ESM + CJS)
+- [x] Validate all migrated packages build together
+
+#### Deliverables
+- [x] BUILD.bazel for client-utils with .cts compilation
+- [x] .cts compilation pattern established (rootDirs solution)
+- [x] ESM: 14 .js + 14 .d.ts + source maps + eventEmitter.cjs
+- [x] CJS: 14 .js + 14 .d.ts + source maps + eventEmitter.cjs
+- [x] All 5 migrated packages build together (< 1s cached)
+- [x] SESSION_2.4_NOTES.md - comprehensive .cts pattern documentation
+- [x] Git commit: `feat(bazel): migrate @fluid-internal/client-utils with .cts pattern` (pending)
+
+#### Validation
+```bash
+# Build client-utils ✅
+bazel build //packages/common/client-utils:client_utils  # ✅ Success
+
+# Build all migrated packages together ✅
+bazel build //packages/common/core-interfaces:core_interfaces //packages/common/driver-definitions:driver_definitions //packages/common/container-definitions:container_definitions //packages/common/core-utils:core_utils //packages/common/client-utils:client_utils  # ✅ < 1s cached
+```
+
+#### The .cts Compilation Challenge & Solution
+
+**Problem**: TypeScript source files import from generated `.cjs` files:
+```typescript
+import { EventEmitter } from "./eventEmitter.cjs";
+```
+
+The `.cts` file compiles to `.cjs` + `.d.cts`, but TypeScript can't find the declaration file because it looks in `src/` while the file is in `lib/`.
+
+**Solution**: Use `rootDirs` in tsconfig to treat `src/` and `lib/` as a unified virtual directory:
+```json
+{
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./lib",
+    "rootDirs": ["./src", "./lib"]  // ← Key insight!
+  }
+}
+```
+
+This allows TypeScript to find `lib/eventEmitter.d.cts` when resolving `./eventEmitter.cjs` from `src/indexBrowser.ts`.
+
+#### Build Configuration
+```python
+# 1. Compile .cts files first (separate targets for ESM and CJS)
+ts_project(
+    name = "client_utils_cts",
+    srcs = glob(["src/**/*.cts"]),
+    out_dir = "lib",
+    tsconfig = ":tsconfig.cts.bazel.json",
+    deps = [":node_modules/events_pkg"],
+)
+
+ts_project(
+    name = "client_utils_cts_cjs",
+    out_dir = "dist",  # Separate output for CJS
+    ...
+)
+
+# 2. Main TypeScript compilation depends on .cts outputs
+ts_project(
+    name = "client_utils_esm",
+    deps = [
+        ":client_utils_cts",  # Ensures .cts builds first
+        ":node_modules/base64-js",
+        ":node_modules/buffer",
+        ":node_modules/events_pkg",
+        ":node_modules/sha.js",
+        "//packages/common/core-interfaces:core_interfaces_esm",
+        "//packages/common/core-utils:core_utils_esm",
+    ],
+)
+```
+
+#### Files Created
+- `packages/common/client-utils/BUILD.bazel`
+- `packages/common/client-utils/tsconfig.bazel.json` (ESM with rootDirs)
+- `packages/common/client-utils/tsconfig.cjs.bazel.json` (CJS with rootDirs)
+- `packages/common/client-utils/tsconfig.cts.bazel.json` (CTS specific)
+- `SESSION_2.4_NOTES.md` - comprehensive investigation and solution documentation
+
+#### Key Learnings
+1. **rootDirs is powerful**: Enables TypeScript to resolve modules across multiple directories
+2. **User feedback matters**: Question "but typescript should handle the CJS import" led to breakthrough
+3. **.cts files work in Bazel**: Just need proper tsconfig configuration
+4. **Build order via deps**: Bazel's dependency system ensures correct compilation sequence
+5. **Pattern reusability**: This solution applies to any future packages with .cts files
+
+#### Next Steps
+1. **Session 2.5+**: Migrate remaining Phase 2 packages
+2. **Pattern**: Document .cts compilation in BAZEL_CONVENTIONS.md
+3. **Build generation script**: Add .cts detection and rootDirs configuration
+
+---
+
+### Sessions 2.5-2.15
 **Status**: ⏳ Not Started
 **Note**: Will be detailed as sessions progress
 
@@ -959,6 +1071,14 @@ None yet
   - Established pattern: local `:node_modules/uuid` targets
   - Created SESSION_2.3_NPM_DEPENDENCY_PATTERN.md - comprehensive pattern docs
   - Pattern ready for 50+ packages with npm dependencies
+  - Time: 1.5 hours
+- **Session 2.4 COMPLETE**: Migrate @fluid-internal/client-utils with .cts Pattern
+  - Migrated client-utils with npm deps + .cts files
+  - Solved .cts → .cjs compilation with TypeScript rootDirs
+  - Pattern established: rootDirs for cross-directory module resolution
+  - ESM + CJS builds successful (14 files each + .cjs files)
+  - All 5 migrated packages build together successfully
+  - Created SESSION_2.4_NOTES.md - comprehensive .cts pattern documentation
   - Time: 1.5 hours
 
 ---
