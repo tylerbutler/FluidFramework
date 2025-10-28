@@ -1,9 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
 **Last Updated**: 2025-10-28
-**Current Phase**: Phase 3 In Progress | Runtime Migrations Active
-**Overall Progress**: 35% (16/46 core sessions complete)
-**Breakthrough**: TS1479 SOLVED - runtime-definitions migrated successfully!
+**Current Phase**: Phase 3 In Progress | Runtime Migrations Accelerating
+**Overall Progress**: 37% (17/46 core sessions complete)
+**Progress**: 4 more runtime packages migrated - datastore-definitions, container-runtime-definitions, runtime-utils!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,26 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 8% | 1.5/20 (runtime-definitions ✅) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 13% | 2.5/20 (5 runtime packages ✅) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.19: Three More Runtime Packages Migrated ✅ (2025-10-28)
+- **Status**: ✅ Complete - Runtime migrations accelerating
+- **Packages**:
+  - @fluidframework/datastore-definitions ✅
+  - @fluidframework/container-runtime-definitions ✅
+  - @fluidframework/runtime-utils ✅
+- **Build Results**: All three packages build successfully
+- **Key Learnings**:
+  - runtime-utils requires `exactOptionalPropertyTypes: false` (matches original tsconfig)
+  - TS1479 fix pattern continues to work perfectly
+  - Dependency chain approach enables efficient parallel migration
+- **Total Runtime Packages**: 5/8+ migrated (62.5%)
 
 ### Session 2.18: Runtime Migrations Resume - runtime-definitions ✅ (2025-10-28)
 - **Status**: ✅ Complete - First runtime package migrated!
@@ -108,22 +121,22 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.19: Continue Runtime Migrations**
-- **Goal**: Migrate next runtime packages in dependency order
-- **Status**: Runtime migrations now unblocked - TS1479 fix proven effective
+**Session 2.20: Continue Runtime Package Migrations**
+- **Goal**: Complete remaining runtime packages
+- **Status**: 5/8+ runtime packages migrated, strong momentum
 - **Next Packages**:
-  - @fluidframework/datastore-definitions (depends on runtime-definitions)
-  - @fluidframework/container-runtime-definitions (depends on runtime-definitions)
-  - @fluidframework/runtime-utils (depends on runtime-definitions)
+  - @fluidframework/test-runtime-utils (depends on runtime-utils)
+  - @fluidframework/datastore (depends on runtime-utils)
+  - Additional runtime packages as dependencies allow
 - **Approach**:
-  1. Apply TS1479 fix pattern (package.json in srcs)
-  2. Follow dependency order for migration
-  3. Build and validate each package
-- **Success Pattern**: TS1479 fix applied to 4 packages (id-compressor, replay-driver, runtime-definitions) - 100% success rate
+  1. Continue dependency-order migration
+  2. Apply TS1479 fix + tsconfig customization pattern
+  3. Build and validate
+- **Success Pattern**: 7 packages with TS1479 fix - 100% success rate
 
 ---
 
-## Migrated Packages (18 attempted, 17 buildable, 1 deferred)
+## Migrated Packages (21 attempted, 20 buildable, 1 deferred)
 
 ### Phase 1 - PoC (3 packages)
 1. @fluidframework/core-interfaces ✅
@@ -152,19 +165,20 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 14. @fluidframework/driver-utils ✅
 15. @fluid-private/test-loader-utils ✅
 
-### Phase 3 - Runtime (3 buildable, 0 blocked)
+### Phase 3 - Runtime (6 buildable, 0 blocked)
 16. @fluidframework/id-compressor ✅ (TS1479 fixed - Session 2.17)
 17. @fluidframework/runtime-definitions ✅ (Session 2.18)
+18. @fluidframework/datastore-definitions ✅ (Session 2.19)
+19. @fluidframework/container-runtime-definitions ✅ (Session 2.19)
+20. @fluidframework/runtime-utils ✅ (Session 2.19 - exactOptionalPropertyTypes: false)
 
-**Next runtime packages (unblocked and ready):**
-- @fluidframework/datastore-definitions (depends on runtime-definitions ✅)
-- @fluidframework/container-runtime-definitions (depends on runtime-definitions ✅)
-- @fluidframework/runtime-utils (depends on runtime-definitions ✅)
-- @fluidframework/test-runtime-utils (depends on runtime-utils)
-- @fluidframework/datastore (depends on runtime-utils)
+**Next runtime packages (dependencies ready):**
+- @fluidframework/test-runtime-utils (depends on runtime-utils ✅)
+- @fluidframework/datastore (depends on runtime-utils ✅)
 - @fluidframework/container-runtime (depends on datastore)
+- Additional runtime packages in dependency order
 
-**Status**: ✅ **Runtime migrations ACTIVE - TS1479 fix proven effective**
+**Status**: ✅ **Runtime migrations ACCELERATING - 5 packages migrated, strong momentum**
 
 *Note: Session numbers may not align exactly due to parallel migrations and tooling sessions*
 
