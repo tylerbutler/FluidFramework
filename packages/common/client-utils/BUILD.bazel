@@ -1,16 +1,16 @@
 # BUILD.bazel for @fluid-internal/client-utils
-# Auto-generated with manual adjustments for npm dependencies and .cts compilation
+# Retrofitted for npm_package approach (Session 2.15)
 
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 
 package(default_visibility = ["//visibility:public"])
 
-# Link npm packages for this package
+# Link npm packages for this workspace package
 npm_link_all_packages(name = "node_modules")
 
-# .cts → .cjs compilation (must build first, needed by ESM and CJS)
-# TypeScript automatically outputs .cjs for .cts files
 ts_project(
     name = "client_utils_cts",
     srcs = glob(["src/**/*.cts"]),
@@ -103,6 +103,27 @@ ts_project(
 )
 
 # Default target builds both ESM and CJS
+
+# js_library wrapping compiled outputs
+# Provides JsInfo for npm_package and includes package.json with exports field
+js_library(
+    name = "lib",
+    srcs = [
+        ":client_utils_esm",
+        ":client_utils_cjs",
+        "package.json",
+    ],
+)
+
+# npm_package makes this linkable via npm_link_all_packages
+# This enables TypeScript to resolve subpath exports (/internal, /legacy, etc.)
+npm_package(
+    name = "pkg",
+    srcs = [":lib"],
+    visibility = ["//visibility:public"],
+)
+
+# Legacy filegroup for backward compatibility
 filegroup(
     name = "client_utils",
     srcs = [

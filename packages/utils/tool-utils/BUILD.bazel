@@ -1,7 +1,9 @@
 # BUILD.bazel for @fluidframework/tool-utils
-# Auto-generated for Bazel migration - Session 2.11
+# Retrofitted for npm_package approach (Session 2.15)
 
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 
 package(default_visibility = ["//visibility:public"])
@@ -9,7 +11,6 @@ package(default_visibility = ["//visibility:public"])
 # Link npm packages for this workspace package
 npm_link_all_packages(name = "node_modules")
 
-# ESM compilation
 ts_project(
     name = "tool_utils_esm",
     srcs = glob(
@@ -64,6 +65,27 @@ ts_project(
 )
 
 # Default target builds both ESM and CJS
+
+# js_library wrapping compiled outputs
+# Provides JsInfo for npm_package and includes package.json with exports field
+js_library(
+    name = "lib",
+    srcs = [
+        ":tool_utils_esm",
+        ":tool_utils_cjs",
+        "package.json",
+    ],
+)
+
+# npm_package makes this linkable via npm_link_all_packages
+# This enables TypeScript to resolve subpath exports (/internal, /legacy, etc.)
+npm_package(
+    name = "pkg",
+    srcs = [":lib"],
+    visibility = ["//visibility:public"],
+)
+
+# Legacy filegroup for backward compatibility
 filegroup(
     name = "tool_utils",
     srcs = [

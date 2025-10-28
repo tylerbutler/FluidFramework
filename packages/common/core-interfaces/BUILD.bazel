@@ -1,10 +1,15 @@
 # BUILD.bazel for @fluidframework/core-interfaces
-# Auto-generated - Minimal PoC version
+# Prototype: js_library + npm_package approach for workspace package resolution
 
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@npm//:mocha/package_json.bzl", mocha_bin = "bin")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@npm//:defs.bzl", "npm_link_all_packages")
 
 package(default_visibility = ["//visibility:public"])
+
+# Link npm packages for this workspace package
+npm_link_all_packages(name = "node_modules")
 
 # ESM compilation
 ts_project(
@@ -46,105 +51,27 @@ ts_project(
     tsconfig = ":tsconfig.cjs.bazel.json",
 )
 
-# Test compilation (ESM)
-ts_project(
-    name = "core_interfaces_test",
-    srcs = glob(
-        ["src/test/**/*.ts"],
-        exclude = [
-            "src/test/types/**",  # Type validation tests require build-tools
-            "src/test/mocha.d.ts",  # Type declaration file
-        ],
-    ),
-    declaration = False,
-    source_map = True,
-    incremental = True,
-    out_dir = "lib/test",
-    root_dir = "src/test",
-    tsconfig = "src/test/tsconfig.bazel.json",
-    transpiler = "tsc",
-    deps = [
+# js_library wrapping the compiled outputs
+# This provides JsInfo for npm_package
+js_library(
+    name = "lib",
+    srcs = [
         ":core_interfaces_esm",
-        "//:node_modules/mocha",
+        ":core_interfaces_cjs",
+        "package.json",  # Include package.json with exports field
     ],
 )
 
-# Mocha test runner
-mocha_bin.mocha_test(
-    name = "test",
-    args = [
-        "lib/test/**/*.spec.js",
-        "--exit",
-    ],
-    data = [
-        ":core_interfaces_test",
-    ],
+# npm_package makes this linkable via npm_link_all_packages
+# This target is what gets linked in the node_modules
+npm_package(
+    name = "pkg",
+    srcs = [":lib"],
+    # package name is read from package.json
+    visibility = ["//visibility:public"],
 )
 
-# ============================================================================
-# API Extraction Targets (Session 2.14)
-# ============================================================================
-# API extraction workflow:
-# 1. Build TypeScript (core_interfaces_esm) generates .d.ts files in lib/
-# 2. flub generate entrypoints creates lib/public.d.ts and lib/legacy.d.ts
-# 3. API Extractor runs on the entrypoint files to generate API reports
-#
-# These are `bazel run` targets that execute in the workspace directory.
-# They modify source files in-place (similar to format targets).
-
-# Generate entrypoint files (public.d.ts, legacy.d.ts) using flub
-# Run with: bazel run //packages/common/core-interfaces:generate_entrypoints
-sh_binary(
-    name = "generate_entrypoints",
-    srcs = ["//tools/bazel:run-flub-entrypoints.sh"],
-    args = [
-        "packages/common/core-interfaces",
-        "lib",
-    ],
-    data = [
-        ":core_interfaces_esm",
-        "//tools/bazel:run-flub-entrypoints.sh",
-    ],
-    tags = ["api-extraction"],
-)
-
-# Run API Extractor for current API reports
-# Run with: bazel run //packages/common/core-interfaces:api_reports_current
-sh_binary(
-    name = "api_reports_current",
-    srcs = ["//tools/bazel:run-api-extractor.sh"],
-    args = [
-        "packages/common/core-interfaces",
-        "api-extractor/api-extractor.current.json",
-    ],
-    data = [
-        ":core_interfaces_esm",
-        "api-extractor/api-extractor.current.json",
-        "tsconfig.json",
-        "//tools/bazel:run-api-extractor.sh",
-    ] + glob(["api-report/*.api.md"]),
-    tags = ["api-extraction"],
-)
-
-# Run API Extractor for legacy API reports
-# Run with: bazel run //packages/common/core-interfaces:api_reports_legacy
-sh_binary(
-    name = "api_reports_legacy",
-    srcs = ["//tools/bazel:run-api-extractor.sh"],
-    args = [
-        "packages/common/core-interfaces",
-        "api-extractor/api-extractor.legacy.json",
-    ],
-    data = [
-        ":core_interfaces_esm",
-        "api-extractor/api-extractor.legacy.json",
-        "tsconfig.json",
-        "//tools/bazel:run-api-extractor.sh",
-    ] + glob(["api-report/*.api.md"]),
-    tags = ["api-extraction"],
-)
-
-# Default target builds both ESM and CJS
+# Legacy filegroup for backward compatibility
 filegroup(
     name = "core_interfaces",
     srcs = [

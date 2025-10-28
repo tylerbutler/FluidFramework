@@ -1,4 +1,4 @@
-# BUILD.bazel for @fluidframework/driver-base
+# BUILD.bazel for @fluidframework/replay-driver
 # Retrofitted for npm_package approach (Session 2.15)
 
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
@@ -12,22 +12,29 @@ package(default_visibility = ["//visibility:public"])
 npm_link_all_packages(name = "node_modules")
 
 ts_project(
-    name = "driver_base_esm",
+    name = "replay_driver_esm",
     srcs = glob(
         ["src/**/*.ts"],
-        exclude = ["src/test/**"],
+        exclude = [
+            "src/test/**",
+            "src/cjs/**",
+        ],
     ),
     declaration = True,
     declaration_map = True,
     source_map = True,
     composite = True,
-    resolve_json_module = True,
+    incremental = True,
     out_dir = "lib",
     root_dir = "src",
     tsconfig = ":tsconfig.bazel.json",
     deps = [
-        ":node_modules/socket.io-client",
-        "//packages/common/client-utils:client_utils_cts",
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/driver-utils",
+        ":node_modules/@fluidframework/telemetry-utils",
         "//packages/common/client-utils:client_utils_esm",
         "//packages/common/core-interfaces:core_interfaces_esm",
         "//packages/common/core-utils:core_utils_esm",
@@ -39,22 +46,29 @@ ts_project(
 
 # CommonJS compilation
 ts_project(
-    name = "driver_base_cjs",
+    name = "replay_driver_cjs",
     srcs = glob(
         ["src/**/*.ts"],
-        exclude = ["src/test/**"],
+        exclude = [
+            "src/test/**",
+            "src/cjs/**",
+        ],
     ),
     declaration = True,
     declaration_map = True,
     source_map = True,
     composite = True,
-    resolve_json_module = True,
+    incremental = True,
     out_dir = "dist",
     root_dir = "src",
     tsconfig = ":tsconfig.cjs.bazel.json",
     deps = [
-        ":node_modules/socket.io-client",
-        "//packages/common/client-utils:client_utils_cts_cjs",
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/driver-utils",
+        ":node_modules/@fluidframework/telemetry-utils",
         "//packages/common/client-utils:client_utils_cjs",
         "//packages/common/core-interfaces:core_interfaces_cjs",
         "//packages/common/core-utils:core_utils_cjs",
@@ -64,6 +78,40 @@ ts_project(
     ],
 )
 
+# Generate entrypoint files (public.d.ts, legacy.d.ts) using flub
+# Run with: bazel run //packages/drivers/replay-driver:generate_entrypoints
+sh_binary(
+    name = "generate_entrypoints",
+    srcs = ["//tools/bazel:run-flub-entrypoints.sh"],
+    args = [
+        "packages/drivers/replay-driver",
+        "lib",
+    ],
+    data = [
+        ":replay_driver_esm",
+        "//tools/bazel:run-flub-entrypoints.sh",
+    ],
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor for current API reports
+# Run with: bazel run //packages/drivers/replay-driver:api_reports
+sh_binary(
+    name = "api_reports",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/drivers/replay-driver",
+        "api-extractor.json",
+    ],
+    data = [
+        ":replay_driver_esm",
+        "api-extractor.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
 # Default target builds both ESM and CJS
 
 # js_library wrapping compiled outputs
@@ -71,8 +119,8 @@ ts_project(
 js_library(
     name = "lib",
     srcs = [
-        ":driver_base_esm",
-        ":driver_base_cjs",
+        ":replay_driver_esm",
+        ":replay_driver_cjs",
         "package.json",
     ],
 )
@@ -87,9 +135,9 @@ npm_package(
 
 # Legacy filegroup for backward compatibility
 filegroup(
-    name = "driver_base",
+    name = "replay_driver",
     srcs = [
-        ":driver_base_esm",
-        ":driver_base_cjs",
+        ":replay_driver_esm",
+        ":replay_driver_cjs",
     ],
 )

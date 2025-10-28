@@ -1,10 +1,16 @@
 # BUILD.bazel for @fluidframework/container-definitions
+# Retrofitted for npm_package approach (Session 2.15)
 
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@npm//:defs.bzl", "npm_link_all_packages")
 
 package(default_visibility = ["//visibility:public"])
 
-# ESM compilation
+# Link npm packages for this workspace package
+npm_link_all_packages(name = "node_modules")
+
 ts_project(
     name = "container_definitions_esm",
     srcs = glob(
@@ -49,6 +55,27 @@ ts_project(
 )
 
 # Default target builds both ESM and CJS
+
+# js_library wrapping compiled outputs
+# Provides JsInfo for npm_package and includes package.json with exports field
+js_library(
+    name = "lib",
+    srcs = [
+        ":container_definitions_esm",
+        ":container_definitions_cjs",
+        "package.json",
+    ],
+)
+
+# npm_package makes this linkable via npm_link_all_packages
+# This enables TypeScript to resolve subpath exports (/internal, /legacy, etc.)
+npm_package(
+    name = "pkg",
+    srcs = [":lib"],
+    visibility = ["//visibility:public"],
+)
+
+# Legacy filegroup for backward compatibility
 filegroup(
     name = "container_definitions",
     srcs = [

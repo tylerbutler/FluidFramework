@@ -61,7 +61,16 @@
       "Bash(bazel run:*)",
       "WebFetch(domain:docs.aspect.build)",
       "Bash(xargs:*)",
-      "Bash(pnpm run esnext:*)"
+      "Bash(pnpm run esnext:*)",
+      "Bash(pnpm run api-reports-current:*)",
+      "Bash(pnpm run generate-entrypoints-esnext)",
+      "Bash(./node_modules/.bin/flub:*)",
+      "Bash(while IFS= read -r dir)",
+      "Bash(do [ -f \"packages/drivers/$dir/BUILD.bazel\" ])",
+      "Bash(do:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(./tools/bazel/retrofit-npm-package.sh:*)",
+      "Bash(for dir in packages/common/client-utils packages/common/container-definitions packages/common/core-interfaces packages/common/core-utils packages/common/driver-definitions packages/drivers/driver-base packages/drivers/driver-web-cache packages/drivers/odsp-driver-definitions packages/drivers/routerlicious-urlResolver packages/loader/driver-utils packages/loader/test-loader-utils packages/utils/odsp-doclib-utils packages/utils/telemetry-utils packages/utils/tool-utils packages/drivers/replay-driver)"
     ],
     "deny": [],
     "ask": []
