@@ -1,9 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
 **Last Updated**: 2025-10-28
-**Current Phase**: Phase 3 In Progress | Runtime Package Completion Near
-**Overall Progress**: 39% (18/46 core sessions complete)
-**Progress**: 2 major runtime packages complete - datastore and container-runtime! 7/8 runtime packages migrated!
+**Current Phase**: Phase 3 In Progress | 🎉 RUNTIME LAYER 100% COMPLETE! 🎉
+**Overall Progress**: 43% (19/46 core sessions complete)
+**Progress**: Session 2.21 complete - Group 1 drivers + ALL 8 runtime packages migrated!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,33 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 15% | 3/20 (7 runtime packages ✅) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 25% | 5/17 groups (8/8 runtime ✅, 4/5 Group 1 ✅) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.21: 🎉 Group 1 Drivers + Runtime Layer 100% Complete! 🎉 (2025-10-28)
+- **Status**: ✅ Complete - **MILESTONE: ALL RUNTIME PACKAGES MIGRATED!**
+- **Driver Packages (Group 1 - 4/5 complete)**:
+  - @fluidframework/tinylicious-driver ✅ (4 ws_deps)
+  - @fluidframework/debugger ✅ (4 ws_deps)
+  - @fluidframework/file-driver ✅ (6 ws_deps)
+  - @fluidframework/routerlicious-driver ✅ (7 ws_deps) - **CRITICAL: Unblocked test-runtime-utils**
+- **Runtime Package (FINAL)**:
+  - @fluidframework/test-runtime-utils ✅ (13 ws_deps) - **8/8 RUNTIME COMPLETE!**
+- **Build Results**: All 5 packages build successfully
+- **Key Learnings**:
+  - routerlicious-driver: Special .cts file handling with `resolvePackageJsonExports/Imports: true`
+  - test-runtime-utils: Preserved strict type checking (`exactOptionalPropertyTypes: true`)
+  - Parallel agent execution successfully migrated 4 driver packages simultaneously
+  - TS1479 fix pattern continues to work perfectly (9th consecutive success)
+- **Deferred**: @fluidframework/odsp-urlresolver (blocked by odsp-driver - Group 10 dependency)
+- **Total Packages**: 27/88 migrated (30.7%)
+- **Runtime**: 8/8 (100%) ✅✅✅
+- **Drivers**: 9/12 (75%)
 
 ### Session 2.20: Major Runtime Packages Complete - datastore & container-runtime ✅ (2025-10-28)
 - **Status**: ✅ Complete - 7/8 runtime packages now migrated!
@@ -135,21 +155,24 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.21: Driver Package Migrations or DDS Packages**
-- **Goal**: Complete driver packages or start DDS migrations
-- **Runtime Status**: 7/8 packages migrated (87.5% complete)
-- **Blocked Package**: test-runtime-utils (needs routerlicious-driver)
-- **Options**:
-  1. **Driver packages**: Migrate routerlicious-driver to unblock test-runtime-utils
-  2. **DDS packages**: Start migrating DDS packages (16 packages total)
+**Session 2.22: Group 2 - Simple DDS Packages**
+- **Goal**: Migrate 5 simple DDS packages in parallel
+- **Runtime Status**: 8/8 packages migrated (100% complete ✅)
+- **Group 2 Packages**:
+  1. @fluid-experimental/ink (6 ws_deps)
+  2. @fluidframework/shared-summary-block (6 ws_deps)
+  3. @fluidframework/cell (7 ws_deps)
+  4. @fluidframework/counter (7 ws_deps)
+  5. @fluidframework/register-collection (8 ws_deps)
 - **Approach**:
+  - Parallel Task agents (one per package)
   - Continue established pattern (TS1479 fix + tsconfig customization)
-  - Build and validate each package
-- **Success Pattern**: 9 packages with custom tsconfig - 100% success rate
+  - Build and validate all packages
+- **Success Pattern**: 10 consecutive packages with TS1479 fix - 100% success rate
 
 ---
 
-## Migrated Packages (23 attempted, 22 buildable)
+## Migrated Packages (27 attempted, 26 buildable)
 
 ### Phase 1 - PoC (3 packages)
 1. @fluidframework/core-interfaces ✅
@@ -178,7 +201,7 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 14. @fluidframework/driver-utils ✅
 15. @fluid-private/test-loader-utils ✅
 
-### Phase 3 - Runtime (7/8 buildable - 87.5% complete)
+### Phase 3 - Runtime (8/8 buildable - 100% COMPLETE ✅)
 16. @fluidframework/id-compressor ✅ (TS1479 fixed - Session 2.17)
 17. @fluidframework/runtime-definitions ✅ (Session 2.18)
 18. @fluidframework/datastore-definitions ✅ (Session 2.19)
@@ -186,11 +209,18 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 20. @fluidframework/runtime-utils ✅ (Session 2.19 - exactOptionalPropertyTypes: false)
 21. @fluidframework/datastore ✅ (Session 2.20)
 22. @fluidframework/container-runtime ✅ (Session 2.20 - noUncheckedIndexedAccess: false, exactOptionalPropertyTypes: false)
+23. @fluidframework/test-runtime-utils ✅ (Session 2.21 - exactOptionalPropertyTypes: true)
 
-**Remaining runtime packages:**
-- @fluidframework/test-runtime-utils (blocked: needs routerlicious-driver)
+**Status**: ✅ **Runtime migrations 100% COMPLETE - ALL 8 packages migrated!** 🎉
 
-**Status**: ✅ **Runtime migrations NEAR COMPLETE - 7/8 packages migrated (87.5%)**
+### Phase 3 - Group 1 Drivers (4/5 buildable - 80% complete)
+24. @fluidframework/tinylicious-driver ✅ (Session 2.21)
+25. @fluidframework/debugger ✅ (Session 2.21)
+26. @fluidframework/file-driver ✅ (Session 2.21)
+27. @fluidframework/routerlicious-driver ✅ (Session 2.21 - .cts file handling)
+
+**Deferred from Group 1:**
+- @fluidframework/odsp-urlresolver (blocked: needs @fluidframework/odsp-driver from Group 10)
 
 *Note: Session numbers may not align exactly due to parallel migrations and tooling sessions*
 
