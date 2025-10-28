@@ -946,13 +946,15 @@ bazel build //packages/common/core-interfaces:core_interfaces //packages/common/
 
 ---
 
-### Session 2.7: Migrate @fluidframework/routerlicious-urlresolver (PLANNED)
-**Status**: ⏳ Not Started
+### Session 2.7: Migrate @fluidframework/routerlicious-urlresolver
+**Status**: ✅ Complete
+**Date Started**: 2025-10-27
+**Date Completed**: 2025-10-27
+**Time Spent**: 1 hour
 **Prerequisites**: Session 2.6 complete
-**Estimated**: 30-45 minutes
 
-#### Package to Migrate
-- ⏳ @fluidframework/routerlicious-urlresolver (second drivers package)
+#### Package Migrated
+- ✅ @fluidframework/routerlicious-urlresolver (second drivers package)
 
 #### Package Details
 - **Path**: packages/drivers/routerlicious-urlResolver
@@ -961,33 +963,50 @@ bazel build //packages/common/core-interfaces:core_interfaces //packages/common/
   - @fluidframework/core-utils
   - @fluidframework/driver-definitions
 - **NPM Dependencies**: 1 (nconf)
-- **Source Files**: ~5 TypeScript files
-- **Complexity**: SIMPLE
+- **Source Files**: 3 TypeScript files + 1 .cts file
+- **Complexity**: MEDIUM (has .cts files)
 
-#### Tasks
-- [ ] Create inline tsconfig files with path mappings
-- [ ] Add npm_link_all_packages for nconf dependency
-- [ ] Create BUILD.bazel with workspace and npm dependencies
-- [ ] Build and validate (ESM + CJS)
-- [ ] Verify all migrated packages build together
+#### Tasks Completed
+- [x] Create inline tsconfig files with path mappings ✅
+- [x] Add npm_link_all_packages for nconf dependency ✅
+- [x] Create BUILD.bazel with workspace and npm dependencies ✅
+- [x] Build and validate (ESM + CJS) ✅
+- [x] Verify all migrated packages build together ✅
 
-#### Expected Deliverables
-- [ ] BUILD.bazel for routerlicious-urlresolver created
-- [ ] ESM + CJS builds successful (~5 files each)
-- [ ] All 8 migrated packages build together (< 1s cached)
-- [ ] Git commit: `feat(bazel): migrate @fluidframework/routerlicious-urlresolver (Session 2.7)`
+#### Deliverables
+- [x] BUILD.bazel for routerlicious-urlresolver created ✅
+- [x] tsconfig.bazel.json (ESM), tsconfig.cjs.bazel.json (CJS), tsconfig.cts.bazel.json (.cts) ✅
+- [x] ESM + CJS builds successful (4 files each + .cjs + source maps) ✅
+- [x] All 7 migrated packages build together (4.163s, 168 processes) ✅
+- [x] Git commit: `feat(bazel): migrate @fluidframework/routerlicious-urlresolver (Session 2.7)` ✅
 
-#### Strategic Value
-- Continues drivers category momentum
-- Establishes urlresolver pattern
-- Simple package for quick win
-- Prepares for more complex drivers packages
+#### Key Learnings
+- **TypeScript Path Mappings**: Must use correct relative paths based on package location
+  - From `packages/drivers/` to `packages/common/`: use `../../common/`
+  - From `packages/utils/` to `packages/common/`: use `../../common/`
+  - Cannot use `../common/` - must traverse up to workspace root first
+- **@types Packages**: Use `"types": []` instead of `"types": ["node"]` (follows client-utils pattern)
+  - Avoids need for @types packages in Bazel deps
+  - Consistent with Session 2.4 pattern
+- **.cts Files**: Successfully applied rootDirs pattern from Session 2.4
+  - Separate ts_project targets for .cts compilation (ESM and CJS versions)
+  - rootDirs enables module resolution between src/ and lib/ (or dist/)
 
-#### Alternative Candidates (for reference)
-See [SESSION_2.7_CANDIDATES.md](./SESSION_2.7_CANDIDATES.md) for detailed analysis:
-- **driver-utils** (loader, high impact, unblocks 9 packages)
-- **synthesize** (framework, very simple, 4 files)
-- **id-compressor** (runtime, has .cts files)
+#### Validation
+```bash
+# Build routerlicious-urlresolver ✅
+bazel build //packages/drivers/routerlicious-urlResolver:routerlicious_urlresolver  # ✅ Success (0.998s)
+
+# Build all 7 migrated packages ✅
+bazel build //packages/common/core-interfaces:core_interfaces \
+  //packages/common/core-utils:core_utils \
+  //packages/common/driver-definitions:driver_definitions \
+  //packages/common/client-utils:client_utils \
+  //packages/utils/telemetry-utils:telemetry_utils \
+  //packages/drivers/odsp-driver-definitions:odsp_driver_definitions \
+  //packages/drivers/routerlicious-urlResolver:routerlicious_urlresolver
+# ✅ Success (4.163s, 168 processes)
+```
 
 ---
 
@@ -1264,6 +1283,15 @@ None yet
   - Pattern established for drivers category (same as common/utils)
   - Successfully expanded migration beyond common and utils categories
   - Time: 0.5 hours
+- **Session 2.7 COMPLETE**: Migrate @fluidframework/routerlicious-urlresolver (Second drivers Package)
+  - Migrated second drivers package with .cts files + npm + workspace dependencies
+  - Fixed TypeScript path mappings: must use correct relative paths (../../common/ from packages/drivers/)
+  - Fixed @types package issue: use `"types": []` instead of `"types": ["node"]` (follows client-utils pattern)
+  - Applied .cts rootDirs pattern from Session 2.4
+  - ESM + CJS builds successful (4 files each + .cjs + source maps)
+  - All 7 migrated packages build together successfully (4.163s, 168 processes)
+  - Pattern validated: drivers packages work same as common/utils packages
+  - Time: 1 hour
 
 ---
 
@@ -1290,5 +1318,5 @@ None yet
 ---
 
 **Last Updated**: 2025-10-27
-**Next Session**: Session 2.6+ - Continue migrating Phase 2 packages
-**Document Version**: 1.8
+**Next Session**: Session 2.8 - Continue migrating Phase 2 packages
+**Document Version**: 1.9

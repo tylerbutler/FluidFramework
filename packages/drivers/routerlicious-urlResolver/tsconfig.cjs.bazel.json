@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": false,
+    "esModuleInterop": true,
+    "exactOptionalPropertyTypes": true,
+    "incremental": true,
+    "inlineSources": true,
+    "jsx": "react",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "noImplicitAny": false,
+    "noUncheckedIndexedAccess": false,
+    "noUnusedLocals": true,
+    "outDir": "./dist",
+    "pretty": true,
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "rootDirs": ["./src", "./dist"],
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2021",
+    "types": [],
+    "paths": {
+      "@fluidframework/core-interfaces": ["../../common/core-interfaces/dist/index.d.ts"],
+      "@fluidframework/core-interfaces/*": ["../../common/core-interfaces/dist/*"],
+      "@fluidframework/core-utils": ["../../common/core-utils/dist/index.d.ts"],
+      "@fluidframework/core-utils/internal": ["../../common/core-utils/dist/index.d.ts"],
+      "@fluidframework/core-utils/*": ["../../common/core-utils/dist/*"],
+      "@fluidframework/driver-definitions": ["../../common/driver-definitions/dist/index.d.ts"],
+      "@fluidframework/driver-definitions/internal": ["../../common/driver-definitions/dist/index.d.ts"],
+      "@fluidframework/driver-definitions/*": ["../../common/driver-definitions/dist/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/test/**/*"]
+}
