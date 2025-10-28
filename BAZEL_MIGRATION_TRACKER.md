@@ -3,7 +3,7 @@
 **Project**: FluidFramework TypeScript Monorepo
 **Migration Start Date**: 2025-10-27
 **Current Phase**: Phase 2 - Expansion (In Progress)
-**Overall Progress**: 24% (18/69 sessions complete)
+**Overall Progress**: 26% (19/69 sessions complete)
 
 ---
 
@@ -13,7 +13,7 @@
 |-------|--------|-------------------|----------------|----------|
 | Phase 0: Setup | ✅ Complete | 2/2 | 2 | 100% |
 | Phase 1: PoC | ✅ Complete | 5/6 | 6 | 83% (API extraction deferred) |
-| Phase 2: Expansion | 🔄 In Progress | 11/18 | 15-18 | 61% |
+| Phase 2: Expansion | 🔄 In Progress | 12/18 | 15-18 | 67% |
 | Phase 3: Core Migration | ⏳ Not Started | 0/30 | 20-30 | 0% |
 | Phase 4: Integration | ⏳ Not Started | 0/8 | 5-8 | 0% |
 | Phase 5: Cleanup | ⏳ Not Started | 0/5 | 3-5 | 0% |
@@ -1448,10 +1448,10 @@ bazel build //packages/common/core-interfaces:core_interfaces \
 ---
 
 ### Session 2.12: Tooling Integration - Biome (Lint/Format)
-**Status**: ⏳ Not Started
-**Date Started**: TBD
-**Date Completed**: TBD
-**Time Spent**: 0 hours
+**Status**: ✅ Complete
+**Date Started**: 2025-10-28
+**Date Completed**: 2025-10-28
+**Time Spent**: 2 hours
 **Prerequisites**: Session 2.11 complete
 **Estimated**: 1 hour
 
@@ -1475,35 +1475,46 @@ Establish root-level Biome linting and formatting integration for workspace-wide
 - **Target**: Mirror root-level orchestration in Bazel
 
 #### Tasks
-- [ ] Check if root BUILD.bazel exists, create if needed
-- [ ] Add js_run_binary rule for workspace-wide `format` target
-- [ ] Add js_run_binary rule for workspace-wide `format_check` target
-- [ ] Validate against `pnpm run format:biome` output
-- [ ] Test nested biome.jsonc discovery (e.g., framework packages)
-- [ ] Document root-level pattern and rationale
+- [x] Check if root BUILD.bazel exists, create if needed
+- [x] Add sh_binary wrapper for workspace-wide `format` target
+- [x] Add sh_binary wrapper for workspace-wide `format_check` target
+- [x] Validate against `pnpm run format:biome` output (5666 files processed)
+- [x] Test nested biome.jsonc discovery (experimental/dds/tree confirmed working)
+- [x] Document root-level pattern and rationale
 
 #### Deliverables
-- [ ] `format` target in root BUILD.bazel
-- [ ] `format_check` target in root BUILD.bazel
-- [ ] Documentation explaining root-level approach
-- [ ] Git commit: `feat(bazel): add root-level Biome lint/format integration (Session 2.12)`
+- [x] `format` target in root BUILD.bazel
+- [x] `format_check` target in root BUILD.bazel
+- [x] Wrapper script: tools/bazel/run-biome.sh
+- [x] Documentation: docs/bazel/BIOME_INTEGRATION.md
+- [x] Git commit: `feat(bazel): add root-level Biome lint/format integration (Session 2.12)`
 
-#### Expected Pattern
+#### Actual Implementation
 ```python
-# Root BUILD.bazel
-load("@aspect_rules_js//js:defs.bzl", "js_run_binary")
-
-js_run_binary(
+# Root BUILD.bazel - sh_binary with wrapper script approach
+sh_binary(
     name = "format",
-    tool = "@npm//:biomejs/biome",
+    srcs = ["//tools/bazel:run-biome.sh"],
     args = ["check", ".", "--write"],
 )
 
-js_run_binary(
+sh_binary(
     name = "format_check",
-    tool = "@npm//:biomejs/biome",
+    srcs = ["//tools/bazel:run-biome.sh"],
     args = ["check", "."],
 )
+```
+
+**Wrapper Script** (tools/bazel/run-biome.sh):
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Change to workspace root (BUILD_WORKSPACE_DIRECTORY set by bazel run)
+cd "$BUILD_WORKSPACE_DIRECTORY"
+
+# Execute biome with arguments
+exec pnpm biome "$@"
 ```
 
 #### Usage
@@ -1515,9 +1526,37 @@ bazel run //:format_check     # Check entire workspace (CI/pre-commit)
 #### Why Now
 - Linting/formatting is essential for code quality
 - Establishes pattern before Phase 3 mass migration
-- Validates aspect_rules_js js_run_binary integration
+- Validates aspect_rules_js integration patterns
 - Provides single command for CI/consistency
 - Honors existing nested biome.jsonc configs automatically
+
+#### Notes
+
+**Implementation Approach**: Used `sh_binary` with wrapper script instead of `biome_bin.biome_binary`
+
+**Rationale**:
+- Biome needs to run from workspace root to find `biome.jsonc`
+- `biome_bin.biome_binary` runs from `bazel-bin` directory by default
+- Wrapper script uses `BUILD_WORKSPACE_DIRECTORY` (available with `bazel run`)
+- Changes to workspace root before executing biome
+
+**Testing Results**:
+- ✅ Successfully processed 5,666 files across entire workspace
+- ✅ Found 36 formatting issues (trailing commas in tsconfig files)
+- ✅ Nested config discovery confirmed (experimental/dds/tree with custom settings)
+- ✅ Matches current `pnpm run format:biome` workflow behavior
+
+**Alternative Approaches Considered**:
+1. `biome_bin.biome_binary` with args - Cannot access workspace root at runtime
+2. `js_binary` with `chdir` - Parameter doesn't support runtime variables
+3. `js_run_binary` - Same directory context issue
+4. **✅ `sh_binary` with wrapper script** - Clean, works from any directory
+
+**Files Created**:
+- `BUILD.bazel` - Root-level format targets
+- `tools/bazel/BUILD.bazel` - Exports wrapper script
+- `tools/bazel/run-biome.sh` - Workspace-aware wrapper
+- `docs/bazel/BIOME_INTEGRATION.md` - Comprehensive documentation
 
 ---
 
