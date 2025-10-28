@@ -13,12 +13,17 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "ES2021",
-		"types": [],
+		"typeRoots": ["../../../../node_modules/@types"],
 		"exactOptionalPropertyTypes": true,
 		"noUncheckedIndexedAccess": true,
 		"skipLibCheck": true,
 		"rootDir": "./",
-		"outDir": "../../lib/test"
+		"outDir": "../../lib/test",
+		"paths": {
+			"@fluidframework/core-interfaces": ["../../lib/index.js"],
+			"@fluidframework/core-interfaces/internal": ["../../lib/internal.js"],
+			"@fluidframework/core-interfaces/legacy": ["../../lib/legacy.js"]
+		}
 	},
 	"include": ["./**/*"],
 	"exclude": ["./jsonSerializable.exactOptionalPropertyTypes.false.spec.ts"]

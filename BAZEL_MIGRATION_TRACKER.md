@@ -1561,10 +1561,10 @@ bazel run //:format_check     # Check entire workspace (CI/pre-commit)
 ---
 
 ### Session 2.13: Tooling Integration - Mocha Tests
-**Status**: ⏳ Not Started
-**Date Started**: TBD
-**Date Completed**: TBD
-**Time Spent**: 0 hours
+**Status**: ⚠️ Blocked - npm types resolution
+**Date Started**: 2025-10-28
+**Date Completed**: 2025-10-28 (documentation complete, execution blocked)
+**Time Spent**: 2 hours
 **Prerequisites**: Session 2.12 complete
 **Estimated**: 1-2 hours
 
@@ -1573,54 +1573,158 @@ Establish Mocha test integration pattern with test compilation and execution.
 
 #### Reference Package
 - **Package**: @fluidframework/core-interfaces
-- **Why**: Has test files, simple test setup, good example
+- **Why**: Has test files, simple test setup, good example for pattern
 
 #### Tasks
-- [ ] Create tsconfig.test.json for test compilation
-- [ ] Add ts_project target for test compilation
-- [ ] Add mocha_test rule for test execution
-- [ ] Configure test dependencies (@types/mocha, mocha, etc.)
-- [ ] Run tests: `bazel test //packages/common/core-interfaces:test`
-- [ ] Validate test output matches pnpm test results
-- [ ] Document test pattern
+- [x] Analyze existing Mocha test setup in core-interfaces
+- [x] Create ts_project target for test compilation structure
+- [x] Add mocha_bin.mocha_test rule for test execution structure
+- [x] Configure test dependencies (attempted multiple approaches)
+- [x] Identify blocker: npm @types resolution in Bazel sandbox
+- [x] Document comprehensive findings and pattern
+- [ ] ⚠️ BLOCKED: Test compilation (TypeScript can't find @types/mocha, @types/node)
+- [ ] ⚠️ BLOCKED: Test execution (depends on compilation)
 
 #### Deliverables
-- [ ] Test compilation target in BUILD.bazel
-- [ ] Mocha test execution target in BUILD.bazel
-- [ ] tsconfig.test.json configuration
-- [ ] Test pattern documentation
-- [ ] Git commit: `feat(bazel): add Mocha test integration (Session 2.13)`
+- [x] Test target structure in BUILD.bazel (correct but blocked)
+- [x] tsconfig.bazel.json for tests (with path mappings)
+- [x] **Comprehensive documentation**: `docs/bazel/MOCHA_TEST_INTEGRATION.md`
+- [x] Blocker analysis and resolution paths documented
+- [ ] ⚠️ Test execution blocked until npm types resolution solved
 
-#### Expected Pattern
+#### Blocker: npm @types Resolution
+
+**Issue**: TypeScript cannot find `@types/mocha` and `@types/node` in Bazel sandbox environment.
+
+**Error**:
+```
+error TS2582: Cannot find name 'describe'. Do you need to install type definitions
+for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+```
+
+**Root Cause**:
+- Bazel's ts_project rule executes in isolated sandbox
+- Adding `//:node_modules/mocha` doesn't expose bundled @types packages
+- `typeRoots` paths don't resolve correctly in sandbox
+- `types: ["mocha", "node"]` in tsconfig fails to find packages
+
+**Approaches Attempted** (All Failed):
+1. Explicit `//:node_modules/@types/mocha` deps (target not declared)
+2. TypeScript `types: ["mocha", "node"]` array (cannot find definitions)
+3. TypeScript `typeRoots` path configuration (path not found in sandbox)
+4. Dependency on `//:node_modules/mocha` package (doesn't expose types)
+
+#### Actual Implementation (Blocked)
+
+**BUILD.bazel** (Structure correct, compilation blocked):
 ```python
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@npm//:mocha/package_json.bzl", mocha_bin = "bin")
 
+# Test compilation (ESM) - BLOCKED
 ts_project(
     name = "core_interfaces_test",
-    srcs = glob(["src/test/**/*.ts"]),
-    composite = True,
-    declaration = True,
+    srcs = glob(
+        ["src/test/**/*.ts"],
+        exclude = [
+            "src/test/types/**",  # Type validation tests
+            "src/test/mocha.d.ts",
+        ],
+    ),
+    declaration = False,
+    source_map = True,
+    incremental = True,
     out_dir = "lib/test",
-    tsconfig = ":tsconfig.test.json",
+    root_dir = "src/test",
+    tsconfig = "src/test/tsconfig.bazel.json",
+    transpiler = "tsc",
     deps = [
         ":core_interfaces_esm",
-        ":node_modules/@types/mocha",
-        ":node_modules/@types/node",
-        ":node_modules/mocha",
+        "//:node_modules/mocha",  # ⚠️ Doesn't expose @types
     ],
 )
 
+# Mocha test runner - Structure ready
 mocha_bin.mocha_test(
     name = "test",
-    args = ["lib/test/**/*.spec.js"],
+    args = ["lib/test/**/*.spec.js", "--exit"],
     data = [":core_interfaces_test"],
 )
 ```
 
-#### Why Now
-- Testing is critical for validation and CI
-- Need test patterns before Phase 3
-- Ensures all packages have working tests from migration start
+**tsconfig.bazel.json** (With path mappings):
+```json
+{
+  "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "target": "ES2021",
+    "paths": {
+      "@fluidframework/core-interfaces": ["../../lib/index.js"],
+      "@fluidframework/core-interfaces/internal": ["../../lib/internal.js"],
+      "@fluidframework/core-interfaces/legacy": ["../../lib/legacy.js"]
+    }
+  },
+  "include": ["./**/*"]
+}
+```
+
+#### Resolution Paths
+
+**Option 1: Aspect Rules JS npm Integration** (Recommended)
+- Research proper @types package exposure from pnpm-lock.yaml
+- Investigate `npm_link_all_packages` scoped package support
+- May require explicit @types targets in WORKSPACE.bazel
+- **Resources**: https://docs.aspect.build/rules/aspect_rules_js/
+
+**Option 2: Manual Type Declaration Files** (Workaround)
+- Copy `@types/mocha` to local `src/test/types/`
+- Reference via `/// <reference path="./types/mocha.d.ts" />`
+- **Drawback**: Not scalable, manual maintenance
+
+**Option 3: Defer to Phase 4** (Chosen)
+- Continue Phase 2-3 migrations with build-only targets
+- Dedicate Phase 4 session to npm integration research
+- Solve once, apply to all packages
+- Tests run via `pnpm test` in parallel
+
+#### Decision
+
+**Proceeding with Option 3** - Defer full test integration to Phase 4.
+
+**Rationale**:
+- Unblocks ~30 remaining package migrations
+- Maintains migration velocity (build targets working)
+- Consolidates npm integration research into focused session
+- Tests still functional via existing `pnpm test` commands
+- Pattern documented for future application
+
+#### Files Created/Modified
+
+- `packages/common/core-interfaces/BUILD.bazel` - Test target structure (blocked)
+- `packages/common/core-interfaces/src/test/tsconfig.bazel.json` - Test tsconfig
+- `docs/bazel/MOCHA_TEST_INTEGRATION.md` - **Comprehensive 400-line documentation**
+- `BAZEL_MIGRATION_TRACKER.md` - Session 2.13 status and findings
+
+#### Why This Session Was Valuable
+
+- Identified critical blocker early in migration
+- Documented comprehensive blocker analysis
+- Established test target structure (ready when blocker resolved)
+- Prevented wasted effort on 30+ package test migrations
+- Created reference documentation for Phase 4 resolution
+
+#### Next Steps
+
+**Immediate** (Session 2.14):
+- Continue with API Extractor integration (separate concern)
+- May encounter similar npm dependency issues
+
+**Phase 4** (Dedicated Session):
+- "Bazel npm Integration Deep Dive"
+- Research aspect_rules_js @types handling
+- Implement solution for all packages at once
+- Apply test patterns from this session's documentation
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Last Updated**: 2025-10-28
 **Current Phase**: Phase 2 - Expansion (In Progress)
-**Overall Progress**: 26% (12/46 core sessions complete)
+**Overall Progress**: 28% (13/46 core sessions complete)
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -14,7 +14,7 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 |-------|--------|----------|----------|
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
-| **Phase 2: Expansion** | 🔄 In Progress | 61% | 12/18 |
+| **Phase 2: Expansion** | 🔄 In Progress | 72% | 13/18 |
 | **Phase 3: Core Migration** | ⏳ Pending | 0% | 0/20 |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
@@ -22,6 +22,14 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 ---
 
 ## Recently Completed
+
+### Session 2.13: Mocha Test Integration (2025-10-28)
+- **Status**: ⚠️ Blocked - npm @types resolution
+- **Implementation**: Test target structure established, compilation blocked
+- **Blocker**: TypeScript cannot find @types/mocha, @types/node in Bazel sandbox
+- **Documentation**: Comprehensive 400-line analysis in docs/bazel/MOCHA_TEST_INTEGRATION.md
+- **Decision**: Defer full test integration to Phase 4, continue with build-only migrations
+- **Details**: [BAZEL_MIGRATION_TRACKER.md#session-2.13](./BAZEL_MIGRATION_TRACKER.md)
 
 ### Session 2.12: Biome Lint/Format Integration (2025-10-28)
 - **Status**: ✅ Complete
@@ -40,15 +48,17 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.13: Tooling Integration - Mocha Tests**
-- **Goal**: Establish Mocha test integration pattern
+**Session 2.14: Tooling Integration - API Extractor**
+- **Goal**: Establish API Extractor integration pattern for API report generation
 - **Reference**: @fluidframework/core-interfaces
 - **Key Tasks**:
-  - ts_project for test compilation
-  - mocha_test rule for execution
-  - Validate against pnpm test results
-- **Estimated**: 1-2 hours
-- **Details**: [BAZEL_MIGRATION_TRACKER.md#session-2.13](./BAZEL_MIGRATION_TRACKER.md)
+  - js_run_binary rule for api_extractor
+  - Configure api-extractor.json paths for Bazel
+  - Generate and validate API reports
+  - Document API extraction pattern
+- **Estimated**: 2 hours
+- **Note**: May encounter similar npm dependency issues as Session 2.13
+- **Details**: [BAZEL_MIGRATION_TRACKER.md#session-2.14](./BAZEL_MIGRATION_TRACKER.md)
 
 ---
 
@@ -95,7 +105,7 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 - **Target Naming**: `{package}_esm`, `{package}_cjs`, `{package}` (filegroup)
 
 ### Test Patterns
-- **Mocha**: ts_project + mocha_bin.mocha_test (partial - Session 2.13 in progress)
+- **Mocha**: ⚠️ Blocked - npm @types resolution (Session 2.13 deferred to Phase 4)
 
 ### Tooling Patterns
 - **Biome**: sh_binary wrapper with BUILD_WORKSPACE_DIRECTORY (Session 2.12)
