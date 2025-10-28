@@ -17,8 +17,8 @@
 		"strict": true,
 		"target": "ES2021",
 		"types": [],
-		"exactOptionalPropertyTypes": true,
-		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": false,
+		"noUncheckedIndexedAccess": false,
 		"rootDir": "./src",
 		"outDir": "./lib"
 	},

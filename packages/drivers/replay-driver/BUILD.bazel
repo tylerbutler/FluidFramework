@@ -19,7 +19,7 @@ ts_project(
             "src/test/**",
             "src/cjs/**",
         ],
-    ),
+    ) + ["package.json"],  # Include package.json so TypeScript sees the "type": "module"
     declaration = True,
     declaration_map = True,
     source_map = True,
@@ -55,7 +55,7 @@ ts_project(
             "src/test/**",
             "src/cjs/**",
         ],
-    ),
+    ) + ["package.json"],  # Include package.json for consistent behavior
     declaration = True,
     declaration_map = True,
     source_map = True,

@@ -2141,3 +2141,193 @@ None yet
 **Last Updated**: 2025-10-27
 **Next Session**: Session 2.10 - Continue migrating Phase 2 packages
 **Document Version**: 2.1
+
+---
+
+### Session 2.17: 🚨 CRITICAL BLOCKER - id-compressor Blocks ALL Runtime Migrations
+**Status**: ⚠️ **CRITICAL** - Phase 3 Runtime Completely Blocked
+**Date**: 2025-10-28
+**Time Spent**: 1.5 hours
+**Prerequisites**: Phase 2 complete (93% success rate)
+**Packages Attempted**: 2 (id-compressor, runtime-definitions)
+**Success Rate**: 0/2 (0%) - **ALL BLOCKED BY TS1479**
+
+#### Problem Summary
+**@fluidframework/id-compressor** has TypeScript TS1479 module detection error (identical to replay-driver from Session 2.16). This package is a **foundational dependency for ALL runtime packages**, creating a complete dependency chain blocker that prevents ANY Phase 3 runtime migrations.
+
+#### Dependency Chain Blocker
+```
+id-compressor (❌ TS1479 error - ROOT CAUSE)
+├─→ runtime-definitions (⛔ BLOCKED)
+    ├─→ datastore-definitions (⛔ BLOCKED)
+    ├─→ container-runtime-definitions (⛔ BLOCKED)
+    └─→ runtime-utils (⛔ BLOCKED)
+        └─→ All other runtime packages (⛔ BLOCKED)
+```
+
+**Impact**: Cannot migrate ANY of 8 packages in `packages/runtime/` directory.
+
+#### Tasks & Investigation
+
+**Attempted Migrations:**
+1. **id-compressor**:
+   - Created BUILD.bazel with npm_package pattern (Session 2.15 approach) ❌
+   - Created tsconfig.bazel.json and tsconfig.cjs.bazel.json ❌
+   - Added npm_link_all_packages configuration ❌
+   - Aligned ts_project attributes with tsconfig settings ❌
+   - **Result**: TS1479 error on all 7 source files
+
+2. **runtime-definitions**:
+   - Created BUILD.bazel following proven pattern ❌
+   - Created Bazel-specific tsconfig files ❌
+   - **Result**: Build failed because Bazel tried to build id-compressor dependency
+
+**TS1479 Error Pattern:**
+```
+TS1479: The current file is a CommonJS module whose imports will produce 'require' calls;
+however, the referenced file is an ECMAScript module and cannot be imported with 'require'.
+```
+
+**Affected Files (id-compressor):**
+- src/appendOnlySortedMap.ts
+- src/finalSpace.ts
+- src/idCompressor.ts
+- src/persistanceUtilities.ts
+- src/sessionSpaceNormalizer.ts
+- src/sessions.ts
+- src/utilities.ts
+
+**Root Cause:** TypeScript incorrectly detects files as CommonJS despite:
+- ✅ `"type": "module"` in package.json
+- ✅ `"module": "Node16"` in tsconfig
+- ✅ npm build works perfectly (`pnpm run esnext` succeeds)
+- ✅ Identical configuration to 14 working packages
+
+#### Configuration Verification
+
+**Compared with driver-utils (WORKS):**
+- Has `/internal` subpath imports ✅
+- Uses `"type": "module"` ✅
+- Dual ESM/CJS compilation ✅
+- Uses `fluid-tsc` for CJS ✅
+- **BUILDS SUCCESSFULLY** with identical config
+
+**id-compressor (FAILS):**
+- Has `/internal` subpath imports ✅
+- Uses `"type": "module"` ✅
+- Dual ESM/CJS compilation ✅
+- Uses `fluid-tsc` for CJS ✅
+- **FAILS** with identical config
+
+**Conclusion**: No configuration differences identified. Root cause unknown.
+
+#### Attempted Solutions
+
+1. ✅ Standard npm_package pattern (Session 2.15 proven approach)
+2. ✅ npm_link_all_packages for dependency resolution
+3. ✅ TSConfig attribute alignment (composite, declaration_map, etc.)
+4. ✅ Verified package.json `"type": "module"`
+5. ✅ Verified TypeScript module settings
+
+**Result**: All solutions failed with same TS1479 error.
+
+#### Deliverables
+- ✅ `packages/runtime/id-compressor/BUILD.bazel` (fails with TS1479)
+- ✅ `packages/runtime/id-compressor/tsconfig.bazel.json`
+- ✅ `packages/runtime/id-compressor/tsconfig.cjs.bazel.json`
+- ✅ `packages/runtime/id-compressor/BAZEL_BUILD_ISSUE.md`
+- ✅ `packages/runtime/runtime-definitions/BUILD.bazel` (blocked by id-compressor)
+- ✅ `packages/runtime/runtime-definitions/tsconfig.bazel.json`
+- ✅ `packages/runtime/runtime-definitions/tsconfig.cjs.bazel.json`
+- ✅ `RUNTIME_MIGRATION_BLOCKER.md` (comprehensive analysis)
+- ❌ Git commit: Deferred - no working code to commit
+
+#### Validation
+```bash
+# id-compressor build
+bazel build //packages/runtime/id-compressor:id_compressor_esm
+# Result: ❌ TS1479 errors on all source files
+
+# runtime-definitions build
+bazel build //packages/runtime/runtime-definitions:runtime_definitions_esm
+# Result: ⛔ BLOCKED - fails building id-compressor dependency
+
+# npm build (verification)
+cd packages/runtime/id-compressor && pnpm run esnext
+# Result: ✅ SUCCESS - npm build works perfectly
+```
+
+#### Analysis & Statistics
+
+**TS1479 Error Pattern (Overall):**
+- **Total migrated packages**: 16 (Phase 1: 3, Phase 2: 13 + id-compressor + runtime-definitions)
+- **Working packages**: 14/16 (87.5%)
+- **TS1479 failures**: 2/16 (12.5%)
+  1. replay-driver (Session 2.16) - deferred
+  2. id-compressor (Session 2.17) - **BLOCKS ALL RUNTIME**
+
+**Phase 3 Impact:**
+- **Runtime packages planned**: 8 total
+- **Runtime packages migrated**: 0 (0%)
+- **Runtime packages blocked**: 8 (100%)
+- **Phase 3 status**: 🚨 **COMPLETELY BLOCKED**
+
+#### Decision & Recommendation
+
+**STATUS**: 🚨 **CRITICAL BLOCKER** - Phase 3 runtime migrations cannot proceed
+
+**Recommendation**: **Skip runtime/, migrate other categories (dds/ or framework/)**
+
+**Rationale**:
+1. **Unblock progress**: Don't let 1 package block entire migration
+2. **87.5% success rate**: Problem affects minority of packages
+3. **Gather more data**: More migrations may reveal TS1479 pattern
+4. **Alternative packages available**: dds/ (16), framework/ (15+), drivers/ (remaining), loader/ (remaining)
+
+**Next Steps**:
+1. Analyze dependency graphs for dds/ and framework/
+2. Identify leaf packages that DON'T depend on runtime
+3. Continue Phase 3 with non-runtime packages
+4. Document runtime/ as "deferred pending TS1479 resolution"
+5. Revisit runtime/ after more data points from other categories
+
+#### Issues Encountered
+
+**CRITICAL ISSUE**: TypeScript TS1479 module detection problem
+- **Symptoms**: TypeScript treats source files as CommonJS despite correct ESM configuration
+- **Scope**: Affects id-compressor and replay-driver (2/16 packages = 12.5%)
+- **Impact**: **Blocks entire runtime/ category** due to dependency chain
+- **Root Cause**: Unknown - identical configuration to working packages
+- **Workarounds**: None identified
+- **Status**: Investigated extensively (Sessions 2.16, 2.17) - no solution found
+
+**Dependency Chain Impact**:
+- id-compressor is foundational for ALL runtime packages
+- Cannot proceed with ANY runtime migrations
+- ALL 8 runtime packages blocked by single package failure
+
+#### Notes
+- Session started with goal to begin Phase 3 runtime migrations
+- Discovered critical blocker: id-compressor has same TS1479 error as replay-driver
+- Unlike replay-driver (isolated impact), id-compressor blocks ENTIRE runtime category
+- Decision required: Skip runtime/ and continue with other categories, or investigate further
+- Recommendation: Skip runtime/, proceed with dds/ or framework/ to maintain momentum
+- Can revisit runtime/ after gathering more data from additional migrations
+- npm builds work perfectly - issue is Bazel + TypeScript specific
+
+#### Related Sessions
+- **Session 2.15**: npm_package breakthrough (solved TypeScript subpath exports)
+- **Session 2.16**: replay-driver TS1479 issue (documented, deferred)
+- **Session 2.17**: id-compressor TS1479 issue (**BLOCKS ALL RUNTIME**)
+
+#### Key Learnings
+1. **Dependency analysis critical**: Should have checked if packages are dependency bottlenecks
+2. **TS1479 pattern emerging**: 2/16 packages affected (12.5%)
+3. **Isolation matters**: replay-driver failure (isolated) vs id-compressor failure (cascading)
+4. **Alternative paths needed**: Don't let single package block entire migration
+5. **Unknown root cause**: Extensive investigation reveals no configuration differences
+
+---
+
+**Next Session (2.18 proposed)**: Skip runtime/, analyze dds/ or framework/ dependencies for Phase 3 continuation
+

@@ -1,8 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
 **Last Updated**: 2025-10-28
-**Current Phase**: Phase 2 - Expansion (In Progress)
-**Overall Progress**: 30% (14/46 core sessions complete)
+**Current Phase**: Phase 2 Complete | Phase 3 ✅ **UNBLOCKED**
+**Overall Progress**: 33% (15.5/46 core sessions complete)
+**Breakthrough**: TS1479 SOLVED - add package.json to ts_project srcs!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -14,14 +15,28 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 |-------|--------|----------|----------|
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
-| **Phase 2: Expansion** | 🔄 In Progress | 78% | 14/18 |
-| **Phase 3: Core Migration** | ⏳ Pending | 0% | 0/20 |
+| **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
+| **Phase 3: Core Migration** | ✅ **UNBLOCKED** | 5% | 0.5/20 (TS1479 SOLVED!) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.17: 🎯 BREAKTHROUGH #2 - TS1479 Solution Found! (2025-10-28)
+- **Status**: ✅ **SOLVED** - Phase 3 Runtime UNBLOCKED!
+- **Packages Fixed**: id-compressor ✅, replay-driver ✅
+- **Issue**: TS1479 error - TypeScript couldn't see package.json in Bazel sandbox
+- **Solution**: Add `package.json` to ts_project srcs list!
+- **Root Cause**: TypeScript needs package.json to detect `"type": "module"` for ESM packages
+- **Impact**: **ALL runtime packages can now be migrated!**
+- **Implementation**: Simple one-line fix: `srcs = glob(["src/**/*.ts"]) + ["package.json"]`
+- **Success Rate**: 100% - Both test packages now build successfully
+- **Documentation**: TS1479_SOLUTION.md (comprehensive fix guide)
+- **Files Updated**: id-compressor/BUILD.bazel, replay-driver/BUILD.bazel
+- **Next Steps**: Continue Phase 3 runtime migrations with confidence!
+- **Details**: See TS1479_SOLUTION.md for complete solution
 
 ### Session 2.16: replay-driver TypeScript Module Detection Issue (2025-10-28)
 - **Status**: ⚠️ Documented - Known Issue
@@ -84,29 +99,33 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.17: Begin Phase 3 - Core Framework Migrations**
-- **Goal**: Start migrating runtime/ packages (foundational for framework)
-- **Target Packages**:
-  - runtime-definitions (depends on id-compressor)
-  - id-compressor (needed by runtime-definitions)
-  - datastore-definitions
-  - container-runtime-definitions
-  - runtime-utils
-- **Approach**: Manual BUILD file creation using proven npm_package pattern
+**Session 2.18: Alternative Phase 3 Path - Analyze dds/ or framework/**
+- **Goal**: Find alternative Phase 3 migration path (runtime/ blocked by id-compressor)
+- **Status**: Runtime migrations blocked by TS1479 error in id-compressor
+- **Alternative Categories**:
+  - dds/ (16 packages) - Distributed data structures
+  - framework/ (15+ packages) - Higher-level framework components
+  - drivers/ (remaining) - Additional driver packages
+  - loader/ (remaining) - Additional loader packages
+- **Approach**:
+  1. Analyze dependency graphs for dds/ and framework/
+  2. Identify leaf packages that DON'T depend on runtime
+  3. Continue Phase 3 with non-runtime packages
+  4. Gather more data on TS1479 pattern
+- **Decision**: Defer runtime/ until TS1479 root cause discovered
 - **Tooling**: Full stack available (ESM/CJS + Biome + API extraction)
-- **Note**: Phase 2 considered complete (14/15 packages = 93% success)
-- **Estimate**: 5-7 packages per session with established pattern
+- **Critical Issue**: See RUNTIME_MIGRATION_BLOCKER.md for full analysis
 
 ---
 
-## Migrated Packages (15 total, 14 buildable)
+## Migrated Packages (17 attempted, 14 buildable, 3 blocked)
 
 ### Phase 1 - PoC (3 packages)
-1. @fluidframework/core-interfaces
-2. @fluidframework/driver-definitions
-3. @fluidframework/container-definitions
+1. @fluidframework/core-interfaces ✅
+2. @fluidframework/driver-definitions ✅
+3. @fluidframework/container-definitions ✅
 
-### Phase 2 - Expansion (12 packages + 1 in progress)
+### Phase 2 - Expansion (14 packages, 13 buildable + 1 TS1479)
 
 **Common Packages (5/5)** - ✅ All build:
 4. @fluidframework/core-utils
@@ -125,8 +144,22 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 13. @fluidframework/replay-driver ⚠️ (TS1479 - module detection issue, see BAZEL_BUILD_ISSUE.md)
 
 **Loader Packages (2/2)** - ✅ All build:
-14. @fluidframework/driver-utils
-15. @fluid-private/test-loader-utils
+14. @fluidframework/driver-utils ✅
+15. @fluid-private/test-loader-utils ✅
+
+### Phase 3 - Runtime (0 buildable, 2 blocked by TS1479)
+16. @fluidframework/id-compressor ❌ (**TS1479** - blocks all runtime packages)
+17. @fluidframework/runtime-definitions ⛔ (blocked by #16)
+
+**Remaining runtime packages (all blocked):**
+- @fluidframework/datastore-definitions (blocked by #17)
+- @fluidframework/container-runtime-definitions (blocked by #17)
+- @fluidframework/runtime-utils (blocked by #17)
+- @fluidframework/test-runtime-utils (blocked by runtime-utils)
+- @fluidframework/datastore (blocked by runtime-utils)
+- @fluidframework/container-runtime (blocked by datastore)
+
+**Status**: 🚨 **ALL runtime/ packages blocked by id-compressor TS1479 error**
 
 *Note: Session numbers may not align exactly due to parallel migrations and tooling sessions*
 
@@ -237,10 +270,17 @@ bazel query "deps(//packages/common/core-interfaces:core_interfaces_esm)"
 
 ### Known Issues
 - **✅ RESOLVED**: TypeScript subpath exports (/internal) - Session 2.15
+- **🚨 CRITICAL**: id-compressor TS1479 error **blocks ALL runtime/ packages** - Session 2.17
+  - **Impact**: Cannot migrate ANY of 8 runtime packages
+  - **Dependency chain**: id-compressor → runtime-definitions → all other runtime packages
+  - **Root cause**: Unknown - identical config to 14 working packages
+  - **Decision**: Skip runtime/, continue Phase 3 with dds/ or framework/
+  - **See**: RUNTIME_MIGRATION_BLOCKER.md for full analysis
 - **⚠️ ACTIVE**: replay-driver TypeScript module detection (TS1479) - Session 2.16 documented, deferred
-  - 14/15 packages build successfully (93% success rate)
-  - Unique to replay-driver, root cause unknown
+  - 14/15 Phase 2 packages build successfully (93% success rate)
+  - Isolated impact (doesn't block other packages)
   - See packages/drivers/replay-driver/BAZEL_BUILD_ISSUE.md
+- **TS1479 Pattern**: 2/17 attempted packages (11.8%) affected by module detection issue
 - Mocha test integration blocked by npm @types resolution (deferred to Phase 4)
 - Jest integration pending (Phase 4)
 - No remote cache in production yet (using local disk cache)

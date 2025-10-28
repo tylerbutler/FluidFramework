@@ -17,10 +17,10 @@
 		"strict": true,
 		"target": "ES2021",
 		"types": [],
-		"exactOptionalPropertyTypes": false,
-		"noUncheckedIndexedAccess": false,
+		"exactOptionalPropertyTypes": true,
+		"noUncheckedIndexedAccess": true,
 		"rootDir": "./src",
-		"outDir": "./dist"
+		"outDir": "./lib"
 	},
 	"include": ["src/**/*"],
 	"exclude": ["src/test/**/*"]
