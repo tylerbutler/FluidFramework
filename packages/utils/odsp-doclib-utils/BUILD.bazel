@@ -1,0 +1,73 @@
+# BUILD.bazel for @fluidframework/odsp-doclib-utils
+# Auto-generated - Session 2.10
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+package(default_visibility = ["//visibility:public"])
+
+# Link npm packages for this package
+npm_link_all_packages(name = "node_modules")
+
+# ESM compilation
+ts_project(
+    name = "odsp_doclib_utils_esm",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**"],
+    ),
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    out_dir = "lib",
+    resolve_json_module = True,
+    root_dir = "src",
+    source_map = True,
+    tsconfig = ":tsconfig.bazel.json",
+    deps = [
+        ":node_modules/isomorphic-fetch",
+        "//packages/common/client-utils:client_utils_esm",
+        "//packages/common/core-interfaces:core_interfaces_esm",
+        "//packages/common/core-utils:core_utils_esm",
+        "//packages/common/driver-definitions:driver_definitions_esm",
+        "//packages/drivers/odsp-driver-definitions:odsp_driver_definitions_esm",
+        "//packages/loader/driver-utils:driver_utils_esm",
+        "//packages/utils/telemetry-utils:telemetry_utils_esm",
+    ],
+)
+
+# CommonJS compilation
+ts_project(
+    name = "odsp_doclib_utils_cjs",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**"],
+    ),
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    out_dir = "dist",
+    resolve_json_module = True,
+    root_dir = "src",
+    source_map = True,
+    tsconfig = ":tsconfig.cjs.bazel.json",
+    deps = [
+        ":node_modules/isomorphic-fetch",
+        "//packages/common/client-utils:client_utils_cjs",
+        "//packages/common/core-interfaces:core_interfaces_cjs",
+        "//packages/common/core-utils:core_utils_cjs",
+        "//packages/common/driver-definitions:driver_definitions_cjs",
+        "//packages/drivers/odsp-driver-definitions:odsp_driver_definitions_cjs",
+        "//packages/loader/driver-utils:driver_utils_cjs",
+        "//packages/utils/telemetry-utils:telemetry_utils_cjs",
+    ],
+)
+
+# Default target builds both ESM and CJS
+filegroup(
+    name = "odsp_doclib_utils",
+    srcs = [
+        ":odsp_doclib_utils_esm",
+        ":odsp_doclib_utils_cjs",
+    ],
+)

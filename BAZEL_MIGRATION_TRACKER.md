@@ -3,7 +3,7 @@
 **Project**: FluidFramework TypeScript Monorepo
 **Migration Start Date**: 2025-10-27
 **Current Phase**: Phase 2 - Expansion (In Progress)
-**Overall Progress**: 23% (15/66 sessions complete)
+**Overall Progress**: 24% (16/66 sessions complete)
 
 ---
 
@@ -13,7 +13,7 @@
 |-------|--------|-------------------|----------------|----------|
 | Phase 0: Setup | ✅ Complete | 2/2 | 2 | 100% |
 | Phase 1: PoC | ✅ Complete | 5/6 | 6 | 83% (API extraction deferred) |
-| Phase 2: Expansion | 🔄 In Progress | 8/15 | 10-15 | 53% |
+| Phase 2: Expansion | 🔄 In Progress | 9/15 | 10-15 | 60% |
 | Phase 3: Core Migration | ⏳ Not Started | 0/30 | 20-30 | 0% |
 | Phase 4: Integration | ⏳ Not Started | 0/8 | 5-8 | 0% |
 | Phase 5: Cleanup | ⏳ Not Started | 0/5 | 3-5 | 0% |
@@ -494,10 +494,10 @@ This pattern allows TypeScript to resolve both main exports and subpath exports 
 ## Phase 2: Expansion - Common & Utility Packages
 
 **Status**: 🔄 In Progress
-**Sessions**: 8/15 complete
+**Sessions**: 9/15 complete
 **Prerequisites**: Phase 1 complete
 **Estimated Time**: 15-25 hours
-**Time Spent**: 8 hours
+**Time Spent**: 8.5 hours
 
 ### Session 2.1: Migrate @fluidframework/core-utils
 **Status**: ✅ Complete
@@ -1209,12 +1209,103 @@ npx @bazel/bazelisk build //packages/common/core-interfaces:core_interfaces \
 
 ---
 
-### Sessions 2.10-2.15
+### Session 2.10: Migrate @fluidframework/odsp-doclib-utils
+**Status**: ✅ Complete
+**Date Started**: 2025-10-27
+**Date Completed**: 2025-10-27
+**Time Spent**: 0.5 hours
+**Prerequisites**: Session 2.9 complete
+**Estimated**: 1-2 hours
+**Actual**: 0.5 hours (straightforward package with established patterns)
+
+#### Package Migrated
+- ✅ @fluidframework/odsp-doclib-utils (third utils package)
+
+#### Package Details
+- **Path**: packages/utils/odsp-doclib-utils
+- **Fluid Dependencies**: 7 (all migrated)
+  - @fluid-internal/client-utils
+  - @fluidframework/core-interfaces
+  - @fluidframework/core-utils
+  - @fluidframework/driver-definitions
+  - @fluidframework/driver-utils
+  - @fluidframework/odsp-driver-definitions
+  - @fluidframework/telemetry-utils
+- **NPM Dependencies**: 1 (isomorphic-fetch)
+- **Source Files**: 9 TypeScript files (no .cts files)
+- **Complexity**: MEDIUM (7 workspace deps + 1 npm dep)
+
+#### Tasks Completed
+- [x] Check source file structure (9 .ts files, no .cts files) ✅
+- [x] Create tsconfig.bazel.json (ESM) with path mappings for 7 workspace deps ✅
+- [x] Create tsconfig.cjs.bazel.json (CJS) with path mappings ✅
+- [x] Create BUILD.bazel with npm_link_all_packages and all dependencies ✅
+- [x] Add composite and resolve_json_module attributes ✅
+- [x] Build and validate (ESM + CJS) ✅
+- [x] Verify all 11 migrated packages build together ✅
+
+#### Deliverables
+- [x] BUILD.bazel for odsp-doclib-utils created ✅
+- [x] tsconfig.bazel.json (ESM), tsconfig.cjs.bazel.json (CJS) ✅
+- [x] ESM + CJS builds successful (9 .js + 9 .d.ts files each + source maps) ✅
+- [x] All 11 migrated packages build together (0.214s, fully cached) ✅
+- [x] Git commit: `feat(bazel): migrate @fluidframework/odsp-doclib-utils (Session 2.10)` (pending)
+
+#### Validation
+```bash
+# Build odsp-doclib-utils ESM ✅
+npx @bazel/bazelisk build //packages/utils/odsp-doclib-utils:odsp_doclib_utils_esm
+# Success (1.173s, 9 .js + 9 .d.ts files + source maps)
+
+# Build odsp-doclib-utils CJS ✅
+npx @bazel/bazelisk build //packages/utils/odsp-doclib-utils:odsp_doclib_utils_cjs
+# Success (1.151s, 9 .js + 9 .d.ts files + source maps)
+
+# Build all 11 migrated packages ✅
+npx @bazel/bazelisk build //packages/common/core-interfaces:core_interfaces \
+  //packages/common/core-utils:core_utils \
+  //packages/common/driver-definitions:driver_definitions \
+  //packages/common/container-definitions:container_definitions \
+  //packages/common/client-utils:client_utils \
+  //packages/utils/telemetry-utils:telemetry_utils \
+  //packages/drivers/odsp-driver-definitions:odsp_driver_definitions \
+  //packages/drivers/routerlicious-urlResolver:routerlicious_urlresolver \
+  //packages/loader/driver-utils:driver_utils \
+  //packages/loader/test-loader-utils:test_loader_utils \
+  //packages/utils/odsp-doclib-utils:odsp_doclib_utils
+# Success (0.214s, fully cached)
+```
+
+#### Files Created
+- `packages/utils/odsp-doclib-utils/BUILD.bazel`
+- `packages/utils/odsp-doclib-utils/tsconfig.bazel.json` (ESM inline config with path mappings)
+- `packages/utils/odsp-doclib-utils/tsconfig.cjs.bazel.json` (CJS inline config with path mappings)
+
+#### Key Learnings
+1. **Pattern Consistency**: odsp-doclib-utils followed exact pattern from previous sessions
+2. **Third utils Package**: Successfully continued expansion of utils category
+3. **11 Packages Migrated**: 60% of Phase 2 estimated minimum complete (9/15 sessions)
+4. **Build Speed**: Fully cached builds remain extremely fast (0.2s) with 11 packages
+5. **HIGH IMPACT**: Unblocks @fluidframework/tool-utils migration
+
+#### Impact
+- ✅ **Third utils Package**: Successfully expanded utils category migration
+- ✅ **11 Packages Migrated**: Over 60% of Phase 2 minimum sessions complete
+- ✅ **Build Speed**: Sub-second cached builds with 11 packages demonstrating excellent caching
+- ✅ **Unblocks tool-utils**: High-impact package enabling next migration candidate
+
+#### Next Steps
+1. **Session 2.11+**: Migrate @fluidframework/tool-utils (now unblocked) or continue with other packages
+2. **Pattern**: odsp-doclib-utils pattern (7 workspace deps + npm deps) applies to complex dependencies
+
+---
+
+### Sessions 2.11-2.15
 **Status**: ⏳ Not Started
 **Note**: Will be detailed as sessions progress
 
 **Preliminary Plan**:
-- **Session 2.10+**: Continue with drivers, loader, or framework packages
+- **Session 2.11+**: Continue with drivers, loader, or framework packages
 
 ---
 
