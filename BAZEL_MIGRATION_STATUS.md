@@ -1,9 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
 **Last Updated**: 2025-10-28
-**Current Phase**: Phase 2 Complete | Phase 3 ✅ **UNBLOCKED**
-**Overall Progress**: 33% (15.5/46 core sessions complete)
-**Breakthrough**: TS1479 SOLVED - add package.json to ts_project srcs!
+**Current Phase**: Phase 3 In Progress | Runtime Migrations Active
+**Overall Progress**: 35% (16/46 core sessions complete)
+**Breakthrough**: TS1479 SOLVED - runtime-definitions migrated successfully!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,22 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | ✅ **UNBLOCKED** | 5% | 0.5/20 (TS1479 SOLVED!) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 8% | 1.5/20 (runtime-definitions ✅) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.18: Runtime Migrations Resume - runtime-definitions ✅ (2025-10-28)
+- **Status**: ✅ Complete - First runtime package migrated!
+- **Package**: @fluidframework/runtime-definitions
+- **Fix Applied**: Added package.json to ts_project srcs (TS1479 solution)
+- **Build**: ✅ Successful - Both ESM and CJS targets compile
+- **Dependencies**: All dependencies already migrated (container-definitions, core-interfaces, driver-definitions, id-compressor, telemetry-utils)
+- **Impact**: Opens path for remaining runtime packages (datastore-definitions, container-runtime-definitions, runtime-utils, etc.)
+- **Next**: Continue with datastore-definitions and other runtime packages
 
 ### Session 2.17: 🎯 BREAKTHROUGH #2 - TS1479 Solution Found! (2025-10-28)
 - **Status**: ✅ **SOLVED** - Phase 3 Runtime UNBLOCKED!
@@ -99,33 +108,29 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.18: Alternative Phase 3 Path - Analyze dds/ or framework/**
-- **Goal**: Find alternative Phase 3 migration path (runtime/ blocked by id-compressor)
-- **Status**: Runtime migrations blocked by TS1479 error in id-compressor
-- **Alternative Categories**:
-  - dds/ (16 packages) - Distributed data structures
-  - framework/ (15+ packages) - Higher-level framework components
-  - drivers/ (remaining) - Additional driver packages
-  - loader/ (remaining) - Additional loader packages
+**Session 2.19: Continue Runtime Migrations**
+- **Goal**: Migrate next runtime packages in dependency order
+- **Status**: Runtime migrations now unblocked - TS1479 fix proven effective
+- **Next Packages**:
+  - @fluidframework/datastore-definitions (depends on runtime-definitions)
+  - @fluidframework/container-runtime-definitions (depends on runtime-definitions)
+  - @fluidframework/runtime-utils (depends on runtime-definitions)
 - **Approach**:
-  1. Analyze dependency graphs for dds/ and framework/
-  2. Identify leaf packages that DON'T depend on runtime
-  3. Continue Phase 3 with non-runtime packages
-  4. Gather more data on TS1479 pattern
-- **Decision**: Defer runtime/ until TS1479 root cause discovered
-- **Tooling**: Full stack available (ESM/CJS + Biome + API extraction)
-- **Critical Issue**: See RUNTIME_MIGRATION_BLOCKER.md for full analysis
+  1. Apply TS1479 fix pattern (package.json in srcs)
+  2. Follow dependency order for migration
+  3. Build and validate each package
+- **Success Pattern**: TS1479 fix applied to 4 packages (id-compressor, replay-driver, runtime-definitions) - 100% success rate
 
 ---
 
-## Migrated Packages (17 attempted, 14 buildable, 3 blocked)
+## Migrated Packages (18 attempted, 17 buildable, 1 deferred)
 
 ### Phase 1 - PoC (3 packages)
 1. @fluidframework/core-interfaces ✅
 2. @fluidframework/driver-definitions ✅
 3. @fluidframework/container-definitions ✅
 
-### Phase 2 - Expansion (14 packages, 13 buildable + 1 TS1479)
+### Phase 2 - Expansion (14 packages, 13 buildable + 1 deferred)
 
 **Common Packages (5/5)** - ✅ All build:
 4. @fluidframework/core-utils
@@ -136,30 +141,30 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 7. @fluidframework/tool-utils
 8. @fluidframework/odsp-doclib-utils
 
-**Driver Packages (5/6)** - ✅ 4 build, ⚠️ 1 has TypeScript module detection issue:
+**Driver Packages (5/6)** - ✅ 5 build (Session 2.17 fixed replay-driver):
 9. @fluidframework/odsp-driver-definitions ✅
 10. @fluidframework/routerlicious-urlresolver ✅
 11. @fluidframework/driver-base ✅
 12. @fluidframework/driver-web-cache ✅
-13. @fluidframework/replay-driver ⚠️ (TS1479 - module detection issue, see BAZEL_BUILD_ISSUE.md)
+13. @fluidframework/replay-driver ✅ (TS1479 fixed - Session 2.17)
 
 **Loader Packages (2/2)** - ✅ All build:
 14. @fluidframework/driver-utils ✅
 15. @fluid-private/test-loader-utils ✅
 
-### Phase 3 - Runtime (0 buildable, 2 blocked by TS1479)
-16. @fluidframework/id-compressor ❌ (**TS1479** - blocks all runtime packages)
-17. @fluidframework/runtime-definitions ⛔ (blocked by #16)
+### Phase 3 - Runtime (3 buildable, 0 blocked)
+16. @fluidframework/id-compressor ✅ (TS1479 fixed - Session 2.17)
+17. @fluidframework/runtime-definitions ✅ (Session 2.18)
 
-**Remaining runtime packages (all blocked):**
-- @fluidframework/datastore-definitions (blocked by #17)
-- @fluidframework/container-runtime-definitions (blocked by #17)
-- @fluidframework/runtime-utils (blocked by #17)
-- @fluidframework/test-runtime-utils (blocked by runtime-utils)
-- @fluidframework/datastore (blocked by runtime-utils)
-- @fluidframework/container-runtime (blocked by datastore)
+**Next runtime packages (unblocked and ready):**
+- @fluidframework/datastore-definitions (depends on runtime-definitions ✅)
+- @fluidframework/container-runtime-definitions (depends on runtime-definitions ✅)
+- @fluidframework/runtime-utils (depends on runtime-definitions ✅)
+- @fluidframework/test-runtime-utils (depends on runtime-utils)
+- @fluidframework/datastore (depends on runtime-utils)
+- @fluidframework/container-runtime (depends on datastore)
 
-**Status**: 🚨 **ALL runtime/ packages blocked by id-compressor TS1479 error**
+**Status**: ✅ **Runtime migrations ACTIVE - TS1479 fix proven effective**
 
 *Note: Session numbers may not align exactly due to parallel migrations and tooling sessions*
 
