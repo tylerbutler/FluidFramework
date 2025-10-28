@@ -23,6 +23,22 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Recently Completed
 
+### Session 2.16: replay-driver TypeScript Module Detection Issue (2025-10-28)
+- **Status**: ⚠️ Documented - Known Issue
+- **Investigation**: Extensive debugging of TypeScript module detection problem
+- **Issue**: replay-driver source files detected as CommonJS despite `"type": "module"` in package.json
+- **Error**: TS1479 - Files treated as CommonJS, cannot import ESM dependencies
+- **Attempted Solutions**:
+  - Modified tsconfig module/moduleResolution combinations
+  - Created genrules for CJS package.json markers
+  - Tested fluid-tsc wrapper approach
+  - All attempts failed with same error
+- **Root Cause**: Unknown - 14 other packages with identical configuration build successfully
+- **Decision**: Document issue, skip replay-driver, continue migrations (93% success rate acceptable)
+- **Documentation**: packages/drivers/replay-driver/BAZEL_BUILD_ISSUE.md
+- **Next Steps**: Return to replay-driver investigation after more packages migrated
+- **Details**: See commit 74fd29c6518
+
 ### Session 2.15: 🎯 BREAKTHROUGH - TypeScript Subpath Exports Solved (2025-10-28)
 - **Status**: ✅ Complete - **CRITICAL BLOCKER RESOLVED**
 - **Achievement**: Solved TypeScript `/internal` subpath resolution blocking 90%+ of migrations
@@ -68,14 +84,18 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.16+: Accelerated Phase 2/3 Migrations**
-- **Goal**: Rapidly migrate remaining packages using proven npm_package pattern
-- **Status**: ✅ Blocker resolved - full speed ahead!
-- **Tooling**: Full stack (ESM/CJS + Biome + API extraction + npm_package resolution)
-- **Approach**: Use tools/bazel/retrofit-npm-package.sh for new packages
-- **Pattern**: Proven and automated with 14/15 success rate
-- **Target**: 5-10 packages per session (much faster now)
-- **Estimate**: Complete Phase 2 in 1-2 more sessions, begin Phase 3
+**Session 2.17: Begin Phase 3 - Core Framework Migrations**
+- **Goal**: Start migrating runtime/ packages (foundational for framework)
+- **Target Packages**:
+  - runtime-definitions (depends on id-compressor)
+  - id-compressor (needed by runtime-definitions)
+  - datastore-definitions
+  - container-runtime-definitions
+  - runtime-utils
+- **Approach**: Manual BUILD file creation using proven npm_package pattern
+- **Tooling**: Full stack available (ESM/CJS + Biome + API extraction)
+- **Note**: Phase 2 considered complete (14/15 packages = 93% success)
+- **Estimate**: 5-7 packages per session with established pattern
 
 ---
 
@@ -97,12 +117,12 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 7. @fluidframework/tool-utils
 8. @fluidframework/odsp-doclib-utils
 
-**Driver Packages (5/6)** - ✅ 4 build, ⚠️ 1 ESM/CJS fix needed:
+**Driver Packages (5/6)** - ✅ 4 build, ⚠️ 1 has TypeScript module detection issue:
 9. @fluidframework/odsp-driver-definitions ✅
 10. @fluidframework/routerlicious-urlresolver ✅
 11. @fluidframework/driver-base ✅
 12. @fluidframework/driver-web-cache ✅
-13. @fluidframework/replay-driver ⚠️ (ESM/CJS tsconfig)
+13. @fluidframework/replay-driver ⚠️ (TS1479 - module detection issue, see BAZEL_BUILD_ISSUE.md)
 
 **Loader Packages (2/2)** - ✅ All build:
 14. @fluidframework/driver-utils
@@ -217,9 +237,12 @@ bazel query "deps(//packages/common/core-interfaces:core_interfaces_esm)"
 
 ### Known Issues
 - **✅ RESOLVED**: TypeScript subpath exports (/internal) - Session 2.15
+- **⚠️ ACTIVE**: replay-driver TypeScript module detection (TS1479) - Session 2.16 documented, deferred
+  - 14/15 packages build successfully (93% success rate)
+  - Unique to replay-driver, root cause unknown
+  - See packages/drivers/replay-driver/BAZEL_BUILD_ISSUE.md
 - Mocha test integration blocked by npm @types resolution (deferred to Phase 4)
 - Jest integration pending (Phase 4)
-- replay-driver: ESM/CJS module mismatch in tsconfig (minor, fixable)
 - No remote cache in production yet (using local disk cache)
 
 ---
