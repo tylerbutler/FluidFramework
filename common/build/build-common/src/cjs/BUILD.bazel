@@ -1,4 +1,3 @@
-# BUILD.bazel for CJS package.json marker
-# This package.json is copied to dist/ directories to mark CJS output
+package(default_visibility = ["//visibility:public"])
 
 exports_files(["package.json"])
