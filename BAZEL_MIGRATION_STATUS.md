@@ -1,9 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
 **Last Updated**: 2025-10-28
-**Current Phase**: Phase 3 In Progress | Runtime Migrations Accelerating
-**Overall Progress**: 37% (17/46 core sessions complete)
-**Progress**: 4 more runtime packages migrated - datastore-definitions, container-runtime-definitions, runtime-utils!
+**Current Phase**: Phase 3 In Progress | Runtime Package Completion Near
+**Overall Progress**: 39% (18/46 core sessions complete)
+**Progress**: 2 major runtime packages complete - datastore and container-runtime! 7/8 runtime packages migrated!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,27 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 13% | 2.5/20 (5 runtime packages ✅) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 15% | 3/20 (7 runtime packages ✅) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.20: Major Runtime Packages Complete - datastore & container-runtime ✅ (2025-10-28)
+- **Status**: ✅ Complete - 7/8 runtime packages now migrated!
+- **Packages**:
+  - @fluidframework/datastore ✅
+  - @fluidframework/container-runtime ✅ (largest runtime package)
+- **Build Results**: Both packages build successfully with all dependencies
+- **Key Learnings**:
+  - container-runtime requires `noUncheckedIndexedAccess: false` AND `exactOptionalPropertyTypes: false`
+  - package.json must be in js_library `srcs` (not `data`) for subpath exports to work
+  - Larger packages (container-runtime with 194KB containerRuntime.ts) compile successfully
+  - TypeScript subpath imports (`@fluidframework/datastore/internal`) work correctly with proper npm_package setup
+- **Total Runtime Packages**: 7/8 migrated (87.5%)
+- **Remaining**: test-runtime-utils (blocked on routerlicious-driver dependency)
 
 ### Session 2.19: Three More Runtime Packages Migrated ✅ (2025-10-28)
 - **Status**: ✅ Complete - Runtime migrations accelerating
@@ -121,22 +135,21 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.20: Continue Runtime Package Migrations**
-- **Goal**: Complete remaining runtime packages
-- **Status**: 5/8+ runtime packages migrated, strong momentum
-- **Next Packages**:
-  - @fluidframework/test-runtime-utils (depends on runtime-utils)
-  - @fluidframework/datastore (depends on runtime-utils)
-  - Additional runtime packages as dependencies allow
+**Session 2.21: Driver Package Migrations or DDS Packages**
+- **Goal**: Complete driver packages or start DDS migrations
+- **Runtime Status**: 7/8 packages migrated (87.5% complete)
+- **Blocked Package**: test-runtime-utils (needs routerlicious-driver)
+- **Options**:
+  1. **Driver packages**: Migrate routerlicious-driver to unblock test-runtime-utils
+  2. **DDS packages**: Start migrating DDS packages (16 packages total)
 - **Approach**:
-  1. Continue dependency-order migration
-  2. Apply TS1479 fix + tsconfig customization pattern
-  3. Build and validate
-- **Success Pattern**: 7 packages with TS1479 fix - 100% success rate
+  - Continue established pattern (TS1479 fix + tsconfig customization)
+  - Build and validate each package
+- **Success Pattern**: 9 packages with custom tsconfig - 100% success rate
 
 ---
 
-## Migrated Packages (21 attempted, 20 buildable, 1 deferred)
+## Migrated Packages (23 attempted, 22 buildable)
 
 ### Phase 1 - PoC (3 packages)
 1. @fluidframework/core-interfaces ✅
@@ -165,20 +178,19 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 14. @fluidframework/driver-utils ✅
 15. @fluid-private/test-loader-utils ✅
 
-### Phase 3 - Runtime (6 buildable, 0 blocked)
+### Phase 3 - Runtime (7/8 buildable - 87.5% complete)
 16. @fluidframework/id-compressor ✅ (TS1479 fixed - Session 2.17)
 17. @fluidframework/runtime-definitions ✅ (Session 2.18)
 18. @fluidframework/datastore-definitions ✅ (Session 2.19)
 19. @fluidframework/container-runtime-definitions ✅ (Session 2.19)
 20. @fluidframework/runtime-utils ✅ (Session 2.19 - exactOptionalPropertyTypes: false)
+21. @fluidframework/datastore ✅ (Session 2.20)
+22. @fluidframework/container-runtime ✅ (Session 2.20 - noUncheckedIndexedAccess: false, exactOptionalPropertyTypes: false)
 
-**Next runtime packages (dependencies ready):**
-- @fluidframework/test-runtime-utils (depends on runtime-utils ✅)
-- @fluidframework/datastore (depends on runtime-utils ✅)
-- @fluidframework/container-runtime (depends on datastore)
-- Additional runtime packages in dependency order
+**Remaining runtime packages:**
+- @fluidframework/test-runtime-utils (blocked: needs routerlicious-driver)
 
-**Status**: ✅ **Runtime migrations ACCELERATING - 5 packages migrated, strong momentum**
+**Status**: ✅ **Runtime migrations NEAR COMPLETE - 7/8 packages migrated (87.5%)**
 
 *Note: Session numbers may not align exactly due to parallel migrations and tooling sessions*
 
