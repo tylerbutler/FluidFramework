@@ -7621,6 +7621,10 @@ importers:
         version: 5.4.5
 
   packages/common/core-utils:
+    dependencies:
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: ^0.17.1

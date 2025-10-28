@@ -3,7 +3,7 @@
 **Project**: FluidFramework TypeScript Monorepo
 **Migration Start Date**: 2025-10-27
 **Current Phase**: Phase 2 - Expansion (In Progress)
-**Overall Progress**: 14% (9/66 sessions complete)
+**Overall Progress**: 15% (10/66 sessions complete)
 
 ---
 
@@ -13,7 +13,7 @@
 |-------|--------|-------------------|----------------|----------|
 | Phase 0: Setup | ✅ Complete | 2/2 | 2 | 100% |
 | Phase 1: PoC | ✅ Complete | 5/6 | 6 | 83% (API extraction deferred) |
-| Phase 2: Expansion | 🔄 In Progress | 1/15 | 10-15 | 7% |
+| Phase 2: Expansion | 🔄 In Progress | 3/15 | 10-15 | 20% |
 | Phase 3: Core Migration | ⏳ Not Started | 0/30 | 20-30 | 0% |
 | Phase 4: Integration | ⏳ Not Started | 0/8 | 5-8 | 0% |
 | Phase 5: Cleanup | ⏳ Not Started | 0/5 | 3-5 | 0% |
@@ -494,10 +494,10 @@ This pattern allows TypeScript to resolve both main exports and subpath exports 
 ## Phase 2: Expansion - Common & Utility Packages
 
 **Status**: 🔄 In Progress
-**Sessions**: 2/15 complete
+**Sessions**: 3/15 complete
 **Prerequisites**: Phase 1 complete
 **Estimated Time**: 15-25 hours
-**Time Spent**: 1.5 hours
+**Time Spent**: 3.0 hours
 
 ### Session 2.1: Migrate @fluidframework/core-utils
 **Status**: ✅ Complete
@@ -630,7 +630,91 @@ bazel query '//:all' | grep "node_modules/<package-name>"
 
 ---
 
-### Sessions 2.3-2.15
+### Session 2.3: Establish npm Dependency Pattern
+**Status**: ✅ Complete
+**Date Started**: 2025-10-27
+**Date Completed**: 2025-10-27
+**Time Spent**: 1.5 hours
+**Prerequisites**: Session 2.2 complete
+**Estimated**: 1-2 hours
+**Actual**: 1.5 hours (test case creation + pattern documentation)
+
+#### Test Package
+- ✅ @fluidframework/core-utils (added uuid test case)
+
+#### Tasks
+- [x] Add uuid npm dependency to core-utils package.json
+- [x] Update pnpm lockfile with new dependency
+- [x] Add npm_link_all_packages to core-utils BUILD.bazel
+- [x] Configure ts_project deps with local node_modules targets
+- [x] Create test TypeScript file importing uuid
+- [x] Build and validate ESM + CJS outputs
+- [x] Document complete npm dependency pattern
+
+#### Deliverables
+- [x] core-utils successfully builds with npm dependency (uuid)
+- [x] SESSION_2.3_NPM_DEPENDENCY_PATTERN.md - comprehensive pattern documentation
+- [x] npm dependency resolution pattern established and validated
+- [x] Test file: packages/common/core-utils/src/uuidUtils.ts
+- [x] Git commit: `feat(bazel): establish npm dependency pattern with uuid test case` (pending)
+
+#### Pattern Established
+
+**Key Insight**: Each workspace package needs `npm_link_all_packages` in its BUILD file to link npm dependencies.
+
+```python
+# Step 1: Load npm linking function
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+# Step 2: Link npm packages for this package
+npm_link_all_packages(name = "node_modules")
+
+# Step 3: Use local node_modules targets in deps
+ts_project(
+    name = "my_package_esm",
+    deps = [
+        ":node_modules/uuid",  # Local linked npm package
+        ":node_modules/debug",
+    ],
+)
+```
+
+#### Validation
+```bash
+# ESM build ✅
+bazel build //packages/common/core-utils:core_utils_esm
+# Success: 15 .js + 15 .d.ts + source maps
+
+# CJS build ✅
+bazel build //packages/common/core-utils:core_utils_cjs
+# Success: 15 .js + 15 .d.ts + source maps
+```
+
+#### Key Learnings
+1. **npm_link_all_packages Per Package**: Root-level call only links root dependencies; each workspace package must call it
+2. **Local vs Global Targets**: Use `:node_modules/uuid` not `//:.aspect_rules_js/node_modules/uuid@11.1.0`
+3. **Built-in Types**: Modern packages (uuid@11) include types - no separate @types/* dependency needed
+4. **pnpm Lockfile**: Must run `pnpm install --no-frozen-lockfile` after adding dependencies
+
+#### Impact
+- ✅ **Pattern Ready**: Can now migrate 50+ packages with npm dependencies
+- ✅ **Blocker Removed**: Session 2.2 investigation resolved
+- ✅ **Next Steps Clear**: Apply pattern to client-utils and other packages
+
+#### Files Modified
+- `packages/common/core-utils/package.json` - Added uuid dependency
+- `packages/common/core-utils/BUILD.bazel` - Added npm_link_all_packages
+- `packages/common/core-utils/src/uuidUtils.ts` - Test file created
+- `pnpm-lock.yaml` - Updated with uuid@11.1.0
+
+#### Next Steps
+1. **Session 2.4**: Apply pattern to @fluid-internal/client-utils
+2. **Session 2.5+**: Migrate remaining packages with npm dependencies
+3. **Update BUILD generation script**: Auto-detect npm deps and add npm_link_all_packages
+
+---
+
+### Sessions 2.4-2.15
 **Status**: ⏳ Not Started
 **Note**: Will be detailed as sessions progress
 
@@ -868,6 +952,14 @@ None yet
   - Strategic decision: defer client-utils to later session
   - Created SESSION_2.2_NOTES.md with comprehensive investigation findings
   - Time: 1 hour (investigation + documentation)
+- **Session 2.3 COMPLETE**: Establish npm Dependency Pattern
+  - Added uuid test case to @fluidframework/core-utils
+  - Discovered npm_link_all_packages required per workspace package
+  - Successfully built with npm dependency (ESM + CJS)
+  - Established pattern: local `:node_modules/uuid` targets
+  - Created SESSION_2.3_NPM_DEPENDENCY_PATTERN.md - comprehensive pattern docs
+  - Pattern ready for 50+ packages with npm dependencies
+  - Time: 1.5 hours
 
 ---
 
@@ -894,5 +986,5 @@ None yet
 ---
 
 **Last Updated**: 2025-10-27
-**Next Session**: Session 2.3 - Establish npm dependency pattern with simpler package
-**Document Version**: 1.6
+**Next Session**: Session 2.4 - Migrate @fluid-internal/client-utils with npm deps + .cts files
+**Document Version**: 1.7

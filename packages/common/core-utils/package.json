@@ -112,6 +112,9 @@
 		],
 		"temp-directory": "nyc/.nyc_output"
 	},
+	"dependencies": {
+		"uuid": "^11.1.0"
+	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.17.1",
 		"@biomejs/biome": "~1.9.3",
