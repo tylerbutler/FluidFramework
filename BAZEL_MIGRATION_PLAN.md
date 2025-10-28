@@ -1285,44 +1285,85 @@ Each package migration now includes full tooling setup from the start.
 
 ---
 
-## Phase 3: Core Framework Migration (20-30 sessions, 30-50 hours)
+## Phase 3: Core Framework Migration (17 groups, 29-39 hours)
 
-### Session 3.x: Category-by-Category Migration
+### Migration Strategy (Updated 2025-10-28)
 
-**Strategy**:
-- Migrate packages in dependency order (leaf packages first)
-- Use dependency graph to determine order
-- 2-3 packages per session
+**Approach**: Parallel group migrations using optimized dependency ordering
+**Reference**: See [PARALLEL_MIGRATION_GROUPS.md](./PARALLEL_MIGRATION_GROUPS.md) for complete plan
 
-**Categories**:
-1. dds/ (16 packages, ~6-8 sessions)
-2. drivers/ (4 packages, ~2 sessions)
-3. loader/ (5 packages, ~2 sessions)
-4. runtime/ (10+ packages, ~4-5 sessions)
-5. framework/ (15+ packages, ~6-8 sessions)
-6. service-clients/ (3+ packages, ~2 sessions)
+**Key Changes from Original Plan**:
+- ✅ Parallel execution (3-5 packages per group)
+- ✅ Dependency-based grouping (low to high)
+- ✅ Category isolation within groups
+- ✅ 66 packages organized into 17 groups
 
-### Example Session Template:
+### Execution Phases
+
+**Phase 3A: Runtime Completion (Groups 1, 11)** - 2 sessions, 3-3.5 hours
+- **Priority**: CRITICAL - Unblocks final runtime package
+- Group 1: 5 driver packages (includes routerlicious-driver)
+- Group 11: container-loader + test-runtime-utils
+
+**Phase 3B: DDS Foundation (Groups 2-5)** - 4 sessions, 7-10 hours
+- 21 DDS packages (core data structures)
+- Group 2: Simple DDS (6-8 ws_deps)
+- Group 3: Mid-complexity DDS (8-10 ws_deps)
+- Group 4: Complex DDS (10-12 ws_deps)
+- Group 5: Tree DDS (special - 11 ws_deps, 17 total)
+
+**Phase 3C: Framework Layer (Groups 6-10)** - 5 sessions, 9-12 hours
+- 19 framework packages
+- Groups 6-7: Low/mid framework (1-7 ws_deps)
+- Group 8: Advanced framework (11-13 ws_deps)
+- Group 9: Top-level framework (16 ws_deps)
+- Group 10: Remaining drivers (8-9 ws_deps)
+
+**Phase 3D: Clients & Infrastructure (Groups 12-14, 17)** - 4 sessions, 6-8 hours
+- Group 12: Service clients (3 packages)
+- Groups 13-14: Test utilities (8 packages)
+- Group 17: Tools (4 packages)
+
+**Phase 3E: Advanced Testing (Groups 15-16)** - 2 sessions, 4-5.5 hours
+- Complex integration test packages
+- Defer to Phase 4 if needed
+
+### Package Categories Summary
+
+| Category | Total | Migrated | Remaining | Groups |
+|----------|-------|----------|-----------|--------|
+| **common** | 5 | 5 | 0 | ✅ Complete |
+| **utils** | 3 | 3 | 0 | ✅ Complete |
+| **runtime** | 8 | 7 | 1 | Groups 1, 11 |
+| **drivers** | 12 | 5 | 7 | Groups 1, 10 |
+| **loader** | 3 | 2 | 1 | Group 11 |
+| **dds** | 16 | 0 | 16 | Groups 2-5 |
+| **framework** | 17 | 0 | 17 | Groups 6-9 |
+| **service-clients** | 3 | 0 | 3 | Group 12 |
+| **test** | 14 | 0 | 14 | Groups 13-16 |
+| **tools** | 4 | 0 | 4 | Group 17 |
+| **TOTAL** | **85** | **22** | **63** | **17 groups** |
+
+### Session Template (Parallel Groups):
 ```markdown
-## Session 3.X: Migrate <Package Category>
+## Session 3.X: Migrate Group Y (<Category>)
 
-**Packages**:
-- <package-1>
-- <package-2>
-- <package-3>
+**Group**: Y from PARALLEL_MIGRATION_GROUPS.md
+**Packages**: 3-5 packages
+**Strategy**: Parallel execution using Task agents
 
-**Tasks**:
-1. Generate BUILD files: `tsx scripts/generate-build-file.ts packages/<category>/<name>`
-2. Review and adjust dependencies
-3. Build: `bazel build //packages/<category>/...`
-4. Test: `bazel test //packages/<category>/...`
-5. Validate outputs
-6. Commit: `feat(bazel): migrate <packages>`
+**Approach**:
+1. Launch Task agents in parallel (one per package)
+2. Each agent creates BUILD.bazel + tsconfig files
+3. Apply TS1479 fix pattern (package.json in srcs)
+4. Build and validate all packages
+5. Consolidate and commit together
 
 **Validation**:
-- [ ] All packages build
-- [ ] All tests pass
-- [ ] Outputs match fluid-build
+- [ ] All packages build (ESM + CJS)
+- [ ] Dependencies resolve correctly
+- [ ] No TypeScript errors
+- [ ] Commit with group summary
 ```
 
 ---
@@ -1530,30 +1571,56 @@ Copy this for each session:
 
 ## Estimated Timeline Summary
 
-| Phase | Sessions | Hours | Duration |
-|-------|----------|-------|----------|
-| Phase 0: Setup | 2 | 2-4h | 2-3 days |
-| Phase 1: PoC | 6 | 8-12h | 1-2 weeks |
-| Phase 2: Expansion | 10-15 | 15-25h | 2-3 weeks |
-| Phase 3: Core Migration | 20-30 | 30-50h | 4-6 weeks |
-| Phase 4: Integration | 5-8 | 8-12h | 1-2 weeks |
-| Phase 5: Cleanup | 3-5 | 4-8h | 1 week |
-| **Total** | **46-66** | **67-111h** | **8-12 weeks** |
+### Original Plan vs Actual Progress
 
-*Assumes 1-2 hour sessions, one session per day*
+| Phase | Original Est. | Revised Est. | Actual Status |
+|-------|--------------|--------------|---------------|
+| Phase 0: Setup | 2 sessions, 2-4h | - | ✅ Complete (2/2) |
+| Phase 1: PoC | 6 sessions, 8-12h | - | ✅ Complete (5/6) |
+| Phase 2: Expansion | 10-15 sessions, 15-25h | - | ✅ Complete (15/18) |
+| Phase 3: Core Migration | 20-30 sessions, 30-50h | 17 groups, 29-39h | 🔄 In Progress (3/17 groups) |
+| Phase 4: Integration | 5-8 sessions, 8-12h | - | ⏳ Pending |
+| Phase 5: Cleanup | 3-5 sessions, 4-8h | - | ⏳ Pending |
+| **Total** | **46-66 sessions**, **67-111h** | **~40 sessions**, **~60-80h** | **22/88 packages** (25%) |
+
+### Updated Phase 3 Timeline (17 Groups)
+
+| Sub-Phase | Groups | Packages | Estimated Time | Status |
+|-----------|--------|----------|----------------|--------|
+| **3A: Runtime** | 2 | 7 | 3-3.5h | 🔄 Group 1 next |
+| **3B: DDS** | 4 | 21 | 7-10h | ⏳ Pending |
+| **3C: Framework** | 5 | 19 | 9-12h | ⏳ Pending |
+| **3D: Infrastructure** | 4 | 17 | 6-8h | ⏳ Pending |
+| **3E: Testing** | 2 | 6 | 4-5.5h | ⏳ Pending |
+| **TOTAL Phase 3** | **17** | **70** | **29-39h** | **0/17 groups** |
+
+*Note: Phases 0-2 complete. Phase 3 uses parallel group approach for efficiency.*
 
 ---
 
-## Next Session
+## Current Status & Next Steps
 
-**Session 0.1**: Bazel Installation & Project Structure Setup
-**Estimated Time**: 1-2 hours
-**Prerequisites**: Read this plan, understand Bazel basics
-**Outcome**: Bazel installed, migration tooling structure ready
+**Current Progress**: Session 2.20 Complete
+- ✅ 22 packages migrated (25% of 88 total)
+- ✅ Runtime: 7/8 packages (87.5%)
+- ✅ Common, Utils: 100% complete
+- ✅ Drivers: 5/12 packages (42%)
+
+**Next Session: 2.21 - Group 1 (Drivers)**
+- **Packages**: 5 driver packages in parallel
+- **Priority**: CRITICAL - Unblocks final runtime package
+- **Strategy**: Parallel Task agents, one per package
+- **Expected Time**: 1.5-2 hours
+- **Outcome**: Runtime 100% complete, drivers 83% complete
+
+**Reference Documentation**:
+- Full group details: [PARALLEL_MIGRATION_GROUPS.md](./PARALLEL_MIGRATION_GROUPS.md)
+- Status tracking: [BAZEL_MIGRATION_STATUS.md](./BAZEL_MIGRATION_STATUS.md)
+- Session history: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-10-27
+**Document Version**: 2.0
+**Last Updated**: 2025-10-28
 **Author**: Bazel Migration Planning
-**Status**: Ready for execution
+**Status**: Phase 3 In Progress - Parallel Groups Active
