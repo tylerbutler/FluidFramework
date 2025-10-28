@@ -3,7 +3,7 @@
 **Project**: FluidFramework TypeScript Monorepo
 **Migration Start Date**: 2025-10-27
 **Current Phase**: Phase 2 - Expansion (In Progress)
-**Overall Progress**: 21% (14/66 sessions complete)
+**Overall Progress**: 23% (15/66 sessions complete)
 
 ---
 
@@ -13,7 +13,7 @@
 |-------|--------|-------------------|----------------|----------|
 | Phase 0: Setup | ✅ Complete | 2/2 | 2 | 100% |
 | Phase 1: PoC | ✅ Complete | 5/6 | 6 | 83% (API extraction deferred) |
-| Phase 2: Expansion | 🔄 In Progress | 7/15 | 10-15 | 47% |
+| Phase 2: Expansion | 🔄 In Progress | 8/15 | 10-15 | 53% |
 | Phase 3: Core Migration | ⏳ Not Started | 0/30 | 20-30 | 0% |
 | Phase 4: Integration | ⏳ Not Started | 0/8 | 5-8 | 0% |
 | Phase 5: Cleanup | ⏳ Not Started | 0/5 | 3-5 | 0% |
@@ -494,10 +494,10 @@ This pattern allows TypeScript to resolve both main exports and subpath exports 
 ## Phase 2: Expansion - Common & Utility Packages
 
 **Status**: 🔄 In Progress
-**Sessions**: 7/15 complete
+**Sessions**: 8/15 complete
 **Prerequisites**: Phase 1 complete
 **Estimated Time**: 15-25 hours
-**Time Spent**: 7.5 hours
+**Time Spent**: 8 hours
 
 ### Session 2.1: Migrate @fluidframework/core-utils
 **Status**: ✅ Complete
@@ -1114,12 +1114,106 @@ npx @bazel/bazelisk build //packages/common/core-interfaces:core_interfaces \
 
 ---
 
-### Sessions 2.9-2.15
+### Session 2.9: Migrate @fluid-private/test-loader-utils
+**Status**: ✅ Complete
+**Date Started**: 2025-10-27
+**Date Completed**: 2025-10-27
+**Time Spent**: 0.5 hours
+**Prerequisites**: Session 2.8 complete
+**Estimated**: 1-2 hours
+**Actual**: 0.5 hours (simple package with established patterns)
+
+#### Package Migrated
+- ✅ @fluid-private/test-loader-utils (second loader package)
+
+#### Package Details
+- **Path**: packages/loader/test-loader-utils
+- **Fluid Dependencies**: 4 (all migrated)
+  - @fluid-internal/client-utils
+  - @fluidframework/core-interfaces
+  - @fluidframework/driver-definitions
+  - @fluidframework/driver-utils
+- **NPM Dependencies**: 0
+- **Source Files**: 4 TypeScript files
+- **Complexity**: LOW (simple mock utilities)
+
+#### Tasks Completed
+- [x] Create tsconfig.bazel.json (ESM) with path mappings ✅
+- [x] Create tsconfig.cjs.bazel.json (CJS) with path mappings ✅
+- [x] Create BUILD.bazel with 4 workspace dependencies ✅
+- [x] Add DOM types for AbortSignal ✅
+- [x] Fix TypedEventEmitter.emit() type errors ✅
+- [x] Build and validate (ESM + CJS) ✅
+- [x] Verify all 10 migrated packages build together ✅
+
+#### Deliverables
+- [x] BUILD.bazel for test-loader-utils created ✅
+- [x] tsconfig.bazel.json (ESM), tsconfig.cjs.bazel.json (CJS) ✅
+- [x] ESM + CJS builds successful (4 .js + 4 .d.ts + 8 .d.ts.map + 8 .js.map = 16 files each) ✅
+- [x] All 10 migrated packages build together (0.202s, fully cached) ✅
+- [x] Git commit: `feat(bazel): migrate @fluid-private/test-loader-utils (Session 2.9)` (pending)
+
+#### Key Issues Resolved
+1. **AbortSignal Type Missing**: Added `"lib": ["ES2022", "DOM"]` to provide DOM types
+2. **TypedEventEmitter.emit() Errors**: Added 7 @ts-expect-error annotations for emit() calls
+3. **Module Resolution**: Fixed tsconfig.cjs.bazel.json to use module: "Node16" with moduleResolution: "Node16"
+
+#### Validation
+```bash
+# Build test-loader-utils ESM ✅
+npx @bazel/bazelisk build //packages/loader/test-loader-utils:test_loader_utils_esm
+# Success (1.105s, 4 .js + 4 .d.ts files + source maps + declaration maps)
+
+# Build test-loader-utils CJS ✅
+npx @bazel/bazelisk build //packages/loader/test-loader-utils:test_loader_utils_cjs
+# Success (1.008s, 4 .js + 4 .d.ts files + source maps + declaration maps)
+
+# Build all 10 migrated packages ✅
+npx @bazel/bazelisk build //packages/common/core-interfaces:core_interfaces \
+  //packages/common/core-utils:core_utils \
+  //packages/common/driver-definitions:driver_definitions \
+  //packages/common/container-definitions:container_definitions \
+  //packages/common/client-utils:client_utils \
+  //packages/utils/telemetry-utils:telemetry_utils \
+  //packages/drivers/odsp-driver-definitions:odsp_driver_definitions \
+  //packages/drivers/routerlicious-urlResolver:routerlicious_urlresolver \
+  //packages/loader/driver-utils:driver_utils \
+  //packages/loader/test-loader-utils:test_loader_utils
+# Success (0.202s, 1 process, fully cached)
+```
+
+#### Files Created
+- `packages/loader/test-loader-utils/BUILD.bazel`
+- `packages/loader/test-loader-utils/tsconfig.bazel.json` (ESM inline config with path mappings)
+- `packages/loader/test-loader-utils/tsconfig.cjs.bazel.json` (CJS inline config with path mappings)
+
+#### Files Modified
+- `packages/loader/test-loader-utils/src/mockDocumentDeltaConnection.ts` - Added 7 @ts-expect-error annotations for emit() calls
+
+#### Key Learnings
+1. **Pattern Consistency**: test-loader-utils followed exact pattern from previous sessions (DOM types + @ts-expect-error for emit())
+2. **Second Loader Package**: Successfully continued expansion of loader category
+3. **10 Packages Migrated**: 53% of Phase 2 estimated minimum complete (8/15 sessions)
+4. **Build Speed**: Cached builds remain extremely fast (0.2s) with 10 packages
+5. **Module Resolution**: Node16 moduleResolution requires module: "Node16" (not CommonJS)
+
+#### Impact
+- ✅ **Second loader Package**: Successfully expanded loader category migration
+- ✅ **10 Packages Migrated**: Over half of Phase 2 minimum sessions complete
+- ✅ **Build Speed**: Sub-second cached builds with 10 packages demonstrating excellent caching
+- ✅ **Pattern Validation**: DOM types + @ts-expect-error pattern working consistently
+
+#### Next Steps
+1. **Session 2.10+**: Continue migrating Phase 2 packages - consider high-impact packages or simple dependencies
+2. **Pattern**: test-loader-utils pattern (4 workspace deps, DOM types, emit() fixes) applies to similar mock/test utility packages
+
+---
+
+### Sessions 2.10-2.15
 **Status**: ⏳ Not Started
 **Note**: Will be detailed as sessions progress
 
 **Preliminary Plan**:
-- **Session 2.9**: Continue with packages unblocked by driver-utils or other high-impact packages
 - **Session 2.10+**: Continue with drivers, loader, or framework packages
 
 ---
@@ -1407,6 +1501,16 @@ None yet
   - HIGH IMPACT: Unblocks 9 other packages in dependency graph
   - First loader category package - successfully expanded migration scope
   - Time: 1 hour
+- **Session 2.9 COMPLETE**: Migrate @fluid-private/test-loader-utils (Second loader Package)
+  - Migrated second loader package with 4 workspace dependencies (all already migrated)
+  - Added DOM types to lib array for AbortSignal
+  - Fixed 7 TypedEventEmitter.emit() type errors with @ts-expect-error annotations
+  - Fixed module resolution: Node16 moduleResolution requires module: "Node16"
+  - ESM + CJS builds successful (4 .js + 4 .d.ts files each + source maps + declaration maps)
+  - All 10 migrated packages build together successfully (0.202s, fully cached)
+  - Second loader category package - continued loader expansion
+  - 10 packages now migrated - 53% of Phase 2 minimum sessions complete
+  - Time: 0.5 hours
 
 ---
 
@@ -1435,5 +1539,5 @@ None yet
 ---
 
 **Last Updated**: 2025-10-27
-**Next Session**: Session 2.9 - Continue migrating Phase 2 packages
-**Document Version**: 2.0
+**Next Session**: Session 2.10 - Continue migrating Phase 2 packages
+**Document Version**: 2.1

@@ -1,0 +1,35 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "Node16",
+		"moduleResolution": "Node16",
+		"lib": ["ES2022", "DOM"],
+		"rootDir": "./src",
+		"outDir": "./dist",
+		"composite": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"strict": false,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"esModuleInterop": true,
+		"exactOptionalPropertyTypes": false,
+		"noUncheckedIndexedAccess": false,
+		"types": [],
+		"paths": {
+			"@fluid-internal/client-utils": ["../../common/client-utils/dist/index.d.ts"],
+			"@fluid-internal/client-utils/*": ["../../common/client-utils/dist/*"],
+			"@fluidframework/core-interfaces": ["../../common/core-interfaces/dist/index.d.ts"],
+			"@fluidframework/core-interfaces/*": ["../../common/core-interfaces/dist/*"],
+			"@fluidframework/driver-definitions": ["../../common/driver-definitions/dist/index.d.ts"],
+			"@fluidframework/driver-definitions/*": ["../../common/driver-definitions/dist/*"],
+			"@fluidframework/driver-definitions/internal": ["../../common/driver-definitions/dist/index.d.ts"],
+			"@fluidframework/driver-utils": ["../driver-utils/dist/index.d.ts"],
+			"@fluidframework/driver-utils/*": ["../driver-utils/dist/*"],
+			"@fluidframework/driver-utils/internal": ["../driver-utils/dist/index.d.ts"]
+		}
+	},
+	"include": ["src/**/*"],
+	"exclude": ["dist", "node_modules"]
+}

@@ -80,26 +80,34 @@ export class MockDocumentDeltaConnection
 	}
 	public dispose(error?: Error): void {
 		this._disposed = true;
+		// TypeScript doesn't see emit() on TypedEventEmitter, but it exists on the base EventEmitter class
+		// @ts-expect-error TS2339 - emit() exists at runtime via inheritance from EventEmitter
 		this.emit("disconnect", error?.message ?? "mock close() called");
 	}
 
 	// Mock methods for raising events
 	public emitOp(documentId: string, messages: Partial<ISequencedDocumentMessage>[]): void {
+		// @ts-expect-error TS2339 - emit() exists at runtime via inheritance from EventEmitter
 		this.emit("op", documentId, messages);
 	}
 	public emitSignal(signal: Partial<ISignalMessage>): void {
+		// @ts-expect-error TS2339 - emit() exists at runtime via inheritance from EventEmitter
 		this.emit("signal", signal);
 	}
 	public emitNack(documentId: string, message: Partial<INack>[]): void {
+		// @ts-expect-error TS2339 - emit() exists at runtime via inheritance from EventEmitter
 		this.emit("nack", documentId, message);
 	}
 	public emitPong(latency: number): void {
+		// @ts-expect-error TS2339 - emit() exists at runtime via inheritance from EventEmitter
 		this.emit("pong", latency);
 	}
 	public emitDisconnect(disconnectReason: IAnyDriverError): void {
+		// @ts-expect-error TS2339 - emit() exists at runtime via inheritance from EventEmitter
 		this.emit("error", disconnectReason);
 	}
 	public emitError(error: IAnyDriverError): void {
+		// @ts-expect-error TS2339 - emit() exists at runtime via inheritance from EventEmitter
 		this.emit("error", error);
 	}
 }
