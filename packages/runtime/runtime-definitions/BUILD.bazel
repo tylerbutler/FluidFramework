@@ -17,7 +17,7 @@ ts_project(
     srcs = glob(
         ["src/**/*.ts"],
         exclude = ["src/test/**"],
-    ),
+    ) + ["package.json"],  # Include package.json so TypeScript sees the "type": "module"
     composite = True,
     declaration = True,
     declaration_map = True,
@@ -41,7 +41,7 @@ ts_project(
     srcs = glob(
         ["src/**/*.ts"],
         exclude = ["src/test/**"],
-    ),
+    ) + ["package.json"],  # Include package.json for consistent behavior
     composite = True,
     declaration = True,
     declaration_map = True,
