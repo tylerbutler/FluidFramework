@@ -1104,43 +1104,58 @@ Migrate 3-4 packages simultaneously using parallel agent execution.
 
 ### Session 2.12: Tooling Integration - Biome (Lint/Format)
 **Time**: 1 hour
-**Reference Package**: @fluidframework/core-interfaces
+**Approach**: Root-level targets (workspace-wide formatting/linting)
 
-Establish Biome integration pattern for linting and formatting.
+Establish Biome integration pattern for linting and formatting at the workspace root.
+
+**Rationale for Root-Level Approach**:
+- Matches current `format:biome` root-level workflow via fluid-build
+- Single source of truth for CI/pre-commit hooks
+- Biome auto-discovers nested biome.jsonc configs in packages
+- Simpler than per-package targets (less BUILD file maintenance)
+- Can add per-package targets later if needed for dev workflow
+
+**Current FluidFramework Setup**:
+- Root `biome.jsonc` with comprehensive shared configuration
+- Some packages (e.g., `framework/*`) have nested `biome.jsonc` with `"extends": ["../../../biome.jsonc"]`
+- Per-package scripts run `biome check .` but orchestrated via root-level `format:biome`
 
 **Tasks**:
-1. Add biome rules to BUILD.bazel
-2. Create `biome_check` target for validation
-3. Create `biome_format` target for auto-formatting
-4. Validate against existing `pnpm run biome-check` output
-5. Document pattern for future packages
+1. Add root-level BUILD.bazel (if doesn't exist)
+2. Create `format` target for workspace-wide auto-formatting
+3. Create `format_check` target for validation
+4. Validate against existing `pnpm run format:biome` output
+5. Document root-level pattern and rationale
 
 **Deliverables**:
 ```python
+# Root BUILD.bazel
 load("@aspect_rules_js//js:defs.bzl", "js_run_binary")
 
 js_run_binary(
-    name = "biome_check",
-    tool = ":node_modules/@biomejs/biome",
-    args = ["check", "."],
-    chdir = package_name(),
+    name = "format",
+    tool = "@npm//:biomejs/biome",
+    args = ["check", ".", "--write"],
 )
 
 js_run_binary(
-    name = "biome_format",
-    tool = ":node_modules/@biomejs/biome",
-    args = ["check", ".", "--write"],
-    chdir = package_name(),
+    name = "format_check",
+    tool = "@npm//:biomejs/biome",
+    args = ["check", "."],
 )
 ```
 
 **Usage**:
 ```bash
-bazel run //packages/common/core-interfaces:biome_check
-bazel run //packages/common/core-interfaces:biome_format
+bazel run //:format           # Format entire workspace
+bazel run //:format_check     # Check entire workspace (CI/pre-commit)
 ```
 
-**Why Now**: Establishes linting/formatting patterns early, validates aspect_rules_js integration.
+**Why Now**:
+- Establishes linting/formatting patterns early
+- Validates aspect_rules_js js_run_binary integration
+- Provides single command for CI/consistency
+- Honors existing nested biome.jsonc configs automatically
 
 ---
 

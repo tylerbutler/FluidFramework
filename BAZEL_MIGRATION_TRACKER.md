@@ -1456,49 +1456,68 @@ bazel build //packages/common/core-interfaces:core_interfaces \
 **Estimated**: 1 hour
 
 #### Goal
-Establish Biome linting and formatting integration pattern using core-interfaces as reference.
+Establish root-level Biome linting and formatting integration for workspace-wide operations.
 
-#### Reference Package
-- **Package**: @fluidframework/core-interfaces
-- **Why**: Small (3 files), simple, already has Biome configured, perfect example
+#### Approach
+**Root-Level Targets** (workspace-wide formatting/linting)
+
+**Rationale**:
+- Matches current `format:biome` root-level workflow via fluid-build
+- Single source of truth for CI/pre-commit hooks
+- Biome auto-discovers nested `biome.jsonc` configs in packages
+- Simpler than per-package targets (less BUILD file maintenance)
+- Can add per-package targets later if dev feedback requests it
+
+#### Current FluidFramework Setup Analysis
+- **Root Config**: `biome.jsonc` with comprehensive shared configuration
+- **Nested Configs**: Some packages (e.g., `framework/*`) have `biome.jsonc` with `"extends": ["../../../biome.jsonc"]`
+- **Current Workflow**: Per-package scripts run `biome check .` but orchestrated via root-level `format:biome`
+- **Target**: Mirror root-level orchestration in Bazel
 
 #### Tasks
-- [ ] Add js_run_binary rule for biome_check
-- [ ] Add js_run_binary rule for biome_format
-- [ ] Configure chdir and args for proper execution
-- [ ] Validate against `pnpm run biome-check` output
-- [ ] Document pattern in migration tracker
+- [ ] Check if root BUILD.bazel exists, create if needed
+- [ ] Add js_run_binary rule for workspace-wide `format` target
+- [ ] Add js_run_binary rule for workspace-wide `format_check` target
+- [ ] Validate against `pnpm run format:biome` output
+- [ ] Test nested biome.jsonc discovery (e.g., framework packages)
+- [ ] Document root-level pattern and rationale
 
 #### Deliverables
-- [ ] `biome_check` target in packages/common/core-interfaces/BUILD.bazel
-- [ ] `biome_format` target in packages/common/core-interfaces/BUILD.bazel
-- [ ] Pattern documentation for future packages
-- [ ] Git commit: `feat(bazel): add Biome lint/format integration (Session 2.12)`
+- [ ] `format` target in root BUILD.bazel
+- [ ] `format_check` target in root BUILD.bazel
+- [ ] Documentation explaining root-level approach
+- [ ] Git commit: `feat(bazel): add root-level Biome lint/format integration (Session 2.12)`
 
 #### Expected Pattern
 ```python
+# Root BUILD.bazel
 load("@aspect_rules_js//js:defs.bzl", "js_run_binary")
 
 js_run_binary(
-    name = "biome_check",
-    tool = ":node_modules/@biomejs/biome",
-    args = ["check", "."],
-    chdir = package_name(),
+    name = "format",
+    tool = "@npm//:biomejs/biome",
+    args = ["check", ".", "--write"],
 )
 
 js_run_binary(
-    name = "biome_format",
-    tool = ":node_modules/@biomejs/biome",
-    args = ["check", ".", "--write"],
-    chdir = package_name(),
+    name = "format_check",
+    tool = "@npm//:biomejs/biome",
+    args = ["check", "."],
 )
+```
+
+#### Usage
+```bash
+bazel run //:format           # Format entire workspace
+bazel run //:format_check     # Check entire workspace (CI/pre-commit)
 ```
 
 #### Why Now
 - Linting/formatting is essential for code quality
 - Establishes pattern before Phase 3 mass migration
 - Validates aspect_rules_js js_run_binary integration
-- Simple enough to debug and document clearly
+- Provides single command for CI/consistency
+- Honors existing nested biome.jsonc configs automatically
 
 ---
 
