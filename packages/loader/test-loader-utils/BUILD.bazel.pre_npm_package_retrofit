@@ -1,0 +1,59 @@
+# BUILD.bazel for @fluid-private/test-loader-utils
+# Auto-generated with modifications for Bazel migration
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+package(default_visibility = ["//visibility:public"])
+
+# ESM compilation
+ts_project(
+    name = "test_loader_utils_esm",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**"],
+    ),
+    declaration = True,
+    declaration_map = True,
+    source_map = True,
+    composite = True,
+    out_dir = "lib",
+    root_dir = "src",
+    tsconfig = ":tsconfig.bazel.json",
+    deps = [
+        "//packages/common/client-utils:client_utils_esm",
+        "//packages/common/core-interfaces:core_interfaces_esm",
+        "//packages/common/driver-definitions:driver_definitions_esm",
+        "//packages/loader/driver-utils:driver_utils_esm",
+    ],
+)
+
+# CommonJS compilation
+ts_project(
+    name = "test_loader_utils_cjs",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**"],
+    ),
+    declaration = True,
+    declaration_map = True,
+    source_map = True,
+    composite = True,
+    out_dir = "dist",
+    root_dir = "src",
+    tsconfig = ":tsconfig.cjs.bazel.json",
+    deps = [
+        "//packages/common/client-utils:client_utils_cjs",
+        "//packages/common/core-interfaces:core_interfaces_cjs",
+        "//packages/common/driver-definitions:driver_definitions_cjs",
+        "//packages/loader/driver-utils:driver_utils_cjs",
+    ],
+)
+
+# Default target builds both ESM and CJS
+filegroup(
+    name = "test_loader_utils",
+    srcs = [
+        ":test_loader_utils_esm",
+        ":test_loader_utils_cjs",
+    ],
+)

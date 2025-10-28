@@ -1,0 +1,69 @@
+# BUILD.bazel for @fluidframework/telemetry-utils
+# Session 2.5 - First utils package migration
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+package(default_visibility = ["//visibility:public"])
+
+# Link npm packages for this package
+npm_link_all_packages(name = "node_modules")
+
+# ESM compilation
+ts_project(
+    name = "telemetry_utils_esm",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**"],
+    ),
+    declaration = True,
+    declaration_map = True,
+    composite = True,
+    incremental = True,
+    source_map = True,
+    out_dir = "lib",
+    root_dir = "src",
+    tsconfig = ":tsconfig.bazel.json",
+    deps = [
+        ":node_modules/debug",
+        ":node_modules/uuid",
+        "//packages/common/client-utils:client_utils_esm",
+        "//packages/common/core-interfaces:core_interfaces_esm",
+        "//packages/common/core-utils:core_utils_esm",
+        "//packages/common/driver-definitions:driver_definitions_esm",
+    ],
+)
+
+# CommonJS compilation
+ts_project(
+    name = "telemetry_utils_cjs",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**"],
+    ),
+    declaration = True,
+    declaration_map = True,
+    composite = True,
+    incremental = True,
+    source_map = True,
+    out_dir = "dist",
+    root_dir = "src",
+    tsconfig = ":tsconfig.cjs.bazel.json",
+    deps = [
+        ":node_modules/debug",
+        ":node_modules/uuid",
+        "//packages/common/client-utils:client_utils_cjs",
+        "//packages/common/core-interfaces:core_interfaces_cjs",
+        "//packages/common/core-utils:core_utils_cjs",
+        "//packages/common/driver-definitions:driver_definitions_cjs",
+    ],
+)
+
+# Default target builds both ESM and CJS
+filegroup(
+    name = "telemetry_utils",
+    srcs = [
+        ":telemetry_utils_esm",
+        ":telemetry_utils_cjs",
+    ],
+)

@@ -1,9 +1,6 @@
 # BUILD.bazel for @fluidframework/replay-driver
-# Retrofitted for npm_package approach (Session 2.15)
 
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
-load("@aspect_rules_js//js:defs.bzl", "js_library")
-load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 
 package(default_visibility = ["//visibility:public"])
@@ -11,6 +8,7 @@ package(default_visibility = ["//visibility:public"])
 # Link npm packages for this workspace package
 npm_link_all_packages(name = "node_modules")
 
+# ESM compilation
 ts_project(
     name = "replay_driver_esm",
     srcs = glob(
@@ -44,9 +42,7 @@ ts_project(
     ],
 )
 
-# CommonJS compilation using ts_project with corrected tsconfig
-# The key is to use "module": "Node16" with "moduleResolution": "Node16"
-# which allows subpath imports while still generating CommonJS output
+# CommonJS compilation
 ts_project(
     name = "replay_driver_cjs",
     srcs = glob(
@@ -78,17 +74,6 @@ ts_project(
         "//packages/loader/driver-utils:driver_utils_cjs",
         "//packages/utils/telemetry-utils:telemetry_utils_cjs",
     ],
-)
-
-# Copy CJS package.json to dist/ after compilation
-genrule(
-    name = "cjs_dist_package_json",
-    srcs = [
-        ":replay_driver_cjs",
-        "//common/build/build-common/src/cjs:package.json",
-    ],
-    outs = ["dist_with_package_json"],
-    cmd = "cp -r $(location :replay_driver_cjs) $@ && cp $(location //common/build/build-common/src/cjs:package.json) $@/",
 )
 
 # Generate entrypoint files (public.d.ts, legacy.d.ts) using flub
@@ -126,27 +111,6 @@ sh_binary(
 )
 
 # Default target builds both ESM and CJS
-
-# js_library wrapping compiled outputs
-# Provides JsInfo for npm_package and includes package.json with exports field
-js_library(
-    name = "lib",
-    srcs = [
-        ":replay_driver_esm",
-        ":replay_driver_cjs",
-        "package.json",
-    ],
-)
-
-# npm_package makes this linkable via npm_link_all_packages
-# This enables TypeScript to resolve subpath exports (/internal, /legacy, etc.)
-npm_package(
-    name = "pkg",
-    srcs = [":lib"],
-    visibility = ["//visibility:public"],
-)
-
-# Legacy filegroup for backward compatibility
 filegroup(
     name = "replay_driver",
     srcs = [

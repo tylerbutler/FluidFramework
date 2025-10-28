@@ -1,0 +1,4 @@
+# BUILD.bazel for CJS package.json marker
+# This package.json is copied to dist/ directories to mark CJS output
+
+exports_files(["package.json"])
