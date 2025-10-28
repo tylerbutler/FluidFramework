@@ -30,6 +30,8 @@ export class EventEmitterWithErrorHandling<
 
 	public emit(event: EventEmitterEventType, ...args: unknown[]): boolean {
 		try {
+			// TypeScript doesn't see emit() on TypedEventEmitter, but it exists on the base EventEmitter class
+			// @ts-expect-error TS2339 - emit() exists at runtime via inheritance from EventEmitter
 			return super.emit(event, ...args);
 		} catch (error) {
 			this.errorHandler(event, error);

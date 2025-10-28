@@ -59,7 +59,9 @@
       "Bash(do jq -r '.name' \"$dir/package.json\")",
       "Bash(for dir in packages/utils/*/)",
       "Bash(bazel run:*)",
-      "WebFetch(domain:docs.aspect.build)"
+      "WebFetch(domain:docs.aspect.build)",
+      "Bash(xargs:*)",
+      "Bash(pnpm run esnext:*)"
     ],
     "deny": [],
     "ask": []
