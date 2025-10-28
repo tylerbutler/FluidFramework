@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "lib": ["ES2022", "DOM"],
+    "outDir": "./lib",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "importHelpers": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "types": [],
+    "paths": {
+      "@fluidframework/core-interfaces": ["../../common/core-interfaces/lib/index.d.ts"],
+      "@fluidframework/core-interfaces/*": ["../../common/core-interfaces/lib/*"],
+      "@fluidframework/core-utils": ["../../common/core-utils/lib/index.d.ts"],
+      "@fluidframework/core-utils/internal": ["../../common/core-utils/lib/index.d.ts"],
+      "@fluidframework/core-utils/*": ["../../common/core-utils/lib/*"],
+      "@fluidframework/driver-definitions": ["../../common/driver-definitions/lib/index.d.ts"],
+      "@fluidframework/driver-definitions/internal": ["../../common/driver-definitions/lib/index.d.ts"],
+      "@fluidframework/driver-definitions/*": ["../../common/driver-definitions/lib/*"],
+      "@fluidframework/driver-utils": ["../../loader/driver-utils/lib/index.d.ts"],
+      "@fluidframework/driver-utils/internal": ["../../loader/driver-utils/lib/index.d.ts"],
+      "@fluidframework/driver-utils/*": ["../../loader/driver-utils/lib/*"],
+      "@fluidframework/telemetry-utils": ["../../utils/telemetry-utils/lib/index.d.ts"],
+      "@fluidframework/telemetry-utils/internal": ["../../utils/telemetry-utils/lib/index.d.ts"],
+      "@fluidframework/telemetry-utils/*": ["../../utils/telemetry-utils/lib/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/test/**"]
+}

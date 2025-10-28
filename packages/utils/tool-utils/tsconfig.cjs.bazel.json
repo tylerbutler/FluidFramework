@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "lib": ["ES2022", "DOM"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "importHelpers": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "paths": {
+      "@fluidframework/core-utils": ["../../common/core-utils/dist/index.d.ts"],
+      "@fluidframework/core-utils/internal": ["../../common/core-utils/dist/index.d.ts"],
+      "@fluidframework/core-utils/*": ["../../common/core-utils/dist/*"],
+      "@fluidframework/driver-definitions": ["../../common/driver-definitions/dist/index.d.ts"],
+      "@fluidframework/driver-definitions/internal": ["../../common/driver-definitions/dist/index.d.ts"],
+      "@fluidframework/driver-definitions/*": ["../../common/driver-definitions/dist/*"],
+      "@fluidframework/driver-utils": ["../../loader/driver-utils/dist/index.d.ts"],
+      "@fluidframework/driver-utils/internal": ["../../loader/driver-utils/dist/index.d.ts"],
+      "@fluidframework/driver-utils/*": ["../../loader/driver-utils/dist/*"],
+      "@fluidframework/odsp-doclib-utils": ["../odsp-doclib-utils/dist/index.d.ts"],
+      "@fluidframework/odsp-doclib-utils/internal": ["../odsp-doclib-utils/dist/index.d.ts"],
+      "@fluidframework/odsp-doclib-utils/*": ["../odsp-doclib-utils/dist/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/test/**"]
+}
