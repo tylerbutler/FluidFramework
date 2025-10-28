@@ -946,9 +946,59 @@ bazel build //packages/common/core-interfaces:core_interfaces //packages/common/
 
 ---
 
-### Sessions 2.7-2.15
+### Session 2.7: Migrate @fluidframework/routerlicious-urlresolver (PLANNED)
+**Status**: ⏳ Not Started
+**Prerequisites**: Session 2.6 complete
+**Estimated**: 30-45 minutes
+
+#### Package to Migrate
+- ⏳ @fluidframework/routerlicious-urlresolver (second drivers package)
+
+#### Package Details
+- **Path**: packages/drivers/routerlicious-urlResolver
+- **Fluid Dependencies**: 3 (all migrated)
+  - @fluidframework/core-interfaces
+  - @fluidframework/core-utils
+  - @fluidframework/driver-definitions
+- **NPM Dependencies**: 1 (nconf)
+- **Source Files**: ~5 TypeScript files
+- **Complexity**: SIMPLE
+
+#### Tasks
+- [ ] Create inline tsconfig files with path mappings
+- [ ] Add npm_link_all_packages for nconf dependency
+- [ ] Create BUILD.bazel with workspace and npm dependencies
+- [ ] Build and validate (ESM + CJS)
+- [ ] Verify all migrated packages build together
+
+#### Expected Deliverables
+- [ ] BUILD.bazel for routerlicious-urlresolver created
+- [ ] ESM + CJS builds successful (~5 files each)
+- [ ] All 8 migrated packages build together (< 1s cached)
+- [ ] Git commit: `feat(bazel): migrate @fluidframework/routerlicious-urlresolver (Session 2.7)`
+
+#### Strategic Value
+- Continues drivers category momentum
+- Establishes urlresolver pattern
+- Simple package for quick win
+- Prepares for more complex drivers packages
+
+#### Alternative Candidates (for reference)
+See [SESSION_2.7_CANDIDATES.md](./SESSION_2.7_CANDIDATES.md) for detailed analysis:
+- **driver-utils** (loader, high impact, unblocks 9 packages)
+- **synthesize** (framework, very simple, 4 files)
+- **id-compressor** (runtime, has .cts files)
+
+---
+
+### Sessions 2.8-2.15
 **Status**: ⏳ Not Started
 **Note**: Will be detailed as sessions progress
+
+**Preliminary Plan**:
+- **Session 2.8**: @fluidframework/driver-utils (high impact, unblocks 9 packages)
+- **Session 2.9**: @fluidframework/driver-base or driver-web-cache
+- **Session 2.10+**: Continue with drivers, loader, or framework packages
 
 ---
 
