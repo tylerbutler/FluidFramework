@@ -2,6 +2,8 @@
 # This file marks the root of the Bazel workspace
 
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//:@biomejs/biome/package_json.bzl", biome_bin = "bin")
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
 
 # Link all npm packages to make them available as dependencies
 npm_link_all_packages(name = "node_modules")
@@ -16,11 +18,51 @@ exports_files([
 # Root package configuration
 package(default_visibility = ["//visibility:public"])
 
+# ============================================================================
+# Biome Formatting & Linting (Session 2.12)
+# ============================================================================
+# Root-level Biome targets for workspace-wide formatting and linting.
+# This matches the current `pnpm run format:biome` workflow.
+#
+# Biome automatically discovers nested biome.jsonc configs (e.g., in framework/*,
+# experimental/dds/tree, etc.) and applies appropriate settings.
+#
+# Usage:
+#   bazel run //:format          # Format entire workspace (--write)
+#   bazel run //:format_check    # Check formatting without modifying (CI)
+
+# Biome format targets using workspace-aware wrapper
+# The wrapper script (tools/bazel/run-biome.sh) changes to BUILD_WORKSPACE_DIRECTORY
+# before running biome, ensuring biome.jsonc is found and source files are accessible
+#
+# These targets work from any directory when using 'bazel run'
+
+sh_binary(
+    name = "format",
+    srcs = ["//tools/bazel:run-biome.sh"],
+    args = [
+        "check",
+        ".",
+        "--write",
+    ],
+)
+
+sh_binary(
+    name = "format_check",
+    srcs = ["//tools/bazel:run-biome.sh"],
+    args = [
+        "check",
+        ".",
+    ],
+)
+
+# ============================================================================
+# Future Convenience Targets (Phase 4)
+# ============================================================================
 # Convenience targets will be added here as packages are migrated:
 # - //...all_packages - builds all migrated packages
 # - //:build - alias for all_packages
 # - //:test - runs all tests
-# - //:lint - runs all linters
 #
 # Example (to be added in Phase 4):
 # filegroup(

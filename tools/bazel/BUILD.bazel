@@ -1,0 +1,8 @@
+# Bazel tools and utilities for FluidFramework migration
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "run-biome.sh",
+    "biome-check.sh",
+])
