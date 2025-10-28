@@ -1,0 +1,118 @@
+# BUILD.bazel for @fluidframework/routerlicious-driver
+# Auto-generated for Bazel migration
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+npm_link_all_packages(name = "node_modules")
+
+package(default_visibility = ["//visibility:public"])
+
+# ESM compilation
+ts_project(
+    name = "routerlicious_driver_esm",
+    srcs = glob(
+        ["src/**/*.ts", "src/**/*.cts"],
+        exclude = ["src/test/**"],
+    ) + ["package.json"],
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    incremental = True,
+    out_dir = "lib",
+    root_dir = "src",
+    source_map = True,
+    tsconfig = "tsconfig.bazel.json",
+    deps = [
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/driver-base",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/driver-utils",
+        ":node_modules/@fluidframework/server-services-client",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/axios",
+        ":node_modules/cross-fetch",
+        ":node_modules/json-stringify-safe",
+        ":node_modules/socket.io-client",
+        ":node_modules/uuid",
+        "//packages/common/client-utils:lib",
+        "//packages/common/core-interfaces:lib",
+        "//packages/common/core-utils:lib",
+        "//packages/drivers/driver-base:lib",
+        "//packages/common/driver-definitions:lib",
+        "//packages/loader/driver-utils:lib",
+        "//packages/utils/telemetry-utils:lib",
+    ],
+)
+
+# CommonJS compilation
+ts_project(
+    name = "routerlicious_driver_cjs",
+    srcs = glob(
+        ["src/**/*.ts", "src/**/*.cts"],
+        exclude = ["src/test/**"],
+    ) + ["package.json"],
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    incremental = True,
+    out_dir = "dist",
+    root_dir = "src",
+    source_map = True,
+    transpiler = "tsc",
+    tsconfig = "tsconfig.cjs.bazel.json",
+    deps = [
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/driver-base",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/driver-utils",
+        ":node_modules/@fluidframework/server-services-client",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/axios",
+        ":node_modules/cross-fetch",
+        ":node_modules/json-stringify-safe",
+        ":node_modules/socket.io-client",
+        ":node_modules/uuid",
+        "//packages/common/client-utils:lib",
+        "//packages/common/core-interfaces:lib",
+        "//packages/common/core-utils:lib",
+        "//packages/drivers/driver-base:lib",
+        "//packages/common/driver-definitions:lib",
+        "//packages/loader/driver-utils:lib",
+        "//packages/utils/telemetry-utils:lib",
+    ],
+)
+
+# Wrapper for npm_package
+js_library(
+    name = "lib",
+    srcs = [
+        ":routerlicious_driver_cjs",
+        ":routerlicious_driver_esm",
+        "package.json",
+    ],
+)
+
+# npm_package for TypeScript resolution
+npm_package(
+    name = "pkg",
+    srcs = [
+        ":lib",
+    ],
+    package = "@fluidframework/routerlicious-driver",
+)
+
+# Default target (backward compatibility)
+filegroup(
+    name = "routerlicious_driver",
+    srcs = [
+        ":routerlicious_driver_cjs",
+        ":routerlicious_driver_esm",
+    ],
+)
