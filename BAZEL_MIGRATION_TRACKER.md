@@ -3,7 +3,7 @@
 **Project**: FluidFramework TypeScript Monorepo
 **Migration Start Date**: 2025-10-27
 **Current Phase**: Phase 2 - Expansion (In Progress)
-**Overall Progress**: 18% (12/66 sessions complete)
+**Overall Progress**: 20% (13/66 sessions complete)
 
 ---
 
@@ -13,7 +13,7 @@
 |-------|--------|-------------------|----------------|----------|
 | Phase 0: Setup | ✅ Complete | 2/2 | 2 | 100% |
 | Phase 1: PoC | ✅ Complete | 5/6 | 6 | 83% (API extraction deferred) |
-| Phase 2: Expansion | 🔄 In Progress | 5/15 | 10-15 | 33% |
+| Phase 2: Expansion | 🔄 In Progress | 6/15 | 10-15 | 40% |
 | Phase 3: Core Migration | ⏳ Not Started | 0/30 | 20-30 | 0% |
 | Phase 4: Integration | ⏳ Not Started | 0/8 | 5-8 | 0% |
 | Phase 5: Cleanup | ⏳ Not Started | 0/5 | 3-5 | 0% |
@@ -494,10 +494,10 @@ This pattern allows TypeScript to resolve both main exports and subpath exports 
 ## Phase 2: Expansion - Common & Utility Packages
 
 **Status**: 🔄 In Progress
-**Sessions**: 5/15 complete
+**Sessions**: 6/15 complete
 **Prerequisites**: Phase 1 complete
 **Estimated Time**: 15-25 hours
-**Time Spent**: 6.0 hours
+**Time Spent**: 6.5 hours
 
 ### Session 2.1: Migrate @fluidframework/core-utils
 **Status**: ✅ Complete
@@ -850,7 +850,7 @@ ts_project(
 - [x] ESM: 16 .js + 16 .d.ts + source maps (32 files)
 - [x] CJS: 16 .js + 16 .d.ts + source maps (32 files)
 - [x] All 6 migrated packages build together (< 1s cached)
-- [x] Git commit: `feat(bazel): migrate @fluidframework/telemetry-utils (Session 2.5)` (pending)
+- [x] Git commit: `feat(bazel): migrate @fluidframework/telemetry-utils (Session 2.5)` ✅
 
 #### Validation
 ```bash
@@ -895,7 +895,58 @@ This follows Session 1.2 guidance to "work through issues properly" - we fixed t
 
 ---
 
-### Sessions 2.6-2.15
+### Session 2.6: Migrate @fluidframework/odsp-driver-definitions
+**Status**: ✅ Complete
+**Date Started**: 2025-10-27
+**Date Completed**: 2025-10-27
+**Time Spent**: 0.5 hours
+**Prerequisites**: Session 2.5 complete
+**Estimated**: 1-2 hours
+**Actual**: 0.5 hours (simple definitions package)
+
+#### Package Migrated
+- ✅ @fluidframework/odsp-driver-definitions (first drivers package)
+
+#### Tasks
+- [x] Create inline tsconfig files with path mappings for driver-definitions
+- [x] Create BUILD.bazel with driver-definitions dependency
+- [x] Build and validate (ESM + CJS)
+- [x] Verify all migrated packages build together
+
+#### Deliverables
+- [x] BUILD.bazel for odsp-driver-definitions created
+- [x] ESM: 7 .js + 7 .d.ts + source maps (21 files)
+- [x] CJS: 7 .js + 7 .d.ts + source maps (21 files)
+- [x] All 7 migrated packages build together (< 1s cached)
+- [x] Git commit: `feat(bazel): migrate @fluidframework/odsp-driver-definitions (Session 2.6)` ✅
+
+#### Validation
+```bash
+# Build odsp-driver-definitions ✅
+bazel build //packages/drivers/odsp-driver-definitions:odsp_driver_definitions  # ✅ Success (1.2s)
+
+# Build all migrated packages together ✅
+bazel build //packages/common/core-interfaces:core_interfaces //packages/common/driver-definitions:driver_definitions //packages/common/container-definitions:container_definitions //packages/common/core-utils:core_utils //packages/common/client-utils:client_utils //packages/utils/telemetry-utils:telemetry_utils //packages/drivers/odsp-driver-definitions:odsp_driver_definitions  # ✅ 0.453s cached
+```
+
+#### Files Created
+- `packages/drivers/odsp-driver-definitions/BUILD.bazel`
+- `packages/drivers/odsp-driver-definitions/tsconfig.bazel.json` (ESM inline config with path mappings)
+- `packages/drivers/odsp-driver-definitions/tsconfig.cjs.bazel.json` (CJS inline config with path mappings)
+
+#### Key Learnings
+1. **First Drivers Package**: Established pattern for drivers category (same as common/utils)
+2. **Simple Dependencies**: Only depends on driver-definitions (already migrated)
+3. **Category Expansion**: Successfully expanded migration beyond common and utils into drivers
+4. **Build Speed**: Cached builds continue to be extremely fast (< 1s) with 7 packages
+
+#### Next Steps
+1. **Session 2.7+**: Continue migrating drivers packages or return to utils
+2. **Pattern**: odsp-driver-definitions pattern applies to other definitions packages
+
+---
+
+### Sessions 2.7-2.15
 **Status**: ⏳ Not Started
 **Note**: Will be detailed as sessions progress
 
@@ -1156,6 +1207,13 @@ None yet
   - All 6 migrated packages build together successfully (< 1s cached)
   - Pattern established for utils category (same as common packages)
   - Time: 1.5 hours
+- **Session 2.6 COMPLETE**: Migrate @fluidframework/odsp-driver-definitions (First drivers Package)
+  - Migrated first drivers package with simple dependency on driver-definitions
+  - ESM + CJS builds successful (7 files each + source maps)
+  - All 7 migrated packages build together successfully (0.453s cached)
+  - Pattern established for drivers category (same as common/utils)
+  - Successfully expanded migration beyond common and utils categories
+  - Time: 0.5 hours
 
 ---
 
