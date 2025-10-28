@@ -2,7 +2,7 @@
 
 **Last Updated**: 2025-10-28
 **Current Phase**: Phase 2 - Expansion (In Progress)
-**Overall Progress**: 28% (13/46 core sessions complete)
+**Overall Progress**: 30% (14/46 core sessions complete)
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -14,7 +14,7 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 |-------|--------|----------|----------|
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
-| **Phase 2: Expansion** | 🔄 In Progress | 72% | 13/18 |
+| **Phase 2: Expansion** | 🔄 In Progress | 78% | 14/18 |
 | **Phase 3: Core Migration** | ⏳ Pending | 0% | 0/20 |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
@@ -22,6 +22,15 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 ---
 
 ## Recently Completed
+
+### Session 2.14: API Extractor Integration (2025-10-28)
+- **Status**: ✅ Complete
+- **Implementation**: sh_binary wrapper approach for flub + api-extractor
+- **Targets**: `:generate_entrypoints`, `:api_reports_current`, `:api_reports_legacy`
+- **Workflow**: TypeScript build → flub entrypoints → API extractor → API reports
+- **Validation**: Generated API reports match npm baseline exactly
+- **Files**: tools/bazel/run-{flub-entrypoints,api-extractor}.sh, docs/bazel/API_EXTRACTOR_INTEGRATION.md
+- **Details**: [BAZEL_MIGRATION_TRACKER.md#session-2.14](./BAZEL_MIGRATION_TRACKER.md)
 
 ### Session 2.13: Mocha Test Integration (2025-10-28)
 - **Status**: ⚠️ Blocked - npm @types resolution
@@ -48,17 +57,14 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.14: Tooling Integration - API Extractor**
-- **Goal**: Establish API Extractor integration pattern for API report generation
-- **Reference**: @fluidframework/core-interfaces
-- **Key Tasks**:
-  - js_run_binary rule for api_extractor
-  - Configure api-extractor.json paths for Bazel
-  - Generate and validate API reports
-  - Document API extraction pattern
-- **Estimated**: 2 hours
-- **Note**: May encounter similar npm dependency issues as Session 2.13
-- **Details**: [BAZEL_MIGRATION_TRACKER.md#session-2.14](./BAZEL_MIGRATION_TRACKER.md)
+**Session 2.15+: Continue Phase 2 Package Migrations**
+- **Goal**: Migrate remaining Phase 2 packages with full tooling stack
+- **Tooling**: ESM/CJS compilation + Biome + API extraction
+- **Approach**: 2-3 packages per session, parallel execution where possible
+- **Target Categories**: Remaining utils/, drivers/, loader/ packages
+- **Pattern**: Copy from core-interfaces BUILD.bazel as template
+- **Estimated**: 1-2 hours per session
+- **Details**: [BAZEL_MIGRATION_PLAN.md#session-2.15](./BAZEL_MIGRATION_PLAN.md)
 
 ---
 
@@ -109,6 +115,7 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ### Tooling Patterns
 - **Biome**: sh_binary wrapper with BUILD_WORKSPACE_DIRECTORY (Session 2.12)
+- **API Extraction**: flub entrypoints → api-extractor (Session 2.14)
 
 ### Migration Scripts
 - Located in: `bazel-migration/scripts/`
@@ -128,6 +135,9 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | `packages/*/tsconfig.bazel.json` | Bazel-specific TypeScript configs |
 | `tools/bazel/` | Bazel utility scripts (wrappers, helpers) |
 | `docs/bazel/` | Bazel integration documentation |
+| `docs/bazel/API_EXTRACTOR_INTEGRATION.md` | API Extractor integration guide |
+| `docs/bazel/BIOME_INTEGRATION.md` | Biome lint/format integration |
+| `docs/bazel/MOCHA_TEST_INTEGRATION.md` | Mocha test integration analysis |
 
 ---
 
@@ -158,9 +168,9 @@ bazel query "deps(//packages/common/core-interfaces:core_interfaces_esm)"
 ## Next Steps (Roadmap)
 
 ### Immediate (Phase 2)
-1. **Session 2.13**: Mocha test integration
-2. **Session 2.14**: API Extractor integration (deferred from Phase 1)
-3. **Session 2.15-2.18**: Complete remaining Phase 2 packages
+1. ✅ **Session 2.13**: Mocha test integration (blocked - deferred to Phase 4)
+2. ✅ **Session 2.14**: API Extractor integration
+3. **Session 2.15-2.18**: Complete remaining Phase 2 packages with full tooling
 
 ### Short-term (Phase 3)
 - Begin systematic migration of core framework packages
@@ -180,11 +190,12 @@ bazel query "deps(//packages/common/core-interfaces:core_interfaces_esm)"
 ### Major Decisions
 - **Bazel Version**: 8.4.2 (LTS) instead of 7.4.1
 - **npm Deps**: Direct via pnpm-lock.yaml (no separate lock)
-- **API Extraction**: Deferred to Session 2.14 (after test patterns established)
-- **Biome Integration**: Wrapper script approach instead of js_binary
+- **API Extraction**: sh_binary wrapper approach (Session 2.14)
+- **Biome Integration**: sh_binary wrapper with BUILD_WORKSPACE_DIRECTORY
+- **Test Integration**: Deferred to Phase 4 (npm @types resolution blocker)
 
 ### Known Issues
-- API extraction pattern not yet established (Session 2.14)
+- Mocha test integration blocked by npm @types resolution (deferred to Phase 4)
 - Jest integration pending (Phase 4)
 - No remote cache in production yet (using local disk cache)
 
@@ -195,6 +206,8 @@ bazel query "deps(//packages/common/core-interfaces:core_interfaces_esm)"
 - **Migration Plan**: [BAZEL_MIGRATION_PLAN.md](./BAZEL_MIGRATION_PLAN.md)
 - **Full Tracker**: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 - **Biome Integration**: [docs/bazel/BIOME_INTEGRATION.md](./docs/bazel/BIOME_INTEGRATION.md)
+- **API Extractor Integration**: [docs/bazel/API_EXTRACTOR_INTEGRATION.md](./docs/bazel/API_EXTRACTOR_INTEGRATION.md)
+- **Mocha Test Analysis**: [docs/bazel/MOCHA_TEST_INTEGRATION.md](./docs/bazel/MOCHA_TEST_INTEGRATION.md)
 
 ---
 
