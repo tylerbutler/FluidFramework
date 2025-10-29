@@ -2,8 +2,8 @@
 
 **Last Updated**: 2025-10-29
 **Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + ALL SERVICE CLIENTS 100%! 🎉
-**Overall Progress**: 73% (30/46 core sessions complete)
-**Progress**: Session 2.33 complete - Basic test utilities migrated, Group 13 complete!
+**Overall Progress**: 75% (31/46 core sessions complete)
+**Progress**: Session 2.34 partial - Group 14 mid-level test utilities - 2/3 packages migrated!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,34 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 76% | 13/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 76% | 13/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **2/3 Group 14**) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.34: Group 14 - Mid-Level Test Utilities Partial (2025-10-29)
+- **Status**: ⚠️ **PARTIAL** - 2/3 test utility packages migrated, 1 blocked by local-driver
+- **Test Utility Packages (Group 14 - 2/3 buildable)**:
+  - @fluid-internal/mocha-test-setup ✅ (2 ws_deps) - Mocha test hooks and setup utilities
+  - @fluid-internal/test-driver-definitions ✅ (2 ws_deps) - Test driver interface definitions
+  - @fluid-private/test-drivers ⏸️ (15 ws_deps) - **BLOCKED** by local-driver module resolution issue
+- **Build Verification**: Both unblocked packages compile successfully (ESM + CJS) ✅
+- **Blocker Identified**: @fluidframework/local-driver has pre-existing TypeScript module resolution issue
+  - Package uses /legacy subpath exports, requires src/package.json for module type
+  - TypeScript needs package.json in src/ for compilation but also copies it to output
+  - Conflicts with genrule attempting to copy package.json separately
+  - This is a pre-existing issue that needs deeper investigation
+- **Key Learnings**:
+  - mocha-test-setup requires mocha and source-map-support npm dependencies
+  - test-driver-definitions is pure interfaces, doesn't need @types/node
+  - tsBuildInfoFile must be specified in tsconfig files (not just BUILD)
+  - Packages with subpath exports that only use /legacy (not /internal) still require src/package.json
+- **Total Packages**: 66/88 migrated (75.0%) +2 packages
+- **Group 14 Progress**: 2/3 packages (66.7%) **PARTIAL**
+- **Next**: Fix local-driver module resolution issue OR skip to Group 15/17 and return to test-drivers later
 
 ### Session 2.33: Group 13 - Basic Test Utilities Complete (2025-10-29)
 - **Status**: ✅ **COMPLETE** - 2/2 buildable test utility packages migrated!

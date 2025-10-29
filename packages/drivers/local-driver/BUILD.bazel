@@ -16,7 +16,7 @@ ts_project(
     srcs = glob(
         ["src/**/*.ts"],
         exclude = ["src/test/**"],
-    ) + ["package.json"],
+    ),
     composite = True,
     declaration = True,
     declaration_map = True,
@@ -61,7 +61,7 @@ ts_project(
     srcs = glob(
         ["src/**/*.ts"],
         exclude = ["src/test/**"],
-    ) + ["package.json"],
+    ),
     composite = True,
     declaration = True,
     declaration_map = True,
@@ -101,12 +101,30 @@ ts_project(
     ],
 )
 
+# Copy ESM package marker to lib/ and dist/
+genrule(
+    name = "copy_src_package_json_to_lib",
+    srcs = ["package.esm.json"],
+    outs = ["lib/package.json"],
+    cmd = "cp $< $@",
+)
+
+# Copy ESM package marker to dist/
+genrule(
+    name = "copy_src_package_json_to_dist",
+    srcs = ["package.esm.json"],
+    outs = ["dist/package.json"],
+    cmd = "cp $< $@",
+)
+
 # Package for TypeScript subpath exports
 js_library(
     name = "lib",
     srcs = [
         ":local_driver_cjs",
         ":local_driver_esm",
+        ":copy_src_package_json_to_lib",
+        ":copy_src_package_json_to_dist",
         "package.json",
     ],
 )
