@@ -148,6 +148,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":driver_utils_test",
+        ":driver_utils_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

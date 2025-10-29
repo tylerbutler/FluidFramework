@@ -165,6 +165,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":shared_object_base_test",
+        ":shared_object_base_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

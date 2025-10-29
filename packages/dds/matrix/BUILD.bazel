@@ -168,6 +168,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":matrix_test",
+        ":matrix_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

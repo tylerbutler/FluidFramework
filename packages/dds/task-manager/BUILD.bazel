@@ -146,6 +146,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":task_manager_test",
+        ":task_manager_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -155,6 +155,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":ordered_collection_test",
+        ":ordered_collection_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

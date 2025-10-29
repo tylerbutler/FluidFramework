@@ -134,6 +134,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":shared_summary_block_test",
+        ":shared_summary_block_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -179,6 +179,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":tree_test",
+        ":tree_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

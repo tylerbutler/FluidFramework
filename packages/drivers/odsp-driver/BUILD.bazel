@@ -180,6 +180,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":odsp_driver_test",
+        ":odsp_driver_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

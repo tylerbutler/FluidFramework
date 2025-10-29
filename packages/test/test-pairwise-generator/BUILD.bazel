@@ -138,6 +138,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":test_pairwise_generator_test",
+        ":test_pairwise_generator_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

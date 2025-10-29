@@ -183,6 +183,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":routerlicious_driver_test",
+        ":routerlicious_driver_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

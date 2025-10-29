@@ -157,6 +157,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":legacy_dds_test",
+        ":legacy_dds_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -159,6 +159,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":merge_tree_test",
+        ":merge_tree_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

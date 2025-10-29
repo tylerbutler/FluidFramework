@@ -142,6 +142,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":telemetry_utils_test",
+        ":telemetry_utils_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

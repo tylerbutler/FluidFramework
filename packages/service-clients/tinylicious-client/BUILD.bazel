@@ -194,6 +194,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":tinylicious_client_test",
+        ":tinylicious_client_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

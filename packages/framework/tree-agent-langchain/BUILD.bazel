@@ -137,6 +137,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":tree_agent_langchain_test",
+        ":tree_agent_langchain_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

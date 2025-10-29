@@ -166,6 +166,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":presence_test",
+        ":presence_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

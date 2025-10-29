@@ -144,6 +144,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":request_handler_test",
+        ":request_handler_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

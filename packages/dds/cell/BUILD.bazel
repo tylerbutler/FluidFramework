@@ -137,6 +137,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":cell_test",
+        ":cell_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

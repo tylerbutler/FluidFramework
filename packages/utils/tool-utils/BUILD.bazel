@@ -145,6 +145,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":tool_utils_test",
+        ":tool_utils_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

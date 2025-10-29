@@ -176,6 +176,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":routerlicious_urlresolver_test",
+        ":routerlicious_urlresolver_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

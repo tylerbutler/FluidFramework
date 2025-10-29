@@ -175,6 +175,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":aqueduct_test",
+        ":aqueduct_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

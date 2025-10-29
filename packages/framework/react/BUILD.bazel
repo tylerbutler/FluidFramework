@@ -149,6 +149,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":react_test",
+        ":react_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

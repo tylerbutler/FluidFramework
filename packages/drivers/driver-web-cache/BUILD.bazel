@@ -136,6 +136,7 @@ jest_bin.jest_test(
     ],
     data = [
         ":driver_web_cache_test",
+        ":driver_web_cache_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

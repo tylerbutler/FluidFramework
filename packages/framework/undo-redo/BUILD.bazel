@@ -140,6 +140,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":undo_redo_test",
+        ":undo_redo_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

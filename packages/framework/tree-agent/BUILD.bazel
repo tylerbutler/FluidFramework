@@ -141,6 +141,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":tree_agent_test",
+        ":tree_agent_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -144,6 +144,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":stochastic_test_utils_test",
+        ":stochastic_test_utils_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -167,6 +167,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":sequence_test",
+        ":sequence_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

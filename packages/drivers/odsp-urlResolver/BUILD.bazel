@@ -140,6 +140,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":odsp_urlresolver_test",
+        ":odsp_urlresolver_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

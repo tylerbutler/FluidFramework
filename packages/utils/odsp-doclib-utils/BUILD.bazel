@@ -146,6 +146,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":odsp_doclib_utils_test",
+        ":odsp_doclib_utils_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

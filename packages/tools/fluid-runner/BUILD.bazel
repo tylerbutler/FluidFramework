@@ -171,6 +171,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":fluid_runner_test",
+        ":fluid_runner_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

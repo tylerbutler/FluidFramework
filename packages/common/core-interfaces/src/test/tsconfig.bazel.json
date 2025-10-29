@@ -4,7 +4,11 @@
 		"incremental": true,
 		"inlineSources": true,
 		"jsx": "react",
-		"lib": ["ES2020", "DOM", "DOM.Iterable"],
+		"lib": [
+			"ES2020",
+			"DOM",
+			"DOM.Iterable"
+		],
 		"module": "Node16",
 		"moduleResolution": "Node16",
 		"noImplicitAny": false,
@@ -13,7 +17,10 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "ES2021",
-		"types": ["mocha", "node"],
+		"types": [
+			"mocha",
+			"node"
+		],
 		"exactOptionalPropertyTypes": true,
 		"noUncheckedIndexedAccess": true,
 		"skipLibCheck": true,

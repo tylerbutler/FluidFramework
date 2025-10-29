@@ -152,6 +152,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":ai_collab_test",
+        ":ai_collab_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

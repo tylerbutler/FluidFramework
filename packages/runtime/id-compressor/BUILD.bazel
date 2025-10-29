@@ -139,6 +139,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":id_compressor_test",
+        ":id_compressor_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

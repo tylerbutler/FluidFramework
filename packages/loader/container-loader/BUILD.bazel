@@ -189,6 +189,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":container_loader_test",
+        ":container_loader_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -140,6 +140,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":register_collection_test",
+        ":register_collection_esm",  # Runtime needs the compiled package
     ],
     tags = ["manual"],  # Mark as manual until validated
 )
