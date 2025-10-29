@@ -20,6 +20,8 @@ ts_project(
     incremental = True,
     source_map = True,
     composite = True,
+    out_dir = "lib",
+    root_dir = "src",
     tsconfig = ":tsconfig.bazel.json",
     deps = [
         ":node_modules/@types/node",

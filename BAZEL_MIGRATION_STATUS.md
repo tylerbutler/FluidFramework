@@ -1,9 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
 **Last Updated**: 2025-10-29
-**Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + ALL SERVICE CLIENTS 100%! 🎉
-**Overall Progress**: 80% (71/88 packages migrated)
-**Progress**: Session 2.37 partial - fetch-tool + sequence-deprecated migrated! replay-tool blocked on file-driver
+**Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + ALL SERVICE CLIENTS 100% + GROUP 17 TOOLS 100%! 🎉
+**Overall Progress**: 81% (72/88 packages migrated)
+**Progress**: Session 2.38 complete - Group 17 ALL tools migrated! file-driver BUILD fix unblocked replay-tool
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,33 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 80% | 14/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **3/3 Group 14 ✅**, **2/4 Group 17**) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 81% | 15/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **3/3 Group 14 ✅**, **4/4 Group 17 ✅**) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.38: 🎉 Group 17 COMPLETE - ALL Tools Migrated! (2025-10-29)
+- **Status**: ✅ **COMPLETE** - All 4 tool packages in Group 17 successfully migrated!
+- **Tool Package (Group 17 - 4/4)**:
+  - @fluid-internal/replay-tool ✅ (26 ws_deps) - Fluid container replay/debugging tool
+- **Critical Fix**: file-driver BUILD.bazel missing out_dir specification
+  - **Problem**: file-driver ts_project ESM build had no `out_dir` attribute, outputs went to src/ instead of lib/
+  - **Impact**: npm_link pointed to source with src/ and dist/, missing lib/ for /internal exports
+  - **Solution**: Added `out_dir = "lib"` and `root_dir = "src"` to file_driver_esm ts_project
+  - **Result**: file-driver now outputs ESM to lib/, CJS to dist/, npm_link resolves /internal exports correctly
+- **Build Verification**: replay-tool compiles successfully (ESM + CJS) ✅
+- **Key Learnings**:
+  - **CRITICAL**: ts_project needs explicit `out_dir` and `root_dir` attributes for predictable output locations
+  - npm_link_all_packages works correctly once migrated packages output to expected directories (lib/ for ESM)
+  - Packages with /internal exports need lib/ directory for TypeScript to resolve subpath imports
+  - Clean rebuild required after fixing output directories to clear Bazel cache
+  - Pattern applies to all packages: ESM → lib/, CJS → dist/
+- **Total Packages**: 72/88 migrated (81.8%) +1 package
+- **Group 17 Progress**: 4/4 packages (100% ✅) **COMPLETE**
+- **Next**: Continue with remaining groups (11, 15, 16) - Group 15 (Advanced Test Packages) recommended next
 
 ### Session 2.37: ⚠️ Group 17 Partial - Tools + sequence-deprecated! replay-tool blocked (2025-10-29)
 - **Status**: ⚠️ **PARTIAL** - 2/3 tool packages migrated, 1 blocked by file-driver dependency
