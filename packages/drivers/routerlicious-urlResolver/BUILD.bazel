@@ -135,6 +135,9 @@ filegroup(
 # Mocha test compilation with proper @types resolution
 
 # Test compilation (ESM)
+# Note: Compiles test files against pre-compiled source outputs
+# The .ts source files import ./nconf.cjs which is compiled from .cts files
+# By compiling source + tests together, TypeScript can resolve these imports
 ts_project(
     name = "routerlicious_urlresolver_test",
     srcs = glob(
@@ -148,6 +151,7 @@ ts_project(
         exclude = [
             "src/test/**",  # Already included above
             "src/cjs/**",  # CJS-specific files
+            "src/**/*.cts",  # CTS files compiled separately
         ],
     ) + [":routerlicious_urlresolver_cts"] + ["package.json"],
     declaration = False,
@@ -160,9 +164,11 @@ ts_project(
     deps = [
 		":routerlicious_urlresolver_esm",
 		":node_modules/@fluidframework/core-interfaces",
+		":node_modules/@fluidframework/core-utils",
 		":node_modules/@fluidframework/driver-definitions",
 		":node_modules/@types/mocha",
 		":node_modules/@types/node",
+		"//packages/common/core-utils:pkg",  # For /internal subpath
 	],
 )
 

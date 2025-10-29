@@ -13,7 +13,7 @@
 		],
 		"skipLibCheck": true,
 		"rootDir": "./",
-		"outDir": "../../lib-test/test"
+		"outDir": "../../lib-test"
 	},
 	"include": [
 		"./**/*"

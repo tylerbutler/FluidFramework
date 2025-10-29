@@ -1,0 +1,300 @@
+[
+  {
+    "target": "//packages/framework/request-handler:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/synthesize:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/ai-collab:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/presence:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/tree-agent:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/attributor:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/aqueduct:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/tree-agent-ses:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/dds-interceptions:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/tree-agent-langchain:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/undo-redo:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/fluid-static:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/framework/react:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/common/core-interfaces:test",
+    "status": "timeout"
+  },
+  {
+    "target": "//packages/common/core-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/common/client-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/loader/container-loader:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/loader/driver-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/tree:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/task-manager:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/cell:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/ink:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/register-collection:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/shared-summary-block:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/shared-object-base:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/legacy-dds:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/ordered-collection:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/merge-tree:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/map:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/sequence:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/pact-map:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/test-dds-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/counter:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/dds/matrix:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/drivers/driver-base:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/drivers/routerlicious-driver:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/drivers/tinylicious-driver:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/drivers/local-driver:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/drivers/odsp-urlResolver:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/drivers/odsp-driver:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/drivers/routerlicious-urlResolver:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/drivers/driver-web-cache:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/runtime/runtime-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/runtime/container-runtime:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/runtime/id-compressor:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/runtime/test-runtime-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/runtime/datastore:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/tools/fluid-runner:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/test/test-version-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/test/stochastic-test-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/test/test-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/test/test-service-load:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/test/test-pairwise-generator:test",
+    "status": "pass"
+  },
+  {
+    "target": "//packages/test/snapshots:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/service-clients/azure-client:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/service-clients/odsp-client:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/service-clients/tinylicious-client:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/utils/telemetry-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/utils/odsp-doclib-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  },
+  {
+    "target": "//packages/utils/tool-utils:test",
+    "status": "fail",
+    "error": "unknown"
+  }
+]

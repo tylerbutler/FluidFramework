@@ -1,0 +1,350 @@
+[
+  {
+    "target": "//packages/framework/request-handler:test",
+    "category": "build_error",
+    "details": "",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/synthesize:test",
+    "category": "build_error",
+    "details": "",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/ai-collab:test",
+    "category": "build_error",
+    "details": "",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/presence:test",
+    "category": "build_error",
+    "details": "",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/tree-agent:test",
+    "category": "build_error",
+    "details": "",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/attributor:test",
+    "category": "build_error",
+    "details": "",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/aqueduct:test",
+    "category": "build_error",
+    "details": "",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/tree-agent-ses:test",
+    "category": "build_error",
+    "details": "",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/dds-interceptions:test",
+    "category": "build_error",
+    "details": "",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/tree-agent-langchain:test",
+    "category": "build_error",
+    "details": "",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/undo-redo:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/fluid-static:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/framework/react:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/common/core-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/common/client-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/loader/container-loader:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/loader/driver-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/tree:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/task-manager:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/cell:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/ink:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/register-collection:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/shared-summary-block:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/shared-object-base:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/legacy-dds:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/ordered-collection:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/merge-tree:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/map:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/sequence:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/pact-map:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/test-dds-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/counter:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/dds/matrix:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/drivers/driver-base:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/drivers/routerlicious-driver:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/drivers/tinylicious-driver:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/drivers/local-driver:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/drivers/odsp-urlResolver:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/drivers/odsp-driver:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/drivers/routerlicious-urlResolver:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/drivers/driver-web-cache:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/runtime/runtime-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/runtime/container-runtime:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/runtime/id-compressor:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/runtime/test-runtime-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/runtime/datastore:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/tools/fluid-runner:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/test/test-version-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/test/stochastic-test-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/test/test-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/test/test-service-load:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/test/snapshots:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/service-clients/azure-client:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/service-clients/odsp-client:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/service-clients/tinylicious-client:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/utils/telemetry-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/utils/odsp-doclib-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  },
+  {
+    "target": "//packages/utils/tool-utils:test",
+    "category": "not_analyzed",
+    "details": "skipped for speed",
+    "fixable": false
+  }
+]

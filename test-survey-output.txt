@@ -1,0 +1,80 @@
+🔍 Surveying test build status...
+
+Testing //packages/framework/request-handler:test... ❌
+Testing //packages/framework/synthesize:test... ❌
+Testing //packages/framework/ai-collab:test... ❌
+Testing //packages/framework/presence:test... ❌
+Testing //packages/framework/tree-agent:test... ❌
+Testing //packages/framework/attributor:test... ❌
+Testing //packages/framework/aqueduct:test... ❌
+Testing //packages/framework/tree-agent-ses:test... ❌
+Testing //packages/framework/dds-interceptions:test... ❌
+Testing //packages/framework/tree-agent-langchain:test... ❌
+Testing //packages/framework/undo-redo:test... ❌
+Testing //packages/framework/fluid-static:test... ❌
+Testing //packages/framework/react:test... ❌
+Testing //packages/common/core-interfaces:test... ⏱️  TIMEOUT
+Testing //packages/common/core-utils:test... ❌
+Testing //packages/common/client-utils:test... ❌
+Testing //packages/loader/container-loader:test... ❌
+Testing //packages/loader/driver-utils:test... ❌
+Testing //packages/dds/tree:test... ❌
+Testing //packages/dds/task-manager:test... ❌
+Testing //packages/dds/cell:test... ❌
+Testing //packages/dds/ink:test... ❌
+Testing //packages/dds/register-collection:test... ❌
+Testing //packages/dds/shared-summary-block:test... ❌
+Testing //packages/dds/shared-object-base:test... ❌
+Testing //packages/dds/legacy-dds:test... ❌
+Testing //packages/dds/ordered-collection:test... ❌
+Testing //packages/dds/merge-tree:test... ❌
+Testing //packages/dds/map:test... ❌
+Testing //packages/dds/sequence:test... ❌
+Testing //packages/dds/pact-map:test... ❌
+Testing //packages/dds/test-dds-utils:test... ❌
+Testing //packages/dds/counter:test... ❌
+Testing //packages/dds/matrix:test... ❌
+Testing //packages/drivers/driver-base:test... ❌
+Testing //packages/drivers/routerlicious-driver:test... ❌
+Testing //packages/drivers/tinylicious-driver:test... ❌
+Testing //packages/drivers/local-driver:test... ❌
+Testing //packages/drivers/odsp-urlResolver:test... ❌
+Testing //packages/drivers/odsp-driver:test... ❌
+Testing //packages/drivers/routerlicious-urlResolver:test... ❌
+Testing //packages/drivers/driver-web-cache:test... ❌
+Testing //packages/runtime/runtime-utils:test... ❌
+Testing //packages/runtime/container-runtime:test... ❌
+Testing //packages/runtime/id-compressor:test... ❌
+Testing //packages/runtime/test-runtime-utils:test... ❌
+Testing //packages/runtime/datastore:test... ❌
+Testing //packages/tools/fluid-runner:test... ❌
+Testing //packages/test/test-version-utils:test... ❌
+Testing //packages/test/stochastic-test-utils:test... ❌
+Testing //packages/test/test-utils:test... ❌
+Testing //packages/test/test-service-load:test... ❌
+Testing //packages/test/test-pairwise-generator:test... ✅
+Testing //packages/test/snapshots:test... ❌
+Testing //packages/service-clients/azure-client:test... ❌
+Testing //packages/service-clients/odsp-client:test... ❌
+Testing //packages/service-clients/tinylicious-client:test... ❌
+Testing //packages/utils/telemetry-utils:test... ❌
+Testing //packages/utils/odsp-doclib-utils:test... ❌
+Testing //packages/utils/tool-utils:test... ❌
+
+📊 Summary:
+
+Total test targets: 60
+✅ Passing: 1 (1.7%)
+❌ Failing: 58 (96.7%)
+⏱️  Timeout: 1 (1.7%)
+
+📋 Error breakdown:
+  unknown: 58
+
+✅ Passing tests:
+  //packages/test/test-pairwise-generator:test
+
+⏱️  Timeout tests (likely compilation hangs):
+  //packages/common/core-interfaces:test
+
+💾 Detailed results saved to: test-survey-results.json
