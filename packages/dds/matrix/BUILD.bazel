@@ -1,0 +1,112 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+package(default_visibility = ["//visibility:public"])
+
+# Link npm packages for this workspace package
+npm_link_all_packages(name = "node_modules")
+
+# ESM build
+ts_project(
+    name = "matrix_esm",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**"],
+    ) + ["package.json"],
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    incremental = True,
+    out_dir = "lib",
+    root_dir = "src",
+    source_map = True,
+    ts_build_info_file = "lib/.tsbuildinfo",
+    tsconfig = ":tsconfig.bazel.json",
+    deps = [
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/datastore-definitions",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/driver-utils",
+        ":node_modules/@fluidframework/merge-tree",
+        ":node_modules/@fluidframework/runtime-definitions",
+        ":node_modules/@fluidframework/runtime-utils",
+        ":node_modules/@fluidframework/shared-object-base",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/@tiny-calc/nano",
+        ":node_modules/@types/double-ended-queue",
+        ":node_modules/@types/node",
+        ":node_modules/double-ended-queue",
+    ],
+)
+
+# CJS build
+ts_project(
+    name = "matrix_cjs",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**"],
+    ) + ["package.json"],
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    incremental = True,
+    out_dir = "dist",
+    root_dir = "src",
+    source_map = True,
+    transpiler = "tsc",
+    ts_build_info_file = "dist/.tsbuildinfo",
+    tsconfig = ":tsconfig.cjs.bazel.json",
+    deps = [
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/datastore-definitions",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/driver-utils",
+        ":node_modules/@fluidframework/merge-tree",
+        ":node_modules/@fluidframework/runtime-definitions",
+        ":node_modules/@fluidframework/runtime-utils",
+        ":node_modules/@fluidframework/shared-object-base",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/@tiny-calc/nano",
+        ":node_modules/@types/double-ended-queue",
+        ":node_modules/@types/node",
+        ":node_modules/double-ended-queue",
+    ],
+)
+
+# Copy CJS package.json marker to dist/
+genrule(
+    name = "copy_cjs_package_json",
+    srcs = ["//common/build/build-common/src/cjs:package.json"],
+    outs = ["dist/package.json"],
+    cmd = "cp $< $@",
+)
+
+# Combined library with package.json
+js_library(
+    name = "lib",
+    srcs = [
+        ":matrix_esm",
+        ":matrix_cjs",
+        ":copy_cjs_package_json",
+        "package.json",
+    ],
+)
+
+# NPM package
+npm_package(
+    name = "pkg",
+    srcs = [":lib"],
+    package = "@fluidframework/matrix",
+)
+
+# Backward compatibility filegroup
+filegroup(
+    name = "matrix",
+    srcs = [":lib"],
+)
