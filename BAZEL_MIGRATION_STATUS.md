@@ -2,8 +2,8 @@
 
 **Last Updated**: 2025-10-29
 **Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + ALL SERVICE CLIENTS 100%! 🎉
-**Overall Progress**: 70% (29/46 core sessions complete)
-**Progress**: Session 2.32 complete - odsp-client migrated, Group 12 (Service Clients) 100% COMPLETE!
+**Overall Progress**: 73% (30/46 core sessions complete)
+**Progress**: Session 2.33 complete - Basic test utilities migrated, Group 13 complete!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,32 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 71% | 12/17 groups (8/8 runtime ✅, 4/5 Group 1 ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 76% | 13/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.33: Group 13 - Basic Test Utilities Complete (2025-10-29)
+- **Status**: ✅ **COMPLETE** - 2/2 buildable test utility packages migrated!
+- **Test Utility Packages (Group 13 - 2/2 buildable)**:
+  - @fluid-private/test-pairwise-generator ✅ (0 ws_deps) - Pairwise test generation utility
+  - @fluid-private/stochastic-test-utils ✅ (1 ws_dep) - Stochastic testing utilities
+- **Skipped (test-only, no exports)**:
+  - @fluid-internal/local-server-tests - Pure test package, no library exports
+  - @fluid-internal/functional-tests - Pure test package, no library exports
+- **Build Verification**: Both packages compile successfully (ESM + CJS) ✅
+- **Key Learnings**:
+  - Bazel tsconfig files must inline all compiler options (no "extends" in sandbox)
+  - Test utilities require @types/mocha and @types/node in deps
+  - Must include all npm dependencies (random-js, best-random, path-browserify)
+  - Test-only packages without exports don't need BUILD files
+  - **Test compilation deferred**: Test sources (src/test/) excluded from build - will be added in Phase 4 with Mocha integration
+- **Total Packages**: 64/88 migrated (72.7%) +2 packages
+- **Group 13 Progress**: 2/2 buildable packages (100% ✅) **COMPLETE**
+- **Next**: Continue with DDS packages (Groups 2-5 likely already done) or Group 14 test utilities
 
 ### Session 2.32: 🎉 Group 12 Complete - ALL Service Clients Migrated! 🎉 (2025-10-29)
 - **Status**: ✅ **MILESTONE COMPLETE** - All 3 service client packages now migrated!
