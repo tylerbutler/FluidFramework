@@ -1,0 +1,123 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+package(default_visibility = ["//visibility:public"])
+
+# Link npm packages for this workspace package
+npm_link_all_packages(name = "node_modules")
+
+# ESM build
+ts_project(
+    name = "snapshots_esm",
+    srcs = glob(["src/**/*.ts", "src/**/*.cts"], exclude=["src/test/**/*"]) + ["src/package.json"],
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    incremental = True,
+    out_dir = "lib",
+    root_dir = "src",
+    source_map = True,
+    ts_build_info_file = "lib/.tsbuildinfo",
+    tsconfig = ":tsconfig.bazel.json",
+    deps = [
+        ":node_modules/@fluid-experimental/ink",
+        ":node_modules/@fluid-experimental/sequence-deprecated",
+        ":node_modules/@fluid-internal/replay-tool",
+        ":node_modules/@fluidframework/cell",
+        ":node_modules/@fluidframework/container-definitions",
+        ":node_modules/@fluidframework/container-loader",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/counter",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/driver-utils",
+        ":node_modules/@fluidframework/file-driver",
+        ":node_modules/@fluidframework/local-driver",
+        ":node_modules/@fluidframework/map",
+        ":node_modules/@fluidframework/matrix",
+        ":node_modules/@fluidframework/ordered-collection",
+        ":node_modules/@fluidframework/register-collection",
+        ":node_modules/@fluidframework/replay-driver",
+        ":node_modules/@fluidframework/sequence",
+        ":node_modules/@fluidframework/server-local-server",
+        ":node_modules/@fluidframework/test-utils",
+        ":node_modules/@types/mocha",
+        ":node_modules/@types/node",
+    ],
+)
+
+# CJS build
+ts_project(
+    name = "snapshots_cjs",
+    srcs = glob(["src/**/*.ts", "src/**/*.cts"], exclude=["src/test/**/*"]) + ["src/package.json"],
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    incremental = True,
+    out_dir = "dist",
+    root_dir = "src",
+    source_map = True,
+    transpiler = "tsc",
+    ts_build_info_file = "dist/.tsbuildinfo",
+    tsconfig = ":tsconfig.cjs.bazel.json",
+    deps = [
+        ":node_modules/@fluid-experimental/ink",
+        ":node_modules/@fluid-experimental/sequence-deprecated",
+        ":node_modules/@fluid-internal/replay-tool",
+        ":node_modules/@fluidframework/cell",
+        ":node_modules/@fluidframework/container-definitions",
+        ":node_modules/@fluidframework/container-loader",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/counter",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/driver-utils",
+        ":node_modules/@fluidframework/file-driver",
+        ":node_modules/@fluidframework/local-driver",
+        ":node_modules/@fluidframework/map",
+        ":node_modules/@fluidframework/matrix",
+        ":node_modules/@fluidframework/ordered-collection",
+        ":node_modules/@fluidframework/register-collection",
+        ":node_modules/@fluidframework/replay-driver",
+        ":node_modules/@fluidframework/sequence",
+        ":node_modules/@fluidframework/server-local-server",
+        ":node_modules/@fluidframework/test-utils",
+        ":node_modules/@types/mocha",
+        ":node_modules/@types/node",
+    ],
+)
+
+# Copy CJS package.json marker to dist/
+genrule(
+    name = "copy_cjs_package_json",
+    srcs = ["//common/build/build-common/src/cjs:package.json"],
+    outs = ["dist/package.json"],
+    cmd = "cp $< $@",
+)
+
+# Combined library
+js_library(
+    name = "lib",
+    srcs = [
+        ":snapshots_esm",
+        ":snapshots_cjs",
+        ":copy_cjs_package_json",
+        "package.json",
+        "src/package.json",
+    ],
+)
+
+# NPM package
+npm_package(
+    name = "pkg",
+    srcs = [":lib"],
+    package = "@fluid-internal/test-snapshots",
+)
+
+# Backward compatibility filegroup
+filegroup(
+    name = "snapshots",
+    srcs = [":lib"],
+)
