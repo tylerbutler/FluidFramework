@@ -1,9 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
 **Last Updated**: 2025-10-29
-**Current Phase**: Phase 3 Complete | 🎉 ALL PRODUCTION PACKAGES MIGRATED! 🎉
+**Current Phase**: Phase 4 In Progress | 🎉 ALL PRODUCTION PACKAGES MIGRATED! 🎉
 **Overall Progress**: 84% (74/88 packages migrated)
-**Progress**: Session 2.40 complete - Completed Groups 4 & 17 (test-dds-utils migrated, changelog-generator-wrapper is JS-only)
+**Progress**: Session 4.1 complete - Root build targets created for all migrated packages
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -17,12 +17,43 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
 | **Phase 3: Core Migration** | ✅ Complete | 84% | 17/17 groups (8/8 runtime ✅, 18/18 framework ✅, 16/16 DDS ✅, **5/5 Group 4 ✅**, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **3/3 Group 14 ✅**, **3/3 Group 15 ✅**, **1/3 Group 16 ⚠️**, **4/4 Group 17 ✅**) |
-| **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
+| **Phase 4: Integration** | 🔄 In Progress | 20% | 1/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 4.1: 🎉 Root Build Targets Created - Phase 4 Integration Started! (2025-10-29)
+- **Status**: ✅ **COMPLETE** - Root BUILD.bazel updated with convenient build targets
+- **Build Targets Created**:
+  - `//:all_packages` - Builds all 74 migrated packages (79 BUILD files total)
+  - `//:build` - Alias for `:all_packages` (main convenience target)
+  - `//:common` - Build all common packages (5 packages)
+  - `//:utils` - Build all utils packages (3 packages)
+  - `//:runtime` - Build all runtime packages (8 packages)
+  - `//:dds` - Build all DDS packages (16 packages)
+  - `//:drivers` - Build all driver packages (12 packages)
+  - `//:loader` - Build all loader packages (3 packages)
+  - `//:framework` - Build all framework packages (17 packages)
+  - `//:service-clients` - Build all service client packages (3 packages)
+  - `//:tools` - Build all tool packages (3 packages)
+  - `//:test-utils` - Build all test utility packages (9 packages)
+- **Build Verification**: All category targets build successfully ✅
+- **Key Learnings**:
+  - Target names in BUILD files are inconsistent (mix of hyphens and underscores)
+  - Generated targets programmatically by extracting actual names from BUILD files
+  - filegroup targets provide convenient category-level builds
+  - `bazel build //:build` now builds all migrated packages in one command
+- **Usage Examples**:
+  ```bash
+  bazel build //:build          # Build all migrated packages
+  bazel build //:framework      # Build only framework packages
+  bazel build //:runtime        # Build only runtime packages
+  bazel build //:common //:utils # Build multiple categories
+  ```
+- **Total Targets**: 12 build targets (10 category + all_packages + build alias)
+- **Next**: Session 4.2 - Jest test integration or CI integration
 
 ### Session 2.40: 🎉 Groups 4 & 17 COMPLETE - Final Production Packages! (2025-10-29)
 - **Status**: ✅ **COMPLETE** - All production TypeScript packages migrated!

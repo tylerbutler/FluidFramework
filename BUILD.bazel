@@ -57,19 +57,178 @@ sh_binary(
 )
 
 # ============================================================================
-# Future Convenience Targets (Phase 4)
+# Phase 4: Build Integration & Convenience Targets (Session 4.1)
 # ============================================================================
-# Convenience targets will be added here as packages are migrated:
-# - //...all_packages - builds all migrated packages
-# - //:build - alias for all_packages
-# - //:test - runs all tests
+# Root build targets for building all migrated packages by category.
+# 74/88 packages migrated (84%) - All production TypeScript packages complete!
 #
-# Example (to be added in Phase 4):
-# filegroup(
-#     name = "all_packages",
-#     srcs = [
-#         "//packages/common/...",
-#         "//packages/dds/...",
-#         # ... other categories
-#     ],
-# )
+# Usage:
+#   bazel build //:all_packages     # Build all migrated packages
+#   bazel build //:build            # Alias for all_packages
+#   bazel build //:runtime          # Build only runtime packages
+#   bazel build //:framework        # Build only framework packages
+#   bazel build //:dds              # Build only DDS packages
+#   bazel test //packages/...       # Run all tests in migrated packages
+
+# Build all packages in each category
+filegroup(
+    name = "common",
+    srcs = [
+        "//packages/common/client-utils:client_utils",
+        "//packages/common/container-definitions:container_definitions",
+        "//packages/common/core-interfaces:core_interfaces",
+        "//packages/common/core-utils:core_utils",
+        "//packages/common/driver-definitions:driver_definitions",
+    ],
+)
+
+filegroup(
+    name = "utils",
+    srcs = [
+        "//packages/utils/odsp-doclib-utils:odsp_doclib_utils",
+        "//packages/utils/telemetry-utils:telemetry_utils",
+        "//packages/utils/tool-utils:tool_utils",
+    ],
+)
+
+filegroup(
+    name = "runtime",
+    srcs = [
+        "//packages/runtime/container-runtime:container_runtime",
+        "//packages/runtime/container-runtime-definitions:container_runtime_definitions",
+        "//packages/runtime/datastore:datastore",
+        "//packages/runtime/datastore-definitions:datastore_definitions",
+        "//packages/runtime/id-compressor:id_compressor",
+        "//packages/runtime/runtime-definitions:runtime_definitions",
+        "//packages/runtime/runtime-utils:runtime_utils",
+        "//packages/runtime/test-runtime-utils:test_runtime_utils",
+    ],
+)
+
+filegroup(
+    name = "dds",
+    srcs = [
+        "//packages/dds/cell:cell",
+        "//packages/dds/counter:counter",
+        "//packages/dds/ink:ink",
+        "//packages/dds/legacy-dds:legacy_dds",
+        "//packages/dds/map:map",
+        "//packages/dds/matrix:matrix",
+        "//packages/dds/merge-tree:merge_tree",
+        "//packages/dds/ordered-collection:ordered-collection",
+        "//packages/dds/pact-map:pact-map",
+        "//packages/dds/register-collection:register_collection",
+        "//packages/dds/sequence:sequence",
+        "//packages/dds/shared-object-base:shared_object_base",
+        "//packages/dds/shared-summary-block:shared_summary_block",
+        "//packages/dds/task-manager:task-manager",
+        "//packages/dds/test-dds-utils:test_dds_utils",
+        "//packages/dds/tree:tree",
+    ],
+)
+
+filegroup(
+    name = "drivers",
+    srcs = [
+        "//packages/drivers/debugger:debugger",
+        "//packages/drivers/driver-base:driver_base",
+        "//packages/drivers/driver-web-cache:driver_web_cache",
+        "//packages/drivers/file-driver:file_driver",
+        "//packages/drivers/local-driver:local_driver",
+        "//packages/drivers/odsp-driver:odsp_driver",
+        "//packages/drivers/odsp-driver-definitions:odsp_driver_definitions",
+        "//packages/drivers/odsp-urlResolver:odsp_urlresolver",
+        "//packages/drivers/replay-driver:replay_driver",
+        "//packages/drivers/routerlicious-driver:routerlicious_driver",
+        "//packages/drivers/routerlicious-urlResolver:routerlicious_urlresolver",
+        "//packages/drivers/tinylicious-driver:tinylicious_driver",
+    ],
+)
+
+filegroup(
+    name = "loader",
+    srcs = [
+        "//packages/loader/container-loader:container_loader",
+        "//packages/loader/driver-utils:driver_utils",
+        "//packages/loader/test-loader-utils:test_loader_utils",
+    ],
+)
+
+filegroup(
+    name = "framework",
+    srcs = [
+        "//packages/framework/agent-scheduler:agent-scheduler",
+        "//packages/framework/ai-collab:ai_collab",
+        "//packages/framework/aqueduct:aqueduct",
+        "//packages/framework/attributor:attributor_files",
+        "//packages/framework/data-object-base:data_object_base",
+        "//packages/framework/dds-interceptions:dds_interceptions",
+        "//packages/framework/fluid-framework:fluid-framework",
+        "//packages/framework/fluid-static:fluid_static",
+        "//packages/framework/oldest-client-observer:oldest_client_observer",
+        "//packages/framework/presence:presence",
+        "//packages/framework/react:react",
+        "//packages/framework/request-handler:request-handler",
+        "//packages/framework/synthesize:synthesize",
+        "//packages/framework/tree-agent:tree_agent",
+        "//packages/framework/tree-agent-langchain:tree_agent_langchain",
+        "//packages/framework/tree-agent-ses:tree_agent_ses",
+        "//packages/framework/undo-redo:undo_redo",
+    ],
+)
+
+filegroup(
+    name = "service-clients",
+    srcs = [
+        "//packages/service-clients/azure-client:azure_client",
+        "//packages/service-clients/odsp-client:odsp_client",
+        "//packages/service-clients/tinylicious-client:tinylicious_client",
+    ],
+)
+
+filegroup(
+    name = "tools",
+    srcs = [
+        "//packages/tools/fetch-tool:fetch-tool",
+        "//packages/tools/fluid-runner:fluid_runner",
+        "//packages/tools/replay-tool:replay-tool",
+    ],
+)
+
+filegroup(
+    name = "test-utils",
+    srcs = [
+        "//packages/test/mocha-test-setup:mocha-test-setup",
+        "//packages/test/snapshots:snapshots",
+        "//packages/test/stochastic-test-utils:stochastic-test-utils",
+        "//packages/test/test-driver-definitions:test-driver-definitions",
+        "//packages/test/test-drivers:test-drivers",
+        "//packages/test/test-pairwise-generator:test-pairwise-generator",
+        "//packages/test/test-service-load:test-service-load",
+        "//packages/test/test-utils:test-utils",
+        "//packages/test/test-version-utils:test_version_utils",
+    ],
+)
+
+# Build all migrated packages (74/88 packages)
+filegroup(
+    name = "all_packages",
+    srcs = [
+        ":common",
+        ":utils",
+        ":runtime",
+        ":dds",
+        ":drivers",
+        ":loader",
+        ":framework",
+        ":service-clients",
+        ":tools",
+        ":test-utils",
+    ],
+)
+
+# Convenience alias for building everything
+alias(
+    name = "build",
+    actual = ":all_packages",
+)
