@@ -52,7 +52,8 @@
       "Bash(readlink:*)",
       "Read(//home/tylerbu/.cache/bazel/_bazel_tylerbu/add1157379999da039bd5897a45c5786/execroot/fluidframework/bazel-out/k8-fastbuild/bin/packages/framework/**)",
       "Read(//home/tylerbu/.cache/bazel/_bazel_tylerbu/add1157379999da039bd5897a45c5786/execroot/fluidframework/bazel-out/**)",
-      "Read(//home/tylerbu/.cache/bazel/_bazel_tylerbu/add1157379999da039bd5897a45c5786/**)"
+      "Read(//home/tylerbu/.cache/bazel/_bazel_tylerbu/add1157379999da039bd5897a45c5786/**)",
+      "Bash(1)"
     ],
     "deny": [],
     "ask": []
