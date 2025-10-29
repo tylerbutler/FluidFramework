@@ -116,15 +116,19 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
-        ":node_modules/@types/jest",
-        ":node_modules/@types/node",
-        "//packages/common/core-interfaces:core_interfaces_esm",
-        "//packages/common/core-utils:core_utils_esm",
-        "//packages/common/driver-definitions:driver_definitions_esm",
-        "//packages/loader/driver-utils:driver_utils_esm",
-        "//packages/utils/telemetry-utils:telemetry_utils_esm",
-        ":node_modules/idb",
-    ],
+		"//packages/common/core-interfaces:core_interfaces_esm",
+		"//packages/common/core-utils:core_utils_esm",
+		"//packages/common/driver-definitions:driver_definitions_esm",
+		"//packages/loader/driver-utils:driver_utils_esm",
+		"//packages/utils/telemetry-utils:telemetry_utils_esm",
+		":node_modules/@fluidframework/core-utils",
+		":node_modules/@fluidframework/driver-definitions",
+		":node_modules/@fluidframework/driver-utils",
+		":node_modules/@fluidframework/telemetry-utils",
+		":node_modules/@types/jest",
+		":node_modules/@types/node",
+		":node_modules/idb",
+	],
 )
 
 # Jest test runner

@@ -119,16 +119,17 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
-        ":node_modules/@types/mocha",
-        ":node_modules/@types/node",
-        ":node_modules/@types/diff",
-        ":node_modules/@fluidframework/map",
-        ":node_modules/@fluidframework/matrix",
-        ":node_modules/@fluidframework/merge-tree",
-        ":node_modules/@fluidframework/sequence",
-        ":node_modules/@fluid-internal/client-utils",
-        ":node_modules/diff",
-    ],
+		":node_modules/@fluid-internal/client-utils",
+		":node_modules/@fluidframework/map",
+		":node_modules/@fluidframework/matrix",
+		":node_modules/@fluidframework/merge-tree",
+		":node_modules/@fluidframework/sequence",
+		":node_modules/@fluidframework/test-runtime-utils",
+		":node_modules/@types/diff",
+		":node_modules/@types/mocha",
+		":node_modules/@types/node",
+		":node_modules/diff",
+	],
 )
 
 # Mocha test runner
