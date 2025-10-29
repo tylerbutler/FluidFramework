@@ -1,9 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
-**Last Updated**: 2025-10-28
-**Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + SERVICE CLIENTS! 🎉
-**Overall Progress**: 69% (28/46 core sessions complete)
-**Progress**: Session 2.31 complete - Group 10 drivers (odsp-driver unblocks odsp-client)
+**Last Updated**: 2025-10-29
+**Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + ALL SERVICE CLIENTS 100%! 🎉
+**Overall Progress**: 70% (29/46 core sessions complete)
+**Progress**: Session 2.32 complete - odsp-client migrated, Group 12 (Service Clients) 100% COMPLETE!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,29 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 65% | 11/17 groups (8/8 runtime ✅, 4/5 Group 1 ✅, 18/18 framework ✅, 2/3 service clients, 1/2 Group 10 ✅) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 71% | 12/17 groups (8/8 runtime ✅, 4/5 Group 1 ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.32: 🎉 Group 12 Complete - ALL Service Clients Migrated! 🎉 (2025-10-29)
+- **Status**: ✅ **MILESTONE COMPLETE** - All 3 service client packages now migrated!
+- **Service Client Packages (Group 12 - 3/3 complete)**:
+  - @fluidframework/tinylicious-client ✅ (12 ws_deps) - Session 2.30
+  - @fluidframework/azure-client ✅ (8 ws_deps) - Session 2.30
+  - @fluid-experimental/odsp-client ✅ (11 ws_deps) - **NEW** - ODSP service integration
+- **Build Verification**: odsp-client compiles successfully (ESM + CJS) ✅
+- **Key Learnings**:
+  - odsp-client uses /internal and /beta subpath exports (Node16 moduleResolution)
+  - Requires noImplicitOverride: true compiler option
+  - Unblocked by odsp-driver migration (Session 2.31)
+  - All service clients follow same pattern: package.json in srcs, standalone tsconfigs
+- **Total Packages**: 62/88 migrated (70.5%) +1 package
+- **Group 12 Progress**: 3/3 packages (100% ✅) **COMPLETE**
+- **Next**: Test utilities (Groups 13-14) or DDS packages (Groups 2-5)
 
 ### Session 2.31: Group 10 Drivers - odsp-driver Migrated (2025-10-28)
 - **Status**: ✅ Partial Complete - 1/2 Group 10 drivers migrated (local-driver already done)
