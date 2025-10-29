@@ -133,6 +133,7 @@ ts_project(
         ":node_modules/best-random",
         ":node_modules/path-browserify",
         ":node_modules/@fluid-tools/benchmark",
+        ":node_modules/random-js",
     ],
 )
 

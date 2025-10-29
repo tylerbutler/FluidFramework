@@ -116,6 +116,7 @@ ts_project(
         ":node_modules/uuid",
         ":node_modules/sinon",
         ":node_modules/@fluid-tools/benchmark",
+        ":pkg",
     ],
 )
 

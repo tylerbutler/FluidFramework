@@ -149,7 +149,7 @@ ts_project(
             "src/test/**",  # Already included above
             "src/cjs/**",  # CJS-specific files
         ],
-    ) + ["package.json"],
+    ) + [":routerlicious_urlresolver_cts"] + ["package.json"],
     declaration = False,
     source_map = True,
     incremental = True,
@@ -158,14 +158,11 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
-		"//packages/common/core-interfaces:core_interfaces_esm",
-		"//packages/common/core-utils:core_utils_esm",
-		"//packages/common/driver-definitions:driver_definitions_esm",
+		":routerlicious_urlresolver_esm",
 		":node_modules/@fluidframework/core-interfaces",
 		":node_modules/@fluidframework/driver-definitions",
 		":node_modules/@types/mocha",
 		":node_modules/@types/node",
-		":node_modules/nconf",
 	],
 )
 

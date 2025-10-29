@@ -24,6 +24,32 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Recently Completed
 
+### Session 4.9: 🔧 Module Resolution Fixes (2025-10-29)
+- **Status**: 🔄 **IN PROGRESS** - Fixed 2 of 4 remaining module resolution issues
+- **Problem**: 4 packages still had TS2307 module resolution errors
+- **Implementation**:
+  1. ✅ Fixed `stochastic-test-utils`: Added missing `random-js` npm dependency
+  2. ✅ Fixed `core-utils`: Added `:pkg` dependency for self-referencing `/internal` subpath
+  3. ⚠️ `routerlicious-urlresolver`: Complex issue with `.cts` → `.cjs` compilation
+     - Source files import `./nconf.cjs` which is compiled from `nconf.cts`
+     - Test compilation can't resolve `.cjs` files from separate ts_project
+     - Requires either: (a) rootDirs config, (b) different test structure, or (c) alternative import pattern
+  4. ⏳ `core-interfaces`: Relative imports with `.js` extensions - needs investigation
+- **Results**:
+  - ✅ stochastic-test-utils: No more TS2307 errors (only pre-existing code quality issues)
+  - ✅ core-utils: Added self-package dependency via `:pkg` target
+  - ⚠️ routerlicious-urlresolver: Still blocked by `.cts`/`.cjs` import resolution
+  - ⏳ core-interfaces: Not yet attempted
+- **Key Learnings**:
+  - Self-referencing subpath imports can be resolved by depending on own `:pkg` target
+  - `.cts` files create special challenges when mixing with `.ts` in test compilation
+  - TypeScript needs either source `.cts` files or compiled `.cjs` + proper rootDirs config
+- **Next Steps**:
+  1. Fix routerlicious-urlresolver (consider rootDirs approach or test refactoring)
+  2. Fix core-interfaces relative imports
+  3. Survey all test builds to count how many now compile successfully
+  4. Create comprehensive test status summary
+
 ### Session 4.8: 📦 npm Dependencies & Test Pattern Fixes (2025-10-29)
 - **Status**: ✅ **COMPLETE** - Major progress on test infrastructure!
 - **Problem**: Tests still had TS2307 errors for npm packages and runtime module errors
