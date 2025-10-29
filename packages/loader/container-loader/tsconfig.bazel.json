@@ -16,7 +16,6 @@
 		"noUnusedLocals": true,
 		"outDir": "./lib",
 		"pretty": true,
-		"resolveJsonModule": true,
 		"rootDir": "./src",
 		"sourceMap": true,
 		"strict": true,
