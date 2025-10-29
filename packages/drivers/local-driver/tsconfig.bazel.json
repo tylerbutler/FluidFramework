@@ -15,7 +15,6 @@
 		"noUnusedLocals": true,
 		"outDir": "./lib",
 		"pretty": true,
-		"resolveJsonModule": true,
 		"rootDir": "./src",
 		"sourceMap": true,
 		"strict": true,
@@ -24,5 +23,5 @@
 		"types": []
 	},
 	"include": ["src/**/*"],
-	"exclude": ["src/test/**/*", "src/package.json"]
+	"exclude": ["src/test/**/*"]
 }

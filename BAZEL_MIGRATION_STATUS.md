@@ -2,8 +2,8 @@
 
 **Last Updated**: 2025-10-29
 **Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + ALL SERVICE CLIENTS 100%! 🎉
-**Overall Progress**: 76% (67/88 packages migrated)
-**Progress**: Session 2.35 complete - fluid-runner tool migrated! Package.json handling pattern resolved!
+**Overall Progress**: 78% (69/88 packages migrated)
+**Progress**: Session 2.36 complete - Group 14 COMPLETE! local-driver + test-drivers migrated!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,37 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 76% | 13/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **2/3 Group 14**, **1/4 Group 17 ✅**) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 78% | 14/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **3/3 Group 14 ✅**, **1/4 Group 17 ✅**) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.36: 🎉 Group 14 COMPLETE - Test Drivers + local-driver Migrated! (2025-10-29)
+- **Status**: ✅ **COMPLETE** - Group 14 fully migrated, local-driver blocker resolved!
+- **Driver Package (Dependency)**:
+  - @fluidframework/local-driver ✅ (8 ws_deps) - Local development driver with /legacy and /internal exports
+- **Test Driver Package (Group 14 - 3/3)**:
+  - @fluid-private/test-drivers ✅ (15 ws_deps) - Abstraction and implementations for test servers
+- **Build Verification**: Both packages compile successfully (ESM + CJS) ✅
+- **Blocker Resolution**: Applied Session 2.35's package.json pattern to local-driver
+  - **Problem**: local-driver has /legacy subpath exports, needs src/package.json for module type detection
+  - **Solution Applied**:
+    1. ✅ Added `src/package.json` to `ts_project.srcs` in BUILD.bazel (both ESM + CJS)
+    2. ✅ Removed `resolve_json_module = True` from BUILD.bazel targets
+    3. ✅ Removed `resolveJsonModule: true` from tsconfig.bazel.json and tsconfig.cjs.bazel.json
+    4. ✅ Removed `src/package.json` from exclude list in tsconfig files
+  - **Result**: TypeScript now correctly detects src/ files as ESM modules, ts_project copies package.json to output
+- **Key Learnings**:
+  - Session 2.35's package.json pattern works for /legacy exports too (not just /internal)
+  - local-driver was a missing dependency for test-drivers migration
+  - With local-driver migrated, test-drivers builds without any changes needed
+  - Pattern is consistent: include package.json in srcs, remove resolveJsonModule options
+- **Total Packages**: 69/88 migrated (78.4%) +2 packages
+- **Group 14 Progress**: 3/3 packages (100% ✅) **COMPLETE**
+- **Next**: Continue with Group 17 tools (3/4 remaining) OR tackle Group 15 or other remaining groups
 
 ### Session 2.35: 🎉 Group 17 Partial - fluid-runner Tool + Package.json Pattern Discovery! (2025-10-29)
 - **Status**: ✅ **SUCCESS** - fluid-runner migrated, critical package.json pattern resolved!
@@ -50,13 +74,13 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 - **Next**: Continue with remaining Group 17 tools OR return to Group 14 test-drivers with new package.json understanding
 
 ### Session 2.34: Group 14 - Mid-Level Test Utilities Partial (2025-10-29)
-- **Status**: ⚠️ **PARTIAL** - 2/3 test utility packages migrated, 1 blocked by local-driver
+- **Status**: ⚠️ **PARTIAL** - 2/3 test utility packages migrated, 1 blocked by local-driver (**RESOLVED in Session 2.36**)
 - **Test Utility Packages (Group 14 - 2/3 buildable)**:
   - @fluid-internal/mocha-test-setup ✅ (2 ws_deps) - Mocha test hooks and setup utilities
   - @fluid-internal/test-driver-definitions ✅ (2 ws_deps) - Test driver interface definitions
-  - @fluid-private/test-drivers ⏸️ (15 ws_deps) - **BLOCKED** by local-driver module resolution issue
+  - @fluid-private/test-drivers ⏸️ (15 ws_deps) - **BLOCKED** by local-driver module resolution issue (**RESOLVED in Session 2.36**)
 - **Build Verification**: Both unblocked packages compile successfully (ESM + CJS) ✅
-- **Blocker Identified**: @fluidframework/local-driver has pre-existing TypeScript module resolution issue
+- **Blocker Identified**: @fluidframework/local-driver has pre-existing TypeScript module resolution issue (**RESOLVED in Session 2.36**)
   - Package uses /legacy subpath exports, requires src/package.json for module type
   - TypeScript needs package.json in src/ for compilation but also copies it to output
   - Conflicts with genrule attempting to copy package.json separately
@@ -67,7 +91,7 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
   - tsBuildInfoFile must be specified in tsconfig files (not just BUILD)
   - Packages with subpath exports that only use /legacy (not /internal) still require src/package.json
 - **Total Packages**: 66/88 migrated (75.0%) +2 packages
-- **Group 14 Progress**: 2/3 packages (66.7%) **PARTIAL**
+- **Group 14 Progress**: 2/3 packages (66.7%) **PARTIAL** (**100% COMPLETE in Session 2.36**)
 - **Next**: Fix local-driver module resolution issue OR skip to Group 15/17 and return to test-drivers later
 
 ### Session 2.33: Group 13 - Basic Test Utilities Complete (2025-10-29)
