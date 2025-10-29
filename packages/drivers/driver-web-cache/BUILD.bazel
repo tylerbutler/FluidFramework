@@ -5,6 +5,7 @@ load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//:jest/package_json.bzl", jest_bin = "bin")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -88,4 +89,47 @@ filegroup(
         ":driver_web_cache_esm",
         ":driver_web_cache_cjs",
     ],
+)
+
+# ============================================================================
+# Test Integration (Session 4.3)
+# ============================================================================
+# Jest test compilation with proper @types resolution
+
+# Test compilation
+ts_project(
+    name = "driver_web_cache_test",
+    srcs = glob(
+        ["src/**/*.test.ts", "src/**/*.spec.ts"],
+    ) + glob(
+        ["src/**/*.ts"],
+        exclude = [
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+        ],
+    ),
+    declaration = False,
+    source_map = True,
+    incremental = True,
+    out_dir = "lib-test",
+    root_dir = "src",
+    tsconfig = "src/test/tsconfig.bazel.json",
+    transpiler = "tsc",
+    deps = [
+        ":node_modules/@types/jest",
+        ":node_modules/@types/node",
+    ],
+)
+
+# Jest test runner
+jest_bin.jest_test(
+    name = "test",
+    args = [
+        "lib-test/**/*.test.js",
+        "lib-test/**/*.spec.js",
+    ],
+    data = [
+        ":driver_web_cache_test",
+    ],
+    tags = ["manual"],  # Mark as manual until validated
 )

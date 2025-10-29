@@ -2,6 +2,7 @@ load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_js//npm:defs.bzl", "npm_package")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//:mocha/package_json.bzl", mocha_bin = "bin")
 
 npm_link_all_packages(name = "node_modules")
 
@@ -95,4 +96,51 @@ filegroup(
     name = "react",
     srcs = [":pkg"],
     visibility = ["//visibility:public"],
+)
+
+# ============================================================================
+# Test Integration (Session 4.3)
+# ============================================================================
+# Mocha test compilation with proper @types resolution
+
+# Test compilation (ESM)
+ts_project(
+    name = "react_test",
+    srcs = glob(
+        ["src/test/**/*.ts"],
+        exclude = [
+            "src/test/types/**",  # Type validation tests
+            "src/test/**/*.d.ts",  # Type declaration files
+        ],
+    ) + glob(
+        ["src/**/*.ts"],
+        exclude = [
+            "src/test/**",  # Already included above
+            "src/cjs/**",  # CJS-specific files
+        ],
+    ),
+    declaration = False,
+    source_map = True,
+    incremental = True,
+    out_dir = "lib-test",
+    root_dir = "src",
+    tsconfig = "src/test/tsconfig.bazel.json",
+    transpiler = "tsc",
+    deps = [
+        ":node_modules/@types/mocha",
+        ":node_modules/@types/node",
+    ],
+)
+
+# Mocha test runner
+mocha_bin.mocha_test(
+    name = "test",
+    args = [
+        "lib-test/test/**/*.spec.js",
+        "--exit",
+    ],
+    data = [
+        ":react_test",
+    ],
+    tags = ["manual"],  # Mark as manual until validated
 )
