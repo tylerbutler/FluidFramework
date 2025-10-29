@@ -1,9 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
 **Last Updated**: 2025-10-28
-**Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% COMPLETE! 🎉
-**Overall Progress**: 66% (26/46 core sessions complete)
-**Progress**: Session 2.29 complete - Loader layer migrated, FRAMEWORK 100%!
+**Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + SERVICE CLIENTS! 🎉
+**Overall Progress**: 68% (27/46 core sessions complete)
+**Progress**: Session 2.30 complete - Service client packages (Group 12 partial)
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,31 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 53% | 9/17 groups (8/8 runtime ✅, 4/5 Group 1 ✅, 18/18 framework ✅) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 59% | 10/17 groups (8/8 runtime ✅, 4/5 Group 1 ✅, 18/18 framework ✅, 2/3 service clients) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.30: Service Client Packages - Group 12 Partial (2025-10-28)
+- **Status**: ✅ Complete - 2/3 service client packages migrated, 1 deferred
+- **Service Client Packages (Group 12 - 2/3 buildable)**:
+  - @fluidframework/tinylicious-client ✅ (12 ws_deps) - Tinylicious service integration
+  - @fluidframework/azure-client ✅ (8 ws_deps) - Azure Fluid Relay service integration
+  - @fluid-experimental/odsp-client ⏸️ (11 ws_deps) - **DEFERRED** (blocked by odsp-driver from Group 10)
+- **Build Verification**: Both buildable packages compile successfully (ESM + CJS) ✅
+- **Key Learnings**:
+  - Both packages require Node16 moduleResolution for /internal and /beta subpath exports
+  - tinylicious-client required tsBuildInfoFile in both ESM and CJS tsconfig files
+  - Initial agent-generated BUILD files had path typos: packages/driver/ vs packages/drivers/, packages/driver/ vs packages/loader/
+  - Both packages preserve exactOptionalPropertyTypes: false from original tsconfig
+  - Module setting for CJS must be Node16 (not CommonJS) when moduleResolution is Node16 for subpath imports
+- **Blocker Identified**: @fluidframework/odsp-driver (Group 10) blocks odsp-client migration
+- **Total Packages**: 60/88 migrated (68.2%) +2 packages
+- **Service Clients Progress**: 2/3 packages (66.7%)
+- **Next**: Continue with test utilities (Groups 13-14) or migrate Group 10 drivers to unblock odsp-client
 
 ### Session 2.29: 🎉 Loader Layer + FRAMEWORK 100% COMPLETE! 🎉 (2025-10-28)
 - **Status**: ✅ Complete - **MILESTONE: ALL FRAMEWORK PACKAGES MIGRATED!**
@@ -305,30 +323,33 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.30: Infrastructure Packages - Service Clients + Test Utilities**
+**Session 2.31: Test Utilities Foundation - Group 13**
 
 **Core Layer Status**:
 - ✅ Runtime Layer: 8/8 packages (100%)
 - ✅ DDS Layer: 16/16 packages (100%)
 - ✅ Framework Layer: 18/18 packages (100%)
+- ✅ Service Clients: 2/3 packages (66.7%)
 - **ALL CORE LAYERS COMPLETE!**
 
 **Remaining Categories**:
-- Service Clients: 0/3 packages (Group 12)
+- Service Clients: 1/3 packages incomplete (odsp-client blocked by Group 10)
 - Test Utilities: 0/14 packages (Groups 13-16)
 - Tools: 0/4 packages (Group 17)
-- Drivers (remaining): 3/12 packages incomplete
+- Drivers (remaining): 3/12 packages incomplete (Group 10)
 
-**Recommended Next: Group 12 - Service Clients (3 packages)**:
-- @fluidframework/tinylicious-client
-- @fluid-experimental/odsp-client
-- @fluid-experimental/azure-client
+**Recommended Next: Group 13 - Basic Test Utilities (5 packages)**:
+- @fluid-internal/local-server-tests (0 ws_deps)
+- @fluid-private/test-pairwise-generator (0 ws_deps)
+- @fluid-internal/functional-tests (0 ws_deps)
+- @types/jest-environment-puppeteer (0 ws_deps)
+- @fluid-private/stochastic-test-utils (1 ws_dep)
 
-**Strategy**: Complete service client layer, then test utilities, then tools
+**Strategy**: Low-dependency test infrastructure packages with minimal blockers
 
 ---
 
-## Migrated Packages (58 total, 58 buildable)
+## Migrated Packages (60 total, 60 buildable)
 
 ### Phase 1 - PoC (3 packages)
 1. @fluidframework/core-interfaces ✅
@@ -426,6 +447,15 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 60. @fluidframework/react ✅ (Session 2.29 - 7 ws_deps, React integration)
 
 **Status**: ✅ **FRAMEWORK LAYER 100% COMPLETE - All 18 packages migrated!** 🎉
+
+### Phase 3 - Service Client Packages (2/3 buildable - 66.7% complete)
+61. @fluidframework/tinylicious-client ✅ (Session 2.30 - 12 ws_deps, Node16 required)
+62. @fluidframework/azure-client ✅ (Session 2.30 - 8 ws_deps, Node16 required)
+
+**Deferred from Group 12:**
+- @fluid-experimental/odsp-client (blocked: needs @fluidframework/odsp-driver from Group 10)
+
+**Status**: ✅ **Service clients 66.7% complete - 2/3 packages migrated!**
 
 *Note: Session numbers may not align exactly due to parallel migrations and tooling sessions*
 
