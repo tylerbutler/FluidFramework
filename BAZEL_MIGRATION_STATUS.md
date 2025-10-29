@@ -24,6 +24,25 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Recently Completed
 
+### Session 2.27: Group 7 - Mid-Level Framework Packages (2025-10-28)
+- **Status**: ✅ Complete - 4/5 Group 7 packages migrated (1 deferred)
+- **Framework Packages (Group 7 - 4/5 buildable)**:
+  - @fluid-experimental/oldest-client-observer ✅ (5 ws_deps) - Client observation utilities
+  - @fluid-experimental/dds-interceptions ✅ (5 ws_deps) - DDS interception framework
+  - @fluidframework/undo-redo ✅ (5 ws_deps) - Undo/redo functionality for DDS
+  - @fluidframework/ai-collab ✅ (4 ws_deps) - AI collaboration features with openai/typechat
+  - @fluidframework/react ⏸️ (7 ws_deps) - React integration (DEFERRED - needs fluid-static from Group 9)
+- **Build Verification**: All 4 buildable packages compile successfully (ESM + CJS) ✅
+- **Key Learnings**:
+  - ai-collab has external deps: openai, typechat, fastest-levenshtein, uuid, zod
+  - react package has React/TSX support but blocked by fluid-static dependency (Group 9)
+  - All packages use exactOptionalPropertyTypes: false or true based on original tsconfig
+  - Consistent pattern: undo-redo uses noImplicitAny: false (relaxed strictness)
+- **Deferred**: @fluidframework/react (depends on fluid-static with 16 ws_deps - Group 9 package)
+- **Total Packages**: 51/88 migrated (58.0%)
+- **Framework Progress**: 10/18 packages (55.6%)
+- **Next**: Complete Group 6 (2 remaining packages) or continue with Group 8
+
 ### Session 2.26: Tree-Agent Framework Packages (Group 6 Partial) (2025-10-28)
 - **Status**: ✅ Complete - 3 tree-agent packages migrated forming dependency chain
 - **Framework Packages (Group 6 - 3/5 complete)**:
@@ -38,7 +57,6 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
   - Module: Node16 with Node16 moduleResolution (required for both ESM and CJS)
 - **Total Packages**: 47/88 migrated (53.4%)
 - **Framework Progress**: 6/18 packages (33.3%)
-- **Next**: Complete Group 6 or move to Group 7 framework packages
 
 ### Session 2.25: 🎉 DDS Layer 100% Complete + Aqueduct! 🎉 (2025-10-28)
 - **Status**: ✅ Complete - Final DDS package + bonus framework packages migrated
@@ -238,18 +256,22 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.27: Framework Layer Continuation - Group 7**
+**Session 2.28: Complete Group 6 Framework Packages**
 - **DDS Layer**: 16/16 packages (100% ✅)
-- **Framework Layer**: 6/18 packages migrated (33.3%)
+- **Framework Layer**: 10/18 packages migrated (55.6%)
 
-**Target: Group 7 - Mid-Level Framework (5 packages)**:
-- @fluid-experimental/oldest-client-observer (5 ws_deps)
-- @fluid-experimental/dds-interceptions (5 ws_deps)
-- @fluidframework/undo-redo (5 ws_deps)
-- @fluidframework/ai-collab (4 ws_deps)
-- @fluidframework/react (7 ws_deps)
+**Target: Group 6 - Remaining Low-Dependency Framework (2 packages)**:
+- @fluidframework/request-handler (5 ws_deps) - Already migrated in Session 2.25 ✅
+- Need to identify the 5th package from Group 6 (synthesize ✅, tree-agent* ✅ done)
 
-**Strategy**: Parallel migration of mid-level framework packages with established dependencies
+**Alternative: Start Group 8 - Advanced Framework (5 packages)**:
+- @fluidframework/agent-scheduler (11 ws_deps)
+- fluid-framework (11 ws_deps) - Main framework package!
+- @fluid-experimental/attributor (12 ws_deps)
+- @fluid-experimental/data-object-base (12 ws_deps)
+- @fluidframework/presence (13 ws_deps)
+
+**Strategy**: Verify Group 6 completion status, then proceed to Group 8 for advanced framework packages
 
 ---
 
@@ -330,15 +352,22 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 **Status**: ✅ **Group 4 DDS 100% COMPLETE - Complex DDS layer established!** 🎉
 
-### Phase 3 - Framework Packages (6/18 buildable - 33.3% complete)
+### Phase 3 - Framework Packages (10/18 buildable - 55.6% complete)
 43. @fluidframework/synthesize ✅ (Session 2.25 - simple scope synthesis)
 44. @fluidframework/request-handler ✅ (Session 2.25 - request handling framework)
 45. @fluidframework/aqueduct ✅ (Session 2.25 - full data object framework, 14 ws_deps)
 46. @fluidframework/tree-agent ✅ (Session 2.26 - AI integration, 4 ws_deps)
 47. @fluidframework/tree-agent-langchain ✅ (Session 2.26 - LangChain integration, 2 ws_deps)
 48. @fluidframework/tree-agent-ses ✅ (Session 2.26 - SES integration, 1 ws_dep)
+49. @fluid-experimental/oldest-client-observer ✅ (Session 2.27 - 5 ws_deps)
+50. @fluid-experimental/dds-interceptions ✅ (Session 2.27 - 5 ws_deps)
+51. @fluidframework/undo-redo ✅ (Session 2.27 - 5 ws_deps)
+52. @fluidframework/ai-collab ✅ (Session 2.27 - 4 ws_deps, external: openai, typechat, zod)
 
-**Status**: 🔄 **Framework layer in progress - 6/18 packages migrated (33.3%)**
+**Deferred from Group 7**:
+- @fluidframework/react (7 ws_deps) - Blocked by @fluidframework/fluid-static (Group 9)
+
+**Status**: 🔄 **Framework layer in progress - 10/18 packages migrated (55.6%)**
 
 *Note: Session numbers may not align exactly due to parallel migrations and tooling sessions*
 
