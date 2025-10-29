@@ -228,10 +228,18 @@ validate = True,            # Enable full type checking (default)
 
 ### Standard Package BUILD.bazel
 
+**IMPORTANT**: Always include `out_dir` and `root_dir` attributes (see Critical section below).
+
 ```python
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@npm//:defs.bzl", "npm_link_all_packages")
 
 package(default_visibility = ["//visibility:public"])
+
+# Link npm packages for this workspace package
+npm_link_all_packages(name = "node_modules")
 
 # ESM compilation
 ts_project(
@@ -241,10 +249,13 @@ ts_project(
         exclude = ["src/test/**"],
     ),
     declaration = True,
-    out_dir = "lib",
-    root_dir = "src",
+    declaration_map = True,
+    incremental = True,
+    source_map = True,
+    composite = True,
+    out_dir = "lib",           # CRITICAL: ESM output directory
+    root_dir = "src",          # CRITICAL: Source root directory
     tsconfig = ":tsconfig.bazel.json",
-    transpiler = "tsc",
     deps = [
         # Workspace dependencies here
     ],
@@ -258,24 +269,76 @@ ts_project(
         exclude = ["src/test/**"],
     ),
     declaration = True,
-    out_dir = "dist",
-    root_dir = "src",
+    declaration_map = True,
+    incremental = True,
+    source_map = True,
+    composite = True,
+    out_dir = "dist",          # CRITICAL: CJS output directory
+    root_dir = "src",          # CRITICAL: Source root directory
+    transpiler = "tsc",        # REQUIRED for CJS
     tsconfig = ":tsconfig.cjs.bazel.json",
-    transpiler = "tsc",
     deps = [
         # Workspace dependencies here
     ],
 )
 
-# Main target (convenience for building both)
-filegroup(
-    name = "core_interfaces",
+# js_library wrapper with package.json (for subpath exports)
+js_library(
+    name = "lib",
     srcs = [
         ":core_interfaces_esm",
         ":core_interfaces_cjs",
+        "package.json",        # REQUIRED for /internal, /legacy exports
     ],
 )
+
+# npm_package - REQUIRED for npm_link_all_packages
+npm_package(
+    name = "pkg",
+    srcs = [":lib"],
+    package = "@fluidframework/core-interfaces",
+    visibility = ["//visibility:public"],
+)
+
+# Backward compatibility filegroup
+filegroup(
+    name = "core_interfaces",
+    srcs = [":lib"],
+)
 ```
+
+### ⚠️ CRITICAL: Output Directory Configuration
+
+**ALWAYS specify `out_dir` and `root_dir` in ts_project targets.**
+
+Without explicit `out_dir` and `root_dir` attributes, TypeScript may output files to unexpected locations, breaking npm_link resolution for packages with subpath exports.
+
+**Required Pattern**:
+```python
+ts_project(
+    name = "package_name_esm",
+    out_dir = "lib",      # REQUIRED for ESM
+    root_dir = "src",     # REQUIRED for predictable output
+    # ... other attributes
+)
+
+ts_project(
+    name = "package_name_cjs",
+    out_dir = "dist",     # REQUIRED for CJS
+    root_dir = "src",     # REQUIRED for predictable output
+    transpiler = "tsc",   # REQUIRED for CJS
+    # ... other attributes
+)
+```
+
+**Why This Matters**:
+- ESM outputs must go to `lib/` for npm_link to resolve package.json exports
+- CJS outputs must go to `dist/` to match package.json exports
+- Without `out_dir`, ts_project may mirror source structure (outputs to `src/`)
+- Packages with `/internal` or `/legacy` subpath exports **require** lib/ directory
+- npm_link_all_packages points to Bazel outputs, expects lib/ and dist/ structure
+
+**Discovered In**: Session 2.38 - file-driver BUILD was missing out_dir, causing replay-tool import failures
 
 ### Build Commands
 
@@ -505,6 +568,37 @@ filegroup(
 ---
 
 ## Troubleshooting
+
+### ⚠️ CRITICAL: Cannot find module with /internal subpath
+
+**Symptom**: `TS2307: Cannot find module '@fluidframework/package/internal' or its corresponding type declarations`
+
+**Root Cause**: Package BUILD.bazel missing `out_dir` attribute, causing ESM outputs to go to wrong directory
+
+**Example Error**:
+```
+packages/tools/replay-tool/src/replayMessages.ts:34:8 - error TS2307: Cannot find module '@fluidframework/file-driver/internal'
+```
+
+**Solution**: Add explicit `out_dir` and `root_dir` to ts_project:
+```python
+ts_project(
+    name = "package_name_esm",
+    out_dir = "lib",      # REQUIRED: ESM outputs must go to lib/
+    root_dir = "src",     # REQUIRED: Predictable output structure
+    # ... other attributes
+)
+```
+
+**Why It Happens**:
+- Without `out_dir`, ts_project mirrors source structure (outputs to `src/`)
+- npm_link expects lib/ directory for package.json exports resolution
+- Packages with subpath exports (/internal, /legacy) require lib/ structure
+- TypeScript cannot resolve subpaths when package structure is incorrect
+
+**Prevention**: Always use the standard BUILD pattern with explicit out_dir (see Build Patterns section)
+
+**Discovered In**: Session 2.38 - file-driver missing out_dir blocked replay-tool migration
 
 ### Module Resolution Errors
 
