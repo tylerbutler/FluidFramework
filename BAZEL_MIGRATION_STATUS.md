@@ -1,9 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
 **Last Updated**: 2025-10-28
-**Current Phase**: Phase 3 In Progress | 🎉 RUNTIME COMPLETE + DDS 100% COMPLETE! 🎉
-**Overall Progress**: 54% (23/46 core sessions complete)
-**Progress**: Session 2.26 complete - tree-agent framework packages (Group 6)!
+**Current Phase**: Phase 3 In Progress | 🎉 RUNTIME + DDS 100% COMPLETE! Framework 72.2%! 🎉
+**Overall Progress**: 61% (25/46 core sessions complete)
+**Progress**: Session 2.28 complete - Group 8 advanced framework (3/5 packages)!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -23,6 +23,31 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 ---
 
 ## Recently Completed
+
+### Session 2.28: Group 8 - Advanced Framework Packages (2025-10-28)
+- **Status**: ✅ Partial Complete - 3/5 packages migrated, 2 blocked by loader layer
+- **Framework Packages (Group 8 - 3/5 buildable)**:
+  - @fluidframework/agent-scheduler ✅ (11 ws_deps) - Distributed agent coordination
+  - @fluid-experimental/attributor ✅ (12 ws_deps) - Attribution tracking for collaborative editing
+  - @fluid-experimental/data-object-base ✅ (12 ws_deps) - Base data object implementation
+  - @fluidframework/fluid-framework ⏸️ (11 ws_deps) - **MAIN FRAMEWORK PACKAGE** (blocked by container-loader)
+  - @fluidframework/presence ⏸️ (13 ws_deps) - Real-time presence tracking (blocked by fluid-static → container-loader)
+- **Build Verification**: All 3 buildable packages compile successfully (ESM + CJS) ✅
+- **Key Learnings**:
+  - **agent-scheduler**: External dep uuid, requires Node16 moduleResolution, exactOptionalPropertyTypes: false
+  - **attributor**: External dep lz4js, uses /internal subpath exports extensively, Node16 for both ESM/CJS
+  - **data-object-base**: Most dependencies (12 ws_deps), exactOptionalPropertyTypes: false, noUnusedLocals: true
+  - **presence**: skipLibCheck: true due to exactOptionalPropertyTypes conflicts in upstream deps
+  - **fluid-framework**: Main aggregation package re-exporting from all core packages (9/11 deps migrated)
+- **Blockers Identified**:
+  - **@fluidframework/container-loader** (7 ws_deps, loader layer) - Blocks fluid-framework and fluid-static
+  - **@fluidframework/fluid-static** (16 ws_deps) - Required by presence, depends on container-loader
+- **Deferred Packages (2)**:
+  - fluid-framework (BUILD files created, blocked by container-loader)
+  - presence (BUILD files created, blocked by fluid-static → container-loader)
+- **Total Packages**: 54/88 migrated (61.4%) +3 packages
+- **Framework Progress**: 13/18 packages (72.2%) +3 packages
+- **Next**: **PRIORITY** - Migrate loader layer (container-loader + fluid-static) to unblock 2 deferred Group 8 packages
 
 ### Session 2.27: Group 7 - Mid-Level Framework Packages (2025-10-28)
 - **Status**: ✅ Complete - 4/5 Group 7 packages migrated (1 deferred)
@@ -256,26 +281,26 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.28: Complete Group 6 Framework Packages**
+**Session 2.29: Migrate Loader Layer - Unblock fluid-framework**
 - **DDS Layer**: 16/16 packages (100% ✅)
 - **Framework Layer**: 10/18 packages migrated (55.6%)
+- **Blocker**: fluid-framework cannot build without loader packages
 
-**Target: Group 6 - Remaining Low-Dependency Framework (2 packages)**:
-- @fluidframework/request-handler (5 ws_deps) - Already migrated in Session 2.25 ✅
-- Need to identify the 5th package from Group 6 (synthesize ✅, tree-agent* ✅ done)
+**Critical Path - Loader Layer (2 packages)**:
+- @fluidframework/container-loader (7 ws_deps) - **BLOCKS fluid-framework**
+- @fluidframework/fluid-static (16 ws_deps) - **BLOCKS fluid-framework + react**
 
-**Alternative: Start Group 8 - Advanced Framework (5 packages)**:
+**Alternative: Continue Group 8 - Other Advanced Framework (4 packages)**:
 - @fluidframework/agent-scheduler (11 ws_deps)
-- fluid-framework (11 ws_deps) - Main framework package!
 - @fluid-experimental/attributor (12 ws_deps)
 - @fluid-experimental/data-object-base (12 ws_deps)
 - @fluidframework/presence (13 ws_deps)
 
-**Strategy**: Verify Group 6 completion status, then proceed to Group 8 for advanced framework packages
+**Strategy**: Prioritize container-loader migration to unblock fluid-framework main package build verification
 
 ---
 
-## Migrated Packages (47 total, 46 buildable)
+## Migrated Packages (54 total, 54 buildable)
 
 ### Phase 1 - PoC (3 packages)
 1. @fluidframework/core-interfaces ✅
@@ -352,7 +377,7 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 **Status**: ✅ **Group 4 DDS 100% COMPLETE - Complex DDS layer established!** 🎉
 
-### Phase 3 - Framework Packages (10/18 buildable - 55.6% complete)
+### Phase 3 - Framework Packages (13/18 buildable - 72.2% complete)
 43. @fluidframework/synthesize ✅ (Session 2.25 - simple scope synthesis)
 44. @fluidframework/request-handler ✅ (Session 2.25 - request handling framework)
 45. @fluidframework/aqueduct ✅ (Session 2.25 - full data object framework, 14 ws_deps)
@@ -363,11 +388,18 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 50. @fluid-experimental/dds-interceptions ✅ (Session 2.27 - 5 ws_deps)
 51. @fluidframework/undo-redo ✅ (Session 2.27 - 5 ws_deps)
 52. @fluidframework/ai-collab ✅ (Session 2.27 - 4 ws_deps, external: openai, typechat, zod)
+53. @fluidframework/agent-scheduler ✅ (Session 2.28 - 11 ws_deps, distributed agent coordination)
+54. @fluid-experimental/attributor ✅ (Session 2.28 - 12 ws_deps, external: lz4js)
+55. @fluid-experimental/data-object-base ✅ (Session 2.28 - 12 ws_deps, base data object)
 
 **Deferred from Group 7**:
 - @fluidframework/react (7 ws_deps) - Blocked by @fluidframework/fluid-static (Group 9)
 
-**Status**: 🔄 **Framework layer in progress - 10/18 packages migrated (55.6%)**
+**Deferred from Group 8**:
+- @fluidframework/fluid-framework (11 ws_deps) - **MAIN FRAMEWORK PACKAGE** - Blocked by container-loader
+- @fluidframework/presence (13 ws_deps) - Blocked by fluid-static → container-loader
+
+**Status**: 🔄 **Framework layer in progress - 13/18 packages migrated (72.2%)**
 
 *Note: Session numbers may not align exactly due to parallel migrations and tooling sessions*
 
