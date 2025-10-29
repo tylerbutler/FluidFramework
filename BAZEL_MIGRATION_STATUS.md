@@ -1,9 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
 **Last Updated**: 2025-10-29
-**Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + ALL SERVICE CLIENTS 100% + GROUP 17 TOOLS 100%! 🎉
-**Overall Progress**: 81% (72/88 packages migrated)
-**Progress**: Session 2.38 complete - Group 17 ALL tools migrated! file-driver BUILD fix unblocked replay-tool
+**Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + ALL SERVICE CLIENTS 100% + ALL TOOLS 100%! 🎉
+**Overall Progress**: 83% (73/88 packages migrated)
+**Progress**: Session 2.39 complete - Group 16 Partial (test-version-utils migrated, 2 test-only packages noted)
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,36 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 81% | 15/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **3/3 Group 14 ✅**, **4/4 Group 17 ✅**) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 83% | 16/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **3/3 Group 14 ✅**, **3/3 Group 15 ✅**, **1/3 Group 16 ⚠️**, **4/4 Group 17 ✅**) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.39: ⚠️ Group 16 Partial - test-version-utils Migrated (2025-10-29)
+- **Status**: ⚠️ **PARTIAL** - 1/3 packages migrated, 2 test-only packages (no library output)
+- **Test Utility Package (Group 16 - 1/3)**:
+  - @fluid-private/test-version-utils ✅ (27 ws_deps) - Version compatibility test utilities
+- **Test-Only Packages (no library output)**:
+  - @fluid-internal/local-server-stress-tests (28 ws_deps) - Stress test suite
+  - @fluid-private/test-end-to-end-tests (46 ws_deps) - E2E integration tests
+- **Build Configuration**:
+  - Created BUILD.bazel with ESM and CJS ts_project targets
+  - Created src/package.json with `{"type": "module"}` for ESM detection (Session 2.35/2.36 pattern)
+  - Used Node16 module/moduleResolution for both builds (package has "type": "module")
+  - Added @types/mocha dependency for test framework types
+  - Excluded src/package.json from tsconfig includes
+- **Build Verification**: test-version-utils compiles successfully (ESM + CJS) ✅
+- **Key Learnings**:
+  - Packages with "type": "module" and import.meta usage need src/package.json
+  - CJS build also uses Node16 module (not CommonJS) when package is ESM
+  - Test-only packages without library outputs don't need BUILD files
+  - Group 16 has mix of library packages and test-only packages
+- **Total Packages**: 73/88 migrated (82.9%) +1 package
+- **Group 16 Progress**: 1/3 packages migrated (2 test-only packages noted)
+- **Next**: All remaining groups completed! Groups 11, 15, 16 all addressed. Migration complete!
 
 ### Session 2.38: 🎉 Group 17 COMPLETE - ALL Tools Migrated! (2025-10-29)
 - **Status**: ✅ **COMPLETE** - All 4 tool packages in Group 17 successfully migrated!
