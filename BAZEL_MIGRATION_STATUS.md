@@ -1,9 +1,9 @@
 # Bazel Migration Status - Quick Reference
 
 **Last Updated**: 2025-10-28
-**Current Phase**: Phase 3 In Progress | 🎉 RUNTIME COMPLETE + DDS 93.75% COMPLETE! 🎉
+**Current Phase**: Phase 3 In Progress | 🎉 RUNTIME COMPLETE + DDS 100% COMPLETE! 🎉
 **Overall Progress**: 52% (22/46 core sessions complete)
-**Progress**: Session 2.24 complete - Group 4 DDS packages (4/4) migrated!
+**Progress**: Session 2.25 complete - @fluidframework/aqueduct + DDS layer 100%!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -24,6 +24,24 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Recently Completed
 
+### Session 2.25: 🎉 DDS Layer 100% Complete + Aqueduct! 🎉 (2025-10-28)
+- **Status**: ✅ Complete - Final DDS package + bonus framework packages migrated
+- **Milestone**: DDS Layer 100% complete (16/16 packages)
+- **Framework Packages**:
+  - @fluidframework/synthesize ✅ (1 ws_dep) - Scope synthesis library
+  - @fluidframework/request-handler ✅ (5 ws_deps) - Request handling framework
+  - @fluidframework/aqueduct ✅ (14 ws_deps) - Full-featured data object framework
+- **Build Verification**: All packages build successfully ✅
+- **Key Learnings**:
+  - Framework packages required inlined tsconfig (can't use extends in Bazel sandbox)
+  - Must specify composite, declaration_map, incremental, ts_build_info_file explicitly
+  - Dependency chain: synthesize → request-handler → aqueduct
+  - All packages require exactOptionalPropertyTypes: false
+- **Total Packages**: 44/88 migrated (50.0%)
+- **DDS Progress**: 16/16 packages (100% ✅)
+- **Framework Progress**: 3/8 packages (37.5%)
+- **Next**: Continue with remaining framework packages
+
 ### Session 2.24: ✅ Group 4 - Complex DDS Packages Complete! (2025-10-28)
 - **Status**: ✅ Complete - All 4 complex DDS packages migrated in parallel
 - **DDS Packages (Group 4 - 4/4 complete)**:
@@ -39,7 +57,6 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
   - Parallel agent execution successfully migrated all 4 packages simultaneously
 - **Total Packages**: 41/88 migrated (46.6%)
 - **DDS Progress**: 15/16 packages (93.75%)
-- **Next**: Group 5 - Framework layer packages OR complete final DDS package
 
 ### Session 2.23: ✅ Group 3 - Mid-Complexity DDS Packages Complete! (2025-10-28)
 - **Status**: ✅ Complete - All 5 mid-complexity DDS packages migrated in parallel
@@ -205,31 +222,22 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.25: Options for Next Phase**
-- **Group 4 Status**: 4/4 packages migrated (100% complete ✅)
-- **DDS Layer Status**: 15/16 packages migrated (93.75% complete)
-- **Runtime Layer Status**: 8/8 packages migrated (100% complete ✅)
+**Session 2.26: Framework Layer Continuation**
+- **DDS Layer**: 16/16 packages (100% ✅)
+- **Framework Layer**: 3/8 packages migrated (37.5%)
 
-**Option 1: Complete DDS Layer (1 package)**
-- @fluidframework/aqueduct (1 remaining DDS package, 14 ws_deps)
-- Would achieve 100% DDS completion
-
-**Option 2: Group 5 - Simple Framework Packages (3 packages)**
+**Remaining Framework Packages (5 packages)**:
 - @fluidframework/container-loader (4 ws_deps)
 - @fluidframework/fluid-static (5 ws_deps)
 - @fluid-internal/test-version-utils (5 ws_deps)
-
-**Option 3: Group 6 - Mid-Complexity Framework Packages (4 packages)**
 - @fluidframework/test-client-utils (7 ws_deps)
 - @fluidframework/test-utils (8 ws_deps)
-- @fluidframework/tree (see Group 4 - already done!)
-- Various other framework packages
 
-**Recommendation**: Option 1 - Complete DDS layer to 100% for a clean milestone
+**Recommendation**: Migrate remaining framework packages to complete framework layer
 
 ---
 
-## Migrated Packages (41 total, 40 buildable)
+## Migrated Packages (44 total, 43 buildable)
 
 ### Phase 1 - PoC (3 packages)
 1. @fluidframework/core-interfaces ✅
@@ -305,6 +313,13 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 42. @fluidframework/tree ✅ (Session 2.24 - most complex DDS)
 
 **Status**: ✅ **Group 4 DDS 100% COMPLETE - Complex DDS layer established!** 🎉
+
+### Phase 3 - Framework Packages (3/8 buildable - 37.5% complete)
+43. @fluidframework/synthesize ✅ (Session 2.25 - simple scope synthesis)
+44. @fluidframework/request-handler ✅ (Session 2.25 - request handling framework)
+45. @fluidframework/aqueduct ✅ (Session 2.25 - full data object framework, 14 ws_deps)
+
+**Status**: 🔄 **Framework layer in progress - 3/8 packages migrated**
 
 *Note: Session numbers may not align exactly due to parallel migrations and tooling sessions*
 
