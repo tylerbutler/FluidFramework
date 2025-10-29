@@ -260,7 +260,8 @@
   },
   {
     "target": "//packages/test/test-pairwise-generator:test",
-    "status": "pass"
+    "status": "fail",
+    "error": "unknown"
   },
   {
     "target": "//packages/test/snapshots:test",
