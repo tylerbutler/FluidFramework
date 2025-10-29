@@ -2,8 +2,8 @@
 
 **Last Updated**: 2025-10-28
 **Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + SERVICE CLIENTS! 🎉
-**Overall Progress**: 68% (27/46 core sessions complete)
-**Progress**: Session 2.30 complete - Service client packages (Group 12 partial)
+**Overall Progress**: 69% (28/46 core sessions complete)
+**Progress**: Session 2.31 complete - Group 10 drivers (odsp-driver unblocks odsp-client)
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,30 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 59% | 10/17 groups (8/8 runtime ✅, 4/5 Group 1 ✅, 18/18 framework ✅, 2/3 service clients) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 65% | 11/17 groups (8/8 runtime ✅, 4/5 Group 1 ✅, 18/18 framework ✅, 2/3 service clients, 1/2 Group 10 ✅) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.31: Group 10 Drivers - odsp-driver Migrated (2025-10-28)
+- **Status**: ✅ Partial Complete - 1/2 Group 10 drivers migrated (local-driver already done)
+- **Driver Packages (Group 10 - 1/2 newly migrated)**:
+  - @fluidframework/odsp-driver ✅ (9 ws_deps) - **NEW** - Socket storage for SPO and ODC
+  - @fluidframework/local-driver ✅ (8 ws_deps) - Already migrated (Session 2.8)
+- **Build Verification**: odsp-driver compiles successfully (ESM + CJS) ✅
+- **Key Learnings**:
+  - Package uses /internal subpath imports, requires package.json in ts_project srcs
+  - Must follow runtime-definitions pattern: package.json in srcs, no extra BUILD attributes
+  - tsconfig attributes (resolve_json_module, ts_build_info_file) must NOT be in BUILD or tsconfig
+  - Path correction: odsp-doclib-utils in packages/utils not packages/drivers
+  - Dependencies: odsp-driver-definitions, odsp-doclib-utils already migrated
+- **Unblocked**: @fluid-experimental/odsp-client can now be migrated ✅
+- **Total Packages**: 61/88 migrated (69.3%) +1 package
+- **Group 10 Progress**: 2/2 packages (100% ✅)
+- **Next**: Migrate odsp-client to complete Group 12 service clients, OR continue with Groups 13-14 test utilities
 
 ### Session 2.30: Service Client Packages - Group 12 Partial (2025-10-28)
 - **Status**: ✅ Complete - 2/3 service client packages migrated, 1 deferred
