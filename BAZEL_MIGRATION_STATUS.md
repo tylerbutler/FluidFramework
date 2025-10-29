@@ -2,8 +2,8 @@
 
 **Last Updated**: 2025-10-28
 **Current Phase**: Phase 3 In Progress | 🎉 RUNTIME COMPLETE + DDS 100% COMPLETE! 🎉
-**Overall Progress**: 52% (22/46 core sessions complete)
-**Progress**: Session 2.25 complete - @fluidframework/aqueduct + DDS layer 100%!
+**Overall Progress**: 54% (23/46 core sessions complete)
+**Progress**: Session 2.26 complete - tree-agent framework packages (Group 6)!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -24,6 +24,22 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Recently Completed
 
+### Session 2.26: Tree-Agent Framework Packages (Group 6 Partial) (2025-10-28)
+- **Status**: ✅ Complete - 3 tree-agent packages migrated forming dependency chain
+- **Framework Packages (Group 6 - 3/5 complete)**:
+  - @fluidframework/tree-agent ✅ (4 ws_deps) - AI integration for Fluid applications
+  - @fluidframework/tree-agent-langchain ✅ (2 ws_deps) - LangChain integration helpers
+  - @fluidframework/tree-agent-ses ✅ (1 ws_dep) - SES integration for secure execution
+- **Build Verification**: All 6 targets build successfully (ESM + CJS) ✅
+- **Key Learnings**:
+  - External dependencies needed: zod, @langchain/core, ses
+  - Dependency chain: tree-agent → tree-agent-langchain, tree-agent-ses
+  - All packages: noImplicitAny: true, preserveConstEnums: true
+  - Module: Node16 with Node16 moduleResolution (required for both ESM and CJS)
+- **Total Packages**: 47/88 migrated (53.4%)
+- **Framework Progress**: 6/18 packages (33.3%)
+- **Next**: Complete Group 6 or move to Group 7 framework packages
+
 ### Session 2.25: 🎉 DDS Layer 100% Complete + Aqueduct! 🎉 (2025-10-28)
 - **Status**: ✅ Complete - Final DDS package + bonus framework packages migrated
 - **Milestone**: DDS Layer 100% complete (16/16 packages)
@@ -39,7 +55,7 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
   - All packages require exactOptionalPropertyTypes: false
 - **Total Packages**: 44/88 migrated (50.0%)
 - **DDS Progress**: 16/16 packages (100% ✅)
-- **Framework Progress**: 3/8 packages (37.5%)
+- **Framework Progress**: 3/18 packages (16.7%)
 - **Next**: Continue with remaining framework packages
 
 ### Session 2.24: ✅ Group 4 - Complex DDS Packages Complete! (2025-10-28)
@@ -222,22 +238,22 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 ## Next Session
 
-**Session 2.26: Framework Layer Continuation**
+**Session 2.27: Framework Layer Continuation - Group 7**
 - **DDS Layer**: 16/16 packages (100% ✅)
-- **Framework Layer**: 3/8 packages migrated (37.5%)
+- **Framework Layer**: 6/18 packages migrated (33.3%)
 
-**Remaining Framework Packages (5 packages)**:
-- @fluidframework/container-loader (4 ws_deps)
-- @fluidframework/fluid-static (5 ws_deps)
-- @fluid-internal/test-version-utils (5 ws_deps)
-- @fluidframework/test-client-utils (7 ws_deps)
-- @fluidframework/test-utils (8 ws_deps)
+**Target: Group 7 - Mid-Level Framework (5 packages)**:
+- @fluid-experimental/oldest-client-observer (5 ws_deps)
+- @fluid-experimental/dds-interceptions (5 ws_deps)
+- @fluidframework/undo-redo (5 ws_deps)
+- @fluidframework/ai-collab (4 ws_deps)
+- @fluidframework/react (7 ws_deps)
 
-**Recommendation**: Migrate remaining framework packages to complete framework layer
+**Strategy**: Parallel migration of mid-level framework packages with established dependencies
 
 ---
 
-## Migrated Packages (44 total, 43 buildable)
+## Migrated Packages (47 total, 46 buildable)
 
 ### Phase 1 - PoC (3 packages)
 1. @fluidframework/core-interfaces ✅
@@ -314,12 +330,15 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 
 **Status**: ✅ **Group 4 DDS 100% COMPLETE - Complex DDS layer established!** 🎉
 
-### Phase 3 - Framework Packages (3/8 buildable - 37.5% complete)
+### Phase 3 - Framework Packages (6/18 buildable - 33.3% complete)
 43. @fluidframework/synthesize ✅ (Session 2.25 - simple scope synthesis)
 44. @fluidframework/request-handler ✅ (Session 2.25 - request handling framework)
 45. @fluidframework/aqueduct ✅ (Session 2.25 - full data object framework, 14 ws_deps)
+46. @fluidframework/tree-agent ✅ (Session 2.26 - AI integration, 4 ws_deps)
+47. @fluidframework/tree-agent-langchain ✅ (Session 2.26 - LangChain integration, 2 ws_deps)
+48. @fluidframework/tree-agent-ses ✅ (Session 2.26 - SES integration, 1 ws_dep)
 
-**Status**: 🔄 **Framework layer in progress - 3/8 packages migrated**
+**Status**: 🔄 **Framework layer in progress - 6/18 packages migrated (33.3%)**
 
 *Note: Session numbers may not align exactly due to parallel migrations and tooling sessions*
 
