@@ -29,7 +29,6 @@ export { isIDeltaManagerFull } from "./deltas.js";
 export type { ContainerWarning, ICriticalContainerError } from "./error.js";
 export { ContainerErrorTypes } from "./error.js";
 export type {
-	ConnectionState,
 	ICodeDetailsLoader,
 	IContainer,
 	IContainerEvents,
@@ -45,7 +44,7 @@ export type {
 	IResolvedFluidCodeDetails,
 	ISnapshotTreeWithBlobContents,
 } from "./loader.js";
-export { LoaderHeader } from "./loader.js";
+export { ConnectionState, LoaderHeader } from "./loader.js";
 export type { IFluidModule } from "./fluidModule.js";
 export type {
 	IFluidPackage,
@@ -60,6 +59,12 @@ export {
 	isFluidCodeDetails,
 } from "./fluidPackage.js";
 export type {
+	ConnectionStatus,
+	ConnectionStatusCatchingUp,
+	ConnectionStatusConnected,
+	ConnectionStatusDisconnected,
+	ConnectionStatusEstablishingConnection,
+	ConnectionStatusTemplate,
 	IBatchMessage,
 	IContainerContext,
 	IProvideRuntimeFactory,

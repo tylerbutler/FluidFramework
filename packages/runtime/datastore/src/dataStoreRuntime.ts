@@ -4,16 +4,18 @@
  */
 
 import { TypedEventEmitter, type ILayerCompatDetails } from "@fluid-internal/client-utils";
-import { AttachState, IAudience } from "@fluidframework/container-definitions";
-import { IDeltaManager } from "@fluidframework/container-definitions/internal";
-import {
+import { AttachState, type IAudience } from "@fluidframework/container-definitions";
+import type { IDeltaManager } from "@fluidframework/container-definitions/internal";
+import type {
 	FluidObject,
 	IFluidHandle,
 	IRequest,
 	IResponse,
 } from "@fluidframework/core-interfaces";
-import { IFluidHandleContext } from "@fluidframework/core-interfaces/internal";
-import type { IFluidHandleInternal } from "@fluidframework/core-interfaces/internal";
+import type {
+	IFluidHandleContext,
+	IFluidHandleInternal,
+} from "@fluidframework/core-interfaces/internal";
 import {
 	assert,
 	debugAssert,
@@ -21,49 +23,48 @@ import {
 	LazyPromise,
 	unreachableCase,
 } from "@fluidframework/core-utils/internal";
-import {
+import type {
 	IChannel,
 	IChannelFactory,
 	IFluidDataStoreRuntime,
 	IFluidDataStoreRuntimeEvents,
-	type IDeltaManagerErased,
-	// eslint-disable-next-line import/no-deprecated
-	type IFluidDataStoreRuntimeExperimental,
+	IDeltaManagerErased,
+	IFluidDataStoreRuntimeAlpha,
 } from "@fluidframework/datastore-definitions/internal";
 import {
-	IClientDetails,
-	IQuorumClients,
-	ISummaryBlob,
-	ISummaryTree,
+	type IClientDetails,
+	type IQuorumClients,
+	type ISummaryBlob,
+	type ISummaryTree,
 	SummaryType,
 } from "@fluidframework/driver-definitions";
-import {
+import type {
 	IDocumentMessage,
-	type ISnapshotTree,
+	ISnapshotTree,
 	ISequencedDocumentMessage,
 } from "@fluidframework/driver-definitions/internal";
 import { buildSnapshotTree } from "@fluidframework/driver-utils/internal";
-import { IIdCompressor } from "@fluidframework/id-compressor";
+import type { IIdCompressor } from "@fluidframework/id-compressor";
 import {
-	ISummaryTreeWithStats,
-	ITelemetryContext,
-	IGarbageCollectionData,
-	CreateChildSummarizerNodeParam,
+	type ISummaryTreeWithStats,
+	type ITelemetryContext,
+	type IGarbageCollectionData,
+	type CreateChildSummarizerNodeParam,
 	CreateSummarizerNodeSource,
-	IAttachMessage,
-	IEnvelope,
-	IFluidDataStoreChannel,
-	IFluidDataStoreContext,
+	type IAttachMessage,
+	type IEnvelope,
+	type IFluidDataStoreChannel,
+	type IFluidDataStoreContext,
 	VisibilityState,
 	gcDataBlobKey,
-	IInboundSignalMessage,
+	type IInboundSignalMessage,
 	type IRuntimeMessageCollection,
 	type IRuntimeMessagesContent,
-	// eslint-disable-next-line import/no-deprecated
-	type IContainerRuntimeBaseExperimental,
 	notifiesReadOnlyState,
 	encodeHandlesInContainerRuntime,
 	type IFluidDataStorePolicies,
+	type MinimumVersionForCollab,
+	asLegacyAlpha,
 } from "@fluidframework/runtime-definitions/internal";
 import {
 	GCDataBuilder,
@@ -83,10 +84,10 @@ import {
 	encodeCompactIdToString,
 } from "@fluidframework/runtime-utils/internal";
 import {
-	ITelemetryLoggerExt,
+	type ITelemetryLoggerExt,
 	DataProcessingError,
 	LoggingError,
-	MonitoringContext,
+	type MonitoringContext,
 	UsageError,
 	createChildMonitoringContext,
 	generateStack,
@@ -95,7 +96,7 @@ import {
 } from "@fluidframework/telemetry-utils/internal";
 import { v4 as uuid } from "uuid";
 
-import { IChannelContext, summarizeChannel } from "./channelContext.js";
+import { type IChannelContext, summarizeChannel } from "./channelContext.js";
 import {
 	dataStoreCompatDetailsForRuntime,
 	validateRuntimeCompatibility,
@@ -126,8 +127,7 @@ function contextSupportsFeature<K extends keyof IFluidDataStoreContextFeaturesTo
 }
 
 /**
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export enum DataStoreMessageType {
 	// Creates a new channel
@@ -136,8 +136,7 @@ export enum DataStoreMessageType {
 }
 
 /**
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export interface ISharedObjectRegistry {
 	// TODO consider making this async. A consequence is that either the creation of a distributed data type
@@ -167,8 +166,7 @@ function initializePendingOpCount(): { value: number } {
 
 /**
  * Base data store class
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export class FluidDataStoreRuntime
 	extends TypedEventEmitter<IFluidDataStoreRuntimeEvents>
@@ -294,6 +292,11 @@ export class FluidDataStoreRuntime
 	private readonly submitMessagesWithoutEncodingHandles: boolean;
 
 	/**
+	 * See `IFluidDataStoreRuntimeInternalConfig.minVersionForCollab`.
+	 */
+	public readonly minVersionForCollab?: MinimumVersionForCollab | undefined;
+
+	/**
 	 * Create an instance of a DataStore runtime.
 	 *
 	 * @param dataStoreContext - Context object for the runtime.
@@ -318,12 +321,23 @@ export class FluidDataStoreRuntime
 			0x30e /* Id cannot contain slashes. DataStoreContext should have validated this. */,
 		);
 
-		this.policies = { ...defaultPolicies, ...policies };
+		this.mc = createChildMonitoringContext({
+			logger: dataStoreContext.baseLogger,
+			namespace: "FluidDataStoreRuntime",
+			properties: {
+				all: { dataStoreId: uuid(), dataStoreVersion: pkgVersion },
+				error: { inStagingMode: () => this.inStagingMode, isDirty: () => this.isDirty },
+			},
+		});
 
 		// Validate that the Runtime is compatible with this DataStore.
 		const { ILayerCompatDetails: runtimeCompatDetails } =
 			dataStoreContext as FluidObject<ILayerCompatDetails>;
-		validateRuntimeCompatibility(runtimeCompatDetails, this.dispose.bind(this));
+		validateRuntimeCompatibility(
+			runtimeCompatDetails,
+			this.dispose.bind(this),
+			this.mc.logger,
+		);
 
 		if (contextSupportsFeature(dataStoreContext, notifiesReadOnlyState)) {
 			this._readonly = dataStoreContext.isReadOnly();
@@ -334,20 +348,14 @@ export class FluidDataStoreRuntime
 			);
 		}
 
+		this.policies = { ...defaultPolicies, ...policies };
+
 		this.submitMessagesWithoutEncodingHandles = contextSupportsFeature(
 			dataStoreContext,
 			encodeHandlesInContainerRuntime,
 		);
 		// We read this property here to avoid a compiler error (unused private member)
 		debugAssert(() => this.submitMessagesWithoutEncodingHandles !== undefined);
-
-		this.mc = createChildMonitoringContext({
-			logger: dataStoreContext.baseLogger,
-			namespace: "FluidDataStoreRuntime",
-			properties: {
-				all: { dataStoreId: uuid(), dataStoreVersion: pkgVersion },
-			},
-		});
 
 		this.id = dataStoreContext.id;
 		this.options = dataStoreContext.options;
@@ -438,29 +446,20 @@ export class FluidDataStoreRuntime
 		this.localChangesTelemetryCount =
 			this.mc.config.getNumber("Fluid.Telemetry.LocalChangesTelemetryCount") ?? 10;
 
-		// Reference these properties to avoid unused private member errors.
-		// They're accessed via IFluidDataStoreRuntimeExperimental interface.
-		// eslint-disable-next-line no-void
-		void [this.inStagingMode, this.isDirty];
+		this.minVersionForCollab = this.dataStoreContext.minVersionForCollab;
 	}
 
 	/**
-	 * Implementation of IFluidDataStoreRuntimeExperimental.inStagingMode
+	 * Implementation of IFluidDataStoreRuntimeAlpha.inStagingMode
 	 */
-	// eslint-disable-next-line import/no-deprecated
-	private get inStagingMode(): IFluidDataStoreRuntimeExperimental["inStagingMode"] {
-		return (
-			// eslint-disable-next-line import/no-deprecated
-			(this.dataStoreContext.containerRuntime as IContainerRuntimeBaseExperimental)
-				?.inStagingMode
-		);
+	private get inStagingMode(): IFluidDataStoreRuntimeAlpha["inStagingMode"] {
+		return asLegacyAlpha(this.dataStoreContext.containerRuntime)?.inStagingMode;
 	}
 
 	/**
-	 * Implementation of IFluidDataStoreRuntimeExperimental.isDirty
+	 * Implementation of IFluidDataStoreRuntimeAlpha.isDirty
 	 */
-	// eslint-disable-next-line import/no-deprecated
-	private get isDirty(): IFluidDataStoreRuntimeExperimental["isDirty"] {
+	private get isDirty(): IFluidDataStoreRuntimeAlpha["isDirty"] {
 		return this.pendingOpCount.value > 0;
 	}
 
@@ -1129,25 +1128,10 @@ export class FluidDataStoreRuntime
 	private visitLocalBoundContextsDuringAttach(
 		visitor: (contextId: string, context: LocalChannelContextBase) => void,
 	): void {
-		/**
-		 * back-compat 0.59.1000 - getAttachSummary() is called when making a data store globally visible (previously
-		 * attaching state). Ideally, attachGraph() should have already be called making it locally visible. However,
-		 * before visibility state was added, this may not have been the case and getAttachSummary() could be called:
-		 *
-		 * 1. Before attaching the data store - When a detached container is attached.
-		 *
-		 * 2. After attaching the data store - When a data store is created and bound in an attached container.
-		 *
-		 * The basic idea is that all local object should become locally visible before they are globally visible.
-		 */
-		this.attachGraph();
-
-		// This assert cannot be added now due to back-compat. To be uncommented when the following issue is fixed -
-		// https://github.com/microsoft/FluidFramework/issues/9688.
-		//
-		// assert(this.visibilityState === VisibilityState.LocallyVisible,
-		//  "The data store should be locally visible when generating attach summary",
-		// );
+		assert(
+			this.visibilityState === VisibilityState.LocallyVisible,
+			0xc2c /* The data store should be locally visible when generating attach summary */,
+		);
 
 		const visitedContexts = new Set<string>();
 		let visitedLength = -1;
@@ -1172,16 +1156,6 @@ export class FluidDataStoreRuntime
 				}
 			}
 		}
-	}
-
-	public submitMessage(
-		type: DataStoreMessageType,
-		// TODO: use something other than `any` here (breaking change)
-		// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-		content: any,
-		localOpMetadata: unknown,
-	): void {
-		this.submit(type, content, localOpMetadata);
 	}
 
 	/**
@@ -1395,7 +1369,7 @@ export class FluidDataStoreRuntime
 	 * Indicates the given channel is dirty from Summarizer's point of view,
 	 * i.e. it has local changes that need to be included in the summary.
 	 *
-	 * @remarks - If a channel's changes are rolled back or rebased away, we won't
+	 * @remarks If a channel's changes are rolled back or rebased away, we won't
 	 * clear the dirty flag set here.
 	 */
 	private setChannelDirty(address: string): void {
@@ -1511,8 +1485,7 @@ export class FluidDataStoreRuntime
  * Request handler is only called when data store can't resolve request, i.e. for custom requests.
  * @param Base - base class, inherits from FluidDataStoreRuntime
  * @param requestHandler - request handler to mix in
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export const mixinRequestHandler = (
 	requestHandler: (request: IRequest, runtime: FluidDataStoreRuntime) => Promise<IResponse>,
@@ -1533,8 +1506,7 @@ export const mixinRequestHandler = (
  * @param handler - handler that returns info about blob to be added to summary.
  * Or undefined not to add anything to summary.
  * @param Base - base class, inherits from FluidDataStoreRuntime
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export const mixinSummaryHandler = (
 	handler: (

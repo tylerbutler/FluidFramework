@@ -31,13 +31,13 @@ import {
 	type InternalTreeNode,
 	type TreeNodeSchema,
 	UnhydratedFlexTreeNode,
-	type NormalizedAnnotatedAllowedTypes,
 	type TreeNodeSchemaInitializedData,
 	privateDataSymbol,
 	CompatibilityLevel,
 	type TreeNodeSchemaPrivateData,
 	// eslint-disable-next-line import/no-internal-modules
 } from "../../simple-tree/core/index.js";
+import { LeafNodeStoredSchema, ValueSchema } from "../../core/index.js";
 
 describe("TreeNodeValid", () => {
 	class MockFlexNode extends UnhydratedFlexTreeNode {
@@ -93,8 +93,6 @@ describe("TreeNodeValid", () => {
 			}
 
 			public static readonly childTypes: ReadonlySet<TreeNodeSchema> = new Set();
-			public static readonly childAnnotatedAllowedTypes: readonly NormalizedAnnotatedAllowedTypes[] =
-				[];
 
 			public override get [typeNameSymbol](): string {
 				throw new Error("Method not implemented.");
@@ -104,7 +102,11 @@ describe("TreeNodeValid", () => {
 			}
 
 			public static get [privateDataSymbol](): TreeNodeSchemaPrivateData {
-				return (privateData ??= createTreeNodeSchemaPrivateData(this, []));
+				return (privateData ??= createTreeNodeSchemaPrivateData(
+					this,
+					[],
+					() => new LeafNodeStoredSchema(ValueSchema.Null),
+				));
 			}
 
 			public constructor(input: number | InternalTreeNode) {
@@ -171,8 +173,6 @@ describe("TreeNodeValid", () => {
 			public static readonly info = numberSchema;
 			public static readonly implicitlyConstructable: false;
 			public static readonly childTypes: ReadonlySet<TreeNodeSchema> = new Set();
-			public static readonly childAnnotatedAllowedTypes: readonly NormalizedAnnotatedAllowedTypes[] =
-				[];
 
 			public static override buildRawNode<T2>(
 				this: typeof TreeNodeValid<T2>,
@@ -193,7 +193,11 @@ describe("TreeNodeValid", () => {
 			}
 
 			public static get [privateDataSymbol](): TreeNodeSchemaPrivateData {
-				return (privateData ??= createTreeNodeSchemaPrivateData(this, []));
+				return (privateData ??= createTreeNodeSchemaPrivateData(
+					this,
+					[],
+					() => new LeafNodeStoredSchema(ValueSchema.Null),
+				));
 			}
 		}
 
@@ -234,8 +238,6 @@ describe("TreeNodeValid", () => {
 			public static readonly info = numberSchema;
 			public static readonly implicitlyConstructable: false;
 			public static readonly childTypes: ReadonlySet<TreeNodeSchema> = new Set();
-			public static readonly childAnnotatedAllowedTypes: readonly NormalizedAnnotatedAllowedTypes[] =
-				[];
 
 			public static override buildRawNode<T2>(
 				this: typeof TreeNodeValid<T2>,
@@ -264,7 +266,11 @@ describe("TreeNodeValid", () => {
 				return getTreeNodeSchemaInitializedData(this, handler);
 			}
 			public static get [privateDataSymbol](): TreeNodeSchemaPrivateData {
-				return (privateData ??= createTreeNodeSchemaPrivateData(this, []));
+				return (privateData ??= createTreeNodeSchemaPrivateData(
+					this,
+					[],
+					() => new LeafNodeStoredSchema(ValueSchema.Null),
+				));
 			}
 		}
 

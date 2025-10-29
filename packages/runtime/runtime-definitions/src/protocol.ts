@@ -8,22 +8,11 @@ import type {
 	ITree,
 	ISignalMessage,
 	ISequencedDocumentMessage,
-	IDocumentStorageServicePolicies,
-	IVersion,
-	ISnapshotTree,
-	ISnapshotFetchOptions,
-	ISnapshot,
-	FetchSource,
-	ICreateBlobResponse,
-	ISummaryTree,
-	ISummaryHandle,
-	ISummaryContext,
 } from "@fluidframework/driver-definitions/internal";
 
 /**
  * An envelope wraps the contents with the intended target
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export interface IEnvelope {
 	/**
@@ -40,8 +29,7 @@ export interface IEnvelope {
 
 /**
  * Represents ISignalMessage with its type.
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export interface IInboundSignalMessage<TMessage extends TypedMessage = TypedMessage>
 	extends ISignalMessage<TMessage> {
@@ -51,8 +39,7 @@ export interface IInboundSignalMessage<TMessage extends TypedMessage = TypedMess
 /**
  * Message send by client attaching local data structure.
  * Contains snapshot of data structure which is the current state of this data structure.
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export interface IAttachMessage {
 	/**
@@ -76,8 +63,7 @@ export interface IAttachMessage {
  * but it should not be used when creating a new attach op.
  * Older versions of attach messages could have null snapshots,
  * so this gives correct typings for writing backward compatible code.
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export type InboundAttachMessage = Omit<IAttachMessage, "snapshot"> & {
 	// eslint-disable-next-line @rushstack/no-new-null -- TODO: breaking change; protocol might even explicitly use null
@@ -89,8 +75,7 @@ export type InboundAttachMessage = Omit<IAttachMessage, "snapshot"> & {
  * It is the same as ISequencedDocumentMessage, but without the contents and clientSequenceNumbers
  * which are sent separately. The contents are modified at multiple layers in the stack so having it
  * separate doesn't require packing and unpacking the entire message.
- * @alpha
- * @legacy
+ * @legacy @beta
  */
 export type ISequencedMessageEnvelope = Omit<
 	ISequencedDocumentMessage,
@@ -99,8 +84,7 @@ export type ISequencedMessageEnvelope = Omit<
 
 /**
  * These are the contents of a runtime message as it is processed throughout the stack.
- * @alpha
- * @legacy
+ * @legacy @beta
  * @sealed
  */
 export interface IRuntimeMessagesContent {
@@ -120,8 +104,7 @@ export interface IRuntimeMessagesContent {
 
 /**
  * A collection of messages that are processed by the runtime.
- * @alpha
- * @legacy
+ * @legacy @beta
  * @sealed
  */
 export interface IRuntimeMessageCollection {
@@ -142,81 +125,11 @@ export interface IRuntimeMessageCollection {
 /**
  * Interface to provide access to snapshot blobs to DataStore layer.
  *
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export interface IRuntimeStorageService {
 	/**
 	 * Reads the object with the given ID, returns content in arrayBufferLike
 	 */
 	readBlob(id: string): Promise<ArrayBufferLike>;
-
-	/**
-	 * Whether or not the object has been disposed.
-	 * If true, the object should be considered invalid, and its other state should be disregarded.
-	 *
-	 * @deprecated - This API is deprecated and will be removed in a future release. No replacement is planned as
-	 * it is unused in the DataStore layer.
-	 */
-	readonly disposed?: boolean;
-
-	/**
-	 * Dispose of the object and its resources.
-	 * @param error - Optional error indicating the reason for the disposal, if the object was
-	 * disposed as the result of an error.
-	 *
-	 * @deprecated - This API is deprecated and will be removed in a future release. No replacement is planned as
-	 * it is unused in the DataStore layer.
-	 */
-	dispose?(error?: Error): void;
-
-	/**
-	 * @deprecated - This will be removed in a future release. No replacement is planned as
-	 * it is unused in the DataStore layer.
-	 */
-	readonly policies?: IDocumentStorageServicePolicies | undefined;
-
-	/**
-	 * @deprecated - This will be removed in a future release. No replacement is planned as
-	 * it is unused in the DataStore layer.
-	 */
-	// eslint-disable-next-line @rushstack/no-new-null
-	getSnapshotTree(version?: IVersion, scenarioName?: string): Promise<ISnapshotTree | null>;
-
-	/**
-	 * @deprecated - This will be removed in a future release. No replacement is planned as
-	 * it is unused in the DataStore layer.
-	 */
-	getSnapshot?(snapshotFetchOptions?: ISnapshotFetchOptions): Promise<ISnapshot>;
-
-	/**
-	 * @deprecated - This will be removed in a future release. No replacement is planned as
-	 * it is unused in the DataStore layer.
-	 */
-	getVersions(
-		// TODO: use `undefined` instead.
-		// eslint-disable-next-line @rushstack/no-new-null
-		versionId: string | null,
-		count: number,
-		scenarioName?: string,
-		fetchSource?: FetchSource,
-	): Promise<IVersion[]>;
-
-	/**
-	 * @deprecated - This will be removed in a future release. No replacement is planned as
-	 * it is unused in the DataStore layer.
-	 */
-	createBlob(file: ArrayBufferLike): Promise<ICreateBlobResponse>;
-
-	/**
-	 * @deprecated - This will be removed in a future release. No replacement is planned as
-	 * it is unused in the DataStore layer.
-	 */
-	uploadSummaryWithContext(summary: ISummaryTree, context: ISummaryContext): Promise<string>;
-
-	/**
-	 * @deprecated - This will be removed in a future release. No replacement is planned as
-	 * it is unused in the DataStore layer.
-	 */
-	downloadSummary(handle: ISummaryHandle): Promise<ISummaryTree>;
 }

@@ -76,6 +76,7 @@ declare type current_as_old_for_Interface_AttributionInfo = requireAssignableTo<
  * typeValidation.broken:
  * "Interface_CommitStagedChangesOptionsExperimental": {"backCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type current_as_old_for_Interface_CommitStagedChangesOptionsExperimental = requireAssignableTo<TypeOnly<current.CommitStagedChangesOptionsExperimental>, TypeOnly<old.CommitStagedChangesOptionsExperimental>>
 
 /*
@@ -139,6 +140,7 @@ declare type current_as_old_for_Interface_IContainerRuntimeBaseEvents = requireA
  * typeValidation.broken:
  * "Interface_IContainerRuntimeBaseExperimental": {"backCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type current_as_old_for_Interface_IContainerRuntimeBaseExperimental = requireAssignableTo<TypeOnly<current.IContainerRuntimeBaseExperimental>, TypeOnly<old.IContainerRuntimeBaseExperimental>>
 
 /*
@@ -229,6 +231,7 @@ declare type old_as_current_for_Interface_IFluidDataStoreContext = requireAssign
  * typeValidation.broken:
  * "Interface_IFluidDataStoreContext": {"backCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type current_as_old_for_Interface_IFluidDataStoreContext = requireAssignableTo<TypeOnly<current.IFluidDataStoreContext>, TypeOnly<old.IFluidDataStoreContext>>
 
 /*
@@ -247,6 +250,7 @@ declare type old_as_current_for_Interface_IFluidDataStoreContextDetached = requi
  * typeValidation.broken:
  * "Interface_IFluidDataStoreContextDetached": {"backCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type current_as_old_for_Interface_IFluidDataStoreContextDetached = requireAssignableTo<TypeOnly<current.IFluidDataStoreContextDetached>, TypeOnly<old.IFluidDataStoreContextDetached>>
 
 /*
@@ -319,6 +323,7 @@ declare type old_as_current_for_Interface_IFluidParentContext = requireAssignabl
  * typeValidation.broken:
  * "Interface_IFluidParentContext": {"backCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type current_as_old_for_Interface_IFluidParentContext = requireAssignableTo<TypeOnly<current.IFluidParentContext>, TypeOnly<old.IFluidParentContext>>
 
 /*
@@ -428,6 +433,25 @@ declare type current_as_old_for_Interface_IRuntimeMessageCollection = requireAss
  * "Interface_IRuntimeMessagesContent": {"backCompat": false}
  */
 declare type current_as_old_for_Interface_IRuntimeMessagesContent = requireAssignableTo<TypeOnly<current.IRuntimeMessagesContent>, TypeOnly<old.IRuntimeMessagesContent>>
+
+/*
+ * Validate forward compatibility by using the old type in place of the current type.
+ * If this test starts failing, it indicates a change that is not forward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "Interface_IRuntimeStorageService": {"forwardCompat": false}
+ */
+declare type old_as_current_for_Interface_IRuntimeStorageService = requireAssignableTo<TypeOnly<old.IRuntimeStorageService>, TypeOnly<current.IRuntimeStorageService>>
+
+/*
+ * Validate backward compatibility by using the current type in place of the old type.
+ * If this test starts failing, it indicates a change that is not backward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "Interface_IRuntimeStorageService": {"backCompat": false}
+ */
+// @ts-expect-error compatibility expected to be broken
+declare type current_as_old_for_Interface_IRuntimeStorageService = requireAssignableTo<TypeOnly<current.IRuntimeStorageService>, TypeOnly<old.IRuntimeStorageService>>
 
 /*
  * Validate forward compatibility by using the old type in place of the current type.
@@ -634,6 +658,7 @@ declare type current_as_old_for_Interface_OpAttributionKey = requireAssignableTo
  * typeValidation.broken:
  * "Interface_StageControlsExperimental": {"backCompat": false}
  */
+// @ts-expect-error compatibility expected to be broken
 declare type current_as_old_for_Interface_StageControlsExperimental = requireAssignableTo<TypeOnly<current.StageControlsExperimental>, TypeOnly<old.StageControlsExperimental>>
 
 /*
@@ -761,6 +786,24 @@ declare type old_as_current_for_TypeAlias_ISequencedMessageEnvelope = requireAss
  * "TypeAlias_ISequencedMessageEnvelope": {"backCompat": false}
  */
 declare type current_as_old_for_TypeAlias_ISequencedMessageEnvelope = requireAssignableTo<TypeOnly<current.ISequencedMessageEnvelope>, TypeOnly<old.ISequencedMessageEnvelope>>
+
+/*
+ * Validate forward compatibility by using the old type in place of the current type.
+ * If this test starts failing, it indicates a change that is not forward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "TypeAlias_MinimumVersionForCollab": {"forwardCompat": false}
+ */
+declare type old_as_current_for_TypeAlias_MinimumVersionForCollab = requireAssignableTo<TypeOnly<old.MinimumVersionForCollab>, TypeOnly<current.MinimumVersionForCollab>>
+
+/*
+ * Validate backward compatibility by using the current type in place of the old type.
+ * If this test starts failing, it indicates a change that is not backward compatible.
+ * To acknowledge the breaking change, add the following to package.json under
+ * typeValidation.broken:
+ * "TypeAlias_MinimumVersionForCollab": {"backCompat": false}
+ */
+declare type current_as_old_for_TypeAlias_MinimumVersionForCollab = requireAssignableTo<TypeOnly<current.MinimumVersionForCollab>, TypeOnly<old.MinimumVersionForCollab>>
 
 /*
  * Validate forward compatibility by using the old type in place of the current type.

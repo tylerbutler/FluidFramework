@@ -9,13 +9,6 @@ import { expect } from "chai";
 
 import { defaultConsoleLogger } from "../../Logging.js";
 import {
-	LinkNode,
-	ListItemNode,
-	ListNode,
-	ParagraphNode,
-	PlainTextNode,
-} from "../../documentation-domain/index.js";
-import {
 	transformTsdocSection,
 	type TsdocNodeTransformOptions,
 } from "../TsdocNodeTransforms.js";
@@ -24,8 +17,16 @@ const mockApiItem = {} as unknown as ApiItem;
 const transformOptions: TsdocNodeTransformOptions = {
 	logger: defaultConsoleLogger,
 	contextApiItem: mockApiItem,
-	resolveApiReference: (codeDestination) =>
-		new LinkNode(codeDestination.emitAsTsdoc(), "<URL>"),
+	resolveApiReference: (codeDestination) => ({
+		type: "link",
+		url: "<URL>",
+		children: [
+			{
+				type: "text",
+				value: codeDestination.emitAsTsdoc(),
+			},
+		],
+	}),
 };
 
 describe("Tsdoc node transformation tests", () => {
@@ -48,7 +49,10 @@ describe("Tsdoc node transformation tests", () => {
 			const result = transformTsdocSection(summarySection, transformOptions);
 
 			expect(result).to.deep.equal([
-				new ParagraphNode([new PlainTextNode("This is a simple comment.")]),
+				{
+					type: "paragraph",
+					children: [{ type: "text", value: "This is a simple comment." }],
+				},
 			]);
 		});
 
@@ -59,7 +63,38 @@ describe("Tsdoc node transformation tests", () => {
 
 			const result = transformTsdocSection(summarySection, transformOptions);
 
-			expect(result).to.deep.equal([new ParagraphNode([new PlainTextNode("@foo")])]);
+			expect(result).to.deep.equal([
+				{
+					type: "paragraph",
+					children: [
+						{
+							type: "text",
+							value: "@foo",
+						},
+					],
+				},
+			]);
+		});
+
+		it("@example with fenced code", () => {
+			const comment = `/**
+ * \`\`\`typescript
+ * const foo = "bar";
+ * \`\`\`
+ */`;
+
+			const context = parser.parseString(comment);
+			const summarySection = context.docComment.summarySection;
+
+			const result = transformTsdocSection(summarySection, transformOptions);
+
+			expect(result).to.deep.equal([
+				{
+					type: "code",
+					value: 'const foo = "bar";',
+					lang: "typescript",
+				},
+			]);
 		});
 
 		it("Multi-paragraph comment", () => {
@@ -75,10 +110,24 @@ describe("Tsdoc node transformation tests", () => {
 			const result = transformTsdocSection(summarySection, transformOptions);
 
 			expect(result).to.deep.equal([
-				new ParagraphNode([
-					new PlainTextNode("This is a simple comment. It has multiple paragraphs."),
-				]),
-				new ParagraphNode([new PlainTextNode("This is the second paragraph.")]),
+				{
+					type: "paragraph",
+					children: [
+						{
+							type: "text",
+							value: "This is a simple comment. It has multiple paragraphs.",
+						},
+					],
+				},
+				{
+					type: "paragraph",
+					children: [
+						{
+							type: "text",
+							value: "This is the second paragraph.",
+						},
+					],
+				},
 			]);
 		});
 
@@ -96,14 +145,51 @@ describe("Tsdoc node transformation tests", () => {
 					const result = transformTsdocSection(summarySection, transformOptions);
 
 					expect(result).to.deep.equal([
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 1")]),
-								new ListItemNode([new LinkNode("Item 2", "<URL>")]),
-								new ListItemNode([new PlainTextNode("Item 3")]),
+						{
+							type: "list",
+							ordered: true,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 1" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [
+												{
+													type: "link",
+													url: "<URL>",
+													children: [
+														{
+															type: "text",
+															value: "Item 2",
+														},
+													],
+												},
+											],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 3" }],
+										},
+									],
+								},
 							],
-							true,
-						),
+						},
 					]);
 				});
 
@@ -125,22 +211,74 @@ describe("Tsdoc node transformation tests", () => {
 					const result = transformTsdocSection(summarySection, transformOptions);
 
 					expect(result).to.deep.equal([
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 1")]),
-								new ListItemNode([new PlainTextNode("Item 2")]),
-								new ListItemNode([new PlainTextNode("Item 3")]),
+						{
+							type: "list",
+							ordered: true,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 1" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 2" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 3" }],
+										},
+									],
+								},
 							],
-							true,
-						),
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 4")]),
-								new ListItemNode([new PlainTextNode("Item 5")]),
-								new ListItemNode([new PlainTextNode("Item 6")]),
+						},
+						{
+							type: "list",
+							ordered: true,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 4" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 5" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 6" }],
+										},
+									],
+								},
 							],
-							true,
-						),
+						},
 					]);
 				});
 
@@ -159,27 +297,81 @@ describe("Tsdoc node transformation tests", () => {
 					const result = transformTsdocSection(summarySection, transformOptions);
 
 					expect(result).to.deep.equal([
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 1")]),
-								new ListItemNode([new PlainTextNode("Item 2")]),
+						{
+							type: "list",
+							ordered: true,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 1" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 2" }],
+										},
+									],
+								},
 							],
-							true,
-						),
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 3")]),
-								new ListItemNode([new PlainTextNode("Item 4")]),
+						},
+						{
+							type: "list",
+							ordered: true,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 3" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 4" }],
+										},
+									],
+								},
 							],
-							true,
-						),
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 5")]),
-								new ListItemNode([new PlainTextNode("Item 6")]),
+						},
+						{
+							type: "list",
+							ordered: true,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 5" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 6" }],
+										},
+									],
+								},
 							],
-							true,
-						),
+						},
 					]);
 				});
 
@@ -199,16 +391,43 @@ describe("Tsdoc node transformation tests", () => {
 					const result = transformTsdocSection(summarySection, transformOptions);
 
 					expect(result).to.deep.equal([
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 1")]),
-								new ListItemNode([new PlainTextNode("Item 1.a")]),
-								new ListItemNode([new PlainTextNode("Item 1.b")]),
-								new ListItemNode([new PlainTextNode("Item 2")]),
-								new ListItemNode([new PlainTextNode("Item 2.a")]),
+						{
+							type: "list",
+							ordered: true,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 1" }] },
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 1.a" }] },
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 1.b" }] },
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 2" }] },
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 2.a" }] },
+									],
+								},
 							],
-							true,
-						),
+						},
 					]);
 				});
 			});
@@ -226,14 +445,51 @@ describe("Tsdoc node transformation tests", () => {
 					const result = transformTsdocSection(summarySection, transformOptions);
 
 					expect(result).to.deep.equal([
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 1")]),
-								new ListItemNode([new LinkNode("Item 2", "<URL>")]),
-								new ListItemNode([new PlainTextNode("Item 3")]),
+						{
+							type: "list",
+							ordered: false,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 1" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [
+												{
+													type: "link",
+													url: "<URL>",
+													children: [
+														{
+															type: "text",
+															value: "Item 2",
+														},
+													],
+												},
+											],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 3" }],
+										},
+									],
+								},
 							],
-							false,
-						),
+						},
 					]);
 				});
 
@@ -253,22 +509,74 @@ describe("Tsdoc node transformation tests", () => {
 					const result = transformTsdocSection(summarySection, transformOptions);
 
 					expect(result).to.deep.equal([
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 1")]),
-								new ListItemNode([new PlainTextNode("Item 2")]),
-								new ListItemNode([new PlainTextNode("Item 3")]),
+						{
+							type: "list",
+							ordered: false,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 1" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 2" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 3" }],
+										},
+									],
+								},
 							],
-							false,
-						),
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 4")]),
-								new ListItemNode([new PlainTextNode("Item 5")]),
-								new ListItemNode([new PlainTextNode("Item 6")]),
+						},
+						{
+							type: "list",
+							ordered: false,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 4" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 5" }],
+										},
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: "Item 6" }],
+										},
+									],
+								},
 							],
-							false,
-						),
+						},
 					]);
 				});
 
@@ -287,27 +595,63 @@ describe("Tsdoc node transformation tests", () => {
 					const result = transformTsdocSection(summarySection, transformOptions);
 
 					expect(result).to.deep.equal([
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 1")]),
-								new ListItemNode([new PlainTextNode("Item 2")]),
+						{
+							type: "list",
+							ordered: false,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 1" }] },
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 2" }] },
+									],
+								},
 							],
-							false,
-						),
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 3")]),
-								new ListItemNode([new PlainTextNode("Item 4")]),
+						},
+						{
+							type: "list",
+							ordered: false,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 3" }] },
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 4" }] },
+									],
+								},
 							],
-							false,
-						),
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 5")]),
-								new ListItemNode([new PlainTextNode("Item 6")]),
+						},
+						{
+							type: "list",
+							ordered: false,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 5" }] },
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 6" }] },
+									],
+								},
 							],
-							false,
-						),
+						},
 					]);
 				});
 
@@ -327,16 +671,43 @@ describe("Tsdoc node transformation tests", () => {
 					const result = transformTsdocSection(summarySection, transformOptions);
 
 					expect(result).to.deep.equal([
-						new ListNode(
-							[
-								new ListItemNode([new PlainTextNode("Item 1")]),
-								new ListItemNode([new PlainTextNode("Item 1.a")]),
-								new ListItemNode([new PlainTextNode("Item 1.b")]),
-								new ListItemNode([new PlainTextNode("Item 2")]),
-								new ListItemNode([new PlainTextNode("Item 2.a")]),
+						{
+							type: "list",
+							ordered: false,
+							spread: false,
+							children: [
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 1" }] },
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 1.a" }] },
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 1.b" }] },
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 2" }] },
+									],
+								},
+								{
+									type: "listItem",
+									children: [
+										{ type: "paragraph", children: [{ type: "text", value: "Item 2.a" }] },
+									],
+								},
 							],
-							false,
-						),
+						},
 					]);
 				});
 			});
@@ -361,24 +732,89 @@ describe("Tsdoc node transformation tests", () => {
 				const result = transformTsdocSection(summarySection, transformOptions);
 
 				expect(result).to.deep.equal([
-					new ListNode(
-						[
-							new ListItemNode([new PlainTextNode("Item 1")]),
-							new ListItemNode([new PlainTextNode("Item 2")]),
-							new ListItemNode([new PlainTextNode("Item 3")]),
+					{
+						type: "list",
+						ordered: true,
+						spread: false,
+						children: [
+							{
+								type: "listItem",
+								children: [
+									{ type: "paragraph", children: [{ type: "text", value: "Item 1" }] },
+								],
+							},
+							{
+								type: "listItem",
+								children: [
+									{ type: "paragraph", children: [{ type: "text", value: "Item 2" }] },
+								],
+							},
+							{
+								type: "listItem",
+								children: [
+									{ type: "paragraph", children: [{ type: "text", value: "Item 3" }] },
+								],
+							},
 						],
-						true,
-					),
-					new ListNode(
-						[
-							new ListItemNode([new PlainTextNode("Item 4")]),
-							new ListItemNode([new PlainTextNode("Item 5")]),
+					},
+					{
+						type: "list",
+						ordered: false,
+						spread: false,
+						children: [
+							{
+								type: "listItem",
+								children: [
+									{ type: "paragraph", children: [{ type: "text", value: "Item 4" }] },
+								],
+							},
+							{
+								type: "listItem",
+								children: [
+									{ type: "paragraph", children: [{ type: "text", value: "Item 5" }] },
+								],
+							},
 						],
-						false,
-					),
-					new ListNode([new ListItemNode([new PlainTextNode("Item 6")])], false),
-					new ListNode([new ListItemNode([new PlainTextNode("Item 7")])], true),
-					new ListNode([new ListItemNode([new PlainTextNode("Item 8")])], true),
+					},
+					{
+						type: "list",
+						ordered: false,
+						spread: false,
+						children: [
+							{
+								type: "listItem",
+								children: [
+									{ type: "paragraph", children: [{ type: "text", value: "Item 6" }] },
+								],
+							},
+						],
+					},
+					{
+						type: "list",
+						ordered: true,
+						spread: false,
+						children: [
+							{
+								type: "listItem",
+								children: [
+									{ type: "paragraph", children: [{ type: "text", value: "Item 7" }] },
+								],
+							},
+						],
+					},
+					{
+						type: "list",
+						ordered: true,
+						spread: false,
+						children: [
+							{
+								type: "listItem",
+								children: [
+									{ type: "paragraph", children: [{ type: "text", value: "Item 8" }] },
+								],
+							},
+						],
+					},
 				]);
 			});
 		});
@@ -395,21 +831,43 @@ describe("Tsdoc node transformation tests", () => {
 			const result = transformTsdocSection(summarySection, transformOptions);
 
 			expect(result).to.deep.equal([
-				new ListNode(
-					[
-						new ListItemNode([
-							new PlainTextNode(
-								"This is a list item that is long enough to require soft wrapping. It spans multiple lines, but should still be parsed as a single list item.",
-							),
-						]),
-						new ListItemNode([
-							new PlainTextNode(
-								"This is a second list item, which should end up in the same list as the previous one.",
-							),
-						]),
+				{
+					type: "list",
+					ordered: false,
+					spread: false,
+					children: [
+						{
+							type: "listItem",
+							children: [
+								{
+									type: "paragraph",
+									children: [
+										{
+											type: "text",
+											value:
+												"This is a list item that is long enough to require soft wrapping. It spans multiple lines, but should still be parsed as a single list item.",
+										},
+									],
+								},
+							],
+						},
+						{
+							type: "listItem",
+							children: [
+								{
+									type: "paragraph",
+									children: [
+										{
+											type: "text",
+											value:
+												"This is a second list item, which should end up in the same list as the previous one.",
+										},
+									],
+								},
+							],
+						},
 					],
-					false,
-				),
+				},
 			]);
 		});
 	});

@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  */
 
-import { Lazy } from "@fluidframework/core-utils/internal";
+import { assert, Lazy } from "@fluidframework/core-utils/internal";
 import { UsageError } from "@fluidframework/telemetry-utils/internal";
 
 import { type JsonCompatibleReadOnlyObject, brand } from "../../../util/index.js";
@@ -15,15 +15,12 @@ import {
 	typeNameSymbol,
 	typeSchemaSymbol,
 	type UnhydratedFlexTreeNode,
-	getOrCreateInnerNode,
+	getInnerNode,
 	getKernel,
 	type InternalTreeNode,
 	type NodeSchemaMetadata,
-	type ImplicitAnnotatedAllowedTypes,
-	type UnannotateImplicitAllowedTypes,
 	type ImplicitAllowedTypes,
 	normalizeAllowedTypes,
-	unannotateImplicitAllowedTypes,
 	type TreeNodeFromImplicitAllowedTypes,
 	TreeNodeValid,
 	type MostDerivedData,
@@ -34,6 +31,7 @@ import {
 	type FlexContent,
 	CompatibilityLevel,
 	type TreeNodeSchemaPrivateData,
+	convertAllowedTypes,
 } from "../../core/index.js";
 import { getTreeNodeSchemaInitializedData } from "../../createContext.js";
 import { tryGetTreeNodeForField } from "../../getTreeNodeForField.js";
@@ -51,12 +49,15 @@ import type {
 	TreeRecordNode,
 } from "./recordNodeTypes.js";
 import {
+	FieldKinds,
 	isTreeValue,
 	type FlexTreeNode,
 	type FlexTreeOptionalField,
 } from "../../../feature-libraries/index.js";
 import { prepareForInsertion } from "../../prepareForInsertion.js";
 import { recordLikeDataToFlexContent } from "../common.js";
+import { MapNodeStoredSchema } from "../../../core/index.js";
+import type { NodeSchemaOptionsAlpha } from "../../api/index.js";
 
 /**
  * Create a proxy which implements the {@link TreeRecordNode} API.
@@ -105,7 +106,7 @@ function createRecordNodeProxy(
 			}
 
 			if (typeof key === "string") {
-				const innerNode = getOrCreateInnerNode(receiver);
+				const innerNode = getInnerNode(receiver);
 				const field = innerNode.tryGetField(brand(key));
 				if (field !== undefined) {
 					return tryGetTreeNodeForField(field);
@@ -119,14 +120,20 @@ function createRecordNodeProxy(
 				return false;
 			}
 
-			const innerNode = getOrCreateInnerNode(receiver);
+			const innerNode = getInnerNode(receiver);
 			const field = innerNode.getBoxed(brand(key)) as FlexTreeOptionalField;
 			const kernel = getKernel(receiver);
+			const innerSchema = innerNode.context.schema.nodeSchema.get(brand(schema.identifier));
+			assert(
+				innerSchema instanceof MapNodeStoredSchema,
+				0xc1a /* Expected MapNodeStoredSchema */,
+			);
 
 			const mapTree = prepareForInsertion(
 				value,
 				createFieldSchema(FieldKind.Optional, kernel.schema.info as ImplicitAllowedTypes),
 				innerNode.context,
+				innerSchema.mapFields,
 			);
 
 			field.editor.set(mapTree, field.length === 0);
@@ -137,13 +144,13 @@ function createRecordNodeProxy(
 				return false;
 			}
 
-			const innerNode = getOrCreateInnerNode(proxy);
+			const innerNode = getInnerNode(proxy);
 			const childField = innerNode.tryGetField(brand(key));
 
 			return childField !== undefined;
 		},
 		ownKeys: (target) => {
-			const innerNode = getOrCreateInnerNode(proxy);
+			const innerNode = getInnerNode(proxy);
 			return [...innerNode.keys()];
 		},
 		getOwnPropertyDescriptor: (target, key) => {
@@ -151,7 +158,7 @@ function createRecordNodeProxy(
 				return undefined;
 			}
 
-			const innerNode = getOrCreateInnerNode(proxy);
+			const innerNode = getInnerNode(proxy);
 			const field = innerNode.tryGetField(brand(key));
 
 			if (field === undefined) {
@@ -173,13 +180,12 @@ function createRecordNodeProxy(
 				return false;
 			}
 
-			const innerNode = getOrCreateInnerNode(proxy);
+			const innerNode = getInnerNode(proxy);
 			const field = innerNode.tryGetField(brand(key)) as FlexTreeOptionalField | undefined;
-			if (field === undefined) {
-				return false;
+			if (field !== undefined) {
+				field.editor.set(undefined, field.length === 0);
 			}
 
-			field.editor.set(undefined, field.length === 0);
 			return true;
 		},
 	});
@@ -204,7 +210,7 @@ abstract class CustomRecordNodeBase<
  */
 export interface RecordSchemaOptions<
 	TName extends string,
-	TAllowedTypes extends ImplicitAnnotatedAllowedTypes,
+	TAllowedTypes extends ImplicitAllowedTypes,
 	TImplicitlyConstructable extends boolean,
 	TCustomMetadata = unknown,
 > {
@@ -222,15 +228,7 @@ export interface RecordSchemaOptions<
 
 	readonly implicitlyConstructable: TImplicitlyConstructable;
 
-	/**
-	 * Optional ephemeral metadata for the object node schema.
-	 */
-	readonly metadata?: NodeSchemaMetadata<TCustomMetadata>;
-
-	/**
-	 * Optional persisted metadata for the object node schema.
-	 */
-	readonly persistedMetadata?: JsonCompatibleReadOnlyObject | undefined;
+	readonly nodeOptions?: NodeSchemaOptionsAlpha<TCustomMetadata>;
 }
 
 /**
@@ -242,7 +240,7 @@ export interface RecordSchemaOptions<
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function recordSchema<
 	TName extends string,
-	const TAllowedTypes extends ImplicitAnnotatedAllowedTypes,
+	const TAllowedTypes extends ImplicitAllowedTypes,
 	const TImplicitlyConstructable extends boolean,
 	const TCustomMetadata = unknown,
 >(
@@ -253,34 +251,24 @@ export function recordSchema<
 		TCustomMetadata
 	>,
 ) {
-	type TUnannotatedAllowedTypes = UnannotateImplicitAllowedTypes<TAllowedTypes>;
+	const { identifier, info, customizable, implicitlyConstructable, nodeOptions } = options;
+	const persistedMetadata = nodeOptions?.persistedMetadata;
 
-	const {
-		identifier,
-		info,
-		customizable,
-		implicitlyConstructable,
-		metadata,
-		persistedMetadata,
-	} = options;
-
-	const lazyChildTypes = new Lazy(() =>
-		normalizeAllowedTypes(unannotateImplicitAllowedTypes(info)),
-	);
+	const normalizedTypes = normalizeAllowedTypes(info);
 	const lazyAllowedTypesIdentifiers = new Lazy(
-		() => new Set([...lazyChildTypes.value].map((type) => type.identifier)),
+		() => new Set(normalizedTypes.evaluate().map((type) => type.identifier)),
 	);
 
 	let privateData: TreeNodeSchemaPrivateData | undefined;
 
 	class Schema
-		extends CustomRecordNodeBase<TUnannotatedAllowedTypes>
-		implements TreeRecordNode<TUnannotatedAllowedTypes>
+		extends CustomRecordNodeBase<TAllowedTypes>
+		implements TreeRecordNode<TAllowedTypes>
 	{
 		/**
 		 * Record-like index signature for the node.
 		 */
-		[key: string]: TreeNodeFromImplicitAllowedTypes<TUnannotatedAllowedTypes>;
+		[key: string]: TreeNodeFromImplicitAllowedTypes<TAllowedTypes>;
 
 		public static override prepareInstance<T2>(
 			this: typeof TreeNodeValid<T2>,
@@ -366,9 +354,10 @@ export function recordSchema<
 		public static readonly implicitlyConstructable: TImplicitlyConstructable =
 			implicitlyConstructable;
 		public static get childTypes(): ReadonlySet<TreeNodeSchema> {
-			return lazyChildTypes.value;
+			return normalizedTypes.evaluateSet();
 		}
-		public static readonly metadata: NodeSchemaMetadata<TCustomMetadata> = metadata ?? {};
+		public static readonly metadata: NodeSchemaMetadata<TCustomMetadata> =
+			nodeOptions?.metadata ?? {};
 		public static readonly persistedMetadata: JsonCompatibleReadOnlyObject | undefined =
 			persistedMetadata;
 
@@ -381,7 +370,7 @@ export function recordSchema<
 		}
 
 		public [Symbol.iterator](): IterableIterator<
-			[string, TreeNodeFromImplicitAllowedTypes<TUnannotatedAllowedTypes>]
+			[string, TreeNodeFromImplicitAllowedTypes<TAllowedTypes>]
 		> {
 			return recordIterator(this);
 		}
@@ -390,7 +379,19 @@ export function recordSchema<
 		}
 
 		public static get [privateDataSymbol](): TreeNodeSchemaPrivateData {
-			return (privateData ??= createTreeNodeSchemaPrivateData(this, [info]));
+			return (privateData ??= createTreeNodeSchemaPrivateData(
+				this,
+				[normalizedTypes],
+				(storedOptions) =>
+					new MapNodeStoredSchema(
+						{
+							kind: FieldKinds.optional.identifier,
+							types: convertAllowedTypes(info, storedOptions),
+							persistedMetadata,
+						},
+						persistedMetadata,
+					),
+			));
 		}
 	}
 

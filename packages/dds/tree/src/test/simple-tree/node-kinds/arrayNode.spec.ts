@@ -72,6 +72,18 @@ describe("ArrayNode", () => {
 			assert.equal(n.y, 3);
 			assert.deepEqual(thisList, [n, n]);
 		});
+
+		it("does not pass Array.isArray", () => {
+			const array = init(CustomizableNumberArray, [1, 2, 3]);
+			assert.equal(Array.isArray(array), false);
+		});
+	});
+
+	describeHydration("pojo-emulation", (init) => {
+		it("passes Array.isArray", () => {
+			const array = init(PojoEmulationNumberArray, [1, 2, 3]);
+			assert.equal(Array.isArray(array), true);
+		});
 	});
 
 	describe("insertable types", () => {
@@ -675,7 +687,7 @@ describe("ArrayNode", () => {
 					});
 					const { array1, array2 } = init(schema, { array1: [1, "bad", 2], array2: [] });
 					const expected = validateUsageError(
-						/Type in source sequence is not allowed in destination./,
+						"Type com.fluidframework.leaf.string in source sequence is not allowed in destination.",
 					);
 					assert.throws(() => array2.moveRangeToIndex(0, 1, 3, array1), expected);
 					assert.throws(() => array2.moveRangeToIndex(0, 0, 2, array1), expected);

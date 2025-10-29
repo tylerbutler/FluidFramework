@@ -37,7 +37,6 @@ import {
 	ReferenceType,
 	SlidingPreference,
 	createAnnotateRangeOp,
-	// eslint-disable-next-line import/no-deprecated
 	createGroupOp,
 	createInsertOp,
 	createObliterateRangeOp,
@@ -50,6 +49,9 @@ import {
 import {
 	ISummaryTreeWithStats,
 	ITelemetryContext,
+	IRuntimeMessageCollection,
+	IRuntimeMessagesContent,
+	ISequencedMessageEnvelope,
 } from "@fluidframework/runtime-definitions/internal";
 import {
 	ObjectStoragePartition,
@@ -114,8 +116,7 @@ const contentPath = "content";
  * - `event` - Various information on the segments that were modified.
  *
  * - `target` - The sequence itself.
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export interface ISharedSegmentSequenceEvents extends ISharedObjectEvents {
 	(
@@ -133,8 +134,7 @@ export interface ISharedSegmentSequenceEvents extends ISharedObjectEvents {
 }
 
 /**
- * @legacy
- * @alpha
+ * @legacy @beta
  */
 export interface ISharedSegmentSequence<T extends ISegment>
 	extends ISharedObject<ISharedSegmentSequenceEvents>,
@@ -475,7 +475,7 @@ export abstract class SharedSegmentSequence<T extends ISegment>
 	 * even if the op is resubmitted more than once. Thus during resubmit, `inFlightRefSeqs` gets populated with the
 	 * original refSeq rather than the refSeq at the time of reconnection.
 	 *
-	 * @remarks - In some not fully understood cases, the runtime may process incoming ops before putting an op that this
+	 * @remarks In some not fully understood cases, the runtime may process incoming ops before putting an op that this
 	 * DDS submits over the wire. See `inFlightRefSeqs` for more details.
 	 */
 	private get currentRefSeq() {
@@ -865,13 +865,27 @@ export abstract class SharedSegmentSequence<T extends ISegment>
 	}
 
 	/**
-	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.processCore}
+	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.processMessagesCore}
 	 */
-	protected processCore(
-		message: ISequencedDocumentMessage,
+	protected processMessagesCore(messagesCollection: IRuntimeMessageCollection): void {
+		const { envelope, local, messagesContent } = messagesCollection;
+		for (const messageContent of messagesContent) {
+			this.processMessage(envelope, messageContent, local);
+		}
+	}
+
+	private processMessage(
+		messageEnvelope: ISequencedMessageEnvelope,
+		messageContent: IRuntimeMessagesContent,
 		local: boolean,
-		localOpMetadata: unknown,
-	) {
+	): void {
+		// Reconstruct ISequencedDocumentMessage which is needed by merge tree client
+		const message: ISequencedDocumentMessage = {
+			...messageEnvelope,
+			contents: messageContent.contents,
+			clientSequenceNumber: messageContent.clientSequenceNumber,
+		};
+
 		if (local) {
 			const recordedRefSeq = this.inFlightRefSeqs.shift();
 			assert(recordedRefSeq !== undefined, 0x8bc /* No pending recorded refSeq found */);
@@ -893,7 +907,7 @@ export abstract class SharedSegmentSequence<T extends ISegment>
 			message.contents as IMapOperation,
 			local,
 			message,
-			localOpMetadata,
+			messageContent.localOpMetadata,
 		);
 
 		if (!handled) {
@@ -973,7 +987,6 @@ export abstract class SharedSegmentSequence<T extends ISegment>
 				stashMessage = {
 					...message,
 					referenceSequenceNumber: stashMessage.sequenceNumber - 1,
-					// eslint-disable-next-line import/no-deprecated
 					contents: ops.length !== 1 ? createGroupOp(...ops) : ops[0],
 				};
 			}
