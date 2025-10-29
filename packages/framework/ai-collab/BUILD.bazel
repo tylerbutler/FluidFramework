@@ -149,12 +149,12 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/framework/ai-collab/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":ai_collab_test",
-        ":ai_collab_esm",  # Runtime needs the compiled package
+    data = [":ai_collab_test",
+        ":ai_collab_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

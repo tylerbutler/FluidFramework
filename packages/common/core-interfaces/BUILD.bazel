@@ -118,9 +118,9 @@ mocha_bin.mocha_test(
         "packages/common/core-interfaces/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":core_interfaces_test",
-        ":core_interfaces_esm",  # Runtime needs the compiled package
+    data = [":core_interfaces_test",
+        ":core_interfaces_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -134,11 +134,11 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/dds/ink/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":ink_test",
+    data = [":ink_test",,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

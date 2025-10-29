@@ -156,12 +156,12 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/dds/legacy-dds/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":legacy_dds_test",
-        ":legacy_dds_esm",  # Runtime needs the compiled package
+    data = [":legacy_dds_test",
+        ":legacy_dds_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

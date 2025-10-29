@@ -127,12 +127,12 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/framework/tree-agent-ses/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":tree_agent_ses_test",
-        ":tree_agent_ses_esm",  # Runtime needs the compiled package
+    data = [":tree_agent_ses_test",
+        ":tree_agent_ses_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

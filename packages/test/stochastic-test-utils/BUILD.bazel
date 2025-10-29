@@ -132,6 +132,7 @@ ts_project(
         ":node_modules/@fluidframework/core-utils",
         ":node_modules/best-random",
         ":node_modules/path-browserify",
+        ":node_modules/@fluid-tools/benchmark",
     ],
 )
 
@@ -139,12 +140,12 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/test/stochastic-test-utils/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":stochastic_test_utils_test",
-        ":stochastic_test_utils_esm",  # Runtime needs the compiled package
+    data = [":stochastic_test_utils_test",
+        ":stochastic_test_utils_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

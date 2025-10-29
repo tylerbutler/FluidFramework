@@ -136,12 +136,12 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/framework/undo-redo/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":undo_redo_test",
-        ":undo_redo_esm",  # Runtime needs the compiled package
+    data = [":undo_redo_test",
+        ":undo_redo_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

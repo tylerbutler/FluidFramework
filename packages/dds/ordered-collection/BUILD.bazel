@@ -152,12 +152,12 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/dds/ordered-collection/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":ordered_collection_test",
-        ":ordered_collection_esm",  # Runtime needs the compiled package
+    data = [":ordered_collection_test",
+        ":ordered_collection_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

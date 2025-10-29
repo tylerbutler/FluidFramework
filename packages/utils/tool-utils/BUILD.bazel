@@ -142,12 +142,12 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/utils/tool-utils/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":tool_utils_test",
-        ":tool_utils_esm",  # Runtime needs the compiled package
+    data = [":tool_utils_test",
+        ":tool_utils_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -148,12 +148,12 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/loader/driver-utils/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":driver_utils_test",
-        ":driver_utils_esm",  # Runtime needs the compiled package
+    data = [":driver_utils_test",
+        ":driver_utils_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -115,6 +115,7 @@ ts_project(
         ":node_modules/@types/sinon",
         ":node_modules/uuid",
         ":node_modules/sinon",
+        ":node_modules/@fluid-tools/benchmark",
     ],
 )
 
@@ -122,12 +123,12 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/common/core-utils/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":core_utils_test",
-        ":core_utils_esm",  # Runtime needs the compiled package
+    data = [":core_utils_test",
+        ":core_utils_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

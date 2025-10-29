@@ -202,19 +202,20 @@ ts_project(
 		":node_modules/semver-ts",
 		":node_modules/sinon",
 		":node_modules/uuid",
-	],
+	,
+        ":node_modules/@fluid-tools/benchmark"],
 )
 
 # Mocha test runner
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/runtime/container-runtime/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":container_runtime_test",
-        ":container_runtime_esm",  # Runtime needs the compiled package
+    data = [":container_runtime_test",
+        ":container_runtime_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

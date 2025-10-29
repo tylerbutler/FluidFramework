@@ -162,12 +162,12 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/dds/shared-object-base/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":shared_object_base_test",
-        ":shared_object_base_esm",  # Runtime needs the compiled package
+    data = [":shared_object_base_test",
+        ":shared_object_base_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

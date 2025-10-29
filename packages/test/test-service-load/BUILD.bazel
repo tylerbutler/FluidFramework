@@ -189,11 +189,11 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/test/test-service-load/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":test_service_load_test",
+    data = [":test_service_load_test",,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

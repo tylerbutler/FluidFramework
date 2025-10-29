@@ -160,19 +160,21 @@ ts_project(
 		":node_modules/@types/mocha",
 		":node_modules/@types/node",
 		":node_modules/double-ended-queue",
-	],
+	,
+        ":node_modules/best-random",
+        ":node_modules/@fluid-tools/benchmark"],
 )
 
 # Mocha test runner
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/dds/matrix/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":matrix_test",
-        ":matrix_esm",  # Runtime needs the compiled package
+    data = [":matrix_test",
+        ":matrix_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

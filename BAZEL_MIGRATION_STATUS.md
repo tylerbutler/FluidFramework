@@ -3,7 +3,7 @@
 **Last Updated**: 2025-10-29
 **Current Phase**: Phase 4 In Progress | 🎉 ALL PRODUCTION PACKAGES MIGRATED! 🎉
 **Overall Progress**: 84% (74/88 packages migrated)
-**Progress**: Session 4.7 complete - TS1479 errors SOLVED! Module detection fixed!
+**Progress**: Session 4.8 complete - npm dependencies added, test patterns fixed! 1 package fully passing!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -23,6 +23,41 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 ---
 
 ## Recently Completed
+
+### Session 4.8: 📦 npm Dependencies & Test Pattern Fixes (2025-10-29)
+- **Status**: ✅ **COMPLETE** - Major progress on test infrastructure!
+- **Problem**: Tests still had TS2307 errors for npm packages and runtime module errors
+- **Implementation**:
+  1. Created `add-npm-deps-to-tests.ts` script to analyze and add npm package dependencies
+  2. Added `@fluid-tools/benchmark`, `@langchain/anthropic`, and other npm deps to 11 packages
+  3. Created `fix-test-patterns.ts` script to fix mocha_test configurations
+  4. Updated all 58 test targets with correct workspace-relative paths
+  5. Added `package.json` to mocha_test data (critical for ESM module detection at runtime)
+  6. Removed `manual` tag from test-pairwise-generator (first passing test!)
+- **Results**:
+  - ✅ Module resolution errors reduced from 24 to 4 packages (83% reduction!)
+  - ✅ 1 package now fully passing tests: @fluid-private/test-pairwise-generator
+  - ✅ Test runtime now correctly detects ESM modules
+  - ✅ Mocha test patterns now use correct workspace-relative paths
+  - ⚠️  55 packages still have "other errors" (mostly pre-existing code quality issues)
+  - ⚠️  4 packages with remaining module resolution issues (CJS files, relative imports)
+- **Remaining Module Resolution Issues** (4 packages):
+  - `stochastic-test-utils`: missing npm package `random-js`
+  - `routerlicious-urlresolver`: CJS file import (`nconf.cjs`)
+  - `core-utils`: self-referencing subpath import (`/internal`)
+  - `core-interfaces`: relative import with `.js` extension
+- **Key Discoveries**:
+  - Test compilation needs `package.json` in srcs for TypeScript module detection
+  - Test runtime needs `package.json` in data for Node.js ESM detection
+  - Both are required for ESM tests to work properly!
+- **Scripts Created**:
+  - `add-npm-deps-to-tests.ts` - Adds npm package dependencies to test targets
+  - `fix-test-patterns.ts` - Fixes mocha_test paths and adds package.json to data
+- **Next Steps**:
+  1. Fix remaining 4 module resolution issues
+  2. Investigate "other errors" to see how many are buildable with --keep_going
+  3. Create summary document of test status
+  4. Plan strategy for handling pre-existing code quality issues
 
 ### Session 4.7: 🎉 TS1479 BREAKTHROUGH - Module Detection Fixed! (2025-10-29)
 - **Status**: ✅ **COMPLETE** - Root cause discovered and fixed!

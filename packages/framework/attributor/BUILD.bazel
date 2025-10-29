@@ -186,11 +186,11 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/framework/attributor/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":attributor_test",
+    data = [":attributor_test",,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

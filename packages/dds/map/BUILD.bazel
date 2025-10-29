@@ -154,19 +154,20 @@ ts_project(
 		":node_modules/@types/mocha",
 		":node_modules/@types/node",
 		":node_modules/path-browserify",
-	],
+	,
+        ":node_modules/@fluid-tools/benchmark"],
 )
 
 # Mocha test runner
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/dds/map/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":map_test",
-        ":map_esm",  # Runtime needs the compiled package
+    data = [":map_test",
+        ":map_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

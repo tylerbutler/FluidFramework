@@ -136,11 +136,11 @@ ts_project(
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/dds/pact-map/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":pact_map_test",
+    data = [":pact_map_test",,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

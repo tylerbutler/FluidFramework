@@ -174,19 +174,22 @@ ts_project(
 		":node_modules/diff",
 		":node_modules/semver-ts",
 		":node_modules/uuid",
-	],
+	,
+        ":node_modules/ajv",
+        ":node_modules/ajv-formats",
+        ":node_modules/@fluid-tools/benchmark"],
 )
 
 # Mocha test runner
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/dds/tree/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":tree_test",
-        ":tree_esm",  # Runtime needs the compiled package
+    data = [":tree_test",
+        ":tree_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

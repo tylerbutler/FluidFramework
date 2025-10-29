@@ -160,19 +160,20 @@ ts_project(
 		":node_modules/diff",
 		":node_modules/double-ended-queue",
 		":node_modules/uuid",
-	],
+	,
+        ":node_modules/@fluid-tools/benchmark"],
 )
 
 # Mocha test runner
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/dds/sequence/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [
-        ":sequence_test",
-        ":sequence_esm",  # Runtime needs the compiled package
+    data = [":sequence_test",
+        ":sequence_esm",  # Runtime needs the compiled package,
+        "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated
 )
