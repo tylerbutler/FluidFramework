@@ -3,7 +3,7 @@
 **Last Updated**: 2025-10-29
 **Current Phase**: Phase 4 In Progress | 🎉 ALL PRODUCTION PACKAGES MIGRATED! 🎉
 **Overall Progress**: 84% (74/88 packages migrated)
-**Progress**: Session 4.5 complete - Test targets corrected for all 60 packages!
+**Progress**: Session 4.6 complete - Workspace dependencies added to test targets!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -23,6 +23,30 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 ---
 
 ## Recently Completed
+
+### Session 4.6: 📦 Workspace Dependencies Added to Test Targets (2025-10-29)
+- **Status**: ✅ **COMPLETE** - Module resolution significantly improved
+- **Problem**: Tests couldn't resolve workspace package imports
+- **Root Cause**: Test targets missing `:node_modules/*` dependencies for workspace packages
+- **Solution**:
+  1. Created survey script to identify buildable tests
+  2. Created automated script to extract workspace imports from test files
+  3. Added `:node_modules/@fluidframework/*` links to test target deps
+  4. Updated 39/60 BUILD.bazel files with missing dependencies
+- **Results**:
+  - ✅ Module resolution errors reduced from 45 to 25 packages
+  - ✅ 1 package builds successfully: `@fluid-private/test-pairwise-generator`
+  - ⚠️  34 packages have "other errors" (mostly TS1479 CommonJS/ESM issues)
+  - ⚠️  25 packages still have module resolution issues (need npm packages or subpath imports)
+- **Scripts Created**:
+  - `survey-test-builds.ts` - Tests all packages and categorizes build results
+  - `add-workspace-deps-to-tests.ts` - Automatically adds workspace dependencies
+- **Key Learning**: Tests depend on compiled `:_esm` outputs AND need `:node_modules/*` links for workspace packages
+- **Next Steps**:
+  1. Investigate remaining 25 module resolution errors (likely npm package issues)
+  2. Address TS1479 CommonJS/ESM mismatches (may need source code fixes)
+  3. Remove `manual` tag from successfully building tests
+  4. Create pattern documentation for future test additions
 
 ### Session 4.5: 🔥 CRITICAL FIX - Test Target Pattern Corrected! (2025-10-29)
 - **Status**: ✅ **COMPLETE** - All 60 test targets now use correct pattern
