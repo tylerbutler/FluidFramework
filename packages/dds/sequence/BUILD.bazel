@@ -141,6 +141,20 @@ ts_project(
     deps = [
         ":node_modules/@types/mocha",
         ":node_modules/@types/node",
+        ":node_modules/@types/diff",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/datastore-definitions",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/merge-tree",
+        ":node_modules/@fluidframework/runtime-definitions",
+        ":node_modules/@fluidframework/runtime-utils",
+        ":node_modules/@fluidframework/shared-object-base",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/double-ended-queue",
+        ":node_modules/uuid",
+        ":node_modules/diff",
     ],
 )
 

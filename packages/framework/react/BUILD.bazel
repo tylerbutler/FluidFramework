@@ -129,6 +129,14 @@ ts_project(
     deps = [
         ":node_modules/@types/mocha",
         ":node_modules/@types/node",
+        ":node_modules/@fluidframework/aqueduct",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/datastore-definitions",
+        ":node_modules/@fluidframework/fluid-static",
+        ":node_modules/@fluidframework/runtime-definitions",
+        ":node_modules/@fluidframework/shared-object-base",
+        ":node_modules/@fluidframework/tree",
+        ":node_modules/react",
     ],
 )
 

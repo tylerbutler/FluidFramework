@@ -118,6 +118,12 @@ ts_project(
     deps = [
         ":node_modules/@types/jest",
         ":node_modules/@types/node",
+        "//packages/common/core-interfaces:core_interfaces_esm",
+        "//packages/common/core-utils:core_utils_esm",
+        "//packages/common/driver-definitions:driver_definitions_esm",
+        "//packages/loader/driver-utils:driver_utils_esm",
+        "//packages/utils/telemetry-utils:telemetry_utils_esm",
+        ":node_modules/idb",
     ],
 )
 

@@ -122,6 +122,14 @@ ts_project(
     deps = [
         ":node_modules/@types/mocha",
         ":node_modules/@types/node",
+        ":node_modules/@types/sinon",
+        "//packages/common/client-utils:client_utils_esm",
+        "//packages/common/core-interfaces:core_interfaces_esm",
+        "//packages/common/core-utils:core_utils_esm",
+        "//packages/common/driver-definitions:driver_definitions_esm",
+        ":node_modules/debug",
+        ":node_modules/uuid",
+        ":node_modules/sinon",
     ],
 )
 

@@ -136,6 +136,19 @@ ts_project(
     deps = [
         ":node_modules/@types/mocha",
         ":node_modules/@types/node",
+        ":node_modules/@fluidframework/container-definitions",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/datastore-definitions",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/id-compressor",
+        ":node_modules/@fluidframework/runtime-utils",
+        ":node_modules/@fluidframework/shared-object-base",
+        ":node_modules/@fluidframework/test-runtime-utils",
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/@fluid-private/stochastic-test-utils",
+        ":node_modules/mocha",
+        ":node_modules/uuid",
     ],
 )
 

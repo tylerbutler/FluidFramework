@@ -121,6 +121,13 @@ ts_project(
     deps = [
         ":node_modules/@types/mocha",
         ":node_modules/@types/node",
+        ":node_modules/@types/diff",
+        ":node_modules/@fluidframework/map",
+        ":node_modules/@fluidframework/matrix",
+        ":node_modules/@fluidframework/merge-tree",
+        ":node_modules/@fluidframework/sequence",
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/diff",
     ],
 )
 

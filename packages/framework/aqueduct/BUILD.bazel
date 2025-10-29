@@ -147,6 +147,22 @@ ts_project(
     deps = [
         ":node_modules/@types/mocha",
         ":node_modules/@types/node",
+        ":node_modules/@fluidframework/container-definitions",
+        ":node_modules/@fluidframework/container-runtime",
+        ":node_modules/@fluidframework/container-runtime-definitions",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/datastore",
+        ":node_modules/@fluidframework/datastore-definitions",
+        ":node_modules/@fluidframework/map",
+        ":node_modules/@fluidframework/request-handler",
+        ":node_modules/@fluidframework/runtime-definitions",
+        ":node_modules/@fluidframework/runtime-utils",
+        ":node_modules/@fluidframework/shared-object-base",
+        ":node_modules/@fluidframework/synthesize",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/@fluidframework/tree",
+        ":node_modules/@fluid-internal/client-utils",
     ],
 )
 

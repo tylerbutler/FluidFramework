@@ -92,8 +92,8 @@ ts_project(
     srcs = glob(
         ["src/test/**/*.ts"],
         exclude = [
-            "src/test/types/**",  # Type validation tests require build-tools
-            "src/test/mocha.d.ts",  # Type declaration file
+            "src/test/types/**",  # Type validation tests
+            "src/test/**/*.d.ts",  # Type declaration files
         ],
     ) + glob(
         ["src/**/*.ts"],

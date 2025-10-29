@@ -117,6 +117,8 @@ ts_project(
     deps = [
         ":node_modules/@types/mocha",
         ":node_modules/@types/node",
+        ":node_modules/@fluidframework/tree-agent",
+        ":node_modules/ses",
     ],
 )
 

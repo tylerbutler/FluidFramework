@@ -131,6 +131,15 @@ ts_project(
     deps = [
         ":node_modules/@types/mocha",
         ":node_modules/@types/node",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/runtime-utils",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/@fluidframework/tree",
+        ":node_modules/fastest-levenshtein",
+        ":node_modules/openai",
+        ":node_modules/typechat",
+        ":node_modules/uuid",
+        ":node_modules/zod",
     ],
 )
 

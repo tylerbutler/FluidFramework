@@ -121,6 +121,12 @@ ts_project(
     deps = [
         ":node_modules/@types/mocha",
         ":node_modules/@types/node",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/@tylerbu/sorted-btree-es6",
+        ":node_modules/uuid",
     ],
 )
 
