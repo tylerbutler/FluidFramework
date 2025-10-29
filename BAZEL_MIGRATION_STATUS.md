@@ -2,8 +2,8 @@
 
 **Last Updated**: 2025-10-29
 **Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + ALL SERVICE CLIENTS 100%! 🎉
-**Overall Progress**: 75% (31/46 core sessions complete)
-**Progress**: Session 2.34 partial - Group 14 mid-level test utilities - 2/3 packages migrated!
+**Overall Progress**: 76% (67/88 packages migrated)
+**Progress**: Session 2.35 complete - fluid-runner tool migrated! Package.json handling pattern resolved!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,38 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 76% | 13/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **2/3 Group 14**) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 76% | 13/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **2/3 Group 14**, **1/4 Group 17 ✅**) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.35: 🎉 Group 17 Partial - fluid-runner Tool + Package.json Pattern Discovery! (2025-10-29)
+- **Status**: ✅ **SUCCESS** - fluid-runner migrated, critical package.json pattern resolved!
+- **Tool Package (Group 17 - 1/4)**:
+  - @fluidframework/fluid-runner ✅ (8 ws_deps) - Fluid Framework utility runner with /internal exports
+- **Build Verification**: fluid-runner compiles successfully (ESM + CJS) ✅
+- **🔍 CRITICAL DISCOVERY - Package.json Handling Pattern**:
+  - **Problem**: Packages with `/internal` or `/legacy` subpath imports need package.json for TypeScript module resolution
+  - **Confusion**: TypeScript doesn't copy package.json to output, causing "expected output not created" errors
+  - **Solution Pattern**:
+    1. ✅ **Include** `package.json` in `ts_project.srcs` (TypeScript needs it for module type detection)
+    2. ✅ **DO NOT** set `resolve_json_module` attribute in BUILD.bazel (let it default to false)
+    3. ✅ **DO NOT** include `resolveJsonModule` in tsconfig.bazel.json (omit it entirely)
+    4. ✅ **DO NOT** set `ts_build_info_file` in BUILD.bazel (let it default to empty string)
+    5. ✅ **ts_project automatically copies package.json** to output directory as passthrough file
+  - **Why it works**: ts_project treats package.json specially - it's used during compilation but also copied to output
+  - **Previous confusion**: Trying to match all compiler options caused validation errors; the pattern is minimal options
+- **Key Learnings**:
+  - Package uses /internal and /legacy subpath exports (Node16 moduleResolution)
+  - Dependencies: All workspace deps already migrated (aqueduct, container-loader, odsp-driver, etc.)
+  - Compiler options must be fully inlined (no extends in Bazel sandbox)
+  - CJS build uses `transpiler = "tsc"` attribute, ESM doesn't need it
+- **Total Packages**: 67/88 migrated (76.1%) +1 package
+- **Group 17 Progress**: 1/4 packages (25%) **IN PROGRESS**
+- **Next**: Continue with remaining Group 17 tools OR return to Group 14 test-drivers with new package.json understanding
 
 ### Session 2.34: Group 14 - Mid-Level Test Utilities Partial (2025-10-29)
 - **Status**: ⚠️ **PARTIAL** - 2/3 test utility packages migrated, 1 blocked by local-driver

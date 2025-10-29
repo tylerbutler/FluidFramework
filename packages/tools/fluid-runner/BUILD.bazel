@@ -1,0 +1,110 @@
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+npm_link_all_packages(name = "node_modules")
+
+# ESM build
+ts_project(
+    name = "fluid_runner_esm_compile",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**/*"],
+    ) + ["package.json"],
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    incremental = True,
+    out_dir = "lib",
+    root_dir = "src",
+    source_map = True,
+    tsconfig = ":tsconfig.bazel.json",
+    deps = [
+        ":node_modules/@fluidframework/aqueduct",
+        ":node_modules/@fluidframework/container-definitions",
+        ":node_modules/@fluidframework/container-loader",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/odsp-driver",
+        ":node_modules/@fluidframework/odsp-driver-definitions",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/@json2csv/plainjs",
+        ":node_modules/@types/node",
+        ":node_modules/@types/yargs",
+        ":node_modules/yargs",
+        "//packages/framework/aqueduct:aqueduct",
+        "//packages/common/container-definitions:container_definitions",
+        "//packages/loader/container-loader:container_loader",
+        "//packages/common/core-interfaces:core_interfaces",
+        "//packages/common/driver-definitions:driver_definitions",
+        "//packages/drivers/odsp-driver:odsp_driver",
+        "//packages/drivers/odsp-driver-definitions:odsp_driver_definitions",
+        "//packages/utils/telemetry-utils:telemetry_utils",
+    ],
+)
+
+js_library(
+    name = "fluid_runner_esm",
+    srcs = [
+        ":fluid_runner_esm_compile",
+    ] + glob(["package.json"]),
+    visibility = ["//visibility:public"],
+)
+
+# CJS build
+ts_project(
+    name = "fluid_runner_cjs_compile",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**/*"],
+    ) + ["package.json"],
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    incremental = True,
+    out_dir = "dist",
+    root_dir = "src",
+    source_map = True,
+    transpiler = "tsc",
+    tsconfig = ":tsconfig.cjs.bazel.json",
+    deps = [
+        ":node_modules/@fluidframework/aqueduct",
+        ":node_modules/@fluidframework/container-definitions",
+        ":node_modules/@fluidframework/container-loader",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/odsp-driver",
+        ":node_modules/@fluidframework/odsp-driver-definitions",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/@json2csv/plainjs",
+        ":node_modules/@types/node",
+        ":node_modules/@types/yargs",
+        ":node_modules/yargs",
+        "//packages/framework/aqueduct:aqueduct",
+        "//packages/common/container-definitions:container_definitions",
+        "//packages/loader/container-loader:container_loader",
+        "//packages/common/core-interfaces:core_interfaces",
+        "//packages/common/driver-definitions:driver_definitions",
+        "//packages/drivers/odsp-driver:odsp_driver",
+        "//packages/drivers/odsp-driver-definitions:odsp_driver_definitions",
+        "//packages/utils/telemetry-utils:telemetry_utils",
+    ],
+)
+
+js_library(
+    name = "fluid_runner_cjs",
+    srcs = [
+        ":fluid_runner_cjs_compile",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Combined target for both formats
+filegroup(
+    name = "fluid_runner",
+    srcs = [
+        ":fluid_runner_cjs",
+        ":fluid_runner_esm",
+    ],
+    visibility = ["//visibility:public"],
+)
