@@ -3,7 +3,7 @@
 **Last Updated**: 2025-10-29
 **Current Phase**: Phase 4 In Progress | 🎉 ALL PRODUCTION PACKAGES MIGRATED! 🎉
 **Overall Progress**: 84% (74/88 packages migrated)
-**Progress**: Session 4.4 complete - Test dependencies added to 60 packages!
+**Progress**: Session 4.5 complete - Test targets corrected for all 60 packages!
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -17,14 +17,52 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
 | **Phase 3: Core Migration** | ✅ Complete | 84% | 17/17 groups (8/8 runtime ✅, 18/18 framework ✅, 16/16 DDS ✅, **5/5 Group 4 ✅**, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **3/3 Group 14 ✅**, **3/3 Group 15 ✅**, **1/3 Group 16 ⚠️**, **4/4 Group 17 ✅**) |
-| **Phase 4: Integration** | 🔄 In Progress | 60% | 3/5 |
+| **Phase 4: Integration** | 🔄 In Progress | 80% | 4/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
 
-### Session 4.4: 🔧 Test Dependencies Added - 60 Packages Enhanced! (2025-10-29)
+### Session 4.5: 🔥 CRITICAL FIX - Test Target Pattern Corrected! (2025-10-29)
+- **Status**: ✅ **COMPLETE** - All 60 test targets now use correct pattern
+- **Breaking Discovery**: Session 4.4 had fundamentally wrong approach!
+- **Problem Identified**:
+  - Session 4.4 compiled source + tests together (wrong!)
+  - Tests imported from own package name caused runtime module resolution failures
+  - Pattern didn't match how TypeScript project references work
+- **Correct Pattern Discovered**:
+  1. Test targets should ONLY compile test files (not source)
+  2. Test targets must depend on compiled ESM output (`:package_esm`)
+  3. mocha_test/jest_test data must include both test + ESM targets
+  4. tsconfig must use correct rootDir/outDir for test-only compilation
+- **Implementation**:
+  - Manual fix and validation on core-interfaces package
+  - Created automated script: `fix-all-test-targets.ts`
+  - Applied fix to all 60 packages successfully
+- **Changes Made**:
+  - BUILD.bazel: Removed source from srcs, added ESM to deps and data
+  - tsconfig.bazel.json: Fixed paths for test-only compilation
+  - 112 files modified across 60 packages
+- **Results**:
+  - ✅ Test compilation structure now correct
+  - ✅ Workspace dependencies resolved properly
+  - ⚠️  Self-referencing packages still have module resolution issue
+  - ⚠️  Many packages have pre-existing TypeScript errors
+- **Remaining Issues**:
+  1. **Self-Referencing**: Packages that import from their own package name
+     - Examples: core-interfaces (`@fluidframework/core-interfaces/internal`)
+     - Need strategy for runtime module resolution
+  2. **TypeScript Errors**: Pre-existing errors in test source code
+     - 632 errors in core-interfaces alone
+     - Not Bazel issues - exist in original source
+- **Next Steps**:
+  1. Solve self-referencing package import resolution
+  2. Survey packages to find tests without TS errors
+  3. Remove `manual` tag from clean tests
+  4. Document pattern for future test additions
+
+### Session 4.4: 🔧 Test Dependencies Added [SUPERSEDED by 4.5] (2025-10-29)
 - **Status**: ✅ **COMPLETE** - All test targets now have complete dependency sets
 - **Automated Process**:
   1. Created automated script to extract workspace dependencies from ESM targets
