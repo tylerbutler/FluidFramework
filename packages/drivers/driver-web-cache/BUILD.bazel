@@ -107,7 +107,7 @@ ts_project(
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
         ],
-    ),
+    ) + ["package.json"],
     declaration = False,
     source_map = True,
     incremental = True,

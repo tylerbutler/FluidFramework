@@ -115,7 +115,7 @@ ts_project(
             "src/test/**",  # Already included above
             "src/cjs/**",  # CJS-specific files
         ],
-    ),
+    ) + ["package.json"],
     declaration = False,
     source_map = True,
     incremental = True,

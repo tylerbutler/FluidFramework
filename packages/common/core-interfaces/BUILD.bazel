@@ -96,7 +96,7 @@ ts_project(
             "src/test/**/*.d.ts",  # Type declaration files
             "src/test/jsonSerializable.exactOptionalPropertyTypes.false.spec.ts",  # Excluded in tsconfig
         ],
-    ),
+    ) + ["package.json"],
     declaration = False,
     source_map = True,
     incremental = True,

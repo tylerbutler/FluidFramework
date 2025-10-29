@@ -111,7 +111,7 @@ ts_project(
             "src/test/**",  # Already included above
             "src/cjs/**",  # CJS-specific files
         ],
-    ),
+    ) + ["package.json"],  # Include package.json for module resolution
     declaration = False,
     source_map = True,
     incremental = True,
@@ -124,8 +124,10 @@ ts_project(
 		"//packages/common/core-interfaces:core_interfaces_esm",
 		"//packages/common/core-utils:core_utils_esm",
 		"//packages/common/driver-definitions:driver_definitions_esm",
+		":node_modules/@fluid-internal/client-utils",
 		":node_modules/@fluidframework/core-interfaces",
 		":node_modules/@fluidframework/core-utils",
+		":node_modules/@fluidframework/driver-definitions",
 		":node_modules/@types/mocha",
 		":node_modules/@types/node",
 		":node_modules/@types/sinon",

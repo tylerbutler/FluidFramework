@@ -148,7 +148,7 @@ ts_project(
             "src/test/**",  # Already included above
             "src/cjs/**",  # CJS-specific files
         ],
-    ),
+    ) + ["package.json"],  # Fix TS1479: TypeScript needs package.json for module detection
     declaration = False,
     source_map = True,
     incremental = True,
