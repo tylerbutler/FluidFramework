@@ -1,0 +1,150 @@
+# BUILD.bazel for @fluidframework/fluid-static
+# Framework package - high-level API for Fluid applications
+# Session 2.29 - Loader layer migration
+
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+npm_link_all_packages(name = "node_modules")
+
+package(default_visibility = ["//visibility:public"])
+
+# ESM compilation
+ts_project(
+    name = "fluid_static_esm",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**/*"],
+    ) + ["package.json"],
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    incremental = True,
+    out_dir = "lib",
+    root_dir = "src",
+    source_map = True,
+    ts_build_info_file = "lib/tsconfig.esm.tsbuildinfo",
+    tsconfig = ":tsconfig.bazel.json",
+    deps = [
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/@fluidframework/aqueduct",
+        ":node_modules/@fluidframework/container-definitions",
+        ":node_modules/@fluidframework/container-loader",
+        ":node_modules/@fluidframework/container-runtime",
+        ":node_modules/@fluidframework/container-runtime-definitions",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/datastore-definitions",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/request-handler",
+        ":node_modules/@fluidframework/runtime-definitions",
+        ":node_modules/@fluidframework/runtime-utils",
+        ":node_modules/@fluidframework/shared-object-base",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/@fluidframework/tree",
+        ":node_modules/@fluidframework/map",
+        ":node_modules/@types/node",
+        "//packages/common/client-utils:lib",
+        "//packages/dds/map:lib",
+        "//packages/common/container-definitions:lib",
+        "//packages/common/core-interfaces:lib",
+        "//packages/common/core-utils:lib",
+        "//packages/common/driver-definitions:lib",
+        "//packages/dds/shared-object-base:lib",
+        "//packages/dds/tree:lib",
+        "//packages/framework/aqueduct:lib",
+        "//packages/framework/request-handler:lib",
+        "//packages/loader/container-loader:lib",
+        "//packages/runtime/container-runtime:lib",
+        "//packages/runtime/container-runtime-definitions:lib",
+        "//packages/runtime/datastore-definitions:lib",
+        "//packages/runtime/runtime-definitions:lib",
+        "//packages/runtime/runtime-utils:lib",
+        "//packages/utils/telemetry-utils:lib",
+    ],
+)
+
+# CommonJS compilation
+ts_project(
+    name = "fluid_static_cjs",
+    srcs = glob(
+        ["src/**/*.ts"],
+        exclude = ["src/test/**/*"],
+    ) + ["package.json"],
+    composite = True,
+    declaration = True,
+    declaration_map = True,
+    incremental = True,
+    out_dir = "dist",
+    root_dir = "src",
+    source_map = True,
+    ts_build_info_file = "dist/tsconfig.cjs.tsbuildinfo",
+    tsconfig = ":tsconfig.cjs.bazel.json",
+    transpiler = "tsc",
+    deps = [
+        ":node_modules/@fluid-internal/client-utils",
+        ":node_modules/@fluidframework/aqueduct",
+        ":node_modules/@fluidframework/container-definitions",
+        ":node_modules/@fluidframework/container-loader",
+        ":node_modules/@fluidframework/container-runtime",
+        ":node_modules/@fluidframework/container-runtime-definitions",
+        ":node_modules/@fluidframework/core-interfaces",
+        ":node_modules/@fluidframework/core-utils",
+        ":node_modules/@fluidframework/datastore-definitions",
+        ":node_modules/@fluidframework/driver-definitions",
+        ":node_modules/@fluidframework/request-handler",
+        ":node_modules/@fluidframework/runtime-definitions",
+        ":node_modules/@fluidframework/runtime-utils",
+        ":node_modules/@fluidframework/shared-object-base",
+        ":node_modules/@fluidframework/telemetry-utils",
+        ":node_modules/@fluidframework/tree",
+        ":node_modules/@fluidframework/map",
+        ":node_modules/@types/node",
+        "//packages/common/client-utils:lib",
+        "//packages/dds/map:lib",
+        "//packages/common/container-definitions:lib",
+        "//packages/common/core-interfaces:lib",
+        "//packages/common/core-utils:lib",
+        "//packages/common/driver-definitions:lib",
+        "//packages/dds/shared-object-base:lib",
+        "//packages/dds/tree:lib",
+        "//packages/framework/aqueduct:lib",
+        "//packages/framework/request-handler:lib",
+        "//packages/loader/container-loader:lib",
+        "//packages/runtime/container-runtime:lib",
+        "//packages/runtime/container-runtime-definitions:lib",
+        "//packages/runtime/datastore-definitions:lib",
+        "//packages/runtime/runtime-definitions:lib",
+        "//packages/runtime/runtime-utils:lib",
+        "//packages/utils/telemetry-utils:lib",
+    ],
+)
+
+# Wrapper library with package.json for subpath exports
+js_library(
+    name = "lib",
+    srcs = [
+        ":fluid_static_cjs",
+        ":fluid_static_esm",
+        "package.json",
+    ],
+)
+
+# NPM package for npm_link_all_packages
+npm_package(
+    name = "pkg",
+    srcs = [":lib"],
+    package = "@fluidframework/fluid-static",
+    visibility = ["//visibility:public"],
+)
+
+# Backward compatibility
+filegroup(
+    name = "fluid_static",
+    srcs = [
+        ":fluid_static_cjs",
+        ":fluid_static_esm",
+    ],
+)

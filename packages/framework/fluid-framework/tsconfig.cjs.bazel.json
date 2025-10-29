@@ -16,6 +16,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "ES2021",
+		"tsBuildInfoFile": "./dist/.tsbuildinfo",
 		"types": [],
 		"exactOptionalPropertyTypes": true,
 		"noUncheckedIndexedAccess": true,
