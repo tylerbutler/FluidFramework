@@ -94,38 +94,33 @@ ts_project(
         exclude = [
             "src/test/types/**",  # Type validation tests
             "src/test/**/*.d.ts",  # Type declaration files
-        ],
-    ) + glob(
-        ["src/**/*.ts"],
-        exclude = [
-            "src/test/**",  # Already included above
-            "src/cjs/**",  # CJS-specific files
+            "src/test/jsonSerializable.exactOptionalPropertyTypes.false.spec.ts",  # Excluded in tsconfig
         ],
     ),
     declaration = False,
     source_map = True,
     incremental = True,
-    out_dir = "lib-test",
-    root_dir = "src",
+    out_dir = "lib-test/test",
+    root_dir = "src/test",
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
+        ":core_interfaces_esm",  # Depend on compiled package output
         ":node_modules/@types/mocha",
         ":node_modules/@types/node",
     ],
 )
 
 # Mocha test runner
-# Note: Test compilation currently has TypeScript type errors in test files themselves.
-# Once those are resolved, this target will run the Mocha tests.
 mocha_bin.mocha_test(
     name = "test",
     args = [
-        "lib-test/test/**/*.spec.js",
+        "packages/common/core-interfaces/lib-test/test/**/*.spec.js",
         "--exit",
     ],
     data = [
         ":core_interfaces_test",
+        ":core_interfaces_esm",  # Runtime needs the compiled package
     ],
-    tags = ["manual"],  # Mark as manual until test compilation succeeds
+    tags = ["manual"],  # Mark as manual until validated
 )

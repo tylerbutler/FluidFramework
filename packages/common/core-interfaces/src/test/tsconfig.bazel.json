@@ -17,14 +17,13 @@
 		"exactOptionalPropertyTypes": true,
 		"noUncheckedIndexedAccess": true,
 		"skipLibCheck": true,
-		"rootDir": "../",
-		"outDir": "../../lib-test"
+		"rootDir": "./",
+		"outDir": "../../lib-test/test"
 	},
 	"include": [
-		"../**/*"
+		"./**/*"
 	],
 	"exclude": [
-		"../cjs/**",
 		"./jsonSerializable.exactOptionalPropertyTypes.false.spec.ts",
 		"./types/**"
 	]
