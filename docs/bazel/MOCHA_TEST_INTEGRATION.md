@@ -1,7 +1,36 @@
 # Mocha Test Integration with Bazel - Session 2.13
 
 **Date**: 2025-10-28
-**Status**: ⚠️ Blocked - npm types resolution issue
+**Status**: ✅ **SOLVED** in Session 4.2 (2025-10-29)
+**Reference Package**: `@fluidframework/core-interfaces`
+
+---
+
+## ✅ SOLUTION FOUND - Session 4.2 (2025-10-29)
+
+The npm @types resolution issue has been **SOLVED**!
+
+See complete solution documentation: **[TEST_INTEGRATION_SOLUTION.md](./TEST_INTEGRATION_SOLUTION.md)**
+
+### Quick Summary
+
+**Problem**: TypeScript couldn't find `@types/mocha` and `@types/node` in Bazel sandbox.
+
+**Solution**: Three-part fix:
+1. Add explicit deps in BUILD.bazel: `:node_modules/@types/mocha` and `:node_modules/@types/node`
+2. Add `"types": ["mocha", "node"]` to tsconfig.bazel.json compilerOptions
+3. Include source files in test compilation srcs to support relative imports
+
+**Result**: TypeScript now finds all test framework globals (`describe`, `it`, etc.)
+
+**Impact**: Pattern works for Mocha AND Jest - ready to apply to all 74 migrated packages.
+
+---
+
+## Original Problem Documentation (Historical)
+
+**Date**: 2025-10-28
+**Status**: ⚠️ Blocked - npm types resolution issue (RESOLVED in Session 4.2)
 **Reference Package**: `@fluidframework/core-interfaces`
 
 ## Goal

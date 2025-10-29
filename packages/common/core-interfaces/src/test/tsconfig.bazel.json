@@ -13,18 +13,19 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "ES2021",
-		"typeRoots": ["../../../../node_modules/@types"],
+		"types": ["mocha", "node"],
 		"exactOptionalPropertyTypes": true,
 		"noUncheckedIndexedAccess": true,
 		"skipLibCheck": true,
-		"rootDir": "./",
-		"outDir": "../../lib/test",
-		"paths": {
-			"@fluidframework/core-interfaces": ["../../lib/index.js"],
-			"@fluidframework/core-interfaces/internal": ["../../lib/internal.js"],
-			"@fluidframework/core-interfaces/legacy": ["../../lib/legacy.js"]
-		}
+		"rootDir": "../",
+		"outDir": "../../lib-test"
 	},
-	"include": ["./**/*"],
-	"exclude": ["./jsonSerializable.exactOptionalPropertyTypes.false.spec.ts"]
+	"include": [
+		"../**/*"
+	],
+	"exclude": [
+		"../cjs/**",
+		"./jsonSerializable.exactOptionalPropertyTypes.false.spec.ts",
+		"./types/**"
+	]
 }
