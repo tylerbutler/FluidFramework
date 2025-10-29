@@ -2,8 +2,8 @@
 
 **Last Updated**: 2025-10-29
 **Current Phase**: Phase 3 In Progress | 🎉 ALL CORE LAYERS 100% + ALL SERVICE CLIENTS 100%! 🎉
-**Overall Progress**: 78% (69/88 packages migrated)
-**Progress**: Session 2.36 complete - Group 14 COMPLETE! local-driver + test-drivers migrated!
+**Overall Progress**: 80% (71/88 packages migrated)
+**Progress**: Session 2.37 partial - fetch-tool + sequence-deprecated migrated! replay-tool blocked on file-driver
 
 For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md)
 
@@ -16,13 +16,34 @@ For full details, see: [BAZEL_MIGRATION_TRACKER.md](./BAZEL_MIGRATION_TRACKER.md
 | **Phase 0: Setup** | ✅ Complete | 100% | 2/2 |
 | **Phase 1: PoC** | ✅ Complete | 83% | 5/6 |
 | **Phase 2: Expansion** | ✅ Complete | 93% | 15/18 |
-| **Phase 3: Core Migration** | 🔄 In Progress | 78% | 14/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **3/3 Group 14 ✅**, **1/4 Group 17 ✅**) |
+| **Phase 3: Core Migration** | 🔄 In Progress | 80% | 14/17 groups (8/8 runtime ✅, 18/18 framework ✅, **3/3 service clients ✅**, 2/2 Group 10 ✅, **2/2 Group 13 ✅**, **3/3 Group 14 ✅**, **2/4 Group 17**) |
 | **Phase 4: Integration** | ⏳ Pending | 0% | 0/5 |
 | **Phase 5: Cleanup** | ⏳ Pending | 0% | 0/3 |
 
 ---
 
 ## Recently Completed
+
+### Session 2.37: ⚠️ Group 17 Partial - Tools + sequence-deprecated! replay-tool blocked (2025-10-29)
+- **Status**: ⚠️ **PARTIAL** - 2/3 tool packages migrated, 1 blocked by file-driver dependency
+- **Tool Packages (Group 17 - 2/4)**:
+  - @fluid-tools/fetch-tool ✅ (14 ws_deps) - Console tool to fetch Fluid data from relay service
+  - @fluid-internal/replay-tool ⏸️ (26 ws_deps) - **BLOCKED** by @fluidframework/file-driver not migrated
+- **DDS Package (Dependency)**:
+  - @fluid-experimental/sequence-deprecated ✅ (6 ws_deps) - Deprecated distributed sequences (required by replay-tool)
+- **Build Verification**: fetch-tool and sequence-deprecated compile successfully (ESM + CJS) ✅
+- **Blocker Identified**: @fluidframework/file-driver not yet migrated
+  - replay-tool imports from '@fluidframework/file-driver/internal'
+  - file-driver is a driver package, not in current migration groups
+  - Will need to migrate file-driver before completing replay-tool
+- **Key Learnings**:
+  - Tools in Group 17 have varying dependency complexity
+  - fetch-tool: straightforward build with /internal subpath imports
+  - replay-tool: extensive dependencies including experimental packages
+  - Package.json pattern (Session 2.35/2.36) applied: include package.json in srcs for ESM detection
+- **Total Packages**: 71/88 migrated (80.7%) +2 packages
+- **Group 17 Progress**: 2/4 packages (50%) **PARTIAL**
+- **Next**: Migrate file-driver to unblock replay-tool OR continue with other remaining groups
 
 ### Session 2.36: 🎉 Group 14 COMPLETE - Test Drivers + local-driver Migrated! (2025-10-29)
 - **Status**: ✅ **COMPLETE** - Group 14 fully migrated, local-driver blocker resolved!
