@@ -1,0 +1,35 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//npm:defs.bzl", "npm_package")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+
+package(default_visibility = ["//visibility:public"])
+
+# Link npm packages for this workspace package
+npm_link_all_packages(name = "node_modules")
+
+# This is a pure JavaScript package with no build step
+# Just copy the source files as-is
+js_library(
+    name = "lib",
+    srcs = glob(["src/**/*.js"]) + [
+        "package.json",
+    ],
+    deps = [
+        ":node_modules/@changesets/cli",
+        ":node_modules/@changesets/types",
+        ":node_modules/changesets-format-with-issue-links",
+    ],
+)
+
+# NPM package
+npm_package(
+    name = "pkg",
+    srcs = [":lib"],
+    package = "@fluid-private/changelog-generator-wrapper",
+)
+
+# Backward compatibility filegroup
+filegroup(
+    name = "changelog-generator-wrapper",
+    srcs = [":lib"],
+)
