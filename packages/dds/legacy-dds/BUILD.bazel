@@ -98,6 +98,162 @@ npm_package(
     package = "@fluidframework/legacy-dds",
 )
 
+
+# ============================================================================
+# API Extractor Integration (Phase 6)
+# ============================================================================
+
+# Generate entrypoint files for API Extractor
+sh_binary(
+    name = "generate_entrypoints",
+    srcs = ["//tools/bazel:run-flub-entrypoints.sh"],
+    args = [
+        "packages/dds/legacy-dds",
+        "lib",
+    ],
+    data = [
+        ":legacy_dds_esm",
+        "//tools/bazel:run-flub-entrypoints.sh",
+    ],
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor.json
+sh_binary(
+    name = "api_reports",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/dds/legacy-dds",
+        "api-extractor.json",
+    ],
+    data = [
+        ":legacy_dds_esm",
+        "api-extractor.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor.current.json
+sh_binary(
+    name = "api_reports_current",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/dds/legacy-dds",
+        "api-extractor/api-extractor.current.json",
+    ],
+    data = [
+        ":legacy_dds_esm",
+        "api-extractor/api-extractor.current.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor.legacy.json
+sh_binary(
+    name = "api_reports_legacy",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/dds/legacy-dds",
+        "api-extractor/api-extractor.legacy.json",
+    ],
+    data = [
+        ":legacy_dds_esm",
+        "api-extractor/api-extractor.legacy.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-bundle.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-bundle",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/dds/legacy-dds",
+        "api-extractor/api-extractor-lint-bundle.json",
+    ],
+    data = [
+        ":legacy_dds_esm",
+        "api-extractor/api-extractor-lint-bundle.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-legacy.cjs.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-legacy.cjs",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/dds/legacy-dds",
+        "api-extractor/api-extractor-lint-legacy.cjs.json",
+    ],
+    data = [
+        ":legacy_dds_esm",
+        "api-extractor/api-extractor-lint-legacy.cjs.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-legacy.esm.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-legacy.esm",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/dds/legacy-dds",
+        "api-extractor/api-extractor-lint-legacy.esm.json",
+    ],
+    data = [
+        ":legacy_dds_esm",
+        "api-extractor/api-extractor-lint-legacy.esm.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-public.cjs.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-public.cjs",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/dds/legacy-dds",
+        "api-extractor/api-extractor-lint-public.cjs.json",
+    ],
+    data = [
+        ":legacy_dds_esm",
+        "api-extractor/api-extractor-lint-public.cjs.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-public.esm.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-public.esm",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/dds/legacy-dds",
+        "api-extractor/api-extractor-lint-public.esm.json",
+    ],
+    data = [
+        ":legacy_dds_esm",
+        "api-extractor/api-extractor-lint-public.esm.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
 # Backward compatibility filegroup
 filegroup(
     name = "legacy_dds",

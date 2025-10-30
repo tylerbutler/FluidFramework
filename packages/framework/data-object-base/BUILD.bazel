@@ -98,6 +98,94 @@ npm_package(
     visibility = ["//visibility:public"],
 )
 
+
+# ============================================================================
+# API Extractor Integration (Phase 6)
+# ============================================================================
+
+# Generate entrypoint files for API Extractor
+sh_binary(
+    name = "generate_entrypoints",
+    srcs = ["//tools/bazel:run-flub-entrypoints.sh"],
+    args = [
+        "packages/framework/data-object-base",
+        "lib",
+    ],
+    data = [
+        ":data_object_base_esm",
+        "//tools/bazel:run-flub-entrypoints.sh",
+    ],
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor.json
+sh_binary(
+    name = "api_reports",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/data-object-base",
+        "api-extractor.json",
+    ],
+    data = [
+        ":data_object_base_esm",
+        "api-extractor.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-bundle.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-bundle",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/data-object-base",
+        "api-extractor/api-extractor-lint-bundle.json",
+    ],
+    data = [
+        ":data_object_base_esm",
+        "api-extractor/api-extractor-lint-bundle.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-index.cjs.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-index.cjs",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/data-object-base",
+        "api-extractor/api-extractor-lint-index.cjs.json",
+    ],
+    data = [
+        ":data_object_base_esm",
+        "api-extractor/api-extractor-lint-index.cjs.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-index.esm.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-index.esm",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/data-object-base",
+        "api-extractor/api-extractor-lint-index.esm.json",
+    ],
+    data = [
+        ":data_object_base_esm",
+        "api-extractor/api-extractor-lint-index.esm.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
 # Backward compatibility filegroup
 filegroup(
     name = "data_object_base",

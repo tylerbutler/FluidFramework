@@ -61,6 +61,94 @@ ts_project(
     ],
 )
 
+
+# ============================================================================
+# API Extractor Integration (Phase 6)
+# ============================================================================
+
+# Generate entrypoint files for API Extractor
+sh_binary(
+    name = "generate_entrypoints",
+    srcs = ["//tools/bazel:run-flub-entrypoints.sh"],
+    args = [
+        "packages/drivers/odsp-urlResolver",
+        "lib",
+    ],
+    data = [
+        ":odsp_urlResolver_esm",
+        "//tools/bazel:run-flub-entrypoints.sh",
+    ],
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor.json
+sh_binary(
+    name = "api_reports",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/drivers/odsp-urlResolver",
+        "api-extractor.json",
+    ],
+    data = [
+        ":odsp_urlResolver_esm",
+        "api-extractor.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-bundle.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-bundle",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/drivers/odsp-urlResolver",
+        "api-extractor/api-extractor-lint-bundle.json",
+    ],
+    data = [
+        ":odsp_urlResolver_esm",
+        "api-extractor/api-extractor-lint-bundle.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-public.cjs.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-public.cjs",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/drivers/odsp-urlResolver",
+        "api-extractor/api-extractor-lint-public.cjs.json",
+    ],
+    data = [
+        ":odsp_urlResolver_esm",
+        "api-extractor/api-extractor-lint-public.cjs.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-public.esm.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-public.esm",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/drivers/odsp-urlResolver",
+        "api-extractor/api-extractor-lint-public.esm.json",
+    ],
+    data = [
+        ":odsp_urlResolver_esm",
+        "api-extractor/api-extractor-lint-public.esm.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
 # Default target builds both ESM and CJS
 
 # js_library wrapping compiled outputs

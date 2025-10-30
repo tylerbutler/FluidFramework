@@ -79,6 +79,162 @@ npm_package(
     visibility = ["//visibility:public"],
 )
 
+
+# ============================================================================
+# API Extractor Integration (Phase 6)
+# ============================================================================
+
+# Generate entrypoint files for API Extractor
+sh_binary(
+    name = "generate_entrypoints",
+    srcs = ["//tools/bazel:run-flub-entrypoints.sh"],
+    args = [
+        "packages/framework/tree-agent-ses",
+        "lib",
+    ],
+    data = [
+        ":tree_agent_ses_esm",
+        "//tools/bazel:run-flub-entrypoints.sh",
+    ],
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor.json
+sh_binary(
+    name = "api_reports",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/tree-agent-ses",
+        "api-extractor.json",
+    ],
+    data = [
+        ":tree_agent_ses_esm",
+        "api-extractor.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-alpha.cjs.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-alpha.cjs",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/tree-agent-ses",
+        "api-extractor/api-extractor-lint-alpha.cjs.json",
+    ],
+    data = [
+        ":tree_agent_ses_esm",
+        "api-extractor/api-extractor-lint-alpha.cjs.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-alpha.esm.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-alpha.esm",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/tree-agent-ses",
+        "api-extractor/api-extractor-lint-alpha.esm.json",
+    ],
+    data = [
+        ":tree_agent_ses_esm",
+        "api-extractor/api-extractor-lint-alpha.esm.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-bundle.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-bundle",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/tree-agent-ses",
+        "api-extractor/api-extractor-lint-bundle.json",
+    ],
+    data = [
+        ":tree_agent_ses_esm",
+        "api-extractor/api-extractor-lint-bundle.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-index.cjs.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-index.cjs",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/tree-agent-ses",
+        "api-extractor/api-extractor-lint-index.cjs.json",
+    ],
+    data = [
+        ":tree_agent_ses_esm",
+        "api-extractor/api-extractor-lint-index.cjs.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-index.esm.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-index.esm",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/tree-agent-ses",
+        "api-extractor/api-extractor-lint-index.esm.json",
+    ],
+    data = [
+        ":tree_agent_ses_esm",
+        "api-extractor/api-extractor-lint-index.esm.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-public.cjs.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-public.cjs",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/tree-agent-ses",
+        "api-extractor/api-extractor-lint-public.cjs.json",
+    ],
+    data = [
+        ":tree_agent_ses_esm",
+        "api-extractor/api-extractor-lint-public.cjs.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-public.esm.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-public.esm",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/tree-agent-ses",
+        "api-extractor/api-extractor-lint-public.esm.json",
+    ],
+    data = [
+        ":tree_agent_ses_esm",
+        "api-extractor/api-extractor-lint-public.esm.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
 # Backward compatibility filegroup
 filegroup(
     name = "tree_agent_ses",

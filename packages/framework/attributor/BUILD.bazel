@@ -121,6 +121,94 @@ filegroup(
 )
 
 # ============================================================================
+
+# ============================================================================
+# API Extractor Integration (Phase 6)
+# ============================================================================
+
+# Generate entrypoint files for API Extractor
+sh_binary(
+    name = "generate_entrypoints",
+    srcs = ["//tools/bazel:run-flub-entrypoints.sh"],
+    args = [
+        "packages/framework/attributor",
+        "lib",
+    ],
+    data = [
+        ":attributor_esm",
+        "//tools/bazel:run-flub-entrypoints.sh",
+    ],
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor.json
+sh_binary(
+    name = "api_reports",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/attributor",
+        "api-extractor.json",
+    ],
+    data = [
+        ":attributor_esm",
+        "api-extractor.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-bundle.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-bundle",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/attributor",
+        "api-extractor/api-extractor-lint-bundle.json",
+    ],
+    data = [
+        ":attributor_esm",
+        "api-extractor/api-extractor-lint-bundle.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-index.cjs.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-index.cjs",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/attributor",
+        "api-extractor/api-extractor-lint-index.cjs.json",
+    ],
+    data = [
+        ":attributor_esm",
+        "api-extractor/api-extractor-lint-index.cjs.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
+# Run API Extractor: api-extractor/api-extractor-lint-index.esm.json
+sh_binary(
+    name = "api_reports_api-extractor-lint-index.esm",
+    srcs = ["//tools/bazel:run-api-extractor.sh"],
+    args = [
+        "packages/framework/attributor",
+        "api-extractor/api-extractor-lint-index.esm.json",
+    ],
+    data = [
+        ":attributor_esm",
+        "api-extractor/api-extractor-lint-index.esm.json",
+        "tsconfig.json",
+        "//tools/bazel:run-api-extractor.sh",
+    ] + glob(["api-report/*.api.md"], allow_empty = True),
+    tags = ["api-extraction"],
+)
+
 # Test Integration (Session 4.3)
 # ============================================================================
 # Mocha test compilation with proper @types resolution
