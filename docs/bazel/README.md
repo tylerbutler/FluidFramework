@@ -6,8 +6,10 @@ Welcome to the Bazel documentation for FluidFramework. This directory contains g
 
 New to Bazel? Start here:
 1. [Getting Started](./GETTING_STARTED.md) - Installation, setup, and basic workflows
-2. [Commands Reference](./COMMANDS.md) - Comprehensive command guide
-3. [Troubleshooting](./TROUBLESHOOTING.md) - Common issues and solutions
+2. [Quick Reference](./QUICK_REFERENCE.md) - One-page command cheat sheet
+3. [FAQ](./FAQ.md) - Common questions and answers
+4. [Commands Reference](./COMMANDS.md) - Comprehensive command guide
+5. [Troubleshooting](./TROUBLESHOOTING.md) - Common issues and solutions
 
 ## Documentation Index
 
@@ -18,6 +20,18 @@ New to Bazel? Start here:
   - Common commands
   - Understanding build outputs
   - IDE integration
+
+- **[Quick Reference](./QUICK_REFERENCE.md)** - One-page cheat sheet
+  - Essential commands
+  - Common patterns
+  - Quick troubleshooting
+  - Print-friendly format
+
+- **[FAQ](./FAQ.md)** - Frequently Asked Questions
+  - General Bazel questions
+  - Daily workflow questions
+  - Troubleshooting Q&A
+  - Migration questions
 
 - **[Commands Reference](./COMMANDS.md)** - Complete command guide
   - Build commands
