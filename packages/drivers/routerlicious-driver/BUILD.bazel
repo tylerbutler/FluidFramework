@@ -185,8 +185,8 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":routerlicious_driver_test",
-        ":pkg",  # Runtime needs package with subpath exports
-
+        ":pkg",  # Runtime needs package with subpath exports,
+        "package.json",
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

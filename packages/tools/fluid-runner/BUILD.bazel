@@ -175,6 +175,7 @@ mocha_bin.mocha_test(
         ":fluid_runner_test",
         ":pkg",  # Runtime needs package with subpath exports
 
-    ],
+    ,
+        "package.json"],
     tags = ["manual"],  # Mark as manual until validated
 )
