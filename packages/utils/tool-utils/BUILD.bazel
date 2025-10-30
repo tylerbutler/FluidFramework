@@ -124,6 +124,8 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
+		":tool_utils_esm",  # For TypeScript module resolution
+		":pkg",  # For runtime package resolution with subpath exports
 		"//packages/common/core-utils:core_utils_esm",
 		"//packages/common/driver-definitions:driver_definitions_esm",
 		"//packages/loader/driver-utils:driver_utils_esm",
@@ -145,9 +147,10 @@ mocha_bin.mocha_test(
         "packages/utils/tool-utils/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [":tool_utils_test",
-        ":tool_utils_esm",  # Runtime needs the compiled package,
-        "package.json",  # Needed for Node to detect ESM module type
+    data = [
+        ":tool_utils_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

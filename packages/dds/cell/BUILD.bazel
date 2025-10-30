@@ -116,6 +116,8 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
+		":cell_esm",  # For TypeScript module resolution
+		":pkg",  # For runtime package resolution with subpath exports
 		":node_modules/@fluid-private/test-dds-utils",
 		":node_modules/@fluidframework/container-definitions",
 		":node_modules/@fluidframework/core-interfaces",
@@ -138,8 +140,9 @@ mocha_bin.mocha_test(
         "packages/dds/cell/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [":cell_test",
-        ":cell_esm",  # Runtime needs the compiled package,
+    data = [
+        ":cell_test",
+        ":pkg",  # Runtime needs package with subpath exports
         "package.json",  # Needed for Node to detect ESM module type
     ],
     tags = ["manual"],  # Mark as manual until validated

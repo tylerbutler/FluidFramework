@@ -102,35 +102,25 @@ filegroup(
 # Test compilation (ESM)
 ts_project(
     name = "request_handler_test",
-    srcs = glob(
-        ["src/test/**/*.ts"],
-        exclude = [
-            "src/test/types/**",  # Type validation tests
-            "src/test/**/*.d.ts",  # Type declaration files
-        ],
-    ) + glob(
-        ["src/**/*.ts"],
-        exclude = [
-            "src/test/**",  # Already included above
-            "src/cjs/**",  # CJS-specific files
-        ],
-    ) + ["package.json"],  # Fix TS1479: TypeScript needs package.json for module detection
+    srcs = glob([
+        "src/test/**/*.ts",
+    ], exclude = [
+        "src/test/types/**",
+        "src/test/**/*.d.ts",
+    ]) + ["package.json"],
     declaration = False,
     source_map = True,
     incremental = True,
-    out_dir = "lib-test",
-    root_dir = "src",
+    out_dir = "lib-test/test",
+    root_dir = "src/test",
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
+        ":request_handler_esm",  # compiled package output
+        ":pkg",  # npm package for resolution
         ":node_modules/@types/mocha",
         ":node_modules/@types/node",
         ":node_modules/@types/diff",
-        ":node_modules/@fluidframework/container-runtime-definitions",
-        ":node_modules/@fluidframework/core-interfaces",
-        ":node_modules/@fluidframework/core-utils",
-        ":node_modules/@fluidframework/runtime-definitions",
-        ":node_modules/@fluidframework/runtime-utils",
         ":node_modules/diff",
     ],
 )
@@ -142,9 +132,10 @@ mocha_bin.mocha_test(
         "packages/framework/request-handler/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [":request_handler_test",
-        ":request_handler_esm",  # Runtime needs the compiled package,
-        "package.json",  # Needed for Node to detect ESM module type
+    data = [
+        ":request_handler_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

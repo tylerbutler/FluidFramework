@@ -139,27 +139,29 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
-        ":node_modules/@types/mocha",
-        ":node_modules/@types/node",
-        "//packages/framework/aqueduct:aqueduct",
-        "//packages/common/container-definitions:container_definitions",
-        "//packages/loader/container-loader:container_loader",
-        "//packages/common/core-interfaces:core_interfaces",
-        "//packages/common/driver-definitions:driver_definitions",
-        "//packages/drivers/odsp-driver:odsp_driver",
-        "//packages/drivers/odsp-driver-definitions:odsp_driver_definitions",
-        "//packages/utils/telemetry-utils:telemetry_utils",
-        ":node_modules/@fluidframework/aqueduct",
-        ":node_modules/@fluidframework/container-definitions",
-        ":node_modules/@fluidframework/container-loader",
-        ":node_modules/@fluidframework/core-interfaces",
-        ":node_modules/@fluidframework/driver-definitions",
-        ":node_modules/@fluidframework/odsp-driver",
-        ":node_modules/@fluidframework/odsp-driver-definitions",
-        ":node_modules/@fluidframework/telemetry-utils",
-        ":node_modules/@json2csv/plainjs",
-        ":node_modules/yargs",
-    ],
+		":fluid_runner_esm",  # For TypeScript module resolution
+		":pkg",  # For runtime package resolution with subpath exports
+		":node_modules/@types/mocha",
+		":node_modules/@types/node",
+		"//packages/framework/aqueduct:aqueduct",
+		"//packages/common/container-definitions:container_definitions",
+		"//packages/loader/container-loader:container_loader",
+		"//packages/common/core-interfaces:core_interfaces",
+		"//packages/common/driver-definitions:driver_definitions",
+		"//packages/drivers/odsp-driver:odsp_driver",
+		"//packages/drivers/odsp-driver-definitions:odsp_driver_definitions",
+		"//packages/utils/telemetry-utils:telemetry_utils",
+		":node_modules/@fluidframework/aqueduct",
+		":node_modules/@fluidframework/container-definitions",
+		":node_modules/@fluidframework/container-loader",
+		":node_modules/@fluidframework/core-interfaces",
+		":node_modules/@fluidframework/driver-definitions",
+		":node_modules/@fluidframework/odsp-driver",
+		":node_modules/@fluidframework/odsp-driver-definitions",
+		":node_modules/@fluidframework/telemetry-utils",
+		":node_modules/@json2csv/plainjs",
+		":node_modules/yargs",
+	],
 )
 
 # Mocha test runner
@@ -169,9 +171,10 @@ mocha_bin.mocha_test(
         "packages/tools/fluid-runner/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [":fluid_runner_test",
-        ":fluid_runner_esm",  # Runtime needs the compiled package,
-        "package.json",  # Needed for Node to detect ESM module type
+    data = [
+        ":fluid_runner_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -108,41 +108,25 @@ filegroup(
 # Test compilation (ESM)
 ts_project(
     name = "ai_collab_test",
-    srcs = glob(
-        ["src/test/**/*.ts"],
-        exclude = [
-            "src/test/types/**",  # Type validation tests
-            "src/test/**/*.d.ts",  # Type declaration files
-        ],
-    ) + glob(
-        ["src/**/*.ts"],
-        exclude = [
-            "src/test/**",  # Already included above
-            "src/cjs/**",  # CJS-specific files
-        ],
-    ) + ["package.json"],  # Fix TS1479: TypeScript needs package.json for module detection
+    srcs = glob([
+        "src/test/**/*.ts",
+    ], exclude = [
+        "src/test/types/**",
+        "src/test/**/*.d.ts",
+    ]) + ["package.json"],
     declaration = False,
     source_map = True,
     incremental = True,
-    out_dir = "lib-test",
-    root_dir = "src",
+    out_dir = "lib-test/test",
+    root_dir = "src/test",
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
-		":node_modules/@fluidframework/core-utils",
-		":node_modules/@fluidframework/id-compressor",
-		":node_modules/@fluidframework/runtime-utils",
-		":node_modules/@fluidframework/telemetry-utils",
-		":node_modules/@fluidframework/test-runtime-utils",
-		":node_modules/@fluidframework/tree",
-		":node_modules/@types/mocha",
-		":node_modules/@types/node",
-		":node_modules/fastest-levenshtein",
-		":node_modules/openai",
-		":node_modules/typechat",
-		":node_modules/uuid",
-		":node_modules/zod",
-	],
+        ":ai_collab_esm",
+        ":pkg",
+        ":node_modules/@types/mocha",
+        ":node_modules/@types/node",
+    ],
 )
 
 # Mocha test runner
@@ -152,9 +136,10 @@ mocha_bin.mocha_test(
         "packages/framework/ai-collab/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [":ai_collab_test",
-        ":ai_collab_esm",  # Runtime needs the compiled package,
-        "package.json",  # Needed for Node to detect ESM module type
+    data = [
+        ":ai_collab_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

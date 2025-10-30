@@ -118,6 +118,8 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
+		":register_collection_esm",  # For TypeScript module resolution
+		":pkg",  # For runtime package resolution with subpath exports
 		":node_modules/@fluid-internal/client-utils",
 		":node_modules/@fluid-private/test-dds-utils",
 		":node_modules/@fluidframework/core-interfaces",
@@ -140,9 +142,10 @@ mocha_bin.mocha_test(
         "packages/dds/register-collection/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [":register_collection_test",
-        ":register_collection_esm",  # Runtime needs the compiled package,
-        "package.json",  # Needed for Node to detect ESM module type
+    data = [
+        ":register_collection_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -165,6 +165,8 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
+		":container_runtime_esm",  # For TypeScript module resolution
+		":pkg",  # For runtime package resolution with subpath exports
 		"//packages/common/client-utils:lib",
 		"//packages/common/container-definitions:lib",
 		"//packages/common/core-interfaces:lib",
@@ -202,8 +204,9 @@ ts_project(
 		":node_modules/semver-ts",
 		":node_modules/sinon",
 		":node_modules/uuid",
-	,
-        ":node_modules/@fluid-tools/benchmark"],
+		,
+		":node_modules/@fluid-tools/benchmark",
+	],
 )
 
 # Mocha test runner
@@ -213,9 +216,10 @@ mocha_bin.mocha_test(
         "packages/runtime/container-runtime/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [":container_runtime_test",
-        ":container_runtime_esm",  # Runtime needs the compiled package,
-        "package.json",  # Needed for Node to detect ESM module type
+    data = [
+        ":container_runtime_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

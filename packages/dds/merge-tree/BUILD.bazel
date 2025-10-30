@@ -133,6 +133,8 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
+		":merge_tree_esm",  # For TypeScript module resolution
+		":pkg",  # For runtime package resolution with subpath exports
 		":node_modules/@fluid-internal/client-utils",
 		":node_modules/@fluid-private/stochastic-test-utils",
 		":node_modules/@fluid-private/test-pairwise-generator",
@@ -150,8 +152,9 @@ ts_project(
 		":node_modules/@types/mocha",
 		":node_modules/@types/node",
 		":node_modules/diff",
-	,
-        ":node_modules/@fluid-tools/benchmark"],
+		,
+		":node_modules/@fluid-tools/benchmark",
+	],
 )
 
 # Mocha test runner
@@ -161,9 +164,10 @@ mocha_bin.mocha_test(
         "packages/dds/merge-tree/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [":merge_tree_test",
-        ":merge_tree_esm",  # Runtime needs the compiled package,
-        "package.json",  # Needed for Node to detect ESM module type
+    data = [
+        ":merge_tree_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

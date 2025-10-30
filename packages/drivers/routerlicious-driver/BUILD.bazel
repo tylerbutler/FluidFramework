@@ -147,31 +147,33 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
-        ":node_modules/@types/mocha",
-        ":node_modules/@types/node",
-        ":node_modules/@types/sinon",
-        "//packages/common/client-utils:lib",
-        "//packages/common/core-interfaces:lib",
-        "//packages/common/core-utils:lib",
-        "//packages/drivers/driver-base:lib",
-        "//packages/common/driver-definitions:lib",
-        "//packages/loader/driver-utils:lib",
-        "//packages/utils/telemetry-utils:lib",
-        ":node_modules/@fluidframework/core-interfaces",
-        ":node_modules/@fluidframework/core-utils",
-        ":node_modules/@fluidframework/driver-base",
-        ":node_modules/@fluidframework/driver-definitions",
-        ":node_modules/@fluidframework/driver-utils",
-        ":node_modules/@fluidframework/server-services-client",
-        ":node_modules/@fluidframework/telemetry-utils",
-        ":node_modules/@fluid-internal/client-utils",
-        ":node_modules/axios",
-        ":node_modules/cross-fetch",
-        ":node_modules/json-stringify-safe",
-        ":node_modules/socket.io-client",
-        ":node_modules/uuid",
-        ":node_modules/sinon",
-    ],
+		":routerlicious_driver_esm",  # For TypeScript module resolution
+		":pkg",  # For runtime package resolution with subpath exports
+		":node_modules/@types/mocha",
+		":node_modules/@types/node",
+		":node_modules/@types/sinon",
+		"//packages/common/client-utils:lib",
+		"//packages/common/core-interfaces:lib",
+		"//packages/common/core-utils:lib",
+		"//packages/drivers/driver-base:lib",
+		"//packages/common/driver-definitions:lib",
+		"//packages/loader/driver-utils:lib",
+		"//packages/utils/telemetry-utils:lib",
+		":node_modules/@fluidframework/core-interfaces",
+		":node_modules/@fluidframework/core-utils",
+		":node_modules/@fluidframework/driver-base",
+		":node_modules/@fluidframework/driver-definitions",
+		":node_modules/@fluidframework/driver-utils",
+		":node_modules/@fluidframework/server-services-client",
+		":node_modules/@fluidframework/telemetry-utils",
+		":node_modules/@fluid-internal/client-utils",
+		":node_modules/axios",
+		":node_modules/cross-fetch",
+		":node_modules/json-stringify-safe",
+		":node_modules/socket.io-client",
+		":node_modules/uuid",
+		":node_modules/sinon",
+	],
 )
 
 # Mocha test runner
@@ -181,9 +183,10 @@ mocha_bin.mocha_test(
         "packages/drivers/routerlicious-driver/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [":routerlicious_driver_test",
-        ":routerlicious_driver_esm",  # Runtime needs the compiled package,
-        "package.json",  # Needed for Node to detect ESM module type
+    data = [
+        ":routerlicious_driver_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

@@ -153,6 +153,8 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
+		":datastore_esm",  # For TypeScript module resolution
+		":pkg",  # For runtime package resolution with subpath exports
 		"//packages/common/client-utils:lib",
 		"//packages/common/container-definitions:lib",
 		"//packages/common/core-interfaces:lib",
@@ -191,9 +193,10 @@ mocha_bin.mocha_test(
         "packages/runtime/datastore/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [":datastore_test",
-        ":datastore_esm",  # Runtime needs the compiled package,
-        "package.json",  # Needed for Node to detect ESM module type
+    data = [
+        ":datastore_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

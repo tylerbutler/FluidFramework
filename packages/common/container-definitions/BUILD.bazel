@@ -83,3 +83,35 @@ filegroup(
         ":container_definitions_cjs",
     ],
 )
+
+load("@npm//:mocha/package_json.bzl", mocha_bin = "bin")
+
+ts_project(
+    name = "container_definitions_test",
+    srcs = ["src/test/types/validateContainerDefinitionsPrevious.generated.ts", "package.json"],  # Build generated types file only
+    declaration = False,
+    source_map = True,
+    incremental = True,
+    out_dir = "lib-test/types",
+    root_dir = "src/test/types",
+    tsconfig = "src/test/tsconfig.bazel.json",
+    transpiler = "tsc",
+    deps = [
+        ":container_definitions_esm",
+        ":pkg",
+    ],
+)
+
+mocha_bin.mocha_test(
+    name = "test",
+    args = [
+        "packages/common/container-definitions/lib-test/test/**/*.spec.js",
+        "--exit",
+    ],
+    data = [
+        ":container_definitions_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
+    ],
+    tags = ["manual"],
+)

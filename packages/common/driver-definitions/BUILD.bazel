@@ -79,3 +79,43 @@ filegroup(
         ":driver_definitions_cjs",
     ],
 )
+
+# ============================================================================
+# Test Integration (Added)
+# ============================================================================
+# Mocha test compilation pattern update
+
+ts_project(
+    name = "driver_definitions_test",
+    srcs = glob([
+        "src/test/**/*.ts",
+    ], exclude = [
+        "src/test/**/*.d.ts",
+    ]) + ["package.json"],
+    declaration = False,
+    source_map = True,
+    incremental = True,
+    out_dir = "lib-test/test",
+    root_dir = "src/test",
+    tsconfig = "src/test/tsconfig.bazel.json",
+    transpiler = "tsc",
+    deps = [
+        ":driver_definitions_esm",  # Expose compiled package
+        ":pkg",
+    ],
+)
+
+load("@npm//:mocha/package_json.bzl", mocha_bin = "bin")
+mocha_bin.mocha_test(
+    name = "test",
+    args = [
+        "packages/common/driver-definitions/lib-test/test/**/*.spec.js",
+        "--exit",
+    ],
+    data = [
+        ":driver_definitions_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
+    ],
+    tags = ["manual"],
+)

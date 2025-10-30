@@ -141,6 +141,8 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
+		":matrix_esm",  # For TypeScript module resolution
+		":pkg",  # For runtime package resolution with subpath exports
 		":node_modules/@fluid-internal/client-utils",
 		":node_modules/@fluid-private/stochastic-test-utils",
 		":node_modules/@fluid-private/test-dds-utils",
@@ -160,9 +162,10 @@ ts_project(
 		":node_modules/@types/mocha",
 		":node_modules/@types/node",
 		":node_modules/double-ended-queue",
-	,
-        ":node_modules/best-random",
-        ":node_modules/@fluid-tools/benchmark"],
+		,
+		":node_modules/best-random",
+		":node_modules/@fluid-tools/benchmark",
+	],
 )
 
 # Mocha test runner
@@ -172,9 +175,10 @@ mocha_bin.mocha_test(
         "packages/dds/matrix/lib-test/test/**/*.spec.js",
         "--exit",
     ],
-    data = [":matrix_test",
-        ":matrix_esm",  # Runtime needs the compiled package,
-        "package.json",  # Needed for Node to detect ESM module type
+    data = [
+        ":matrix_test",
+        ":pkg",  # Runtime needs package with subpath exports
+
     ],
     tags = ["manual"],  # Mark as manual until validated
 )

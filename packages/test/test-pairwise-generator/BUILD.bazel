@@ -123,10 +123,12 @@ ts_project(
     tsconfig = "src/test/tsconfig.bazel.json",
     transpiler = "tsc",
     deps = [
-        ":node_modules/@types/mocha",
-        ":node_modules/@types/node",
-        ":node_modules/random-js",
-    ],
+		":test_pairwise_generator_esm",  # For TypeScript module resolution
+		":pkg",  # For runtime package resolution with subpath exports
+		":node_modules/@types/mocha",
+		":node_modules/@types/node",
+		":node_modules/random-js",
+	],
 )
 
 # Mocha test runner
@@ -138,7 +140,7 @@ mocha_bin.mocha_test(
     ],
     data = [
         ":test_pairwise_generator_test",
-        ":test_pairwise_generator_esm",  # Runtime needs the compiled package
-        "package.json",  # Needed for Node to detect ESM module type
+        ":pkg",  # Runtime needs package with subpath exports
+
     ],
 )
