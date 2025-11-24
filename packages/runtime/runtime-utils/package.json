@@ -164,6 +164,11 @@
 		"ts-node": "^10.9.1",
 		"typescript": "~5.4.5"
 	},
+	"fluidCompatMetadata": {
+		"generation": 1,
+		"releaseDate": "2025-11-24",
+		"releasePkgVersion": "2.73.0"
+	},
 	"typeValidation": {
 		"broken": {},
 		"entrypoint": "legacy"

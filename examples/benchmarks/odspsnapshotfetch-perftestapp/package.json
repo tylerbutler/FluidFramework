@@ -71,6 +71,11 @@
 		"webpack-hot-middleware": "^2.25.3",
 		"webpack-merge": "^6.0.1"
 	},
+	"fluidCompatMetadata": {
+		"generation": 1,
+		"releaseDate": "2025-11-24",
+		"releasePkgVersion": "2.73.0"
+	},
 	"typeValidation": {
 		"disabled": true
 	}

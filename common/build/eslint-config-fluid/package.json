@@ -71,6 +71,11 @@
 			}
 		}
 	},
+	"fluidCompatMetadata": {
+		"generation": 1,
+		"releaseDate": "2025-11-24",
+		"releasePkgVersion": "2.73.0"
+	},
 	"pnpm": {
 		"commentsOverrides": [
 			"serialize-javascript - CVE-2024-11831 impacts version 6.0.0 which is pinned by mocha 10.4.0, which in turn comes from mocha-multi-reporters 1.5.1 (which has no updated version at this time)"

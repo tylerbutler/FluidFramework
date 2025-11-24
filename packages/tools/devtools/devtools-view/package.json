@@ -141,6 +141,11 @@
 			]
 		}
 	},
+	"fluidCompatMetadata": {
+		"generation": 1,
+		"releaseDate": "2025-11-24",
+		"releasePkgVersion": "2.73.0"
+	},
 	"typeValidation": {
 		"disabled": true
 	}

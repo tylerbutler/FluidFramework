@@ -38,6 +38,11 @@
 	"dependencyComments": [
 		"chalk is left at version 4 (not 5) to keep CommonJS support."
 	],
+	"fluidCompatMetadata": {
+		"generation": 1,
+		"releaseDate": "2025-11-24",
+		"releasePkgVersion": "2.73.0"
+	},
 	"typeValidation": {
 		"disabled": true
 	}

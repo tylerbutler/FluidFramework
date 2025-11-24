@@ -156,6 +156,11 @@
 		"sinon": "^18.0.1",
 		"typescript": "~5.4.5"
 	},
+	"fluidCompatMetadata": {
+		"generation": 1,
+		"releaseDate": "2025-11-24",
+		"releasePkgVersion": "2.73.0"
+	},
 	"typeValidation": {
 		"broken": {
 			"Class_FluidDataStoreRuntime": {
