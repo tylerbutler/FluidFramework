@@ -34,6 +34,8 @@ export {
 	unscopedPackageNameString,
 	BaseCommand,
 	BaseCommandWithBuildProject,
+	BuildProjectPackageCommand,
+	type PackageSelectionDefault,
 	GenerateEntrypointsCommand,
 } from "./commands/index.js";
 export { Context, type VersionDetails, isMonoRepoKind, MonoRepoKind } from "./context.js";

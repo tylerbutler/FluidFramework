@@ -40,21 +40,23 @@ Run a shell command in the context of a package or release group.
 
 ```
 USAGE
-  $ flub vnext exec CMD [-v | --quiet] [-g <value> | --all] [--concurrency <value>]
+  $ flub vnext exec CMD [-g <value> | --all] [--concurrency <value>] [--private] [--scope <value>... |
+    --skipScope <value>...]
 
 ARGUMENTS
   CMD  The shell command to execute.
 
 FLAGS
-  -g, --releaseGroup=<value>  Run the command in the context of packages in this release group. Cannot be used with
-                              --all.
-      --all                   Run the command in the context of all packages in the BuildProject. Cannot be used with
-                              --releaseGroup.
-      --concurrency=<value>   [default: 25] The number of packages to process concurrently.
+  -g, --releaseGroup=<value>  Run on packages within this release group. Cannot be used with --all.
+      --all                   Run on all packages in the BuildProject. Cannot be used with --releaseGroup.
+      --concurrency=<value>   [default: 25] The number of tasks to execute concurrently.
 
-LOGGING FLAGS
-  -v, --verbose  Enable verbose logging.
-      --quiet    Disable all logging.
+PACKAGE FILTER FLAGS
+  --[no-]private          Only include private packages. Use --no-private to exclude private packages instead.
+  --scope=<value>...      Package scopes to filter to. If provided, only packages whose scope matches the flag will be
+                          included. Cannot be used with --skipScope.
+  --skipScope=<value>...  Package scopes to filter out. If provided, packages whose scope matches the flag will be
+                          excluded. Cannot be used with --scope.
 
 DESCRIPTION
   Run a shell command in the context of a package or release group.

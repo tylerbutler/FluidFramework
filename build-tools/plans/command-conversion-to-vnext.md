@@ -1,8 +1,7 @@
 # Plan: Converting Commands to VNext Style
 
 This document provides guidance on converting commands from the legacy `PackageCommand` pattern to the newer
-`BaseCommandWithBuildProject` pattern (vnext style) that uses the APIs in the `@fluid-tools/build-infrastructure`
-package.
+vnext style that uses the APIs in the `@fluid-tools/build-infrastructure` package.
 
 ## Background
 
@@ -12,17 +11,18 @@ The build-tools project has two styles of building commands that operate on pack
    `PackageCommand` base class defined in `BasePackageCommand.ts`. This style relies on the older package
    infrastructure.
 
-2. **VNext Style (BaseCommandWithBuildProject)**: Uses the `IBuildProject` and related types from
+2. **VNext Style (BuildProjectPackageCommand)**: Uses the `IBuildProject` and related types from
    `@fluid-tools/build-infrastructure`. This newer pattern provides better typing, more flexible filtering,
-   and a cleaner separation of concerns.
+   and a cleaner separation of concerns. For commands that operate on packages, use `BuildProjectPackageCommand`
+   which mirrors the `PackageCommand` pattern and allows subclasses to only implement per-package handling.
 
 ## Key Differences
 
 ### Base Classes
 
-| Aspect | Legacy (PackageCommand) | VNext (BaseCommandWithBuildProject) |
+| Aspect | Legacy (PackageCommand) | VNext (BuildProjectPackageCommand) |
 |--------|------------------------|-------------------------------------|
-| Base Class | `PackageCommand<T>` | `BaseCommandWithBuildProject<T>` |
+| Base Class | `PackageCommand<T>` | `BuildProjectPackageCommand<T>` |
 | Package Type | `Package` from `@fluidframework/build-tools` | `IPackage` from `@fluid-tools/build-infrastructure` |
 | Context | `Context` from `library/context.js` | `IBuildProject` from `build-infrastructure` |
 | Get Context | `this.getContext()` | `this.getBuildProject()` |
@@ -31,17 +31,17 @@ The build-tools project has two styles of building commands that operate on pack
 
 | Aspect | Legacy | VNext |
 |--------|--------|-------|
-| Selection | `selectionFlags` defined in `flags.ts` | Can use `build-infrastructure` filter types |
-| Filter | `filterFlags` defined in `flags.ts` | `PackageFilterOptions` from `build-infrastructure` |
-| Default Selection | `defaultSelection` abstract property | Can define custom defaults |
+| Selection | `selectionFlags` defined in `flags.ts` | Built into `BuildProjectPackageCommand` (`--all`, `--releaseGroup`) |
+| Filter | `filterFlags` defined in `flags.ts` | Built into `BuildProjectPackageCommand` (`--private`, `--scope`, `--skipScope`) |
+| Default Selection | `defaultSelection` abstract property | `defaultSelection` abstract property |
 
 ### Processing Packages
 
 | Aspect | Legacy | VNext |
 |--------|--------|-------|
-| Iteration | `processPackage(pkg, kind)` called per package | Manual iteration over packages |
-| Concurrency | Built-in with `async.mapLimit` | Manual implementation |
-| Error Handling | Built-in error collection | Manual implementation |
+| Iteration | `processPackage(pkg, kind)` called per package | `processPackage(pkg)` called per package |
+| Concurrency | Built-in with `async.mapLimit` | Built-in with `async.mapLimit` |
+| Error Handling | Built-in error collection | Built-in error collection |
 
 ## Commands to Convert
 
@@ -101,7 +101,10 @@ import type { PackageSelectionDefault } from "../../flags.js";
 
 To:
 ```typescript
-import { BaseCommandWithBuildProject } from "../../library/index.js";
+import {
+  BuildProjectPackageCommand,
+  type PackageSelectionDefault,
+} from "../../library/index.js";
 import type { IPackage } from "@fluid-tools/build-infrastructure";
 ```
 
@@ -117,44 +120,35 @@ export default class MyCommand extends PackageCommand<typeof MyCommand> {
 
 To:
 ```typescript
-export default class MyCommand extends BaseCommandWithBuildProject<typeof MyCommand> {
+export default class MyCommand extends BuildProjectPackageCommand<typeof MyCommand> {
+  protected defaultSelection: PackageSelectionDefault = "all";
   // ...
 }
 ```
 
-### Step 3: Define Flags
+### Step 3: Define Flags (Optional)
 
-If you need package selection/filtering:
+The `BuildProjectPackageCommand` already includes all necessary flags. If you need additional flags:
 ```typescript
 static readonly flags = {
-  releaseGroup: releaseGroupNameFlag({ required: false }),
-  // Add other selection flags as needed
-  ...BaseCommandWithBuildProject.flags,
+  myCustomFlag: Flags.boolean({ description: "My custom flag" }),
+  ...BuildProjectPackageCommand.flags,
 } as const;
 ```
 
-### Step 4: Replace processPackage with run Logic
+### Step 4: Implement processPackage
 
 Change:
 ```typescript
-protected async processPackage(pkg: Package): Promise<void> {
+protected async processPackage(pkg: Package, kind: PackageKind): Promise<void> {
   // per-package logic
 }
 ```
 
 To:
 ```typescript
-public async run(): Promise<void> {
-  const buildProject = this.getBuildProject();
-
-  // Get packages based on flags/criteria
-  const releaseGroup = buildProject.releaseGroups.get(this.flags.releaseGroup);
-  const packages = releaseGroup?.packages ?? [...buildProject.packages.values()];
-
-  // Process packages
-  for (const pkg of packages) {
-    // per-package logic using IPackage interface
-  }
+protected async processPackage(pkg: IPackage): Promise<void> {
+  // per-package logic using IPackage interface
 }
 ```
 
@@ -170,22 +164,6 @@ Replace usage of `Package` properties with `IPackage` properties:
 | `pkg.packageJson` | `pkg.packageJson` |
 | `pkg.private` | `pkg.private` |
 | `pkg.savePackageJson()` | `pkg.savePackageJson()` |
-
-### Step 6: Handle Concurrency (Optional)
-
-If parallel processing is needed:
-```typescript
-import async from "async";
-
-const errors: string[] = [];
-await async.mapLimit(packages, concurrency, async (pkg) => {
-  try {
-    // process package
-  } catch (error) {
-    errors.push(`Error processing ${pkg.name}: ${error}`);
-  }
-});
-```
 
 ## Example Conversion: exec Command
 
@@ -210,42 +188,23 @@ export default class ExecCommand extends PackageCommand<typeof ExecCommand> {
 
 ### After (VNext)
 ```typescript
-export default class ExecCommand extends BaseCommandWithBuildProject<typeof ExecCommand> {
+export default class ExecCommand extends BuildProjectPackageCommand<typeof ExecCommand> {
   static readonly args = {
     cmd: Args.string({ required: true }),
   };
 
   static readonly flags = {
-    releaseGroup: releaseGroupNameFlag({ required: false }),
-    all: Flags.boolean({ description: "Run on all packages" }),
-    ...BaseCommandWithBuildProject.flags,
-  };
+    ...BuildProjectPackageCommand.flags,
+  } as const;
 
-  public async run(): Promise<void> {
-    const { cmd } = this.args;
-    const buildProject = this.getBuildProject();
+  protected defaultSelection: PackageSelectionDefault = "all";
 
-    let packages: IPackage[];
-    if (this.flags.all) {
-      packages = [...buildProject.packages.values()];
-    } else if (this.flags.releaseGroup) {
-      const rg = buildProject.releaseGroups.get(this.flags.releaseGroup);
-      if (!rg) {
-        this.error(`Release group not found: ${this.flags.releaseGroup}`);
-      }
-      packages = rg.packages;
-    } else {
-      this.error("Specify --all or --releaseGroup");
-    }
-
-    for (const pkg of packages) {
-      this.info(`Running in ${pkg.name}...`);
-      await execa.command(cmd, {
-        cwd: pkg.directory,
-        stdio: "inherit",
-        shell: true,
-      });
-    }
+  protected async processPackage(pkg: IPackage): Promise<void> {
+    await execa.command(this.args.cmd, {
+      cwd: pkg.directory,
+      stdio: "inherit",
+      shell: true,
+    });
   }
 }
 ```
@@ -260,12 +219,15 @@ export default class ExecCommand extends BaseCommandWithBuildProject<typeof Exec
 
 3. **Testing**: When converting a command, ensure that existing tests still pass or are updated accordingly.
 
-4. **Flags**: Consider using the `releaseGroupNameFlag` from `flags.ts` for consistent release group selection.
+4. **PackageKind Removed**: The vnext pattern removes the `PackageKind` parameter from `processPackage`. If you
+   need to know the kind of package, you can check `pkg.isReleaseGroupRoot`, `pkg.isWorkspaceRoot`, etc.
 
-5. **Error Handling**: VNext commands should handle errors explicitly rather than relying on the built-in
-   error collection from `PackageCommand`.
-
-6. **Progress Reporting**: Consider using `ux.action.start/stop` from `@oclif/core` for progress indication.
+5. **Built-in Features**: `BuildProjectPackageCommand` includes built-in:
+   - Package selection via `--all` and `--releaseGroup` flags
+   - Package filtering via `--private`, `--scope`, and `--skipScope` flags
+   - Concurrent processing with `--concurrency` flag
+   - Progress reporting with spinner
+   - Error collection and reporting
 
 ## Recommendations
 
