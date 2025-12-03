@@ -31,12 +31,13 @@ The build-tools project has two styles of building commands that operate on pack
 
 | Aspect | Legacy | VNext |
 |--------|--------|-------|
-| Selection | `selectionFlags` defined in `flags.ts` | `releaseGroupNameFlag` from `flags.ts` + custom `--all` flag |
-| Filter | `filterFlags` defined in `flags.ts` | Uses `filterFlags` from `flags.ts` |
+| Selection | `selectionFlags` defined in `flags.ts` | Custom `--releaseGroup` and `--all` flags |
+| Filter | `filterFlags` defined in `flags.ts` | Same filter flag definitions (locally defined to avoid circular deps) |
 | Default Selection | `defaultSelection` abstract property | `defaultSelection` abstract property |
 
-**Note:** The vnext pattern reuses the existing `filterFlags` and `releaseGroupNameFlag` from `flags.ts` where possible.
-Only custom flags specific to the vnext pattern (like `--all`) are defined in `BuildProjectPackageCommand`.
+**Note:** The vnext pattern uses the same filter flag definitions as `flags.ts`. Due to a circular dependency 
+(flags.ts imports from library/), these are defined locally in `buildProjectPackageCommand.ts` with documentation 
+noting they match the definitions in `flags.ts`.
 
 ### Processing Packages
 
