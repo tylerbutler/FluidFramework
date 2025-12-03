@@ -110,14 +110,11 @@ You can select packages using the --releaseGroup or --all flags.`;
 
 				try {
 					this.verbose(`Running '${cmd}' in ${pkg.name} (${pkg.directory})`);
-					const result = await execa.command(cmd, {
+					await execa.command(cmd, {
 						cwd: pkg.directory,
 						stdio: "inherit",
 						shell: true,
 					});
-					if (result.all !== undefined && result.all.length > 0) {
-						this.log(result.all);
-					}
 					succeeded += 1;
 				} catch (error: unknown) {
 					const errorString = `Error in ${pkg.name}: ${error instanceof Error ? error.message : String(error)}`;
