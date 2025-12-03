@@ -16,8 +16,20 @@ import async from "async";
 import { BaseCommandWithBuildProject } from "./base.js";
 
 /**
+ * The default to use as selection criteria when none is explicitly provided by the user. This enables commands
+ * without flags to operate on a collection of packages by default that make sense based on the command.
+ *
+ * @remarks
+ * This type matches the `PackageSelectionDefault` type in `flags.ts`. It's defined here to avoid circular
+ * dependencies between this module and `flags.ts`.
+ */
+export type PackageSelectionDefault = "all" | "dir" | undefined;
+
+/**
  * A re-usable CLI flag to parse release group names.
- * Defined locally to avoid circular dependency with flags.ts.
+ *
+ * @remarks
+ * This matches `releaseGroupNameFlag` in `flags.ts`. It's defined here to avoid circular dependencies.
  */
 const releaseGroupNameFlag = Flags.custom<ReleaseGroupName>({
 	description: "The name of a release group.",
@@ -28,10 +40,34 @@ const releaseGroupNameFlag = Flags.custom<ReleaseGroupName>({
 });
 
 /**
- * The default to use as selection criteria when none is explicitly provided by the user. This enables commands
- * without flags to operate on a collection of packages by default that make sense based on the command.
+ * Filter flags for package filtering.
+ *
+ * @remarks
+ * These match `filterFlags` in `flags.ts`. They're defined here to avoid circular dependencies.
  */
-export type PackageSelectionDefault = "all" | "dir" | undefined;
+const filterFlags = {
+	private: Flags.boolean({
+		description:
+			"Only include private packages. Use --no-private to exclude private packages instead.",
+		allowNo: true,
+		helpGroup: "PACKAGE FILTER",
+	}),
+	scope: Flags.string({
+		description:
+			"Package scopes to filter to. If provided, only packages whose scope matches the flag will be included. Cannot be used with --skipScope.",
+		exclusive: ["skipScope"],
+		multiple: true,
+		helpGroup: "PACKAGE FILTER",
+	}),
+	skipScope: Flags.string({
+		description:
+			"Package scopes to filter out. If provided, packages whose scope matches the flag will be excluded. Cannot be used with --scope.",
+		exclusive: ["scope"],
+		aliases: ["no-scope"],
+		multiple: true,
+		helpGroup: "PACKAGE FILTER",
+	}),
+} as const;
 
 /**
  * A base command for vnext commands that operate on packages within a BuildProject.
@@ -61,27 +97,7 @@ export abstract class BuildProjectPackageCommand<
 			description: "The number of tasks to execute concurrently.",
 			default: 25,
 		}),
-		private: Flags.boolean({
-			description:
-				"Only include private packages. Use --no-private to exclude private packages instead.",
-			allowNo: true,
-			helpGroup: "PACKAGE FILTER",
-		}),
-		scope: Flags.string({
-			description:
-				"Package scopes to filter to. If provided, only packages whose scope matches the flag will be included. Cannot be used with --skipScope.",
-			exclusive: ["skipScope"],
-			multiple: true,
-			helpGroup: "PACKAGE FILTER",
-		}),
-		skipScope: Flags.string({
-			description:
-				"Package scopes to filter out. If provided, packages whose scope matches the flag will be excluded. Cannot be used with --scope.",
-			exclusive: ["scope"],
-			aliases: ["no-scope"],
-			multiple: true,
-			helpGroup: "PACKAGE FILTER",
-		}),
+		...filterFlags,
 		...BaseCommandWithBuildProject.flags,
 	} as const;
 

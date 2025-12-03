@@ -31,9 +31,12 @@ The build-tools project has two styles of building commands that operate on pack
 
 | Aspect | Legacy | VNext |
 |--------|--------|-------|
-| Selection | `selectionFlags` defined in `flags.ts` | Built into `BuildProjectPackageCommand` (`--all`, `--releaseGroup`) |
-| Filter | `filterFlags` defined in `flags.ts` | Built into `BuildProjectPackageCommand` (`--private`, `--scope`, `--skipScope`) |
+| Selection | `selectionFlags` defined in `flags.ts` | `releaseGroupNameFlag` from `flags.ts` + custom `--all` flag |
+| Filter | `filterFlags` defined in `flags.ts` | Uses `filterFlags` from `flags.ts` |
 | Default Selection | `defaultSelection` abstract property | `defaultSelection` abstract property |
+
+**Note:** The vnext pattern reuses the existing `filterFlags` and `releaseGroupNameFlag` from `flags.ts` where possible.
+Only custom flags specific to the vnext pattern (like `--all`) are defined in `BuildProjectPackageCommand`.
 
 ### Processing Packages
 
@@ -42,6 +45,14 @@ The build-tools project has two styles of building commands that operate on pack
 | Iteration | `processPackage(pkg, kind)` called per package | `processPackage(pkg)` called per package |
 | Concurrency | Built-in with `async.mapLimit` | Built-in with `async.mapLimit` |
 | Error Handling | Built-in error collection | Built-in error collection |
+
+**Note on PackageKind:** The legacy `PackageKind` parameter has been removed in the vnext pattern. If you need to 
+determine the kind of package, use the `IPackage` properties instead:
+- `pkg.isReleaseGroupRoot` - true if this is a release group root package
+- `pkg.isWorkspaceRoot` - true if this is a workspace root package
+- Check `pkg.releaseGroup` to determine if the package belongs to a release group
+
+Most commands do not rely on the `kind` parameter, so this change should not affect them.
 
 ## Commands to Convert
 
@@ -101,11 +112,9 @@ import type { PackageSelectionDefault } from "../../flags.js";
 
 To:
 ```typescript
-import {
-  BuildProjectPackageCommand,
-  type PackageSelectionDefault,
-} from "../../library/index.js";
 import type { IPackage } from "@fluid-tools/build-infrastructure";
+import type { PackageSelectionDefault } from "../../flags.js";
+import { BuildProjectPackageCommand } from "../../library/index.js";
 ```
 
 ### Step 2: Change Base Class
@@ -209,13 +218,45 @@ export default class ExecCommand extends BuildProjectPackageCommand<typeof ExecC
 }
 ```
 
+## Command Migration Process
+
+When a vnext command is ready to replace a legacy command, follow this process:
+
+1. **Move the legacy command to `commands/legacy/`** and mark it as deprecated with appropriate JSDoc.
+
+2. **Move the vnext command** from `commands/vnext/` to the original command location (e.g., `commands/exec.ts`).
+
+3. **Add aliases for the vnext command location** so that users who were using `vnext:exec` can still use it:
+   ```typescript
+   static readonly aliases = ["vnext:exec"];
+   ```
+
+4. **Set deprecateAliases** to true so the vnext aliases are deprecated:
+   ```typescript
+   static readonly deprecateAliases = true;
+   ```
+
+5. **Once all legacy commands are converted**, delete the legacy commands and remove the vnext aliases.
+
+## Other Commands (Non-PackageCommand Based)
+
+Some commands don't extend `PackageCommand` but still interact with packages or release groups. These commands 
+may need different migration approaches:
+
+- **`release`** - Release management commands
+- **`release:prep`** - Release preparation  
+- **`bump`** - Version bumping commands
+- **`check/policy`** - Policy checking
+
+These commands often use the `Context` class directly and may need to be migrated to use `IBuildProject` instead.
+The migration approach for these will be documented separately as they are worked on.
+
 ## Notes and Considerations
 
-1. **Location**: VNext commands should be placed in the `commands/vnext/` directory to distinguish them from
-   legacy commands.
+1. **Location**: VNext commands should be placed in the `commands/vnext/` directory during development.
 
 2. **Backward Compatibility**: The legacy commands can remain in place while vnext versions are developed.
-   Eventually, the vnext versions can replace the legacy ones.
+   Eventually, the vnext versions can replace the legacy ones using the migration process above.
 
 3. **Testing**: When converting a command, ensure that existing tests still pass or are updated accordingly.
 
@@ -224,10 +265,13 @@ export default class ExecCommand extends BuildProjectPackageCommand<typeof ExecC
 
 5. **Built-in Features**: `BuildProjectPackageCommand` includes built-in:
    - Package selection via `--all` and `--releaseGroup` flags
-   - Package filtering via `--private`, `--scope`, and `--skipScope` flags
+   - Package filtering via `--private`, `--scope`, and `--skipScope` flags (uses existing `filterFlags`)
    - Concurrent processing with `--concurrency` flag
    - Progress reporting with spinner
    - Error collection and reporting
+
+6. **Reuse Existing Flags**: Use flags from `flags.ts` where possible. Only define new flags when the existing
+   ones don't meet the requirements.
 
 ## Recommendations
 

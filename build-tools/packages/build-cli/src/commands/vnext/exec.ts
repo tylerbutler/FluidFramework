@@ -10,7 +10,7 @@ import execa from "execa";
 import {
 	BuildProjectPackageCommand,
 	type PackageSelectionDefault,
-} from "../../library/index.js";
+} from "../../library/commands/buildProjectPackageCommand.js";
 
 /**
  * Runs a shell command in the context of packages within the BuildProject.
