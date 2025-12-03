@@ -4,6 +4,7 @@
 Vnext commands are new implementations of standard flub commands using new infrastructure.
 
 * [`flub vnext check latestVersions`](#flub-vnext-check-latestversions)
+* [`flub vnext exec CMD`](#flub-vnext-exec-cmd)
 * [`flub vnext generate changelog`](#flub-vnext-generate-changelog)
 
 ## `flub vnext check latestVersions`
@@ -32,6 +33,46 @@ DESCRIPTION
 ```
 
 _See code: [src/commands/vnext/check/latestVersions.ts](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/vnext/check/latestVersions.ts)_
+
+## `flub vnext exec CMD`
+
+Run a shell command in the context of a package or release group.
+
+```
+USAGE
+  $ flub vnext exec CMD [-v | --quiet] [-g <value> | --all] [--concurrency <value>]
+
+ARGUMENTS
+  CMD  The shell command to execute.
+
+FLAGS
+  -g, --releaseGroup=<value>  Run the command in the context of packages in this release group. Cannot be used with
+                              --all.
+      --all                   Run the command in the context of all packages in the BuildProject. Cannot be used with
+                              --releaseGroup.
+      --concurrency=<value>   [default: 25] The number of packages to process concurrently.
+
+LOGGING FLAGS
+  -v, --verbose  Enable verbose logging.
+      --quiet    Disable all logging.
+
+DESCRIPTION
+  Run a shell command in the context of a package or release group.
+
+  This command runs a shell command in the context of packages within the BuildProject.
+  You can select packages using the --releaseGroup or --all flags.
+
+EXAMPLES
+  Run 'npm ls' in all packages
+
+    $ flub vnext exec --all 'npm ls'
+
+  Run a script in packages within a release group
+
+    $ flub vnext exec --releaseGroup client 'npm run build'
+```
+
+_See code: [src/commands/vnext/exec.ts](https://github.com/microsoft/FluidFramework/blob/main/build-tools/packages/build-cli/src/commands/vnext/exec.ts)_
 
 ## `flub vnext generate changelog`
 
