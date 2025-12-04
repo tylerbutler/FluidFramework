@@ -9,7 +9,7 @@ import {
 	type AzureRemoteConnectionConfig,
 	type ITelemetryBaseLogger,
 } from "@fluidframework/azure-client";
-// eslint-disable-next-line import/no-internal-modules -- TODO consider a test exposure to avoid /internal
+// eslint-disable-next-line import-x/no-internal-modules -- TODO consider a test exposure to avoid /internal
 import type { AzureClientPropsInternal } from "@fluidframework/azure-client/internal";
 import {
 	AzureClient as AzureClientLegacy,
@@ -191,7 +191,7 @@ export function createAzureClientLegacy(
  * currently these are mainly fetched from ephemeralSummaryTrees.ts
  * @param userID - ID for the user creating the container
  * @param userName - Name for the user creating the container
- * @returns - A FetchResponse containing the container ID(response.data.id)
+ * @returns A FetchResponse containing the container ID(response.data.id)
  */
 export async function createContainerFromPayload(
 	requestPayload: object,
@@ -262,7 +262,7 @@ export async function createContainerFromPayload(
  * (Tinylicious has the ID stored at a different path than other services)
  *
  * @param response - A container creation response returned by createContainerFromPayload
- * @returns - The ID of the container that was created by createContainerFromPayload
+ * @returns The ID of the container that was created by createContainerFromPayload
  */
 export function getContainerIdFromPayloadResponse(response: FetchResponse): string {
 	const useAzure = process.env.FLUID_CLIENT === "azure";
