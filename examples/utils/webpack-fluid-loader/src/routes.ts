@@ -15,7 +15,6 @@ import {
 	OdspTokenManager,
 	odspTokensCache,
 } from "@fluidframework/tool-utils/internal";
-import Axios from "axios";
 import express from "express";
 import nconf from "nconf";
 import type Server from "webpack-dev-server";
@@ -110,8 +109,12 @@ const makeAfterMiddlewares = (
 		}
 		case "tinylicious": {
 			const hostUrl = tinyliciousUrls(options).hostUrl;
-			Axios.get(hostUrl)
-				.then()
+			fetch(hostUrl)
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error! status: ${response.status}`);
+					}
+				})
 				.catch((err) => {
 					throw new Error(`${err.message}
 
