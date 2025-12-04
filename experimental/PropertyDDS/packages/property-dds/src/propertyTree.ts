@@ -25,10 +25,13 @@ import {
 	MessageType,
 	ISequencedDocumentMessage,
 } from "@fluidframework/driver-definitions/internal";
-import { ISummaryTreeWithStats } from "@fluidframework/runtime-definitions/internal";
+import {
+	ISummaryTreeWithStats,
+	type IRuntimeMessageCollection,
+	type ISequencedMessageEnvelope,
+} from "@fluidframework/runtime-definitions/internal";
 import { SummaryTreeBuilder } from "@fluidframework/runtime-utils/internal";
 import { SharedObject, IFluidSerializer } from "@fluidframework/shared-object-base/internal";
-import axios from "axios";
 import lodash from "lodash";
 import { Packr } from "msgpackr";
 import { v4 as uuidv4 } from "uuid";
@@ -360,28 +363,26 @@ export class SharedPropertyTree extends SharedObject {
 	}
 
 	/**
-	 * Process an operation
-	 *
-	 * @param message - the message to prepare
-	 * @param local - whether the message was sent by the local client
-	 * @param localOpMetadata - For local client messages, this is the metadata that was submitted with the message.
-	 * For messages from a remote client, this will be undefined.
+	 * {@inheritDoc @fluidframework/shared-object-base#SharedObject.processMessagesCore}
 	 */
-	protected processCore(
-		message: ISequencedDocumentMessage,
-		local: boolean,
-		localOpMetadata: unknown,
-	) {
+	protected processMessagesCore(messagesCollection: IRuntimeMessageCollection): void {
+		const { envelope, messagesContent } = messagesCollection;
+		for (const messageContent of messagesContent) {
+			this.processMessage(envelope, messageContent.contents);
+		}
+	}
+
+	private processMessage(messageEnvelope: ISequencedMessageEnvelope, contents: unknown) {
 		if (
-			message.type === MessageType.Operation &&
-			message.sequenceNumber > this.skipSequenceNumber
+			messageEnvelope.type === MessageType.Operation &&
+			messageEnvelope.sequenceNumber > this.skipSequenceNumber
 		) {
 			const change: IPropertyTreeMessage = this.decodeMessage(
-				cloneDeep(message.contents as IPropertyTreeMessage),
+				cloneDeep(contents as IPropertyTreeMessage),
 			);
 			const content: IRemotePropertyTreeMessage = {
 				...change,
-				sequenceNumber: message.sequenceNumber,
+				sequenceNumber: messageEnvelope.sequenceNumber,
 			};
 			switch (content.op) {
 				case OpKind.ChangeSet:
@@ -674,20 +675,32 @@ export class SharedPropertyTree extends SharedObject {
 				this.skipSequenceNumber = 0;
 			} else {
 				const { branchGuid, summaryMinimumSequenceNumber } = snapshot;
-				const branchResponse = await axios.get(`http://localhost:3000/branch/${branchGuid}`);
-				this.headCommitGuid = branchResponse.data.headCommitGuid;
+				const branchResponse = await fetch(`http://localhost:3000/branch/${branchGuid}`);
+				if (!branchResponse.ok) {
+					throw new Error(`HTTP error! status: ${branchResponse.status}`);
+				}
+				const branchData = (await branchResponse.json()) as { headCommitGuid: string };
+				this.headCommitGuid = branchData.headCommitGuid;
+				const commitResponse = await fetch(
+					`http://localhost:3000/branch/${branchGuid}/commit/${this.headCommitGuid}`,
+				);
+				if (!commitResponse.ok) {
+					throw new Error(`HTTP error! status: ${commitResponse.status}`);
+				}
 				const {
 					commit: { meta: commitMetadata },
-				} = (
-					await axios.get(
-						`http://localhost:3000/branch/${branchGuid}/commit/${this.headCommitGuid}`,
-					)
-				).data;
-				let { changeSet: materializedView } = (
-					await axios.get(
-						`http://localhost:3000/branch/${branchGuid}/commit/${this.headCommitGuid}/materializedView`,
-					)
-				).data;
+				} = (await commitResponse.json()) as {
+					commit: { meta: { minimumSequenceNumber: number; sequenceNumber: number } };
+				};
+				const materializedViewResponse = await fetch(
+					`http://localhost:3000/branch/${branchGuid}/commit/${this.headCommitGuid}/materializedView`,
+				);
+				if (!materializedViewResponse.ok) {
+					throw new Error(`HTTP error! status: ${materializedViewResponse.status}`);
+				}
+				let { changeSet: materializedView } = (await materializedViewResponse.json()) as {
+					changeSet: unknown;
+				};
 
 				const isPartialCheckoutActive = this.options.clientFiltering && this.options.paths;
 
@@ -722,18 +735,21 @@ export class SharedPropertyTree extends SharedObject {
 
 				// eslint-disable-next-line @typescript-eslint/prefer-for-of
 				for (let i = 0; i < missingDeltas.length; i++) {
-					if (missingDeltas[i].sequenceNumber < commitMetadata.sequenceNumber) {
+					const missingDelta = missingDeltas[i];
+					if (missingDelta.sequenceNumber < commitMetadata.sequenceNumber) {
 						// TODO: Don't spy on the DeltaManager's private internals.
 						// This is trying to mimic what DeltaManager does in processInboundMessage, but there's no guarantee that
 						// private implementation won't change.
 						const remoteChange: IPropertyTreeMessage = JSON.parse(
-							missingDeltas[i].contents as string,
+							missingDelta.contents as string,
 						).contents.contents.content.contents;
-						const { changeSet } = (
-							await axios.get(
-								`http://localhost:3000/branch/${branchGuid}/commit/${remoteChange.guid}/changeSet`,
-							)
-						).data;
+						const changeSetResponse = await fetch(
+							`http://localhost:3000/branch/${branchGuid}/commit/${remoteChange.guid}/changeSet`,
+						);
+						if (!changeSetResponse.ok) {
+							throw new Error(`HTTP error! status: ${changeSetResponse.status}`);
+						}
+						const { changeSet } = (await changeSetResponse.json()) as { changeSet: unknown };
 						remoteChange.changeSet = changeSet;
 
 						if (remoteChange) {
@@ -746,7 +762,7 @@ export class SharedPropertyTree extends SharedObject {
 							this.addRemoteChange(remoteChange);
 						}
 					} else {
-						this.processCore(missingDeltas[i], false, {});
+						this.processMessage(missingDelta, missingDelta.contents);
 					}
 				}
 

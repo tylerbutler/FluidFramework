@@ -5,7 +5,6 @@
 
 import type { AzureMember } from "@fluidframework/azure-client";
 import type { ITokenProvider, ITokenResponse } from "@fluidframework/routerlicious-driver";
-import axios from "axios";
 
 /**
  * Token Provider implementation for connecting to an Azure Function endpoint for
@@ -47,15 +46,27 @@ export class AzureFunctionTokenProvider implements ITokenProvider {
 	}
 
 	private async getToken(tenantId: string, documentId?: string): Promise<string> {
-		const response = await axios.get(this.azFunctionUrl, {
-			params: {
-				tenantId,
-				documentId,
-				id: this.user?.id,
-				name: this.user?.name,
-				additionalDetails: this.user?.additionalDetails as unknown,
-			},
+		const params = new URLSearchParams({
+			tenantId,
 		});
-		return response.data as string;
+		if (documentId !== undefined) {
+			params.append("documentId", documentId);
+		}
+		if (this.user?.id !== undefined) {
+			params.append("id", this.user.id);
+		}
+		if (this.user?.name !== undefined) {
+			params.append("name", this.user.name);
+		}
+		if (this.user?.additionalDetails !== undefined) {
+			params.append("additionalDetails", JSON.stringify(this.user.additionalDetails));
+		}
+
+		const url = `${this.azFunctionUrl}?${params.toString()}`;
+		const response = await fetch(url);
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		return response.text();
 	}
 }
