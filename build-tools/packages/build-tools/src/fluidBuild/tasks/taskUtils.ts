@@ -14,8 +14,23 @@ import type { PackageJson } from "../../common/npmPackage";
 import { lookUpDirSync } from "../../common/utils";
 
 export function getEsLintConfigFilePath(dir: string) {
-	// TODO: we currently don't support .yaml and .yml, or config in package.json
-	const possibleConfig = [".eslintrc.js", ".eslintrc.cjs", ".eslintrc.json", ".eslintrc"];
+	// ESLint 9 flat config files (checked first for newer projects)
+	// ESLint 8 legacy config files
+	// Note: we currently don't support .yaml and .yml, or config in package.json
+	const possibleConfig = [
+		// ESLint 9+ flat config files
+		"eslint.config.js",
+		"eslint.config.mjs",
+		"eslint.config.cjs",
+		"eslint.config.ts",
+		"eslint.config.mts",
+		"eslint.config.cts",
+		// ESLint 8 legacy config files
+		".eslintrc.js",
+		".eslintrc.cjs",
+		".eslintrc.json",
+		".eslintrc",
+	];
 	for (const configFile of possibleConfig) {
 		const configFileFullPath = path.join(dir, configFile);
 		if (existsSync(configFileFullPath)) {
