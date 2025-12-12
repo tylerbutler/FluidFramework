@@ -30,6 +30,16 @@ export {
 } from "./config.js";
 export { NotInGitRepository } from "./errors.js";
 export {
+	type GlobString,
+	type FilterablePackage,
+	type PackageFilterOptions,
+	type PackageSelectionCriteria,
+	AllPackagesSelectionCriteria,
+	EmptySelectionCriteria,
+	selectAndFilterPackages,
+	filterPackages,
+} from "./filter.js";
+export {
 	getFiles,
 	findGitRootSync,
 	getMergeBaseRemote,
