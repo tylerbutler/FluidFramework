@@ -4,6 +4,10 @@
  */
 
 export { BaseCommand, BaseCommandWithBuildProject } from "./base.js";
+export {
+	BuildProjectPackageCommand,
+	type PackageSelectionDefault,
+} from "./buildProjectPackageCommand.js";
 export { unscopedPackageNameString } from "./constants.js";
 export {
 	GenerateEntrypointsCommand,
