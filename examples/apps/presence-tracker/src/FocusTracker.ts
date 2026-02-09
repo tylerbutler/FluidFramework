@@ -48,7 +48,7 @@ export class FocusTracker extends TypedEventEmitter<IFocusTrackerEvents> {
 		/**
 		 * A states workspace that the FocusTracker will use to share focus states with other session clients.
 		 */
-		// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- empty object is the correct typing
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- {} type parameter indicates no predefined states
 		readonly statesWorkspace: StatesWorkspace<{}>,
 	) {
 		super();
