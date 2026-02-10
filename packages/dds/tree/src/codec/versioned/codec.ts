@@ -194,6 +194,7 @@ export interface CodecVersionBase<
  * Removing support for this laziness would be nice to help prevent unexpected coupling and alteration to codec behavior,
  * helping ensure that tests and production code behave the same.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface CodecVersion<
 	TDecoded,
 	TContext,
@@ -211,6 +212,7 @@ export interface CodecVersion<
  * Produced by {@link normalizeCodecVersion}.
  * Includes schema validation.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface NormalizedCodecVersion<
 	TDecoded,
 	TContext,
@@ -228,6 +230,7 @@ export interface NormalizedCodecVersion<
  * @remarks
  * Produced by {@link ClientVersionDispatchingCodecBuilder.applyOptions}.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface EvaluatedCodecVersion<
 	TDecoded,
 	TContext,

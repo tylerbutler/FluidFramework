@@ -48,6 +48,7 @@ export const requiredFieldChangeHandler: FieldChangeHandler<
 	editor: requiredFieldEditor,
 };
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface Required
 	extends FlexFieldKind<RequiredFieldEditor, typeof requiredIdentifier, Multiplicity.Single> {}
 

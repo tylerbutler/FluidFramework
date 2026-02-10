@@ -16,6 +16,7 @@ import { type Brand, type Opaque, brand } from "../../util/index.js";
  * For example, they are more efficient than {@link StableNodeIdentifier}s when used as keys in a map.
  * {@link LocalNodeIdentifier}s may be compared or equated via {@link compareLocalNodeIdentifiers}.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface LocalNodeIdentifier
 	extends Opaque<Brand<SessionSpaceCompressedId, "Local Node Identifier">> {}
 

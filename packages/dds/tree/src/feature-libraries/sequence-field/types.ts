@@ -24,6 +24,7 @@ export interface HasMoveId {
 	id: MoveId;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface CellId extends ChangeAtomId {}
 
 /**

@@ -209,10 +209,12 @@ export type EnforceTypeCheckTests =
 	| requireFalse<isAny<unknown>>
 	| requireFalse<isAny<Nominal1>>
 	| requireFalse<isAny<never>>
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	| requireFalse<isAny<{}>>
 	| requireFalse<isAny<boolean>>
 	| requireFalse<isAny<number | undefined>>
 	| requireFalse<isAny<1 & "x">>
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	| requireFalse<isAny<(1 & 2) | {}>>
 
 	// test isStrictSubset

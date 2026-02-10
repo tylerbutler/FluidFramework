@@ -76,6 +76,7 @@ export type ChildCollection = FieldKey | RootField;
  * In some APIs DetachedFields are used as FieldKeys on a special implicit root node
  * to simplify the APIs and implementation.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface DetachedField extends Opaque<Brand<string, "tree.DetachedField">> {}
 
 /**

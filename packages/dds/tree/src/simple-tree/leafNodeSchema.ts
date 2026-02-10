@@ -115,6 +115,7 @@ function makeLeaf<Name extends string, const T extends ValueSchema>(
  * This is an interface so its name will show up in things like type errors instead of the fully expanded TreeNodeSchemaNonClass.
  * @system @sealed @public
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface LeafSchema<Name extends string, T extends TreeLeafValue>
 	extends TreeNodeSchemaNonClass<
 		`com.fluidframework.leaf.${Name}`,

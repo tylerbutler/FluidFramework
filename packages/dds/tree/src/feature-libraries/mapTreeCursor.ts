@@ -68,6 +68,7 @@ export interface MapTreeFieldViewGeneric<TNode> {
 /**
  * Like {@link MapTree} but with the minimal properties needed for reading.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface MinimalMapTreeNodeView
 	extends MapTreeNodeViewGeneric<MinimalMapTreeNodeView> {}
 

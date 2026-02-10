@@ -213,6 +213,7 @@ export function isConstant(
  * If present in a `FieldSchema`, when constructing new tree content that field can be omitted, and a default will be provided.
  * @system @sealed @public
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface DefaultProvider extends ErasedType<"@fluidframework/tree.FieldProvider"> {}
 
 export function extractFieldProvider(input: DefaultProvider): FieldProvider {

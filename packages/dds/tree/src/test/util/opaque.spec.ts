@@ -26,7 +26,9 @@ import {
 export type T1 = Brand<number, "1">;
 export type T2 = Brand<number, "2">;
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface O1 extends Opaque<T1> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface O2 extends Opaque<T2> {}
 
 type _check =

@@ -678,6 +678,7 @@ export interface SharedTreeFormatOptions {
  * Consume using {@link buildConfiguredForest}.
  * @sealed @beta
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ForestType extends ErasedType<"ForestType"> {}
 
 /**

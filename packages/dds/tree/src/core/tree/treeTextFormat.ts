@@ -77,6 +77,7 @@ export interface GenericFieldsNode<TChild> {
  *
  * JsonableTrees should not store empty fields.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface JsonableTree extends GenericTreeNode<JsonableTree> {}
 
 /**

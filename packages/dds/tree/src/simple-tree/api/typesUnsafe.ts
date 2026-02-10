@@ -304,6 +304,7 @@ export namespace System_Unsafe {
 	 * Do not use this type directly: it's only needed in the implementation of generic logic which define recursive schema, not when using recursive schema.
 	 * @system @sealed @public
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 	export interface TreeArrayNodeUnsafe<TAllowedTypes extends ImplicitAllowedTypesUnsafe>
 		extends TreeArrayNode<
 			TAllowedTypes,
@@ -569,6 +570,7 @@ export type UnannotateAllowedTypeUnsafe<
  * Do not use this type directly: it's only needed in the implementation of generic logic which define recursive schema, not when using recursive schema.
  * @system @sealed @beta
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AnnotatedAllowedTypeUnsafe<T = Unenforced<LazyItem<TreeNodeSchema>>>
 	extends AnnotatedAllowedType<T> {}
 
@@ -578,6 +580,7 @@ export interface AnnotatedAllowedTypeUnsafe<T = Unenforced<LazyItem<TreeNodeSche
  * Do not use this type directly: it's only needed in the implementation of generic logic which define recursive schema, not when using recursive schema.
  * @system @sealed @beta
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AnnotatedAllowedTypesUnsafe
 	extends AnnotatedAllowedTypes<LazyItem<System_Unsafe.TreeNodeSchemaUnsafe>> {}
 

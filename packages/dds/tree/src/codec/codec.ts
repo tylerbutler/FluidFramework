@@ -63,6 +63,7 @@ export interface SchemaValidationFunction<Schema extends TSchema> {
  * This also allows us to avoid stabilizing or documenting how handles interact with JSON validation since that is not exposed through this type.
  * @sealed @alpha
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface FormatValidator extends ErasedType<"FormatValidator"> {}
 
 /**

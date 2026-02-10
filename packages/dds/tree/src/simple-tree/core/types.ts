@@ -32,6 +32,7 @@ export type Unhydrated<T> = T;
  * A {@link FlexTreeNode}. Includes {@link RawTreeNode}s.
  * @sealed @public
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface InternalTreeNode
 	extends ErasedType<"@fluidframework/tree.InternalTreeNode"> {}
 

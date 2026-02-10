@@ -174,12 +174,14 @@ export const fieldKinds: ReadonlyMap<FieldKindIdentifier, FlexFieldKind> = new M
 // TODO: Find a way to make docs like {@inheritDoc required} work in vscode.
 // TODO: ensure thy work in generated docs.
 // TODO: add these comments to the rest of the cases below.
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Identifier
 	extends FlexFieldKind<
 		FieldEditor<0>,
 		typeof identifierFieldIdentifier,
 		Multiplicity.Single
 	> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Forbidden
 	extends FlexFieldKind<
 		FieldEditor<0>,

@@ -15,6 +15,7 @@ import { FlexFieldKind } from "../modular-schema/index.js";
 import { sequenceFieldChangeHandler } from "./sequenceFieldChangeHandler.js";
 import type { SequenceFieldEditor } from "./sequenceFieldEditor.js";
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface Sequence
 	extends FlexFieldKind<
 		SequenceFieldEditor,

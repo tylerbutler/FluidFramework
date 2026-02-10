@@ -52,7 +52,9 @@ const _branded3 = brand(0);
 const _branded4: number = brand(0);
 
 // Erased
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface E4 extends ErasedType<"4"> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface E5 extends ErasedType<"5"> {}
 export type T4 = Brand<{ test: number }, E4>;
 export type T5 = Brand<{ test: number }, E5>;
