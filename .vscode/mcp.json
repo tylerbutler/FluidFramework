@@ -1,0 +1,19 @@
+{
+  "servers": {
+    "ado": {
+      "command": "agency",
+      "args": ["mcp", "ado", "--organization", "fluidframework", "--project", "internal"]
+    },
+    "bluebird": {
+      "command": "agency",
+      "args": ["mcp", "bluebird", 
+      "--organization", "fluidframework", 
+      "--project", "internal", 
+      "--repository", "fluidframework"]
+    },
+    "workiq": {
+      "command": "agency",
+      "args": ["mcp", "workiq"]
+    }
+  }
+}
