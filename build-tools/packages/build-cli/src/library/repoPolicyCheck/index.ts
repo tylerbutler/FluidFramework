@@ -4,6 +4,7 @@
  */
 
 import type { Handler } from "./common.js";
+import { handler as compatLayerGenerationHandler } from "./compatLayerGeneration.js";
 import { handlers as copyrightFileHeaderHandlers } from "./copyrightFileHeader.js";
 import { handler as dockerfilePackageHandler } from "./dockerfilePackages.js";
 import { handlers as fluidBuildTasks } from "./fluidBuildTasks.js";
@@ -27,6 +28,7 @@ export const policyHandlers: Handler[] = [
 	...fluidBuildTasks,
 	noJsFileHandler,
 	yamlTabsHandler,
+	compatLayerGenerationHandler,
 ];
 
 export { type Handler } from "./common.js";
