@@ -179,14 +179,15 @@ export class BuildMetrics {
 		const failedStr = s.failed > 0 ? chalk.red(` | ${s.failed} failed`) : "";
 		const nonIncStr =
 			s.nonIncremental > 0 ? chalk.yellow(` | ${s.nonIncremental} non-incremental`) : "";
+		const notRunStr = s.notRun > 0 ? chalk.yellow(` | ${s.notRun} not run`) : "";
 
 		log(
-			`  ${chalk.bold(String(s.totalTasks))} tasks | ${cachedStr} (${hitRateStr}) | ${executedStr}${nonIncStr}${failedStr}`,
+			`  ${chalk.bold(String(s.totalTasks))} tasks | ${cachedStr} (${hitRateStr}) | ${executedStr}${nonIncStr}${failedStr}${notRunStr}`,
 		);
 
 		// Table of executables that had cache misses or other non-cached outcomes (the interesting ones)
 		const withMisses = s.byExecutable.filter(
-			(eb) => eb.miss > 0 || eb.failed > 0 || eb.nonIncremental > 0,
+			(eb) => eb.miss > 0 || eb.failed > 0 || eb.nonIncremental > 0 || eb.notRun > 0,
 		);
 		const fullyCached = s.byExecutable.filter(
 			(eb) => eb.miss === 0 && eb.failed === 0 && eb.nonIncremental === 0 && eb.notRun === 0,
@@ -201,12 +202,12 @@ export class BuildMetrics {
 			log("");
 			log(
 				chalk.dim(
-					`  ${"Executable".padEnd(nameWidth)}  Total  Cached  Miss  NonInc  Hit Rate     Time`,
+					`  ${"Executable".padEnd(nameWidth)}  Total  Cached  Miss  NonInc  NotRun  Hit Rate     Time`,
 				),
 			);
 			log(
 				chalk.dim(
-					`  ${"─".repeat(nameWidth)}  ─────  ──────  ────  ──────  ────────  ───────`,
+					`  ${"─".repeat(nameWidth)}  ─────  ──────  ────  ──────  ──────  ────────  ───────`,
 				),
 			);
 
@@ -217,11 +218,12 @@ export class BuildMetrics {
 					eb.nonIncremental > 0
 						? chalk.yellow(pad(eb.nonIncremental, 6))
 						: pad(eb.nonIncremental, 6);
+				const notRunStr = eb.notRun > 0 ? chalk.yellow(pad(eb.notRun, 6)) : pad(eb.notRun, 6);
 				const hitRate = eb.total > 0 ? formatPercent(eb.cached / eb.total) : "0%";
 				const hitRateStr = hitRate.padStart(8);
 				const failStr = eb.failed > 0 ? `  ${chalk.red(`${eb.failed} failed`)}` : "";
 				log(
-					`  ${chalk.bold(eb.executable.padEnd(nameWidth))}  ${pad(eb.total, 5)}  ${pad(eb.cached, 6)}  ${missStr}  ${nonIncStr}  ${hitRateStr}  ${time.padStart(7)}${failStr}`,
+					`  ${chalk.bold(eb.executable.padEnd(nameWidth))}  ${pad(eb.total, 5)}  ${pad(eb.cached, 6)}  ${missStr}  ${nonIncStr}  ${notRunStr}  ${hitRateStr}  ${time.padStart(7)}${failStr}`,
 				);
 			}
 		}
