@@ -1,0 +1,85 @@
+{
+	"formatVersion": 1,
+	"name": "basic-set",
+	"description": "Single client sets two keys; all clients converge.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "y",
+			"value": "two"
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 3,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							1
+						],
+						[
+							"y",
+							"two"
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": true
+						}
+					]
+				},
+				"B": {
+					"entries": [
+						[
+							"x",
+							1
+						],
+						[
+							"y",
+							"two"
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": false
+						}
+					]
+				}
+			}
+		}
+	]
+}

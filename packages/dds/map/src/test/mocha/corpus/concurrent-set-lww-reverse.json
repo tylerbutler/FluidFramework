@@ -1,0 +1,73 @@
+{
+	"formatVersion": 1,
+	"name": "concurrent-set-lww-reverse",
+	"description": "Same as concurrent-set-lww with submission order reversed.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "B",
+			"key": "x",
+			"value": 2
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 3,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							1
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						}
+					]
+				},
+				"B": {
+					"entries": [
+						[
+							"x",
+							1
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false,
+							"previousValue": 2
+						}
+					]
+				}
+			}
+		}
+	]
+}

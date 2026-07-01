@@ -1,0 +1,125 @@
+{
+	"formatVersion": 1,
+	"name": "lifetime-after-delete",
+	"description": "A pending delete followed by a pending set on the same key starts a new lifetime; the key re-appears with the new value.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "delete",
+			"client": "A",
+			"key": "x"
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 2
+		},
+		{
+			"action": "check"
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 4,
+			"converged": false,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							2
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 1
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						}
+					]
+				},
+				"B": {
+					"entries": [
+						[
+							"x",
+							1
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						}
+					]
+				}
+			}
+		},
+		{
+			"afterStep": 6,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							2
+						]
+					],
+					"events": []
+				},
+				"B": {
+					"entries": [
+						[
+							"x",
+							2
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false,
+							"previousValue": 1
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						}
+					]
+				}
+			}
+		}
+	]
+}

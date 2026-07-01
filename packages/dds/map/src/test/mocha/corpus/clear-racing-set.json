@@ -1,0 +1,104 @@
+{
+	"formatVersion": 1,
+	"name": "clear-racing-set",
+	"description": "Set sequenced after a concurrent clear survives it.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "clear",
+			"client": "B"
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "y",
+			"value": 2
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 5,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"y",
+							2
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": true
+						},
+						{
+							"event": "clear",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false,
+							"previousValue": 1
+						}
+					]
+				},
+				"B": {
+					"entries": [
+						[
+							"y",
+							2
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						},
+						{
+							"event": "clear",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 1
+						},
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": false
+						}
+					]
+				}
+			}
+		}
+	]
+}

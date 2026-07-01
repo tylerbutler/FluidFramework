@@ -1,0 +1,119 @@
+{
+	"formatVersion": 1,
+	"name": "pending-masks-remote-delete",
+	"description": "A remote delete is masked by a local pending set on the same key.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "delete",
+			"client": "B",
+			"key": "x"
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 5
+		},
+		{
+			"action": "processSome",
+			"count": 1
+		},
+		{
+			"action": "check"
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 5,
+			"converged": false,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							5
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 1
+						}
+					]
+				},
+				"B": {
+					"entries": [],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 1
+						}
+					]
+				}
+			}
+		},
+		{
+			"afterStep": 7,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							5
+						]
+					],
+					"events": []
+				},
+				"B": {
+					"entries": [
+						[
+							"x",
+							5
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						}
+					]
+				}
+			}
+		}
+	]
+}

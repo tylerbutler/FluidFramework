@@ -1,0 +1,44 @@
+{
+	"formatVersion": 1,
+	"name": "delete-nonexistent",
+	"description": "Deleting a key that was never set: the op is still sequenced; local clients emit no event, remote clients emit valueChanged with no previous value.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "delete",
+			"client": "A",
+			"key": "ghost"
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 2,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [],
+					"events": []
+				},
+				"B": {
+					"entries": [],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "ghost",
+							"local": false
+						}
+					]
+				}
+			}
+		}
+	]
+}

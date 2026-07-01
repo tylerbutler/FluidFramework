@@ -1,0 +1,71 @@
+{
+	"formatVersion": 1,
+	"name": "basic-delete",
+	"description": "Set then delete a key after sequencing.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "delete",
+			"client": "A",
+			"key": "x"
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 4,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 1
+						}
+					]
+				},
+				"B": {
+					"entries": [],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false,
+							"previousValue": 1
+						}
+					]
+				}
+			}
+		}
+	]
+}

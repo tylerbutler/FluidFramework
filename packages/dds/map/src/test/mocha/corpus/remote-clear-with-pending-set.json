@@ -1,0 +1,131 @@
+{
+	"formatVersion": 1,
+	"name": "remote-clear-with-pending-set",
+	"description": "A remote clear arrives while a local set is pending; the pending set survives optimistically and the cleared key disappears.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "clear",
+			"client": "B"
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "y",
+			"value": 7
+		},
+		{
+			"action": "processSome",
+			"count": 1
+		},
+		{
+			"action": "check"
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 5,
+			"converged": false,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"y",
+							7
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": true
+						},
+						{
+							"event": "clear",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false,
+							"previousValue": 1
+						}
+					]
+				},
+				"B": {
+					"entries": [],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						},
+						{
+							"event": "clear",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 1
+						}
+					]
+				}
+			}
+		},
+		{
+			"afterStep": 7,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"y",
+							7
+						]
+					],
+					"events": []
+				},
+				"B": {
+					"entries": [
+						[
+							"y",
+							7
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": false
+						}
+					]
+				}
+			}
+		}
+	]
+}

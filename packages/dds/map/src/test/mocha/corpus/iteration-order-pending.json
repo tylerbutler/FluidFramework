@@ -1,0 +1,142 @@
+{
+	"formatVersion": 1,
+	"name": "iteration-order-pending",
+	"description": "Iteration order with unacked entries: each client sees its own pending entries after sequenced ones; after sequencing, order converges to sequence order.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "a",
+			"value": 1
+		},
+		{
+			"action": "set",
+			"client": "B",
+			"key": "b",
+			"value": 2
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "c",
+			"value": 3
+		},
+		{
+			"action": "check"
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 3,
+			"converged": false,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"a",
+							1
+						],
+						[
+							"c",
+							3
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "a",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "c",
+							"local": true
+						}
+					]
+				},
+				"B": {
+					"entries": [
+						[
+							"b",
+							2
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "b",
+							"local": true
+						}
+					]
+				}
+			}
+		},
+		{
+			"afterStep": 5,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"a",
+							1
+						],
+						[
+							"b",
+							2
+						],
+						[
+							"c",
+							3
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "b",
+							"local": false
+						}
+					]
+				},
+				"B": {
+					"entries": [
+						[
+							"a",
+							1
+						],
+						[
+							"b",
+							2
+						],
+						[
+							"c",
+							3
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "a",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "c",
+							"local": false
+						}
+					]
+				}
+			}
+		}
+	]
+}

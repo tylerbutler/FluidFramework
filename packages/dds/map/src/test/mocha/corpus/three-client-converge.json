@@ -1,0 +1,179 @@
+{
+	"formatVersion": 1,
+	"name": "three-client-converge",
+	"description": "Mixed concurrent ops from three clients converge to the same state.",
+	"clients": [
+		"A",
+		"B",
+		"C"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "set",
+			"client": "B",
+			"key": "y",
+			"value": 2
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "delete",
+			"client": "C",
+			"key": "x"
+		},
+		{
+			"action": "clear",
+			"client": "B"
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "z",
+			"value": 3
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 7,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"z",
+							3
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "z",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false,
+							"previousValue": 1
+						},
+						{
+							"event": "clear",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": false,
+							"previousValue": 2
+						}
+					]
+				},
+				"B": {
+					"entries": [
+						[
+							"z",
+							3
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						},
+						{
+							"event": "clear",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 1
+						},
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": true,
+							"previousValue": 2
+						},
+						{
+							"event": "valueChanged",
+							"key": "z",
+							"local": false
+						}
+					]
+				},
+				"C": {
+					"entries": [
+						[
+							"z",
+							3
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 1
+						},
+						{
+							"event": "clear",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "y",
+							"local": false,
+							"previousValue": 2
+						},
+						{
+							"event": "valueChanged",
+							"key": "z",
+							"local": false
+						}
+					]
+				}
+			}
+		}
+	]
+}

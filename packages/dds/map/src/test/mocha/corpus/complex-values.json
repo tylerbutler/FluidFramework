@@ -1,0 +1,115 @@
+{
+	"formatVersion": 1,
+	"name": "complex-values",
+	"description": "Nested objects, arrays, null, and booleans survive the op round-trip.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "obj",
+			"value": {
+				"nested": {
+					"list": [
+						1,
+						"two",
+						null,
+						true
+					],
+					"flag": false
+				}
+			}
+		},
+		{
+			"action": "set",
+			"client": "B",
+			"key": "nil",
+			"value": null
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 3,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"obj",
+							{
+								"nested": {
+									"list": [
+										1,
+										"two",
+										null,
+										true
+									],
+									"flag": false
+								}
+							}
+						],
+						[
+							"nil",
+							null
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "obj",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "nil",
+							"local": false
+						}
+					]
+				},
+				"B": {
+					"entries": [
+						[
+							"obj",
+							{
+								"nested": {
+									"list": [
+										1,
+										"two",
+										null,
+										true
+									],
+									"flag": false
+								}
+							}
+						],
+						[
+							"nil",
+							null
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "nil",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "obj",
+							"local": false
+						}
+					]
+				}
+			}
+		}
+	]
+}

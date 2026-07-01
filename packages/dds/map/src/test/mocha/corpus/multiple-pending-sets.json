@@ -1,0 +1,151 @@
+{
+	"formatVersion": 1,
+	"name": "multiple-pending-sets",
+	"description": "Several unacked sets to one key form a single lifetime; the optimistic view shows the latest and is stable across incremental acks.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 2
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 3
+		},
+		{
+			"action": "check"
+		},
+		{
+			"action": "processSome",
+			"count": 1
+		},
+		{
+			"action": "check"
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 3,
+			"converged": false,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							3
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 1
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 2
+						}
+					]
+				},
+				"B": {
+					"entries": [],
+					"events": []
+				}
+			}
+		},
+		{
+			"afterStep": 5,
+			"converged": false,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							3
+						]
+					],
+					"events": []
+				},
+				"B": {
+					"entries": [
+						[
+							"x",
+							1
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						}
+					]
+				}
+			}
+		},
+		{
+			"afterStep": 7,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							3
+						]
+					],
+					"events": []
+				},
+				"B": {
+					"entries": [
+						[
+							"x",
+							3
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false,
+							"previousValue": 1
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false,
+							"previousValue": 2
+						}
+					]
+				}
+			}
+		}
+	]
+}

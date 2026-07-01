@@ -1,0 +1,106 @@
+{
+	"formatVersion": 1,
+	"name": "pending-masks-remote-set",
+	"description": "A remote set arriving while a local pending set exists on the same key is masked: the optimistic view and events are unaffected on the pending client.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "B",
+			"key": "x",
+			"value": 2
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "processSome",
+			"count": 1
+		},
+		{
+			"action": "check"
+		},
+		{
+			"action": "processSome",
+			"count": 1
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 3,
+			"converged": false,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							1
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						}
+					]
+				},
+				"B": {
+					"entries": [
+						[
+							"x",
+							2
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						}
+					]
+				}
+			}
+		},
+		{
+			"afterStep": 5,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							1
+						]
+					],
+					"events": []
+				},
+				"B": {
+					"entries": [
+						[
+							"x",
+							1
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false,
+							"previousValue": 2
+						}
+					]
+				}
+			}
+		}
+	]
+}

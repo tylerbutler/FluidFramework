@@ -1,0 +1,148 @@
+{
+	"formatVersion": 1,
+	"name": "iteration-order-readd",
+	"description": "Deleting and re-adding a key moves it to the end of iteration order.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "a",
+			"value": 1
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "b",
+			"value": 2
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "c",
+			"value": 3
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "delete",
+			"client": "A",
+			"key": "b"
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "b",
+			"value": 22
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 8,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"a",
+							1
+						],
+						[
+							"c",
+							3
+						],
+						[
+							"b",
+							22
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "a",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "b",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "c",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "b",
+							"local": true,
+							"previousValue": 2
+						},
+						{
+							"event": "valueChanged",
+							"key": "b",
+							"local": true
+						}
+					]
+				},
+				"B": {
+					"entries": [
+						[
+							"a",
+							1
+						],
+						[
+							"c",
+							3
+						],
+						[
+							"b",
+							22
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "a",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "b",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "c",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "b",
+							"local": false,
+							"previousValue": 2
+						},
+						{
+							"event": "valueChanged",
+							"key": "b",
+							"local": false
+						}
+					]
+				}
+			}
+		}
+	]
+}

@@ -1,0 +1,73 @@
+{
+	"formatVersion": 1,
+	"name": "concurrent-set-lww",
+	"description": "Two clients set the same key concurrently; later sequenced set wins.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "set",
+			"client": "B",
+			"key": "x",
+			"value": 2
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 3,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [
+						[
+							"x",
+							2
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false,
+							"previousValue": 1
+						}
+					]
+				},
+				"B": {
+					"entries": [
+						[
+							"x",
+							2
+						]
+					],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						}
+					]
+				}
+			}
+		}
+	]
+}

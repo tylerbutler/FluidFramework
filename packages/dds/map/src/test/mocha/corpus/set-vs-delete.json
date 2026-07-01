@@ -1,0 +1,83 @@
+{
+	"formatVersion": 1,
+	"name": "set-vs-delete",
+	"description": "Concurrent set and delete of the same key; delete sequenced last wins.",
+	"clients": [
+		"A",
+		"B"
+	],
+	"steps": [
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 1
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "set",
+			"client": "A",
+			"key": "x",
+			"value": 9
+		},
+		{
+			"action": "delete",
+			"client": "B",
+			"key": "x"
+		},
+		{
+			"action": "processAll"
+		},
+		{
+			"action": "check"
+		}
+	],
+	"observations": [
+		{
+			"afterStep": 5,
+			"converged": true,
+			"clients": {
+				"A": {
+					"entries": [],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 1
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false,
+							"previousValue": 9
+						}
+					]
+				},
+				"B": {
+					"entries": [],
+					"events": [
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": false
+						},
+						{
+							"event": "valueChanged",
+							"key": "x",
+							"local": true,
+							"previousValue": 1
+						}
+					]
+				}
+			}
+		}
+	]
+}
